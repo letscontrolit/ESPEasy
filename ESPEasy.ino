@@ -48,7 +48,7 @@
 // ********************************************************************************
 
 #define VERSION           1
-#define BUILD             1
+#define BUILD             2
 
 #define PIN_I2C_SDA       0
 #define PIN_I2C_SCL       2
@@ -73,8 +73,8 @@ struct SettingsStruct
   byte          Unit;
   char          WifiSSID[26];
   char          WifiKey[26];
-  byte          Server_IP[4];
-  unsigned int  ServerPort;
+  byte          Controller_IP[4];
+  unsigned int  ControllerPort;
   unsigned long Delay;
   unsigned int  Dallas;
   unsigned int  DHT;
@@ -88,19 +88,6 @@ struct SettingsStruct
 float UserVar[15];
 unsigned long timer;
 unsigned long timer100ms;
-
-void handle_root() {
-  Serial.print("HTTP : Webrequest : ");
-  String webrequest = server.arg("cmd");
-  webrequest.replace("%20", " ");
-  Serial.println(webrequest);
-  char command[80];
-  command[0] = 0;
-  webrequest.toCharArray(command, 79);
-  ExecuteCommand(command);
-  server.send(200, "text/plain", "Hello from ESP!");
-  delay(100);
-}
 
 void setup()
 {
@@ -129,6 +116,8 @@ void setup()
     }
 
   server.on("/", handle_root);
+  server.on("/config", handle_config);
+  server.on("/devices", handle_devices);
   server.begin();
 
   timer = millis() + 30000; // startup delay 30 sec
@@ -140,7 +129,13 @@ void setup()
   // if a SSID is configured, try to connect to Wifi network
   if (strcasecmp(Settings.WifiSSID, "ssid") != 0)
     ExecuteCommand((char*)"WifiConnect");
-
+  else
+    {
+      // Start Access Point for first config steps...
+      Serial.println("INIT : Start AP mode");
+      WiFi.mode(WIFI_AP_STA);
+      WiFi.softAP("ESP","configesp");
+    }
   Serial.println("INIT : Boot OK");
 }
 

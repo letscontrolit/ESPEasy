@@ -68,14 +68,14 @@ void ExecuteCommand(char *Line)
   if (strcasecmp(Command, "ServerIP") == 0)
   {
     if (GetArgv(Line, TmpStr1, 2))
-      if (!str2ip(TmpStr1, Settings.Server_IP))
+      if (!str2ip(TmpStr1, Settings.Controller_IP))
         Serial.println("?");
   }
 
-  if (strcasecmp(Command, "ServerPort") == 0)
+  if (strcasecmp(Command, "ControllerPort") == 0)
   {
     if (GetArgv(Line, TmpStr1, 2))
-      Settings.ServerPort = str2int(TmpStr1);
+      Settings.ControllerPort = str2int(TmpStr1);
   }
 
   if (strcasecmp(Command, "WifiSSID") == 0)
@@ -143,7 +143,8 @@ void ExecuteCommand(char *Line)
 
   if (strcasecmp(Command, "Reboot") == 0)
   {
-    Reboot();
+    ESP.reset();
+    //Reboot();
   }
 
   if (strcasecmp(Command, "Reset") == 0)
@@ -159,25 +160,25 @@ void ExecuteCommand(char *Line)
   if (strcasecmp(Command, "Settings") == 0)
   {
     char str[20];
-    sprintf(str, "%u.%u.%u.%u", Settings.Server_IP[0], Settings.Server_IP[1], Settings.Server_IP[2], Settings.Server_IP[3]);
+    sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
     Serial.println();
     Serial.println("Generic settings");
-    Serial.print("  Version   :"); Serial.println((int)Settings.Version);
-    Serial.print("  Unit      :"); Serial.println((int)Settings.Unit);
-    Serial.print("  WifiSSID  :"); Serial.println(Settings.WifiSSID);
-    Serial.print("  WifiKey   :");  Serial.println(Settings.WifiKey);
-    Serial.print("  ServerIP  :"); Serial.println(str);
-    Serial.print("  ServerPort:"); Serial.println(Settings.ServerPort);
-    Serial.print("  Delay     :"); Serial.println(Settings.Delay);
+    Serial.print("  Version       :"); Serial.println((int)Settings.Version);
+    Serial.print("  Unit          :"); Serial.println((int)Settings.Unit);
+    Serial.print("  WifiSSID      :"); Serial.println(Settings.WifiSSID);
+    Serial.print("  WifiKey       :");  Serial.println(Settings.WifiKey);
+    Serial.print("  Controller IP :"); Serial.println(str);
+    Serial.print("  ControllerPort:"); Serial.println(Settings.ControllerPort);
     Serial.println();
     Serial.println("Device settings");
-    Serial.print("  Dallas    :"); Serial.println(Settings.Dallas);
-    Serial.print("  DHT       :"); Serial.println(Settings.DHT);
-    Serial.print("  DHTType   :"); Serial.println(Settings.DHTType);
-    Serial.print("  BMP       :"); Serial.println(Settings.BMP);
-    Serial.print("  LUX       :"); Serial.println(Settings.LUX);
-    Serial.print("  RFID      :"); Serial.println(Settings.RFID);
-    Serial.print("  Analog    :"); Serial.println(Settings.Analog);
+    Serial.print("  Delay   :"); Serial.println(Settings.Delay);
+    Serial.print("  Dallas  :"); Serial.println(Settings.Dallas);
+    Serial.print("  DHT     :"); Serial.println(Settings.DHT);
+    Serial.print("  DHTType :"); Serial.println(Settings.DHTType);
+    Serial.print("  BMP     :"); Serial.println(Settings.BMP);
+    Serial.print("  LUX     :"); Serial.println(Settings.LUX);
+    Serial.print("  RFID    :"); Serial.println(Settings.RFID);
+    Serial.print("  Analog  :"); Serial.println(Settings.Analog);
   }
 
   if (strcasecmp(Command, "Freemem") == 0)
@@ -352,8 +353,8 @@ void ResetFactory(void)
   Settings.Unit            = UNIT;
   strcpy(Settings.WifiSSID, DEFAULT_SSID);
   strcpy(Settings.WifiKey, DEFAULT_KEY);
-  str2ip((char*)DEFAULT_SERVER, Settings.Server_IP);
-  Settings.ServerPort      = DEFAULT_PORT;
+  str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
+  Settings.ControllerPort      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Dallas          = DEFAULT_DALLAS_IDX;
   Settings.DHT             = DEFAULT_DHT_IDX;

@@ -6,14 +6,14 @@ boolean Domoticz_getData(int idx, float *data)
 {
   boolean success = false;
   char host[20];
-  sprintf(host, "%u.%u.%u.%u", Settings.Server_IP[0], Settings.Server_IP[1], Settings.Server_IP[2], Settings.Server_IP[3]);
+  sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
   Serial.print("HTTP : Connecting to ");
   Serial.println(host);
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, Settings.ServerPort)) {
+  if (!client.connect(host, Settings.ControllerPort)) {
     Serial.println("HTTP : Connection failed");
     return false;
   }
@@ -57,14 +57,14 @@ boolean Domoticz_sendData(int idx, float value)
 {
   boolean success = false;
   char host[20];
-  sprintf(host, "%u.%u.%u.%u", Settings.Server_IP[0], Settings.Server_IP[1], Settings.Server_IP[2], Settings.Server_IP[3]);
+  sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
   Serial.print("HTTP : Connecting to ");
   Serial.println(host);
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, Settings.ServerPort)) {
+  if (!client.connect(host, Settings.ControllerPort)) {
     Serial.println("HTTP : Connection failed");
     return false;
   }
