@@ -29,9 +29,9 @@ void ExecuteCommand(char *Line)
   {
     GetArgv(Line, TmpStr1, 4);
     TmpStr1[25] = 0;
-    for (byte x=0; x < 25; x++)
-      if (TmpStr1[x]=='_')
-        TmpStr1[x]=' ';
+    for (byte x = 0; x < 25; x++)
+      if (TmpStr1[x] == '_')
+        TmpStr1[x] = ' ';
     lcd(Par1, Par2, TmpStr1);
   }
 
@@ -65,11 +65,17 @@ void ExecuteCommand(char *Line)
   if (strcasecmp(Command, "Delay") == 0)
     Settings.Delay = Par1;
 
-  if (strcasecmp(Command, "ServerIP") == 0)
+  if (strcasecmp(Command, "ControllerIP") == 0)
   {
     if (GetArgv(Line, TmpStr1, 2))
       if (!str2ip(TmpStr1, Settings.Controller_IP))
         Serial.println("?");
+  }
+
+  if (strcasecmp(Command, "IP") == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 2))
+      Settings.IP_Octet = str2int(TmpStr1);
   }
 
   if (strcasecmp(Command, "ControllerPort") == 0)
@@ -92,54 +98,21 @@ void ExecuteCommand(char *Line)
     strcpy(Settings.WifiKey, TmpStr1);
   }
 
-  if (strcasecmp(Command, "WifiScan") == 0)
+  if (strcasecmp(Command, "WifiAPKey") == 0)
   {
-    Serial.println("scan start");
-    int n = WiFi.scanNetworks();
-    Serial.println("scan done");
-    if (n == 0)
-      Serial.println("no networks found");
-    else
-    {
-      Serial.print(n);
-      Serial.println(" networks found");
-      for (int i = 0; i < n; ++i)
-      {
-        // Print SSID and RSSI for each network found
-        Serial.print(i + 1);
-        Serial.print(": ");
-        Serial.print(WiFi.SSID(i));
-        Serial.print(" (");
-        Serial.print(WiFi.RSSI(i));
-        Serial.print(")");
-        Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
-        delay(10);
-      }
-    }
-    Serial.println("");
+    GetArgv(Line, TmpStr1, 2);
+    TmpStr1[25] = 0;
+    strcpy(Settings.WifiAPKey, TmpStr1);
   }
+
+  if (strcasecmp(Command, "WifiScan") == 0)
+    WifiScan();
 
   if (strcasecmp(Command, "WifiConnect") == 0)
-  {
-    if (Settings.WifiSSID[0] != 0)
-    {
-      WiFi.mode(WIFI_STA);
-      WiFi.begin(Settings.WifiSSID, Settings.WifiKey);
-      while (WiFi.status() != WL_CONNECTED)
-      {
-        delay(100);
-        Serial.print(".");
-      }
-      Serial.println("");
-    }
-    else
-      Serial.println("No SSID!");
-  }
+    WifiConnect();
 
   if (strcasecmp(Command, "WifiDisconnect") == 0)
-  {
-    WiFi.disconnect();
-  }
+    WifiDisconnect();
 
   if (strcasecmp(Command, "Reboot") == 0)
   {
@@ -160,25 +133,36 @@ void ExecuteCommand(char *Line)
   if (strcasecmp(Command, "Settings") == 0)
   {
     char str[20];
-    sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
     Serial.println();
+
+    Serial.println("System Info");
+    IPAddress ip = WiFi.localIP();
+    sprintf(str, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+    Serial.print("  IP Address : "); Serial.println(str);
+    Serial.println();
+    
     Serial.println("Generic settings");
-    Serial.print("  Version       :"); Serial.println((int)Settings.Version);
-    Serial.print("  Unit          :"); Serial.println((int)Settings.Unit);
-    Serial.print("  WifiSSID      :"); Serial.println(Settings.WifiSSID);
-    Serial.print("  WifiKey       :");  Serial.println(Settings.WifiKey);
-    Serial.print("  Controller IP :"); Serial.println(str);
-    Serial.print("  ControllerPort:"); Serial.println(Settings.ControllerPort);
+    Serial.print("  Version          : "); Serial.println((int)Settings.Version);
+    Serial.print("  Unit             : "); Serial.println((int)Settings.Unit);
+    Serial.print("  WifiSSID         : "); Serial.println(Settings.WifiSSID);
+    Serial.print("  WifiKey          : ");  Serial.println(Settings.WifiKey);
+    sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+    Serial.print("  ControllerIP     : "); Serial.println(str);
+    Serial.print("  ControllerPort   : "); Serial.println(Settings.ControllerPort);
+    Serial.print("  Fixed IP octet   : "); Serial.println(Settings.IP_Octet);
+    Serial.print("  WifiKey (APmode) : ");  Serial.println(Settings.WifiAPKey);
+
     Serial.println();
     Serial.println("Device settings");
-    Serial.print("  Delay   :"); Serial.println(Settings.Delay);
-    Serial.print("  Dallas  :"); Serial.println(Settings.Dallas);
-    Serial.print("  DHT     :"); Serial.println(Settings.DHT);
-    Serial.print("  DHTType :"); Serial.println(Settings.DHTType);
-    Serial.print("  BMP     :"); Serial.println(Settings.BMP);
-    Serial.print("  LUX     :"); Serial.println(Settings.LUX);
-    Serial.print("  RFID    :"); Serial.println(Settings.RFID);
-    Serial.print("  Analog  :"); Serial.println(Settings.Analog);
+    Serial.print("  Delay   : "); Serial.println(Settings.Delay);
+    Serial.print("  Dallas  : "); Serial.println(Settings.Dallas);
+    Serial.print("  DHT     : "); Serial.println(Settings.DHT);
+    Serial.print("  DHTType : "); Serial.println(Settings.DHTType);
+    Serial.print("  BMP     : "); Serial.println(Settings.BMP);
+    Serial.print("  LUX     : "); Serial.println(Settings.LUX);
+    Serial.print("  RFID    : "); Serial.println(Settings.RFID);
+    Serial.print("  Analog  : "); Serial.println(Settings.Analog);
+    Serial.print("  Pulse   : "); Serial.println(Settings.Pulse1);
   }
 
   if (strcasecmp(Command, "Freemem") == 0)
@@ -348,11 +332,12 @@ void ResetFactory(void)
 //********************************************************************************
 {
   Serial.println("Reset!");
-
+  Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;
   strcpy(Settings.WifiSSID, DEFAULT_SSID);
   strcpy(Settings.WifiKey, DEFAULT_KEY);
+  strcpy(Settings.WifiAPKey, DEFAULT_AP_KEY);
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
@@ -363,8 +348,9 @@ void ResetFactory(void)
   Settings.LUX             = DEFAULT_LUX_IDX;
   Settings.RFID            = DEFAULT_RFID_IDX;
   Settings.Analog          = DEFAULT_ANALOG_IDX;
-
+  Settings.Pulse1          = DEFAULT_PULSE1_IDX;
   Save_Settings();
+  WifiDisconnect();
   Reboot();
 }
 

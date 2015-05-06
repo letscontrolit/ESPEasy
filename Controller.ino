@@ -53,7 +53,7 @@ boolean Domoticz_getData(int idx, float *data)
   return success;
 }
 
-boolean Domoticz_sendData(int idx, float value)
+boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
 {
   boolean success = false;
   char host[20];
@@ -72,9 +72,28 @@ boolean Domoticz_sendData(int idx, float value)
   // We now create a URI for the request
   String url = "/json.htm?type=command&param=udevice&idx=";
   url += idx;
-  url += "&svalue=";
-  url += value;
-
+  switch(sensorType)
+  {
+    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+      url += "&svalue=";
+      url += UserVar[varIndex-1];
+      break;
+    case 2:                      // temp + hum + hum_stat, used for DHT11
+      url += "&svalue=";
+      url += UserVar[varIndex-1];
+      url += ";";
+      url += UserVar[varIndex];
+      url += ";0";
+      break;
+    case 3:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+      url += "&svalue=";
+      url += UserVar[varIndex-1];
+      url += ";0;0";
+      url += UserVar[varIndex];
+      url += ";0";
+      break;
+  }
+  
   Serial.print("HTTP : Requesting URL: ");
   Serial.println(url);
 
