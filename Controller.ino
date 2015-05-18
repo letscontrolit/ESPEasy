@@ -13,7 +13,9 @@ boolean Domoticz_getData(int idx, float *data)
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, Settings.ControllerPort)) {
+  if (!client.connect(host, Settings.ControllerPort))
+  {
+    connectionFailures++;
     Serial.println("HTTP : Connection failed");
     return false;
   }
@@ -64,7 +66,9 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, Settings.ControllerPort)) {
+  if (!client.connect(host, Settings.ControllerPort))
+  {
+    connectionFailures++;
     Serial.println("HTTP : Connection failed");
     return false;
   }
@@ -88,7 +92,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
     case 3:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       url += "&svalue=";
       url += UserVar[varIndex-1];
-      url += ";0;0";
+      url += ";0;0;";
       url += UserVar[varIndex];
       url += ";0";
       break;
@@ -108,7 +112,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
     String line = client.readStringUntil('\n');
-    if (line.substring(0, 15) == "HTTP/1.0 200 OK")
+    if (line.substring(0, 15) == "HTTP/1.1 200 OK")
     {
       Serial.println("HTTP : Succes!");
       success = true;

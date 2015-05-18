@@ -1,13 +1,28 @@
 //********************************************************************************
+// workaround for strcasecmp, issue with lib of header files.??????
+//********************************************************************************
+int strcasecmp(const char * str1, const char * str2) {
+  int d = 0;
+  while (1) {
+    int c1 = tolower(*str1++);
+    int c2 = tolower(*str2++);
+    if (((d = c1 - c2) != 0) || (c2 == '\0')) {
+      break;
+    }
+  }
+  return d;
+}
+
+//********************************************************************************
 // Serial Interface to configure and save settings to eeprom
 //********************************************************************************
 
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(char *Line)
 {
-  char TmpStr1[40];
+  char TmpStr1[80];
   TmpStr1[0] = 0;
-  char Command[40];
+  char Command[80];
   Command[0] = 0;
   int Par1 = 0;
   int Par2 = 0;
@@ -20,6 +35,17 @@ void ExecuteCommand(char *Line)
   // commands to execute io tasks
   // ****************************************
 
+  if (strcasecmp(Command, "UDP") == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 2))
+      {
+        IPAddress broadcastIP(255,255,255,255);
+        portTX.beginPacket(broadcastIP,UDP_LISTEN_PORT);
+        portTX.write(TmpStr1);
+        portTX.endPacket();
+      }
+  }
+  
   if (strcasecmp(Command, "ExtWiredOut") == 0)
   {
     mcp23017(Par1, Par2);
@@ -64,6 +90,9 @@ void ExecuteCommand(char *Line)
 
   if (strcasecmp(Command, "Delay") == 0)
     Settings.Delay = Par1;
+
+  if (strcasecmp(Command, "Pulse") == 0)
+    Settings.Pulse1 = Par1;
 
   if (strcasecmp(Command, "ControllerIP") == 0)
   {
@@ -117,7 +146,6 @@ void ExecuteCommand(char *Line)
   if (strcasecmp(Command, "Reboot") == 0)
   {
     ESP.reset();
-    //Reboot();
   }
 
   if (strcasecmp(Command, "Reset") == 0)
@@ -138,7 +166,14 @@ void ExecuteCommand(char *Line)
     Serial.println("System Info");
     IPAddress ip = WiFi.localIP();
     sprintf(str, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
-    Serial.print("  IP Address : "); Serial.println(str);
+    Serial.print("  IP Address   : "); Serial.println(str);
+    Serial.print("  Board Type   : "); Serial.println((int)Settings.BoardType);
+    Serial.print("         SDA   : "); Serial.println((int)Settings.Pin_i2c_sda);
+    Serial.print("         SCL   : "); Serial.println((int)Settings.Pin_i2c_scl);
+    Serial.print("         In 1  : "); Serial.println((int)Settings.Pin_wired_in_1);
+    Serial.print("         In 2  : "); Serial.println((int)Settings.Pin_wired_in_2);
+    Serial.print("         Out 1 : "); Serial.println((int)Settings.Pin_wired_out_1);
+    Serial.print("         Out 2 : "); Serial.println((int)Settings.Pin_wired_out_2);
     Serial.println();
     
     Serial.println("Generic settings");
@@ -171,21 +206,6 @@ void ExecuteCommand(char *Line)
   }
 }
 #define INPUT_BUFFER_SIZE          128
-
-//********************************************************************************
-// workaround for strcasecmp, issue with lib of header files.??????
-//********************************************************************************
-int strcasecmp(const char * str1, const char * str2) {
-  int d = 0;
-  while (1) {
-    int c1 = tolower(*str1++);
-    int c2 = tolower(*str2++);
-    if (((d = c1 - c2) != 0) || (c2 == '\0')) {
-      break;
-    }
-  }
-  return d;
-}
 
 byte SerialInByte;
 int SerialInByteCounter = 0;
@@ -340,6 +360,7 @@ void ResetFactory(void)
   strcpy(Settings.WifiAPKey, DEFAULT_AP_KEY);
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
+  Settings.IP_Octet        = 0;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Dallas          = DEFAULT_DALLAS_IDX;
   Settings.DHT             = DEFAULT_DHT_IDX;
@@ -349,9 +370,20 @@ void ResetFactory(void)
   Settings.RFID            = DEFAULT_RFID_IDX;
   Settings.Analog          = DEFAULT_ANALOG_IDX;
   Settings.Pulse1          = DEFAULT_PULSE1_IDX;
+  Settings.BoardType       = 0;
+  Settings.Pin_i2c_sda     = 0;
+  Settings.Pin_i2c_scl     = 2;
+  Settings.Pin_wired_in_1  = 4;
+  Settings.Pin_wired_in_2  = 5;
+  Settings.Pin_wired_out_1 = 12;
+  Settings.Pin_wired_out_2 = 13;
+  Settings.Syslog_IP[0]    = 0;
+  Settings.Syslog_IP[1]    = 0;
+  Settings.Syslog_IP[2]    = 0;
+  Settings.Syslog_IP[3]    = 0;
   Save_Settings();
   WifiDisconnect();
-  Reboot();
+  ESP.reset();
 }
 
 extern "C" {

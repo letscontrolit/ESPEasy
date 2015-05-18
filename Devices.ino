@@ -278,7 +278,7 @@ boolean dallas(byte Par1, byte Par2)
   byte var = Par2;               // Variable to be set.
   byte RelativePort = Par1 - 1;
 
-  DallasPin = PIN_WIRED_OUT_1 + Par1 - 1;
+  DallasPin = Settings.Pin_wired_out_1 + Par1 - 1;
 
   noInterrupts();
   while (!(bitRead(Call_Status, RelativePort)))
@@ -338,7 +338,7 @@ byte read_dht_dat(void)
 boolean dht(byte type, byte Par1, byte Par2)
 {
   boolean success = false;
-  DHT_Pin = PIN_WIRED_OUT_1 + Par1 - 1;
+  DHT_Pin = Settings.Pin_wired_out_1 + Par1 - 1;
   byte dht_dat[5];
   byte dht_in;
   byte i;
