@@ -29,3 +29,5 @@
 // Delayed reboot on empty IP adress (in case of DHCP issue)
 // Delayed reboot after 30 connection failures
 
+// R004 18-05-2015
+// Some fixes to be compabtible with Arduino 1.6.4 using ESP board addon 1.6.4.-628-g545ffde

@@ -51,7 +51,7 @@
 
 #define ESP_PROJECT_PID   2015050101L
 #define VERSION           1
-#define BUILD             4
+#define BUILD             5
 
 #define UDP_LISTEN_PORT   65500
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
@@ -138,8 +138,7 @@ void setup()
   if (Settings.Pin_i2c_sda != -1)
     {
       Serial.println("INIT : I2C");
-      Wire.pins(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
-      Wire.begin();
+      Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
     }
 
   if (Settings.Pin_wired_in_1 != -1)
