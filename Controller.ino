@@ -8,7 +8,7 @@ boolean Domoticz_getData(int idx, float *data)
   char host[20];
   sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  Serial.print("HTTP : Connecting to ");
+  Serial.print(F("HTTP : Connecting to "));
   Serial.println(host);
 
   // Use WiFiClient class to create TCP connections
@@ -16,7 +16,7 @@ boolean Domoticz_getData(int idx, float *data)
   if (!client.connect(host, Settings.ControllerPort))
   {
     connectionFailures++;
-    Serial.println("HTTP : Connection failed");
+    Serial.println(F("HTTP : Connection failed"));
     return false;
   }
 
@@ -24,7 +24,7 @@ boolean Domoticz_getData(int idx, float *data)
   String url = "/json.htm?type=devices&rid=";
   url += idx;
 
-  Serial.print("HTTP : Requesting URL: ");
+  Serial.print(F("HTTP : Requesting URL: "));
   Serial.println(url);
 
   // This will send the request to the server
@@ -33,7 +33,8 @@ boolean Domoticz_getData(int idx, float *data)
                "Connection: close\r\n\r\n");
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer) {}
+  while (!client.available() && millis() < timer)
+    delay(1);
 
   // Read all the lines of the reply from server and print them to Serial
 
@@ -51,7 +52,7 @@ boolean Domoticz_getData(int idx, float *data)
       success = true;
     }
   }
-  Serial.println("HTTP : Closing connection");
+  Serial.println(F("HTTP : Closing connection"));
   return success;
 }
 
@@ -61,7 +62,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   char host[20];
   sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  Serial.print("HTTP : Connecting to ");
+  Serial.print(F("HTTP : Connecting to "));
   Serial.println(host);
 
   // Use WiFiClient class to create TCP connections
@@ -69,12 +70,12 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   if (!client.connect(host, Settings.ControllerPort))
   {
     connectionFailures++;
-    Serial.println("HTTP : Connection failed");
+    Serial.println(F("HTTP : Connection failed"));
     return false;
   }
 
   // We now create a URI for the request
-  String url = "/json.htm?type=command&param=udevice&idx=";
+  String url = F("/json.htm?type=command&param=udevice&idx=");
   url += idx;
   switch(sensorType)
   {
@@ -98,7 +99,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
       break;
   }
   
-  Serial.print("HTTP : Requesting URL: ");
+  Serial.print(F("HTTP : Requesting URL: "));
   Serial.println(url);
 
   // This will send the request to the server
@@ -107,7 +108,8 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
                "Connection: close\r\n\r\n");
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer) {}
+  while (!client.available() && millis() < timer)
+    delay(1);
 
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
@@ -118,7 +120,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
       success = true;
     }
   }
-  Serial.println("HTTP : Closing connection");
+  Serial.println(F("HTTP : Closing connection"));
   return success;
 }
 

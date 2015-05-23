@@ -51,7 +51,7 @@
 
 #define ESP_PROJECT_PID   2015050101L
 #define VERSION           1
-#define BUILD             5
+#define BUILD             6
 
 #define UDP_LISTEN_PORT   65500
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
@@ -117,7 +117,7 @@ unsigned long pulseCounter1=0;
 void setup()
 {
   Serial.begin(19200);
-  Serial.print("\nINIT : Booting Build nr:");
+  Serial.print(F("\nINIT : Booting Build nr:"));
   Serial.println(BUILD);
 
   EEPROM.begin(4096);
@@ -129,7 +129,7 @@ void setup()
   Serial.println(Settings.Version);
   if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
   {
-    Serial.println("INIT : Incorrect PID or version!");
+    Serial.println(F("INIT : Incorrect PID or version!"));
     delay(10000);
     ResetFactory();
   }
@@ -137,31 +137,31 @@ void setup()
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
     {
-      Serial.println("INIT : I2C");
+      Serial.println(F("INIT : I2C"));
       Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
     }
 
   if (Settings.Pin_wired_in_1 != -1)
     {
-      Serial.println("INIT : Input 1");
+      Serial.println(F("INIT : Input 1"));
       pinMode(Settings.Pin_wired_in_1, INPUT_PULLUP);
     }
     
   if (Settings.Pin_wired_in_2 != -1)
     {
-      Serial.println("INIT : Input 2");
+      Serial.println(F("INIT : Input 2"));
       pinMode(Settings.Pin_wired_in_2, INPUT_PULLUP);
     }
 
   if (Settings.Pin_wired_out_1 != -1)
     {
-      Serial.println("INIT : Output 1");
+      Serial.println(F("INIT : Output 1"));
       pinMode(Settings.Pin_wired_out_1, OUTPUT);
     }
 
   if (Settings.Pin_wired_out_2 != -1)
     {
-      Serial.println("INIT : Output 2");
+      Serial.println(F("INIT : Output 2"));
       pinMode(Settings.Pin_wired_out_2, OUTPUT);
     }
 
@@ -203,7 +203,7 @@ void setup()
       IPAddress ip = WiFi.localIP();
       if (ip[0]==0) // dhcp issue ?
         {
-          Serial.println("No IP!");
+          Serial.println(F("No IP!"));
           delayedReboot(60);
         }
     }
@@ -214,13 +214,12 @@ void setup()
       WifiAPMode(true);
     }
      
-  Serial.println("INIT : Boot OK");
+  Serial.println(F("INIT : Boot OK"));
   syslog((char*)"Boot");
 }
 
 void loop()
 {
-  yield();
   server.handleClient();
 
   if (Serial.available())
@@ -279,9 +278,11 @@ void loop()
 
   if(connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
   {
-    Serial.println("Too many connection failures");
+    Serial.println(F("Too many connection failures"));
     delayedReboot(60);
   }
+  
+  delay(10);
 }
 
 void inputCheck()
@@ -336,13 +337,13 @@ void SensorSend()
     float value=0;
     if (Domoticz_getData(Settings.Pulse1, &value))
     {
-      Serial.print("Current Value:");
+      Serial.print(F("Current Value:"));
       Serial.println(value);
-      Serial.print("Delta Value:");
+      Serial.print(F("Delta Value:"));
       Serial.println(pulseCounter1);
       value=(value + pulseCounter1)*100;
       pulseCounter1=0;
-      Serial.print("New Value:");
+      Serial.print(F("New Value:"));
       Serial.println(value);
       UserVar[9 - 1] = value;  // store pulsecount to var 9
       Domoticz_sendData(1, Settings.Pulse1, 9);
@@ -371,7 +372,7 @@ void delayedReboot(int rebootDelay)
   {
     while (rebootDelay !=0 )
     {
-      Serial.print("Delayed Reset ");
+      Serial.print(F("Delayed Reset "));
       Serial.println(rebootDelay);
       rebootDelay--;
       delay(1000);

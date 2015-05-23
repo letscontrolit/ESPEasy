@@ -29,5 +29,13 @@
 // Delayed reboot on empty IP adress (in case of DHCP issue)
 // Delayed reboot after 30 connection failures
 
-// R004 18-05-2015
+// R005 21-05-2015
 // Some fixes to be compabtible with Arduino 1.6.4 using ESP board addon 1.6.4.-628-g545ffde
+
+// R006 23-05-2015
+// Stored many constant strings to progmem
+// delay(1) into http 'while' client check
+// delay(10) in main loop instead of yield()
+// DomoticzSend <type>,<idx>,<value> test command (via serial)
+// Disabled analogRead, seems broken in g8cd3697 (use millis()/1000 as demo value!)
+

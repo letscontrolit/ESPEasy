@@ -11,7 +11,7 @@ void ExecuteCommand(char *Line)
   Command[0] = 0;
   int Par1 = 0;
   int Par2 = 0;
-
+  
   GetArgv(Line, Command, 1);
   if (GetArgv(Line, TmpStr1, 2)) Par1 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
@@ -19,6 +19,15 @@ void ExecuteCommand(char *Line)
   // ****************************************
   // commands to execute io tasks
   // ****************************************
+
+  if (strcasecmp(Command, "DomoticzSend") == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 4))
+      {
+        UserVar[10 - 1] = atof(TmpStr1);
+        Domoticz_sendData(Par1, Par2, 10);
+      }
+  }
 
   if (strcasecmp(Command, "UDP") == 0)
   {

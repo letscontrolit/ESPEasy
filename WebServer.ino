@@ -2,7 +2,7 @@
 // Web Interface root page
 //********************************************************************************
 void handle_root() {
-  Serial.print("HTTP : Webrequest : ");
+  Serial.print(F("HTTP : Webrequest : "));
   String webrequest = server.arg("cmd");
   webrequest.replace("%20", " ");
   Serial.println(webrequest);
@@ -13,15 +13,15 @@ void handle_root() {
   if (strcasecmp(command, "wifidisconnect") != 0)
   {
     ExecuteCommand(command);
-    String reply = "<body><form>Welcome to ESP Easy";
-    reply += "<BR><a href='/config'>Config</a>";
-    reply += "<BR><a href='/devices'>Devices</a>";
-    reply += "<BR><a href='/hardware'>Hardware</a>";
-    reply += "<BR><a href='/?cmd=reboot'>Reboot</a>";
-    reply += "<BR><a href='/?cmd=wifidisconnect'>Disconnect</a>";
-    reply += "<BR><a href='/?cmd=wificonnect'>Connect</a>";
+    String reply = F("<body><form>Welcome to ESP Easy");
+    reply += F("<BR><a href='/config'>Config</a>");
+    reply += F("<BR><a href='/devices'>Devices</a>");
+    reply += F("<BR><a href='/hardware'>Hardware</a>");
+    reply += F("<BR><a href='/?cmd=reboot'>Reboot</a>");
+    reply += F("<BR><a href='/?cmd=wifidisconnect'>Disconnect</a>");
+    reply += F("<BR><a href='/?cmd=wificonnect'>Connect</a>");
 
-    reply += "<BR><BR>System Info";
+    reply += F("<BR><BR>System Info");
 
     IPAddress ip = WiFi.localIP();
     IPAddress gw = WiFi.gatewayIP();
@@ -32,16 +32,16 @@ void handle_root() {
     reply += str;
 
     sprintf(str, "%u.%u.%u.%u", gw[0], gw[1], gw[2], gw[3]);
-    reply += "<BR>GW : ";
+    reply += F("<BR>GW : ");
     reply += str;
 
-    reply += "<BR>Build : ";
+    reply += F("<BR>Build : ");
     reply += BUILD;
 
-    reply += "<BR>Unit : ";
+    reply += F("<BR>Unit : ");
     reply += Settings.Unit;
 
-    reply += "</form></body>";
+    reply += F("</form></body>");
     server.send(200, "text/html", reply);
     delay(100);
   }
@@ -50,7 +50,7 @@ void handle_root() {
     // have to disconnect from within the main loop
     // because the webconnection is still active at this point
     // disconnect would result into a crash/reboot...
-    Serial.println("WIFI : Disconnecting...");
+    Serial.println(F("WIFI : Disconnecting..."));
     cmd_disconnect = true;
   }
 }
@@ -61,7 +61,7 @@ void handle_root() {
 void handle_config() {
   char tmpstring[26];
 
-  Serial.println("HTTP : Webconfig : ");
+  Serial.println(F("HTTP : Webconfig : "));
 
   String ssid = server.arg("ssid");
   String key = server.arg("key");
@@ -91,35 +91,35 @@ void handle_config() {
     LoadSettings();
   }
 
-  String reply = "<body>";
-  reply += "<form>SSID:<BR><input type='text' name='ssid' value='";
+  String reply = F("<body>");
+  reply += F("<form>SSID:<BR><input type='text' name='ssid' value='");
   reply += Settings.WifiSSID;
-  reply += "'><BR>WPA Key:<BR><input type='text' name='key' value='";
+  reply += F("'><BR>WPA Key:<BR><input type='text' name='key' value='");
   reply += Settings.WifiKey;
 
-  reply += "'><BR>Controller IP:<BR><input type='text' name='controllerip' value='";
+  reply += F("'><BR>Controller IP:<BR><input type='text' name='controllerip' value='");
   char str[20];
   sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
   reply += str;
 
-  reply += "'><BR>Controller Port:<BR><input type='text' name='controllerport' value='";
+  reply += F("'><BR>Controller Port:<BR><input type='text' name='controllerport' value='");
   reply += Settings.ControllerPort;
-  reply += "'><BR>Fixed IP Octet: (Optional)<BR><input type='text' name='ip' value='";
+  reply += F("'><BR>Fixed IP Octet: (Optional)<BR><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
 
-  reply += "'><BR>Unit nr:<BR><input type='text' name='unit' value='";
+  reply += F("'><BR>Unit nr:<BR><input type='text' name='unit' value='");
   reply += Settings.Unit;
 
-  reply += "'><BR>WPA AP Mode Key:<BR><input type='text' name='apkey' value='";
+  reply += F("'><BR>WPA AP Mode Key:<BR><input type='text' name='apkey' value='");
   reply += Settings.WifiAPKey;
 
-  reply += "'><BR>Syslog IP:<BR><input type='text' name='syslogip' value='";
+  reply += F("'><BR>Syslog IP:<BR><input type='text' name='syslogip' value='");
   str[0]=0;
   sprintf(str, "%u.%u.%u.%u", Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
   reply += str;
 
-  reply += "'><BR><input type='submit' value='Submit'>";
-  reply += "</form></body>";
+  reply += F("'><BR><input type='submit' value='Submit'>");
+  reply += F("</form></body>");
   server.send(200, "text/html", reply);
   delay(1000);
 
@@ -130,7 +130,7 @@ void handle_config() {
 //********************************************************************************
 void handle_devices() {
 
-  Serial.println("HTTP : Webdevices : ");
+  Serial.println(F("HTTP : Webdevices : "));
 
   String boardtype = server.arg("boardtype");
   String sensordelay = server.arg("delay");
@@ -157,28 +157,28 @@ void handle_devices() {
     Save_Settings();
   }
 
-  String reply = "<body><form>";
-  reply += "Delay:<BR><input type='text' name='delay' value='";
+  String reply = F("<body><form>");
+  reply += F("Delay:<BR><input type='text' name='delay' value='");
   reply += Settings.Delay;
-  reply += "'><BR>Dallas:<BR><input type='text' name='dallas' value='";
+  reply += F("'><BR>Dallas:<BR><input type='text' name='dallas' value='");
   reply += Settings.Dallas;
-  reply += "'><BR>DHT:<BR><input type='text' name='dht' value='";
+  reply += F("'><BR>DHT:<BR><input type='text' name='dht' value='");
   reply += Settings.DHT;
-  reply += "'><BR>DHT Type:<BR><input type='text' name='dhttype' value='";
+  reply += F("'><BR>DHT Type:<BR><input type='text' name='dhttype' value='");
   reply += Settings.DHTType;
-  reply += "'><BR>BMP:<BR><input type='text' name='bmp' value='";
+  reply += F("'><BR>BMP:<BR><input type='text' name='bmp' value='");
   reply += Settings.BMP;
-  reply += "'><BR>LUX:<BR><input type='text' name='lux' value='";
+  reply += F("'><BR>LUX:<BR><input type='text' name='lux' value='");
   reply += Settings.LUX;
-  reply += "'><BR>RFID:<BR><input type='text' name='rfid' value='";
+  reply += F("'><BR>RFID:<BR><input type='text' name='rfid' value='");
   reply += Settings.RFID;
-  reply += "'><BR>Analog:<BR><input type='text' name='analog' value='";
+  reply += F("'><BR>Analog:<BR><input type='text' name='analog' value='");
   reply += Settings.Analog;
-  reply += "'><BR>Pulse:<BR><input type='text' name='pulse1' value='";
+  reply += F("'><BR>Pulse:<BR><input type='text' name='pulse1' value='");
   reply += Settings.Pulse1;
 
-  reply += "'><BR><input type='submit' value='Submit'>";
-  reply += "</form></body>";
+  reply += F("'><BR><input type='submit' value='Submit'>");
+  reply += F("</form></body>");
   server.send(200, "text/html", reply);
   delay(100);
 }
@@ -188,7 +188,7 @@ void handle_devices() {
 //********************************************************************************
 void handle_hardware() {
 
-  Serial.println("HTTP : Hardware : ");
+  Serial.println(F("HTTP : Hardware : "));
 
   String boardtype = server.arg("boardtype");
 
@@ -242,20 +242,20 @@ void handle_hardware() {
     Save_Settings();
   }
 
-  String reply = "<body><form>";
+  String reply = F("<body><form>");
 
   reply +="Board Type:";
   byte choice = Settings.BoardType;
   String options[5];
-  options[0]="ESP-07/12";
-  options[1]="ESP-01 I2C";
-  options[2]="ESP-01 In/Out";
-  options[3]="ESP-01 2 x In";
-  options[4]="ESP-01 2 x Out";
-  reply +="<BR><select name='boardtype'>";
+  options[0]=F("ESP-07/12");
+  options[1]=F("ESP-01 I2C");
+  options[2]=F("ESP-01 In/Out");
+  options[3]=F("ESP-01 2 x In");
+  options[4]=F("ESP-01 2 x Out");
+  reply +=F("<BR><select name='boardtype'>");
   for (byte x=0; x<5;x++)
     {
-    reply +="<option value='";
+    reply +=F("<option value='");
     reply +=x;
     reply +="'";
     if (choice==x)
@@ -264,54 +264,54 @@ void handle_hardware() {
     reply +=options[x];
     reply+="</option>";
     }
-  reply +="</select>";
+  reply +=F("</select>");
 
 
 
     switch (Settings.BoardType)
       {
         case 0:
-          reply +="<BR>SDA: ";
+          reply +=F("<BR>SDA: ");
           reply += Settings.Pin_i2c_sda;
-          reply +="<BR>SCL: ";
+          reply +=F("<BR>SCL: ");
           reply += Settings.Pin_i2c_scl;
-          reply +="<BR>Input 1: ";
+          reply +=F("<BR>Input 1: ");
           reply += Settings.Pin_wired_in_1;
-          reply +="<BR>Input 2: ";
+          reply +=F("<BR>Input 2: ");
           reply += Settings.Pin_wired_in_2;
-          reply +="<BR>Output 1: ";
+          reply +=F("<BR>Output 1: ");
           reply += Settings.Pin_wired_out_1;
-          reply +="<BR>Output 2: ";
+          reply +=F("<BR>Output 2: ");
           reply += Settings.Pin_wired_out_2;
           break;
         case 1:
-          reply +="<BR>SDA: ";
+          reply +=F("<BR>SDA: ");
           reply += Settings.Pin_i2c_sda;
-          reply +="<BR>SCL: ";
+          reply +=F("<BR>SCL: ");
           reply += Settings.Pin_i2c_scl;
           break;
         case 2:
-          reply +="<BR>Input 1: ";
+          reply +=F("<BR>Input 1: ");
           reply += Settings.Pin_wired_in_1;
-          reply +="<BR>Output 1: ";
+          reply +=F("<BR>Output 1: ");
           reply += Settings.Pin_wired_out_1;
           break;
         case 3:
-          reply +="<BR>Input 1: ";
+          reply +=F("<BR>Input 1: ");
           reply += Settings.Pin_wired_in_1;
-          reply +="<BR>Input 2: ";
+          reply +=F("<BR>Input 2: ");
           reply += Settings.Pin_wired_in_2;
           break;
         case 4:
-          reply +="<BR>Output 1: ";
+          reply +=F("<BR>Output 1: ");
           reply += Settings.Pin_wired_out_1;
-          reply +="<BR>Output 2: ";
+          reply +=F("<BR>Output 2: ");
           reply += Settings.Pin_wired_out_2;
           break;
       }
   
-  reply += "<BR><input type='submit' value='Submit'>";
-  reply += "</form></body>";
+  reply += F("<BR><input type='submit' value='Submit'>");
+  reply += F("</form></body>");
   server.send(200, "text/html", reply);
   delay(100);
 }

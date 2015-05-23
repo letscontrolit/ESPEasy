@@ -2,20 +2,20 @@ void WifiAPMode(boolean state)
 {
   if (state)
   {
-    Serial.println("WIFI : Starting AP Mode");
+    Serial.println(F("WIFI : Starting AP Mode"));
     WiFi.softAP(ap_ssid, Settings.WifiAPKey);
     WiFi.mode(WIFI_AP_STA);
   }
   else
   {
-    Serial.println("WIFI : Ending AP Mode");
+    Serial.println(F("WIFI : Ending AP Mode"));
     WiFi.mode(WIFI_STA);
   }
 }
 
 boolean WifiConnect()
 {
-  Serial.println("WIFI : Connecting...");
+  Serial.println(F("WIFI : Connecting..."));
   if (WiFi.status() != WL_CONNECTED)
   {
     if (Settings.WifiSSID[0] != 0)
@@ -40,13 +40,13 @@ boolean WifiConnect()
         IPAddress gw = WiFi.gatewayIP();
         IPAddress subnet = WiFi.subnetMask();
         ip[3] = Settings.IP_Octet;
-        Serial.print("IP   : Fixed IP :");
+        Serial.print(F("IP   : Fixed IP :"));
         Serial.println(ip);
         WiFi.config(ip, gw, subnet);
       }
     }
     else
-      Serial.println("WIFI : No SSID!");
+      Serial.println(F("WIFI : No SSID!"));
   }
 }
 
@@ -57,20 +57,20 @@ boolean WifiDisconnect()
 
 void WifiScan()
 {
-  Serial.println("WIFI : SSID Scan start");
+  Serial.println(F("WIFI : SSID Scan start"));
   int n = WiFi.scanNetworks();
-  Serial.println("WIFI : Scan done");
+  Serial.println(F("WIFI : Scan done"));
   if (n == 0)
-    Serial.println("WIFI : No networks found");
+    Serial.println(F("WIFI : No networks found"));
   else
   {
-    Serial.print("WIFI : ");
+    Serial.print(F("WIFI : "));
     Serial.print(n);
-    Serial.println(" networks found");
+    Serial.println(F(" networks found"));
     for (int i = 0; i < n; ++i)
     {
       // Print SSID and RSSI for each network found
-      Serial.print("WIFI : ");
+      Serial.print(F("WIFI : "));
       Serial.print(i + 1);
       Serial.print(": ");
       Serial.print(WiFi.SSID(i));
@@ -104,7 +104,7 @@ void WifiCheck()
             C_Count++;
             if (C_Count > 30)
               {
-                Serial.println("WIFI : Return to STA mode");
+                Serial.println(F("WIFI : Return to STA mode"));
                 NC_Count=0;
                 AP_Mode=false;
                 WifiAPMode(false);

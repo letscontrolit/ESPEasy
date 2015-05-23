@@ -19,7 +19,8 @@ void pulseinit(byte Par1)
 boolean analog(byte Par1)
 {
   boolean success = false;
-  int value = analogRead(A0);
+  //int value = analogRead(A0);  // crashes on latest release...
+  int value = millis()/1000;
   UserVar[Par1 - 1] = (float)value;
   Serial.print("ADC  : Analog value: ");
   Serial.println(value);
