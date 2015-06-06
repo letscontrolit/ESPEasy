@@ -97,6 +97,15 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
       url += UserVar[varIndex];
       url += ";0";
       break;
+    case 10:                      // single value sensor, used for Dallas, BH1750, etc
+      url = F("/json.htm?type=command&param=switchlight&idx=");
+      url += idx;
+      url += "&switchcmd=";
+      if (UserVar[varIndex-1] == 0)
+        url += "Off";
+      else
+        url += "On";
+      break;
   }
   
   Serial.print(F("HTTP : Requesting URL: "));
@@ -121,6 +130,23 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
     }
   }
   Serial.println(F("HTTP : Closing connection"));
+
+  if (Settings.UDPPort != 0)
+    {
+      IPAddress broadcastIP(255,255,255,255);
+      portTX.beginPacket(broadcastIP,Settings.UDPPort);
+      String message = F("IDXEvent ");
+      message += idx;
+      message += ",";
+      message += UserVar[varIndex-1];
+      char str[80];
+      str[0]=0;
+      message.toCharArray(str, 79);
+      Serial.print("SYSLG: ");
+      Serial.println(str);
+      portTX.write(str);
+      portTX.endPacket();
+    }
   return success;
 }
 

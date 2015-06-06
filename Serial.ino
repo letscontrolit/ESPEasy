@@ -46,7 +46,7 @@ void ExecuteCommand(char *Line)
     if (GetArgv(Line, TmpStr1, 2))
       {
         IPAddress broadcastIP(255,255,255,255);
-        portTX.beginPacket(broadcastIP,UDP_LISTEN_PORT);
+        portTX.beginPacket(broadcastIP,Settings.UDPPort);
         portTX.write(TmpStr1);
         portTX.endPacket();
       }
@@ -387,6 +387,8 @@ void ResetFactory(void)
   Settings.Syslog_IP[1]    = 0;
   Settings.Syslog_IP[2]    = 0;
   Settings.Syslog_IP[3]    = 0;
+  Settings.UDPPort         = 0;
+  Settings.Switch1         = DEFAULT_SWITCH1_IDX;
   Save_Settings();
   WifiDisconnect();
   ESP.reset();

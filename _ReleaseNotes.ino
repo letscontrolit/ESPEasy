@@ -44,3 +44,8 @@
 // Changed BAUDrate to 9600
 // DomoticzGet <type>, <idx> test command (via serial)
 
+// R008 06-06-2015
+// UDP listening port web configurable
+// If UDP port enabled, also send IDX events to this UDP port
+// Added Domotics lightswitch option, input on GPIO-0 pin.
+

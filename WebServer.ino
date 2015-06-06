@@ -71,6 +71,7 @@ void handle_config() {
   String unit = server.arg("unit");
   String apkey = server.arg("apkey");
   String syslogip = server.arg("syslogip");
+  String udpport = server.arg("udpport");
 
   if (ssid[0] != 0)
   {
@@ -87,6 +88,7 @@ void handle_config() {
     strcpy(Settings.WifiAPKey, tmpstring);
     syslogip.toCharArray(tmpstring, 25);
     str2ip(tmpstring, Settings.Syslog_IP);
+    Settings.UDPPort = udpport.toInt();
     Save_Settings();
     LoadSettings();
   }
@@ -118,6 +120,9 @@ void handle_config() {
   sprintf(str, "%u.%u.%u.%u", Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
   reply += str;
 
+  reply += F("'><BR>UDP port:<BR><input type='text' name='udpport' value='");
+  reply += Settings.UDPPort;
+
   reply += F("'><BR><input type='submit' value='Submit'>");
   reply += F("</form></body>");
   server.send(200, "text/html", reply);
@@ -142,6 +147,7 @@ void handle_devices() {
   String rfid = server.arg("rfid");
   String analog = server.arg("analog");
   String pulse1 = server.arg("pulse1");
+  String switch1 = server.arg("switch1");
 
   if (sensordelay.toInt() != 0)
   {
@@ -154,6 +160,7 @@ void handle_devices() {
     Settings.RFID = rfid.toInt();
     Settings.Analog = analog.toInt();
     Settings.Pulse1 = pulse1.toInt();
+    Settings.Switch1 = switch1.toInt();
     Save_Settings();
   }
 
@@ -176,6 +183,8 @@ void handle_devices() {
   reply += Settings.Analog;
   reply += F("'><BR>Pulse:<BR><input type='text' name='pulse1' value='");
   reply += Settings.Pulse1;
+  reply += F("'><BR>Switch:<BR><input type='text' name='switch1' value='");
+  reply += Settings.Switch1;
 
   reply += F("'><BR><input type='submit' value='Submit'>");
   reply += F("</form></body>");

@@ -20,6 +20,7 @@
 //   Analog input (ESP-7/12 only)
 //   LCD I2C display 4x20 chars
 //   Pulse counter
+//   Simple switch input
 
 // ********************************************************************************
 //   User specific configuration
@@ -43,6 +44,7 @@
 #define DEFAULT_RFID_IDX   0                   // Enter IDX of your virtual RFID device
 #define DEFAULT_ANALOG_IDX 0                   // Enter IDX of your virtual Analog device
 #define DEFAULT_PULSE1_IDX 0                   // Enter IDX of your virtual Pulse counter
+#define DEFAULT_SWITCH1_IDX 0                   // Enter IDX of your switch device
 #define UNIT               1
 
 // ********************************************************************************
@@ -58,10 +60,11 @@
 // 8 RFID
 // 9 Pulsecounter
 // 10 DomoticzSend Serial in
+// 11 Switch
 
 #define ESP_PROJECT_PID   2015050101L
 #define VERSION           1
-#define BUILD             6
+#define BUILD             8
 
 #define UDP_LISTEN_PORT   65500
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
@@ -108,6 +111,8 @@ struct SettingsStruct
   int8_t        Pin_wired_out_1;
   int8_t        Pin_wired_out_2;
   byte          Syslog_IP[4];
+  unsigned int  UDPPort;
+  unsigned int  Switch1;
 } Settings;
 
 float UserVar[15];
@@ -124,7 +129,7 @@ unsigned long connectionFailures;
 unsigned long wdcounter=0;
 
 unsigned long pulseCounter1=0;
-
+byte switch1state=0;
 void setup()
 {
   Serial.begin(9600);
@@ -192,8 +197,8 @@ void setup()
   server.on("/json.htm", handle_json);
   server.begin();
 
-  // Syslog
-  portRX.begin(UDP_LISTEN_PORT);
+  if (Settings.UDPPort != 0)
+    portRX.begin(Settings.UDPPort);
   
   timer = millis() + 30000; // startup delay 30 sec
   timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
@@ -294,6 +299,16 @@ void loop()
     delayedReboot(60);
   }
   
+  if (Settings.Switch1 != 0)
+  {
+    byte state1 = digitalRead(0);
+    if (state1 != switch1state)
+      {
+        switch1state = state1;
+        UserVar[11 - 1] = state1;
+        Domoticz_sendData(10, Settings.Switch1, 11);
+      }
+  }
   delay(10);
 }
 
