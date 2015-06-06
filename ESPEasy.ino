@@ -49,6 +49,16 @@
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 
+// variables used
+// 1 Dallas
+// 2-3 DHT
+// 4-5 BMP085
+// 6 Lux
+// 7 Analog
+// 8 RFID
+// 9 Pulsecounter
+// 10 DomoticzSend Serial in
+
 #define ESP_PROJECT_PID   2015050101L
 #define VERSION           1
 #define BUILD             6
@@ -111,12 +121,13 @@ boolean AP_Mode = false;
 char ap_ssid[20];
 boolean cmd_disconnect = false;
 unsigned long connectionFailures;
+unsigned long wdcounter=0;
 
 unsigned long pulseCounter1=0;
 
 void setup()
 {
-  Serial.begin(19200);
+  Serial.begin(9600);
   Serial.print(F("\nINIT : Booting Build nr:"));
   Serial.println(BUILD);
 
@@ -247,10 +258,11 @@ void loop()
   // Watchdog trigger
   if (millis() > timerwd)
   {
+    wdcounter++;
     timerwd = millis() + 30000;
     char str[40];
     str[0]=0;
-    sprintf(str,"WD %u CF %u FM %u", millis()/1000, connectionFailures, FreeMem());
+    sprintf(str,"WD %u CF %u FM %u", wdcounter/2, connectionFailures, FreeMem());
     Serial.println(str);
     syslog(str);
   }

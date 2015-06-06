@@ -39,3 +39,8 @@
 // DomoticzSend <type>,<idx>,<value> test command (via serial)
 // Disabled analogRead, seems broken in g8cd3697 (use millis()/1000 as demo value!)
 
+// R007 01-06-2015
+// use custom counter for WD instead of millis() (millis does not reset on ESP.Reset)
+// Changed BAUDrate to 9600
+// DomoticzGet <type>, <idx> test command (via serial)
+

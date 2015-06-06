@@ -29,6 +29,18 @@ void ExecuteCommand(char *Line)
       }
   }
 
+  if (strcasecmp(Command, "DomoticzGet") == 0)
+  {
+    float value=0;
+    if (Domoticz_getData(Par2, &value))
+      {
+        Serial.print("DomoticzGet ");
+        Serial.println(value);
+      }
+    else
+      Serial.println("Error getting data");
+  }
+
   if (strcasecmp(Command, "UDP") == 0)
   {
     if (GetArgv(Line, TmpStr1, 2))
