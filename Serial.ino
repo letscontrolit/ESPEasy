@@ -25,7 +25,7 @@ void ExecuteCommand(char *Line)
     if (GetArgv(Line, TmpStr1, 4))
       {
         UserVar[10 - 1] = atof(TmpStr1);
-        Domoticz_sendData(Par1, Par2, 10);
+        sendData(Par1, Par2, 10);
       }
   }
 
@@ -64,9 +64,40 @@ void ExecuteCommand(char *Line)
     for (byte x = 0; x < 25; x++)
       if (TmpStr1[x] == '_')
         TmpStr1[x] = ' ';
-    lcd(Par1, Par2, TmpStr1);
+    lcd.setCursor(Par2-1,Par1-1);
+    lcd.print(TmpStr1);
   }
 
+  if (strcasecmp(Command, "IOTest") == 0)
+  {
+    if (Par1 == 255)
+      {
+        Serial.print("Analog:");
+        Serial.println(analogRead(A0));
+        if (printToWeb)
+        {
+          printWebString += "Analog: ";
+          printWebString += analogRead(A0);
+          printWebString += "<BR>";
+        }
+      }
+    else
+      {
+      pinMode(Par1, OUTPUT);
+      for (byte x=0; x < 10; x++)
+        {
+          digitalWrite(Par1,HIGH);
+          delay(100);
+          digitalWrite(Par1,LOW);
+          delay(100);
+          if (printToWeb)
+          {
+            printWebString += "Did the LED Flash? <BR>";
+          }
+      }
+      }
+  }
+  
   // ****************************************
   // configure settings commands:
   // ****************************************
@@ -99,6 +130,12 @@ void ExecuteCommand(char *Line)
 
   if (strcasecmp(Command, "Pulse") == 0)
     Settings.Pulse1 = Par1;
+
+  if (strcasecmp(Command, "Switch") == 0)
+    Settings.Switch1 = Par1;
+
+  if (strcasecmp(Command, "Debug") == 0)
+    Settings.Debug = Par1;
 
   if (strcasecmp(Command, "ControllerIP") == 0)
   {
@@ -204,6 +241,7 @@ void ExecuteCommand(char *Line)
     Serial.print("  RFID    : "); Serial.println(Settings.RFID);
     Serial.print("  Analog  : "); Serial.println(Settings.Analog);
     Serial.print("  Pulse   : "); Serial.println(Settings.Pulse1);
+    Serial.print("  Switch  : "); Serial.println(Settings.Switch1);
   }
 
   if (strcasecmp(Command, "Freemem") == 0)
@@ -389,6 +427,21 @@ void ResetFactory(void)
   Settings.Syslog_IP[3]    = 0;
   Settings.UDPPort         = 0;
   Settings.Switch1         = DEFAULT_SWITCH1_IDX;
+  Settings.Protocol        = DEFAULT_PROTOCOL;
+  Settings.IP[0]           = 0;
+  Settings.IP[1]           = 0;
+  Settings.IP[2]           = 0;
+  Settings.IP[3]           = 0;
+  Settings.Gateway[0]      = 0;
+  Settings.Gateway[1]      = 0;
+  Settings.Gateway[2]      = 0;
+  Settings.Gateway[3]      = 0;
+  Settings.Subnet[0]       = 0;
+  Settings.Subnet[1]       = 0;
+  Settings.Subnet[2]       = 0;
+  Settings.Subnet[3]       = 0;
+  Settings.Debug           = 0;
+  strcpy(Settings.Name, DEFAULT_NAME);
   Save_Settings();
   WifiDisconnect();
   ESP.reset();
@@ -403,4 +456,5 @@ unsigned long FreeMem(void)
 {
   return system_get_free_heap_size();
 }
+
 

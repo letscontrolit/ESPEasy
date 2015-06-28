@@ -30,22 +30,26 @@
 // You can allways change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_SSID       "ssid"              // Enter your network SSID
-#define DEFAULT_KEY        "wpakey"            // Enter your network WPA key
-#define DEFAULT_SERVER     "192.168.0.8"       // Enter your Domoticz Server IP address
-#define DEFAULT_PORT       8080                // Enter your Domoticz Server port value
-#define DEFAULT_DELAY      60                  // Enter your Send delay in seconds
-#define DEFAULT_AP_KEY     "configesp"         // Enter network WPA key for AP (config) mode
-#define DEFAULT_DALLAS_IDX 0                   // Enter IDX of your virtual temperature device
-#define DEFAULT_DHT_IDX    0                   // Enter IDX of your virtual Humidity device
-#define DEFAULT_DHT_TYPE   11                  // Enter Type of your virtual Humidity device
-#define DEFAULT_BMP_IDX    0                   // Enter IDX of your virtual Barometric Pressure device
-#define DEFAULT_LUX_IDX    0                   // Enter IDX of your virtual LUX device
-#define DEFAULT_RFID_IDX   0                   // Enter IDX of your virtual RFID device
-#define DEFAULT_ANALOG_IDX 0                   // Enter IDX of your virtual Analog device
-#define DEFAULT_PULSE1_IDX 0                   // Enter IDX of your virtual Pulse counter
+#define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
+#define DEFAULT_SSID        "ssid"              // Enter your network SSID
+#define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
+#define DEFAULT_SERVER      "192.168.0.8"       // Enter your Domoticz Server IP address
+#define DEFAULT_PORT        8080                // Enter your Domoticz Server port value
+#define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
+#define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
+#define DEFAULT_DALLAS_IDX  0                   // Enter IDX of your virtual temperature device
+#define DEFAULT_DHT_IDX     0                   // Enter IDX of your virtual Humidity device
+#define DEFAULT_DHT_TYPE    11                  // Enter Type of your virtual Humidity device
+#define DEFAULT_BMP_IDX     0                   // Enter IDX of your virtual Barometric Pressure device
+#define DEFAULT_LUX_IDX     0                   // Enter IDX of your virtual LUX device
+#define DEFAULT_RFID_IDX    0                   // Enter IDX of your virtual RFID device
+#define DEFAULT_ANALOG_IDX  0                   // Enter IDX of your virtual Analog device
+#define DEFAULT_PULSE1_IDX  0                   // Enter IDX of your virtual Pulse counter
 #define DEFAULT_SWITCH1_IDX 0                   // Enter IDX of your switch device
-#define UNIT               1
+#define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
+                                                // 1 = Domoticz HTTP
+                                                // 2 = Domoticz MQTT
+#define UNIT                1
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
@@ -62,11 +66,17 @@
 // 10 DomoticzSend Serial in
 // 11 Switch
 
-#define ESP_PROJECT_PID   2015050101L
-#define VERSION           1
-#define BUILD             8
+// sensor types
+//  1 = single value, general purpose (Dallas, LUX, counters, etc)
+//  2 = temp + hum (DHT)
+//  3 = temp + hum + baro (BMP085)
+// 10 = switch
 
-#define UDP_LISTEN_PORT   65500
+#define ESP_PROJECT_PID   2015050101L
+#define ESP_EASY
+#define VERSION           1
+#define BUILD             9
+
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #include <ESP8266WiFi.h>
@@ -74,12 +84,20 @@
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
 #include <Wire.h>
-#include <stdio.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <LiquidCrystal_I2C.h>
 
-ESP8266WebServer server(80);
+// MQTT client
+PubSubClient MQTTclient("");
+
+// LCD
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+// WebServer
+ESP8266WebServer WebServer(80);
 
 // syslog stuff
-char packetBuffer[255];
 WiFiUDP portRX;
 WiFiUDP portTX;
 
@@ -113,7 +131,23 @@ struct SettingsStruct
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
   unsigned int  Switch1;
+  byte          Protocol;
+  byte          IP[4];
+  byte          Gateway[4];
+  byte          Subnet[4];
+  byte          Debug;
+  char          Name[26];
 } Settings;
+
+struct LogStruct
+{
+  unsigned long timeStamp;
+  char Message[80];
+}Logging[10];
+int logcount=-1;
+
+boolean printToWeb = false;
+String printWebString = "";
 
 float UserVar[15];
 unsigned long timer;
@@ -130,13 +164,14 @@ unsigned long wdcounter=0;
 
 unsigned long pulseCounter1=0;
 byte switch1state=0;
+
 void setup()
 {
   Serial.begin(9600);
   Serial.print(F("\nINIT : Booting Build nr:"));
   Serial.println(BUILD);
 
-  EEPROM.begin(4096);
+  EEPROM.begin(1024);
    
   LoadSettings();
   // if different version, eeprom settings structure has changed. Full Reset needed
@@ -150,110 +185,48 @@ void setup()
     ResetFactory();
   }
 
-  // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1)
-    {
-      Serial.println(F("INIT : I2C"));
-      Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
-    }
+  hardwareInit();
 
-  if (Settings.Pin_wired_in_1 != -1)
-    {
-      Serial.println(F("INIT : Input 1"));
-      pinMode(Settings.Pin_wired_in_1, INPUT_PULLUP);
-    }
-    
-  if (Settings.Pin_wired_in_2 != -1)
-    {
-      Serial.println(F("INIT : Input 2"));
-      pinMode(Settings.Pin_wired_in_2, INPUT_PULLUP);
-    }
+  WifiAPconfig();
+  WifiConnect();
 
-  if (Settings.Pin_wired_out_1 != -1)
-    {
-      Serial.println(F("INIT : Output 1"));
-      pinMode(Settings.Pin_wired_out_1, OUTPUT);
-    }
+  WebServerInit();
 
-  if (Settings.Pin_wired_out_2 != -1)
-    {
-      Serial.println(F("INIT : Output 2"));
-      pinMode(Settings.Pin_wired_out_2, OUTPUT);
-    }
-
-  // create unique AP SSID
-  ap_ssid[0] = 0;
-  strcpy(ap_ssid, "ESP_");
-  sprintf(ap_ssid, "%s%u", ap_ssid, Settings.Unit);
-  // setup ssid for AP Mode when needed
-  WiFi.softAP(ap_ssid, Settings.WifiAPKey);
-  // We start in STA mode
-  WiFi.mode(WIFI_STA);
-  
-  server.on("/", handle_root);
-  server.on("/config", handle_config);
-  server.on("/devices", handle_devices);
-  server.on("/hardware", handle_hardware);
-  server.on("/json.htm", handle_json);
-  server.begin();
-
+  // setup UDP
   if (Settings.UDPPort != 0)
     portRX.begin(Settings.UDPPort);
   
+  // Setup timers
   timer = millis() + 30000; // startup delay 30 sec
   timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
   timer1s = millis() + 1000; // timer for periodic actions once per/sec
   timerwd = millis() + 30000; // timer for watchdog once per 30 sec
-
-  if (Settings.RFID > 0)
-    rfidinit(Settings.Pin_wired_in_1, Settings.Pin_wired_in_2);
-
-  if (Settings.Pulse1 > 0)
-    pulseinit(Settings.Pin_wired_in_1);
-
-  // if a SSID is configured, try to connect to Wifi network
-  if (strcasecmp(Settings.WifiSSID, "ssid") != 0)
-    {
-      WifiConnect();
-      // check if we got an ip address.
-      IPAddress ip = WiFi.localIP();
-      if (ip[0]==0) // dhcp issue ?
-        {
-          Serial.println(F("No IP!"));
-          delayedReboot(60);
-        }
-    }
-  else
-    {
-      // Start Access Point for first config steps...
-      AP_Mode = true;
-      WifiAPMode(true);
-    }
      
-  Serial.println(F("INIT : Boot OK"));
+  // Setup LCD display
+  lcd.init();                      // initialize the lcd 
+  lcd.backlight();
+  lcd.print("ESP Easy");
+
+  // Setup MQTT Client
+  MQTTConnect();
+
   syslog((char*)"Boot");
+  sendSysInfoUDP(3);
+  Serial.println(F("INIT : Boot OK"));
+  addLog((char*)"Boot");
 }
 
 void loop()
 {
-  server.handleClient();
+  WebServer.handleClient();
 
+  MQTTclient.loop();
+  
   if (Serial.available())
     serial();
-    
-  // upd events    
-  int packetSize = portRX.parsePacket();
-  if (packetSize)
-    {
-      Serial.print("UDP  : " );
-      int len = portRX.read(packetBuffer, 255);
-      if (len > 0) packetBuffer[len] = 0;
-        {
-          Serial.println(packetBuffer);
-          ExecuteCommand(packetBuffer);
-        }
-    }
-    
+  
+  checkUDP();  
+   
   if (cmd_disconnect == true)
   {
     cmd_disconnect = false;
@@ -267,9 +240,12 @@ void loop()
     timerwd = millis() + 30000;
     char str[40];
     str[0]=0;
-    sprintf(str,"WD %u CF %u FM %u", wdcounter/2, connectionFailures, FreeMem());
+    Serial.print("WD   : ");
+    sprintf(str,"Uptime %u ConnectFailures %u FreeMem %u", wdcounter/2, connectionFailures, FreeMem());
     Serial.println(str);
     syslog(str);
+    sendSysInfoUDP(1);
+    refreshNodeList();
   }
 
   // Perform regular checks, 10 times/sec
@@ -301,12 +277,13 @@ void loop()
   
   if (Settings.Switch1 != 0)
   {
-    byte state1 = digitalRead(0);
+    byte state1 = digitalRead(Settings.Pin_wired_in_1);
     if (state1 != switch1state)
       {
         switch1state = state1;
         UserVar[11 - 1] = state1;
-        Domoticz_sendData(10, Settings.Switch1, 11);
+        sendData(10, Settings.Switch1, 11);
+        delay(100);
       }
   }
   delay(10);
@@ -322,7 +299,7 @@ void inputCheck()
       Serial.print("RFID : Tag : ");
       Serial.println(rfid_id);
       UserVar[8 - 1] = rfid_id;
-      Domoticz_sendData(1, Settings.RFID, 8);
+      sendData(1, Settings.RFID, 8);
     }
   }
 }
@@ -332,31 +309,32 @@ void SensorSend()
   if (Settings.Dallas > 0)
   {
     dallas(1, 1); // read ds18b20 on wiredout 1, store to var 1
-    Domoticz_sendData(1, Settings.Dallas, 1);
+    sendData(1, Settings.Dallas, 1);
   }
 
   if (Settings.DHT > 0)
   {
-    dht(Settings.DHTType, 2, 2); // readd dht on wiredout 2, store to var 2 (and 3)
-    Domoticz_sendData(2, Settings.DHT, 2);
+    dht(Settings.DHTType, 2, 2); // read dht on wiredout 2, store to var 2 (and 3)
+    if (!isnan(UserVar[2-1]) && (UserVar[3-1] > 0))
+      sendData(2, Settings.DHT, 2);
   }
 
   if (Settings.BMP > 0)
   {
     bmp085(4);  // read bmp085 (i2c) and store to vars 4 and 5
-    Domoticz_sendData(3, Settings.BMP, 4);
+    sendData(3, Settings.BMP, 4);
   }
 
   if (Settings.LUX > 0)
   {
     lux(6);       // read BH1750 LUX sensor and store to var 6
-    Domoticz_sendData(1, Settings.LUX, 6);
+    sendData(1, Settings.LUX, 6);
   }
 
   if (Settings.Analog > 0)
   {
     analog(7);       // read ADC and store to var 7
-    Domoticz_sendData(1, Settings.Analog, 7);
+    sendData(1, Settings.Analog, 7);
   }
 
   if (Settings.Pulse1 > 0)
@@ -373,37 +351,10 @@ void SensorSend()
       Serial.print(F("New Value:"));
       Serial.println(value);
       UserVar[9 - 1] = value;  // store pulsecount to var 9
-      Domoticz_sendData(1, Settings.Pulse1, 9);
+      sendData(1, Settings.Pulse1, 9);
     }
   }
 
 }
 
-void syslog(char *message)
-{
-  if (Settings.Syslog_IP[0] != 0)
-    {
-      IPAddress broadcastIP(Settings.Syslog_IP[0],Settings.Syslog_IP[1],Settings.Syslog_IP[2],Settings.Syslog_IP[3]);
-      portTX.beginPacket(broadcastIP,514);
-      char str[80];
-      str[0]=0;
-      sprintf(str,"<7>ESP Unit: %u : %s",Settings.Unit,message);
-      Serial.print("SYSLG: ");
-      Serial.println(str);
-      portTX.write(str);
-      portTX.endPacket();
-    }
-}
-
-void delayedReboot(int rebootDelay)
-  {
-    while (rebootDelay !=0 )
-    {
-      Serial.print(F("Delayed Reset "));
-      Serial.println(rebootDelay);
-      rebootDelay--;
-      delay(1000);
-    }
-    ESP.reset();
-  }
 

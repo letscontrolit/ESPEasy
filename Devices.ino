@@ -19,8 +19,7 @@ void pulseinit(byte Par1)
 boolean analog(byte Par1)
 {
   boolean success = false;
-  //int value = analogRead(A0);  // crashes on latest release...
-  int value = millis()/1000;
+  int value = analogRead(A0);
   UserVar[Par1 - 1] = (float)value;
   Serial.print("ADC  : Analog value: ");
   Serial.println(value);
@@ -323,7 +322,6 @@ byte read_dht_dat(void)
 {
   byte i = 0;
   byte result = 0;
-  noInterrupts();
   for (i = 0; i < 8; i++)
   {
     while (!digitalRead(DHT_Pin)); // wait for 50us
@@ -332,7 +330,6 @@ byte read_dht_dat(void)
       result |= (1 << (7 - i));
     while (digitalRead(DHT_Pin)); // wait '1' finish
   }
-  interrupts();
   return result;
 }
 
@@ -349,12 +346,15 @@ boolean dht(byte type, byte Par1, byte Par2)
   {
     pinMode(DHT_Pin, OUTPUT);
     // DHT start condition, pull-down i/o pin for 18ms
+    digitalWrite(DHT_Pin, HIGH);             // Pull high
+    delay(250);
     digitalWrite(DHT_Pin, LOW);              // Pull low
-    delay(18);
+    delay(20);
+    noInterrupts();
     digitalWrite(DHT_Pin, HIGH);             // Pull high
     delayMicroseconds(40);
     pinMode(DHT_Pin, INPUT);                 // change pin to input
-    delayMicroseconds(40);
+    //delayMicroseconds(40);
 
     dht_in = digitalRead(DHT_Pin);
     if (!dht_in)
@@ -366,6 +366,8 @@ boolean dht(byte type, byte Par1, byte Par2)
         delayMicroseconds(40);                     // now ready for data reception
         for (i = 0; i < 5; i++)
           dht_dat[i] = read_dht_dat();
+
+        interrupts();
 
         // Checksum calculation is a Rollover Checksum by design!
         byte dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
@@ -395,6 +397,9 @@ boolean dht(byte type, byte Par1, byte Par2)
         }
       }
     }
+
+    interrupts();
+
     if (!success)
     {
       delay(2000);
@@ -613,219 +618,5 @@ boolean bmp085(byte Par1)
   }
 }
 
-/*********************************************************************************************\
- * LCD I2C Display
-\*********************************************************************************************/
-#define LCD_I2C_ADDRESS 0x27
 
-#define PLUGIN_021_ROWS  4
-#define PLUGIN_021_COLS 20
-
-#define LCD_CLEARDISPLAY 0x01
-#define LCD_RETURNHOME 0x02
-#define LCD_ENTRYMODESET 0x04
-#define LCD_DISPLAYCONTROL 0x08
-#define LCD_CURSORSHIFT 0x10
-#define LCD_FUNCTIONSET 0x20
-#define LCD_SETCGRAMADDR 0x40
-#define LCD_SETDDRAMADDR 0x80
-
-// flags for display entry mode
-#define LCD_ENTRYRIGHT 0x00
-#define LCD_ENTRYLEFT 0x02
-#define LCD_ENTRYSHIFTINCREMENT 0x01
-#define LCD_ENTRYSHIFTDECREMENT 0x00
-
-// flags for display on/off control
-#define LCD_DISPLAYON 0x04
-#define LCD_DISPLAYOFF 0x00
-#define LCD_CURSORON 0x02
-#define LCD_CURSOROFF 0x00
-#define LCD_BLINKON 0x01
-#define LCD_BLINKOFF 0x00
-
-// flags for display/cursor shift
-#define LCD_DISPLAYMOVE 0x08
-#define LCD_CURSORMOVE 0x00
-#define LCD_MOVERIGHT 0x04
-#define LCD_MOVELEFT 0x00
-
-// flags for function set
-#define LCD_8BITMODE 0x10
-#define LCD_4BITMODE 0x00
-#define LCD_2LINE 0x08
-#define LCD_1LINE 0x00
-#define LCD_5x10DOTS 0x04
-#define LCD_5x8DOTS 0x00
-
-// flags for backlight control
-#define LCD_BACKLIGHT 0x08
-#define LCD_NOBACKLIGHT 0x00
-
-#define En B00000100  // Enable bit
-#define Rw B00000010  // Read/Write bit
-#define Rs B00000001  // Register select bit
-
-void LCD_I2C_init();
-void LCD_I2C_printline(byte row, byte col, char* message);
-inline size_t LCD_I2C_write(uint8_t value);
-void LCD_I2C_display();
-void LCD_I2C_clear();
-void LCD_I2C_home();
-void LCD_I2C_setCursor(uint8_t col, uint8_t row);
-inline void LCD_I2C_command(uint8_t value);
-void LCD_I2C_send(uint8_t value, uint8_t mode);
-void LCD_I2C_write4bits(uint8_t value);
-void LCD_I2C_expanderWrite(uint8_t _data);                                        
-void LCD_I2C_pulseEnable(uint8_t _data);
-
-uint8_t _displayfunction;
-uint8_t _displaycontrol;
-uint8_t _displaymode;
-uint8_t _numlines;
-uint8_t _backlightval=LCD_BACKLIGHT;
-
-boolean lcdinit=false;
-
-boolean lcd(byte Par1, byte Par2, char *text)
-{
-  Serial.print("LCD  : ");
-  Serial.println(text);
-  if (!lcdinit)
-    {
-      LCD_I2C_init();
-      lcdinit=true;
-    }
-  
-     if (Par1 >= 0 && Par1 <= PLUGIN_021_ROWS)
-       {
-         LCD_I2C_printline(Par1-1, Par2-1, text);
-       }
-     Wire.endTransmission(true);
-}
-/*********************************************************************/
-void LCD_I2C_init()
-/*********************************************************************/
-{
-     _displayfunction = LCD_2LINE;
-     _numlines = PLUGIN_021_ROWS;
-     delay(50); 
-     // Now we pull both RS and R/W low to begin commands
-     LCD_I2C_expanderWrite(_backlightval);	// reset expander and turn backlight off (Bit 8 =1)
-     delay(1000);
-
-     //put the LCD into 4 bit mode, this is according to the hitachi HD44780 datasheet, figure 24, pg 46
-     LCD_I2C_write4bits(0x03 << 4);        // we start in 8bit mode, try to set 4 bit mode
-     delayMicroseconds(4500);              // wait min 4.1ms
-     LCD_I2C_write4bits(0x03 << 4);        // second try
-     delayMicroseconds(4500);              // wait min 4.1ms
-     LCD_I2C_write4bits(0x03 << 4);        // third go!
-     delayMicroseconds(150);
-     LCD_I2C_write4bits(0x02 << 4);        // finally, set to 4-bit interface
-     LCD_I2C_command(LCD_FUNCTIONSET | _displayfunction);              // set # lines, font size, etc.
-     _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;   // turn the display on with no cursor or blinking default
-     LCD_I2C_display();
-     LCD_I2C_clear();                                                  // clear it off
-     _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;           // Initialize to default text direction (for roman languages)
-     LCD_I2C_command(LCD_ENTRYMODESET | _displaymode);                 // set the entry mode
-     LCD_I2C_home();
-}
-
-/*********************************************************************/
-void LCD_I2C_printline(byte row, byte col, char* message)
-/*********************************************************************/
-{
- LCD_I2C_setCursor(col,row);
- byte maxcol = PLUGIN_021_COLS-col;
-
- //clear line if empty message
- if (message[0]==0)
-   for (byte x=0; x<PLUGIN_021_COLS; x++) LCD_I2C_write(' ');
- else
-   for (byte x=0; x < maxcol; x++)
-     {
-       if (message[x] != 0) LCD_I2C_write(message[x]);
-       else break;
-     }
-}
-
-/*********************************************************************/
-inline size_t LCD_I2C_write(uint8_t value)
-/*********************************************************************/
-{
-LCD_I2C_send(value, Rs);
-return 0;
-}
-
-/*********************************************************************/
-void LCD_I2C_display() {
-/*********************************************************************/
- _displaycontrol |= LCD_DISPLAYON;
- LCD_I2C_command(LCD_DISPLAYCONTROL | _displaycontrol);
-}
-
-/*********************************************************************/
-void LCD_I2C_clear(){
-/*********************************************************************/
- LCD_I2C_command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
- delayMicroseconds(2000);  // this command takes a long time!
-}
-
-/*********************************************************************/
-void LCD_I2C_home(){
-/*********************************************************************/
- LCD_I2C_command(LCD_RETURNHOME);  // set cursor position to zero
- delayMicroseconds(2000);  // this command takes a long time!
-}
-
-/*********************************************************************/
-void LCD_I2C_setCursor(uint8_t col, uint8_t row){
-/*********************************************************************/
- int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
- if ( row > _numlines ) {
-row = _numlines-1;    // we count rows starting w/0
- }
- LCD_I2C_command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
-}
-
-/*********************************************************************/
-inline void LCD_I2C_command(uint8_t value) {
-/*********************************************************************/
- LCD_I2C_send(value, 0);
-}
-
-/*********************************************************************/
-void LCD_I2C_send(uint8_t value, uint8_t mode) {
-/*********************************************************************/
- uint8_t highnib=value&0xf0;
- uint8_t lownib=(value<<4)&0xf0;
- LCD_I2C_write4bits((highnib)|mode);
- LCD_I2C_write4bits((lownib)|mode); 
-}
-
-/*********************************************************************/
-void LCD_I2C_write4bits(uint8_t value) {
-/*********************************************************************/
- LCD_I2C_expanderWrite(value);
- LCD_I2C_pulseEnable(value);
-}
-
-/*********************************************************************/
-void LCD_I2C_expanderWrite(uint8_t _data){                                        
-/*********************************************************************/
- Wire.beginTransmission(LCD_I2C_ADDRESS);
- Wire.write((int)(_data) | _backlightval);
- Wire.endTransmission(false);
- yield();   
-}
-
-/*********************************************************************/
-void LCD_I2C_pulseEnable(uint8_t _data){
-/*********************************************************************/
- LCD_I2C_expanderWrite(_data | En);	// En high
- delayMicroseconds(1);	 // enable pulse must be >450ns
-
- LCD_I2C_expanderWrite(_data & ~En);	// En low
- delayMicroseconds(50);	 // commands need > 37us to settle
-} 
 

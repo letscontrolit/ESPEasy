@@ -1,26 +1,50 @@
+//********************************************************************************
+// Set Wifi AP Mode config
+//********************************************************************************
+void WifiAPconfig()
+{
+// create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
+ap_ssid[0] = 0;
+strcpy(ap_ssid, "ESP_");
+sprintf(ap_ssid, "%s%u", ap_ssid, Settings.Unit);
+// setup ssid for AP Mode when needed
+WiFi.softAP(ap_ssid, Settings.WifiAPKey);
+// We start in STA mode
+WiFi.mode(WIFI_STA);
+}
+
+
+//********************************************************************************
+// Set Wifi AP Mode
+//********************************************************************************
 void WifiAPMode(boolean state)
 {
   if (state)
   {
+    AP_Mode=true;
     Serial.println(F("WIFI : Starting AP Mode"));
     WiFi.softAP(ap_ssid, Settings.WifiAPKey);
     WiFi.mode(WIFI_AP_STA);
   }
   else
   {
+    AP_Mode=false;
     Serial.println(F("WIFI : Ending AP Mode"));
     WiFi.mode(WIFI_STA);
   }
 }
 
+
+//********************************************************************************
+// Connect to Wifi AP
+//********************************************************************************
 boolean WifiConnect()
 {
   Serial.println(F("WIFI : Connecting..."));
   if (WiFi.status() != WL_CONNECTED)
   {
-    if (Settings.WifiSSID[0] != 0)
+    if ((Settings.WifiSSID[0] != 0)  && (strcasecmp(Settings.WifiSSID, "ssid") != 0))
     {
-      //WiFi.mode(WIFI_STA);
       WiFi.begin(Settings.WifiSSID, Settings.WifiKey);
       for (byte x = 0; x < 10; x++)
       {
@@ -44,17 +68,42 @@ boolean WifiConnect()
         Serial.println(ip);
         WiFi.config(ip, gw, subnet);
       }
+    
+      if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
+        {
+          Serial.print(F("IP   : Static IP :"));
+          char str[20];
+          sprintf(str, "%u.%u.%u.%u", Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
+          Serial.println(str);
+          IPAddress ip = Settings.IP;
+          IPAddress gw = Settings.Gateway;
+          IPAddress subnet = Settings.Subnet;
+          WiFi.config(ip,gw,subnet);
+        }
+      
     }
     else
-      Serial.println(F("WIFI : No SSID!"));
+      {
+        Serial.println(F("WIFI : No SSID!"));
+        NC_Count=1;
+        WifiAPMode(true);
+      }
   }
 }
 
+
+//********************************************************************************
+// Disconnect from Wifi AP
+//********************************************************************************
 boolean WifiDisconnect()
 {
   WiFi.disconnect();
 }
 
+
+//********************************************************************************
+// Scan all Wifi Access Points
+//********************************************************************************
 void WifiScan()
 {
   Serial.println(F("WIFI : SSID Scan start"));
@@ -85,6 +134,10 @@ void WifiScan()
   Serial.println("");
 }
 
+
+//********************************************************************************
+// Check if we are still connected to a Wifi AP
+//********************************************************************************
 void WifiCheck()
 {
     if (WiFi.status() != WL_CONNECTED)
@@ -93,7 +146,6 @@ void WifiCheck()
         if (NC_Count > 10 && !AP_Mode)
           {
             C_Count=0;
-            AP_Mode=true;
             WifiAPMode(true);
           }
       }
@@ -102,13 +154,13 @@ void WifiCheck()
           if (NC_Count !=0)  // there was a disconnect before...
           {
             C_Count++;
-            if (C_Count > 30)
+            if (C_Count > 60)
               {
                 Serial.println(F("WIFI : Return to STA mode"));
                 NC_Count=0;
-                AP_Mode=false;
                 WifiAPMode(false);
               }
           }
         }
 }
+

@@ -49,3 +49,13 @@
 // If UDP port enabled, also send IDX events to this UDP port
 // Added Domotics lightswitch option, input on GPIO-0 pin.
 
+// R009 26-06-2015
+// Changed switch pin from GPIO-0 to wired input pin 1
+// Added config options for static IP/gateway/subnet
+// Using LCD library instead of local functions
+// Added MQTT library
+// Added JSON parse library
+// Needs Domoticz 2560 and Mosquitto 3.1.1 or higher
+// Reduced EEPROM from 4096->1024 (needs a RAM buffer from same size!)
+// Added basic logging to web interface
+
