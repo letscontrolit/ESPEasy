@@ -442,6 +442,7 @@ void ResetFactory(void)
   Settings.Subnet[3]       = 0;
   Settings.Debug           = 0;
   strcpy(Settings.Name, DEFAULT_NAME);
+  Settings.SyslogLevel     = 0;
   Save_Settings();
   WifiDisconnect();
   ESP.reset();

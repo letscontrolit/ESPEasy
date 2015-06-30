@@ -5,9 +5,31 @@
  * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- * You received a copy of the GNU General Public License along with this program in file 'COPYING.TXT'.
+ * You received a copy of the GNU General Public License along with this program in file 'License.txt'.
+ *
+ * Source Code : https://sourceforge.net/projects/espeasy/
+ * Support     : http://www.esp8266.nu
+ * Discussion  : http://www.esp8266.nu/forum/
  *
  * Additional information about licensing can be found at : http://www.gnu.org/licenses
+\*************************************************************************************************************************/
+
+// This file incorporates work covered by the following copyright and permission notice:  
+
+/****************************************************************************************************************************\
+* Arduino project "Nodo" © Copyright 2010..2015 Paul Tonkes 
+* 
+* This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+* as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+* This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+* of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+* You received a copy of the GNU General Public License along with this program in file 'License.txt'.
+*
+* Voor toelichting op de licentievoorwaarden zie    : http://www.gnu.org/licenses
+* Uitgebreide documentatie is te vinden op          : http://www.nodo-domotica.nl
+* bugs kunnen worden gelogd op                      : https://code.google.com/p/arduino-nodo/
+* Compiler voor deze programmacode te downloaden op : http://arduino.cc
+* Voor vragen of suggesties, mail naar              : p.k.tonkes@gmail.com
 \*************************************************************************************************************************/
 
 // Simple Arduino sketch for ESP module, supporting:
@@ -75,7 +97,7 @@
 #define ESP_PROJECT_PID   2015050101L
 #define ESP_EASY
 #define VERSION           1
-#define BUILD             9
+#define BUILD            10
 
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
@@ -137,6 +159,7 @@ struct SettingsStruct
   byte          Subnet[4];
   byte          Debug;
   char          Name[26];
+  byte          SyslogLevel;
 } Settings;
 
 struct LogStruct
@@ -157,7 +180,6 @@ unsigned long timerwd;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 boolean AP_Mode = false;
-char ap_ssid[20];
 boolean cmd_disconnect = false;
 unsigned long connectionFailures;
 unsigned long wdcounter=0;
@@ -208,7 +230,8 @@ void setup()
   lcd.print("ESP Easy");
 
   // Setup MQTT Client
-  MQTTConnect();
+  if (Settings.Protocol == 2)
+    MQTTConnect();
 
   syslog((char*)"Boot");
   sendSysInfoUDP(3);

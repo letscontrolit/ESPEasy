@@ -20,6 +20,10 @@ float ul2float(unsigned long ul)
 void addLog(char *line)
 {
   Serial.println(line);
+
+  if (Settings.SyslogLevel == 3)
+    syslog(line);
+    
   logcount++;
   if (logcount > 9)
     logcount=0;

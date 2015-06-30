@@ -59,3 +59,11 @@
 // Reduced EEPROM from 4096->1024 (needs a RAM buffer from same size!)
 // Added basic logging to web interface
 
+// R010 30-06-2015
+// Changed freemem request in root web page
+// Some memory reduced by eliminating globals
+// Init MQTT at boot only if protocol is set to MQTT
+// Added syslog level for detailed logging
+// Added menu buttons in webgui and stuctured data as HTML tables
+
+
