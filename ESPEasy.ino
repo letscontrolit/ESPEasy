@@ -14,14 +14,14 @@
  * Additional information about licensing can be found at : http://www.gnu.org/licenses
 \*************************************************************************************************************************/
 
-// This file incorporates work covered by the following copyright and permission notice:  
+// This file incorporates work covered by the following copyright and permission notice:
 
 /****************************************************************************************************************************\
-* Arduino project "Nodo" © Copyright 2010..2015 Paul Tonkes 
-* 
-* This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+* Arduino project "Nodo" © Copyright 2010..2015 Paul Tonkes
+*
+* This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-* This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+* This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
 * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 * You received a copy of the GNU General Public License along with this program in file 'License.txt'.
 *
@@ -69,9 +69,10 @@
 #define DEFAULT_PULSE1_IDX  0                   // Enter IDX of your virtual Pulse counter
 #define DEFAULT_SWITCH1_IDX 0                   // Enter IDX of your switch device
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
-                                                // 1 = Domoticz HTTP
-                                                // 2 = Domoticz MQTT
-#define UNIT                1
+                                                //   1 = Domoticz HTTP
+                                                //   2 = Domoticz MQTT
+                                                //   3 = Nodo Telnet
+#define UNIT                0
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
@@ -96,10 +97,17 @@
 
 #define ESP_PROJECT_PID   2015050101L
 #define ESP_EASY
-#define VERSION           1
-#define BUILD            10
-
+#define VERSION           2
+#define BUILD            11
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
+
+#define LOG_LEVEL_ERROR      1
+#define LOG_LEVEL_INFO       2
+#define LOG_LEVEL_DEBUG      3
+#define LOG_LEVEL_DEBUG_MORE 4
+
+#define CMD_REBOOT                      89
+#define CMD_WIFI_DISCONNECT             135
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -114,7 +122,7 @@
 PubSubClient MQTTclient("");
 
 // LCD
-LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 // WebServer
 ESP8266WebServer WebServer(80);
@@ -160,14 +168,19 @@ struct SettingsStruct
   byte          Debug;
   char          Name[26];
   byte          SyslogLevel;
+  byte          SerialLogLevel;
+  byte          WebLogLevel;
+  unsigned long BaudRate;
+  char          ControllerUser[26];
+  char          ControllerPassword[26];
 } Settings;
 
 struct LogStruct
 {
   unsigned long timeStamp;
   char Message[80];
-}Logging[10];
-int logcount=-1;
+} Logging[10];
+int logcount = -1;
 
 boolean printToWeb = false;
 String printWebString = "";
@@ -180,32 +193,37 @@ unsigned long timerwd;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 boolean AP_Mode = false;
-boolean cmd_disconnect = false;
+byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
-unsigned long wdcounter=0;
+unsigned long wdcounter = 0;
 
-unsigned long pulseCounter1=0;
-byte switch1state=0;
+unsigned long pulseCounter1 = 0;
+byte switch1state = 0;
 
 void setup()
 {
-  Serial.begin(9600);
-  Serial.print(F("\nINIT : Booting Build nr:"));
-  Serial.println(BUILD);
-
   EEPROM.begin(1024);
-   
+
   LoadSettings();
+
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
-  Serial.println(Settings.PID);
-  Serial.println(Settings.Version);
   if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
   {
+    Serial.begin(9600);                                                           // Initialiseer de seriele poort
+    Serial.println(Settings.PID);
+    Serial.println(Settings.Version);
     Serial.println(F("INIT : Incorrect PID or version!"));
     delay(10000);
     ResetFactory();
   }
+
+  Serial.begin(Settings.BaudRate);
+  Serial.print(F("\nINIT : Booting Build nr:"));
+  Serial.println(BUILD);
+
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+    Serial.setDebugOutput(true);
 
   hardwareInit();
 
@@ -217,15 +235,15 @@ void setup()
   // setup UDP
   if (Settings.UDPPort != 0)
     portRX.begin(Settings.UDPPort);
-  
+
   // Setup timers
   timer = millis() + 30000; // startup delay 30 sec
   timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
   timer1s = millis() + 1000; // timer for periodic actions once per/sec
   timerwd = millis() + 30000; // timer for watchdog once per 30 sec
-     
+
   // Setup LCD display
-  lcd.init();                      // initialize the lcd 
+  lcd.init();                      // initialize the lcd
   lcd.backlight();
   lcd.print("ESP Easy");
 
@@ -236,7 +254,7 @@ void setup()
   syslog((char*)"Boot");
   sendSysInfoUDP(3);
   Serial.println(F("INIT : Boot OK"));
-  addLog((char*)"Boot");
+  addLog(LOG_LEVEL_INFO,(char*)"Boot");
 }
 
 void loop()
@@ -244,16 +262,29 @@ void loop()
   WebServer.handleClient();
 
   MQTTclient.loop();
-  
+
   if (Serial.available())
     serial();
-  
-  checkUDP();  
-   
-  if (cmd_disconnect == true)
+
+  checkUDP();
+
+
+  if (cmd_within_mainloop != 0)
   {
-    cmd_disconnect = false;
-    WifiDisconnect();
+    switch (cmd_within_mainloop)
+    {
+      case CMD_WIFI_DISCONNECT:
+        {
+          WifiDisconnect();
+          break;
+        }
+      case CMD_REBOOT:
+        {
+          ESP.reset();
+          break;
+        }
+    }
+    cmd_within_mainloop = 0;
   }
 
   // Watchdog trigger
@@ -262,9 +293,9 @@ void loop()
     wdcounter++;
     timerwd = millis() + 30000;
     char str[40];
-    str[0]=0;
+    str[0] = 0;
     Serial.print("WD   : ");
-    sprintf(str,"Uptime %u ConnectFailures %u FreeMem %u", wdcounter/2, connectionFailures, FreeMem());
+    sprintf(str, "Uptime %u ConnectFailures %u FreeMem %u", wdcounter / 2, connectionFailures, FreeMem());
     Serial.println(str);
     syslog(str);
     sendSysInfoUDP(1);
@@ -292,22 +323,22 @@ void loop()
     SensorSend();
   }
 
-  if(connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
+  if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
   {
     Serial.println(F("Too many connection failures"));
     delayedReboot(60);
   }
-  
+
   if (Settings.Switch1 != 0)
   {
     byte state1 = digitalRead(Settings.Pin_wired_in_1);
     if (state1 != switch1state)
-      {
-        switch1state = state1;
-        UserVar[11 - 1] = state1;
-        sendData(10, Settings.Switch1, 11);
-        delay(100);
-      }
+    {
+      switch1state = state1;
+      UserVar[11 - 1] = state1;
+      sendData(10, Settings.Switch1, 11);
+      delay(100);
+    }
   }
   delay(10);
 }
@@ -338,7 +369,7 @@ void SensorSend()
   if (Settings.DHT > 0)
   {
     dht(Settings.DHTType, 2, 2); // read dht on wiredout 2, store to var 2 (and 3)
-    if (!isnan(UserVar[2-1]) && (UserVar[3-1] > 0))
+    if (!isnan(UserVar[2 - 1]) && (UserVar[3 - 1] > 0))
       sendData(2, Settings.DHT, 2);
   }
 
@@ -362,15 +393,15 @@ void SensorSend()
 
   if (Settings.Pulse1 > 0)
   {
-    float value=0;
+    float value = 0;
     if (Domoticz_getData(Settings.Pulse1, &value))
     {
       Serial.print(F("Current Value:"));
       Serial.println(value);
       Serial.print(F("Delta Value:"));
       Serial.println(pulseCounter1);
-      value=(value + pulseCounter1)*100;
-      pulseCounter1=0;
+      value = (value + pulseCounter1) * 100;
+      pulseCounter1 = 0;
       Serial.print(F("New Value:"));
       Serial.println(value);
       UserVar[9 - 1] = value;  // store pulsecount to var 9

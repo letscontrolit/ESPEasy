@@ -443,6 +443,12 @@ void ResetFactory(void)
   Settings.Debug           = 0;
   strcpy(Settings.Name, DEFAULT_NAME);
   Settings.SyslogLevel     = 0;
+  Settings.SerialLogLevel  = 4;
+  Settings.WebLogLevel     = 0;
+  Settings.BaudRate        = 115200;
+  Settings.ControllerUser[0]     = 0;
+  Settings.ControllerPassword[0] = 0;
+    
   Save_Settings();
   WifiDisconnect();
   ESP.reset();

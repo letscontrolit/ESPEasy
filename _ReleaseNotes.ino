@@ -66,4 +66,17 @@
 // Added syslog level for detailed logging
 // Added menu buttons in webgui and stuctured data as HTML tables
 
+// R011 12-07-2015
+// Changed javascript link buttons into CSS button styled href links
+// Fixed Main button, only worked on IE.
+// Changed connectionFailures counting
+// Reboot from main loop instead of web event callback
+// Changed logging configuration
+// BaudRate can be configured through webgui, defaults to 115200
+// Added Serial.setDebugOutput(true) if serial loglevel = 4 (debug_more level)
+// Added telnet protocol to send variable data to a Nodo Mega controller
+// Added webgui I2C scanner
+// Added webgui Wifi scanner
+// Fixed bug in settingssave on devices
+// Added delay(1) in Domoticz_sendData, while available loop
 

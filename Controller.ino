@@ -18,6 +18,8 @@ boolean Domoticz_getData(int idx, float *data)
     Serial.println(F("connection failed"));
     return false;
   }
+  if (connectionFailures)
+    connectionFailures--;
 
   // We now create a URI for the request
   String url = F("/json.htm?type=devices&rid=");
@@ -69,6 +71,9 @@ boolean sendData(byte sensorType, int idx, byte varIndex)
     case 2:
       Domoticz_sendDataMQTT(sensorType, idx, varIndex);
       break;
+    case 3:
+      NodoTelnet_sendData(sensorType, idx, varIndex);
+      break;
   }
 }
 //#endif
@@ -83,8 +88,8 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   char host[20];
   sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  sprintf(log, "%s%s", "connecting to ", host);
-  addLog(log);
+  sprintf(log, "%s%s", "HTTP : connecting to ", host);
+  addLog(LOG_LEVEL_DEBUG,log);
   if (printToWeb)
   {
     printWebString += log;
@@ -95,11 +100,13 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   if (!client.connect(host, Settings.ControllerPort))
   {
     connectionFailures++;
-    addLog((char*)"connection failed");
+    addLog(LOG_LEVEL_ERROR,(char*)"HTTP : connection failed");
     if (printToWeb)
       printWebString += F("connection failed<BR>");
     return false;
   }
+  if (connectionFailures)
+    connectionFailures--;
 
   // We now create a URI for the request
   String url = F("/json.htm?type=command&param=udevice&idx=");
@@ -137,7 +144,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   }
 
   url.toCharArray(log, 79);
-  addLog(log);
+  addLog(LOG_LEVEL_DEBUG_MORE,log);
   if (printToWeb)
   {
     printWebString += log;
@@ -155,41 +162,115 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
 
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      {
+        sprintf(log,"C1 WS %u FM %u",WiFi.status(),FreeMem());
+        Serial.println(log);
+      }
     String line = client.readStringUntil('\n');
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      {
+        sprintf(log,"C2 WS %u FM %u",WiFi.status(),FreeMem());
+        Serial.println(log);
+      }
+    line.toCharArray(log,79);
+    addLog(LOG_LEVEL_DEBUG_MORE,log);
     if (line.substring(0, 15) == "HTTP/1.1 200 OK")
     {
-      addLog((char*)"Succes!");
+      addLog(LOG_LEVEL_DEBUG,(char*)"HTTP : Succes!");
       if (printToWeb)
         printWebString += F("Success<BR>");
       success = true;
     }
+    delay(1);
   }
-  addLog((char*)"closing connection");
+  addLog(LOG_LEVEL_DEBUG,(char*)"HTTP : closing connection");
   if (printToWeb)
     printWebString += F("closing connection<BR>");
 
-#ifdef ESP_EASY
-  if (Settings.UDPPort != 0)
-  {
-    IPAddress broadcastIP(255, 255, 255, 255);
-    portTX.beginPacket(broadcastIP, Settings.UDPPort);
-    String message = F("IDXEvent ");
-    message += idx;
-    message += ",";
-    message += UserVar[varIndex - 1];
-    char str[80];
-    str[0] = 0;
-    message.toCharArray(str, 79);
-    Serial.print("UDP >: ");
-    Serial.println(str);
-    portTX.write(str);
-    portTX.endPacket();
-  }
-#endif
-
+  client.flush();
+  client.stop();
   return success;
 }
 
+
+/*********************************************************************************************\
+ * Send data to Domoticz using http url querystring
+\*********************************************************************************************/
+boolean NodoTelnet_sendData(byte sensorType, int var, byte varIndex)
+{
+  char log[80];
+  boolean success = false;
+  char host[20];
+  sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+
+  sprintf(log, "%s%s", "TELNT: connecting to ", host);
+  addLog(LOG_LEVEL_DEBUG,log);
+  if (printToWeb)
+  {
+    printWebString += log;
+    printWebString += "<BR>";
+  }
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  if (!client.connect(host, Settings.ControllerPort))
+  {
+    connectionFailures++;
+    addLog(LOG_LEVEL_ERROR,(char*)"TELNT: connection failed");
+    if (printToWeb)
+      printWebString += F("connection failed<BR>");
+    return false;
+  }
+  if (connectionFailures)
+    connectionFailures--;
+
+  float value = UserVar[varIndex - 1];
+  // We now create a URI for the request
+  String url = F("variableset ");
+  url += var;
+  url += ",";
+  url += value;
+  url += "\n";
+
+  Serial.println("Sending enter");
+  client.print(" \n");
+
+  unsigned long timer = millis() + 200;
+  while (!client.available() && millis() < timer)
+    delay(1);
+
+  timer = millis() + 1000;
+  while (client.available() && millis() < timer && !success)
+    { 
+      String line = client.readStringUntil('\n');
+      Serial.println(line);
+      if (line.substring(0, 20) == "Enter your password:")
+        {
+        success = true;
+        Serial.println("Password request ok");
+        }
+      delay(1);
+    }
+    
+  Serial.println("Sending pw");
+  client.println(Settings.ControllerPassword);
+  delay(100);
+  while (client.available())
+    Serial.write(client.read());
+ 
+  Serial.println("Sending cmd");
+  client.print(url);
+  delay(10);
+  while (client.available())
+    Serial.write(client.read());
+
+  addLog(LOG_LEVEL_DEBUG,(char*)"TELNT: closing connection");
+  if (printToWeb)
+    printWebString += F("closing connection<BR>");
+
+  client.stop();
+  return success;
+}
 
 /*********************************************************************************************\
  * Syslog client
@@ -203,8 +284,7 @@ void syslog(char *message)
     char str[80];
     str[0] = 0;
     sprintf(str, "<7>ESP Unit: %u : %s", Settings.Unit, message);
-    Serial.print("SYSLG > ");
-    Serial.println(str);
+    addLog(LOG_LEVEL_DEBUG,str);
     portTX.write(str);
     portTX.endPacket();
   }
@@ -367,13 +447,16 @@ boolean Domoticz_sendDataMQTT(byte sensorType, int idx, byte varIndex)
   root.printTo(json, sizeof(json));
   Serial.print("MQTT : ");
   Serial.println(json);
-  addLog(json);
+  addLog(LOG_LEVEL_DEBUG,json);
   if (!MQTTclient.publish("domoticz/in", json))
   {
     Serial.println(F("MQTT publish failed"));
     MQTTConnect();
     connectionFailures++;
   }
+  else
+    if (connectionFailures)
+      connectionFailures--;
 }
 
 struct NodeStruct
@@ -396,7 +479,7 @@ boolean nodeVariableCopy(byte var, byte unit)
   if (Nodes[unit].ip[0] == 0)
   {
     strcpy(log, "Remote Node unknown");
-    addLog(log);
+    addLog(LOG_LEVEL_DEBUG,log);
     if (printToWeb)
     {
       printWebString += log;
@@ -408,7 +491,7 @@ boolean nodeVariableCopy(byte var, byte unit)
   sprintf(host, "%u.%u.%u.%u", Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
 
   sprintf(log, "%s%s", "connecting to ", host);
-  addLog(log);
+  addLog(LOG_LEVEL_DEBUG,log);
   if (printToWeb)
   {
     printWebString += log;
@@ -419,11 +502,13 @@ boolean nodeVariableCopy(byte var, byte unit)
   if (!client.connect(host, 80))
   {
     connectionFailures++;
-    addLog((char*)"connection failed");
+    addLog(LOG_LEVEL_ERROR,(char*)"HTTP : connection failed");
     if (printToWeb)
       printWebString += F("connection failed<BR>");
     return false;
   }
+  if (connectionFailures)
+    connectionFailures--;
 
   // We now create a URI for the request
   String url = F("/?cmd=variableset%20");
@@ -432,7 +517,7 @@ boolean nodeVariableCopy(byte var, byte unit)
   url += value;
 
   url.toCharArray(log, 79);
-  addLog(log);
+  addLog(LOG_LEVEL_DEBUG,log);
   if (printToWeb)
   {
     printWebString += log;
@@ -453,13 +538,13 @@ boolean nodeVariableCopy(byte var, byte unit)
     String line = client.readStringUntil('\n');
     if (line.substring(0, 15) == "HTTP/1.1 200 OK")
     {
-      addLog((char*)"Succes!");
+      addLog(LOG_LEVEL_DEBUG,(char*)"HTTP : Succes!");
       if (printToWeb)
         printWebString += F("Success<BR>");
       success = true;
     }
   }
-  addLog((char*)"closing connection");
+  addLog(LOG_LEVEL_DEBUG,(char*)"HTTP : closing connection");
   if (printToWeb)
     printWebString += F("closing connection<BR>");
 
@@ -477,14 +562,14 @@ void checkUDP()
   if (packetSize)
   {
     char packetBuffer[128];
-    Serial.print("UDP " );
-    Serial.print(packetSize);
-    Serial.print(" < ");
+    //Serial.print("UDP " );
+    //Serial.print(packetSize);
+    //Serial.print(" < ");
     int len = portRX.read(packetBuffer, 128);
     if (packetBuffer[0] != 255)
     {
       packetBuffer[len] = 0;
-      Serial.println(packetBuffer);
+      addLog(LOG_LEVEL_DEBUG,packetBuffer);
 #ifdef ESP_CONNEXIO
       ExecuteLine(packetBuffer, VALUE_SOURCE_SERIAL);
 #endif
@@ -518,11 +603,9 @@ void checkUDP()
             sprintf(macaddress, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             char ipaddress[16];
             sprintf(ipaddress, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
-            Serial.print(macaddress);
-            Serial.print(",");
-            Serial.print(ipaddress);
-            Serial.print(",");
-            Serial.println(unit);
+            char log[80];
+            sprintf(log, "UDP  : %s,%s,%u", macaddress,ipaddress,unit);
+            addLog(LOG_LEVEL_DEBUG,log);
           }
       }
     }

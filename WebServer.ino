@@ -14,35 +14,38 @@ void WebServerInit()
 #endif
   WebServer.on("/log", handle_log);
   WebServer.on("/tools", handle_tools);
+  WebServer.on("/i2cscanner", handle_i2cscanner);
+  WebServer.on("/wifiscanner", handle_wifiscanner);
   WebServer.begin();
 }
 
 void addMenu(String& str)
 {
+  // Inline style definitions
   str += F("<style>");
-  str += F("h1 {font-family:sans-serif; font-size:16pt; font-style:normal; border: 1px solid #333; color: #ffffff; background: #27f;}");
-  str += F("button {border: 1px solid #000; color: #000; background: #ddd; }");
+  str += F("* {font-family:sans-serif; font-size:12pt;}");
+  str += F("h1 {font-size:16pt; border:1px solid #333; color:#ffffff; background:#27f;}");
+  str += F(".button-link {padding:5px 10px; background:#5bf; color:#fff; border-radius:4px; border:solid 1px #258; text-decoration:none}");
+  str += F(".button-link:hover {background:#369;}");
   str += F("</style>");
-  
+
   str += F("<h1>Welcome to ESP ");
-  #ifdef ESP_CONNEXIO
-    str += F("Connexio : ");
-  #endif
-  #ifdef ESP_EASY
-    str += F("Easy : ");
-  #endif
+#ifdef ESP_CONNEXIO
+  str += F("Connexio : ");
+#endif
+#ifdef ESP_EASY
+  str += F("Easy : ");
+#endif
   str += Settings.Name;
-  str += F("</h1><button onClick=\"window.location='' \">Main</button>");
-  str += F("<button onClick=\"window.location='config' \">Config</button>");
-  str += F("<button onClick=\"window.location='devices' \">Devices</button>");
-  str += F("<button onClick=\"window.location='hardware' \">Hardware</button>");
-  #ifdef ESP_CONNEXIO
-    str += F("<button onClick=\"window.location='eventlist' \">Eventlist</button>");
-  #endif
-  str += F("<button onClick=\"window.location='log' \">Log</button>");
-  str += F("<button onClick=\"window.location='tools' \">Tools</button>");
-  str += "</table>";
-  str += "<BR><BR>";
+  str += F("</h1><a class=\"button-link\" href=\".\">Main</a>");
+  str += F("<a class=\"button-link\" href=\"config\">Config</a>");
+  str += F("<a class=\"button-link\" href=\"devices\">Devices</a>");
+  str += F("<a class=\"button-link\" href=\"hardware\">Hardware</a>");
+#ifdef ESP_CONNEXIO
+  str += F("<a class=\"button-link\" href=\"eventlist\">Eventlist</a>");
+#endif
+  str += F("<a class=\"button-link\" href=\"log\">Log</a>");
+  str += F("<a class=\"button-link\" href=\"tools\">Tools</a><BR><BR>");
 }
 
 void addFooter(String& str)
@@ -55,15 +58,17 @@ void addFooter(String& str)
 //********************************************************************************
 void handle_root() {
   int freeMem = ESP.getFreeHeap();
-  Serial.print(F("HTTP : Webrequest : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.print(F("HTTP : Webrequest : "));
   String webrequest = WebServer.arg("cmd");
   webrequest.replace("%20", " ");
-  Serial.println(webrequest);
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(webrequest);
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 79);
 
-  if (strcasecmp(command, "wifidisconnect") != 0)
+  if ((strcasecmp(command, "wifidisconnect") != 0) && (strcasecmp(command, "reboot") != 0))
   {
     String reply = "";
     addMenu(reply);
@@ -152,12 +157,22 @@ void handle_root() {
   }
   else
   {
-    // have to disconnect from within the main loop
+    // have to disconnect or reboot from within the main loop
     // because the webconnection is still active at this point
-    // disconnect would result into a crash/reboot...
-    Serial.println(F("WIFI : Disconnecting..."));
+    // disconnect here could result into a crash/reboot...
+    if (strcasecmp(command, "wifidisconnect") == 0)
+    {
+      Serial.println(F("WIFI : Disconnecting..."));
+      cmd_within_mainloop = CMD_WIFI_DISCONNECT;
+    }
+
+    if (strcasecmp(command, "reboot") == 0)
+    {
+      Serial.println(F("     : Rebooting..."));
+      cmd_within_mainloop = CMD_REBOOT;
+    }
+
     WebServer.send(200, "text/html", "OK");
-    cmd_disconnect = true;
   }
 }
 
@@ -167,7 +182,8 @@ void handle_root() {
 void handle_config() {
   char tmpstring[26];
 
-  Serial.println(F("HTTP : Webconfig : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : Webconfig"));
 
   String name = WebServer.arg("name");
   String ssid = WebServer.arg("ssid");
@@ -175,6 +191,8 @@ void handle_config() {
   String controllerip = WebServer.arg("controllerip");
   String controllerport = WebServer.arg("controllerport");
   String protocol = WebServer.arg("protocol");
+  String controlleruser = WebServer.arg("controlleruser");
+  String controllerpassword = WebServer.arg("controllerpassword");
   String ip = WebServer.arg("ip");
   String espip = WebServer.arg("espip");
   String espgateway = WebServer.arg("espgateway");
@@ -184,6 +202,9 @@ void handle_config() {
   String syslogip = WebServer.arg("syslogip");
   String sysloglevel = WebServer.arg("sysloglevel");
   String udpport = WebServer.arg("udpport");
+  String serialloglevel = WebServer.arg("serialloglevel");
+  String webloglevel = WebServer.arg("webloglevel");
+  String baudrate = WebServer.arg("baudrate");
 
   if (ssid[0] != 0)
   {
@@ -197,6 +218,10 @@ void handle_config() {
     controllerip.toCharArray(tmpstring, 25);
     str2ip(tmpstring, Settings.Controller_IP);
     Settings.ControllerPort = controllerport.toInt();
+    controlleruser.toCharArray(tmpstring, 25);
+    strcpy(Settings.ControllerUser, tmpstring);
+    controllerpassword.toCharArray(tmpstring, 25);
+    strcpy(Settings.ControllerPassword, tmpstring);
     Settings.Protocol = protocol.toInt();
     Settings.IP_Octet = ip.toInt();
     espip.toCharArray(tmpstring, 25);
@@ -212,6 +237,9 @@ void handle_config() {
     str2ip(tmpstring, Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
     Settings.SyslogLevel = sysloglevel.toInt();
+    Settings.SerialLogLevel = serialloglevel.toInt();
+    Settings.WebLogLevel = webloglevel.toInt();
+    Settings.BaudRate = baudrate.toInt();
     Save_Settings();
     LoadSettings();
   }
@@ -234,22 +262,15 @@ void handle_config() {
   reply += F("'><TR><TD>Unit nr:<TD><input type='text' name='unit' value='");
   reply += Settings.Unit;
 
-  reply += F("'><TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
-  char str[20];
-  sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
-  reply += str;
-
-  reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
-  reply += Settings.ControllerPort;
-
   reply += F("'><TR><TD>Protocol:");
   byte choice = Settings.Protocol;
-  String options[3];
+  String options[4];
   options[0] = F("");
   options[1] = F("Domoticz HTTP");
   options[2] = F("Domoticz MQTT");
+  options[3] = F("Nodo Telnet");
   reply += F("<TD><select name='protocol'>");
-  for (byte x = 0; x < 3; x++)
+  for (byte x = 0; x < 4; x++)
   {
     reply += F("<option value='");
     reply += x;
@@ -262,7 +283,27 @@ void handle_config() {
   }
   reply += F("</select>");
 
-  reply += F("<TR bgcolor='#55bbff'><TD>Optional Settings<TD><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
+  reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
+  char str[20];
+  sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  reply += str;
+
+  reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
+  reply += Settings.ControllerPort;
+
+  if (Settings.Protocol == 9999)
+    {
+      reply += F("'><TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
+      reply += Settings.ControllerUser;
+    }
+    
+  if (Settings.Protocol == 3)
+    {
+      reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
+      reply += Settings.ControllerPassword;
+    }
+
+  reply += F("'><TR bgcolor='#55bbff'><TD>Optional Settings<TD><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
 
   reply += F("'><TR><TD>ESP IP:<TD><input type='text' name='espip' value='");
@@ -288,7 +329,16 @@ void handle_config() {
   reply += F("'><TR><TD>UDP port:<TD><input type='text' name='udpport' value='");
   reply += Settings.UDPPort;
 
-  reply += F("'><TR><TD><TD><input type='submit' value='Submit'>");
+  reply += F("'><TR><TD>Serial log Level:<TD><input type='text' name='serialloglevel' value='");
+  reply += Settings.SerialLogLevel;
+
+  reply += F("'><TR><TD>Web log Level:<TD><input type='text' name='webloglevel' value='");
+  reply += Settings.WebLogLevel;
+
+  reply += F("'><TR><TD>Baud Rate:<TD><input type='text' name='baudrate' value='");
+  reply += Settings.BaudRate;
+
+  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -299,7 +349,8 @@ void handle_config() {
 //********************************************************************************
 void handle_devices() {
 
-  Serial.println(F("HTTP : Webdevices : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : Webdevices"));
 
   String boardtype = WebServer.arg("boardtype");
   String sensordelay = WebServer.arg("delay");
@@ -325,14 +376,12 @@ void handle_devices() {
     Settings.Analog = analog.toInt();
     Settings.Pulse1 = pulse1.toInt();
     Settings.Switch1 = switch1.toInt();
-    Save_Settings();
 #ifdef ESP_CONNEXIO
 
     struct NodoEventStruct TempEvent;
     ClearEvent(&TempEvent);
-    for (byte x = 1; x < 50; x++)
-      Eventlist_Write(x, &TempEvent, &TempEvent);
-    EEPROM.commit();
+    byte x = 1;
+    while (Eventlist_Write(x++, &TempEvent, &TempEvent)) delay(1);
 
     char cmd[80];
     sprintf(cmd, "eventlistwrite; boot %u; TimerSet 1,%u", Settings.Unit, Settings.Delay);
@@ -365,6 +414,7 @@ void handle_devices() {
       eventAddVarSend(7, 1, Settings.Analog);
     }
 #endif
+    Save_Settings();
   }
 
   String reply = "";
@@ -391,7 +441,7 @@ void handle_devices() {
   reply += F("'><TR><TD>Switch:<TD><input type='text' name='switch1' value='");
   reply += Settings.Switch1;
 
-  reply += F("'><TR><TD><TD><input type='submit' value='Submit'>");
+  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -406,6 +456,8 @@ void eventAddVarSend(byte var, byte sensortype, int idx)
     strcpy(strProtocol, "HTTP");
   if (Settings.Protocol == 2)
     strcpy(strProtocol, "MQTT");
+  if (Settings.Protocol == 3)
+    strcpy(strProtocol, "TELNET");
   sprintf(cmd, "eventlistwrite; Timer 1; VariableSend %u,%s,%u,%u", var, strProtocol, sensortype, idx);
   ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
 }
@@ -424,7 +476,8 @@ void eventAddTimer(char* event)
 //********************************************************************************
 void handle_hardware() {
 
-  Serial.println(F("HTTP : Hardware : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : Hardware"));
 
   String boardtype = WebServer.arg("boardtype");
 
@@ -505,7 +558,7 @@ void handle_hardware() {
   }
   reply += F("</select>");
 
-  reply += F("<TR><TD><TD><input type='submit' value='Submit'><TR><TD>");
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
   switch (Settings.BoardType)
   {
@@ -631,7 +684,8 @@ void handle_json() {
 // Web Interface eventlist page
 //********************************************************************************
 void handle_eventlist() {
-  Serial.print(F("HTTP : Eventlist request : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : Eventlist request"));
 
   char *TempString = (char*)malloc(80);
   String reply = "";
@@ -644,16 +698,15 @@ void handle_eventlist() {
 
     struct NodoEventStruct TempEvent;
     ClearEvent(&TempEvent);
-    for (byte x = 1; x < 50; x++)
-      Eventlist_Write(x, &TempEvent, &TempEvent);
-    EEPROM.commit();
+    byte x = 1;
+    while (Eventlist_Write(x++, &TempEvent, &TempEvent)) delay(1);
 
     String eventlist = WebServer.arg("eventlist");
     eventlist.replace("%0D%0A", "\n");
     int NewLineIndex = eventlist.indexOf('\n');
     byte limit = 0;
     byte messagecode = 0;
-    while (NewLineIndex > 0 && limit < 10)
+    while ((NewLineIndex > 0) && (limit < EventlistMax))
     {
       limit++;
       String line = eventlist.substring(0, NewLineIndex);
@@ -664,7 +717,8 @@ void handle_eventlist() {
       //line = line.substring(SemiColonIndex+1);
       String strCommand = F("eventlistwrite;");
       strCommand += line;
-      Serial.println(strCommand);
+      if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+        Serial.println(strCommand);
       strCommand.toCharArray(TempString, 79);
       messagecode = ExecuteLine(TempString, VALUE_SOURCE_SERIAL);
       if (messagecode > 0)
@@ -677,6 +731,7 @@ void handle_eventlist() {
       eventlist = eventlist.substring(NewLineIndex + 1);
       NewLineIndex = eventlist.indexOf('\n');
     }
+    EEPROM.commit();
   }
 
   reply += F("<form method='post'>");
@@ -691,7 +746,7 @@ void handle_eventlist() {
 
   reply += F("</textarea>");
 
-  reply += F("<TR><TD><TD><input type='submit' value='Submit'>");
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -703,7 +758,8 @@ void handle_eventlist() {
 // Web Interface log page
 //********************************************************************************
 void handle_log() {
-  Serial.println(F("HTTP : Log request : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : Log request"));
 
   char *TempString = (char*)malloc(80);
 
@@ -712,21 +768,23 @@ void handle_log() {
   reply += F("<script language='JavaScript'>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
   reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Log<TR><TD>");
 
-  byte counter = logcount;
-  do
+  if (logcount != -1)
   {
-    counter++;
-    if (counter > 9)
-      counter = 0;
-    if (Logging[counter].timeStamp > 0)
+    byte counter = logcount;
+    do
     {
-      reply += Logging[counter].timeStamp;
-      reply += " : ";
-      reply += Logging[counter].Message;
-      reply += "<BR>";
-    }
-  }  while (counter != logcount);
-
+      counter++;
+      if (counter > 9)
+        counter = 0;
+      if (Logging[counter].timeStamp > 0)
+      {
+        reply += Logging[counter].timeStamp;
+        reply += " : ";
+        reply += Logging[counter].Message;
+        reply += "<BR>";
+      }
+    }  while (counter != logcount);
+  }
   reply += F("</table>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -737,29 +795,34 @@ void handle_log() {
 // Web Interface debug page
 //********************************************************************************
 void handle_tools() {
-  Serial.print(F("HTTP : Webrequest : "));
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.print(F("HTTP : Tools request : "));
+    
   String webrequest = WebServer.arg("cmd");
   webrequest.replace("%3B", ";");
   webrequest.replace("%2C", ",");
   webrequest.replace("+", " ");
-  Serial.println(webrequest);
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(webrequest);
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 79);
 
   String reply = "";
   addMenu(reply);
-  
-  // second menu
-  reply += F("<button onClick=\"window.location='/?cmd=reboot'\">Reboot</button>");
-  reply += F("<button onClick=\"window.location='/?cmd=wificonnect'\">Connect</button>");
-  reply += F("<button onClick=\"window.location='/?cmd=wifidisconnect'\">Disconnect</button>");
 
-  reply += F("<BR><BR><form>");
+  // second menu
+  reply += F("<a class=\"button-link\" href=\"/?cmd=reboot\">Reboot</a>");
+  reply += F("<a class=\"button-link\" href=\"/?cmd=wificonnect\">Connect</a>");
+  reply += F("<a class=\"button-link\" href=\"/?cmd=wifidisconnect\">Disconnect</a>");
+  reply += F("<a class=\"button-link\" href=\"/i2cscanner\">I2C Scanner</a>");
+  reply += F("<a class=\"button-link\" href=\"/wifiscanner\">Wifi Scanner</a><BR><BR>");
+
+  reply += F("<form>");
   reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Command<TD>");
   reply += F("<input type='text' name='cmd' value='");
   reply += webrequest;
-  reply += F("'><TR><TD><TD><input type='submit' value='Submit'><TR><TD>");
+  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
   printToWeb = true;
   printWebString = "<BR>";
@@ -775,5 +838,82 @@ void handle_tools() {
   WebServer.send(200, "text/html", reply);
   printWebString = "";
   printToWeb = false;
+}
+
+//********************************************************************************
+// Web Interface I2C scanner
+//********************************************************************************
+void handle_i2cscanner() {
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : I2C Scanner"));
+
+  char *TempString = (char*)malloc(80);
+
+  String reply = "";
+  addMenu(reply);
+  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>I2C Addresses in use<TR><TD>");
+
+  byte error, address;
+  int nDevices;
+  nDevices = 0;
+  for(address = 1; address < 127; address++ ) 
+    {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0)
+        {
+          reply += "0x";
+          reply += String(address,HEX);
+          reply += "<BR>";
+          nDevices++;
+        }
+      else if (error==4) 
+        {
+          reply += F("Unknow error at address 0x");
+          reply += String(address,HEX);
+        }    
+    }
+
+  if (nDevices == 0)
+    reply += F("No I2C devices found");
+
+  reply += F("</table>");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+  free(TempString);
+}
+
+//********************************************************************************
+// Web Interface I2C scanner
+//********************************************************************************
+void handle_wifiscanner() {
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(F("HTTP : Wifi Scanner"));
+
+  char *TempString = (char*)malloc(80);
+
+  String reply = "";
+  addMenu(reply);
+  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Access Points:<TD>RSSI");
+
+  int n = WiFi.scanNetworks();
+  if (n == 0)
+    reply += F("No Access Points found");
+  else
+  {
+    for (int i = 0; i < n; ++i)
+    {
+      reply += "<TR><TD>";
+      reply += WiFi.SSID(i);
+      reply += "<TD>";
+      reply += WiFi.RSSI(i);
+    }
+  }
+
+
+  reply += F("</table>");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+  free(TempString);
 }
 

@@ -17,20 +17,25 @@ float ul2float(unsigned long ul)
   return f;
   }
   
-void addLog(char *line)
+void addLog(byte loglevel, char *line)
 {
-  Serial.println(line);
-
-  if (Settings.SyslogLevel == 3)
-    syslog(line);
+  if (loglevel <= Settings.SerialLogLevel)
+    Serial.println(line);
     
-  logcount++;
-  if (logcount > 9)
-    logcount=0;
-  Logging[logcount].timeStamp = millis();
-  strcpy(Logging[logcount].Message,line);
-  Logging[logcount].Message[79]=0;
+  if (loglevel <= Settings.SyslogLevel)
+    syslog(line);
+
+  if (loglevel <= Settings.WebLogLevel)
+    {
+      logcount++;
+      if (logcount > 9)
+        logcount = 0;
+      Logging[logcount].timeStamp = millis();
+      strncpy(Logging[logcount].Message, line, 80);
+      Logging[logcount].Message[79] = 0;
+    }
 }
+
 
 void delayedReboot(int rebootDelay)
   {
