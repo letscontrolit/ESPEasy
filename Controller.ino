@@ -5,7 +5,7 @@ boolean Domoticz_getData(int idx, float *data)
 {
   boolean success = false;
   char host[20];
-  sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
   Serial.print(F("connecting to "));
   Serial.println(host);
@@ -86,9 +86,9 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   char log[80];
   boolean success = false;
   char host[20];
-  sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  sprintf(log, "%s%s", "HTTP : connecting to ", host);
+  sprintf_P(log, PSTR("%s%s"), "HTTP : connecting to ", host);
   addLog(LOG_LEVEL_DEBUG,log);
   if (printToWeb)
   {
@@ -164,13 +164,13 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   while (client.available()) {
     if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
       {
-        sprintf(log,"C1 WS %u FM %u",WiFi.status(),FreeMem());
+        sprintf_P(log,PSTR("C1 WS %u FM %u"),WiFi.status(),FreeMem());
         Serial.println(log);
       }
     String line = client.readStringUntil('\n');
     if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
       {
-        sprintf(log,"C2 WS %u FM %u",WiFi.status(),FreeMem());
+        sprintf_P(log,PSTR("C2 WS %u FM %u"),WiFi.status(),FreeMem());
         Serial.println(log);
       }
     line.toCharArray(log,79);
@@ -202,9 +202,9 @@ boolean NodoTelnet_sendData(byte sensorType, int var, byte varIndex)
   char log[80];
   boolean success = false;
   char host[20];
-  sprintf(host, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  sprintf(log, "%s%s", "TELNT: connecting to ", host);
+  sprintf_P(log, PSTR("%s%s"), "TELNT: connecting to ", host);
   addLog(LOG_LEVEL_DEBUG,log);
   if (printToWeb)
   {
@@ -283,7 +283,7 @@ void syslog(char *message)
     portTX.beginPacket(broadcastIP, 514);
     char str[80];
     str[0] = 0;
-    sprintf(str, "<7>ESP Unit: %u : %s", Settings.Unit, message);
+    sprintf_P(str, PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
     addLog(LOG_LEVEL_DEBUG,str);
     portTX.write(str);
     portTX.endPacket();
@@ -488,9 +488,9 @@ boolean nodeVariableCopy(byte var, byte unit)
     return false;
   }
 
-  sprintf(host, "%u.%u.%u.%u", Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
 
-  sprintf(log, "%s%s", "connecting to ", host);
+  sprintf_P(log, PSTR("%s%s"), "connecting to ", host);
   addLog(LOG_LEVEL_DEBUG,log);
   if (printToWeb)
   {
@@ -557,6 +557,9 @@ boolean nodeVariableCopy(byte var, byte unit)
 \*********************************************************************************************/
 void checkUDP()
 {
+  if (Settings.UDPPort == 0)
+    return;
+
   // UDP events
   int packetSize = portRX.parsePacket();
   if (packetSize)
@@ -600,11 +603,11 @@ void checkUDP()
             }
 
             char macaddress[20];
-            sprintf(macaddress, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             char ipaddress[16];
-            sprintf(ipaddress, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+            sprintf_P(ipaddress, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
             char log[80];
-            sprintf(log, "UDP  : %s,%s,%u", macaddress,ipaddress,unit);
+            sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress,ipaddress,unit);
             addLog(LOG_LEVEL_DEBUG,log);
           }
       }
@@ -628,6 +631,9 @@ void refreshNodeList()
 
 void sendSysInfoUDP(byte repeats)
 {
+  if (Settings.UDPPort == 0)
+    return;
+    
   // 1 byte 'binary token 255'
   // 1 byte id
   // 6 byte mac
@@ -636,6 +642,7 @@ void sendSysInfoUDP(byte repeats)
   // ??? build
   // ??
   // send my info to the world...
+  addLog(LOG_LEVEL_DEBUG,(char*)"UDP  : Send Sysinfo message");
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};

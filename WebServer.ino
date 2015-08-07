@@ -16,6 +16,7 @@ void WebServerInit()
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/wifiscanner", handle_wifiscanner);
+  WebServer.on("/login", handle_login);
   WebServer.begin();
 }
 
@@ -57,6 +58,8 @@ void addFooter(String& str)
 // Web Interface root page
 //********************************************************************************
 void handle_root() {
+  if (!isLoggedIn()) return;
+
   int freeMem = ESP.getFreeHeap();
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.print(F("HTTP : Webrequest : "));
@@ -94,11 +97,11 @@ void handle_root() {
     reply += F(" minutes");
 
     char str[20];
-    sprintf(str, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+    sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     reply += F("<TR><TD>IP:<TD>");
     reply += str;
 
-    sprintf(str, "%u.%u.%u.%u", gw[0], gw[1], gw[2], gw[3]);
+    sprintf_P(str, PSTR("%u.%u.%u.%u"), gw[0], gw[1], gw[2], gw[3]);
     reply += F("<TR><TD>GW:<TD>");
     reply += str;
 
@@ -112,12 +115,12 @@ void handle_root() {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};
     uint8_t* macread = WiFi.macAddress(mac);
     char macaddress[20];
-    sprintf(macaddress, "%02x:%02x:%02x:%02x:%02x:%02x", macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+    sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
     reply += macaddress;
 
     reply += F("<TR><TD>AP MAC:<TD>");
     macread = WiFi.softAPmacAddress(mac);
-    sprintf(macaddress, "%02x:%02x:%02x:%02x:%02x:%02x", macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+    sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
     reply += macaddress;
 
     reply += F("<TR><TD>ESP Chip ID:<TD>");
@@ -137,7 +140,7 @@ void handle_root() {
         if (x == Settings.Unit)
           reply += "<font color='blue'>";
         char url[80];
-        sprintf(url, "<a href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>", Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+        sprintf_P(url, PSTR("<a href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
         reply += "<TR><TD>Unit ";
         reply += x;
         reply += ":<TD>";
@@ -180,12 +183,15 @@ void handle_root() {
 // Web Interface config page
 //********************************************************************************
 void handle_config() {
+  if (!isLoggedIn()) return;
+
   char tmpstring[26];
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Webconfig"));
 
   String name = WebServer.arg("name");
+  String password = WebServer.arg("password");
   String ssid = WebServer.arg("ssid");
   String key = WebServer.arg("key");
   String controllerip = WebServer.arg("controllerip");
@@ -211,6 +217,8 @@ void handle_config() {
     name.replace("+", " ");
     name.toCharArray(tmpstring, 25);
     strcpy(Settings.Name, tmpstring);
+    password.toCharArray(tmpstring, 25);
+    strcpy(Settings.Password, tmpstring);
     ssid.toCharArray(tmpstring, 25);
     strcpy(Settings.WifiSSID, tmpstring);
     key.toCharArray(tmpstring, 25);
@@ -247,10 +255,13 @@ void handle_config() {
   String reply = "";
   addMenu(reply);
 
-  reply += F("<form><table bgcolor='#ddeeff'>");
+  reply += F("<form  method='post'><table bgcolor='#ddeeff'>");
   reply += F("<tr bgcolor='#55bbff'><td>Main Settings<td><TR><TD>Name:<TD><input type='text' name='name' value='");
   Settings.Name[25] = 0;
   reply += Settings.Name;
+  reply += F("'><TR><TD>Admin Password:<TD><input type='text' name='password' value='");
+  Settings.Password[25] = 0;
+  reply += Settings.Password;
   reply += F("'><TR><TD>SSID:<TD><input type='text' name='ssid' value='");
   reply += Settings.WifiSSID;
   reply += F("'><TR><TD>WPA Key:<TD><input type='text' name='key' value='");
@@ -285,7 +296,7 @@ void handle_config() {
 
   reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
   char str[20];
-  sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
   reply += str;
 
   reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
@@ -307,20 +318,20 @@ void handle_config() {
   reply += Settings.IP_Octet;
 
   reply += F("'><TR><TD>ESP IP:<TD><input type='text' name='espip' value='");
-  sprintf(str, "%u.%u.%u.%u", Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
   reply += str;
 
   reply += F("'><TR><TD>ESP GW:<TD><input type='text' name='espgateway' value='");
-  sprintf(str, "%u.%u.%u.%u", Settings.Gateway[0], Settings.Gateway[1], Settings.Gateway[2], Settings.Gateway[3]);
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Gateway[0], Settings.Gateway[1], Settings.Gateway[2], Settings.Gateway[3]);
   reply += str;
 
   reply += F("'><TR><TD>ESP Subnet:<TD><input type='text' name='espsubnet' value='");
-  sprintf(str, "%u.%u.%u.%u", Settings.Subnet[0], Settings.Subnet[1], Settings.Subnet[2], Settings.Subnet[3]);
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Subnet[0], Settings.Subnet[1], Settings.Subnet[2], Settings.Subnet[3]);
   reply += str;
 
   reply += F("'><TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
   str[0] = 0;
-  sprintf(str, "%u.%u.%u.%u", Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
   reply += str;
 
   reply += F("'><TR><TD>Syslog Level:<TD><input type='text' name='sysloglevel' value='");
@@ -348,6 +359,7 @@ void handle_config() {
 // Web Interface device page
 //********************************************************************************
 void handle_devices() {
+  if (!isLoggedIn()) return;
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Webdevices"));
@@ -384,9 +396,9 @@ void handle_devices() {
     while (Eventlist_Write(x++, &TempEvent, &TempEvent)) delay(1);
 
     char cmd[80];
-    sprintf(cmd, "eventlistwrite; boot %u; TimerSet 1,%u", Settings.Unit, Settings.Delay);
+    sprintf_P(cmd, PSTR("eventlistwrite; boot %u; TimerSet 1,%u"), Settings.Unit, Settings.Delay);
     ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
-    sprintf(cmd, "eventlistwrite; Timer 1; TimerSet 1,%u", Settings.Delay);
+    sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; TimerSet 1,%u"), Settings.Delay);
     ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
     if (Settings.Dallas != 0)
     {
@@ -419,29 +431,28 @@ void handle_devices() {
 
   String reply = "";
   addMenu(reply);
-  reply += F("<form><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Device Settings<td><TR><TD>");
+  reply += F("<form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Device Settings<td>IDX/Variable<TD>Connect to<TR><TD>");
   reply += F("<TR><TD>Delay:<TD><input type='text' name='delay' value='");
   reply += Settings.Delay;
   reply += F("'><TR><TD>Dallas:<TD><input type='text' name='dallas' value='");
   reply += Settings.Dallas;
-  reply += F("'><TR><TD>DHT:<TD><input type='text' name='dht' value='");
+  reply += F("'><TD>Output 1<TR><TD>DHT:<TD><input type='text' name='dht' value='");
   reply += Settings.DHT;
-  reply += F("'><TR><TD>DHT Type:<TD><input type='text' name='dhttype' value='");
+  reply += F("'><TD>Output 2<TR><TD>DHT Type:<TD><input type='text' name='dhttype' value='");
   reply += Settings.DHTType;
   reply += F("'><TR><TD>BMP:<TD><input type='text' name='bmp' value='");
   reply += Settings.BMP;
-  reply += F("'><TR><TD>LUX:<TD><input type='text' name='lux' value='");
+  reply += F("'><TD>I2C<TR><TD>LUX:<TD><input type='text' name='lux' value='");
   reply += Settings.LUX;
-  reply += F("'><TR><TD>RFID:<TD><input type='text' name='rfid' value='");
+  reply += F("'><TD>I2C<TR><TD>RFID:<TD><input type='text' name='rfid' value='");
   reply += Settings.RFID;
-  reply += F("'><TR><TD>Analog:<TD><input type='text' name='analog' value='");
+  reply += F("'><TD>Input 1+2<TR><TD>Analog:<TD><input type='text' name='analog' value='");
   reply += Settings.Analog;
-  reply += F("'><TR><TD>Pulse:<TD><input type='text' name='pulse1' value='");
+  reply += F("'><TD>ADC<TR><TD>Pulse:<TD><input type='text' name='pulse1' value='");
   reply += Settings.Pulse1;
-  reply += F("'><TR><TD>Switch:<TD><input type='text' name='switch1' value='");
+  reply += F("'><TD>Input 1<TR><TD>Switch:<TD><input type='text' name='switch1' value='");
   reply += Settings.Switch1;
-
-  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("'><TD>Input 1<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -458,14 +469,14 @@ void eventAddVarSend(byte var, byte sensortype, int idx)
     strcpy(strProtocol, "MQTT");
   if (Settings.Protocol == 3)
     strcpy(strProtocol, "TELNET");
-  sprintf(cmd, "eventlistwrite; Timer 1; VariableSend %u,%s,%u,%u", var, strProtocol, sensortype, idx);
+  sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; VariableSend %u,%s,%u,%u"), var, strProtocol, sensortype, idx);
   ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
 }
 
 void eventAddTimer(char* event)
 {
   char cmd[80];
-  sprintf(cmd, "eventlistwrite; Timer 1; %s", event);
+  sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; %s"), event);
   ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
 }
 #endif
@@ -475,11 +486,18 @@ void eventAddTimer(char* event)
 // Web Interface hardware page
 //********************************************************************************
 void handle_hardware() {
+  if (!isLoggedIn()) return;
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Hardware"));
 
   String boardtype = WebServer.arg("boardtype");
+  String pin_i2c_sda = WebServer.arg("pini2csda");
+  String pin_i2c_scl = WebServer.arg("pini2cscl");
+  String pin_wired_in_1 = WebServer.arg("pinwiredin1");
+  String pin_wired_in_2 = WebServer.arg("pinwiredin2");
+  String pin_wired_out_1 = WebServer.arg("pinwiredout1");
+  String pin_wired_out_2 = WebServer.arg("pinwiredout2");
 
   if (boardtype.length() != 0)
   {
@@ -526,7 +544,17 @@ void handle_hardware() {
         Settings.Pin_wired_out_1 = 0;
         Settings.Pin_wired_out_2 = 2;
         break;
-
+      case 5:
+        if (pin_i2c_sda.length() != 0)
+        {
+        Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
+        Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
+        Settings.Pin_wired_in_1  = pin_wired_in_1.toInt();
+        Settings.Pin_wired_in_2  = pin_wired_in_2.toInt();
+        Settings.Pin_wired_out_1 = pin_wired_out_1.toInt();
+        Settings.Pin_wired_out_2 = pin_wired_out_2.toInt();
+        break;
+        }
     }
     Save_Settings();
   }
@@ -534,18 +562,19 @@ void handle_hardware() {
   String reply = "";
   addMenu(reply);
 
-  reply += F("<form><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Hardware Settings<td><TR><TD>");
+  reply += F("<form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Hardware Settings<td><TR><TD>");
 
   reply += "<TR><TD>Board Type:<TD>";
   byte choice = Settings.BoardType;
-  String options[5];
+  String options[6];
   options[0] = F("ESP-07/12");
   options[1] = F("ESP-01 I2C");
   options[2] = F("ESP-01 In/Out");
   options[3] = F("ESP-01 2 x In");
   options[4] = F("ESP-01 2 x Out");
+  options[5] = F("Custom");
   reply += F("<select name='boardtype'>");
-  for (byte x = 0; x < 5; x++)
+  for (byte x = 0; x < 6; x++)
   {
     reply += F("<option value='");
     reply += x;
@@ -558,11 +587,28 @@ void handle_hardware() {
   }
   reply += F("</select>");
 
+  if (choice == 5) // custom config
+  {
+    reply += F("<TR><TD>SDA:<TD>");
+    addSelect(reply,"pini2csda",Settings.Pin_i2c_sda);
+    reply += F("<TR><TD>SCL:<TD>");
+    addSelect(reply,"pini2cscl",Settings.Pin_i2c_scl);
+    reply += F("<TR><TD>Input 1:<TD>");
+    addSelect(reply,"pinwiredin1",Settings.Pin_wired_in_1);
+    reply += F("<TR><TD>Input 2:<TD>");
+    addSelect(reply,"pinwiredin2",Settings.Pin_wired_in_2);
+    reply += F("<TR><TD>Output 1:<TD>");
+    addSelect(reply,"pinwiredout1",Settings.Pin_wired_out_1);
+    reply += F("<TR><TD>Output 2:<TD>");
+    addSelect(reply,"pinwiredout2",Settings.Pin_wired_out_2);
+  }
+
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
   switch (Settings.BoardType)
   {
     case 0:
+    case 5:
       reply += F("<TR><TD>SDA:<TD>");
       reply += Settings.Pin_i2c_sda;
       reply += F("<TR><TD>SCL:<TD>");
@@ -605,6 +651,42 @@ void handle_hardware() {
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
+}
+
+void addSelect(String& str, String name,  int choice)
+{
+  String options[7];
+  options[0] = F(" ");
+  options[1] = F("GPIO-0");
+  options[2] = F("GPIO-2");
+  options[3] = F("GPIO-4");
+  options[4] = F("GPIO-5");
+  options[5] = F("GPIO-12");
+  options[6] = F("GPIO-13");
+  int optionValues[7];
+  optionValues[0] = -1;
+  optionValues[1] = 0;
+  optionValues[2] = 2;
+  optionValues[3] = 4;
+  optionValues[4] = 5;
+  optionValues[5] = 12;
+  optionValues[6] = 13;
+
+  str += F("<select name='");
+  str += name;
+  str += "'>";
+  for (byte x = 0; x < 7; x++)
+  {
+    str += F("<option value='");
+    str += optionValues[x];
+    str += "'";
+    if (choice == optionValues[x])
+      str += " selected";
+    str += ">";
+    str += options[x];
+    str += "</option>";
+  }
+  str += F("</select>");
 }
 
 //********************************************************************************
@@ -684,6 +766,8 @@ void handle_json() {
 // Web Interface eventlist page
 //********************************************************************************
 void handle_eventlist() {
+  if (!isLoggedIn()) return;
+
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Eventlist request"));
 
@@ -758,6 +842,8 @@ void handle_eventlist() {
 // Web Interface log page
 //********************************************************************************
 void handle_log() {
+  if (!isLoggedIn()) return;
+
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Log request"));
 
@@ -795,6 +881,8 @@ void handle_log() {
 // Web Interface debug page
 //********************************************************************************
 void handle_tools() {
+  if (!isLoggedIn()) return;
+  
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.print(F("HTTP : Tools request : "));
     
@@ -844,6 +932,8 @@ void handle_tools() {
 // Web Interface I2C scanner
 //********************************************************************************
 void handle_i2cscanner() {
+  if (!isLoggedIn()) return;
+
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : I2C Scanner"));
 
@@ -887,6 +977,8 @@ void handle_i2cscanner() {
 // Web Interface I2C scanner
 //********************************************************************************
 void handle_wifiscanner() {
+  if (!isLoggedIn()) return;
+
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Wifi Scanner"));
 
@@ -915,5 +1007,65 @@ void handle_wifiscanner() {
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
   free(TempString);
+}
+
+//********************************************************************************
+// Web Interface login page
+//********************************************************************************
+void handle_login() {
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.print(F("HTTP : Login request : "));
+    
+  String webrequest = WebServer.arg("password");
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(webrequest);
+  char command[80];
+  command[0] = 0;
+  webrequest.toCharArray(command, 79);
+
+  String reply = "";
+  reply += F("<form>");
+  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Password<TD>");
+  reply += F("<input type='text' name='password' value='");
+  reply += webrequest;
+  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+  reply += F("</table></form>");
+
+  if (webrequest.length() != 0)
+  {
+    // compare with stored password and set timer if there's a match
+    if ((strcasecmp(command, Settings.Password) == 0) || (Settings.Password[0] == 0))
+    {
+       WebLoggedIn = true;
+       WebLoggedInTimer=0;
+       reply = F("<script language='JavaScript'>window.location = '.'</script>");
+    }
+    else
+    {
+       reply += F("Invalid password!");
+    }
+  }
+  
+  WebServer.send(200, "text/html", reply);
+  printWebString = "";
+  printToWeb = false;
+}
+
+boolean isLoggedIn()
+{
+  if (Settings.Password[0] == 0)
+    WebLoggedIn = true;
+    
+  if (!WebLoggedIn)
+    {
+      String reply = F("<a class=\"button-link\" href=\"login\">Login</a>");
+      WebServer.send(200, "text/html", reply);
+    }
+  else
+    {
+      WebLoggedInTimer=0;
+    }
+  
+  return WebLoggedIn;
 }
 

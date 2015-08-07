@@ -97,8 +97,8 @@
 
 #define ESP_PROJECT_PID   2015050101L
 #define ESP_EASY
-#define VERSION           2
-#define BUILD            11
+#define VERSION           3
+#define BUILD            12
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define LOG_LEVEL_ERROR      1
@@ -173,6 +173,7 @@ struct SettingsStruct
   unsigned long BaudRate;
   char          ControllerUser[26];
   char          ControllerPassword[26];
+  char          Password[26];
 } Settings;
 
 struct LogStruct
@@ -199,6 +200,9 @@ unsigned long wdcounter = 0;
 
 unsigned long pulseCounter1 = 0;
 byte switch1state = 0;
+
+boolean WebLoggedIn = false;
+int WebLoggedInTimer = 60;
 
 void setup()
 {
@@ -295,7 +299,7 @@ void loop()
     char str[40];
     str[0] = 0;
     Serial.print("WD   : ");
-    sprintf(str, "Uptime %u ConnectFailures %u FreeMem %u", wdcounter / 2, connectionFailures, FreeMem());
+    sprintf_P(str, PSTR("Uptime %u ConnectFailures %u FreeMem %u"), wdcounter / 2, connectionFailures, FreeMem());
     Serial.println(str);
     syslog(str);
     sendSysInfoUDP(1);
@@ -314,6 +318,14 @@ void loop()
   {
     timer1s = millis() + 1000;
     WifiCheck();
+
+    if (Settings.Password[0] != 0)
+    {
+      if (WebLoggedIn)
+        WebLoggedInTimer++;
+      if (WebLoggedInTimer > 60)
+        WebLoggedIn = false;
+    }
   }
 
   // Check sensors and send data to controller when sensor timer has elapsed
@@ -376,7 +388,8 @@ void SensorSend()
   if (Settings.BMP > 0)
   {
     bmp085(4);  // read bmp085 (i2c) and store to vars 4 and 5
-    sendData(3, Settings.BMP, 4);
+    if ((UserVar[5-1] >= 300) && (UserVar[5-1] <= 1100))
+      sendData(3, Settings.BMP, 4);
   }
 
   if (Settings.LUX > 0)

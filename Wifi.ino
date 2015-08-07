@@ -7,7 +7,7 @@ void WifiAPconfig()
   char ap_ssid[20];
   ap_ssid[0] = 0;
   strcpy(ap_ssid, "ESP_");
-  sprintf(ap_ssid, "%s%u", ap_ssid, Settings.Unit);
+  sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
   // setup ssid for AP Mode when needed
   WiFi.softAP(ap_ssid, Settings.WifiAPKey);
   // We start in STA mode
@@ -26,7 +26,7 @@ void WifiAPMode(boolean state)
     char ap_ssid[20];
     ap_ssid[0] = 0;
     strcpy(ap_ssid, "ESP_");
-    sprintf(ap_ssid, "%s%u", ap_ssid, Settings.Unit);
+    sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
     Serial.println(F("WIFI : Starting AP Mode"));
     WiFi.softAP(ap_ssid, Settings.WifiAPKey);
     WiFi.mode(WIFI_AP_STA);
@@ -78,7 +78,7 @@ boolean WifiConnect()
       {
         Serial.print(F("IP   : Static IP :"));
         char str[20];
-        sprintf(str, "%u.%u.%u.%u", Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
+        sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
         Serial.println(str);
         IPAddress ip = Settings.IP;
         IPAddress gw = Settings.Gateway;

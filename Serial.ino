@@ -208,7 +208,7 @@ void ExecuteCommand(char *Line)
 
     Serial.println("System Info");
     IPAddress ip = WiFi.localIP();
-    sprintf(str, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+    sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     Serial.print("  IP Address   : "); Serial.println(str);
     Serial.print("  Board Type   : "); Serial.println((int)Settings.BoardType);
     Serial.print("         SDA   : "); Serial.println((int)Settings.Pin_i2c_sda);
@@ -224,7 +224,7 @@ void ExecuteCommand(char *Line)
     Serial.print("  Unit             : "); Serial.println((int)Settings.Unit);
     Serial.print("  WifiSSID         : "); Serial.println(Settings.WifiSSID);
     Serial.print("  WifiKey          : ");  Serial.println(Settings.WifiKey);
-    sprintf(str, "%u.%u.%u.%u", Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+    sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
     Serial.print("  ControllerIP     : "); Serial.println(str);
     Serial.print("  ControllerPort   : "); Serial.println(Settings.ControllerPort);
     Serial.print("  Fixed IP octet   : "); Serial.println(Settings.IP_Octet);
@@ -448,6 +448,7 @@ void ResetFactory(void)
   Settings.BaudRate        = 115200;
   Settings.ControllerUser[0]     = 0;
   Settings.ControllerPassword[0] = 0;
+  Settings.Password[0] = 0;
     
   Save_Settings();
   WifiDisconnect();

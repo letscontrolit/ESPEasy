@@ -80,3 +80,12 @@
 // Fixed bug in settingssave on devices
 // Added delay(1) in Domoticz_sendData, while available loop
 
+// R012 07-08-2015
+// IMPORTANT NOTICE: this release needs ESP Package version 1.6.5-947-g39819f0, built on Jul 23, 2015)
+// If udp port = 0 no actions!
+// Used sprintf_P to save more RAM
+// Added login page and admin password
+// Added hardware custom gpio pin selection
+// Added sanity check on BMP085 pressure values
+
+
