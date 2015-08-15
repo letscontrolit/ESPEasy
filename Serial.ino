@@ -449,6 +449,7 @@ void ResetFactory(void)
   Settings.ControllerUser[0]     = 0;
   Settings.ControllerPassword[0] = 0;
   Settings.Password[0] = 0;
+  Settings.MessageDelay=2000;
     
   Save_Settings();
   WifiDisconnect();

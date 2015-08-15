@@ -6,8 +6,8 @@ void WebServerInit()
   // Prepare webserver pages
   WebServer.on("/", handle_root);
   WebServer.on("/config", handle_config);
-  WebServer.on("/devices", handle_devices);
   WebServer.on("/hardware", handle_hardware);
+  WebServer.on("/devices", handle_devices);
   WebServer.on("/json.htm", handle_json);
 #ifdef ESP_CONNEXIO
   WebServer.on("/eventlist", handle_eventlist);
@@ -275,13 +275,14 @@ void handle_config() {
 
   reply += F("'><TR><TD>Protocol:");
   byte choice = Settings.Protocol;
-  String options[4];
+  String options[5];
   options[0] = F("");
   options[1] = F("Domoticz HTTP");
   options[2] = F("Domoticz MQTT");
   options[3] = F("Nodo Telnet");
+  options[4] = F("ThingsSpeak HTTP");
   reply += F("<TD><select name='protocol'>");
-  for (byte x = 0; x < 4; x++)
+  for (byte x = 0; x < 5; x++)
   {
     reply += F("<option value='");
     reply += x;
@@ -308,7 +309,7 @@ void handle_config() {
       reply += Settings.ControllerUser;
     }
     
-  if (Settings.Protocol == 3)
+  if (Settings.Protocol == 3 or Settings.Protocol == 4)
     {
       reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
       reply += Settings.ControllerPassword;
@@ -366,6 +367,7 @@ void handle_devices() {
 
   String boardtype = WebServer.arg("boardtype");
   String sensordelay = WebServer.arg("delay");
+  String messagedelay = WebServer.arg("messagedelay");
   String dallas = WebServer.arg("dallas");
   String dht = WebServer.arg("dht");
   String dhttype = WebServer.arg("dhttype");
@@ -379,6 +381,7 @@ void handle_devices() {
   if (sensordelay.toInt() != 0)
   {
     Settings.Delay = sensordelay.toInt();
+    Settings.MessageDelay = messagedelay.toInt();
     Settings.Dallas = dallas.toInt();
     Settings.DHT = dht.toInt();
     Settings.DHTType = dhttype.toInt();
@@ -404,21 +407,29 @@ void handle_devices() {
     {
       eventAddTimer((char*)"DallasRead 1,1");
       eventAddVarSend(1, 1, Settings.Dallas);
+      if (Settings.MessageDelay != 0)
+        eventAddDelay();
     }
     if (Settings.DHT != 0)
     {
       eventAddTimer((char*)"DHTRead 2,2");
       eventAddVarSend(2, 2, Settings.DHT);
+      if (Settings.MessageDelay != 0)
+        eventAddDelay();
     }
     if (Settings.BMP != 0)
     {
       eventAddTimer((char*)"BMP085Read 4");
       eventAddVarSend(4, 3, Settings.BMP);
+      if (Settings.MessageDelay != 0)
+        eventAddDelay();
     }
     if (Settings.LUX != 0)
     {
       eventAddTimer((char*)"LuxRead 6");
       eventAddVarSend(6, 1, Settings.LUX);
+      if (Settings.MessageDelay != 0)
+        eventAddDelay();
     }
     if (Settings.Analog != 0)
     {
@@ -434,6 +445,8 @@ void handle_devices() {
   reply += F("<form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Device Settings<td>IDX/Variable<TD>Connect to<TR><TD>");
   reply += F("<TR><TD>Delay:<TD><input type='text' name='delay' value='");
   reply += Settings.Delay;
+  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
+  reply += Settings.MessageDelay;
   reply += F("'><TR><TD>Dallas:<TD><input type='text' name='dallas' value='");
   reply += Settings.Dallas;
   reply += F("'><TD>Output 1<TR><TD>DHT:<TD><input type='text' name='dht' value='");
@@ -469,6 +482,8 @@ void eventAddVarSend(byte var, byte sensortype, int idx)
     strcpy(strProtocol, "MQTT");
   if (Settings.Protocol == 3)
     strcpy(strProtocol, "TELNET");
+  if (Settings.Protocol == 4)
+    strcpy(strProtocol, "TSPK");
   sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; VariableSend %u,%s,%u,%u"), var, strProtocol, sensortype, idx);
   ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
 }
@@ -477,6 +492,13 @@ void eventAddTimer(char* event)
 {
   char cmd[80];
   sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; %s"), event);
+  ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
+}
+
+void eventAddDelay()
+{
+  char cmd[80];
+  sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; Delay %u"), Settings.MessageDelay);
   ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
 }
 #endif
@@ -1024,9 +1046,9 @@ void handle_login() {
   webrequest.toCharArray(command, 79);
 
   String reply = "";
-  reply += F("<form>");
+  reply += F("<form method='post'>");
   reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Password<TD>");
-  reply += F("<input type='text' name='password' value='");
+  reply += F("<input type='password' name='password' value='");
   reply += webrequest;
   reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
   reply += F("</table></form>");

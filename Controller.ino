@@ -73,8 +73,19 @@ boolean sendData(byte sensorType, int idx, byte varIndex)
       break;
     case 3:
       NodoTelnet_sendData(sensorType, idx, varIndex);
+    case 4:
+      ThingsSpeak_sendData(sensorType, idx, varIndex);
       break;
   }
+  if (Settings.MessageDelay != 0)
+    {
+      char log[30];
+      sprintf_P(log, PSTR("HTTP : Delay %u ms"), Settings.MessageDelay);
+      addLog(LOG_LEVEL_DEBUG_MORE,log);
+      unsigned long timer = millis() + Settings.MessageDelay;
+      while (millis() < timer)
+        backgroundtasks();
+    }
 }
 //#endif
 
@@ -464,6 +475,118 @@ struct NodeStruct
   byte ip[4];
   byte age;
 } Nodes[32];
+
+
+/*********************************************************************************************\
+ * Send data to Domoticz using http url querystring
+\*********************************************************************************************/
+boolean ThingsSpeak_sendData(byte sensorType, int idx, byte varIndex)
+{
+  char log[80];
+  boolean success = false;
+  char host[20];
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+
+  sprintf_P(log, PSTR("%s%s"), "HTTP : connecting to ", host);
+  addLog(LOG_LEVEL_DEBUG,log);
+  if (printToWeb)
+  {
+    printWebString += log;
+    printWebString += "<BR>";
+  }
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  if (!client.connect(host, Settings.ControllerPort))
+  {
+    connectionFailures++;
+    addLog(LOG_LEVEL_ERROR,(char*)"HTTP : connection failed");
+    if (printToWeb)
+      printWebString += F("connection failed<BR>");
+    return false;
+  }
+  if (connectionFailures)
+    connectionFailures--;
+
+  String postDataStr = Settings.ControllerPassword; // "0UDNN17RW6XAS2E5" // api key
+
+  switch (sensorType)
+  {
+    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+      postDataStr +="&field";
+      postDataStr += idx;
+      postDataStr += "=";
+      postDataStr += String(UserVar[varIndex - 1]);
+      break;
+    case 2:                      // dual value
+    case 3:
+      postDataStr +="&field";
+      postDataStr += idx;
+      postDataStr += "=";
+      postDataStr += String(UserVar[varIndex - 1]);
+      postDataStr +="&field";
+      postDataStr += idx+1;
+      postDataStr += "=";
+      postDataStr += String(UserVar[varIndex]);
+      break;
+    case 10:                      // switch
+      break;
+  }
+  postDataStr += "\r\n\r\n";
+
+  String postStr = F("POST /update HTTP/1.1\n"); 
+  postStr += F("Host: api.thingspeak.com\n"); 
+  postStr += F("Connection: close\n"); 
+  postStr += F("X-THINGSPEAKAPIKEY: ");
+  postStr += Settings.ControllerPassword;
+  postStr += "\n";
+  postStr += F("Content-Type: application/x-www-form-urlencoded\n"); 
+  postStr += F("Content-Length: "); 
+  postStr += postDataStr.length(); 
+  postStr += F("\n\n"); 
+  postStr += postDataStr;
+
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+    Serial.println(postStr);
+
+  // This will send the request to the server
+  client.print(postStr);
+
+  unsigned long timer = millis() + 200;
+  while (!client.available() && millis() < timer)
+    delay(1);
+
+  // Read all the lines of the reply from server and print them to Serial
+  while (client.available()) {
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      {
+        sprintf_P(log,PSTR("C1 WS %u FM %u"),WiFi.status(),FreeMem());
+        Serial.println(log);
+      }
+    String line = client.readStringUntil('\n');
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      {
+        sprintf_P(log,PSTR("C2 WS %u FM %u"),WiFi.status(),FreeMem());
+        Serial.println(log);
+      }
+    line.toCharArray(log,79);
+    addLog(LOG_LEVEL_DEBUG_MORE,log);
+    if (line.substring(0, 15) == "HTTP/1.1 200 OK")
+    {
+      addLog(LOG_LEVEL_DEBUG,(char*)"HTTP : Succes!");
+      if (printToWeb)
+        printWebString += F("Success<BR>");
+      success = true;
+    }
+    delay(1);
+  }
+  addLog(LOG_LEVEL_DEBUG,(char*)"HTTP : closing connection");
+  if (printToWeb)
+    printWebString += F("closing connection<BR>");
+
+  client.flush();
+  client.stop();
+  return success;
+}
 
 
 /*********************************************************************************************\

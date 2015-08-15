@@ -98,7 +98,7 @@
 #define ESP_PROJECT_PID   2015050101L
 #define ESP_EASY
 #define VERSION           3
-#define BUILD            12
+#define BUILD            13
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define LOG_LEVEL_ERROR      1
@@ -174,6 +174,7 @@ struct SettingsStruct
   char          ControllerUser[26];
   char          ControllerPassword[26];
   char          Password[26];
+  unsigned long MessageDelay;
 } Settings;
 
 struct LogStruct
@@ -263,10 +264,6 @@ void setup()
 
 void loop()
 {
-  WebServer.handleClient();
-
-  MQTTclient.loop();
-
   if (Serial.available())
     serial();
 
@@ -352,7 +349,9 @@ void loop()
       delay(100);
     }
   }
-  delay(10);
+
+  backgroundtasks();   
+
 }
 
 void inputCheck()
@@ -422,6 +421,13 @@ void SensorSend()
     }
   }
 
+}
+
+void backgroundtasks()
+{
+    WebServer.handleClient();
+    MQTTclient.loop();
+    delay(10);
 }
 
 

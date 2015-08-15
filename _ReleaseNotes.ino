@@ -88,4 +88,10 @@
 // Added hardware custom gpio pin selection
 // Added sanity check on BMP085 pressure values
 
+// R013 15-08-2015
+// Added configurable message delay in ms (delay between messages to controller)
+// Changed login password field to type 'password'
+// Fixed io pin settings for Dallas/DHT for inconsecutive pin configuration (ESP-01)
+// Support for ThingsSpeak "controller" (webservice)
+
 
