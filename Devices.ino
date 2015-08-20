@@ -1,16 +1,139 @@
+void Device_Init()
+{
+  Device[1].Number = DEVICE_DS18B20;
+  strcpy(Device[1].Name,"Temperature DS18b20");
+  Device[1].Type = DEVICE_TYPE_SINGLE;
+  Device[2].Number = DEVICE_DHT11;
+  strcpy(Device[2].Name,"Temp + Hum DHT 11");
+  Device[2].Type = DEVICE_TYPE_SINGLE;
+  Device[3].Number = DEVICE_DHT22;
+  strcpy(Device[3].Name,"Temp + Hum DHT 22");
+  Device[3].Type = DEVICE_TYPE_SINGLE;
+  Device[4].Number = DEVICE_BMP085;
+  strcpy(Device[4].Name,"Temp + Baro BMP085");
+  Device[4].Type = DEVICE_TYPE_I2C;
+  Device[5].Number = DEVICE_BH1750;
+  strcpy(Device[5].Name,"LUX BH1750");
+  Device[5].Type = DEVICE_TYPE_I2C;
+  Device[6].Number = DEVICE_ANALOG;
+  strcpy(Device[6].Name,"Analog input");
+  Device[6].Type = DEVICE_TYPE_ANALOG;
+  Device[7].Number = DEVICE_RFID;
+  strcpy(Device[7].Name,"RFID Reader");
+  Device[7].Type = DEVICE_TYPE_DUAL;
+  Device[8].Number = DEVICE_PULSE;
+  strcpy(Device[8].Name,"Pulse Counter");
+  Device[8].Type = DEVICE_TYPE_SINGLE;
+  Device[9].Number = DEVICE_SWITCH;
+  strcpy(Device[9].Name,"Switch input");
+  Device[9].Type = DEVICE_TYPE_SINGLE;
+
+  for (byte x=0; x < TASKS_MAX; x++)
+  {
+    if (Settings.TaskDeviceID[x] != 0)
+    {
+      switch(Settings.TaskDeviceNumber[x])
+      {
+        case DEVICE_RFID:
+          Serial.print(F("INIT : RFID "));
+          Serial.print(Settings.TaskDevicePin1[x]);
+          Serial.print(" & ");
+          Serial.println(Settings.TaskDevicePin2[x]);
+          pinMode(Settings.TaskDevicePin1[x], INPUT_PULLUP);
+          pinMode(Settings.TaskDevicePin2[x], INPUT_PULLUP);
+          rfidinit(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x]);
+          break;
+        case DEVICE_PULSE:
+          Serial.print(F("INIT : Pulse "));
+          Serial.println(Settings.TaskDevicePin1[x]);
+          pinMode(Settings.TaskDevicePin1[x], INPUT_PULLUP);
+          pulseinit(Settings.TaskDevicePin1[x], x);
+          break;
+        case DEVICE_SWITCH:
+          Serial.print(F("INIT : InputPullup "));
+          Serial.println(Settings.TaskDevicePin1[x]);
+          pinMode(Settings.TaskDevicePin1[x], INPUT_PULLUP);
+          break;
+      }
+    }
+  }
+}
+
 /*********************************************************************************************\
- * Pulse Counter
+ * Pulse Counters
 \*********************************************************************************************/
 void pulse_interrupt1()
 {
-  pulseCounter1++;
+  pulseCounter[0]++;
+  pulseTotalCounter[0]++;
+}
+void pulse_interrupt2()
+{
+  pulseCounter[1]++;
+  pulseTotalCounter[1]++;
+}
+void pulse_interrupt3()
+{
+  pulseCounter[2]++;
+  pulseTotalCounter[2]++;
+}
+void pulse_interrupt4()
+{
+  pulseCounter[3]++;
+  pulseTotalCounter[3]++;
+}
+void pulse_interrupt5()
+{
+  pulseCounter[4]++;
+  pulseTotalCounter[4]++;
+}
+void pulse_interrupt6()
+{
+  pulseCounter[5]++;
+  pulseTotalCounter[5]++;
+}
+void pulse_interrupt7()
+{
+  pulseCounter[6]++;
+  pulseTotalCounter[6]++;
+}
+void pulse_interrupt8()
+{
+  pulseCounter[7]++;
+  pulseTotalCounter[7]++;
 }
 
-void pulseinit(byte Par1)
+void pulseinit(byte Par1, byte Index)
 {
   // Init IO pins
   Serial.println("PULSE: Init");
-  attachInterrupt(Par1, pulse_interrupt1, FALLING);
+  switch(Index)
+    {
+      case 0:
+        attachInterrupt(Par1, pulse_interrupt1, FALLING);
+        break;
+      case 1:
+        attachInterrupt(Par1, pulse_interrupt2, FALLING);
+        break;
+      case 2:
+        attachInterrupt(Par1, pulse_interrupt3, FALLING);
+        break;
+      case 3:
+        attachInterrupt(Par1, pulse_interrupt4, FALLING);
+        break;
+      case 4:
+        attachInterrupt(Par1, pulse_interrupt5, FALLING);
+        break;
+      case 5:
+        attachInterrupt(Par1, pulse_interrupt6, FALLING);
+        break;
+      case 6:
+        attachInterrupt(Par1, pulse_interrupt7, FALLING);
+        break;
+      case 7:
+        attachInterrupt(Par1, pulse_interrupt8, FALLING);
+        break;
+    }
 }
 
 /*********************************************************************************************\
@@ -271,17 +394,17 @@ uint8_t DS_reset()
 
 boolean dallas(byte Par1, byte Par2)
 {
-  static byte Call_Status = 0x00; // Each bit represents one relative port. 0=not called before, 1=already called before.
+  static unsigned int Call_Status = 0x00; // Each bit represents one relative port. 0=not called before, 1=already called before.
   boolean success = false;
   int DSTemp;                           // Temperature in 16-bit Dallas format.
   byte ScratchPad[12];                  // Scratchpad buffer Dallas sensor.
   byte var = Par2;               // Variable to be set.
-  byte RelativePort = Par1 - 1;
+  byte RelativePort = Par1;
 
-  if (Par1 == 1)
-    DallasPin = Settings.Pin_wired_out_1;
-  else
-    DallasPin = Settings.Pin_wired_out_2;
+  DallasPin = Par1;
+  
+  pinMode(DallasPin, OUTPUT);
+  digitalWrite(DallasPin, LOW);
 
   noInterrupts();
   while (!(bitRead(Call_Status, RelativePort)))
@@ -345,10 +468,7 @@ boolean dht(byte type, byte Par1, byte Par2)
   byte i;
   byte Retry = 0;
 
-  if (Par1 == 1)
-    DHT_Pin = Settings.Pin_wired_out_1;
-  else
-    DHT_Pin = Settings.Pin_wired_out_2;
+  DHT_Pin = Par1;
   
   do
   {

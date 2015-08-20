@@ -20,6 +20,40 @@ void ExecuteCommand(char *Line)
   // commands to execute io tasks
   // ****************************************
 
+  if (strcasecmp(Command, "GPIO") == 0)
+  {
+    if (Par1 >= 0 && Par1 <= 16)
+      {
+        pinMode(Par1, OUTPUT);
+        digitalWrite(Par1, Par2);
+        if (printToWeb)
+        {
+          printWebString += "GPIO ";
+          printWebString += Par1;
+          printWebString += " Set to ";
+          printWebString += Par2;
+          printWebString += "<BR>";
+        }
+      }
+  }
+
+  if (strcasecmp(Command, "PWM") == 0)
+  {
+    if (Par1 >= 0 && Par1 <= 1023)
+      {
+        pinMode(Par1, OUTPUT);
+        analogWrite(Par1, Par2);
+        if (printToWeb)
+        {
+          printWebString += "GPIO ";
+          printWebString += Par1;
+          printWebString += " Set PWM to ";
+          printWebString += Par2;
+          printWebString += "<BR>";
+        }
+      }
+  }
+
   if (strcasecmp(Command, "DomoticzSend") == 0)
   {
     if (GetArgv(Line, TmpStr1, 4))
@@ -101,38 +135,11 @@ void ExecuteCommand(char *Line)
   // ****************************************
   // configure settings commands:
   // ****************************************
-  if (strcasecmp(Command, "Analog") == 0)
-    Settings.Analog = Par1;
-
-  if (strcasecmp(Command, "Dallas") == 0)
-    Settings.Dallas = Par1;
-
-  if (strcasecmp(Command, "DHT") == 0)
-    Settings.DHT = Par1;
-
-  if (strcasecmp(Command, "DHTType") == 0)
-    Settings.DHTType = Par1;
-
-  if (strcasecmp(Command, "BMP") == 0)
-    Settings.BMP = Par1;
-
-  if (strcasecmp(Command, "LUX") == 0)
-    Settings.LUX = Par1;
-
-  if (strcasecmp(Command, "RFID") == 0)
-    Settings.RFID = Par1;
-
   if (strcasecmp(Command, "Unit") == 0)
     Settings.Unit = Par1;
 
   if (strcasecmp(Command, "Delay") == 0)
     Settings.Delay = Par1;
-
-  if (strcasecmp(Command, "Pulse") == 0)
-    Settings.Pulse1 = Par1;
-
-  if (strcasecmp(Command, "Switch") == 0)
-    Settings.Switch1 = Par1;
 
   if (strcasecmp(Command, "Debug") == 0)
     Settings.Debug = Par1;
@@ -210,13 +217,8 @@ void ExecuteCommand(char *Line)
     IPAddress ip = WiFi.localIP();
     sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     Serial.print("  IP Address   : "); Serial.println(str);
-    Serial.print("  Board Type   : "); Serial.println((int)Settings.BoardType);
     Serial.print("         SDA   : "); Serial.println((int)Settings.Pin_i2c_sda);
     Serial.print("         SCL   : "); Serial.println((int)Settings.Pin_i2c_scl);
-    Serial.print("         In 1  : "); Serial.println((int)Settings.Pin_wired_in_1);
-    Serial.print("         In 2  : "); Serial.println((int)Settings.Pin_wired_in_2);
-    Serial.print("         Out 1 : "); Serial.println((int)Settings.Pin_wired_out_1);
-    Serial.print("         Out 2 : "); Serial.println((int)Settings.Pin_wired_out_2);
     Serial.println();
     
     Serial.println("Generic settings");
@@ -230,18 +232,6 @@ void ExecuteCommand(char *Line)
     Serial.print("  Fixed IP octet   : "); Serial.println(Settings.IP_Octet);
     Serial.print("  WifiKey (APmode) : ");  Serial.println(Settings.WifiAPKey);
 
-    Serial.println();
-    Serial.println("Device settings");
-    Serial.print("  Delay   : "); Serial.println(Settings.Delay);
-    Serial.print("  Dallas  : "); Serial.println(Settings.Dallas);
-    Serial.print("  DHT     : "); Serial.println(Settings.DHT);
-    Serial.print("  DHTType : "); Serial.println(Settings.DHTType);
-    Serial.print("  BMP     : "); Serial.println(Settings.BMP);
-    Serial.print("  LUX     : "); Serial.println(Settings.LUX);
-    Serial.print("  RFID    : "); Serial.println(Settings.RFID);
-    Serial.print("  Analog  : "); Serial.println(Settings.Analog);
-    Serial.print("  Pulse   : "); Serial.println(Settings.Pulse1);
-    Serial.print("  Switch  : "); Serial.println(Settings.Switch1);
   }
 
   if (strcasecmp(Command, "Freemem") == 0)
@@ -405,22 +395,22 @@ void ResetFactory(void)
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
   Settings.IP_Octet        = 0;
-  Settings.Delay           = DEFAULT_DELAY;
-  Settings.Dallas          = DEFAULT_DALLAS_IDX;
-  Settings.DHT             = DEFAULT_DHT_IDX;
-  Settings.DHTType         = DEFAULT_DHT_TYPE;
-  Settings.BMP             = DEFAULT_BMP_IDX;
-  Settings.LUX             = DEFAULT_LUX_IDX;
-  Settings.RFID            = DEFAULT_RFID_IDX;
-  Settings.Analog          = DEFAULT_ANALOG_IDX;
-  Settings.Pulse1          = DEFAULT_PULSE1_IDX;
-  Settings.BoardType       = 0;
-  Settings.Pin_i2c_sda     = 0;
-  Settings.Pin_i2c_scl     = 2;
-  Settings.Pin_wired_in_1  = 4;
-  Settings.Pin_wired_in_2  = 5;
-  Settings.Pin_wired_out_1 = 12;
-  Settings.Pin_wired_out_2 = 13;
+  //Settings.Delay           = DEFAULT_DELAY;
+  //Settings.Dallas          = DEFAULT_DALLAS_IDX;
+  //Settings.DHT             = DEFAULT_DHT_IDX;
+  //Settings.DHTType         = DEFAULT_DHT_TYPE;
+  //Settings.BMP             = DEFAULT_BMP_IDX;
+  //Settings.LUX             = DEFAULT_LUX_IDX;
+  //Settings.RFID            = DEFAULT_RFID_IDX;
+  //Settings.Analog          = DEFAULT_ANALOG_IDX;
+  //Settings.Pulse1          = DEFAULT_PULSE1_IDX;
+  //Settings.BoardType       = 0;
+  Settings.Pin_i2c_sda     = 4;
+  Settings.Pin_i2c_scl     = 5;
+  //Settings.Pin_wired_in_1  = 0;
+  //Settings.Pin_wired_in_2  = 2;
+  //Settings.Pin_wired_out_1 = 12;
+  //Settings.Pin_wired_out_2 = 13;
   Settings.Syslog_IP[0]    = 0;
   Settings.Syslog_IP[1]    = 0;
   Settings.Syslog_IP[2]    = 0;
@@ -443,14 +433,20 @@ void ResetFactory(void)
   Settings.Debug           = 0;
   strcpy(Settings.Name, DEFAULT_NAME);
   Settings.SyslogLevel     = 0;
-  Settings.SerialLogLevel  = 4;
-  Settings.WebLogLevel     = 0;
+  Settings.SerialLogLevel  = 3;
+  Settings.WebLogLevel     = 3;
   Settings.BaudRate        = 115200;
   Settings.ControllerUser[0]     = 0;
   Settings.ControllerPassword[0] = 0;
   Settings.Password[0] = 0;
-  Settings.MessageDelay=2000;
-    
+  Settings.MessageDelay=1000;
+  for (byte x=0; x < TASKS_MAX; x++)
+  {
+    Settings.TaskDeviceNumber[x]=0;
+    Settings.TaskDeviceID[x]=0;
+    Settings.TaskDevicePin1[x]=-1;
+    Settings.TaskDevicePin2[x]=-1;
+  }
   Save_Settings();
   WifiDisconnect();
   ESP.reset();

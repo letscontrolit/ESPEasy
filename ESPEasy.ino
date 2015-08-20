@@ -7,9 +7,12 @@
  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  * You received a copy of the GNU General Public License along with this program in file 'License.txt'.
  *
- * Source Code : https://sourceforge.net/projects/espeasy/
- * Support     : http://www.esp8266.nu
- * Discussion  : http://www.esp8266.nu/forum/
+ * IDE download    : https://www.arduino.cc/en/Main/Software
+ * ESP8266 Package : https://github.com/esp8266/Arduino
+ *
+ * Source Code     : https://sourceforge.net/projects/espeasy/
+ * Support         : http://www.esp8266.nu
+ * Discussion      : http://www.esp8266.nu/forum/
  *
  * Additional information about licensing can be found at : http://www.gnu.org/licenses
 \*************************************************************************************************************************/
@@ -27,22 +30,21 @@
 *
 * Voor toelichting op de licentievoorwaarden zie    : http://www.gnu.org/licenses
 * Uitgebreide documentatie is te vinden op          : http://www.nodo-domotica.nl
-* bugs kunnen worden gelogd op                      : https://code.google.com/p/arduino-nodo/
 * Compiler voor deze programmacode te downloaden op : http://arduino.cc
-* Voor vragen of suggesties, mail naar              : p.k.tonkes@gmail.com
 \*************************************************************************************************************************/
 
 // Simple Arduino sketch for ESP module, supporting:
-//   Dallas OneWire DS18b20 temperature sensor
-//   DHT11/22 humidity sensor
+//   Dallas OneWire DS18b20 temperature sensors
+//   DHT11/22 humidity sensors
 //   BH1750 I2C Lux sensor
 //   BMP085 I2C Barometric Pressure sensor
 //   RFID Wiegand-26 reader
-//   MCP23017 I2C IO Expander
+//   MCP23017 I2C IO Expanders
 //   Analog input (ESP-7/12 only)
 //   LCD I2C display 4x20 chars
-//   Pulse counter
-//   Simple switch input
+//   Pulse counters
+//   Simple switch inputs
+//   Direct GPIO output control to drive relais, mosfets, etc
 
 // ********************************************************************************
 //   User specific configuration
@@ -78,17 +80,6 @@
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 
-// variables used
-// 1 Dallas
-// 2-3 DHT
-// 4-5 BMP085
-// 6 Lux
-// 7 Analog
-// 8 RFID
-// 9 Pulsecounter
-// 10 DomoticzSend Serial in
-// 11 Switch
-
 // sensor types
 //  1 = single value, general purpose (Dallas, LUX, counters, etc)
 //  2 = temp + hum (DHT)
@@ -97,8 +88,8 @@
 
 #define ESP_PROJECT_PID   2015050101L
 #define ESP_EASY
-#define VERSION           3
-#define BUILD            13
+#define VERSION           4
+#define BUILD            14
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define LOG_LEVEL_ERROR      1
@@ -108,6 +99,24 @@
 
 #define CMD_REBOOT                      89
 #define CMD_WIFI_DISCONNECT             135
+
+#define DEVICE_DS18B20        1
+#define DEVICE_DHT11          2
+#define DEVICE_DHT22          3
+#define DEVICE_BMP085         4
+#define DEVICE_BH1750         5
+#define DEVICE_ANALOG         6
+#define DEVICE_RFID           7
+#define DEVICE_PULSE          8
+#define DEVICE_SWITCH         9
+
+#define DEVICES_MAX 10
+#define TASKS_MAX 8
+
+#define DEVICE_TYPE_SINGLE    1  // connected through 1 datapin
+#define DEVICE_TYPE_I2C       2  // connected through I2C
+#define DEVICE_TYPE_ANALOG    3  // tout pin
+#define DEVICE_TYPE_DUAL      4  // connected through 2 datapins
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -143,21 +152,21 @@ struct SettingsStruct
   byte          IP_Octet;
   char          WifiAPKey[26];
   unsigned long Delay;
-  unsigned int  Dallas;
-  unsigned int  DHT;
-  byte          DHTType;
-  unsigned int  BMP;
-  unsigned int  LUX;
-  unsigned int  RFID;
-  unsigned int  Analog;
-  unsigned int  Pulse1;
-  byte          BoardType;
+  unsigned int  _Dallas;
+  unsigned int  _DHT;
+  byte          _DHTType;
+  unsigned int  _BMP;
+  unsigned int  _LUX;
+  unsigned int  _RFID;
+  unsigned int  _Analog;
+  unsigned int  _Pulse1;
+  byte          _BoardType;
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
-  int8_t        Pin_wired_in_1;
-  int8_t        Pin_wired_in_2;
-  int8_t        Pin_wired_out_1;
-  int8_t        Pin_wired_out_2;
+  int8_t        _Pin_wired_in_1;
+  int8_t        _Pin_wired_in_2;
+  int8_t        _Pin_wired_out_1;
+  int8_t        _Pin_wired_out_2;
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
   unsigned int  Switch1;
@@ -175,6 +184,10 @@ struct SettingsStruct
   char          ControllerPassword[26];
   char          Password[26];
   unsigned long MessageDelay;
+  byte          TaskDeviceNumber[TASKS_MAX];
+  unsigned int  TaskDeviceID[TASKS_MAX];
+  int8_t        TaskDevicePin1[TASKS_MAX];
+  int8_t        TaskDevicePin2[TASKS_MAX];
 } Settings;
 
 struct LogStruct
@@ -184,10 +197,21 @@ struct LogStruct
 } Logging[10];
 int logcount = -1;
 
+struct DeviceStruct
+{
+  byte Number;
+  char Name[26];
+  byte Type;
+} Device[DEVICES_MAX];
+
 boolean printToWeb = false;
 String printWebString = "";
 
-float UserVar[15];
+float UserVar[2 * TASKS_MAX];
+unsigned long pulseCounter[TASKS_MAX];
+unsigned long pulseTotalCounter[TASKS_MAX];
+byte switchstate[TASKS_MAX];
+
 unsigned long timer;
 unsigned long timer100ms;
 unsigned long timer1s;
@@ -203,12 +227,12 @@ unsigned long pulseCounter1 = 0;
 byte switch1state = 0;
 
 boolean WebLoggedIn = false;
-int WebLoggedInTimer = 60;
+int WebLoggedInTimer = 300;
 
 void setup()
 {
   EEPROM.begin(1024);
-
+  
   LoadSettings();
 
   // if different version, eeprom settings structure has changed. Full Reset needed
@@ -230,6 +254,7 @@ void setup()
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
+  Device_Init();
   hardwareInit();
 
   WifiAPconfig();
@@ -320,7 +345,7 @@ void loop()
     {
       if (WebLoggedIn)
         WebLoggedInTimer++;
-      if (WebLoggedInTimer > 60)
+      if (WebLoggedInTimer > 300)
         WebLoggedIn = false;
     }
   }
@@ -338,89 +363,95 @@ void loop()
     delayedReboot(60);
   }
 
-  if (Settings.Switch1 != 0)
-  {
-    byte state1 = digitalRead(Settings.Pin_wired_in_1);
-    if (state1 != switch1state)
-    {
-      switch1state = state1;
-      UserVar[11 - 1] = state1;
-      sendData(10, Settings.Switch1, 11);
-      delay(100);
-    }
-  }
-
   backgroundtasks();   
 
 }
 
 void inputCheck()
 {
-  if (Settings.RFID > 0)
+  // Handle switches
+  for (byte x=0; x < TASKS_MAX; x++)
   {
-    unsigned long rfid_id = rfid();
-    if (rfid_id > 0)
+    if(Settings.TaskDeviceNumber[x] == DEVICE_SWITCH && Settings.TaskDeviceID[x] != 0)
     {
-      Serial.print("RFID : Tag : ");
-      Serial.println(rfid_id);
-      UserVar[8 - 1] = rfid_id;
-      sendData(1, Settings.RFID, 8);
+      byte state = digitalRead(Settings.TaskDevicePin1[x]);
+      if (state != switchstate[x])
+      {
+        switchstate[x] = state;
+        UserVar[(x*2+1) - 1] = state;
+        sendData(10, Settings.TaskDeviceID[x], x*2+1);
+        delay(100);
+      }
     }
   }
+
+  // Handle rfid
+  for (byte x=0; x < TASKS_MAX; x++)
+  {
+    if(Settings.TaskDeviceNumber[x] == DEVICE_RFID && Settings.TaskDeviceID[x] != 0)
+    {
+    unsigned long rfid_id = rfid();
+    if (rfid_id > 0)
+      {
+        Serial.print("RFID : Tag : ");
+        Serial.println(rfid_id);
+        UserVar[(x*2+1) - 1] = rfid_id;
+        sendData(1, Settings.TaskDeviceID[x], x*2+1);
+      }
+    }
+  }
+
 }
 
 void SensorSend()
 {
-  if (Settings.Dallas > 0)
+  for (byte x=0; x < TASKS_MAX; x++)
   {
-    dallas(1, 1); // read ds18b20 on wiredout 1, store to var 1
-    sendData(1, Settings.Dallas, 1);
-  }
-
-  if (Settings.DHT > 0)
-  {
-    dht(Settings.DHTType, 2, 2); // read dht on wiredout 2, store to var 2 (and 3)
-    if (!isnan(UserVar[2 - 1]) && (UserVar[3 - 1] > 0))
-      sendData(2, Settings.DHT, 2);
-  }
-
-  if (Settings.BMP > 0)
-  {
-    bmp085(4);  // read bmp085 (i2c) and store to vars 4 and 5
-    if ((UserVar[5-1] >= 300) && (UserVar[5-1] <= 1100))
-      sendData(3, Settings.BMP, 4);
-  }
-
-  if (Settings.LUX > 0)
-  {
-    lux(6);       // read BH1750 LUX sensor and store to var 6
-    sendData(1, Settings.LUX, 6);
-  }
-
-  if (Settings.Analog > 0)
-  {
-    analog(7);       // read ADC and store to var 7
-    sendData(1, Settings.Analog, 7);
-  }
-
-  if (Settings.Pulse1 > 0)
-  {
-    float value = 0;
-    if (Domoticz_getData(Settings.Pulse1, &value))
+    if (Settings.TaskDeviceID[x] != 0)
     {
-      Serial.print(F("Current Value:"));
-      Serial.println(value);
-      Serial.print(F("Delta Value:"));
-      Serial.println(pulseCounter1);
-      value = (value + pulseCounter1) * 100;
-      pulseCounter1 = 0;
-      Serial.print(F("New Value:"));
-      Serial.println(value);
-      UserVar[9 - 1] = value;  // store pulsecount to var 9
-      sendData(1, Settings.Pulse1, 9);
+      switch(Settings.TaskDeviceNumber[x])
+      {
+        case DEVICE_DS18B20:
+          dallas(Settings.TaskDevicePin1[x], x*2+1);
+          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          break;
+          
+        case DEVICE_DHT11:
+          dht(11, Settings.TaskDevicePin1[x], x*2+1);
+          if (!isnan(UserVar[(x*2+1) - 1]) && (UserVar[(x*2+2) - 1] > 0))
+            sendData(2,Settings.TaskDeviceID[x], x*2+1);
+          break;
+
+        case DEVICE_DHT22:
+          dht(22, Settings.TaskDevicePin1[x], 2);
+          if (!isnan(UserVar[(x*2+1) - 1]) && (UserVar[(x*2+2) - 1] > 0))
+            sendData(2, Settings.TaskDeviceID[x], x*2+1);
+          break;
+
+        case DEVICE_BMP085:
+          bmp085(x*2+1);
+          if ((UserVar[(x*2+2) - 1] >= 300) && (UserVar[(x*2+2) - 1] <= 1100))
+            sendData(3, Settings.TaskDeviceID[x], x*2+1);
+          break;
+
+        case DEVICE_BH1750:
+          lux(x*2+1);       // read BH1750 LUX sensor and store to var 6
+          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          break;
+
+        case DEVICE_ANALOG:
+          analog(x*2+1);       // read ADC and store to var 7
+          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          break;
+
+        case DEVICE_PULSE:
+          UserVar[(x*2+1) - 1] = pulseCounter[x];
+          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          pulseCounter[x] = 0;
+          break;
+      }
     }
   }
-
 }
 
 void backgroundtasks()
@@ -429,5 +460,4 @@ void backgroundtasks()
     MQTTclient.loop();
     delay(10);
 }
-
 

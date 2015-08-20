@@ -94,4 +94,8 @@
 // Fixed io pin settings for Dallas/DHT for inconsecutive pin configuration (ESP-01)
 // Support for ThingsSpeak "controller" (webservice)
 
+// R014 20-08-2015
+// Redesigned device configuration mechanisme
+// Changed password timeout to 5 minutes
+// Added direct GPIO output control without password request
 

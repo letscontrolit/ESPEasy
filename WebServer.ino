@@ -17,6 +17,7 @@ void WebServerInit()
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/wifiscanner", handle_wifiscanner);
   WebServer.on("/login", handle_login);
+  WebServer.on("/control", handle_control);
   WebServer.begin();
 }
 
@@ -26,7 +27,7 @@ void addMenu(String& str)
   str += F("<style>");
   str += F("* {font-family:sans-serif; font-size:12pt;}");
   str += F("h1 {font-size:16pt; border:1px solid #333; color:#ffffff; background:#27f;}");
-  str += F(".button-link {padding:5px 10px; background:#5bf; color:#fff; border-radius:4px; border:solid 1px #258; text-decoration:none}");
+  str += F(".button-link {padding:2px 10px; background:#5bf; color:#fff; border-radius:4px; border:solid 1px #258; text-decoration:none}");
   str += F(".button-link:hover {background:#369;}");
   str += F("</style>");
 
@@ -40,8 +41,8 @@ void addMenu(String& str)
   str += Settings.Name;
   str += F("</h1><a class=\"button-link\" href=\".\">Main</a>");
   str += F("<a class=\"button-link\" href=\"config\">Config</a>");
-  str += F("<a class=\"button-link\" href=\"devices\">Devices</a>");
   str += F("<a class=\"button-link\" href=\"hardware\">Hardware</a>");
+  str += F("<a class=\"button-link\" href=\"devices\">Devices</a>");
 #ifdef ESP_CONNEXIO
   str += F("<a class=\"button-link\" href=\"eventlist\">Eventlist</a>");
 #endif
@@ -199,6 +200,8 @@ void handle_config() {
   String protocol = WebServer.arg("protocol");
   String controlleruser = WebServer.arg("controlleruser");
   String controllerpassword = WebServer.arg("controllerpassword");
+  String sensordelay = WebServer.arg("delay");
+  String messagedelay = WebServer.arg("messagedelay");
   String ip = WebServer.arg("ip");
   String espip = WebServer.arg("espip");
   String espgateway = WebServer.arg("espgateway");
@@ -231,6 +234,8 @@ void handle_config() {
     controllerpassword.toCharArray(tmpstring, 25);
     strcpy(Settings.ControllerPassword, tmpstring);
     Settings.Protocol = protocol.toInt();
+    Settings.Delay = sensordelay.toInt();
+    Settings.MessageDelay = messagedelay.toInt();
     Settings.IP_Octet = ip.toInt();
     espip.toCharArray(tmpstring, 25);
     str2ip(tmpstring, Settings.IP);
@@ -315,6 +320,11 @@ void handle_config() {
       reply += Settings.ControllerPassword;
     }
 
+  reply += F("'><TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
+  reply += Settings.Delay;
+  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
+  reply += Settings.MessageDelay;
+
   reply += F("'><TR bgcolor='#55bbff'><TD>Optional Settings<TD><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
 
@@ -363,110 +373,117 @@ void handle_devices() {
   if (!isLoggedIn()) return;
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
-    Serial.println(F("HTTP : Webdevices"));
+    Serial.println(F("HTTP : Webtasks"));
 
-  String boardtype = WebServer.arg("boardtype");
-  String sensordelay = WebServer.arg("delay");
-  String messagedelay = WebServer.arg("messagedelay");
-  String dallas = WebServer.arg("dallas");
-  String dht = WebServer.arg("dht");
-  String dhttype = WebServer.arg("dhttype");
-  String bmp = WebServer.arg("bmp");
-  String lux = WebServer.arg("lux");
-  String rfid = WebServer.arg("rfid");
-  String analog = WebServer.arg("analog");
-  String pulse1 = WebServer.arg("pulse1");
-  String switch1 = WebServer.arg("switch1");
+  String taskindex = WebServer.arg("index");
+  String taskdevicenumber = WebServer.arg("taskdevicenumber");
+  String taskdeviceid = WebServer.arg("taskdeviceid");
+  String taskdevicepin1 = WebServer.arg("taskdevicepin1");
+  String taskdevicepin2 = WebServer.arg("taskdevicepin2");
+  String edit = WebServer.arg("edit");
+  byte index = taskindex.toInt();
 
-  if (sensordelay.toInt() != 0)
+  if (edit.toInt() != 0)
   {
-    Settings.Delay = sensordelay.toInt();
-    Settings.MessageDelay = messagedelay.toInt();
-    Settings.Dallas = dallas.toInt();
-    Settings.DHT = dht.toInt();
-    Settings.DHTType = dhttype.toInt();
-    Settings.BMP = bmp.toInt();
-    Settings.LUX = lux.toInt();
-    Settings.RFID = rfid.toInt();
-    Settings.Analog = analog.toInt();
-    Settings.Pulse1 = pulse1.toInt();
-    Settings.Switch1 = switch1.toInt();
-#ifdef ESP_CONNEXIO
-
-    struct NodoEventStruct TempEvent;
-    ClearEvent(&TempEvent);
-    byte x = 1;
-    while (Eventlist_Write(x++, &TempEvent, &TempEvent)) delay(1);
-
-    char cmd[80];
-    sprintf_P(cmd, PSTR("eventlistwrite; boot %u; TimerSet 1,%u"), Settings.Unit, Settings.Delay);
-    ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
-    sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; TimerSet 1,%u"), Settings.Delay);
-    ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
-    if (Settings.Dallas != 0)
-    {
-      eventAddTimer((char*)"DallasRead 1,1");
-      eventAddVarSend(1, 1, Settings.Dallas);
-      if (Settings.MessageDelay != 0)
-        eventAddDelay();
-    }
-    if (Settings.DHT != 0)
-    {
-      eventAddTimer((char*)"DHTRead 2,2");
-      eventAddVarSend(2, 2, Settings.DHT);
-      if (Settings.MessageDelay != 0)
-        eventAddDelay();
-    }
-    if (Settings.BMP != 0)
-    {
-      eventAddTimer((char*)"BMP085Read 4");
-      eventAddVarSend(4, 3, Settings.BMP);
-      if (Settings.MessageDelay != 0)
-        eventAddDelay();
-    }
-    if (Settings.LUX != 0)
-    {
-      eventAddTimer((char*)"LuxRead 6");
-      eventAddVarSend(6, 1, Settings.LUX);
-      if (Settings.MessageDelay != 0)
-        eventAddDelay();
-    }
-    if (Settings.Analog != 0)
-    {
-      eventAddTimer((char*)"VariableWiredAnalog 7");
-      eventAddVarSend(7, 1, Settings.Analog);
-    }
-#endif
+    Settings.TaskDeviceNumber[index-1] = taskdevicenumber.toInt();
+    Settings.TaskDeviceID[index-1] = taskdeviceid.toInt();
+    Settings.TaskDevicePin1[index-1] = taskdevicepin1.toInt();
+    Settings.TaskDevicePin2[index-1] = taskdevicepin2.toInt();
+    if (Device[Settings.TaskDeviceNumber[index-1]].Type != DEVICE_TYPE_SINGLE && Device[Settings.TaskDeviceNumber[index-1]].Type != DEVICE_TYPE_DUAL)
+      Settings.TaskDevicePin1[index-1] = -1;
+    if (Device[Settings.TaskDeviceNumber[index-1]].Type != DEVICE_TYPE_DUAL)
+      Settings.TaskDevicePin2[index-1] = -1;
+    
     Save_Settings();
   }
 
   String reply = "";
   addMenu(reply);
-  reply += F("<form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Device Settings<td>IDX/Variable<TD>Connect to<TR><TD>");
-  reply += F("<TR><TD>Delay:<TD><input type='text' name='delay' value='");
-  reply += Settings.Delay;
-  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
-  reply += Settings.MessageDelay;
-  reply += F("'><TR><TD>Dallas:<TD><input type='text' name='dallas' value='");
-  reply += Settings.Dallas;
-  reply += F("'><TD>Output 1<TR><TD>DHT:<TD><input type='text' name='dht' value='");
-  reply += Settings.DHT;
-  reply += F("'><TD>Output 2<TR><TD>DHT Type:<TD><input type='text' name='dhttype' value='");
-  reply += Settings.DHTType;
-  reply += F("'><TR><TD>BMP:<TD><input type='text' name='bmp' value='");
-  reply += Settings.BMP;
-  reply += F("'><TD>I2C<TR><TD>LUX:<TD><input type='text' name='lux' value='");
-  reply += Settings.LUX;
-  reply += F("'><TD>I2C<TR><TD>RFID:<TD><input type='text' name='rfid' value='");
-  reply += Settings.RFID;
-  reply += F("'><TD>Input 1+2<TR><TD>Analog:<TD><input type='text' name='analog' value='");
-  reply += Settings.Analog;
-  reply += F("'><TD>ADC<TR><TD>Pulse:<TD><input type='text' name='pulse1' value='");
-  reply += Settings.Pulse1;
-  reply += F("'><TD>Input 1<TR><TD>Switch:<TD><input type='text' name='switch1' value='");
-  reply += Settings.Switch1;
-  reply += F("'><TD>Input 1<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
-  reply += F("</table></form>");
+  
+  reply += F("<table border='1' bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td><TD>Task<TD>Device<td>IDX/Variable<TD>1st GPIO<TD>2nd GPIO<TD>Value 1<TD>Value2");
+  for (byte x=0; x < TASKS_MAX; x++)
+  {
+    reply += F("<TR><TD>");
+    reply += F("<a class=\"button-link\" href=\"devices?index=");
+    reply += x+1;
+    reply += F("\">Edit</a>");
+    reply += F("<TD>");
+    reply += x+1;
+    reply += F("<TD>");
+    reply += Device[Settings.TaskDeviceNumber[x]].Name;
+    reply += F("<TD>");
+    reply += Settings.TaskDeviceID[x];
+    reply += F("<TD>");
+
+    if (Settings.TaskDevicePin1[x] != -1)
+      {
+        reply += F("GPIO-");
+        reply += Settings.TaskDevicePin1[x];
+      }
+    reply += F("<TD>");
+    
+    if (Settings.TaskDevicePin2[x] != -1)
+      {
+        reply += F("GPIO-");
+        reply += Settings.TaskDevicePin2[x];
+      }
+      
+    if (Device[Settings.TaskDeviceNumber[x]].Number == DEVICE_PULSE)
+      {
+        reply += F("<TD>");
+        reply += pulseCounter[x];
+        reply += F("<TD>");
+        reply += pulseTotalCounter[x];
+      }
+    else
+      {
+        reply += F("<TD>");
+        reply += UserVar[2*x];
+        reply += F("<TD>");
+        reply += UserVar[2*x+1];
+      }
+  }
+  reply += F("</table>");
+
+  if (index != 0)
+  {
+    reply += F("<BR><BR><form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Task Settings<td>Value");
+
+    reply += "<TR><TD>Device:<TD>";
+    byte choice = Settings.TaskDeviceNumber[index-1];;
+    reply += F("<select name='taskdevicenumber'>");
+    for (byte x = 0; x < DEVICES_MAX; x++)
+    {
+      reply += F("<option value='");
+      reply += Device[x].Number;
+      reply += "'";
+      if (choice == Device[x].Number)
+        reply += " selected";
+      reply += ">";
+      reply += Device[x].Name;
+      reply += "</option>";
+    }
+    reply += F("</select>");
+
+    reply += F("<TR><TD>IDX / Var:<TD><input type='text' name='taskdeviceid' value='");
+    reply += Settings.TaskDeviceID[index-1];
+    reply += F("'>");
+
+    if (Device[Settings.TaskDeviceNumber[index-1]].Type == DEVICE_TYPE_SINGLE || Device[Settings.TaskDeviceNumber[index-1]].Type == DEVICE_TYPE_DUAL)
+      {
+        reply += F("<TR><TD>1st GPIO:<TD>");
+        addPinSelect(false, reply,"taskdevicepin1",Settings.TaskDevicePin1[index-1]);
+      }
+    if (Device[Settings.TaskDeviceNumber[index-1]].Type == DEVICE_TYPE_DUAL)
+      {
+        reply += F("<TR><TD>2nd GPIO:<TD>");
+        addPinSelect(false, reply,"taskdevicepin2",Settings.TaskDevicePin2[index-1]);
+      }
+    reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+    reply += F("<input type='hidden' name='edit' value='1'>");
+    reply += F("</table></form>");
+  }
+
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
 }
@@ -513,71 +530,13 @@ void handle_hardware() {
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Hardware"));
 
-  String boardtype = WebServer.arg("boardtype");
   String pin_i2c_sda = WebServer.arg("pini2csda");
   String pin_i2c_scl = WebServer.arg("pini2cscl");
-  String pin_wired_in_1 = WebServer.arg("pinwiredin1");
-  String pin_wired_in_2 = WebServer.arg("pinwiredin2");
-  String pin_wired_out_1 = WebServer.arg("pinwiredout1");
-  String pin_wired_out_2 = WebServer.arg("pinwiredout2");
 
-  if (boardtype.length() != 0)
+  if (pin_i2c_sda.length() != 0)
   {
-    Settings.BoardType = boardtype.toInt();
-    switch (Settings.BoardType)
-    {
-      case 0:
-        Settings.Pin_i2c_sda     = 0;
-        Settings.Pin_i2c_scl     = 2;
-        Settings.Pin_wired_in_1  = 4;
-        Settings.Pin_wired_in_2  = 5;
-        Settings.Pin_wired_out_1 = 12;
-        Settings.Pin_wired_out_2 = 13;
-        break;
-      case 1:
-        Settings.Pin_i2c_sda     = 0;
-        Settings.Pin_i2c_scl     = 2;
-        Settings.Pin_wired_in_1  = -1;
-        Settings.Pin_wired_in_2  = -1;
-        Settings.Pin_wired_out_1 = -1;
-        Settings.Pin_wired_out_2 = -1;
-        break;
-      case 2:
-        Settings.Pin_i2c_sda     = -1;
-        Settings.Pin_i2c_scl     = -1;
-        Settings.Pin_wired_in_1  = 0;
-        Settings.Pin_wired_in_2  = -1;
-        Settings.Pin_wired_out_1 = 2;
-        Settings.Pin_wired_out_2 = -1;
-        break;
-      case 3:
-        Settings.Pin_i2c_sda     = -1;
-        Settings.Pin_i2c_scl     = -1;
-        Settings.Pin_wired_in_1  = 0;
-        Settings.Pin_wired_in_2  = 2;
-        Settings.Pin_wired_out_1 = -1;
-        Settings.Pin_wired_out_2 = -1;
-        break;
-      case 4:
-        Settings.Pin_i2c_sda     = -1;
-        Settings.Pin_i2c_scl     = -1;
-        Settings.Pin_wired_in_1  = -1;
-        Settings.Pin_wired_in_2  = -1;
-        Settings.Pin_wired_out_1 = 0;
-        Settings.Pin_wired_out_2 = 2;
-        break;
-      case 5:
-        if (pin_i2c_sda.length() != 0)
-        {
-        Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
-        Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
-        Settings.Pin_wired_in_1  = pin_wired_in_1.toInt();
-        Settings.Pin_wired_in_2  = pin_wired_in_2.toInt();
-        Settings.Pin_wired_out_1 = pin_wired_out_1.toInt();
-        Settings.Pin_wired_out_2 = pin_wired_out_2.toInt();
-        break;
-        }
-    }
+    Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
+    Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
     Save_Settings();
   }
 
@@ -585,99 +544,21 @@ void handle_hardware() {
   addMenu(reply);
 
   reply += F("<form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Hardware Settings<td><TR><TD>");
-
-  reply += "<TR><TD>Board Type:<TD>";
-  byte choice = Settings.BoardType;
-  String options[6];
-  options[0] = F("ESP-07/12");
-  options[1] = F("ESP-01 I2C");
-  options[2] = F("ESP-01 In/Out");
-  options[3] = F("ESP-01 2 x In");
-  options[4] = F("ESP-01 2 x Out");
-  options[5] = F("Custom");
-  reply += F("<select name='boardtype'>");
-  for (byte x = 0; x < 6; x++)
-  {
-    reply += F("<option value='");
-    reply += x;
-    reply += "'";
-    if (choice == x)
-      reply += " selected";
-    reply += ">";
-    reply += options[x];
-    reply += "</option>";
-  }
-  reply += F("</select>");
-
-  if (choice == 5) // custom config
-  {
-    reply += F("<TR><TD>SDA:<TD>");
-    addSelect(reply,"pini2csda",Settings.Pin_i2c_sda);
-    reply += F("<TR><TD>SCL:<TD>");
-    addSelect(reply,"pini2cscl",Settings.Pin_i2c_scl);
-    reply += F("<TR><TD>Input 1:<TD>");
-    addSelect(reply,"pinwiredin1",Settings.Pin_wired_in_1);
-    reply += F("<TR><TD>Input 2:<TD>");
-    addSelect(reply,"pinwiredin2",Settings.Pin_wired_in_2);
-    reply += F("<TR><TD>Output 1:<TD>");
-    addSelect(reply,"pinwiredout1",Settings.Pin_wired_out_1);
-    reply += F("<TR><TD>Output 2:<TD>");
-    addSelect(reply,"pinwiredout2",Settings.Pin_wired_out_2);
-  }
+  reply += F("<TR><TD>SDA:<TD>");
+  addPinSelect(true, reply,"pini2csda",Settings.Pin_i2c_sda);
+  reply += F("<TR><TD>SCL:<TD>");
+  addPinSelect(true, reply,"pini2cscl",Settings.Pin_i2c_scl);
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
-
-  switch (Settings.BoardType)
-  {
-    case 0:
-    case 5:
-      reply += F("<TR><TD>SDA:<TD>");
-      reply += Settings.Pin_i2c_sda;
-      reply += F("<TR><TD>SCL:<TD>");
-      reply += Settings.Pin_i2c_scl;
-      reply += F("<TR><TD>Input 1:<TD>");
-      reply += Settings.Pin_wired_in_1;
-      reply += F("<TR><TD>Input 2:<TD>");
-      reply += Settings.Pin_wired_in_2;
-      reply += F("<TR><TD>Output 1:<TD>");
-      reply += Settings.Pin_wired_out_1;
-      reply += F("<TR><TD>Output 2:<TD>");
-      reply += Settings.Pin_wired_out_2;
-      break;
-    case 1:
-      reply += F("<TR><TD>SDA:<TD>");
-      reply += Settings.Pin_i2c_sda;
-      reply += F("<TR><TD>SCL:<TD>");
-      reply += Settings.Pin_i2c_scl;
-      break;
-    case 2:
-      reply += F("<TR><TD>Input 1:<TD>");
-      reply += Settings.Pin_wired_in_1;
-      reply += F("<TR><TD>Output 1:<TD>");
-      reply += Settings.Pin_wired_out_1;
-      break;
-    case 3:
-      reply += F("<TR><TD>Input 1:<TD>");
-      reply += Settings.Pin_wired_in_1;
-      reply += F("<TR><TD>Input 2:<TD>");
-      reply += Settings.Pin_wired_in_2;
-      break;
-    case 4:
-      reply += F("<TR><TD>Output 1:<TD>");
-      reply += Settings.Pin_wired_out_1;
-      reply += F("<TR><TD>Output 2:<TD>");
-      reply += Settings.Pin_wired_out_2;
-      break;
-  }
 
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
 }
 
-void addSelect(String& str, String name,  int choice)
+void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
-  String options[7];
+  String options[10];
   options[0] = F(" ");
   options[1] = F("GPIO-0");
   options[2] = F("GPIO-2");
@@ -685,7 +566,10 @@ void addSelect(String& str, String name,  int choice)
   options[4] = F("GPIO-5");
   options[5] = F("GPIO-12");
   options[6] = F("GPIO-13");
-  int optionValues[7];
+  options[7] = F("GPIO-14");
+  options[8] = F("GPIO-15");
+  options[9] = F("GPIO-16");
+  int optionValues[10];
   optionValues[0] = -1;
   optionValues[1] = 0;
   optionValues[2] = 2;
@@ -693,15 +577,19 @@ void addSelect(String& str, String name,  int choice)
   optionValues[4] = 5;
   optionValues[5] = 12;
   optionValues[6] = 13;
-
+  optionValues[7] = 14;
+  optionValues[8] = 15;
+  optionValues[9] = 16;
   str += F("<select name='");
   str += name;
   str += "'>";
-  for (byte x = 0; x < 7; x++)
+  for (byte x = 0; x < 10; x++)
   {
     str += F("<option value='");
     str += optionValues[x];
     str += "'";
+    if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
+      str += " disabled";    
     if (choice == optionValues[x])
       str += " selected";
     str += ">";
@@ -1068,6 +956,53 @@ void handle_login() {
     }
   }
   
+  WebServer.send(200, "text/html", reply);
+  printWebString = "";
+  printToWeb = false;
+}
+
+//********************************************************************************
+// Web Interface control page (no password!)
+//********************************************************************************
+void handle_control() {
+
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.print(F("HTTP : Webrequest : "));
+  String webrequest = WebServer.arg("cmd");
+  webrequest.replace("%20", " ");
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
+    Serial.println(webrequest);
+  char command[80];
+  command[0] = 0;
+  webrequest.toCharArray(command, 79);
+  boolean validCmd = false;
+  
+  char Cmd[40];
+  Cmd[0] = 0;
+  GetArgv(command, Cmd, 1);
+
+  if ((strcasecmp(Cmd, "gpio") == 0) || (strcasecmp(Cmd, "pwm") == 0))
+    validCmd = true;
+    
+  String reply = "";
+
+  printToWeb = true;
+  printWebString = "";
+  
+  if (validCmd)
+    {
+      #ifdef ESP_CONNEXIO
+        ExecuteLine(command, VALUE_SOURCE_SERIAL);
+      #endif
+      #ifdef ESP_EASY
+        ExecuteCommand(command);
+      #endif
+    }
+    else
+      reply += F("Unknown or restricted command!");
+    
+  reply += printWebString;
+  reply += F("</table></form>");
   WebServer.send(200, "text/html", reply);
   printWebString = "";
   printToWeb = false;
