@@ -393,6 +393,10 @@ void handle_devices() {
       Settings.TaskDevicePin1[index-1] = -1;
     if (Device[Settings.TaskDeviceNumber[index-1]].Type != DEVICE_TYPE_DUAL)
       Settings.TaskDevicePin2[index-1] = -1;
+
+    #ifdef ESP_CONNEXIO
+      createEventlist();
+    #endif
     
     Save_Settings();
   }
@@ -415,13 +419,27 @@ void handle_devices() {
     reply += Settings.TaskDeviceID[x];
     reply += F("<TD>");
 
+    if(Device[Settings.TaskDeviceNumber[x]].Type == DEVICE_TYPE_I2C)
+      {
+        reply += F("GPIO-");
+        reply += Settings.Pin_i2c_sda;
+      }
+    if(Device[Settings.TaskDeviceNumber[x]].Type == DEVICE_TYPE_ANALOG)
+        reply += F("ADC (TOUT)");
+
     if (Settings.TaskDevicePin1[x] != -1)
       {
         reply += F("GPIO-");
         reply += Settings.TaskDevicePin1[x];
       }
     reply += F("<TD>");
-    
+
+    if(Device[Settings.TaskDeviceNumber[x]].Type == DEVICE_TYPE_I2C)
+      {
+        reply += F("GPIO-");
+        reply += Settings.Pin_i2c_scl;
+      }
+      
     if (Settings.TaskDevicePin2[x] != -1)
       {
         reply += F("GPIO-");
@@ -479,7 +497,8 @@ void handle_devices() {
         reply += F("<TR><TD>2nd GPIO:<TD>");
         addPinSelect(false, reply,"taskdevicepin2",Settings.TaskDevicePin2[index-1]);
       }
-    reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices\">Cancel</a>");
+    reply += F("<input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
     reply += F("<input type='hidden' name='edit' value='1'>");
     reply += F("</table></form>");
   }
@@ -489,6 +508,62 @@ void handle_devices() {
 }
 
 #ifdef ESP_CONNEXIO
+void createEventlist()
+{
+  struct NodoEventStruct TempEvent;
+  ClearEvent(&TempEvent);
+  byte x = 1;
+  while (Eventlist_Write(x++, &TempEvent, &TempEvent)) delay(1);
+
+  char cmd[80];
+  sprintf_P(cmd, PSTR("eventlistwrite; boot %u; TimerSet 1,%u"), Settings.Unit, Settings.Delay);
+  ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
+  sprintf_P(cmd, PSTR("eventlistwrite; Timer 1; TimerSet 1,%u"), Settings.Delay);
+  ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
+
+  for (byte x=0; x < TASKS_MAX; x++)
+  {
+    if (Settings.TaskDeviceID[x] != 0)
+    {
+      switch(Settings.TaskDeviceNumber[x])
+      {
+        case DEVICE_DS18B20:
+          sprintf_P(cmd, PSTR("DallasRead %u,%u"), Settings.TaskDevicePin1[x], x*2+1);
+          eventAddTimer(cmd);
+          eventAddVarSend(x*2+1, 1, Settings.TaskDeviceID[x]);
+          break;
+        case DEVICE_DHT11:
+          sprintf_P(cmd, PSTR("DHTRead %u,%u,11"), Settings.TaskDevicePin1[x], x*2+1);
+          eventAddTimer(cmd);
+          eventAddVarSend(x*2+1, 2, Settings.TaskDeviceID[x]);
+          break;
+        case DEVICE_DHT22:
+          sprintf_P(cmd, PSTR("DHTRead %u,%u,22"), Settings.TaskDevicePin1[x], x*2+1);
+          eventAddTimer(cmd);
+          eventAddVarSend(x*2+1, 2, Settings.TaskDeviceID[x]);
+          break;
+        case DEVICE_BMP085:
+          sprintf_P(cmd, PSTR("BMP085Read %u"), x*2+1);
+          eventAddTimer(cmd);
+          eventAddVarSend(x*2+1, 3, Settings.TaskDeviceID[x]);
+          break;
+        case DEVICE_BH1750:
+          sprintf_P(cmd, PSTR("LuxRead %u"), x*2+1);
+          eventAddTimer(cmd);
+          eventAddVarSend(x*2+1, 1, Settings.TaskDeviceID[x]);
+          break;
+        case DEVICE_ANALOG:
+          sprintf_P(cmd, PSTR("VariableWiredAnalog %u"), x*2+1);
+          eventAddTimer(cmd);
+          eventAddVarSend(x*2+1, 1, Settings.TaskDeviceID[x]);
+          break;
+      }
+      if (Settings.MessageDelay != 0)
+        eventAddDelay();
+    }
+  }
+}
+
 void eventAddVarSend(byte var, byte sensortype, int idx)
 {
   char cmd[80];

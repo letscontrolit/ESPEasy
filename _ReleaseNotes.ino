@@ -99,3 +99,10 @@
 // Changed password timeout to 5 minutes
 // Added direct GPIO output control without password request
 
+// R015 22-08-2015
+// Fixed a bug in DHT22 device
+// Fixed a bug in setting for default delay
+// Changed debug info
+// Changed device tab, added more pin info and cancel button
+// Fixed syslog loop bug
+

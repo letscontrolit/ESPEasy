@@ -173,17 +173,7 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
 
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-      {
-        sprintf_P(log,PSTR("C1 WS %u FM %u"),WiFi.status(),FreeMem());
-        Serial.println(log);
-      }
     String line = client.readStringUntil('\n');
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-      {
-        sprintf_P(log,PSTR("C2 WS %u FM %u"),WiFi.status(),FreeMem());
-        Serial.println(log);
-      }
     line.toCharArray(log,79);
     addLog(LOG_LEVEL_DEBUG_MORE,log);
     if (line.substring(0, 15) == "HTTP/1.1 200 OK")
@@ -295,7 +285,6 @@ void syslog(char *message)
     char str[80];
     str[0] = 0;
     sprintf_P(str, PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
-    addLog(LOG_LEVEL_DEBUG,str);
     portTX.write(str);
     portTX.endPacket();
   }

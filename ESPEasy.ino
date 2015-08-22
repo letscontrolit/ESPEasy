@@ -61,15 +61,6 @@
 #define DEFAULT_PORT        8080                // Enter your Domoticz Server port value
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
-#define DEFAULT_DALLAS_IDX  0                   // Enter IDX of your virtual temperature device
-#define DEFAULT_DHT_IDX     0                   // Enter IDX of your virtual Humidity device
-#define DEFAULT_DHT_TYPE    11                  // Enter Type of your virtual Humidity device
-#define DEFAULT_BMP_IDX     0                   // Enter IDX of your virtual Barometric Pressure device
-#define DEFAULT_LUX_IDX     0                   // Enter IDX of your virtual LUX device
-#define DEFAULT_RFID_IDX    0                   // Enter IDX of your virtual RFID device
-#define DEFAULT_ANALOG_IDX  0                   // Enter IDX of your virtual Analog device
-#define DEFAULT_PULSE1_IDX  0                   // Enter IDX of your virtual Pulse counter
-#define DEFAULT_SWITCH1_IDX 0                   // Enter IDX of your switch device
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
                                                 //   1 = Domoticz HTTP
                                                 //   2 = Domoticz MQTT
@@ -89,7 +80,7 @@
 #define ESP_PROJECT_PID   2015050101L
 #define ESP_EASY
 #define VERSION           4
-#define BUILD            14
+#define BUILD            15
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define LOG_LEVEL_ERROR      1
@@ -281,7 +272,6 @@ void setup()
   if (Settings.Protocol == 2)
     MQTTConnect();
 
-  syslog((char*)"Boot");
   sendSysInfoUDP(3);
   Serial.println(F("INIT : Boot OK"));
   addLog(LOG_LEVEL_INFO,(char*)"Boot");
@@ -423,7 +413,7 @@ void SensorSend()
           break;
 
         case DEVICE_DHT22:
-          dht(22, Settings.TaskDevicePin1[x], 2);
+          dht(22, Settings.TaskDevicePin1[x], x*2+1);
           if (!isnan(UserVar[(x*2+1) - 1]) && (UserVar[(x*2+2) - 1] > 0))
             sendData(2, Settings.TaskDeviceID[x], x*2+1);
           break;
