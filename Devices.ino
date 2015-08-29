@@ -1,32 +1,100 @@
 void Device_Init()
 {
-  Device[1].Number = DEVICE_DS18B20;
-  strcpy(Device[1].Name,"Temperature DS18b20");
-  Device[1].Type = DEVICE_TYPE_SINGLE;
-  Device[2].Number = DEVICE_DHT11;
-  strcpy(Device[2].Name,"Temp + Hum DHT 11");
-  Device[2].Type = DEVICE_TYPE_SINGLE;
-  Device[3].Number = DEVICE_DHT22;
-  strcpy(Device[3].Name,"Temp + Hum DHT 22");
-  Device[3].Type = DEVICE_TYPE_SINGLE;
-  Device[4].Number = DEVICE_BMP085;
-  strcpy(Device[4].Name,"Temp + Baro BMP085");
-  Device[4].Type = DEVICE_TYPE_I2C;
-  Device[5].Number = DEVICE_BH1750;
-  strcpy(Device[5].Name,"LUX BH1750");
-  Device[5].Type = DEVICE_TYPE_I2C;
-  Device[6].Number = DEVICE_ANALOG;
-  strcpy(Device[6].Name,"Analog input");
-  Device[6].Type = DEVICE_TYPE_ANALOG;
-  Device[7].Number = DEVICE_RFID;
-  strcpy(Device[7].Name,"RFID Reader");
-  Device[7].Type = DEVICE_TYPE_DUAL;
-  Device[8].Number = DEVICE_PULSE;
-  strcpy(Device[8].Name,"Pulse Counter");
-  Device[8].Type = DEVICE_TYPE_SINGLE;
-  Device[9].Number = DEVICE_SWITCH;
-  strcpy(Device[9].Name,"Switch input");
-  Device[9].Type = DEVICE_TYPE_SINGLE;
+  byte x=0;
+  
+  Device[++x].Number = DEVICE_DS18B20;
+  strcpy(Device[x].Name,"Temperature DS18b20");
+  Device[x].Type = DEVICE_TYPE_SINGLE;
+  Device[x].VType = 1;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Temperature");
+  
+  Device[++x].Number = DEVICE_DHT11;
+  strcpy(Device[x].Name,"Temp + Hum DHT 11");
+  Device[x].Type = DEVICE_TYPE_SINGLE;
+  Device[x].VType = 2;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Temperature");
+  strcpy(Device[x].ValueNames[1],"Humidity");
+  
+  Device[++x].Number = DEVICE_DHT22;
+  strcpy(Device[x].Name,"Temp + Hum DHT 22");
+  Device[x].Type = DEVICE_TYPE_SINGLE;
+  Device[x].VType = 2;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Temperature");
+  strcpy(Device[x].ValueNames[1],"Humidity");
+
+  Device[++x].Number = DEVICE_BMP085;
+  strcpy(Device[x].Name,"Temp + Baro BMP085");
+  Device[x].Type = DEVICE_TYPE_I2C;
+  Device[x].VType = 3;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Temperature");
+  strcpy(Device[x].ValueNames[1],"Pressure");
+  
+  Device[++x].Number = DEVICE_BH1750;
+  strcpy(Device[x].Name,"LUX BH1750");
+  Device[x].Type = DEVICE_TYPE_I2C;
+  Device[x].VType = 1;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"LUX");
+
+  Device[++x].Number = DEVICE_ANALOG;
+  strcpy(Device[x].Name,"Analog input");
+  Device[x].Type = DEVICE_TYPE_ANALOG;
+  Device[x].VType = 1;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Analog");
+
+  Device[++x].Number = DEVICE_RFID;
+  strcpy(Device[x].Name,"RFID Reader");
+  Device[x].Type = DEVICE_TYPE_DUAL;
+  Device[x].VType = 1;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"RFID");
+
+  Device[++x].Number = DEVICE_PULSE;
+  strcpy(Device[x].Name,"Pulse Counter");
+  Device[x].Type = DEVICE_TYPE_SINGLE;
+  Device[x].VType = 1;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Count");
+
+  Device[++x].Number = DEVICE_SWITCH;
+  strcpy(Device[x].Name,"Switch input");
+  Device[x].Type = DEVICE_TYPE_SINGLE;
+  Device[x].VType = 1;
+  Device[x].Ports = 0;
+  strcpy(Device[x].ValueNames[0],"Switch");
+
+  Device[++x].Number = DEVICE_PCF8591;
+  strcpy(Device[x].Name,"PCF8591 Analog input");
+  Device[x].Type = DEVICE_TYPE_I2C;
+  Device[x].VType = 1;
+  Device[x].Ports = 4;
+  strcpy(Device[x].ValueNames[0],"Analog");
+
+  Device[++x].Number = DEVICE_MCP23017;
+  strcpy(Device[x].Name,"MCP23017 input");
+  Device[x].Type = DEVICE_TYPE_I2C;
+  Device[x].VType = 1;
+  Device[x].Ports = 16;
+  strcpy(Device[x].ValueNames[0],"Switch");
+
+  Device[++x].Number = DEVICE_PRO_MINI_ANALOG;
+  strcpy(Device[x].Name,"ProMini Extender Analog");
+  Device[x].Type = DEVICE_TYPE_I2C;
+  Device[x].VType = 1;
+  Device[x].Ports = 6;
+  strcpy(Device[x].ValueNames[0],"Analog");
+
+  Device[++x].Number = DEVICE_PRO_MINI_DIGITAL;
+  strcpy(Device[x].Name,"ProMini Extender Digital");
+  Device[x].Type = DEVICE_TYPE_I2C;
+  Device[x].VType = 1;
+  Device[x].Ports = 14;
+  strcpy(Device[x].ValueNames[0],"Switch");
 
   for (byte x=0; x < TASKS_MAX; x++)
   {
@@ -50,9 +118,17 @@ void Device_Init()
           pulseinit(Settings.TaskDevicePin1[x], x);
           break;
         case DEVICE_SWITCH:
-          Serial.print(F("INIT : InputPullup "));
+          if (Settings.TaskDevicePin1PullUp[x])
+            {
+             Serial.print(F("INIT : InputPullup "));
+             pinMode(Settings.TaskDevicePin1[x], INPUT_PULLUP);
+            }
+          else
+            {
+              Serial.print(F("INIT : Input "));
+              pinMode(Settings.TaskDevicePin1[x], INPUT);
+            }
           Serial.println(Settings.TaskDevicePin1[x]);
-          pinMode(Settings.TaskDevicePin1[x], INPUT_PULLUP);
           break;
       }
     }
@@ -134,6 +210,33 @@ void pulseinit(byte Par1, byte Index)
         attachInterrupt(Par1, pulse_interrupt8, FALLING);
         break;
     }
+}
+
+/*********************************************************************************************\
+ * Extender (Arduino Mini Pro connected through I2C)
+ * The Mini Pro needs a small sketch to support this
+\*********************************************************************************************/
+int extender(byte Cmd, byte Port, int Value)
+{ 
+  uint8_t address = 0x7f;
+  Wire.beginTransmission(address);
+  Wire.write(Cmd);
+  Wire.write(Port);
+  Wire.write(Value & 0xff);
+  Wire.write((Value >> 8));
+  Wire.endTransmission();
+  if (Cmd == 2 || Cmd == 4)
+  {
+    delay(1);  // remote unit needs some time to do the adc stuff
+    Wire.requestFrom(address, (uint8_t)0x1);
+    if (Wire.available())
+    {
+      int portvalue = Wire.read();
+      //portvalue += Wire.read()*256;
+      return portvalue;
+    }
+  }
+  return -1;
 }
 
 /*********************************************************************************************\
@@ -259,13 +362,49 @@ boolean pcf8591(byte Par1, byte Par2)
     Wire.read(); // Read older value first (stored in chip)
     UserVar[Par2 - 1] = (float)Wire.read(); // now read actual value and store into Nodo var
     Serial.print("PCF  : Analog Value : ");
-    Serial.println(UserVar[Par1 - 1]);
+    Serial.println(UserVar[Par2 - 1]);
     success = true;
   }
   return success;
 }
+
 /*********************************************************************************************\
- * MCP23017
+ * MCP23017 INPUT
+\*********************************************************************************************/
+boolean mcp23017Read(byte Par1, byte Par2)
+{
+  Serial.println("MCP23017 Read");
+  boolean success = false;
+  byte portvalue = 0;
+  byte unit = (Par1 - 1) / 16;
+  byte port = Par1 - (unit * 16);
+  uint8_t address = 0x20 + unit;
+  byte IOBankConfigReg = 0;
+  byte IOBankValueReg = 0x12;
+  if (port > 8)
+  {
+    port = port - 8;
+    IOBankConfigReg++;
+    IOBankValueReg++;
+  }
+  // get the current pin status
+  Wire.beginTransmission(address);
+  Wire.write(IOBankValueReg); // IO data register
+  Wire.endTransmission();
+  Wire.requestFrom(address, (uint8_t)0x1);
+  if (Wire.available())
+  {
+    portvalue = ((Wire.read() & _BV(port-1)) >> (port-1));
+    UserVar[Par2 - 1] = (float)portvalue;
+    Serial.print("MCP  : Input Value : ");
+    Serial.println(UserVar[Par2 - 1]);
+    success = true;
+  }
+  return success;
+}
+
+/*********************************************************************************************\
+ * MCP23017 OUTPUT
 \*********************************************************************************************/
 boolean mcp23017(byte Par1, byte Par2)
 {
@@ -320,6 +459,7 @@ boolean mcp23017(byte Par1, byte Par2)
     success = true;
   }
 }
+
 
 /*********************************************************************************************\
  * DALLAS

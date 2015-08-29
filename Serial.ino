@@ -20,6 +20,21 @@ void ExecuteCommand(char *Line)
   // commands to execute io tasks
   // ****************************************
 
+  if (strcasecmp(Command, "calc") == 0)
+  {
+    float result;
+    if (GetArgv(Line, TmpStr1, 2))
+      {
+        String formula = TmpStr1;
+        float value = 123.45;
+        String svalue = String(value);
+        formula.replace("%value%",svalue);
+        formula.toCharArray(TmpStr1,25);
+        if(Calculate(TmpStr1,&result)==CALCULATE_OK)
+          Serial.println(result);
+      }
+  }
+
   if (strcasecmp(Command, "GPIO") == 0)
   {
     if (Par1 >= 0 && Par1 <= 16)
@@ -54,12 +69,38 @@ void ExecuteCommand(char *Line)
       }
   }
 
+  if (strcasecmp(Command, "ExtRead") == 0)
+    {
+      uint8_t address = 0x7f;
+      Wire.requestFrom(address, (uint8_t)Par1);
+      if (Wire.available())
+      {
+        for (byte x=0; x<Par1;x++)
+          Serial.println(Wire.read());
+      }
+    }
+    
+  if (strcasecmp(Command, "ExtGPIO") == 0)
+    extender(1,Par1,Par2);
+  if (strcasecmp(Command, "ExtPWM") == 0)
+    extender(3,Par1,Par2);
+  if (strcasecmp(Command, "ExtGPIORead") == 0)
+    {
+      byte value=extender(2,Par1,0);
+      Serial.println(value);
+    }
+  if (strcasecmp(Command, "ExtADCRead") == 0)
+    {
+      int value=extender(4,Par1,0);
+      Serial.println(value);
+    }
+    
   if (strcasecmp(Command, "DomoticzSend") == 0)
   {
     if (GetArgv(Line, TmpStr1, 4))
       {
         UserVar[10 - 1] = atof(TmpStr1);
-        sendData(Par1, Par2, 10);
+        sendData(0, Par1, Par2, 10);
       }
   }
 
@@ -151,16 +192,23 @@ void ExecuteCommand(char *Line)
         Serial.println("?");
   }
 
-  if (strcasecmp(Command, "IP") == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 2))
-      Settings.IP_Octet = str2int(TmpStr1);
-  }
-
   if (strcasecmp(Command, "ControllerPort") == 0)
   {
     if (GetArgv(Line, TmpStr1, 2))
       Settings.ControllerPort = str2int(TmpStr1);
+  }
+
+  if (strcasecmp(Command, "IP") == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 2))
+      if (!str2ip(TmpStr1, Settings.IP))
+        Serial.println("?");
+  }
+
+  if (strcasecmp(Command, "IPoctet") == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 2))
+      Settings.IP_Octet = str2int(TmpStr1);
   }
 
   if (strcasecmp(Command, "WifiSSID") == 0)
@@ -231,6 +279,8 @@ void ExecuteCommand(char *Line)
     Serial.print("  ControllerPort   : "); Serial.println(Settings.ControllerPort);
     Serial.print("  Fixed IP octet   : "); Serial.println(Settings.IP_Octet);
     Serial.print("  WifiKey (APmode) : ");  Serial.println(Settings.WifiAPKey);
+
+    Serial.print("  settings size    : ");  Serial.println(sizeof(struct SettingsStruct));
 
   }
 
@@ -432,6 +482,11 @@ void ResetFactory(void)
     Settings.TaskDeviceID[x]=0;
     Settings.TaskDevicePin1[x]=-1;
     Settings.TaskDevicePin2[x]=-1;
+    Settings.TaskDevicePin1PullUp[x]=true;
+    Settings.TaskDeviceName[x][0]=0;
+    Settings.TaskDevicePort[x]=0;
+    for (byte varNr=0; varNr < VARS_PER_TASK; varNr++)
+      (Settings.TaskDeviceFormula[x][varNr][0] ==0);
   }
   Save_Settings();
   WifiDisconnect();

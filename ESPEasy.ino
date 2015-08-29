@@ -41,10 +41,12 @@
 //   RFID Wiegand-26 reader
 //   MCP23017 I2C IO Expanders
 //   Analog input (ESP-7/12 only)
+//   PCF8591 4 port Analog to Digital converter (I2C)
 //   LCD I2C display 4x20 chars
 //   Pulse counters
 //   Simple switch inputs
 //   Direct GPIO output control to drive relais, mosfets, etc
+//   Arduino Pro Mini with IO extender sketch, connected through I2C
 
 // ********************************************************************************
 //   User specific configuration
@@ -65,6 +67,8 @@
                                                 //   1 = Domoticz HTTP
                                                 //   2 = Domoticz MQTT
                                                 //   3 = Nodo Telnet
+                                                //   4 = ThingSpeak
+                                                //   5 = OpenHAB MQTT
 #define UNIT                0
 
 // ********************************************************************************
@@ -77,37 +81,48 @@
 //  3 = temp + hum + baro (BMP085)
 // 10 = switch
 
-#define ESP_PROJECT_PID   2015050101L
+#define ESP_PROJECT_PID                    2015050101L
 #define ESP_EASY
-#define VERSION           4
-#define BUILD            15
+#define VERSION                             5
+#define BUILD                              16
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
-#define LOG_LEVEL_ERROR      1
-#define LOG_LEVEL_INFO       2
-#define LOG_LEVEL_DEBUG      3
-#define LOG_LEVEL_DEBUG_MORE 4
+#define PROTOCOL_DOMOTICZ_HTTP              1
+#define PROTOCOL_DOMOTICZ_MQTT              2
+#define PROTOCOL_NODO_TELNET                3
+#define PROTOCOL_THINGSPEAK                 4
+#define PROTOCOL_OPENHAB_MQTT               5
 
-#define CMD_REBOOT                      89
-#define CMD_WIFI_DISCONNECT             135
+#define LOG_LEVEL_ERROR                     1
+#define LOG_LEVEL_INFO                      2
+#define LOG_LEVEL_DEBUG                     3
+#define LOG_LEVEL_DEBUG_MORE                4
 
-#define DEVICE_DS18B20        1
-#define DEVICE_DHT11          2
-#define DEVICE_DHT22          3
-#define DEVICE_BMP085         4
-#define DEVICE_BH1750         5
-#define DEVICE_ANALOG         6
-#define DEVICE_RFID           7
-#define DEVICE_PULSE          8
-#define DEVICE_SWITCH         9
+#define CMD_REBOOT                         89
+#define CMD_WIFI_DISCONNECT               135
 
-#define DEVICES_MAX 10
-#define TASKS_MAX 8
+#define DEVICE_DS18B20                      1
+#define DEVICE_DHT11                        2
+#define DEVICE_DHT22                        3
+#define DEVICE_BMP085                       4
+#define DEVICE_BH1750                       5
+#define DEVICE_ANALOG                       6
+#define DEVICE_RFID                         7
+#define DEVICE_PULSE                        8
+#define DEVICE_SWITCH                       9
+#define DEVICE_PCF8591                     10
+#define DEVICE_MCP23017                    11
+#define DEVICE_PRO_MINI_ANALOG             12
+#define DEVICE_PRO_MINI_DIGITAL            13
 
-#define DEVICE_TYPE_SINGLE    1  // connected through 1 datapin
-#define DEVICE_TYPE_I2C       2  // connected through I2C
-#define DEVICE_TYPE_ANALOG    3  // tout pin
-#define DEVICE_TYPE_DUAL      4  // connected through 2 datapins
+#define DEVICES_MAX                        14
+#define TASKS_MAX                           8
+#define VARS_PER_TASK                       2
+
+#define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
+#define DEVICE_TYPE_I2C                     2  // connected through I2C
+#define DEVICE_TYPE_ANALOG                  3  // tout pin
+#define DEVICE_TYPE_DUAL                    4  // connected through 2 datapins
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -160,7 +175,7 @@ struct SettingsStruct
   int8_t        _Pin_wired_out_2;
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
-  unsigned int  Switch1;
+  unsigned int  _Switch1;
   byte          Protocol;
   byte          IP[4];
   byte          Gateway[4];
@@ -179,6 +194,10 @@ struct SettingsStruct
   unsigned int  TaskDeviceID[TASKS_MAX];
   int8_t        TaskDevicePin1[TASKS_MAX];
   int8_t        TaskDevicePin2[TASKS_MAX];
+  char          TaskDeviceName[TASKS_MAX][26];
+  byte          TaskDevicePort[TASKS_MAX];
+  char          TaskDeviceFormula[TASKS_MAX][VARS_PER_TASK][26];
+  boolean       TaskDevicePin1PullUp[TASKS_MAX];
 } Settings;
 
 struct LogStruct
@@ -193,12 +212,15 @@ struct DeviceStruct
   byte Number;
   char Name[26];
   byte Type;
+  byte VType;
+  byte Ports;
+  char ValueNames[2][26];
 } Device[DEVICES_MAX];
 
 boolean printToWeb = false;
 String printWebString = "";
 
-float UserVar[2 * TASKS_MAX];
+float UserVar[VARS_PER_TASK * TASKS_MAX];
 unsigned long pulseCounter[TASKS_MAX];
 unsigned long pulseTotalCounter[TASKS_MAX];
 byte switchstate[TASKS_MAX];
@@ -269,7 +291,7 @@ void setup()
   lcd.print("ESP Easy");
 
   // Setup MQTT Client
-  if (Settings.Protocol == 2)
+  if ((Settings.Protocol == 2) || (Settings.Protocol == 5))
     MQTTConnect();
 
   sendSysInfoUDP(3);
@@ -369,7 +391,7 @@ void inputCheck()
       {
         switchstate[x] = state;
         UserVar[(x*2+1) - 1] = state;
-        sendData(10, Settings.TaskDeviceID[x], x*2+1);
+        sendData(x, 10, Settings.TaskDeviceID[x], x*2+1);
         delay(100);
       }
     }
@@ -386,7 +408,7 @@ void inputCheck()
         Serial.print("RFID : Tag : ");
         Serial.println(rfid_id);
         UserVar[(x*2+1) - 1] = rfid_id;
-        sendData(1, Settings.TaskDeviceID[x], x*2+1);
+        sendData(x, 1, Settings.TaskDeviceID[x], x*2+1);
       }
     }
   }
@@ -399,46 +421,99 @@ void SensorSend()
   {
     if (Settings.TaskDeviceID[x] != 0)
     {
+      byte uvarNr=x * VARS_PER_TASK + 1;
+      boolean success = false;
       switch(Settings.TaskDeviceNumber[x])
       {
         case DEVICE_DS18B20:
-          dallas(Settings.TaskDevicePin1[x], x*2+1);
-          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          dallas(Settings.TaskDevicePin1[x], uvarNr);
+          success = true;
           break;
           
         case DEVICE_DHT11:
-          dht(11, Settings.TaskDevicePin1[x], x*2+1);
-          if (!isnan(UserVar[(x*2+1) - 1]) && (UserVar[(x*2+2) - 1] > 0))
-            sendData(2,Settings.TaskDeviceID[x], x*2+1);
+          dht(11, Settings.TaskDevicePin1[x], uvarNr);
+          if (!isnan(UserVar[uvarNr - 1]) && (UserVar[(uvarNr+1) - 1] > 0))
+            success = true;
           break;
 
         case DEVICE_DHT22:
-          dht(22, Settings.TaskDevicePin1[x], x*2+1);
-          if (!isnan(UserVar[(x*2+1) - 1]) && (UserVar[(x*2+2) - 1] > 0))
-            sendData(2, Settings.TaskDeviceID[x], x*2+1);
+          dht(22, Settings.TaskDevicePin1[x], uvarNr);
+          if (!isnan(UserVar[uvarNr - 1]) && (UserVar[(uvarNr+1) - 1] > 0))
+            success = true;
           break;
 
         case DEVICE_BMP085:
-          bmp085(x*2+1);
-          if ((UserVar[(x*2+2) - 1] >= 300) && (UserVar[(x*2+2) - 1] <= 1100))
-            sendData(3, Settings.TaskDeviceID[x], x*2+1);
+          bmp085(uvarNr);
+          if ((UserVar[(uvarNr+1) - 1] >= 300) && (UserVar[(uvarNr+1) - 1] <= 1100))
+            success = true;
           break;
 
         case DEVICE_BH1750:
-          lux(x*2+1);       // read BH1750 LUX sensor and store to var 6
-          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          lux(uvarNr);
+          success = true;
           break;
 
         case DEVICE_ANALOG:
-          analog(x*2+1);       // read ADC and store to var 7
-          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          analog(uvarNr);
+          success = true;
           break;
 
         case DEVICE_PULSE:
-          UserVar[(x*2+1) - 1] = pulseCounter[x];
-          sendData(1, Settings.TaskDeviceID[x], x*2+1);
+          UserVar[uvarNr - 1] = pulseCounter[x];
+          success = true;
           pulseCounter[x] = 0;
           break;
+
+        case DEVICE_PCF8591:
+          pcf8591(Settings.TaskDevicePort[x], uvarNr);
+          success = true;
+          break;
+
+        case DEVICE_MCP23017:
+          mcp23017Read(Settings.TaskDevicePort[x], uvarNr);
+          success = true;
+          break;
+
+        case DEVICE_PRO_MINI_ANALOG:
+          UserVar[uvarNr - 1] = extender(4,Settings.TaskDevicePort[x],0);
+          success = true;
+          break;
+
+        case DEVICE_PRO_MINI_DIGITAL:
+          UserVar[uvarNr - 1] = extender(2,Settings.TaskDevicePort[x],0);
+          success = true;
+          break;
+      }
+      if (success)
+      {
+        for (byte varNr=0; varNr < VARS_PER_TASK; varNr++)
+        {
+          if (Settings.TaskDeviceFormula[x][varNr][0] !=0)
+          {
+             String formula = Settings.TaskDeviceFormula[x][varNr];
+             float value = UserVar[uvarNr + varNr - 1];
+             float result = 0;
+             String svalue = String(value);
+             formula.replace("%value%",svalue);
+             Serial.print("CALC : ");
+             Serial.print(formula);
+             Serial.print(" = ");
+             char TmpStr[26];
+             formula.toCharArray(TmpStr,25);
+             byte error = Calculate(TmpStr,&result);
+             if(error == 0)
+               {
+                 Serial.println(result);
+                 UserVar[uvarNr + varNr - 1] = result;
+               }
+               else
+               {
+                 Serial.print("? error=");
+                 Serial.println(error);
+               } 
+          }
+        }
+        sendData(x, Device[Settings.TaskDeviceNumber[x]].VType, Settings.TaskDeviceID[x], uvarNr);
       }
     }
   }
