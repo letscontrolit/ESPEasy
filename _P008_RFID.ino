@@ -1,0 +1,103 @@
+//#######################################################################################################
+//################################# Plugin 008: Wiegand RFID Tag Reader #################################
+//#######################################################################################################
+
+#define PLUGIN_008
+#define PLUGIN_ID_008       8
+
+#define PLUGIN_008_WGSIZE 26
+
+volatile byte Plugin_008_bitCount = 0;             // Count the number of bits received.
+volatile unsigned long Plugin_008_keyBuffer = 0;   // A 32-bit-long keyBuffer into which the number is stored.
+byte Plugin_008_bitCountPrev = 0;                  // to detect noise
+byte Plugin_008_Unit = 0;
+
+boolean Plugin_008_init = false;
+
+boolean Plugin_008(byte function, struct EventStruct *event, String& string)
+{
+  boolean success = false;
+
+  switch (function)
+  {
+    case PLUGIN_DEVICE_ADD:
+      {
+        Device[++deviceCount].Number = PLUGIN_ID_008;
+        strcpy(Device[deviceCount].Name, "RFID Reader");
+        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+        Device[deviceCount].VType = 1;
+        Device[deviceCount].Ports = 0;
+        Device[deviceCount].PullUpOption = false;
+        Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].FormulaOption = false;
+        Device[deviceCount].ValueCount = 1;
+        strcpy(Device[deviceCount].ValueNames[0], "RFID");
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
+        Serial.println("RFID plugin init!");
+        Plugin_008_init = true;
+        Serial.print(F("INIT : RFID "));
+        Serial.print(Settings.TaskDevicePin1[event->TaskIndex]);
+        Serial.print(" & ");
+        Serial.println(Settings.TaskDevicePin2[event->TaskIndex]);
+        pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+        pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
+        attachInterrupt(Settings.TaskDevicePin1[event->TaskIndex], Plugin_008_interrupt1, FALLING);
+        attachInterrupt(Settings.TaskDevicePin2[event->TaskIndex], Plugin_008_interrupt2, FALLING);
+        success = true;
+        break;
+      }
+
+    case PLUGIN_ONCE_A_SECOND:
+      {
+        if (Plugin_008_init)
+        {
+          if ((Plugin_008_bitCount != PLUGIN_008_WGSIZE) && (Plugin_008_bitCount == Plugin_008_bitCountPrev))
+          {
+            // must be noise
+            Plugin_008_bitCount = 0;
+            Plugin_008_keyBuffer = 0;
+          }
+
+          if (Plugin_008_bitCount == PLUGIN_008_WGSIZE)
+          {
+            Plugin_008_bitCount = 0;          // Read in the current key and reset everything so that the interrupts can
+
+            Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1;          // Strip leading and trailing parity bits from the keyBuffer
+            Plugin_008_keyBuffer &= 0xFFFFFF;
+            UserVar[event->BaseVarIndex] = Plugin_008_keyBuffer;
+            Serial.println(Plugin_008_keyBuffer);
+            sendData(event->TaskIndex, 1, Settings.TaskDeviceID[event->TaskIndex], event->BaseVarIndex);
+            //              Plugin_008_keyBuffer = 0;          // Clear the buffer for the next iteration.
+          }
+
+          Plugin_008_bitCountPrev = Plugin_008_bitCount; // store this value for next check, detect noise
+        }
+        break;
+      }
+  }
+  return success;
+}
+
+/*********************************************************************/
+void Plugin_008_interrupt1()
+/*********************************************************************/
+{
+  // We've received a 1 bit. (bit 0 = high, bit 1 = low)
+  Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1;     // Left shift the number (effectively multiplying by 2)
+  Plugin_008_keyBuffer += 1;         // Add the 1 (not necessary for the zeroes)
+  Plugin_008_bitCount++;         // Increment the bit count
+}
+
+/*********************************************************************/
+void Plugin_008_interrupt2()
+/*********************************************************************/
+{
+  // We've received a 0 bit. (bit 0 = low, bit 1 = high)
+  Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1;     // Left shift the number (effectively multiplying by 2)
+  Plugin_008_bitCount++;           // Increment the bit count
+}
+
