@@ -61,7 +61,7 @@ boolean Domoticz_getData(int idx, float *data)
 //********************************************************************************
 // Interface for Sending to Controllers
 //********************************************************************************
-boolean sendData(byte TaskNr, byte sensorType, int idx, byte varIndex)
+boolean sendData(byte TaskIndex, byte sensorType, int idx, byte varIndex)
 {
   switch (Settings.Protocol)
   {
@@ -77,7 +77,10 @@ boolean sendData(byte TaskNr, byte sensorType, int idx, byte varIndex)
       ThingsSpeak_sendData(sensorType, idx, varIndex);
       break;
     case PROTOCOL_OPENHAB_MQTT:
-      OpenHAB_sendDataMQTT(TaskNr, sensorType, idx, varIndex);
+      OpenHAB_sendDataMQTT(TaskIndex, sensorType, idx, varIndex);
+      break;
+    case PROTOCOL_PIDOME_MQTT:
+      PiDome_sendDataMQTT(TaskIndex, sensorType, idx, varIndex);
       break;
   }
   if (Settings.MessageDelay != 0)
@@ -130,27 +133,27 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
   {
     case 1:                      // single value sensor, used for Dallas, BH1750, etc
       url += "&svalue=";
-      url += UserVar[varIndex - 1];
+      url += UserVar[varIndex];
       break;
     case 2:                      // temp + hum + hum_stat, used for DHT11
       url += "&svalue=";
-      url += UserVar[varIndex - 1];
-      url += ";";
       url += UserVar[varIndex];
+      url += ";";
+      url += UserVar[varIndex + 1];
       url += ";0";
       break;
     case 3:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       url += "&svalue=";
-      url += UserVar[varIndex - 1];
-      url += ";0;0;";
       url += UserVar[varIndex];
+      url += ";0;0;";
+      url += UserVar[varIndex + 1];
       url += ";0";
       break;
     case 10:                      // switch
       url = F("/json.htm?type=command&param=switchlight&idx=");
       url += idx;
       url += "&switchcmd=";
-      if (UserVar[varIndex - 1] == 0)
+      if (UserVar[varIndex] == 0)
         url += "Off";
       else
         url += "On";
@@ -228,7 +231,7 @@ boolean NodoTelnet_sendData(byte sensorType, int var, byte varIndex)
   if (connectionFailures)
     connectionFailures--;
 
-  float value = UserVar[varIndex - 1];
+  float value = UserVar[varIndex];
   // We now create a URI for the request
   String url = F("variableset ");
   url += var;
@@ -329,10 +332,15 @@ void MQTTConnect()
           MQTTclient.subscribe("domoticz/out");
           break;
         case PROTOCOL_OPENHAB_MQTT:
-          String pubname = "/";
-          pubname += Settings.Name;
-          pubname += "/#";
-          MQTTclient.subscribe(pubname);
+          {
+            String pubname = "/";
+            pubname += Settings.Name;
+            pubname += "/#";
+            MQTTclient.subscribe(pubname);
+            break;
+          }
+        case PROTOCOL_PIDOME_MQTT:
+          MQTTclient.subscribe("/Home/#");
           break;
       }
       break;
@@ -350,6 +358,22 @@ void MQTTConnect()
 \*********************************************************************************************/
 void MQTTMessage(String *topic, String *message)
 {
+  // Split topic into array
+  String tmpTopic = topic->substring(1);
+  String topicSplit[10];
+  int SlashIndex = tmpTopic.indexOf('/');
+  byte count = 0;
+  while (SlashIndex > 0 && count < 10 - 1)
+  {
+    topicSplit[count] = tmpTopic.substring(0, SlashIndex);
+    tmpTopic = tmpTopic.substring(SlashIndex + 1);
+    SlashIndex = tmpTopic.indexOf('/');
+    count++;
+  }
+  topicSplit[count] = tmpTopic;
+
+  //for (byte x = 0; x <= count; x++)
+    //Serial.println(topicSplit[x]);
 
   switch (Settings.Protocol)
   {
@@ -397,28 +421,44 @@ void MQTTMessage(String *topic, String *message)
       }
     case PROTOCOL_OPENHAB_MQTT:
       {
-        Serial.println(*topic);
-        String sdevice = "";
-        String spin = "";
-        String command = topic->substring(1);
-        int SlashIndex = command.indexOf('/');
-        if (SlashIndex > 0)
+        String cmd = topicSplit[1];
+        int pin = topicSplit[2].toInt();
+        if (cmd == "gpio")
         {
-          command = command.substring(SlashIndex + 1);
-          SlashIndex = command.indexOf('/');
-          if (SlashIndex > 0)
+          int value = message->toFloat();
+          char cmd[80];
+          sprintf_P(cmd, PSTR("gpio,%u,%u"), pin, value);
+          Serial.println(cmd);
+          #ifdef ESP_CONNEXIO
+            ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
+          #endif
+          #ifdef ESP_EASY
+            ExecuteCommand(cmd);
+          #endif
+        }
+        break;
+      }
+
+
+    case PROTOCOL_PIDOME_MQTT:
+      {
+        String name = topicSplit[4];
+        String cmd = topicSplit[5];
+        int pin = topicSplit[6].toInt();
+        if (name == Settings.Name)
+        {
+          if (cmd == "gpio")
           {
-            sdevice = command.substring(0, SlashIndex);
-            spin =  command.substring(SlashIndex + 1);
-            int pin = spin.toInt();
-            int value = message->toFloat();
-            if (sdevice == "gpio")
-            {
-              char cmd[80];
-              sprintf_P(cmd, PSTR("gpio,%u,%u"), pin, value);
-              Serial.println(cmd);
+            int value = (*message == "true");
+            char cmd[80];
+            sprintf_P(cmd, PSTR("gpio,%u,%u"), pin, value);
+            Serial.println(cmd);
+            #ifdef ESP_CONNEXIO
+              ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
+            #endif
+            #ifdef ESP_EASY
               ExecuteCommand(cmd);
-            }
+            #endif
           }
         }
         break;
@@ -445,31 +485,31 @@ boolean Domoticz_sendDataMQTT(byte sensorType, int idx, byte varIndex)
   {
     case 1:                      // single value sensor, used for Dallas, BH1750, etc
       root["nvalue"] = 0;
-      values = UserVar[varIndex - 1];
+      values = UserVar[varIndex];
       values.toCharArray(str, 80);
       root["svalue"] =  str;
       break;
     case 2:                      // temp + hum + hum_stat, used for DHT11
       root["nvalue"] = 0;
-      values  = UserVar[varIndex - 1];
+      values  = UserVar[varIndex];
       values += ";";
-      values += UserVar[varIndex];
+      values += UserVar[varIndex + 1];
       values += ";0";
       values.toCharArray(str, 80);
       root["svalue"] =  str;
       break;
     case 3:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       root["nvalue"] = 0;
-      values  = UserVar[varIndex - 1];
+      values  = UserVar[varIndex];
       values += ";0;0;";
-      values += UserVar[varIndex];
+      values += UserVar[varIndex + 1];
       values += ";0";
       values.toCharArray(str, 80);
       root["svalue"] =  str;
       break;
     case 10:                      // switch
       root["command"] = "switchlight";
-      if (UserVar[varIndex - 1] == 0)
+      if (UserVar[varIndex] == 0)
         root["switchcmd"] = "Off";
       else
         root["switchcmd"] = "On";
@@ -494,7 +534,7 @@ boolean Domoticz_sendDataMQTT(byte sensorType, int idx, byte varIndex)
 /*********************************************************************************************\
  * Send data to Domoticz using MQTT message
 \*********************************************************************************************/
-boolean OpenHAB_sendDataMQTT(byte TaskNr, byte sensorType, int idx, byte varIndex)
+boolean OpenHAB_sendDataMQTT(byte TaskIndex, byte sensorType, int idx, byte varIndex)
 {
   // MQTT publish structure:
   // /<unit name>/<task name>/<value name>/state
@@ -512,11 +552,11 @@ boolean OpenHAB_sendDataMQTT(byte TaskNr, byte sensorType, int idx, byte varInde
       pubname = "/";
       pubname += Settings.Name;
       pubname += "/";
-      pubname += Settings.TaskDeviceName[TaskNr];
+      pubname += Settings.TaskDeviceName[TaskIndex];
       pubname += "/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskNr]].ValueNames[0];
+      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
       pubname += "/state";
-      value = String(UserVar[varIndex - 1]);
+      value = String(UserVar[varIndex]);
       Serial.println(pubname);
       Serial.println(value);
       MQTTclient.publish(pubname, value);
@@ -526,19 +566,19 @@ boolean OpenHAB_sendDataMQTT(byte TaskNr, byte sensorType, int idx, byte varInde
       pubname = "/";
       pubname += Settings.Name;
       pubname += "/";
-      pubname += Settings.TaskDeviceName[TaskNr];
+      pubname += Settings.TaskDeviceName[TaskIndex];
       pubname += "/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskNr]].ValueNames[0];
+      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
       pubname += "/state";
-      value = String(UserVar[varIndex - 1]);
+      value = String(UserVar[varIndex]);
       MQTTclient.publish(pubname, value);
       pubname = "/";
       pubname += "/";
-      pubname += Settings.TaskDeviceName[TaskNr];
+      pubname += Settings.TaskDeviceName[TaskIndex];
       pubname += "/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskNr]].ValueNames[1];
+      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[1];
       pubname += "/state";
-      value = String(UserVar[varIndex]);
+      value = String(UserVar[varIndex + 1]);
       MQTTclient.publish(pubname, value);
       break;
     case 10:                      // switch
@@ -547,6 +587,56 @@ boolean OpenHAB_sendDataMQTT(byte TaskNr, byte sensorType, int idx, byte varInde
       break;
   }
 }
+
+
+/*********************************************************************************************\
+ * Send data to Domoticz using MQTT message
+\*********************************************************************************************/
+boolean PiDome_sendDataMQTT(byte TaskIndex, byte sensorType, int idx, byte varIndex)
+{
+  // MQTT publish structure:
+  // /hooks/devices/idx/groupid/value name
+  // value name is prefixed in the device section for each type of device
+
+  char str[80];
+
+  String pubname = "";
+  String value = "";
+
+  switch (sensorType)
+  {
+    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+      pubname = "/hooks/devices/";
+      pubname += idx;
+      pubname += "/SensorData/";
+      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
+      value = String(UserVar[varIndex]);
+      Serial.println(pubname);
+      Serial.println(value);
+      MQTTclient.publish(pubname, value);
+      break;
+    case 2:
+    case 3:
+      pubname = "/hooks/devices/";
+      pubname += idx;
+      pubname += "/SensorData/";
+      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
+      value = String(UserVar[varIndex]);
+      MQTTclient.publish(pubname, value);
+      pubname = "/hooks/devices/";
+      pubname += idx;
+      pubname += "/SensorData/";
+      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[1];
+      value = String(UserVar[varIndex + 1]);
+      MQTTclient.publish(pubname, value);
+      break;
+    case 10:                      // switch
+      //      if (UserVar[varIndex] == 0)
+      //      else
+      break;
+  }
+}
+
 
 struct NodeStruct
 {
@@ -593,18 +683,18 @@ boolean ThingsSpeak_sendData(byte sensorType, int idx, byte varIndex)
       postDataStr += "&field";
       postDataStr += idx;
       postDataStr += "=";
-      postDataStr += String(UserVar[varIndex - 1]);
+      postDataStr += String(UserVar[varIndex]);
       break;
     case 2:                      // dual value
     case 3:
       postDataStr += "&field";
       postDataStr += idx;
       postDataStr += "=";
-      postDataStr += String(UserVar[varIndex - 1]);
+      postDataStr += String(UserVar[varIndex]);
       postDataStr += "&field";
       postDataStr += idx + 1;
       postDataStr += "=";
-      postDataStr += String(UserVar[varIndex]);
+      postDataStr += String(UserVar[varIndex + 1]);
       break;
     case 10:                      // switch
       break;
@@ -809,7 +899,7 @@ void checkUDP()
             sprintf_P(ipaddress, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
             char log[80];
             sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLog(LOG_LEVEL_DEBUG_MORE, log);
           }
       }
     }
@@ -843,7 +933,7 @@ void sendSysInfoUDP(byte repeats)
   // ??? build
   // ??
   // send my info to the world...
-  addLog(LOG_LEVEL_DEBUG, (char*)"UDP  : Send Sysinfo message");
+  addLog(LOG_LEVEL_DEBUG_MORE, (char*)"UDP  : Send Sysinfo message");
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};

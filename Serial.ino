@@ -1,6 +1,6 @@
-//********************************************************************************
-// Serial Interface to configure and save settings to eeprom
-//********************************************************************************
+/********************************************************************************************\
+* Process data from Serial Interface
+\*********************************************************************************************/
 
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(char *Line)
@@ -11,7 +11,7 @@ void ExecuteCommand(char *Line)
   Command[0] = 0;
   int Par1 = 0;
   int Par2 = 0;
-  
+
   GetArgv(Line, Command, 1);
   if (GetArgv(Line, TmpStr1, 2)) Par1 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
@@ -20,113 +20,87 @@ void ExecuteCommand(char *Line)
   // commands to execute io tasks
   // ****************************************
 
-  if (strcasecmp(Command, "calc") == 0)
-  {
-    float result;
-    if (GetArgv(Line, TmpStr1, 2))
-      {
-        String formula = TmpStr1;
-        float value = 123.45;
-        String svalue = String(value);
-        formula.replace("%value%",svalue);
-        formula.toCharArray(TmpStr1,25);
-        if(Calculate(TmpStr1,&result)==CALCULATE_OK)
-          Serial.println(result);
-      }
-  }
-
   if (strcasecmp(Command, "GPIO") == 0)
   {
     if (Par1 >= 0 && Par1 <= 16)
+    {
+      pinMode(Par1, OUTPUT);
+      digitalWrite(Par1, Par2);
+      if (printToWeb)
       {
-        pinMode(Par1, OUTPUT);
-        digitalWrite(Par1, Par2);
-        if (printToWeb)
-        {
-          printWebString += "GPIO ";
-          printWebString += Par1;
-          printWebString += " Set to ";
-          printWebString += Par2;
-          printWebString += "<BR>";
-        }
+        printWebString += "GPIO ";
+        printWebString += Par1;
+        printWebString += " Set to ";
+        printWebString += Par2;
+        printWebString += "<BR>";
       }
+    }
   }
 
   if (strcasecmp(Command, "PWM") == 0)
   {
     if (Par1 >= 0 && Par1 <= 1023)
+    {
+      pinMode(Par1, OUTPUT);
+      analogWrite(Par1, Par2);
+      if (printToWeb)
       {
-        pinMode(Par1, OUTPUT);
-        analogWrite(Par1, Par2);
-        if (printToWeb)
-        {
-          printWebString += "GPIO ";
-          printWebString += Par1;
-          printWebString += " Set PWM to ";
-          printWebString += Par2;
-          printWebString += "<BR>";
-        }
+        printWebString += "GPIO ";
+        printWebString += Par1;
+        printWebString += " Set PWM to ";
+        printWebString += Par2;
+        printWebString += "<BR>";
       }
+    }
   }
 
   if (strcasecmp(Command, "ExtRead") == 0)
+  {
+    uint8_t address = 0x7f;
+    Wire.requestFrom(address, (uint8_t)Par1);
+    if (Wire.available())
     {
-      uint8_t address = 0x7f;
-      Wire.requestFrom(address, (uint8_t)Par1);
-      if (Wire.available())
-      {
-        for (byte x=0; x<Par1;x++)
-          Serial.println(Wire.read());
-      }
+      for (byte x = 0; x < Par1; x++)
+        Serial.println(Wire.read());
     }
-    
+  }
+
   if (strcasecmp(Command, "ExtGPIO") == 0)
-    extender(1,Par1,Par2);
+    extender(1, Par1, Par2);
   if (strcasecmp(Command, "ExtPWM") == 0)
-    extender(3,Par1,Par2);
+    extender(3, Par1, Par2);
   if (strcasecmp(Command, "ExtGPIORead") == 0)
-    {
-      byte value=extender(2,Par1,0);
-      Serial.println(value);
-    }
+  {
+    byte value = extender(2, Par1, 0);
+    Serial.println(value);
+  }
   if (strcasecmp(Command, "ExtADCRead") == 0)
-    {
-      int value=extender(4,Par1,0);
-      Serial.println(value);
-    }
-    
+  {
+    int value = extender(4, Par1, 0);
+    Serial.println(value);
+  }
+
   if (strcasecmp(Command, "DomoticzSend") == 0)
   {
     if (GetArgv(Line, TmpStr1, 4))
-      {
-        UserVar[10 - 1] = atof(TmpStr1);
-        sendData(0, Par1, Par2, 10);
-      }
+    {
+      UserVar[(VARS_PER_TASK * TASKS_MAX) - 1] = atof(TmpStr1);
+      sendData(0, Par1, Par2, VARS_PER_TASK * TASKS_MAX -1);
+    }
   }
 
   if (strcasecmp(Command, "DomoticzGet") == 0)
   {
-    float value=0;
+    float value = 0;
     if (Domoticz_getData(Par2, &value))
-      {
-        Serial.print("DomoticzGet ");
-        Serial.println(value);
-      }
+    {
+      Serial.print("DomoticzGet ");
+      Serial.println(value);
+    }
     else
       Serial.println("Error getting data");
   }
 
-  if (strcasecmp(Command, "UDP") == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 2))
-      {
-        IPAddress broadcastIP(255,255,255,255);
-        portTX.beginPacket(broadcastIP,Settings.UDPPort);
-        portTX.write(TmpStr1);
-        portTX.endPacket();
-      }
-  }
-  
   if (strcasecmp(Command, "ExtWiredOut") == 0)
   {
     mcp23017(Par1, Par2);
@@ -139,78 +113,13 @@ void ExecuteCommand(char *Line)
     for (byte x = 0; x < 25; x++)
       if (TmpStr1[x] == '_')
         TmpStr1[x] = ' ';
-    lcd.setCursor(Par2-1,Par1-1);
+    lcd.setCursor(Par2 - 1, Par1 - 1);
     lcd.print(TmpStr1);
   }
 
-  if (strcasecmp(Command, "IOTest") == 0)
-  {
-    if (Par1 == 255)
-      {
-        Serial.print("Analog:");
-        Serial.println(analogRead(A0));
-        if (printToWeb)
-        {
-          printWebString += "Analog: ";
-          printWebString += analogRead(A0);
-          printWebString += "<BR>";
-        }
-      }
-    else
-      {
-      pinMode(Par1, OUTPUT);
-      for (byte x=0; x < 10; x++)
-        {
-          digitalWrite(Par1,HIGH);
-          delay(100);
-          digitalWrite(Par1,LOW);
-          delay(100);
-          if (printToWeb)
-          {
-            printWebString += "Did the LED Flash? <BR>";
-          }
-      }
-      }
-  }
-  
   // ****************************************
   // configure settings commands:
   // ****************************************
-  if (strcasecmp(Command, "Unit") == 0)
-    Settings.Unit = Par1;
-
-  if (strcasecmp(Command, "Delay") == 0)
-    Settings.Delay = Par1;
-
-  if (strcasecmp(Command, "Debug") == 0)
-    Settings.Debug = Par1;
-
-  if (strcasecmp(Command, "ControllerIP") == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 2))
-      if (!str2ip(TmpStr1, Settings.Controller_IP))
-        Serial.println("?");
-  }
-
-  if (strcasecmp(Command, "ControllerPort") == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 2))
-      Settings.ControllerPort = str2int(TmpStr1);
-  }
-
-  if (strcasecmp(Command, "IP") == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 2))
-      if (!str2ip(TmpStr1, Settings.IP))
-        Serial.println("?");
-  }
-
-  if (strcasecmp(Command, "IPoctet") == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 2))
-      Settings.IP_Octet = str2int(TmpStr1);
-  }
-
   if (strcasecmp(Command, "WifiSSID") == 0)
   {
     GetArgv(Line, TmpStr1, 2);
@@ -225,13 +134,6 @@ void ExecuteCommand(char *Line)
     strcpy(Settings.WifiKey, TmpStr1);
   }
 
-  if (strcasecmp(Command, "WifiAPKey") == 0)
-  {
-    GetArgv(Line, TmpStr1, 2);
-    TmpStr1[25] = 0;
-    strcpy(Settings.WifiAPKey, TmpStr1);
-  }
-
   if (strcasecmp(Command, "WifiScan") == 0)
     WifiScan();
 
@@ -242,18 +144,25 @@ void ExecuteCommand(char *Line)
     WifiDisconnect();
 
   if (strcasecmp(Command, "Reboot") == 0)
-  {
     ESP.reset();
-  }
 
   if (strcasecmp(Command, "Reset") == 0)
-  {
     ResetFactory();
-  }
 
   if (strcasecmp(Command, "Save") == 0)
-  {
     Save_Settings();
+
+  if (strcasecmp(Command, "Delay") == 0)
+    Settings.Delay = Par1;
+
+  if (strcasecmp(Command, "Debug") == 0)
+    Settings.SerialLogLevel = Par1;
+
+  if (strcasecmp(Command, "IP") == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 2))
+      if (!str2ip(TmpStr1, Settings.IP))
+        Serial.println("?");
   }
 
   if (strcasecmp(Command, "Settings") == 0)
@@ -264,40 +173,27 @@ void ExecuteCommand(char *Line)
     Serial.println("System Info");
     IPAddress ip = WiFi.localIP();
     sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    Serial.print("  IP Address   : "); Serial.println(str);
-    Serial.print("         SDA   : "); Serial.println((int)Settings.Pin_i2c_sda);
-    Serial.print("         SCL   : "); Serial.println((int)Settings.Pin_i2c_scl);
-    Serial.println();
-    
-    Serial.println("Generic settings");
-    Serial.print("  Version          : "); Serial.println((int)Settings.Version);
-    Serial.print("  Unit             : "); Serial.println((int)Settings.Unit);
-    Serial.print("  WifiSSID         : "); Serial.println(Settings.WifiSSID);
-    Serial.print("  WifiKey          : ");  Serial.println(Settings.WifiKey);
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
-    Serial.print("  ControllerIP     : "); Serial.println(str);
-    Serial.print("  ControllerPort   : "); Serial.println(Settings.ControllerPort);
-    Serial.print("  Fixed IP octet   : "); Serial.println(Settings.IP_Octet);
-    Serial.print("  WifiKey (APmode) : ");  Serial.println(Settings.WifiAPKey);
-
-    Serial.print("  settings size    : ");  Serial.println(sizeof(struct SettingsStruct));
-
-  }
-
-  if (strcasecmp(Command, "Freemem") == 0)
-  {
-    Serial.println(FreeMem());
+    Serial.print("  IP Address    : "); Serial.println(str);
+    Serial.print("  Build         : "); Serial.println((int)BUILD);
+    Serial.print("  Unit          : "); Serial.println((int)Settings.Unit);
+    Serial.print("  WifiSSID      : "); Serial.println(Settings.WifiSSID);
+    Serial.print("  WifiKey       : "); Serial.println(Settings.WifiKey);
+    Serial.print("  Settings size : "); Serial.println(sizeof(struct SettingsStruct));
+    Serial.print("  Free mem      : "); Serial.println(FreeMem());
   }
 }
+
+
+/********************************************************************************************\
+* Get data from Serial Interface
+\*********************************************************************************************/
 #define INPUT_BUFFER_SIZE          128
 
 byte SerialInByte;
 int SerialInByteCounter = 0;
 char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
-//********************************************************************************
 void serial()
-//********************************************************************************
 {
   while (Serial.available())
   {
@@ -321,186 +217,4 @@ void serial()
     }
   }
 }
-
-//********************************************************************************
-boolean GetArgv(char *string, char *argv, int argc)
-//********************************************************************************
-{
-  int string_pos = 0, argv_pos = 0, argc_pos = 0;
-  char c, d;
-
-  while (string_pos < strlen(string))
-  {
-    c = string[string_pos];
-    d = string[string_pos + 1];
-
-    if       (c == ' ' && d == ' ') {}
-    else if  (c == ' ' && d == ',') {}
-    else if  (c == ',' && d == ' ') {}
-    else if  (c == ' ' && d >= 33 && d <= 126) {}
-    else if  (c == ',' && d >= 33 && d <= 126) {}
-    else
-    {
-      argv[argv_pos++] = c;
-      argv[argv_pos] = 0;
-
-      if (d == ' ' || d == ',' || d == 0)
-      {
-        argv[argv_pos] = 0;
-        argc_pos++;
-
-        if (argc_pos == argc)
-        {
-          return true;
-        }
-
-        argv[0] = 0;
-        argv_pos = 0;
-        string_pos++;
-      }
-    }
-    string_pos++;
-  }
-  return false;
-}
-
-//********************************************************************************
-unsigned long str2int(char *string)
-//********************************************************************************
-{
-  unsigned long temp = atof(string);
-  return temp;
-}
-boolean str2ip(char *string, byte* IP)
-{
-  byte c;
-  byte part = 0;
-  int value = 0;
-
-  for (int x = 0; x <= strlen(string); x++)
-  {
-    c = string[x];
-    if (isdigit(c))
-    {
-      value *= 10;
-      value += c - '0';
-    }
-
-    else if (c == '.' || c == 0) // volgende deel uit IP adres
-    {
-      if (value <= 255)
-        IP[part++] = value;
-      else
-        return false;
-      value = 0;
-    }
-    else if (c == ' ') // deze tekens negeren
-      ;
-    else // ongeldig teken
-      return false;
-  }
-  if (part == 4) // correct aantal delen van het IP adres
-    return true;
-  return false;
-}
-
-//********************************************************************************
-void Save_Settings(void)
-//********************************************************************************
-{
-  char ByteToSave, *pointerToByteToSave = pointerToByteToSave = (char*)&Settings; //pointer to settings struct
-
-  for (int x = 0; x < sizeof(struct SettingsStruct) ; x++)
-  {
-    EEPROM.write(x, *pointerToByteToSave);
-    pointerToByteToSave++;
-  }
-  EEPROM.commit();
-}
-
-boolean LoadSettings()
-{
-  byte x;
-
-  char ByteToSave, *pointerToByteToRead = (char*)&Settings; //pointer to settings struct
-
-  for (int x = 0; x < sizeof(struct SettingsStruct); x++)
-  {
-    *pointerToByteToRead = EEPROM.read(x);
-    pointerToByteToRead++;// next byte
-  }
-}
-
-//********************************************************************************
-void ResetFactory(void)
-//********************************************************************************
-{
-  Serial.println("Reset!");
-  Settings.PID             = ESP_PROJECT_PID;
-  Settings.Version         = VERSION;
-  Settings.Unit            = UNIT;
-  strcpy(Settings.WifiSSID, DEFAULT_SSID);
-  strcpy(Settings.WifiKey, DEFAULT_KEY);
-  strcpy(Settings.WifiAPKey, DEFAULT_AP_KEY);
-  str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
-  Settings.ControllerPort      = DEFAULT_PORT;
-  Settings.IP_Octet        = 0;
-  Settings.Delay           = DEFAULT_DELAY;
-  Settings.Pin_i2c_sda     = 4;
-  Settings.Pin_i2c_scl     = 5;
-  Settings.Syslog_IP[0]    = 0;
-  Settings.Syslog_IP[1]    = 0;
-  Settings.Syslog_IP[2]    = 0;
-  Settings.Syslog_IP[3]    = 0;
-  Settings.UDPPort         = 0;
-  Settings.Protocol        = DEFAULT_PROTOCOL;
-  Settings.IP[0]           = 0;
-  Settings.IP[1]           = 0;
-  Settings.IP[2]           = 0;
-  Settings.IP[3]           = 0;
-  Settings.Gateway[0]      = 0;
-  Settings.Gateway[1]      = 0;
-  Settings.Gateway[2]      = 0;
-  Settings.Gateway[3]      = 0;
-  Settings.Subnet[0]       = 0;
-  Settings.Subnet[1]       = 0;
-  Settings.Subnet[2]       = 0;
-  Settings.Subnet[3]       = 0;
-  Settings.Debug           = 0;
-  strcpy(Settings.Name, DEFAULT_NAME);
-  Settings.SyslogLevel     = 0;
-  Settings.SerialLogLevel  = 3;
-  Settings.WebLogLevel     = 3;
-  Settings.BaudRate        = 115200;
-  Settings.ControllerUser[0]     = 0;
-  Settings.ControllerPassword[0] = 0;
-  Settings.Password[0] = 0;
-  Settings.MessageDelay=1000;
-  for (byte x=0; x < TASKS_MAX; x++)
-  {
-    Settings.TaskDeviceNumber[x]=0;
-    Settings.TaskDeviceID[x]=0;
-    Settings.TaskDevicePin1[x]=-1;
-    Settings.TaskDevicePin2[x]=-1;
-    Settings.TaskDevicePin1PullUp[x]=true;
-    Settings.TaskDeviceName[x][0]=0;
-    Settings.TaskDevicePort[x]=0;
-    for (byte varNr=0; varNr < VARS_PER_TASK; varNr++)
-      (Settings.TaskDeviceFormula[x][varNr][0] ==0);
-  }
-  Save_Settings();
-  WifiDisconnect();
-  ESP.reset();
-}
-
-extern "C" {
-#include "user_interface.h"
-}
-//********************************************************************************
-unsigned long FreeMem(void)
-//********************************************************************************
-{
-  return system_get_free_heap_size();
-}
-
 

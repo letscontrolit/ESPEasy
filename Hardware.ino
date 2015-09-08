@@ -1,3 +1,7 @@
+/********************************************************************************************\
+* Initialize specific hardware setings (only global ones, others are set through devices)
+\*********************************************************************************************/
+
 void hardwareInit()
 {
   // configure hardware pins according to eeprom settings.
