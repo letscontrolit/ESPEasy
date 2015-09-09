@@ -1,3 +1,6 @@
+// R018 09-09-2015
+// Fixed issues with special characters (#,% etc) in text fields like SSID, WPA key etc
+
 // R017 08-09-2015
 // Fixed factory reset formula settings.
 // Preliminary support for PiDome MQTT protocol

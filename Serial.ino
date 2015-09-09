@@ -121,18 +121,10 @@ void ExecuteCommand(char *Line)
   // configure settings commands:
   // ****************************************
   if (strcasecmp(Command, "WifiSSID") == 0)
-  {
-    GetArgv(Line, TmpStr1, 2);
-    TmpStr1[25] = 0;
-    strcpy(Settings.WifiSSID, TmpStr1);
-  }
+    strcpy(Settings.WifiSSID, Line+9);
 
   if (strcasecmp(Command, "WifiKey") == 0)
-  {
-    GetArgv(Line, TmpStr1, 2);
-    TmpStr1[25] = 0;
-    strcpy(Settings.WifiKey, TmpStr1);
-  }
+    strcpy(Settings.WifiKey, Line+8);
 
   if (strcasecmp(Command, "WifiScan") == 0)
     WifiScan();

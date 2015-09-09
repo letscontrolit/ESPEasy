@@ -9,9 +9,9 @@ void WebServerInit()
   WebServer.on("/hardware", handle_hardware);
   WebServer.on("/devices", handle_devices);
   WebServer.on("/json.htm", handle_json);
-#ifdef ESP_CONNEXIO
-  WebServer.on("/eventlist", handle_eventlist);
-#endif
+  #ifdef ESP_CONNEXIO
+    WebServer.on("/eventlist", handle_eventlist);
+  #endif
   WebServer.on("/log", handle_log);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
@@ -39,20 +39,20 @@ void addMenu(String& str)
   str += F("</style>");
 
   str += F("<h1>Welcome to ESP ");
-#ifdef ESP_CONNEXIO
-  str += F("Connexio : ");
-#endif
-#ifdef ESP_EASY
-  str += F("Easy : ");
-#endif
+  #ifdef ESP_CONNEXIO
+    str += F("Connexio : ");
+  #endif
+  #ifdef ESP_EASY
+    str += F("Easy : ");
+  #endif
   str += Settings.Name;
   str += F("</h1><a class=\"button-link\" href=\".\">Main</a>");
   str += F("<a class=\"button-link\" href=\"config\">Config</a>");
   str += F("<a class=\"button-link\" href=\"hardware\">Hardware</a>");
   str += F("<a class=\"button-link\" href=\"devices\">Devices</a>");
-#ifdef ESP_CONNEXIO
-  str += F("<a class=\"button-link\" href=\"eventlist\">Eventlist</a>");
-#endif
+  #ifdef ESP_CONNEXIO
+    str += F("<a class=\"button-link\" href=\"eventlist\">Eventlist</a>");
+  #endif
   str += F("<a class=\"button-link\" href=\"log\">Log</a>");
   str += F("<a class=\"button-link\" href=\"tools\">Tools</a><BR><BR>");
 }
@@ -77,12 +77,12 @@ void handle_root() {
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.print(F("HTTP : Webrequest : "));
   String webrequest = WebServer.arg("cmd");
-  webrequest.replace("%20", " ");
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(webrequest);
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
+  urlDecode(command);
 
   if ((strcasecmp(command, "wifidisconnect") != 0) && (strcasecmp(command, "reboot") != 0))
   {
@@ -91,12 +91,12 @@ void handle_root() {
 
     printToWeb = true;
     printWebString = "";
-#ifdef ESP_CONNEXIO
-    ExecuteLine(command, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
-    ExecuteCommand(command);
-#endif
+    #ifdef ESP_CONNEXIO
+      ExecuteLine(command, VALUE_SOURCE_SERIAL);
+    #endif
+    #ifdef ESP_EASY
+      ExecuteCommand(command);
+    #endif
 
     reply += printWebString;
     reply += F("<form>");
@@ -199,7 +199,7 @@ void handle_root() {
 void handle_config() {
   if (!isLoggedIn()) return;
 
-  char tmpstring[64];
+  char tmpString[64];
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Webconfig"));
@@ -230,37 +230,43 @@ void handle_config() {
 
   if (ssid[0] != 0)
   {
-    name.replace("+", " ");
-    name.toCharArray(tmpstring, 26);
-    strcpy(Settings.Name, tmpstring);
-    password.toCharArray(tmpstring, 26);
-    strcpy(Settings.Password, tmpstring);
-    ssid.toCharArray(tmpstring, 26);
-    strcpy(Settings.WifiSSID, tmpstring);
-    key.toCharArray(tmpstring, 64);
-    strcpy(Settings.WifiKey, tmpstring);
-    apkey.toCharArray(tmpstring, 64);
-    strcpy(Settings.WifiAPKey, tmpstring);
-    controllerip.toCharArray(tmpstring, 26);
-    str2ip(tmpstring, Settings.Controller_IP);
+    name.toCharArray(tmpString, 26);
+    urlDecode(tmpString);
+    strcpy(Settings.Name, tmpString);
+    password.toCharArray(tmpString, 26);
+    urlDecode(tmpString);
+    strcpy(Settings.Password, tmpString);
+    ssid.toCharArray(tmpString, 26);
+    urlDecode(tmpString);
+    strcpy(Settings.WifiSSID, tmpString);
+    key.toCharArray(tmpString, 64);
+    urlDecode(tmpString);
+    strcpy(Settings.WifiKey, tmpString);
+    apkey.toCharArray(tmpString, 64);
+    urlDecode(tmpString);
+    strcpy(Settings.WifiAPKey, tmpString);
+    controllerip.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.Controller_IP);
     Settings.ControllerPort = controllerport.toInt();
-    controlleruser.toCharArray(tmpstring, 26);
-    strcpy(Settings.ControllerUser, tmpstring);
-    controllerpassword.toCharArray(tmpstring, 26);
-    strcpy(Settings.ControllerPassword, tmpstring);
+    controlleruser.toCharArray(tmpString, 26);
+    urlDecode(tmpString);
+    strcpy(Settings.ControllerUser, tmpString);
+    controllerpassword.toCharArray(tmpString, 26);
+    urlDecode(tmpString);
+    strcpy(Settings.ControllerPassword, tmpString);
     Settings.Protocol = protocol.toInt();
     Settings.Delay = sensordelay.toInt();
     Settings.MessageDelay = messagedelay.toInt();
     Settings.IP_Octet = ip.toInt();
-    espip.toCharArray(tmpstring, 26);
-    str2ip(tmpstring, Settings.IP);
-    espgateway.toCharArray(tmpstring, 26);
-    str2ip(tmpstring, Settings.Gateway);
-    espsubnet.toCharArray(tmpstring, 26);
-    str2ip(tmpstring, Settings.Subnet);
+    espip.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.IP);
+    espgateway.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.Gateway);
+    espsubnet.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.Subnet);
     Settings.Unit = unit.toInt();
-    syslogip.toCharArray(tmpstring, 26);
-    str2ip(tmpstring, Settings.Syslog_IP);
+    syslogip.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
     Settings.SyslogLevel = sysloglevel.toInt();
     Settings.SerialLogLevel = serialloglevel.toInt();
@@ -388,7 +394,7 @@ void handle_config() {
 void handle_devices() {
   if (!isLoggedIn()) return;
 
-  char tmpstring[26];
+  char tmpString[26];
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(F("HTTP : Webtasks"));
@@ -421,9 +427,9 @@ void handle_devices() {
   {
     Settings.TaskDeviceNumber[index-1] = taskdevicenumber.toInt();
     DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index-1]);
-    taskdevicename.replace("+", " ");
-    taskdevicename.toCharArray(tmpstring, 26);
-    strcpy(Settings.TaskDeviceName[index-1], tmpstring);
+    taskdevicename.toCharArray(tmpString, 26);
+    urlDecode(tmpString);
+    strcpy(Settings.TaskDeviceName[index-1], tmpString);
     Settings.TaskDevicePort[index-1] = taskdeviceport.toInt();
     if (Settings.TaskDeviceNumber[index-1] !=0)
       Settings.TaskDeviceID[index-1] = taskdeviceid.toInt();
@@ -444,13 +450,9 @@ void handle_devices() {
 
     for (byte varNr=0; varNr < VARS_PER_TASK; varNr++)
       {
-        taskdeviceformula[varNr].replace("%25", "%");
-        taskdeviceformula[varNr].replace("%28", "(");
-        taskdeviceformula[varNr].replace("%29", ")");
-        taskdeviceformula[varNr].replace("%2B", "+");
-        taskdeviceformula[varNr].replace("%2F", "/");
-        taskdeviceformula[varNr].toCharArray(tmpstring, 26);
-        strcpy(Settings.TaskDeviceFormula[index-1][varNr], tmpstring);
+        taskdeviceformula[varNr].toCharArray(tmpString, 26);
+        urlDecode(tmpString);
+        strcpy(Settings.TaskDeviceFormula[index-1][varNr], tmpString);
       }
    
     #ifdef ESP_EASY
@@ -869,17 +871,11 @@ void handle_eventlist() {
     {
       limit++;
       String line = eventlist.substring(0, NewLineIndex);
-      line.replace("+", " ");
-      line.replace("%25", "%");
-      line.replace("%28", "(");
-      line.replace("%29", ")");
-      line.replace("%2B", "+");
-      line.replace("%2F", "/");
-      line.replace("%2C", ",");
-      line.replace("%3B", ";");
       String strCommand = F("eventlistwrite 0,");
       strCommand += line;
       strCommand.toCharArray(TempString, 80);
+      urlDecode(TempString);
+
       messagecode = ExecuteLine(TempString, VALUE_SOURCE_SERIAL);
       if (messagecode > 0)
       {
@@ -965,14 +961,12 @@ void handle_tools() {
     Serial.print(F("HTTP : Tools request : "));
     
   String webrequest = WebServer.arg("cmd");
-  webrequest.replace("%3B", ";");
-  webrequest.replace("%2C", ",");
-  webrequest.replace("+", " ");
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(webrequest);
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
+  urlDecode(command);
 
   String reply = "";
   addMenu(reply);
@@ -992,12 +986,12 @@ void handle_tools() {
 
   printToWeb = true;
   printWebString = "<BR>";
-#ifdef ESP_CONNEXIO
-  ExecuteLine(command, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
-  ExecuteCommand(command);
-#endif
+  #ifdef ESP_CONNEXIO
+    ExecuteLine(command, VALUE_SOURCE_SERIAL);
+  #endif
+  #ifdef ESP_EASY
+    ExecuteCommand(command);
+  #endif
   reply += printWebString;
   reply += F("</table></form>");
   addFooter(reply);
@@ -1125,6 +1119,7 @@ void handle_login() {
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
+  urlDecode(command);
 
   String reply = "";
   reply += F("<form method='post'>");
@@ -1163,12 +1158,12 @@ void handle_control() {
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.print(F("HTTP : Webrequest : "));
   String webrequest = WebServer.arg("cmd");
-  webrequest.replace("%20", " ");
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG)
     Serial.println(webrequest);
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
+  urlDecode(command);
   boolean validCmd = false;
   
   char Cmd[40];
@@ -1222,5 +1217,42 @@ boolean isLoggedIn()
     }
   
   return WebLoggedIn;
+}
+
+//********************************************************************************
+// Decode special characters in URL of get/post data
+//********************************************************************************
+void urlDecode(char *src)
+{
+  char* dst = src;
+  char a, b;
+  while (*src) {
+    
+    if (*src == '+')
+      *src = ' ';
+
+    if ((*src == '%') &&
+      ((a = src[1]) && (b = src[2])) &&
+      (isxdigit(a) && isxdigit(b))) {
+      if (a >= 'a')
+        a -= 'a'-'A';
+      if (a >= 'A')
+        a -= ('A' - 10);
+      else
+        a -= '0';
+      if (b >= 'a')
+        b -= 'a'-'A';
+      if (b >= 'A')
+        b -= ('A' - 10);
+      else
+        b -= '0';
+      *dst++ = 16*a+b;
+      src+=3;
+    } 
+    else {
+      *dst++ = *src++;
+    }
+  }
+  *dst++ = '\0';
 }
 
