@@ -140,6 +140,14 @@ boolean LoadSettings()
 void ResetFactory(void)
 {
   Serial.println("Reset!");
+
+  // First we clear the entire eeprom area and fill with zeros (better default than 0xff)
+  for (int i = 0; i < EEPROM_SIZE; i++)
+    EEPROM.write(i, 0);
+  EEPROM.commit();
+  LoadSettings();
+
+  // now we set all parameters that need to be non-zero as default value
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;
@@ -148,55 +156,46 @@ void ResetFactory(void)
   strcpy(Settings.WifiAPKey, DEFAULT_AP_KEY);
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
-  Settings.IP_Octet        = 0;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
-  Settings.Syslog_IP[0]    = 0;
-  Settings.Syslog_IP[1]    = 0;
-  Settings.Syslog_IP[2]    = 0;
-  Settings.Syslog_IP[3]    = 0;
-  Settings.UDPPort         = 0;
   Settings.Protocol        = DEFAULT_PROTOCOL;
-  Settings.IP[0]           = 0;
-  Settings.IP[1]           = 0;
-  Settings.IP[2]           = 0;
-  Settings.IP[3]           = 0;
-  Settings.Gateway[0]      = 0;
-  Settings.Gateway[1]      = 0;
-  Settings.Gateway[2]      = 0;
-  Settings.Gateway[3]      = 0;
-  Settings.Subnet[0]       = 0;
-  Settings.Subnet[1]       = 0;
-  Settings.Subnet[2]       = 0;
-  Settings.Subnet[3]       = 0;
   strcpy(Settings.Name, DEFAULT_NAME);
-  Settings.SyslogLevel     = 0;
   Settings.SerialLogLevel  = 3;
   Settings.WebLogLevel     = 3;
   Settings.BaudRate        = 115200;
-  Settings.ControllerUser[0]     = 0;
-  Settings.ControllerPassword[0] = 0;
-  Settings.Password[0] = 0;
   Settings.MessageDelay = 1000;
+  Settings.deepSleep = false;
   for (byte x = 0; x < TASKS_MAX; x++)
   {
-    Settings.TaskDeviceNumber[x] = 0;
-    Settings.TaskDeviceID[x] = 0;
     Settings.TaskDevicePin1[x] = -1;
     Settings.TaskDevicePin2[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
-    Settings.TaskDeviceName[x][0] = 0;
-    Settings.TaskDevicePort[x] = 0;
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      (Settings.TaskDeviceFormula[x][varNr][0] = 0);
-    for (byte y = 0; y < PLUGIN_VAR_MAX; y++)
-      Settings.TaskDevicePluginConfig[x][y] = 0;
     Settings.TaskDevicePin1Inversed[x]=false;
   }
   Save_Settings();
   WifiDisconnect();
   ESP.reset();
+}
+
+
+/********************************************************************************************\
+* If RX and TX tied together, perform emergency reset to get the system out of boot loops
+\*********************************************************************************************/
+
+void emergencyReset()
+{
+  Serial.begin(115200);
+  Serial.write(0xAA);
+  Serial.write(0x55);
+  delay(1);
+  if (Serial.available() == 2)
+    if (Serial.read() == 0xAA && Serial.read() == 0x55)
+      {
+        Serial.println("System will reset in 10 seconds...");
+        delay(10000);
+        ResetFactory();
+      }
 }
 
 
@@ -271,6 +270,38 @@ void delayedReboot(int rebootDelay)
     delay(1000);
   }
   ESP.reset();
+}
+
+
+/********************************************************************************************\
+* Save a byte to RTC memory
+\*********************************************************************************************/
+#define RTC_BASE 28 // 64
+void saveToRTC(byte Par1)
+{
+  byte buf[3] = {0xAA,0x55,0};
+  buf[2] = Par1;
+  system_rtc_mem_write(RTC_BASE,buf,3);  
+}
+
+
+/********************************************************************************************\
+* Read a byte from RTC memory
+\*********************************************************************************************/
+boolean readFromRTC(byte* data)
+{
+  byte buf[3] = {0,0,0};
+  system_rtc_mem_read(RTC_BASE,buf,3);  
+  if (buf[0] == 0xAA && buf[1] == 0x55)
+  {
+    *data = buf[2];
+    Serial.println(buf[2]);
+    return true;
+  }
+  else
+    Serial.println("No data");
+    
+  return false;
 }
 
 
