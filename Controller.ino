@@ -131,25 +131,25 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
 
   switch (sensorType)
   {
-    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
       url += "&svalue=";
       url += UserVar[varIndex];
       break;
-    case 2:                      // temp + hum + hum_stat, used for DHT11
+    case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
       url += "&svalue=";
       url += UserVar[varIndex];
       url += ";";
       url += UserVar[varIndex + 1];
       url += ";0";
       break;
-    case 3:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+    case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       url += "&svalue=";
       url += UserVar[varIndex];
       url += ";0;0;";
       url += UserVar[varIndex + 1];
       url += ";0";
       break;
-    case 10:                      // switch
+    case SENSOR_TYPE_SWITCH:
       url = F("/json.htm?type=command&param=switchlight&idx=");
       url += idx;
       url += "&switchcmd=";
@@ -157,6 +157,18 @@ boolean Domoticz_sendData(byte sensorType, int idx, byte varIndex)
         url += "Off";
       else
         url += "On";
+      break;
+    case SENSOR_TYPE_DIMMER:
+      url = F("/json.htm?type=command&param=switchlight&idx=");
+      url += idx;
+      url += "&switchcmd=";
+      if (UserVar[varIndex] == 0)
+        url += "Off";
+      else
+        {
+          url += "Set%20Level&level=";
+          url += UserVar[varIndex];
+        } 
       break;
   }
 
@@ -483,13 +495,13 @@ boolean Domoticz_sendDataMQTT(byte sensorType, int idx, byte varIndex)
 
   switch (sensorType)
   {
-    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
       root["nvalue"] = 0;
       values = UserVar[varIndex];
       values.toCharArray(str, 80);
       root["svalue"] =  str;
       break;
-    case 2:                      // temp + hum + hum_stat, used for DHT11
+    case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
       root["nvalue"] = 0;
       values  = UserVar[varIndex];
       values += ";";
@@ -498,7 +510,7 @@ boolean Domoticz_sendDataMQTT(byte sensorType, int idx, byte varIndex)
       values.toCharArray(str, 80);
       root["svalue"] =  str;
       break;
-    case 3:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+    case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       root["nvalue"] = 0;
       values  = UserVar[varIndex];
       values += ";0;0;";
@@ -507,12 +519,19 @@ boolean Domoticz_sendDataMQTT(byte sensorType, int idx, byte varIndex)
       values.toCharArray(str, 80);
       root["svalue"] =  str;
       break;
-    case 10:                      // switch
+    case SENSOR_TYPE_SWITCH:
       root["command"] = "switchlight";
       if (UserVar[varIndex] == 0)
         root["switchcmd"] = "Off";
       else
         root["switchcmd"] = "On";
+      break;
+    case SENSOR_TYPE_DIMMER:
+      root["command"] = "switchlight";
+      if (UserVar[varIndex] == 0)
+        root["switchcmd"] = "Off";
+      else
+        root["Set%20Level"] = UserVar[varIndex];
       break;
   }
 
@@ -545,30 +564,31 @@ boolean OpenHAB_sendDataMQTT(byte TaskIndex, byte sensorType, int idx, byte varI
 
   String pubname = "";
   String value = "";
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
 
   switch (sensorType)
   {
-    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
       pubname = "/";
       pubname += Settings.Name;
       pubname += "/";
       pubname += Settings.TaskDeviceName[TaskIndex];
       pubname += "/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
+      pubname += Device[DeviceIndex].ValueNames[0];
       pubname += "/state";
       value = String(UserVar[varIndex]);
       Serial.println(pubname);
       Serial.println(value);
       MQTTclient.publish(pubname, value);
       break;
-    case 2:
-    case 3:
+    case SENSOR_TYPE_TEMP_HUM:
+    case SENSOR_TYPE_TEMP_BARO:
       pubname = "/";
       pubname += Settings.Name;
       pubname += "/";
       pubname += Settings.TaskDeviceName[TaskIndex];
       pubname += "/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
+      pubname += Device[DeviceIndex].ValueNames[0];
       pubname += "/state";
       value = String(UserVar[varIndex]);
       MQTTclient.publish(pubname, value);
@@ -576,12 +596,12 @@ boolean OpenHAB_sendDataMQTT(byte TaskIndex, byte sensorType, int idx, byte varI
       pubname += "/";
       pubname += Settings.TaskDeviceName[TaskIndex];
       pubname += "/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[1];
+      pubname += Device[DeviceIndex].ValueNames[1];
       pubname += "/state";
       value = String(UserVar[varIndex + 1]);
       MQTTclient.publish(pubname, value);
       break;
-    case 10:                      // switch
+    case SENSOR_TYPE_SWITCH:
       //      if (UserVar[varIndex - 1] == 0)
       //      else
       break;
@@ -602,35 +622,36 @@ boolean PiDome_sendDataMQTT(byte TaskIndex, byte sensorType, int idx, byte varIn
 
   String pubname = "";
   String value = "";
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
 
   switch (sensorType)
   {
-    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
       pubname = "/hooks/devices/";
       pubname += idx;
       pubname += "/SensorData/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
+      pubname += Device[DeviceIndex].ValueNames[0];
       value = String(UserVar[varIndex]);
       Serial.println(pubname);
       Serial.println(value);
       MQTTclient.publish(pubname, value);
       break;
-    case 2:
-    case 3:
+    case SENSOR_TYPE_TEMP_HUM:
+    case SENSOR_TYPE_TEMP_BARO:
       pubname = "/hooks/devices/";
       pubname += idx;
       pubname += "/SensorData/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[0];
+      pubname += Device[DeviceIndex].ValueNames[0];
       value = String(UserVar[varIndex]);
       MQTTclient.publish(pubname, value);
       pubname = "/hooks/devices/";
       pubname += idx;
       pubname += "/SensorData/";
-      pubname += Device[Settings.TaskDeviceNumber[TaskIndex]].ValueNames[1];
+      pubname += Device[DeviceIndex].ValueNames[1];
       value = String(UserVar[varIndex + 1]);
       MQTTclient.publish(pubname, value);
       break;
-    case 10:                      // switch
+    case SENSOR_TYPE_SWITCH:
       //      if (UserVar[varIndex] == 0)
       //      else
       break;
@@ -679,14 +700,14 @@ boolean ThingsSpeak_sendData(byte sensorType, int idx, byte varIndex)
 
   switch (sensorType)
   {
-    case 1:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
       postDataStr += "&field";
       postDataStr += idx;
       postDataStr += "=";
       postDataStr += String(UserVar[varIndex]);
       break;
-    case 2:                      // dual value
-    case 3:
+    case SENSOR_TYPE_TEMP_HUM:                      // dual value
+    case SENSOR_TYPE_TEMP_BARO:
       postDataStr += "&field";
       postDataStr += idx;
       postDataStr += "=";
@@ -696,7 +717,7 @@ boolean ThingsSpeak_sendData(byte sensorType, int idx, byte varIndex)
       postDataStr += "=";
       postDataStr += String(UserVar[varIndex + 1]);
       break;
-    case 10:                      // switch
+    case SENSOR_TYPE_SWITCH:
       break;
   }
   postDataStr += "\r\n\r\n";

@@ -17,7 +17,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_002;
         strcpy(Device[deviceCount].Name, "Analog input");
         Device[deviceCount].Type = DEVICE_TYPE_ANALOG;
-        Device[deviceCount].VType = 1;
+        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

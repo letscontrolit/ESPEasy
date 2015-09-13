@@ -25,7 +25,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_008;
         strcpy(Device[deviceCount].Name, "RFID Reader");
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = 1;
+        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -37,7 +37,6 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Serial.println("RFID plugin init!");
         Plugin_008_init = true;
         Serial.print(F("INIT : RFID "));
         Serial.print(Settings.TaskDevicePin1[event->TaskIndex]);
@@ -70,7 +69,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             Plugin_008_keyBuffer &= 0xFFFFFF;
             UserVar[event->BaseVarIndex] = Plugin_008_keyBuffer;
             Serial.println(Plugin_008_keyBuffer);
-            sendData(event->TaskIndex, 1, Settings.TaskDeviceID[event->TaskIndex], event->BaseVarIndex);
+            sendData(event->TaskIndex, SENSOR_TYPE_SINGLE, Settings.TaskDeviceID[event->TaskIndex], event->BaseVarIndex);
             //              Plugin_008_keyBuffer = 0;          // Clear the buffer for the next iteration.
           }
 

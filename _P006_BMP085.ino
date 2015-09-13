@@ -18,7 +18,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_006;
         strcpy(Device[deviceCount].Name, "Temp + Baro BMP085");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = 3;
+        Device[deviceCount].VType = SENSOR_TYPE_TEMP_BARO;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

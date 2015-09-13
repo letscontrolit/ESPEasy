@@ -42,6 +42,7 @@
 //   MCP23017 I2C IO Expanders
 //   Analog input (ESP-7/12 only)
 //   PCF8591 4 port Analog to Digital converter (I2C)
+//   HC-SR04 Ultrasonic distance sensor
 //   LCD I2C display 4x20 chars
 //   Pulse counters
 //   Simple switch inputs
@@ -76,16 +77,10 @@
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 
-// sensor types
-//  1 = single value, general purpose (Dallas, LUX, counters, etc)
-//  2 = temp + hum (DHT)
-//  3 = temp + hum + baro (BMP085)
-// 10 = switch
-
 #define ESP_PROJECT_PID                    2015050101L
 #define ESP_EASY
 #define VERSION                             7
-#define BUILD                              18
+#define BUILD                              19
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define PROTOCOL_DOMOTICZ_HTTP              1
@@ -113,6 +108,12 @@
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
 #define DEVICE_TYPE_ANALOG                  3  // tout pin
 #define DEVICE_TYPE_DUAL                    4  // connected through 2 datapins
+
+#define SENSOR_TYPE_SINGLE                  1
+#define SENSOR_TYPE_TEMP_HUM                2
+#define SENSOR_TYPE_TEMP_BARO               3
+#define SENSOR_TYPE_SWITCH                 10
+#define SENSOR_TYPE_DIMMER                 11
 
 #define PLUGIN_INIT_ALL              1
 #define PLUGIN_INIT                  2
@@ -271,11 +272,12 @@ void setup()
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
-  hardwareInit();
-  PluginInit();
 
   WifiAPconfig();
   WifiConnect();
+
+  hardwareInit();
+  PluginInit();
 
   WebServerInit();
 
@@ -433,7 +435,8 @@ void SensorSend()
             }
           }
         }
-        sendData(x, Device[Settings.TaskDeviceNumber[x]].VType, Settings.TaskDeviceID[x], varIndex);
+        byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+        sendData(x, Device[DeviceIndex].VType, Settings.TaskDeviceID[x], varIndex);
       }
     }
   }

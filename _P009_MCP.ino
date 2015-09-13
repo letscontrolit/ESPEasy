@@ -17,7 +17,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_009;
         strcpy(Device[deviceCount].Name, "MCP23017 input");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = 1;
+        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 16;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -30,7 +30,6 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_COMMAND:
       {
         byte Par1 = Settings.TaskDevicePort[event->TaskIndex];
-        Serial.println("MCP23017 Read");
         byte portvalue = 0;
         byte unit = (Par1 - 1) / 16;
         byte port = Par1 - (unit * 16);

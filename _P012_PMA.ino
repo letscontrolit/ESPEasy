@@ -17,7 +17,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_012;
         strcpy(Device[deviceCount].Name,"ProMini Extender Analog");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = 1;
+        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 6;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

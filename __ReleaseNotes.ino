@@ -1,3 +1,8 @@
+// R019 13-09-2015
+// Added support for the HC-SR04 Ultrasonic distance sensor
+// Input switch can now be set to send switch state or dimvalue
+// Other minor internal changes
+
 // R018 09-09-2015
 // Fixed issues with special characters (#,% etc) in text fields like SSID, WPA key etc
 

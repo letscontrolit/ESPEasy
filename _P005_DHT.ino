@@ -18,7 +18,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_005;
         strcpy(Device[deviceCount].Name, "Temp + Hum DHT");
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = 2;
+        Device[deviceCount].VType = SENSOR_TYPE_TEMP_HUM;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -38,7 +38,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         int optionValues[2];
         optionValues[0] = 11;
         optionValues[1] = 22;
-        string += F("<TR><TD>DHT Type:<TD><select name='plugin1'>");
+        string += F("<TR><TD>DHT Type:<TD><select name='plugin_005_dhttype'>");
         for (byte x = 0; x < 2; x++)
         {
           string += F("<option value='");
@@ -58,7 +58,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin1");
+        String plugin1 = WebServer.arg("plugin_005_dhttype");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         success = true;
         break;
