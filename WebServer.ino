@@ -215,6 +215,7 @@ void handle_config() {
   String controllerpassword = WebServer.arg("controllerpassword");
   String sensordelay = WebServer.arg("delay");
   String messagedelay = WebServer.arg("messagedelay");
+  String deepsleep = WebServer.arg("deepsleep");
   String ip = WebServer.arg("ip");
   String espip = WebServer.arg("espip");
   String espgateway = WebServer.arg("espgateway");
@@ -257,6 +258,7 @@ void handle_config() {
     Settings.Protocol = protocol.toInt();
     Settings.Delay = sensordelay.toInt();
     Settings.MessageDelay = messagedelay.toInt();
+    Settings.deepSleep = (deepsleep == "on");
     Settings.IP_Octet = ip.toInt();
     espip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.IP);
@@ -345,8 +347,13 @@ void handle_config() {
   reply += Settings.Delay;
   reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
   reply += Settings.MessageDelay;
+  reply += F("'><TR><TD>Sleep Mode:<TD>");
+  if (Settings.deepSleep)
+    reply += F("<input type=checkbox name='deepsleep' checked>");
+  else
+    reply += F("<input type=checkbox name='deepsleep'>");
 
-  reply += F("'><TR bgcolor='#55bbff'><TD>Optional Settings<TD><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
+  reply += F("<TR bgcolor='#55bbff'><TD>Optional Settings<TD><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
 
   reply += F("'><TR><TD>ESP IP:<TD><input type='text' name='espip' value='");
@@ -572,6 +579,13 @@ void handle_devices() {
 
     reply += "<TR><TD>Device:<TD>";
     addDeviceSelect(reply,"taskdevicenumber",Settings.TaskDeviceNumber[index-1]);
+
+    if(Settings.TaskDeviceNumber[index-1] !=0 )
+    {
+      reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/plugin");
+      reply += Settings.TaskDeviceNumber[index-1];
+      reply += F("\" target=\"_blank\">?</a>");
+    }
 
     reply += F("<TR><TD>Name:<TD><input type='text' maxlength='25' name='taskdevicename' value='");
     reply += Settings.TaskDeviceName[index-1];

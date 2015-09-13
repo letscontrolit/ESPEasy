@@ -77,11 +77,12 @@
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 
-#define ESP_PROJECT_PID                    2015050101L
+#define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
-#define VERSION                             7
-#define BUILD                              19
+#define VERSION                             8
+#define BUILD                              20
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
+#define EEPROM_SIZE                      2048
 
 #define PROTOCOL_DOMOTICZ_HTTP              1
 #define PROTOCOL_DOMOTICZ_MQTT              2
@@ -115,16 +116,16 @@
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 
-#define PLUGIN_INIT_ALL              1
-#define PLUGIN_INIT                  2
-#define PLUGIN_COMMAND               3
-#define PLUGIN_ONCE_A_SECOND         4
-#define PLUGIN_TEN_PER_SECOND        5
-#define PLUGIN_DEVICE_ADD            6
-#define PLUGIN_EVENTLIST_ADD         7
-#define PLUGIN_WEBFORM_SAVE          8
-#define PLUGIN_WEBFORM_LOAD          9
-#define PLUGIN_WEBFORM_VALUES       10
+#define PLUGIN_INIT_ALL                     1
+#define PLUGIN_INIT                         2
+#define PLUGIN_COMMAND                      3
+#define PLUGIN_ONCE_A_SECOND                4
+#define PLUGIN_TEN_PER_SECOND               5
+#define PLUGIN_DEVICE_ADD                   6
+#define PLUGIN_EVENTLIST_ADD                7
+#define PLUGIN_WEBFORM_SAVE                 8
+#define PLUGIN_WEBFORM_LOAD                 9
+#define PLUGIN_WEBFORM_VALUES              10
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -188,6 +189,7 @@ struct SettingsStruct
   boolean       TaskDevicePin1PullUp[TASKS_MAX];
   long          TaskDevicePluginConfig[TASKS_MAX][PLUGIN_VAR_MAX];
   boolean       TaskDevicePin1Inversed[TASKS_MAX];
+  byte          deepSleep;
 } Settings;
 
 struct EventStruct
@@ -249,7 +251,8 @@ String dummyString = "";
 \*********************************************************************************************/
 void setup()
 {
-  EEPROM.begin(2048);
+  EEPROM.begin(EEPROM_SIZE);
+  emergencyReset();
 
   LoadSettings();
 
@@ -272,7 +275,6 @@ void setup()
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
-
   WifiAPconfig();
   WifiConnect();
 
@@ -284,12 +286,6 @@ void setup()
   // setup UDP
   if (Settings.UDPPort != 0)
     portRX.begin(Settings.UDPPort);
-
-  // Setup timers
-  timer = millis() + 30000; // startup delay 30 sec
-  timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
-  timer1s = millis() + 1000; // timer for periodic actions once per/sec
-  timerwd = millis() + 30000; // timer for watchdog once per 30 sec
 
   // Setup LCD display
   lcd.init();                      // initialize the lcd
@@ -303,6 +299,32 @@ void setup()
   sendSysInfoUDP(3);
   Serial.println(F("INIT : Boot OK"));
   addLog(LOG_LEVEL_INFO, (char*)"Boot");
+
+  if(Settings.deepSleep)
+    Serial.println("Deep sleep enabled");
+
+  byte bootMode=0;
+  if (readFromRTC(&bootMode))
+  {
+    if (bootMode == 1)
+      Serial.println("reboot from deepsleep");
+    else
+      Serial.println("normal boot");
+  }
+  else
+      Serial.println("RTC not read");
+ 
+  saveToRTC(0);
+
+  // Setup timers
+  if (bootMode == 0)
+    timer = millis() + 30000; // startup delay 30 sec
+  else
+    timer = millis() + 0; // no startup from deepsleep wake up
+    
+  timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
+  timer1s = millis() + 1000; // timer for periodic actions once per/sec
+  timerwd = millis() + 30000; // timer for watchdog once per 30 sec
 }
 
 
@@ -315,7 +337,6 @@ void loop()
     serial();
 
   checkUDP();
-
 
   if (cmd_within_mainloop != 0)
   {
@@ -379,6 +400,12 @@ void loop()
   {
     timer = millis() + Settings.Delay * 1000;
     SensorSend();
+    if (Settings.deepSleep)
+    {
+      saveToRTC(1);
+      Serial.println("Enter deepsleep...");
+      ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+    }
   }
 
   if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
@@ -389,6 +416,10 @@ void loop()
 
   backgroundtasks();
 
+  if (Settings.deepSleep)
+    {
+      //ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+    }
 }
 
 

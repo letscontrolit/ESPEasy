@@ -20,6 +20,22 @@ void ExecuteCommand(char *Line)
   // commands to execute io tasks
   // ****************************************
 
+  if (strcasecmp(Command, "Sleep") == 0)
+  {
+    ESP.deepSleep(10000000, WAKE_RF_DEFAULT); // Sleep for 10 seconds
+  }
+
+  if (strcasecmp(Command, "RTCsave") == 0)
+  {
+    saveToRTC(Par1);
+  }
+
+  if (strcasecmp(Command, "RTCread") == 0)
+  {
+    byte data=0;
+    readFromRTC(&data);
+  }
+
   if (strcasecmp(Command, "GPIO") == 0)
   {
     if (Par1 >= 0 && Par1 <= 16)
