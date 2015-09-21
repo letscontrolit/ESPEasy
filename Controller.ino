@@ -356,6 +356,7 @@ void MQTTConnect()
       MQTTclient.subscribe(subscribeTo);
       Serial.print(F("Subscribed to: "));
       Serial.println(subscribeTo);
+      break; // end loop if succesfull
     }
     else
       Serial.println(F("MQTT : Failed to connected to broker"));
