@@ -1184,7 +1184,7 @@ void handle_control() {
   Cmd[0] = 0;
   GetArgv(command, Cmd, 1);
 
-  if ((strcasecmp(Cmd, "gpio") == 0) || (strcasecmp(Cmd, "pwm") == 0))
+  if ((strcasecmp(Cmd, "gpio") == 0) || (strcasecmp(Cmd, "pwm") == 0) || (strcasecmp(Cmd, "mcpgpio") == 0))
     validCmd = true;
     
   String reply = "";

@@ -326,12 +326,13 @@ void callback(const MQTT::Publish& pub) {
 void MQTTConnect()
 {
   IPAddress MQTTBrokerIP(Settings.Controller_IP);
-  MQTTclient.set_server(MQTTBrokerIP, 1883);
+  MQTTclient.set_server(MQTTBrokerIP, Settings.ControllerPort);
   MQTTclient.set_callback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = "ESPClient";
   clientid += Settings.Unit;
+  String subscribeTo = "";
 
   for (byte x = 1; x < 3; x++)
   {
@@ -341,21 +342,20 @@ void MQTTConnect()
       switch (Settings.Protocol)
       {
         case PROTOCOL_DOMOTICZ_MQTT:
-          MQTTclient.subscribe("domoticz/out");
+          subscribeTo = "domoticz/out";
           break;
         case PROTOCOL_OPENHAB_MQTT:
-          {
-            String pubname = "/";
-            pubname += Settings.Name;
-            pubname += "/#";
-            MQTTclient.subscribe(pubname);
-            break;
-          }
+          subscribeTo = "/";
+          subscribeTo += Settings.Name;
+          subscribeTo += "/#";
+          break;
         case PROTOCOL_PIDOME_MQTT:
-          MQTTclient.subscribe("/Home/#");
+          subscribeTo = "/Home/#";
           break;
       }
-      break;
+      MQTTclient.subscribe(subscribeTo);
+      Serial.print(F("Subscribed to: "));
+      Serial.println(subscribeTo);
     }
     else
       Serial.println(F("MQTT : Failed to connected to broker"));
@@ -370,6 +370,12 @@ void MQTTConnect()
 \*********************************************************************************************/
 void MQTTMessage(String *topic, String *message)
 {
+  char log[80];
+  char c_topic[80];
+  topic->toCharArray(c_topic,80);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic ", c_topic);
+  addLog(LOG_LEVEL_DEBUG, log);
+  
   // Split topic into array
   String tmpTopic = topic->substring(1);
   String topicSplit[10];

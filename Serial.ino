@@ -70,6 +70,11 @@ void ExecuteCommand(char *Line)
     }
   }
 
+  if (strcasecmp(Command, "MCPGPIO") == 0)
+  {
+    mcp23017(Par1, Par2);
+  }
+
   if (strcasecmp(Command, "ExtRead") == 0)
   {
     uint8_t address = 0x7f;
@@ -115,11 +120,6 @@ void ExecuteCommand(char *Line)
     }
     else
       Serial.println("Error getting data");
-  }
-
-  if (strcasecmp(Command, "ExtWiredOut") == 0)
-  {
-    mcp23017(Par1, Par2);
   }
 
   if (strcasecmp(Command, "LCDWrite") == 0)

@@ -80,7 +80,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             8
-#define BUILD                              20
+#define BUILD                              21
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define EEPROM_SIZE                      2048
 
