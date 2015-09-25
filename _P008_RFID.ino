@@ -3,7 +3,9 @@
 //#######################################################################################################
 
 #define PLUGIN_008
-#define PLUGIN_ID_008       8
+#define PLUGIN_ID_008         8
+#define PLUGIN_NAME_008       "RFID Reader"
+#define PLUGIN_VALUENAME1_008 "RFID"
 
 #define PLUGIN_008_WGSIZE 26
 
@@ -23,7 +25,6 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_008;
-        strcpy(Device[deviceCount].Name, "RFID Reader");
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
@@ -31,17 +32,24 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0], "RFID");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_008);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_008));
         break;
       }
 
     case PLUGIN_INIT:
       {
         Plugin_008_init = true;
-        Serial.print(F("INIT : RFID "));
-        Serial.print(Settings.TaskDevicePin1[event->TaskIndex]);
-        Serial.print(" & ");
-        Serial.println(Settings.TaskDevicePin2[event->TaskIndex]);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
         attachInterrupt(Settings.TaskDevicePin1[event->TaskIndex], Plugin_008_interrupt1, FALLING);
@@ -68,9 +76,8 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1;          // Strip leading and trailing parity bits from the keyBuffer
             Plugin_008_keyBuffer &= 0xFFFFFF;
             UserVar[event->BaseVarIndex] = Plugin_008_keyBuffer;
-            Serial.println(Plugin_008_keyBuffer);
-            sendData(event->TaskIndex, SENSOR_TYPE_SINGLE, Settings.TaskDeviceID[event->TaskIndex], event->BaseVarIndex);
-            //              Plugin_008_keyBuffer = 0;          // Clear the buffer for the next iteration.
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            sendData(event);
           }
 
           Plugin_008_bitCountPrev = Plugin_008_bitCount; // store this value for next check, detect noise

@@ -1,3 +1,16 @@
+// R22 25-09-2015
+// Using Spiffs filesystem support for configuration settings
+// All configuration settings are now stored into the ESP filesystem.
+// Task string fields are now dynamically loaded from spiffs when needed. Saving RAM...
+// Optimize RAM usage by changing device structure array and handling of device strings
+// Added option to load and save ESP configuration settings from/to file
+// Cleanup all fields when a task is cleared or device is changed
+// Moved keys and passwords to a separate file
+// Added option to change valuenames (mainly MQTT purpose)
+// MQTT publish & subscribe settings can be changed using a template
+// Moved some advanced settings to tools/system/advanced button
+// Dallas plugin now supports multiple devices on the same bus
+
 // R21 21-09-2015
 // Added more logging to MQTT
 // Added mcpgpio to valid list of control commands

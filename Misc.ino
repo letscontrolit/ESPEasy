@@ -1,3 +1,34 @@
+void fileSystemCheck()
+{
+  if (SPIFFS.begin())
+  {
+    Serial.println(F("SPIFFS Mount succesfull"));
+    File f = SPIFFS.open("config.txt", "r");
+    if (!f)
+    {
+      Serial.println(F("formatting..."));
+      SPIFFS.format();
+      Serial.println(F("format done!"));
+      File f = SPIFFS.open("config.txt", "w");
+      if (f)
+      {
+        for (int x = 0; x < 32768; x++)
+          f.write(0);
+        f.close();
+      }
+      f = SPIFFS.open("security.txt", "w");
+      if (f)
+      {
+        for (int x = 0; x < 512; x++)
+          f.write(0);
+        f.close();
+      }
+    }
+  }
+  else
+    Serial.println(F("SPIFFS Mount failed"));
+}
+
 /********************************************************************************************\
 * Find device index corresponding to task number setting
 \*********************************************************************************************/
@@ -102,34 +133,83 @@ boolean str2ip(char *string, byte* IP)
 
 
 /********************************************************************************************\
-* Save settings to EEPROM
+* Save settings to SPIFFS
 \*********************************************************************************************/
-void Save_Settings(void)
+void SaveSettings(void)
 {
-  char ByteToSave, *pointerToByteToSave = pointerToByteToSave = (char*)&Settings; //pointer to settings struct
-
-  for (int x = 0; x < sizeof(struct SettingsStruct) ; x++)
-  {
-    EEPROM.write(x, *pointerToByteToSave);
-    pointerToByteToSave++;
-  }
-  EEPROM.commit();
+  SaveToFile((char*)"config.txt", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  SaveToFile((char*)"security.txt", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
 }
 
 
 /********************************************************************************************\
-* Load settings from EEPROM
+* Load settings from SPIFFS
 \*********************************************************************************************/
 boolean LoadSettings()
 {
-  byte x;
+  LoadFromFile((char*)"config.txt", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  LoadFromFile((char*)"security.txt", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+}
 
-  char ByteToSave, *pointerToByteToRead = (char*)&Settings; //pointer to settings struct
 
-  for (int x = 0; x < sizeof(struct SettingsStruct); x++)
+/********************************************************************************************\
+* Save Task settings to SPIFFS
+\*********************************************************************************************/
+void SaveTaskSettings(byte TaskIndex)
+{
+  SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+}
+
+
+/********************************************************************************************\
+* Load Task settings from SPIFFS
+\*********************************************************************************************/
+void LoadTaskSettings(byte TaskIndex)
+{
+  if(ExtraTaskSettings.TaskIndex == TaskIndex)
+    return;
+  LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  ExtraTaskSettings.TaskIndex = TaskIndex; // store active index
+}
+
+
+/********************************************************************************************\
+* Save data into config file on SPIFFS
+\*********************************************************************************************/
+void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
+{
+  File f = SPIFFS.open(fname, "r+");
+  if (f)
   {
-    *pointerToByteToRead = EEPROM.read(x);
-    pointerToByteToRead++;// next byte
+    f.seek(index, SeekSet);
+    byte *pointerToByteToSave = memAddress;
+    for (int x = 0; x < datasize ; x++)
+    {
+      f.write(*pointerToByteToSave);
+      pointerToByteToSave++;
+    }
+    f.close();
+    Serial.println(F("FILE : File saved"));
+  }
+}
+
+
+/********************************************************************************************\
+* Load data from config file on SPIFFS
+\*********************************************************************************************/
+void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
+{
+  File f = SPIFFS.open(fname, "r+");
+  if (f)
+  {
+    f.seek(index, SeekSet);
+    byte *pointerToByteToRead = memAddress;
+    for (int x = 0; x < datasize; x++)
+    {
+      *pointerToByteToRead = f.read();
+      pointerToByteToRead++;// next byte
+    }
+    f.close();
   }
 }
 
@@ -139,30 +219,40 @@ boolean LoadSettings()
 \*********************************************************************************************/
 void ResetFactory(void)
 {
-  Serial.println("Reset!");
+  Serial.println(F("Reset!"));
 
-  // First we clear the entire eeprom area and fill with zeros (better default than 0xff)
-  for (int i = 0; i < EEPROM_SIZE; i++)
-    EEPROM.write(i, 0);
-  EEPROM.commit();
+  File f = SPIFFS.open("config.txt", "w");
+  if (f)
+  {
+    for (int x = 0; x < 32768; x++)
+      f.write(0);
+    f.close();
+
+  }
+  f = SPIFFS.open("security.txt", "w");
+  if (f)
+  {
+    for (int x = 0; x < 512; x++)
+      f.write(0);
+    f.close();
+  }
   LoadSettings();
-
   // now we set all parameters that need to be non-zero as default value
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;
-  strcpy(Settings.WifiSSID, DEFAULT_SSID);
-  strcpy(Settings.WifiKey, DEFAULT_KEY);
-  strcpy(Settings.WifiAPKey, DEFAULT_AP_KEY);
+  strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
+  strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
+  strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
   Settings.Protocol        = DEFAULT_PROTOCOL;
-  strcpy(Settings.Name, DEFAULT_NAME);
-  Settings.SerialLogLevel  = 3;
-  Settings.WebLogLevel     = 3;
+  strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
+  Settings.SerialLogLevel  = 2;
+  Settings.WebLogLevel     = 2;
   Settings.BaudRate        = 115200;
   Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
@@ -171,9 +261,9 @@ void ResetFactory(void)
     Settings.TaskDevicePin1[x] = -1;
     Settings.TaskDevicePin2[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
-    Settings.TaskDevicePin1Inversed[x]=false;
+    Settings.TaskDevicePin1Inversed[x] = false;
   }
-  Save_Settings();
+  SaveSettings();
   WifiDisconnect();
   ESP.reset();
 }
@@ -191,11 +281,11 @@ void emergencyReset()
   delay(1);
   if (Serial.available() == 2)
     if (Serial.read() == 0xAA && Serial.read() == 0x55)
-      {
-        Serial.println("System will reset in 10 seconds...");
-        delay(10000);
-        ResetFactory();
-      }
+    {
+      Serial.println(F("System will reset in 10 seconds..."));
+      delay(10000);
+      ResetFactory();
+    }
 }
 
 
@@ -251,8 +341,7 @@ void addLog(byte loglevel, char *line)
     if (logcount > 9)
       logcount = 0;
     Logging[logcount].timeStamp = millis();
-    strncpy(Logging[logcount].Message, line, 80);
-    Logging[logcount].Message[79] = 0;
+    Logging[logcount].Message = line;
   }
 }
 
@@ -279,9 +368,9 @@ void delayedReboot(int rebootDelay)
 #define RTC_BASE 28 // 64
 void saveToRTC(byte Par1)
 {
-  byte buf[3] = {0xAA,0x55,0};
+  byte buf[3] = {0xAA, 0x55, 0};
   buf[2] = Par1;
-  system_rtc_mem_write(RTC_BASE,buf,3);  
+  system_rtc_mem_write(RTC_BASE, buf, 3);
 }
 
 
@@ -290,17 +379,13 @@ void saveToRTC(byte Par1)
 \*********************************************************************************************/
 boolean readFromRTC(byte* data)
 {
-  byte buf[3] = {0,0,0};
-  system_rtc_mem_read(RTC_BASE,buf,3);  
+  byte buf[3] = {0, 0, 0};
+  system_rtc_mem_read(RTC_BASE, buf, 3);
   if (buf[0] == 0xAA && buf[1] == 0x55)
   {
     *data = buf[2];
-    Serial.println(buf[2]);
     return true;
   }
-  else
-    Serial.println("No data");
-    
   return false;
 }
 

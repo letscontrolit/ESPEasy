@@ -27,14 +27,12 @@ void WifiAPMode(boolean state)
     ap_ssid[0] = 0;
     strcpy(ap_ssid, "ESP_");
     sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
-    Serial.println(F("WIFI : Starting AP Mode"));
     WiFi.softAP(ap_ssid, Settings.WifiAPKey);
     WiFi.mode(WIFI_AP_STA);
   }
   else
   {
     AP_Mode = false;
-    Serial.println(F("WIFI : Ending AP Mode"));
     WiFi.mode(WIFI_STA);
   }
 }
@@ -48,9 +46,9 @@ boolean WifiConnect()
   Serial.println(F("WIFI : Connecting..."));
   if (WiFi.status() != WL_CONNECTED)
   {
-    if ((Settings.WifiSSID[0] != 0)  && (strcasecmp(Settings.WifiSSID, "ssid") != 0))
+    if ((SecuritySettings.WifiSSID[0] != 0)  && (strcasecmp(SecuritySettings.WifiSSID, "ssid") != 0))
     {
-      WiFi.begin(Settings.WifiSSID, Settings.WifiKey);
+      WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
       for (byte x = 0; x < 10; x++)
       {
         if (WiFi.status() != WL_CONNECTED)
@@ -113,7 +111,6 @@ void WifiScan()
 {
   Serial.println(F("WIFI : SSID Scan start"));
   int n = WiFi.scanNetworks();
-  Serial.println(F("WIFI : Scan done"));
   if (n == 0)
     Serial.println(F("WIFI : No networks found"));
   else
@@ -131,7 +128,6 @@ void WifiScan()
       Serial.print(" (");
       Serial.print(WiFi.RSSI(i));
       Serial.print(")");
-      //Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
       Serial.println("");
       delay(10);
     }
@@ -163,7 +159,6 @@ void WifiCheck()
       byte wifimode = wifi_get_opmode();
       if (wifimode == 2 || wifimode == 3) //apmode is active
       {
-        Serial.println(F("WIFI : Return to STA mode"));
         WifiAPMode(false);
       }
     }

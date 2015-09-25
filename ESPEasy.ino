@@ -76,13 +76,11 @@
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
-
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
-#define VERSION                             8
-#define BUILD                              21
+#define VERSION                             9
+#define BUILD                              22
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
-#define EEPROM_SIZE                      2048
 
 #define PROTOCOL_DOMOTICZ_HTTP              1
 #define PROTOCOL_DOMOTICZ_MQTT              2
@@ -99,11 +97,12 @@
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
-#define DEVICES_MAX                        32
-#define TASKS_MAX                           8
-#define VARS_PER_TASK                       2
-#define PLUGIN_MAX                         32
-#define PLUGIN_VAR_MAX                     16
+#define DEVICES_MAX                        64
+#define TASKS_MAX                          12
+#define VARS_PER_TASK                       4
+#define PLUGIN_MAX                         64
+#define PLUGIN_CONFIGVAR_MAX                8
+#define PLUGIN_EXTRACONFIGVAR_MAX          16
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
@@ -126,15 +125,17 @@
 #define PLUGIN_WEBFORM_SAVE                 8
 #define PLUGIN_WEBFORM_LOAD                 9
 #define PLUGIN_WEBFORM_VALUES              10
+#define PLUGIN_GET_DEVICENAME              11
+#define PLUGIN_GET_DEVICEVALUENAMES        12
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
-#include <EEPROM.h>
 #include <Wire.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
+#include <FS.h>
 
 // MQTT client
 PubSubClient MQTTclient("");
@@ -149,13 +150,21 @@ ESP8266WebServer WebServer(80);
 WiFiUDP portRX;
 WiFiUDP portTX;
 
+struct SecurityStruct
+{
+  char          WifiSSID[32];
+  char          WifiKey[64];
+  char          WifiAPKey[64];
+  char          ControllerUser[26];
+  char          ControllerPassword[26];
+  char          Password[26];
+} SecuritySettings;
+
 struct SettingsStruct
 {
   unsigned long PID;
   int           Version;
   byte          Unit;
-  char          WifiSSID[26];
-  char          WifiKey[64];
   byte          Controller_IP[4];
   unsigned int  ControllerPort;
   byte          IP_Octet;
@@ -169,46 +178,52 @@ struct SettingsStruct
   byte          IP[4];
   byte          Gateway[4];
   byte          Subnet[4];
-  byte          _Debug; // obsolete
   char          Name[26];
   byte          SyslogLevel;
   byte          SerialLogLevel;
   byte          WebLogLevel;
   unsigned long BaudRate;
-  char          ControllerUser[26];
-  char          ControllerPassword[26];
-  char          Password[26];
   unsigned long MessageDelay;
   byte          TaskDeviceNumber[TASKS_MAX];
   unsigned int  TaskDeviceID[TASKS_MAX];
   int8_t        TaskDevicePin1[TASKS_MAX];
   int8_t        TaskDevicePin2[TASKS_MAX];
-  char          TaskDeviceName[TASKS_MAX][26];
   byte          TaskDevicePort[TASKS_MAX];
-  char          TaskDeviceFormula[TASKS_MAX][VARS_PER_TASK][26];
   boolean       TaskDevicePin1PullUp[TASKS_MAX];
-  long          TaskDevicePluginConfig[TASKS_MAX][PLUGIN_VAR_MAX];
+  int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
   boolean       TaskDevicePin1Inversed[TASKS_MAX];
   byte          deepSleep;
+  char          MQTTpublish[81];
+  char          MQTTsubscribe[81];
 } Settings;
+
+struct ExtraTaskSettingsStruct
+{
+  byte    TaskIndex;
+  char    TaskDeviceName[26];
+  char    TaskDeviceFormula[VARS_PER_TASK][41];
+  char    TaskDeviceValueNames[VARS_PER_TASK][26];
+  long    TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
+} ExtraTaskSettings;
 
 struct EventStruct
 {
   byte TaskIndex;
   byte BaseVarIndex;
+  byte idx;
+  byte sensorType;
 };
 
 struct LogStruct
 {
   unsigned long timeStamp;
-  char Message[80];
+  String Message;
 } Logging[10];
 int logcount = -1;
 
 struct DeviceStruct
 {
   byte Number;
-  char Name[26];
   byte Type;
   byte VType;
   byte Ports;
@@ -216,10 +231,9 @@ struct DeviceStruct
   boolean InverseLogicOption;
   boolean FormulaOption;
   byte ValueCount;
-  char ValueNames[2][26];
-} Device[DEVICES_MAX];
+} Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
-byte deviceCount = 0;
+int deviceCount = -1;
 
 boolean printToWeb = false;
 String printWebString = "";
@@ -245,22 +259,23 @@ byte Plugin_id[PLUGIN_MAX];
 
 String dummyString = "";
 
-
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
 {
-  EEPROM.begin(EEPROM_SIZE);
+  Serial.begin(115200);
+  fileSystemCheck();
+
   emergencyReset();
 
   LoadSettings();
-
+  ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
+  
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
   if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
   {
-    Serial.begin(9600);                                                           // Initialiseer de seriele poort
     Serial.println(Settings.PID);
     Serial.println(Settings.Version);
     Serial.println(F("INIT : Incorrect PID or version!"));
@@ -300,20 +315,20 @@ void setup()
   Serial.println(F("INIT : Boot OK"));
   addLog(LOG_LEVEL_INFO, (char*)"Boot");
 
-  if(Settings.deepSleep)
-    Serial.println("Deep sleep enabled");
+  if (Settings.deepSleep)
+    Serial.println(F("INIT : Deep sleep enabled"));
 
-  byte bootMode=0;
+  byte bootMode = 0;
   if (readFromRTC(&bootMode))
   {
     if (bootMode == 1)
-      Serial.println("reboot from deepsleep");
+      Serial.println(F("INIT : Reboot from deepsleep"));
     else
-      Serial.println("normal boot");
+      Serial.println(F("INIT : Normal boot"));
   }
   else
-      Serial.println("RTC not read");
- 
+    Serial.println(F("INIT : RTC not read"));
+
   saveToRTC(0);
 
   // Setup timers
@@ -321,7 +336,7 @@ void setup()
     timer = millis() + 30000; // startup delay 30 sec
   else
     timer = millis() + 0; // no startup from deepsleep wake up
-    
+
   timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
   timer1s = millis() + 1000; // timer for periodic actions once per/sec
   timerwd = millis() + 30000; // timer for watchdog once per 30 sec
@@ -386,7 +401,7 @@ void loop()
     timer1s = millis() + 1000;
     WifiCheck();
 
-    if (Settings.Password[0] != 0)
+    if (SecuritySettings.Password[0] != 0)
     {
       if (WebLoggedIn)
         WebLoggedInTimer++;
@@ -403,23 +418,16 @@ void loop()
     if (Settings.deepSleep)
     {
       saveToRTC(1);
-      Serial.println("Enter deepsleep...");
+      Serial.println(F("Enter deep sleep..."));
       ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
     }
   }
 
   if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
-  {
-    Serial.println(F("Too many connection failures"));
     delayedReboot(60);
-  }
 
   backgroundtasks();
 
-  if (Settings.deepSleep)
-    {
-      //ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
-    }
 }
 
 
@@ -429,45 +437,44 @@ void SensorSend()
   {
     if (Settings.TaskDeviceID[x] != 0)
     {
-
       byte varIndex = x * VARS_PER_TASK;
       boolean success = false;
+      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+      LoadTaskSettings(x);
 
       struct EventStruct TempEvent;
       TempEvent.TaskIndex = x;
+      TempEvent.BaseVarIndex = varIndex;
+      TempEvent.idx = Settings.TaskDeviceID[x];
+      TempEvent.sensorType = Device[DeviceIndex].VType;
+      
+      float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
+      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        preValue[varNr] = UserVar[varIndex + varNr];
+        
       success = PluginCall(PLUGIN_COMMAND, &TempEvent, dummyString);
 
       if (success)
       {
         for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
-          if (Settings.TaskDeviceFormula[x][varNr][0] != 0)
+          if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {
-            String formula = Settings.TaskDeviceFormula[x][varNr];
+            String spreValue= String(preValue[varNr]);
+            String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
             float value = UserVar[varIndex + varNr];
             float result = 0;
             String svalue = String(value);
+            formula.replace("%pvalue%", spreValue);
             formula.replace("%value%", svalue);
-            Serial.print("CALC : ");
-            Serial.print(formula);
-            Serial.print(" = ");
             char TmpStr[26];
             formula.toCharArray(TmpStr, 25);
             byte error = Calculate(TmpStr, &result);
             if (error == 0)
-            {
-              Serial.println(result);
               UserVar[varIndex + varNr] = result;
-            }
-            else
-            {
-              Serial.print("? error=");
-              Serial.println(error);
-            }
           }
         }
-        byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-        sendData(x, Device[DeviceIndex].VType, Settings.TaskDeviceID[x], varIndex);
+        sendData(&TempEvent);
       }
     }
   }

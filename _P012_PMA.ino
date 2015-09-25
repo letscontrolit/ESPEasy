@@ -4,6 +4,8 @@
 
 #define PLUGIN_012
 #define PLUGIN_ID_012     12
+#define PLUGIN_NAME_012       "ProMini Extender Analog"
+#define PLUGIN_VALUENAME1_012 "Analog"
 
 boolean Plugin_012(byte function, struct EventStruct *event, String& string)
   {
@@ -15,7 +17,6 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_012;
-        strcpy(Device[deviceCount].Name,"ProMini Extender Analog");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 6;
@@ -23,7 +24,18 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0],"Analog");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_012);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_012));
         break;
       }
     
@@ -40,7 +52,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       Wire.requestFrom(address, (uint8_t)0x1);
       if (Wire.available())
         UserVar[event->BaseVarIndex] = Wire.read();
-      Serial.print("PMADC: Analog: ");
+      Serial.print(F("PMADC: Analog: "));
       Serial.println(UserVar[event->BaseVarIndex]);
       success=true;
       break;

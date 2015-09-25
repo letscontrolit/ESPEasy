@@ -3,7 +3,9 @@
 //#######################################################################################################
 
 #define PLUGIN_010
-#define PLUGIN_ID_010     10
+#define PLUGIN_ID_010         10
+#define PLUGIN_NAME_010       "LUX BH1750"
+#define PLUGIN_VALUENAME1_010 "Lux"
 
 #define BH1750_ADDRESS    0x23
 boolean Plugin_010_init = false;
@@ -18,14 +20,24 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_010;
-        strcpy(Device[deviceCount].Name,"LUX BH1750");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0],"Lux");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_010);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_010));
         break;
       }
     
@@ -34,7 +46,6 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
       if (!Plugin_010_init)
         {
           Plugin_010_init=true;
-          Serial.println("Lux init");
           Wire.beginTransmission(BH1750_ADDRESS);
           Wire.write(0x10);                             // 1 lx resolution
           Wire.endTransmission();
@@ -46,7 +57,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
       val=((b1<<8)|b2)/1.2;
       val=val+15;
       UserVar[event->BaseVarIndex] = val;
-      Serial.print("LUX  : Light intensity: ");
+      Serial.print(F("LUX  : Light intensity: "));
       Serial.println(UserVar[event->BaseVarIndex]);
       success=true;
       break;

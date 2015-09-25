@@ -3,20 +3,22 @@
 //#######################################################################################################
 
 #define PLUGIN_005
-#define PLUGIN_ID_005        5
+#define PLUGIN_ID_005         5
+#define PLUGIN_NAME_005       "Temp + Hum DHT"
+#define PLUGIN_VALUENAME1_005 "Temperature"
+#define PLUGIN_VALUENAME2_005 "Humidity"
 
 uint8_t Plugin_005_DHT_Pin;
 
 boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-
+  
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_005;
-        strcpy(Device[deviceCount].Name, "Temp + Hum DHT");
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_TEMP_HUM;
         Device[deviceCount].Ports = 0;
@@ -24,8 +26,19 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 2;
-        strcpy(Device[deviceCount].ValueNames[0], "Temperature");
-        strcpy(Device[deviceCount].ValueNames[1], "Humidity");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_005);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_005));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_005));
         break;
       }
 
@@ -45,10 +58,10 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
           string += optionValues[x];
           string += "'";
           if (choice == optionValues[x])
-            string += " selected";
+            string += F(" selected");
           string += ">";
           string += options[x];
-          string += "</option>";
+          string += F("</option>");
         }
         string += F("</select>");
 
@@ -130,9 +143,9 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
                       UserVar[event->BaseVarIndex] = 0.1 * word(dht_dat[2], dht_dat[3]);
                     UserVar[event->BaseVarIndex + 1] = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
                   }
-                  Serial.print("DHT  : Temperature: ");
+                  Serial.print(F("DHT  : Temperature: "));
                   Serial.println(UserVar[event->BaseVarIndex]);
-                  Serial.print("DHT  : Humidity: ");
+                  Serial.print(F("DHT  : Humidity: "));
                   Serial.println(UserVar[event->BaseVarIndex + 1]);
                   success = true;
                 } // checksum

@@ -451,7 +451,11 @@ void PluginInit(void)
 byte PluginCall(byte Function, struct EventStruct *Event, String& str)
 {
   int x;
+  struct EventStruct TempEvent;
 
+ if (Event == 0)
+    Event=&TempEvent;
+    
   switch (Function)
   {
     // Call to all plugins
@@ -477,15 +481,17 @@ byte PluginCall(byte Function, struct EventStruct *Event, String& str)
     case PLUGIN_TEN_PER_SECOND:
     case PLUGIN_INIT_ALL:
       {
-        struct EventStruct TempEvent;
         if (Function == PLUGIN_INIT_ALL)
           Function = PLUGIN_INIT;
         for (byte y = 0; y < TASKS_MAX; y++)
         {
           if (Settings.TaskDeviceNumber[y] != 0)
           {
+            byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
             TempEvent.TaskIndex = y;
             TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+            TempEvent.idx = Settings.TaskDeviceID[y];
+            TempEvent.sensorType = Device[DeviceIndex].VType;
             for (x = 0; x < PLUGIN_MAX; x++)
             {
               if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
@@ -511,6 +517,7 @@ byte PluginCall(byte Function, struct EventStruct *Event, String& str)
     case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_WEBFORM_SAVE:
     case PLUGIN_WEBFORM_VALUES:
+    case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_COMMAND:
       for (x = 0; x < PLUGIN_MAX; x++)
       {

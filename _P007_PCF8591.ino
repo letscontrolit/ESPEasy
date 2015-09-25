@@ -17,7 +17,9 @@
  * This commando reads the analog input en stores the result into a variable
  \*********************************************************************************************/
 #define PLUGIN_007
-#define PLUGIN_ID_007        7
+#define PLUGIN_ID_007         7
+#define PLUGIN_NAME_007       "PCF8591 Analog input"
+#define PLUGIN_VALUENAME1_007 "Analog"
 
 boolean Plugin_007(byte function, struct EventStruct *event, String& string)
 {
@@ -30,7 +32,6 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_007;
-        strcpy(Device[deviceCount].Name, "PCF8591 Analog input");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 4;
@@ -38,7 +39,18 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0], "Analog");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_007);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_007));
         break;
       }
 
@@ -58,6 +70,8 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
         {
           Wire.read(); // Read older value first (stored in chip)
           UserVar[event->BaseVarIndex] = (float)Wire.read(); // now read actual value and store into Nodo var
+          Serial.print(F("PCF  : Analog value: "));
+          Serial.println(UserVar[event->BaseVarIndex]);
           success = true;
         }
         break;

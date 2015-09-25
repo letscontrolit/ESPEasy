@@ -4,6 +4,9 @@
 
 #define PLUGIN_006
 #define PLUGIN_ID_006        6
+#define PLUGIN_NAME_006       "Temp + Baro BMP085"
+#define PLUGIN_VALUENAME1_006 "Temperature"
+#define PLUGIN_VALUENAME2_006 "Pressure"
 
 boolean Plugin_006_init = false;
 
@@ -16,7 +19,6 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_006;
-        strcpy(Device[deviceCount].Name, "Temp + Baro BMP085");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_TEMP_BARO;
         Device[deviceCount].Ports = 0;
@@ -24,8 +26,19 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 2;
-        strcpy(Device[deviceCount].ValueNames[0], "Temperature");
-        strcpy(Device[deviceCount].ValueNames[1], "Pressure");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_006);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_006));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_006));
         break;
       }
 
@@ -34,14 +47,13 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         if (!Plugin_006_init)
         {
           Plugin_006_init = true;
-          Serial.println("BMP init");
           Plugin_006_bmp085_begin();
         }
         UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
         UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
-        Serial.print("BMP  : Temperature: ");
+        Serial.print(F("BMP  : Temperature: "));
         Serial.println(UserVar[event->BaseVarIndex]);
-        Serial.print("BMP  : Barometric Pressure: ");
+        Serial.print(F("BMP  : Barometric Pressure: "));
         Serial.println(UserVar[event->BaseVarIndex + 1]);
         success = true;
         break;

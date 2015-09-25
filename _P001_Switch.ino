@@ -3,7 +3,9 @@
 //#######################################################################################################
 
 #define PLUGIN_001
-#define PLUGIN_ID_001        1
+#define PLUGIN_ID_001         1
+#define PLUGIN_NAME_001       "Switch input"
+#define PLUGIN_VALUENAME1_001 "Switch"
 
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
@@ -12,11 +14,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_001;
-        strcpy(Device[deviceCount].Name, "Switch input");
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 0;
@@ -24,7 +24,18 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0], "Switch");
+        break;
+      }
+      
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_001);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_001));
         break;
       }
 
@@ -44,17 +55,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           string += optionValues[x];
           string += "'";
           if (choice == optionValues[x])
-            string += " selected";
+            string += F(" selected");
           string += ">";
           string += options[x];
-          string += "</option>";
+          string += F("</option>");
         }
         string += F("</select>");
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
           char tmpString[80];
-          sprintf(tmpString, "<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>", Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+          sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
           string += tmpString;
         }
 
@@ -79,17 +90,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (Settings.TaskDevicePin1PullUp[event->TaskIndex])
-        {
-          Serial.print(F("INIT : InputPullup "));
-          Serial.println(Settings.TaskDevicePin1[event->TaskIndex]);
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
-        }
         else
-        {
-          Serial.print(F("INIT : Input "));
-          Serial.println(Settings.TaskDevicePin1[event->TaskIndex]);
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
-        }
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
         success = true;
         break;
@@ -106,13 +109,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
             state = !state;
           UserVar[event->BaseVarIndex] = state;
-          byte SensorType = SENSOR_TYPE_SWITCH;
+          event->sensorType = SENSOR_TYPE_SWITCH;
           if ((state == 1) && (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2))
             {
-              SensorType = SENSOR_TYPE_DIMMER;
+              event->sensorType = SENSOR_TYPE_DIMMER;
               UserVar[event->BaseVarIndex] = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
             }
-          sendData(event->TaskIndex, SensorType, Settings.TaskDeviceID[event->TaskIndex], event->BaseVarIndex);
+          sendData(event);
         }
         success = true;
         break;

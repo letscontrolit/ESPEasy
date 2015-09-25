@@ -3,7 +3,10 @@
 //#######################################################################################################
 
 #define PLUGIN_003
-#define PLUGIN_ID_003        3
+#define PLUGIN_ID_003         3
+#define PLUGIN_NAME_003       "Pulse Counter"
+#define PLUGIN_VALUENAME1_003 "Count"
+#define PLUGIN_VALUENAME2_003 "Total"
 
 unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
@@ -18,23 +21,37 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_003;
-        strcpy(Device[deviceCount].Name, "Pulse Counter");
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0], "Count");
+        Device[deviceCount].ValueCount = 2;
+        break;
+      }
+      
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_003);
         break;
       }
 
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_003));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_003));
+        break;
+      }
+      
     case PLUGIN_WEBFORM_VALUES:
       {
-        string += F("<TD>");
+        string += ExtraTaskSettings.TaskDeviceValueNames[0];
+        string += F(":");
         string += Plugin_003_pulseCounter[event->TaskIndex];
-        string += F("<TD>");
+        string += F("<BR>");
+        string += ExtraTaskSettings.TaskDeviceValueNames[1];
+        string += F(":");
         string += Plugin_003_pulseTotalCounter[event->TaskIndex];
         success = true;
         break;
@@ -61,8 +78,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+
 /*********************************************************************************************\
- * Pulse Counters
+ * Pulse Counter IRQ handlers
 \*********************************************************************************************/
 void Plugin_003_pulse_interrupt1()
 {
@@ -105,10 +123,14 @@ void Plugin_003_pulse_interrupt8()
   Plugin_003_pulseTotalCounter[7]++;
 }
 
+
+/*********************************************************************************************\
+ * Init Pulse Counters
+\*********************************************************************************************/
 void Plugin_003_pulseinit(byte Par1, byte Index)
 {
   // Init IO pins
-  Serial.println("PULSE: Init");
+  Serial.println(F("PULSE: Init"));
   switch (Index)
   {
     case 0:

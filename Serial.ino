@@ -17,26 +17,26 @@ void ExecuteCommand(char *Line)
   if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
 
   // ****************************************
+  // commands for debugging
+  // ****************************************
+
+  if (strcasecmp_P(Command, PSTR("format")) == 0)
+  {
+    Serial.println(F("formatting..."));
+    SPIFFS.format();
+    Serial.println(F("format done!"));
+  }
+  
+  if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
+  {
+    Settings.deepSleep = 0;
+  }
+
+  // ****************************************
   // commands to execute io tasks
   // ****************************************
 
-  if (strcasecmp(Command, "Sleep") == 0)
-  {
-    ESP.deepSleep(10000000, WAKE_RF_DEFAULT); // Sleep for 10 seconds
-  }
-
-  if (strcasecmp(Command, "RTCsave") == 0)
-  {
-    saveToRTC(Par1);
-  }
-
-  if (strcasecmp(Command, "RTCread") == 0)
-  {
-    byte data=0;
-    readFromRTC(&data);
-  }
-
-  if (strcasecmp(Command, "GPIO") == 0)
+  if (strcasecmp_P(Command, PSTR("GPIO")) == 0)
   {
     if (Par1 >= 0 && Par1 <= 16)
     {
@@ -44,16 +44,16 @@ void ExecuteCommand(char *Line)
       digitalWrite(Par1, Par2);
       if (printToWeb)
       {
-        printWebString += "GPIO ";
+        printWebString += F("GPIO ");
         printWebString += Par1;
-        printWebString += " Set to ";
+        printWebString += F(" Set to ");
         printWebString += Par2;
-        printWebString += "<BR>";
+        printWebString += F("<BR>");
       }
     }
   }
 
-  if (strcasecmp(Command, "PWM") == 0)
+  if (strcasecmp_P(Command, PSTR("PWM")) == 0)
   {
     if (Par1 >= 0 && Par1 <= 1023)
     {
@@ -61,21 +61,29 @@ void ExecuteCommand(char *Line)
       analogWrite(Par1, Par2);
       if (printToWeb)
       {
-        printWebString += "GPIO ";
+        printWebString += F("GPIO ");
         printWebString += Par1;
-        printWebString += " Set PWM to ";
+        printWebString += F(" Set PWM to ");
         printWebString += Par2;
-        printWebString += "<BR>";
+        printWebString += F("<BR>");
       }
     }
   }
 
-  if (strcasecmp(Command, "MCPGPIO") == 0)
+  if (strcasecmp_P(Command, PSTR("MCPGPIO")) == 0)
   {
     mcp23017(Par1, Par2);
+    if (printToWeb)
+      {
+        printWebString += F("MCPGPIO ");
+        printWebString += Par1;
+        printWebString += F(" Set to ");
+        printWebString += Par2;
+        printWebString += F("<BR>");
+      }
   }
 
-  if (strcasecmp(Command, "ExtRead") == 0)
+  if (strcasecmp_P(Command, PSTR("ExtRead")) == 0)
   {
     uint8_t address = 0x7f;
     Wire.requestFrom(address, (uint8_t)Par1);
@@ -86,43 +94,48 @@ void ExecuteCommand(char *Line)
     }
   }
 
-  if (strcasecmp(Command, "ExtGPIO") == 0)
+  if (strcasecmp_P(Command, PSTR("ExtGPIO")) == 0)
     extender(1, Par1, Par2);
-  if (strcasecmp(Command, "ExtPWM") == 0)
+  if (strcasecmp_P(Command, PSTR("ExtPWM")) == 0)
     extender(3, Par1, Par2);
-  if (strcasecmp(Command, "ExtGPIORead") == 0)
+  if (strcasecmp_P(Command, PSTR("ExtGPIORead")) == 0)
   {
     byte value = extender(2, Par1, 0);
     Serial.println(value);
   }
-  if (strcasecmp(Command, "ExtADCRead") == 0)
+  if (strcasecmp_P(Command, PSTR("ExtADCRead")) == 0)
   {
     int value = extender(4, Par1, 0);
     Serial.println(value);
   }
 
-  if (strcasecmp(Command, "DomoticzSend") == 0)
+  if (strcasecmp_P(Command, PSTR("DomoticzSend")) == 0)
   {
     if (GetArgv(Line, TmpStr1, 4))
     {
+      struct EventStruct TempEvent;
+      TempEvent.TaskIndex = 0;
+      TempEvent.BaseVarIndex = (VARS_PER_TASK * TASKS_MAX) - 1;
+      TempEvent.idx = Par2;
+      TempEvent.sensorType = Par1;
       UserVar[(VARS_PER_TASK * TASKS_MAX) - 1] = atof(TmpStr1);
-      sendData(0, Par1, Par2, VARS_PER_TASK * TASKS_MAX -1);
+      sendData(&TempEvent);
     }
   }
 
-  if (strcasecmp(Command, "DomoticzGet") == 0)
+  if (strcasecmp_P(Command, PSTR("DomoticzGet")) == 0)
   {
     float value = 0;
     if (Domoticz_getData(Par2, &value))
     {
-      Serial.print("DomoticzGet ");
+      Serial.print(F("DomoticzGet "));
       Serial.println(value);
     }
     else
-      Serial.println("Error getting data");
+      Serial.println(F("Error getting data"));
   }
 
-  if (strcasecmp(Command, "LCDWrite") == 0)
+  if (strcasecmp_P(Command, PSTR("LCDWrite")) == 0)
   {
     GetArgv(Line, TmpStr1, 4);
     TmpStr1[25] = 0;
@@ -134,60 +147,67 @@ void ExecuteCommand(char *Line)
   }
 
   // ****************************************
-  // configure settings commands:
+  // configure settings commands
   // ****************************************
-  if (strcasecmp(Command, "WifiSSID") == 0)
-    strcpy(Settings.WifiSSID, Line+9);
+  if (strcasecmp_P(Command, PSTR("WifiSSID")) == 0)
+    strcpy(SecuritySettings.WifiSSID, Line + 9);
 
-  if (strcasecmp(Command, "WifiKey") == 0)
-    strcpy(Settings.WifiKey, Line+8);
+  if (strcasecmp_P(Command, PSTR("WifiKey")) == 0)
+    strcpy(SecuritySettings.WifiKey, Line + 8);
 
-  if (strcasecmp(Command, "WifiScan") == 0)
+  if (strcasecmp_P(Command, PSTR("WifiScan")) == 0)
     WifiScan();
 
-  if (strcasecmp(Command, "WifiConnect") == 0)
+  if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
     WifiConnect();
 
-  if (strcasecmp(Command, "WifiDisconnect") == 0)
+  if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
     WifiDisconnect();
 
-  if (strcasecmp(Command, "Reboot") == 0)
-    ESP.reset();
+  if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
+    {
+      pinMode(0,INPUT);
+      pinMode(2,INPUT);
+      pinMode(15,INPUT);
+      ESP.reset();
+    }
+    
+  if (strcasecmp_P(Command, PSTR("Restart")) == 0)
+    ESP.restart();
 
-  if (strcasecmp(Command, "Reset") == 0)
+  if (strcasecmp_P(Command, PSTR("Reset")) == 0)
     ResetFactory();
 
-  if (strcasecmp(Command, "Save") == 0)
-    Save_Settings();
+  if (strcasecmp_P(Command, PSTR("Save")) == 0)
+    SaveSettings();
 
-  if (strcasecmp(Command, "Delay") == 0)
+  if (strcasecmp_P(Command, PSTR("Delay")) == 0)
     Settings.Delay = Par1;
 
-  if (strcasecmp(Command, "Debug") == 0)
+  if (strcasecmp_P(Command, PSTR("Debug")) == 0)
     Settings.SerialLogLevel = Par1;
 
-  if (strcasecmp(Command, "IP") == 0)
+  if (strcasecmp_P(Command, PSTR("IP")) == 0)
   {
     if (GetArgv(Line, TmpStr1, 2))
       if (!str2ip(TmpStr1, Settings.IP))
         Serial.println("?");
   }
 
-  if (strcasecmp(Command, "Settings") == 0)
+  if (strcasecmp_P(Command, PSTR("Settings")) == 0)
   {
     char str[20];
     Serial.println();
 
-    Serial.println("System Info");
+    Serial.println(F("System Info"));
     IPAddress ip = WiFi.localIP();
     sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    Serial.print("  IP Address    : "); Serial.println(str);
-    Serial.print("  Build         : "); Serial.println((int)BUILD);
-    Serial.print("  Unit          : "); Serial.println((int)Settings.Unit);
-    Serial.print("  WifiSSID      : "); Serial.println(Settings.WifiSSID);
-    Serial.print("  WifiKey       : "); Serial.println(Settings.WifiKey);
-    Serial.print("  Settings size : "); Serial.println(sizeof(struct SettingsStruct));
-    Serial.print("  Free mem      : "); Serial.println(FreeMem());
+    Serial.print(F("  IP Address    : ")); Serial.println(str);
+    Serial.print(F("  Build         : ")); Serial.println((int)BUILD);
+    Serial.print(F("  Unit          : ")); Serial.println((int)Settings.Unit);
+    Serial.print(F("  WifiSSID      : ")); Serial.println(SecuritySettings.WifiSSID);
+    Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);
+    Serial.print(F("  Free mem      : ")); Serial.println(FreeMem());
   }
 }
 

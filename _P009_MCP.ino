@@ -3,7 +3,9 @@
 //#######################################################################################################
 
 #define PLUGIN_009
-#define PLUGIN_ID_009        9
+#define PLUGIN_ID_009         9
+#define PLUGIN_NAME_009       "MCP23017 input"
+#define PLUGIN_VALUENAME1_009 "Switch"
 
 boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 {
@@ -15,7 +17,6 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_009;
-        strcpy(Device[deviceCount].Name, "MCP23017 input");
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 16;
@@ -23,7 +24,18 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0], "Switch");
+        break;
+      }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_009);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_009));
         break;
       }
 
@@ -51,7 +63,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         {
           portvalue = ((Wire.read() & _BV(port - 1)) >> (port - 1));
           UserVar[event->BaseVarIndex] = (float)portvalue;
-          Serial.print("MCP  : Input Value : ");
+          Serial.print(F("MCP  : Input Value : "));
           Serial.println(UserVar[event->BaseVarIndex]);
           success = true;
         }

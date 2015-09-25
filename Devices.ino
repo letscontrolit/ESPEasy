@@ -33,7 +33,6 @@ int extender(byte Cmd, byte Port, int Value)
 \*********************************************************************************************/
 boolean mcp23017(byte Par1, byte Par2)
 {
-  Serial.println("MCP23017");
   boolean success = false;
   byte portvalue = 0;
   byte unit = (Par1 - 1) / 16;

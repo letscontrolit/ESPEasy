@@ -4,6 +4,8 @@
 
 #define PLUGIN_013
 #define PLUGIN_ID_013        13
+#define PLUGIN_NAME_013       "Ultrasonic Sensor HC-SR04"
+#define PLUGIN_VALUENAME1_013 "Distance"
 
 boolean Plugin_013_init = false;
 volatile unsigned long Plugin_013_timer = 0;
@@ -21,7 +23,6 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_013;
-        strcpy(Device[deviceCount].Name, "Ultrasonic Sensor HC-SR04");
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
@@ -29,9 +30,21 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
-        strcpy(Device[deviceCount].ValueNames[0], "Distance");
         break;
       }
+
+    case PLUGIN_GET_DEVICENAME:
+      {
+        string = F(PLUGIN_NAME_013);
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_013));
+        break;
+      }
+    
 
     case PLUGIN_WEBFORM_LOAD:
       {
@@ -49,17 +62,17 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           string += optionValues[x];
           string += "'";
           if (choice == optionValues[x])
-            string += " selected";
+            string += F(" selected");
           string += ">";
           string += options[x];
-          string += "</option>";
+          string += F("</option>");
         }
         string += F("</select>");
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
           char tmpString[80];
-          sprintf(tmpString, "<TR><TD>Threshold:<TD><input type='text' name='plugin_013_threshold' value='%u'>", Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+          sprintf_P(tmpString, PSTR("<TR><TD>Threshold:<TD><input type='text' name='plugin_013_threshold' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
           string += tmpString;
         }
         success = true;
@@ -82,10 +95,6 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_013_init = true;
-        Serial.print(F("INIT : HC-SR04 "));
-        Serial.print(Settings.TaskDevicePin1[event->TaskIndex]);
-        Serial.print(" & ");
-        Serial.println(Settings.TaskDevicePin2[event->TaskIndex]);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
         pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
         Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
@@ -103,12 +112,12 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           if (value != -1)
           {
             UserVar[event->BaseVarIndex] = (float)Plugin_013_timer / 58;
-            Serial.print("SR04 : Distance: ");
+            Serial.print(F("SR04 : Distance: "));
             Serial.println(UserVar[event->BaseVarIndex]);
             success = true;
           }
           else
-            Serial.println("SR04 : Distance: No reading!");
+            Serial.println(F("SR04 : Distance: No reading!"));
         }
         break;
       }
@@ -130,7 +139,8 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               Serial.println(state);
               switchstate[event->TaskIndex] = state;
               UserVar[event->BaseVarIndex] = state;
-              sendData(event->TaskIndex, SENSOR_TYPE_SWITCH, Settings.TaskDeviceID[event->TaskIndex], event->BaseVarIndex);
+              event->sensorType = SENSOR_TYPE_SWITCH;
+              sendData(event);
             }
           }
         }
