@@ -33,18 +33,33 @@ void WebServerInit()
 //********************************************************************************
 void addMenu(String& str)
 {
+  boolean cssfile = false;
+  
   str += F("<script language=\"javascript\"><!--\n");
   str += F("function dept_onchange(frmselect) {frmselect.submit();}\n");
   str += F("//--></script>");
   str += F("<head><title>");
   str += Settings.Name;
-  str += F("</title></head>");
-  str += F("<style>");
-  str += F("* {font-family:sans-serif; font-size:12pt;}");
-  str += F("h1 {font-size:16pt; border:1px solid #333; color:#ffffff; background:#27f;}");
-  str += F(".button-link {padding:2px 10px; background:#5bf; color:#fff; border-radius:4px; border:solid 1px #258; text-decoration:none}");
-  str += F(".button-link:hover {background:#369;}");
-  str += F("</style>");
+  str += F("</title>");
+  File f = SPIFFS.open("esp.css", "r");
+  if (f)
+  {
+    cssfile = true;
+    str += F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
+    f.close();
+  }
+  else
+  {
+    str += F("<style>");
+    str += F("* {font-family:sans-serif; font-size:12pt;}");
+    str += F("h1,h6 {font-size:16pt; border:1px solid #333; color:#ffffff; background:#27f;}");
+    str += F(".button-link,.button-menu {padding:2px 10px; background:#5bf; color:#fff; border:solid 1px #258; text-decoration:none}");
+    str += F(".button-link:hover,.button-menu:hover {background:#369;}");
+    str += F("th {background-color:#55bbff;}");
+    str += F("table {background-color:#ddeeff;}");
+    str += F("</style>");
+  }
+  str += F("</head>");
 
   str += F("<h1>Welcome to ESP ");
 #ifdef ESP_CONNEXIO
@@ -54,14 +69,21 @@ void addMenu(String& str)
   str += F("Easy : ");
 #endif
   str += Settings.Name;
-  str += F("</h1><a class=\"button-link\" href=\".\">Main</a>");
-  str += F("<a class=\"button-link\" href=\"config\">Config</a>");
-  str += F("<a class=\"button-link\" href=\"hardware\">Hardware</a>");
-  str += F("<a class=\"button-link\" href=\"devices\">Devices</a>");
+
+  f = SPIFFS.open("esp.png", "r");
+  if (f)
+  {
+    str += F("<img src=\"esp.png\" width=50 height=50 align=right >");
+    f.close();
+  }  
+  str += F("</h1><BR><a class=\"button-menu\" href=\".\">Main</a>");
+  str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
+  str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
+  str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
 #ifdef ESP_CONNEXIO
-  str += F("<a class=\"button-link\" href=\"eventlist\">Eventlist</a>");
+  str += F("<a class=\"button-menu\" href=\"eventlist\">Eventlist</a>");
 #endif
-  str += F("<a class=\"button-link\" href=\"tools\">Tools</a><BR><BR>");
+  str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
 }
 
 
@@ -70,7 +92,7 @@ void addMenu(String& str)
 //********************************************************************************
 void addFooter(String& str)
 {
-  str += F("<h1>Powered by www.esp8266.nu</h1></body>");
+  str += F("<h6>Powered by www.esp8266.nu</h6></body>");
 }
 
 
@@ -103,7 +125,7 @@ void handle_root() {
 
     reply += printWebString;
     reply += F("<form>");
-    reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>System Info<TD><TD><TR><TD>");
+    reply += F("<table><TH>System Info<TH><TH><TR><TD>");
 
     IPAddress ip = WiFi.localIP();
     IPAddress gw = WiFi.gatewayIP();
@@ -148,7 +170,7 @@ void handle_root() {
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
 
-    reply += F("<TR bgcolor='#55bbff'><TD>Node List:<TD>IP<TD>Age<TR><TD><TD>");
+    reply += F("<TR><TH>Node List:<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < 32; x++)
     {
       if (Nodes[x].ip[0] != 0)
@@ -278,8 +300,8 @@ void handle_config() {
   String reply = "";
   addMenu(reply);
 
-  reply += F("<form name='frmselect' method='post'><table bgcolor='#ddeeff'>");
-  reply += F("<tr bgcolor='#55bbff'><td>Main Settings<td><TR><TD>Name:<TD><input type='text' name='name' value='");
+  reply += F("<form name='frmselect' method='post'><table>");
+  reply += F("<TH>Main Settings<TH><TR><TD>Name:<TD><input type='text' name='name' value='");
   Settings.Name[25] = 0;
   reply += Settings.Name;
   reply += F("'><TR><TD>Admin Password:<TD><input type='text' name='password' value='");
@@ -350,7 +372,7 @@ void handle_config() {
 
   reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/SleepMode\" target=\"_blank\">?</a>");
 
-  reply += F("<TR bgcolor='#55bbff'><TD>Optional Settings<TD>");
+  reply += F("<TR><TH>Optional Settings<TH>");
 
   reply += F("<TR><TD>ESP IP:<TD><input type='text' name='espip' value='");
   sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
@@ -504,7 +526,7 @@ void handle_devices() {
 
 
   // show all tasks as table
-  reply += F("<table cellpadding='4' border='1' bgcolor='#ddeeff'><tr bgcolor='#55bbff'><TD>");
+  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
   reply += F("<a class=\"button-link\" href=\"devices?setpage=");
   if (page > 1)
     reply += page - 1;
@@ -518,7 +540,7 @@ void handle_devices() {
     reply += page;
   reply += F("\">></a>");
 
-  reply += F("<TD>Task<TD>Device<td>Name<TD>Port<TD>IDX/Variable<TD>GPIO<TD>Values");
+  reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
 
   String deviceName;
 
@@ -619,7 +641,7 @@ void handle_devices() {
     if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
       PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
 
-    reply += F("<BR><BR><form name='frmselect' method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Task Settings<td>Value");
+    reply += F("<BR><BR><form name='frmselect' method='post'><table><TH>Task Settings<TH>Value");
 
     reply += F("<TR><TD>Device:<TD>");
     addDeviceSelect(reply, "taskdevicenumber", Settings.TaskDeviceNumber[index - 1]);
@@ -685,7 +707,7 @@ void handle_devices() {
         reply += tmpString;
 #endif
 
-      reply += F("<TR bgcolor='#55bbff'><TD>Optional Settings<TD>Value");
+      reply += F("<TR><TH>Optional Settings<TH>Value");
 
       if (Device[DeviceIndex].FormulaOption)
       {
@@ -747,7 +769,7 @@ void handle_hardware() {
   String reply = "";
   addMenu(reply);
 
-  reply += F("<form  method='post'><table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Hardware Settings<td><TR><TD>");
+  reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
   reply += F("<TR><TD>SDA:<TD>");
   addPinSelect(true, reply, "pini2csda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
@@ -927,7 +949,7 @@ void handle_eventlist() {
   String reply = "";
   addMenu(reply);
 
-  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Eventlist<td><TR><TD>");
+  reply += F("<table><TH>Eventlist<td><TR><TD>");
 
   if (WebServer.args() == 1)
   {
@@ -997,7 +1019,7 @@ void handle_log() {
   String reply = "";
   addMenu(reply);
   reply += F("<script language='JavaScript'>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Log<TR><TD>");
+  reply += F("<table><TH>Log<TR><TD>");
 
   if (logcount != -1)
   {
@@ -1039,7 +1061,7 @@ void handle_tools() {
   addMenu(reply);
 
   reply += F("<form>");
-  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'>");
+  reply += F("<table><TH>Tools<TH>");
   reply += F("<TR><TD>System<TD><a class=\"button-link\" href=\"/?cmd=reboot\">Reboot</a>");
   reply += F("<a class=\"button-link\" href=\"log\">Log</a>");
   reply += F("<a class=\"button-link\" href=\"advanced\">Advanced</a><BR><BR>");
@@ -1083,7 +1105,7 @@ void handle_i2cscanner() {
 
   String reply = "";
   addMenu(reply);
-  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>I2C Addresses in use<TD>Known devices");
+  reply += F("<table><TH>I2C Addresses in use<TH>Known devices");
 
   byte error, address;
   int nDevices;
@@ -1148,7 +1170,7 @@ void handle_wifiscanner() {
 
   String reply = "";
   addMenu(reply);
-  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Access Points:<TD>RSSI");
+  reply += F("<table><TH>Access Points:<TD>RSSI");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -1185,7 +1207,7 @@ void handle_login() {
 
   String reply = "";
   reply += F("<form method='post'>");
-  reply += F("<table bgcolor='#ddeeff'><tr bgcolor='#55bbff'><td>Password<TD>");
+  reply += F("<table><TR><TD>Password<TD>");
   reply += F("<input type='password' name='password' value='");
   reply += webrequest;
   reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
@@ -1497,14 +1519,29 @@ void handleNotFound() {
 //********************************************************************************
 void handle_filelist() {
 
+  String fdelete = WebServer.arg("delete");
+
+  if (fdelete.length() >0)
+    {
+      SPIFFS.remove(fdelete);
+    }
+    
   String reply = "";
   addMenu(reply);
-  reply += F("<table border='1' bgcolor='#ddeeff'><tr bgcolor='#55bbff'><TD>Filename:<TD>Size");
+  reply += F("<table border='1'><TH><TH>Filename:<TH>Size");
 
   Dir dir = SPIFFS.openDir("/");
   while (dir.next())
   {
-    reply += F("<TR><TD><a href=\"");
+    reply += F("<TR><TD>");
+    if (dir.fileName() != "config.txt" && dir.fileName() !="security.txt")
+      {
+      reply += F("<a class=\"button-link\" href=\"filelist?delete=");
+      reply += dir.fileName();
+      reply += F("\">Del</a>");
+      }
+      
+    reply += F("<TD><a href=\"");
     reply += dir.fileName();
     reply += F("\">");
     reply += dir.fileName();
@@ -1563,8 +1600,8 @@ void handle_advanced() {
 
   char str[20];
 
-  reply += F("<form  method='post'><table bgcolor='#ddeeff'>");
-  reply += F("<tr bgcolor='#55bbff'><TD>Advanced Settings<TD>Value");
+  reply += F("<form  method='post'><table>");
+  reply += F("<TH>Advanced Settings<TH>Value");
 
   reply += F("<TR><TD>MQTT Subscribe Template:<TD><input type='text' name='mqttsubscribe' size=80 value='");
   reply += Settings.MQTTsubscribe;

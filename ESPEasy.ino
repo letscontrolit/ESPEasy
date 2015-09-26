@@ -79,7 +79,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              22
+#define BUILD                              23
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define PROTOCOL_DOMOTICZ_HTTP              1

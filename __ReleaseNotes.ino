@@ -1,3 +1,9 @@
+// R23 26-09-2015
+// Fix device table layout for some browsers
+// Added link to stylesheet "esp.css" located on SPIFFS
+// Removed style attibutes from individual tags so it can be arranged with css
+// Added delete button in SPIFFS file list
+
 // R22 25-09-2015
 // Using Spiffs filesystem support for configuration settings
 // All configuration settings are now stored into the ESP filesystem.
