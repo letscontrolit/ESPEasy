@@ -356,11 +356,23 @@ void handle_config() {
     reply += SecuritySettings.ControllerUser;
   }
 
+  if (Settings.Protocol == PROTOCOL_DOMOTICZ_MQTT or Settings.Protocol == PROTOCOL_OPENHAB_MQTT or Settings.Protocol == PROTOCOL_PIDOME_MQTT)
+    {
+      reply += F("'><TR><TD>Broker username:<TD><input type='text' name='controlleruser' value='");
+      reply += Settings.ControllerUser;
+    }
+
   if (Settings.Protocol == PROTOCOL_NODO_TELNET or Settings.Protocol == PROTOCOL_THINGSPEAK)
   {
     reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
     reply += SecuritySettings.ControllerPassword;
   }
+
+  if (Settings.Protocol == PROTOCOL_DOMOTICZ_MQTT or Settings.Protocol == PROTOCOL_OPENHAB_MQTT or Settings.Protocol == PROTOCOL_PIDOME_MQTT)
+    {
+      reply += F("'><TR><TD>Broker password:<TD><input type='text' name='controllerpassword' value='");
+      reply += Settings.ControllerPassword;
+    }
 
   reply += F("'><TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
   reply += Settings.Delay;

@@ -334,7 +334,12 @@ void MQTTConnect()
 
   for (byte x = 1; x < 3; x++)
   {
-    if (MQTTclient.connect(clientid))
+    boolean MQTTresult = false;
+    if ((Settings.ControllerUser) && (Settings.ControllerPassword))
+      MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(Settings.ControllerUser, Settings.ControllerPassword)));
+    else
+      MQTTresult = (MQTTclient.connect(clientid));
+    if (MQTTresult)
     {
       Serial.println(F("MQTT : Connected to broker"));
       subscribeTo = Settings.MQTTsubscribe;
