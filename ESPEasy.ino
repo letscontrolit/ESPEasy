@@ -79,7 +79,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              23
+#define BUILD                              24
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 
 #define PROTOCOL_DOMOTICZ_HTTP              1
@@ -168,7 +168,7 @@ struct SettingsStruct
   byte          Controller_IP[4];
   unsigned int  ControllerPort;
   byte          IP_Octet;
-  char          WifiAPKey[64];
+  char          _obsolete[64];
   unsigned long Delay;
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
@@ -384,6 +384,7 @@ void loop()
     syslog(str);
     sendSysInfoUDP(1);
     refreshNodeList();
+    MQTTCheck();
   }
 
   // Perform regular checks, 10 times/sec

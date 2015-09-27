@@ -9,7 +9,7 @@ void WifiAPconfig()
   strcpy(ap_ssid, "ESP_");
   sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
   // setup ssid for AP Mode when needed
-  WiFi.softAP(ap_ssid, Settings.WifiAPKey);
+  WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
   // We start in STA mode
   WiFi.mode(WIFI_STA);
 }
@@ -27,7 +27,7 @@ void WifiAPMode(boolean state)
     ap_ssid[0] = 0;
     strcpy(ap_ssid, "ESP_");
     sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
-    WiFi.softAP(ap_ssid, Settings.WifiAPKey);
+    WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
     WiFi.mode(WIFI_AP_STA);
   }
   else

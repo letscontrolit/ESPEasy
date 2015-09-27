@@ -57,6 +57,9 @@ void addMenu(String& str)
     str += F(".button-link:hover,.button-menu:hover {background:#369;}");
     str += F("th {background-color:#55bbff;}");
     str += F("table {background-color:#ddeeff;}");
+    str += F(".div_l {float: left;}");
+    str += F(".div_r {float: right;}");
+    str += F(".div_br {clear: both;}");
     str += F("</style>");
   }
   str += F("</head>");
@@ -259,7 +262,7 @@ void handle_config() {
     strcpy(SecuritySettings.WifiKey, tmpString);
     apkey.toCharArray(tmpString, 64);
     urlDecode(tmpString);
-    strcpy(Settings.WifiAPKey, tmpString);
+    strcpy(SecuritySettings.WifiAPKey, tmpString);
     controllerip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Controller_IP);
     Settings.ControllerPort = controllerport.toInt();
@@ -621,10 +624,13 @@ void handle_devices() {
         if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
         {
           if (varNr > 0)
-            reply += F("<BR>");
+            reply += F("<div class=\"div_br\"></div>");
+          reply += F("<div class=\"div_l\">");
           reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-          reply += ":";
+          reply += ":</div>";
+          reply += F("<div class=\"div_r\">");
           reply += UserVar[x * VARS_PER_TASK + varNr];
+          reply += "</div>";
         }
       }
     }
@@ -1170,7 +1176,7 @@ void handle_wifiscanner() {
 
   String reply = "";
   addMenu(reply);
-  reply += F("<table><TH>Access Points:<TD>RSSI");
+  reply += F("<table><TH>Access Points:<TH>RSSI");
 
   int n = WiFi.scanNetworks();
   if (n == 0)

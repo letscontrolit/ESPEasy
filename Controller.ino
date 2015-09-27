@@ -353,6 +353,21 @@ void MQTTConnect()
 
 
 /*********************************************************************************************\
+ * Check connection MQTT message broker
+\*********************************************************************************************/
+void MQTTCheck()
+{
+  if ((Settings.Protocol == PROTOCOL_DOMOTICZ_MQTT) || (Settings.Protocol == PROTOCOL_OPENHAB_MQTT) || (Settings.Protocol == PROTOCOL_PIDOME_MQTT))
+  if (!MQTTclient.connected())
+  {
+    MQTTclient.disconnect();
+    delay(1000);
+    MQTTConnect();
+  }
+}
+
+
+/*********************************************************************************************\
  * Parse incoming MQTT message
 \*********************************************************************************************/
 void MQTTMessage(String *topic, String *message)

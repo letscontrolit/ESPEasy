@@ -1,3 +1,8 @@
+// R24 27-09-2015
+// Right-aligned device values in device table
+// Added periodic MQTT connection check
+// Fixed issue with the AP WPA Key configuration
+
 // R23 26-09-2015
 // Fix device table layout for some browsers
 // Added link to stylesheet "esp.css" located on SPIFFS
