@@ -11,6 +11,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   static byte switchstate[TASKS_MAX];
+  static byte outputstate[TASKS_MAX];
 
   switch (function)
   {
@@ -26,7 +27,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 1;
         break;
       }
-      
+
     case PLUGIN_GET_DEVICENAME:
       {
         string = F(PLUGIN_NAME_001);
@@ -69,6 +70,29 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           string += tmpString;
         }
 
+        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        String buttonOptions[3];
+        buttonOptions[0] = F("Normal Switch");
+        buttonOptions[1] = F("Push Button Active Low");
+        buttonOptions[2] = F("Push Button Active High");
+        int buttonOptionValues[3];
+        buttonOptionValues[0] = 0;
+        buttonOptionValues[1] = 1;
+        buttonOptionValues[2] = 2;
+        string += F("<TR><TD>Switch Button Type:<TD><select name='plugin_001_button'>");
+        for (byte x = 0; x < 3; x++)
+        {
+          string += F("<option value='");
+          string += buttonOptionValues[x];
+          string += "'";
+          if (choice == buttonOptionValues[x])
+            string += F(" selected");
+          string += ">";
+          string += buttonOptions[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
         success = true;
         break;
       }
@@ -82,6 +106,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           String plugin2 = WebServer.arg("plugin_001_dimvalue");
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         }
+        String plugin3 = WebServer.arg("plugin_001_button");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
 
         success = true;
         break;
@@ -106,16 +132,39 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           Serial.print(F("SW   : State "));
           Serial.println(state);
           switchstate[event->TaskIndex] = state;
-          if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-            state = !state;
-          UserVar[event->BaseVarIndex] = state;
-          event->sensorType = SENSOR_TYPE_SWITCH;
-          if ((state == 1) && (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2))
+          byte currentOutputState = outputstate[event->TaskIndex];
+
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 0) //normal switch
+            outputstate[event->TaskIndex] = state;
+          else
+          {
+            if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 1)  // active low push button
+            {
+              if (state == 0)
+                outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
+            }
+            else  // active high push button
+            {
+              if (state == 1)
+                outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
+            }
+          }
+          
+          // send if output needs to be changed
+          if (currentOutputState!=outputstate[event->TaskIndex])
+          {
+            byte sendState = outputstate[event->TaskIndex];
+            if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+              sendState = !outputstate[event->TaskIndex];
+            UserVar[event->BaseVarIndex] = sendState;
+            event->sensorType = SENSOR_TYPE_SWITCH;
+            if ((sendState == 1) && (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2))
             {
               event->sensorType = SENSOR_TYPE_DIMMER;
               UserVar[event->BaseVarIndex] = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
             }
-          sendData(event);
+            sendData(event);
+          }
         }
         success = true;
         break;

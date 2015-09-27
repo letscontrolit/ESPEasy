@@ -1,3 +1,6 @@
+// R25 27-09-2015
+// Switch plugin supports push button (toggle) switch, selectable for active low or high
+
 // R24 27-09-2015
 // Right-aligned device values in device table
 // Added periodic MQTT connection check
