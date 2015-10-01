@@ -20,13 +20,21 @@ void ExecuteCommand(char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("resetpid")) == 0)
+  {
+    Settings.PID = 123456789;
+    SaveSettings();
+  }
+
+  #if FEATURE_SPIFFS
   if (strcasecmp_P(Command, PSTR("format")) == 0)
   {
     Serial.println(F("formatting..."));
     SPIFFS.format();
     Serial.println(F("format done!"));
   }
-  
+  #endif
+    
   if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
   {
     Settings.deepSleep = 0;

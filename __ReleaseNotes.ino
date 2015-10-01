@@ -1,3 +1,8 @@
+// R26 01-10-2015
+// Changed internal stylesheet to new skin
+// Save configuration settings into SPIFFS reserved area without using SPIFFS
+// Reduced code size by disabling SPIFFS to make it work in the latest staging release
+
 // R25 27-09-2015
 // Switch plugin supports push button (toggle) switch, selectable for active low or high
 

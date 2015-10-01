@@ -289,23 +289,6 @@ boolean NodoTelnet_sendData(struct EventStruct *event)
   return success;
 }
 
-/*********************************************************************************************\
- * Syslog client
-\*********************************************************************************************/
-void syslog(char *message)
-{
-  if (Settings.Syslog_IP[0] != 0)
-  {
-    IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
-    portTX.beginPacket(broadcastIP, 514);
-    char str[80];
-    str[0] = 0;
-    sprintf_P(str, PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
-    portTX.write(str);
-    portTX.endPacket();
-  }
-}
-
 
 /*********************************************************************************************\
  * Handle incoming MQTT messages
@@ -656,13 +639,6 @@ boolean PiDome_sendDataMQTT(struct EventStruct *event)
 }
 
 
-struct NodeStruct
-{
-  byte ip[4];
-  byte age;
-} Nodes[32];
-
-
 /*********************************************************************************************\
  * Send data to Domoticz using http url querystring
 \*********************************************************************************************/
@@ -778,6 +754,12 @@ boolean ThingsSpeak_sendData(struct EventStruct *event)
 }
 
 
+struct NodeStruct
+{
+  byte ip[4];
+  byte age;
+} Nodes[32];
+
 /*********************************************************************************************\
  * Send data to other ESP node
 \*********************************************************************************************/
@@ -864,6 +846,24 @@ boolean nodeVariableCopy(byte var, byte unit)
     printWebString += F("closing connection<BR>");
 
   return success;
+}
+
+
+/*********************************************************************************************\
+ * Syslog client
+\*********************************************************************************************/
+void syslog(char *message)
+{
+  if (Settings.Syslog_IP[0] != 0)
+  {
+    IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
+    portTX.beginPacket(broadcastIP, 514);
+    char str[80];
+    str[0] = 0;
+    sprintf_P(str, PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
+    portTX.write(str);
+    portTX.endPacket();
+  }
 }
 
 

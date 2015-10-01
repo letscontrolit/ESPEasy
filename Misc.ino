@@ -1,3 +1,4 @@
+#if FEATURE_SPIFFS
 void fileSystemCheck()
 {
   if (SPIFFS.begin())
@@ -28,6 +29,7 @@ void fileSystemCheck()
   else
     Serial.println(F("SPIFFS Mount failed"));
 }
+#endif
 
 /********************************************************************************************\
 * Find device index corresponding to task number setting
@@ -137,8 +139,13 @@ boolean str2ip(char *string, byte* IP)
 \*********************************************************************************************/
 void SaveSettings(void)
 {
+#if FEATURE_SPIFFS
   SaveToFile((char*)"config.txt", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   SaveToFile((char*)"security.txt", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+#else
+  SaveToFlash(0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  SaveToFlash(32768, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+#endif
 }
 
 
@@ -147,8 +154,13 @@ void SaveSettings(void)
 \*********************************************************************************************/
 boolean LoadSettings()
 {
+#if FEATURE_SPIFFS
   LoadFromFile((char*)"config.txt", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   LoadFromFile((char*)"security.txt", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+#else
+  LoadFromFlash(0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  LoadFromFlash(32768, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+#endif
 }
 
 
@@ -157,7 +169,11 @@ boolean LoadSettings()
 \*********************************************************************************************/
 void SaveTaskSettings(byte TaskIndex)
 {
+#if FEATURE_SPIFFS
   SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+#else
+  SaveToFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+#endif
 }
 
 
@@ -166,13 +182,17 @@ void SaveTaskSettings(byte TaskIndex)
 \*********************************************************************************************/
 void LoadTaskSettings(byte TaskIndex)
 {
+#if FEATURE_SPIFFS
   if(ExtraTaskSettings.TaskIndex == TaskIndex)
     return;
   LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // store active index
+#else
+  LoadFromFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+#endif
 }
 
-
+#if FEATURE_SPIFFS
 /********************************************************************************************\
 * Save data into config file on SPIFFS
 \*********************************************************************************************/
@@ -212,6 +232,123 @@ void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
     f.close();
   }
 }
+#endif
+
+
+/********************************************************************************************\
+* Save data to flash
+\*********************************************************************************************/
+#define FLASH_EEPROM_SIZE 4096
+extern "C" {
+#include "spi_flash.h"
+}
+extern "C" uint32_t _SPIFFS_start;
+extern "C" uint32_t _SPIFFS_end;
+extern "C" uint32_t _SPIFFS_page;
+extern "C" uint32_t _SPIFFS_block;
+
+void SaveToFlash(int index, byte* memAddress, int datasize)
+{
+  if (index > 33791) // Limit usable flash area to 32+1k size
+    {
+      Serial.println("Overflow!");
+      return;
+    }
+  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+  int sectorOffset = index / SPI_FLASH_SEC_SIZE;
+  int sectorIndex = index % SPI_FLASH_SEC_SIZE;
+  uint8_t* dataIndex = data + sectorIndex;
+  _sector += sectorOffset;
+
+  /*
+  Serial.println("Index");
+  Serial.println(index);
+  Serial.println("Sector Offset");
+  Serial.println(sectorOffset);
+  Serial.println("Sector Index");
+  Serial.println(sectorIndex);
+  Serial.println("Page Size");
+  Serial.println((uint32_t)&_SPIFFS_page);
+  Serial.println("Block Size");
+  Serial.println((uint32_t)&_SPIFFS_block);
+  Serial.println("Sector Size");
+  Serial.println(SPI_FLASH_SEC_SIZE);
+  */
+    
+  // load entire sector from flash into memory
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
+  interrupts();
+
+  // store struct into this block
+  memcpy(dataIndex,memAddress,datasize);
+
+  noInterrupts();
+  // write sector back to flash
+  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+    if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+      {
+        //Serial.println("flash save ok");
+      }
+  interrupts();
+  delete [] data;
+  Serial.println(F("FLASH: Settings saved"));
+}
+
+
+/********************************************************************************************\
+* Load data from flash
+\*********************************************************************************************/
+void LoadFromFlash(int index, byte* memAddress, int datasize)
+{
+  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+  int sectorOffset = index / SPI_FLASH_SEC_SIZE;
+  int sectorIndex = index % SPI_FLASH_SEC_SIZE;
+  uint8_t* dataIndex = data + sectorIndex;
+  _sector += sectorOffset;
+
+  // load entire sector from flash into memory
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
+  interrupts();
+
+  // load struct from this block
+  memcpy(memAddress,dataIndex,datasize);
+  delete [] data;
+}
+
+
+/********************************************************************************************\
+* Erase data on flash
+\*********************************************************************************************/
+void EraseFlash()
+{
+  uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint32_t _sectorEnd = _sectorStart + 32+1; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+
+  uint8_t* tmpdata = data;
+  for (int x=0; x < FLASH_EEPROM_SIZE; x++)
+  {
+    *tmpdata = 0;
+    tmpdata++;
+  }
+
+  noInterrupts();
+  for (uint32_t _sector=_sectorStart; _sector < _sectorEnd; _sector++)
+  {
+  // write sector to flash
+  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+    if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+      {
+        Serial.println(F("FLASH: Erase ok"));
+      }
+  }
+  interrupts();
+  delete [] data;
+}
 
 
 /********************************************************************************************\
@@ -221,6 +358,7 @@ void ResetFactory(void)
 {
   Serial.println(F("Reset!"));
 
+  #if FEATURE_SPIFFS
   File f = SPIFFS.open("config.txt", "w");
   if (f)
   {
@@ -236,6 +374,10 @@ void ResetFactory(void)
       f.write(0);
     f.close();
   }
+  #else
+    EraseFlash();
+  #endif
+
   LoadSettings();
   // now we set all parameters that need to be non-zero as default value
   Settings.PID             = ESP_PROJECT_PID;
@@ -244,6 +386,7 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
+  SecuritySettings.Password[0] =0;
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
@@ -256,6 +399,7 @@ void ResetFactory(void)
   Settings.BaudRate        = 115200;
   Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
+  Settings.CustomCSS = false;
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -264,6 +408,7 @@ void ResetFactory(void)
     Settings.TaskDevicePin1Inversed[x] = false;
   }
   SaveSettings();
+  delay(1000);
   WifiDisconnect();
   ESP.reset();
 }

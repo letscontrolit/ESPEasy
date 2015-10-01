@@ -8,7 +8,6 @@ void WebServerInit()
   WebServer.on("/config", handle_config);
   WebServer.on("/hardware", handle_hardware);
   WebServer.on("/devices", handle_devices);
-  WebServer.on("/json.htm", handle_json);
 #ifdef ESP_CONNEXIO
   WebServer.on("/eventlist", handle_eventlist);
 #endif
@@ -18,11 +17,15 @@ void WebServerInit()
   WebServer.on("/wifiscanner", handle_wifiscanner);
   WebServer.on("/login", handle_login);
   WebServer.on("/control", handle_control);
-  WebServer.on("/upload", handle_upload);
   WebServer.on("/download", handle_download);
-  WebServer.on("/filelist", handle_filelist);
+  WebServer.on("/upload", handle_upload);
   WebServer.onFileUpload(handleFileUpload);
-  WebServer.onNotFound(handleNotFound);
+  #if FEATURE_SPIFFS
+    WebServer.on("/filelist", handle_filelist);
+    WebServer.onNotFound(handleNotFound);
+  #else
+    WebServer.on("/esp.css", handle_css);
+  #endif
   WebServer.on("/advanced", handle_advanced);
   WebServer.begin();
 }
@@ -41,27 +44,40 @@ void addMenu(String& str)
   str += F("<head><title>");
   str += Settings.Name;
   str += F("</title>");
+
+  #if FEATURE_SPIFFS
   File f = SPIFFS.open("esp.css", "r");
   if (f)
   {
     cssfile = true;
-    str += F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
     f.close();
   }
-  else
+  #else
+  if (Settings.CustomCSS)
+    cssfile = true;
+  #endif
+
+  if (!cssfile)
   {
     str += F("<style>");
     str += F("* {font-family:sans-serif; font-size:12pt;}");
-    str += F("h1,h6 {font-size:16pt; border:1px solid #333; color:#ffffff; background:#27f;}");
-    str += F(".button-link,.button-menu {padding:2px 10px; background:#5bf; color:#fff; border:solid 1px #258; text-decoration:none}");
-    str += F(".button-link:hover,.button-menu:hover {background:#369;}");
-    str += F("th {background-color:#55bbff;}");
-    str += F("table {background-color:#ddeeff;}");
+    str += F("h1 {font-size:16pt; color:black;}");
+    str += F("h6 {font-size:10pt; color:black; text-align:center;}");
+    str += F(".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}");
+    str += F(".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}");
+    str += F(".button-menu:hover {background:#ddddff;}");
+    str += F(".button-link:hover {background:#369;}");
+    str += F("th {padding:10px; background-color:black; color:#ffffff;}");
+    str += F("td {padding:7px;}");
+    str += F("table {color:black;}");
     str += F(".div_l {float: left;}");
-    str += F(".div_r {float: right;}");
+    str += F(".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}");
     str += F(".div_br {clear: both;}");
     str += F("</style>");
   }
+  else
+    str += F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
+
   str += F("</head>");
 
   str += F("<h1>Welcome to ESP ");
@@ -73,12 +89,15 @@ void addMenu(String& str)
 #endif
   str += Settings.Name;
 
+  #if FEATURE_SPIFFS
   f = SPIFFS.open("esp.png", "r");
   if (f)
   {
     str += F("<img src=\"esp.png\" width=50 height=50 align=right >");
     f.close();
   }  
+  #endif
+  
   str += F("</h1><BR><a class=\"button-menu\" href=\".\">Main</a>");
   str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
   str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
@@ -872,78 +891,6 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 }
 
 
-//********************************************************************************
-// Nodo proof of concept. send json query as nodo event on I2C to mega
-// Compatible with Nodo 3.8 only, tested on R818
-// set used variables to global on the Mega.
-//********************************************************************************
-
-#define NODO_VERSION_MAJOR   3
-#define TARGET_NODO          5
-
-struct TransmissionStruct
-{
-  byte Type;
-  byte Command;
-  byte Par1;
-  byte Dummy;
-  unsigned long Par2;
-  byte P1;
-  byte P2;
-  byte SourceUnit;
-  byte DestinationUnit;
-  byte Flags;
-  byte Checksum;
-};
-
-void handle_json() {
-  Serial.print(F("HTTP : Web json : idx: "));
-  String idx = WebServer.arg("idx");
-  String svalue = WebServer.arg("svalue");
-  Serial.print(idx);
-  Serial.print(F(" svalue: "));
-  Serial.println(svalue);
-  char c_idx[10];
-  c_idx[0] = 0;
-  idx.toCharArray(c_idx, 10);
-  char c_svalue[40];
-  c_svalue[0] = 0;
-  svalue.toCharArray(c_svalue, 40);
-
-  struct TransmissionStruct event;
-  event.Type = 1;
-  event.Command = 4;
-  event.Par1 = str2int(c_idx);
-  event.Par2 = float2ul(atof(c_svalue));
-  event.P1 = 0;
-  event.P2 = 0;
-  event.SourceUnit = 1;
-  event.DestinationUnit = 0;
-  event.Flags = 0;
-  event.Checksum = 0;
-
-  // due to padding of structs in memory on this MCU, we need to shift some bytes
-  byte data[13];
-  memcpy((byte*)&data, (byte*)&event, 3);
-  memcpy((byte*)&data + 3, (byte*)&event + 4, 10);
-
-  // calculate xor checksum
-  byte NewChecksum = NODO_VERSION_MAJOR;
-  for (byte x = 0; x < sizeof(data); x++)
-    NewChecksum ^= data[x];
-  data[12] = NewChecksum;
-
-  // Send data to Nodo through I2C bus
-  // Currently the target Nodo nr is fixed
-  // I2C implementation is still incomplete, scanning does not work, slave mode not supported yet...
-  Wire.beginTransmission(TARGET_NODO);
-  for (byte x = 0; x < sizeof(data); x++)
-    Wire.write(data[x]);
-  Wire.endTransmission();
-
-  WebServer.send(200, "text/html", "OK");
-}
-
 #ifdef ESP_CONNEXIO
 //********************************************************************************
 // Web Interface eventlist page
@@ -1077,7 +1024,12 @@ void handle_tools() {
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
   reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
   reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
-  reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
+
+  #if FEATURE_SPIFFS
+    reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
+  #else
+    reply += F("<BR><BR>");
+  #endif
 
   reply += F("<TR><TD>Command<TD>");
   reply += F("<input type='text' name='cmd' value='");
@@ -1285,6 +1237,109 @@ void handle_control() {
 
 
 //********************************************************************************
+// Web Interface config page
+//********************************************************************************
+void handle_advanced() {
+  if (!isLoggedIn()) return;
+
+  char tmpString[81];
+
+  String mqttsubscribe = WebServer.arg("mqttsubscribe");
+  String mqttpublish = WebServer.arg("mqttpublish");
+  String messagedelay = WebServer.arg("messagedelay");
+  String ip = WebServer.arg("ip");
+  String syslogip = WebServer.arg("syslogip");
+  String sysloglevel = WebServer.arg("sysloglevel");
+  String udpport = WebServer.arg("udpport");
+  String serialloglevel = WebServer.arg("serialloglevel");
+  String webloglevel = WebServer.arg("webloglevel");
+  String baudrate = WebServer.arg("baudrate");
+  #if !FEATURE_SPIFFS
+    String customcss = WebServer.arg("customcss");
+  #endif
+  String edit = WebServer.arg("edit");
+
+  if (edit.length() != 0)
+  {
+    mqttsubscribe.toCharArray(tmpString, 81);
+    urlDecode(tmpString);
+    strcpy(Settings.MQTTsubscribe, tmpString);
+    mqttpublish.toCharArray(tmpString, 81);
+    urlDecode(tmpString);
+    strcpy(Settings.MQTTpublish, tmpString);
+    Settings.MessageDelay = messagedelay.toInt();
+    Settings.IP_Octet = ip.toInt();
+    syslogip.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.Syslog_IP);
+    Settings.UDPPort = udpport.toInt();
+    Settings.SyslogLevel = sysloglevel.toInt();
+    Settings.SerialLogLevel = serialloglevel.toInt();
+    Settings.WebLogLevel = webloglevel.toInt();
+    Settings.BaudRate = baudrate.toInt();
+    #if !FEATURE_SPIFFS
+      Settings.CustomCSS = (customcss == "on");
+    #endif
+    SaveSettings();
+  }
+
+  String reply = "";
+  addMenu(reply);
+
+  char str[20];
+
+  reply += F("<form  method='post'><table>");
+  reply += F("<TH>Advanced Settings<TH>Value");
+
+  reply += F("<TR><TD>MQTT Subscribe Template:<TD><input type='text' name='mqttsubscribe' size=80 value='");
+  reply += Settings.MQTTsubscribe;
+
+  reply += F("'><TR><TD>MQTT Publish Template:<TD><input type='text' name='mqttpublish' size=80 value='");
+  reply += Settings.MQTTpublish;
+
+  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
+  reply += Settings.MessageDelay;
+
+  reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
+  reply += Settings.IP_Octet;
+
+  reply += F("'><TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
+  str[0] = 0;
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
+  reply += str;
+
+  reply += F("'><TR><TD>Syslog Level:<TD><input type='text' name='sysloglevel' value='");
+  reply += Settings.SyslogLevel;
+
+  reply += F("'><TR><TD>UDP port:<TD><input type='text' name='udpport' value='");
+  reply += Settings.UDPPort;
+
+  reply += F("'><TR><TD>Serial log Level:<TD><input type='text' name='serialloglevel' value='");
+  reply += Settings.SerialLogLevel;
+
+  reply += F("'><TR><TD>Web log Level:<TD><input type='text' name='webloglevel' value='");
+  reply += Settings.WebLogLevel;
+
+  reply += F("'><TR><TD>Baud Rate:<TD><input type='text' name='baudrate' value='");
+  reply += Settings.BaudRate;
+  reply += F("'>");
+
+  #if !FEATURE_SPIFFS
+  reply += F("<TR><TD>Custom CSS:<TD>");
+  if (Settings.CustomCSS)
+    reply += F("<input type=checkbox name='customcss' checked>");
+  else
+    reply += F("<input type=checkbox name='customcss'>");
+  #endif
+  
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("<input type='hidden' name='edit' value='1'>");
+  reply += F("</table></form>");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+}
+
+
+//********************************************************************************
 // Login state check
 //********************************************************************************
 boolean isLoggedIn()
@@ -1342,7 +1397,7 @@ void urlDecode(char *src)
   *dst++ = '\0';
 }
 
-
+#if FEATURE_SPIFFS
 //********************************************************************************
 // Web Interface download page
 //********************************************************************************
@@ -1561,90 +1616,166 @@ void handle_filelist() {
   WebServer.send(200, "text/html", reply);
 }
 
+#else
+
+// Without spiffs support, we will use our own handlers to manage a 33kb flash area
+// it uses the same space as where SPIFFS would reside
+// first 32kB is used to store settings as uses in "config.txt"
+// last 4kB block is used for security settings. These cannot be downloaded/uploaded.
+// the config.txt can be interchanged between using spiffs or this custom method
+
 //********************************************************************************
-// Web Interface config page
+// Web Interface download page
 //********************************************************************************
-void handle_advanced() {
+void handle_download() {
   if (!isLoggedIn()) return;
 
-  char tmpString[81];
+  uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint32_t _sectorEnd = _sectorStart + 32; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
 
-  String mqttsubscribe = WebServer.arg("mqttsubscribe");
-  String mqttpublish = WebServer.arg("mqttpublish");
-  String messagedelay = WebServer.arg("messagedelay");
-  String ip = WebServer.arg("ip");
-  String syslogip = WebServer.arg("syslogip");
-  String sysloglevel = WebServer.arg("sysloglevel");
-  String udpport = WebServer.arg("udpport");
-  String serialloglevel = WebServer.arg("serialloglevel");
-  String webloglevel = WebServer.arg("webloglevel");
-  String baudrate = WebServer.arg("baudrate");
-  String edit = WebServer.arg("edit");
-
-  if (edit.length() != 0)
+  WiFiClient client = WebServer.client();
+  /*client.print("HTTP/1.1 200 OK\r\n");
+  client.print("Content-Disposition: attachment; filename=config.txt\r\n");
+  client.print("Content-Type: application/octet-stream\r\n");
+  client.print("Content-Length: 32768\r\n");
+  client.print("Connection: close\r\n");
+  client.print("Access-Control-Allow-Origin: *\r\n");
+  client.print("\r\n");
+  */
+  WebServer.setContentLength(32768);
+  WebServer.sendHeader("Content-Disposition", "attachment; filename=config.txt");
+  WebServer.send(200, "application/octet-stream", "");
+  
+  for (uint32_t _sector=_sectorStart; _sector < _sectorEnd; _sector++)
   {
-    mqttsubscribe.toCharArray(tmpString, 81);
-    urlDecode(tmpString);
-    strcpy(Settings.MQTTsubscribe, tmpString);
-    mqttpublish.toCharArray(tmpString, 81);
-    urlDecode(tmpString);
-    strcpy(Settings.MQTTpublish, tmpString);
-    Settings.MessageDelay = messagedelay.toInt();
-    Settings.IP_Octet = ip.toInt();
-    syslogip.toCharArray(tmpString, 26);
-    str2ip(tmpString, Settings.Syslog_IP);
-    Settings.UDPPort = udpport.toInt();
-    Settings.SyslogLevel = sysloglevel.toInt();
-    Settings.SerialLogLevel = serialloglevel.toInt();
-    Settings.WebLogLevel = webloglevel.toInt();
-    Settings.BaudRate = baudrate.toInt();
-    SaveSettings();
+    // load entire sector from flash into memory
+    noInterrupts();
+    spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
+    interrupts();
+    client.write((const char*)data, 2048);
+    client.write((const char*)data+2028, 2048);
   }
+  delete [] data;
+}
+
+
+//********************************************************************************
+// Web Interface download page
+//********************************************************************************
+void handle_css() {
+  if (!isLoggedIn()) return;
+
+  int size=0;
+  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+  _sector += 9;
+
+  // load entire sector from flash into memory
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
+  interrupts();
+
+  // check size of css file content
+  for (int x=0; x < 4096; x++)
+    if (data[x] == 0)
+      {
+        size=x;
+        break;
+      }
+  WiFiClient client = WebServer.client();
+  WebServer.setContentLength(size);
+  WebServer.send(200, "text/css", "");
+  client.write((const char*)data, size);
+  delete [] data;
+}
+
+
+//********************************************************************************
+// Web Interface upload page
+//********************************************************************************
+void handle_upload() {
+  if (!isLoggedIn()) return;
 
   String reply = "";
   addMenu(reply);
-
-  char str[20];
-
-  reply += F("<form  method='post'><table>");
-  reply += F("<TH>Advanced Settings<TH>Value");
-
-  reply += F("<TR><TD>MQTT Subscribe Template:<TD><input type='text' name='mqttsubscribe' size=80 value='");
-  reply += Settings.MQTTsubscribe;
-
-  reply += F("'><TR><TD>MQTT Publish Template:<TD><input type='text' name='mqttpublish' size=80 value='");
-  reply += Settings.MQTTpublish;
-
-  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
-  reply += Settings.MessageDelay;
-
-  reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
-  reply += Settings.IP_Octet;
-
-  reply += F("'><TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
-  str[0] = 0;
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
-  reply += str;
-
-  reply += F("'><TR><TD>Syslog Level:<TD><input type='text' name='sysloglevel' value='");
-  reply += Settings.SyslogLevel;
-
-  reply += F("'><TR><TD>UDP port:<TD><input type='text' name='udpport' value='");
-  reply += Settings.UDPPort;
-
-  reply += F("'><TR><TD>Serial log Level:<TD><input type='text' name='serialloglevel' value='");
-  reply += Settings.SerialLogLevel;
-
-  reply += F("'><TR><TD>Web log Level:<TD><input type='text' name='webloglevel' value='");
-  reply += Settings.WebLogLevel;
-
-  reply += F("'><TR><TD>Baud Rate:<TD><input type='text' name='baudrate' value='");
-  reply += Settings.BaudRate;
-
-  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
-  reply += F("<input type='hidden' name='edit' value='1'>");
-  reply += F("</table></form>");
+  reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
+  printWebString = "";
+  printToWeb = false;
 }
+
+
+//********************************************************************************
+// Upload handler
+//********************************************************************************
+void handleFileUpload()
+{
+  if (!isLoggedIn()) return;
+
+  static byte filetype = 0;
+  static byte page = 0;
+  static uint8_t* data;
+  int uploadSize = 0;
+  HTTPUpload& upload = WebServer.upload();
+
+  if (upload.status == UPLOAD_FILE_START)
+  {
+    filetype=0;
+    if (strcasecmp(upload.filename.c_str(), "config.txt") == 0)
+      filetype=1;
+    if (strcasecmp(upload.filename.c_str(), "esp.css") == 0)
+      {
+        filetype=2;
+        Settings.CustomCSS=true;
+      }
+    Serial.print(F("Upload start "));
+    Serial.println((char *)upload.filename.c_str());
+    page = 0;
+    data = new uint8_t[FLASH_EEPROM_SIZE];
+  }
+
+  if (upload.status == UPLOAD_FILE_WRITE && filetype !=0)
+  {
+    uploadSize = upload.currentSize;
+    
+    int base=0;
+    if (page % 2)
+      base +=2048;
+    memcpy((byte*)data + base, upload.buf, upload.currentSize);
+    if (filetype == 2)
+      data[upload.currentSize + upload.totalSize]=0; // eof marker
+
+    if ((page % 2) || (filetype == 2))
+    {
+      byte sectorOffset = 0;
+      if (filetype == 2)
+        sectorOffset = 9;
+      uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+      _sector += page/2;
+      _sector += sectorOffset;
+      noInterrupts();
+      if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+        if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+          {
+            //Serial.println("flash save ok");
+          }
+      interrupts();
+      delay(10);
+    }
+    page++;
+  }
+
+  if (upload.status == UPLOAD_FILE_END)
+  {
+    Serial.println(F("Upload end"));
+    delete [] data;
+    if (filetype == 1)
+      LoadSettings();
+    if (filetype == 2)
+      SaveSettings();
+  }
+}
+#endif
 

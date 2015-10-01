@@ -79,8 +79,9 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              25
+#define BUILD                              26
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
+#define FEATURE_SPIFFS                  false
 
 #define PROTOCOL_DOMOTICZ_HTTP              1
 #define PROTOCOL_DOMOTICZ_MQTT              2
@@ -135,7 +136,9 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
-#include <FS.h>
+#if FEATURE_SPIFFS
+  #include <FS.h>
+#endif
 
 // MQTT client
 PubSubClient MQTTclient("");
@@ -195,6 +198,7 @@ struct SettingsStruct
   byte          deepSleep;
   char          MQTTpublish[81];
   char          MQTTsubscribe[81];
+  boolean       CustomCSS;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -265,7 +269,10 @@ String dummyString = "";
 void setup()
 {
   Serial.begin(115200);
-  fileSystemCheck();
+
+  #if FEATURE_SPIFFS
+    fileSystemCheck();
+  #endif
 
   emergencyReset();
 
@@ -340,6 +347,7 @@ void setup()
   timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
   timer1s = millis() + 1000; // timer for periodic actions once per/sec
   timerwd = millis() + 30000; // timer for watchdog once per 30 sec
+
 }
 
 
