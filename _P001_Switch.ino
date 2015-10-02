@@ -149,9 +149,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
             }
           }
-          
+
           // send if output needs to be changed
-          if (currentOutputState!=outputstate[event->TaskIndex])
+          if (currentOutputState != outputstate[event->TaskIndex])
           {
             byte sendState = outputstate[event->TaskIndex];
             if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
@@ -170,6 +170,69 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WRITE:
+      {
+        String tmpString  = string;
+        int argIndex = tmpString.indexOf(',');
+        if (argIndex)
+          tmpString = tmpString.substring(0, argIndex);
+        if (tmpString.equalsIgnoreCase("GPIO"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            pinMode(event->Par1, OUTPUT);
+            digitalWrite(event->Par1, event->Par2);
+            if (printToWeb)
+            {
+              printWebString += F("GPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Set to ");
+              printWebString += event->Par2;
+              printWebString += F("<BR>");
+            }
+          }
+        }
+
+        if (tmpString.equalsIgnoreCase("PWM"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 1023)
+          {
+            pinMode(event->Par1, OUTPUT);
+            analogWrite(event->Par1, event->Par2);
+            if (printToWeb)
+            {
+              printWebString += F("GPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Set PWM to ");
+              printWebString += event->Par2;
+              printWebString += F("<BR>");
+            }
+          }
+        }
+
+        if (tmpString.equalsIgnoreCase("Pulse"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 1023)
+          {
+            pinMode(event->Par1, OUTPUT);
+            digitalWrite(event->Par1, event->Par2);
+            delay(event->Par3);
+            digitalWrite(event->Par1, !event->Par2);
+            if (printToWeb)
+            {
+              printWebString += F("GPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Pulsed for ");
+              printWebString += event->Par3;
+              printWebString += F(" mS<BR>");
+            }
+          }
+        }
+        break;
+      }
   }
   return success;
 }

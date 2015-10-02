@@ -1,3 +1,9 @@
+// R27 02-10-2015
+// Changed MCP23017 plugin to scan inputs realtime instead of using the system timer mechanism
+// Changed MCP23017 default pullup resistors on input pins
+// Moved MCP23017 output and generic GPIO and PWM to device plugins
+// Added simple pulse option for GPIO outputs (only for small pulses less than a few seconds).
+
 // R26 01-10-2015
 // Changed internal stylesheet to new skin
 // Save configuration settings into SPIFFS reserved area without using SPIFFS

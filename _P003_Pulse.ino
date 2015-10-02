@@ -67,7 +67,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       {
         UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
         Plugin_003_pulseCounter[event->TaskIndex] = 0;

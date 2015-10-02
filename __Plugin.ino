@@ -448,31 +448,29 @@ void PluginInit(void)
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-byte PluginCall(byte Function, struct EventStruct *Event, String& str)
+byte PluginCall(byte Function, struct EventStruct *event, String& str)
 {
   int x;
   struct EventStruct TempEvent;
 
- if (Event == 0)
-    Event=&TempEvent;
+ if (event == 0)
+    event=&TempEvent;
     
   switch (Function)
   {
-    // Call to all plugins
-    //case PLUGIN_EVENT_IN:
-    //case PLUGIN_EVENT_OUT:
+    // Unconditional calls to all plugins
     case PLUGIN_DEVICE_ADD:
       for (x = 0; x < PLUGIN_MAX; x++)
         if (Plugin_id[x] != 0)
-          Plugin_ptr[x](Function, Event, str);
+          Plugin_ptr[x](Function, event, str);
       return true;
       break;
 
     // Call to all plugins. Return at first match
-    case PLUGIN_EVENTLIST_ADD:
+    case PLUGIN_WRITE:
       for (x = 0; x < PLUGIN_MAX; x++)
         if (Plugin_id[x] != 0)
-          if (Plugin_ptr[x](Function, Event, str))
+          if (Plugin_ptr[x](Function, event, str))
             return true;
       break;
 
@@ -480,6 +478,7 @@ byte PluginCall(byte Function, struct EventStruct *Event, String& str)
     case PLUGIN_ONCE_A_SECOND:
     case PLUGIN_TEN_PER_SECOND:
     case PLUGIN_INIT_ALL:
+    case PLUGIN_EVENT_OUT:
       {
         if (Function == PLUGIN_INIT_ALL)
           Function = PLUGIN_INIT;
@@ -492,17 +491,11 @@ byte PluginCall(byte Function, struct EventStruct *Event, String& str)
             TempEvent.BaseVarIndex = y * VARS_PER_TASK;
             TempEvent.idx = Settings.TaskDeviceID[y];
             TempEvent.sensorType = Device[DeviceIndex].VType;
+            TempEvent.OriginTaskIndex=event->TaskIndex;
             for (x = 0; x < PLUGIN_MAX; x++)
             {
               if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
               {
-                if ((Function != PLUGIN_ONCE_A_SECOND) && (Function != PLUGIN_TEN_PER_SECOND))
-                {
-                  //Serial.print("All Used Plugin nr ");
-                  //Serial.print(Plugin_id[x]);
-                  //Serial.print(" tasknr  ");
-                  //Serial.println(y);
-                }
                 Plugin_ptr[x](Function, &TempEvent, str);
               }
             }
@@ -512,23 +505,19 @@ byte PluginCall(byte Function, struct EventStruct *Event, String& str)
         break;
       }
 
-    // Call to specific plugin that is used for this task
+    // Call to specific plugin that is used for current task
     case PLUGIN_INIT:
     case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_WEBFORM_SAVE:
     case PLUGIN_WEBFORM_VALUES:
     case PLUGIN_GET_DEVICEVALUENAMES:
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       for (x = 0; x < PLUGIN_MAX; x++)
       {
-        if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[Event->TaskIndex]))
+        if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))
         {
-          Event->BaseVarIndex = Event->TaskIndex * VARS_PER_TASK;
-          //Serial.print("This Plugin nr ");
-          //Serial.print(Plugin_id[x]);
-          //Serial.print(" tasknr  ");
-          //Serial.println(Event->TaskIndex);
-          return Plugin_ptr[x](Function, Event, str);
+          event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+          return Plugin_ptr[x](Function, event, str);
         }
       }
       return false;

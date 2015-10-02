@@ -54,7 +54,7 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       {
         byte unit = (Settings.TaskDevicePort[event->TaskIndex] - 1) / 4;
         byte port = Settings.TaskDevicePort[event->TaskIndex] - (unit * 4);

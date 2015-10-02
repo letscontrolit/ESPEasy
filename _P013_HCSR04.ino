@@ -103,7 +103,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_COMMAND: // If we select value mode, read and send the value based on global timer
+    case PLUGIN_READ: // If we select value mode, read and send the value based on global timer
       {
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 1)
         {

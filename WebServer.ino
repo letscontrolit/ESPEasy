@@ -1204,28 +1204,25 @@ void handle_control() {
   urlDecode(command);
   boolean validCmd = false;
 
+  struct EventStruct TempEvent;
+  char TmpStr1[80];
+  TmpStr1[0] = 0;
+  TempEvent.Par1 = 0;
+  TempEvent.Par2 = 0;
+  TempEvent.Par3 = 0;
+
   char Cmd[40];
   Cmd[0] = 0;
   GetArgv(command, Cmd, 1);
-
-  if ((strcasecmp_P(Cmd, PSTR("gpio")) == 0) || (strcasecmp_P(Cmd, PSTR("pwm")) == 0) || (strcasecmp_P(Cmd, PSTR("mcpgpio")) == 0))
-    validCmd = true;
-
-  String reply = "";
+  if (GetArgv(command, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 3)) TempEvent.Par2 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 4)) TempEvent.Par3 = str2int(TmpStr1);
 
   printToWeb = true;
   printWebString = "";
+  String reply = "";
 
-  if (validCmd)
-  {
-#ifdef ESP_CONNEXIO
-    ExecuteLine(command, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
-    ExecuteCommand(command);
-#endif
-  }
-  else
+  if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
     reply += F("Unknown or restricted command!");
 
   reply += printWebString;

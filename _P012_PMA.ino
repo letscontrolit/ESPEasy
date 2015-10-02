@@ -8,10 +8,10 @@
 #define PLUGIN_VALUENAME1_012 "Analog"
 
 boolean Plugin_012(byte function, struct EventStruct *event, String& string)
-  {
-  boolean success=false;
+{
+  boolean success = false;
 
-  switch(function)
+  switch (function)
   {
 
     case PLUGIN_DEVICE_ADD:
@@ -38,25 +38,53 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_012));
         break;
       }
-    
-  case PLUGIN_COMMAND:
-    {
-      uint8_t address = 0x7f;
-      Wire.beginTransmission(address);
-      Wire.write(4); // ADC Read
-      Wire.write(Settings.TaskDevicePort[event->TaskIndex]);
-      Wire.write(0);
-      Wire.write(0);
-      Wire.endTransmission();
-      delay(1);  // remote unit needs some time to do the adc stuff
-      Wire.requestFrom(address, (uint8_t)0x1);
-      if (Wire.available())
-        UserVar[event->BaseVarIndex] = Wire.read();
-      Serial.print(F("PMADC: Analog: "));
-      Serial.println(UserVar[event->BaseVarIndex]);
-      success=true;
-      break;
-    }
-  }      
+
+    case PLUGIN_READ:
+      {
+        uint8_t address = 0x7f;
+        Wire.beginTransmission(address);
+        Wire.write(4); // ADC Read
+        Wire.write(Settings.TaskDevicePort[event->TaskIndex]);
+        Wire.write(0);
+        Wire.write(0);
+        Wire.endTransmission();
+        delay(1);  // remote unit needs some time to do the adc stuff
+        Wire.requestFrom(address, (uint8_t)0x1);
+        if (Wire.available())
+          UserVar[event->BaseVarIndex] = Wire.read();
+        Serial.print(F("PMADC: Analog: "));
+        Serial.println(UserVar[event->BaseVarIndex]);
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WRITE:
+      {
+        String tmpString  = string;
+        int argIndex = tmpString.indexOf(',');
+        if (argIndex)
+          tmpString = tmpString.substring(0, argIndex);
+        if (tmpString.equalsIgnoreCase("EXTPWM"))
+        {
+          success = true;
+          uint8_t address = 0x7f;
+          Wire.beginTransmission(address);
+          Wire.write(3);
+          Wire.write(event->Par1);
+          Wire.write(event->Par2 & 0xff);
+          Wire.write((event->Par2 >> 8));
+          Wire.endTransmission();
+          if (printToWeb)
+          {
+            printWebString += F("EXTPWM ");
+            printWebString += event->Par1;
+            printWebString += F(" Set to ");
+            printWebString += event->Par2;
+            printWebString += F("<BR>");
+          }
+        }
+        break;
+      }
+  }
   return success;
 }

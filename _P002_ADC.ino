@@ -38,7 +38,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         break;
       }
       
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       {
         int value = analogRead(A0);
         UserVar[event->BaseVarIndex] = (float)value;

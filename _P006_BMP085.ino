@@ -42,7 +42,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       {
         if (!Plugin_006_init)
         {

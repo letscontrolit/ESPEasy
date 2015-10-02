@@ -79,7 +79,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              26
+#define BUILD                              27
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -118,7 +118,7 @@
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
-#define PLUGIN_COMMAND                      3
+#define PLUGIN_READ                         3
 #define PLUGIN_ONCE_A_SECOND                4
 #define PLUGIN_TEN_PER_SECOND               5
 #define PLUGIN_DEVICE_ADD                   6
@@ -128,6 +128,8 @@
 #define PLUGIN_WEBFORM_VALUES              10
 #define PLUGIN_GET_DEVICENAME              11
 #define PLUGIN_GET_DEVICEVALUENAMES        12
+#define PLUGIN_WRITE                       13
+#define PLUGIN_EVENT_OUT                   14
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -216,6 +218,10 @@ struct EventStruct
   byte BaseVarIndex;
   byte idx;
   byte sensorType;
+  int Par1;
+  int Par2;
+  int Par3;
+  byte OriginTaskIndex;
 };
 
 struct LogStruct
@@ -461,7 +467,7 @@ void SensorSend()
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         preValue[varNr] = UserVar[varIndex + varNr];
         
-      success = PluginCall(PLUGIN_COMMAND, &TempEvent, dummyString);
+      success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
 
       if (success)
       {

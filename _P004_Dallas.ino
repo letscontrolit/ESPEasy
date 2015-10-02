@@ -91,7 +91,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
       
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       {
         uint8_t addr[8];
         // Load ROM address from tasksettings

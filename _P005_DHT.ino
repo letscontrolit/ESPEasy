@@ -77,7 +77,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_COMMAND:
+    case PLUGIN_READ:
       {
         byte dht_dat[5];
         byte dht_in;

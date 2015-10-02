@@ -76,6 +76,9 @@ boolean sendData(struct EventStruct *event)
       PiDome_sendDataMQTT(event);
       break;
   }
+
+  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  
   if (Settings.MessageDelay != 0)
   {
     char log[30];
@@ -85,6 +88,7 @@ boolean sendData(struct EventStruct *event)
     while (millis() < timer)
       backgroundtasks();
   }
+
 }
 //#endif
 
@@ -423,43 +427,26 @@ void MQTTMessage(String *topic, String *message)
       {
         String cmd = topicSplit[1];
         int pin = topicSplit[2].toInt();
-        if (cmd == "gpio")
-        {
-          int value = message->toFloat();
-          char cmd[80];
-          sprintf_P(cmd, PSTR("gpio,%u,%u"), pin, value);
-          Serial.println(cmd);
-#ifdef ESP_CONNEXIO
-          ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
-          ExecuteCommand(cmd);
-#endif
-        }
+        int value = message->toFloat();
+        struct EventStruct TempEvent;
+        TempEvent.Par1 = pin;
+        TempEvent.Par2 = value;
+        PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
         break;
       }
-
 
     case PROTOCOL_PIDOME_MQTT:
       {
         String name = topicSplit[4];
         String cmd = topicSplit[5];
         int pin = topicSplit[6].toInt();
+        int value = (*message == "true");
+        struct EventStruct TempEvent;
+        TempEvent.Par1 = pin;
+        TempEvent.Par2 = value;
         if (name == Settings.Name)
         {
-          if (cmd == "gpio")
-          {
-            int value = (*message == "true");
-            char cmd[80];
-            sprintf_P(cmd, PSTR("gpio,%u,%u"), pin, value);
-            Serial.println(cmd);
-#ifdef ESP_CONNEXIO
-            ExecuteLine(cmd, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
-            ExecuteCommand(cmd);
-#endif
-          }
+          PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
         }
         break;
       }
