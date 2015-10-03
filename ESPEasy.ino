@@ -79,7 +79,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              28
+#define BUILD                              29
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -216,7 +216,7 @@ struct EventStruct
 {
   byte TaskIndex;
   byte BaseVarIndex;
-  byte idx;
+  int idx;
   byte sensorType;
   int Par1;
   int Par2;

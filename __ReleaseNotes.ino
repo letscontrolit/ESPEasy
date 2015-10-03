@@ -1,3 +1,6 @@
+// R29 03-10-2015
+// Fixed bug with idx values > 255. Bug was introduced in R22
+
 // R28 03-10-2015
 // Merged Pro Mini extender plugins into one single plugin
 
