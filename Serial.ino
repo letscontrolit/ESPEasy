@@ -20,11 +20,6 @@ void ExecuteCommand(char *Line)
   // commands for debugging
   // ****************************************
 
-  if (strcasecmp_P(Command, PSTR("Pullup")) == 0)
-  {
-    Plugin_009_Config(18, 1);
-  }
-
   #if FEATURE_SPIFFS
   if (strcasecmp_P(Command, PSTR("format")) == 0)
   {

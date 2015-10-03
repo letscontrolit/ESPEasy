@@ -1,3 +1,6 @@
+// R28 03-10-2015
+// Merged Pro Mini extender plugins into one single plugin
+
 // R27 02-10-2015
 // Changed MCP23017 plugin to scan inputs realtime instead of using the system timer mechanism
 // Changed MCP23017 default pullup resistors on input pins

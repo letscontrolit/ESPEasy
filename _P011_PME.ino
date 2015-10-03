@@ -1,11 +1,11 @@
 //#######################################################################################################
-//#################################### Plugin 011: Pro Mini Digital #####################################
+//#################################### Plugin 011: Pro Mini Extender ####################################
 //#######################################################################################################
 
 #define PLUGIN_011
 #define PLUGIN_ID_011         11
-#define PLUGIN_NAME_011       "ProMini Extender Digital"
-#define PLUGIN_VALUENAME1_011 "Switch"
+#define PLUGIN_NAME_011       "ProMini Extender"
+#define PLUGIN_VALUENAME1_011 "Value"
 
 boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 {
@@ -38,11 +38,49 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options[2];
+        options[0] = F("Digital");
+        options[1] = F("Analog");
+        int optionValues[2];
+        optionValues[0] = 0;
+        optionValues[1] = 1;
+        string += F("<TR><TD>Port Type:<TD><select name='plugin_011'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues[x];
+          string += "'";
+          if (choice == optionValues[x])
+            string += F(" selected");
+          string += ">";
+          string += options[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        String plugin1 = WebServer.arg("plugin_011");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
         uint8_t address = 0x7f;
         Wire.beginTransmission(address);
-        Wire.write(2); // Digital Read
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0)
+          Wire.write(2); // Digital Read
+        else
+          Wire.write(4); // Analog Read
         Wire.write(Settings.TaskDevicePort[event->TaskIndex]);
         Wire.write(0);
         Wire.write(0);
@@ -51,7 +89,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Wire.requestFrom(address, (uint8_t)0x1);
         if (Wire.available())
           UserVar[event->BaseVarIndex] = Wire.read();
-        Serial.print(F("PMD  : Digital: "));
+        Serial.print(F("PMini: PortValue: "));
         Serial.println(UserVar[event->BaseVarIndex]);
         success = true;
         break;
@@ -76,6 +114,26 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           if (printToWeb)
           {
             printWebString += F("EXTGPIO ");
+            printWebString += event->Par1;
+            printWebString += F(" Set to ");
+            printWebString += event->Par2;
+            printWebString += F("<BR>");
+          }
+        }
+
+        if (tmpString.equalsIgnoreCase("EXTPWM"))
+        {
+          success = true;
+          uint8_t address = 0x7f;
+          Wire.beginTransmission(address);
+          Wire.write(3);
+          Wire.write(event->Par1);
+          Wire.write(event->Par2 & 0xff);
+          Wire.write((event->Par2 >> 8));
+          Wire.endTransmission();
+          if (printToWeb)
+          {
+            printWebString += F("EXTPWM ");
             printWebString += event->Par1;
             printWebString += F(" Set to ");
             printWebString += event->Par2;
