@@ -1,5 +1,5 @@
 //********************************************************************************
-// Initialize allplugins that where defined earlier
+// Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
 //********************************************************************************
 void PluginInit(void)

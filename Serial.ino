@@ -52,18 +52,6 @@ void ExecuteCommand(char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("DomoticzGet")) == 0)
-  {
-    float value = 0;
-    if (Domoticz_getData(Par2, &value))
-    {
-      Serial.print(F("DomoticzGet "));
-      Serial.println(value);
-    }
-    else
-      Serial.println(F("Error getting data"));
-  }
-
   if (strcasecmp_P(Command, PSTR("LCDWrite")) == 0)
   {
     GetArgv(Line, TmpStr1, 4);

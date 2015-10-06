@@ -79,16 +79,14 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              29
+#define BUILD                              30
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
-#define PROTOCOL_DOMOTICZ_HTTP              1
-#define PROTOCOL_DOMOTICZ_MQTT              2
-#define PROTOCOL_NODO_TELNET                3
-#define PROTOCOL_THINGSPEAK                 4
-#define PROTOCOL_OPENHAB_MQTT               5
-#define PROTOCOL_PIDOME_MQTT                6
+#define CPLUGIN_PROTOCOL_ADD                1
+#define CPLUGIN_PROTOCOL_TEMPLATE           2
+#define CPLUGIN_PROTOCOL_SEND               3
+#define CPLUGIN_PROTOCOL_RECV               4
 
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
@@ -104,6 +102,7 @@
 #define PLUGIN_MAX                         64
 #define PLUGIN_CONFIGVAR_MAX                8
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
+#define CPLUGIN_MAX                        16
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
@@ -222,6 +221,8 @@ struct EventStruct
   int Par2;
   int Par3;
   byte OriginTaskIndex;
+  String String1;
+  String String2;
 };
 
 struct LogStruct
@@ -243,7 +244,17 @@ struct DeviceStruct
   byte ValueCount;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
+struct ProtocolStruct
+{
+  byte Number;
+  boolean usesMQTT;
+  boolean usesAccount;
+  boolean usesPassword;
+  char Name[20];
+} Protocol[CPLUGIN_MAX];
+
 int deviceCount = -1;
+int protocolCount = -1;
 
 boolean printToWeb = false;
 String printWebString = "";
@@ -266,6 +277,9 @@ int WebLoggedInTimer = 300;
 
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte Plugin_id[PLUGIN_MAX];
+
+boolean (*CPlugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*);
+byte CPlugin_id[PLUGIN_MAX];
 
 String dummyString = "";
 
@@ -308,6 +322,7 @@ void setup()
 
   hardwareInit();
   PluginInit();
+  CPluginInit();
 
   WebServerInit();
 
@@ -321,7 +336,8 @@ void setup()
   lcd.print("ESP Easy");
 
   // Setup MQTT Client
-  if ((Settings.Protocol == PROTOCOL_DOMOTICZ_MQTT) || (Settings.Protocol == PROTOCOL_OPENHAB_MQTT) || (Settings.Protocol == PROTOCOL_PIDOME_MQTT))
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+  if (Protocol[ProtocolIndex].usesMQTT)
     MQTTConnect();
 
   sendSysInfoUDP(3);

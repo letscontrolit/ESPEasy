@@ -1,3 +1,7 @@
+// R30 06-10-2015
+// Moved all controller specific code to CPlugin mechanism (similar to device plugins)
+// Added debounce feature to pulsecounter plugin
+
 // R29 03-10-2015
 // Fixed bug with idx values > 255. Bug was introduced in R22
 

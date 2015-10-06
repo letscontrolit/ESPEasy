@@ -31,6 +31,7 @@ void fileSystemCheck()
 }
 #endif
 
+
 /********************************************************************************************\
 * Find device index corresponding to task number setting
 \*********************************************************************************************/
@@ -42,6 +43,20 @@ byte getDeviceIndex(byte Number)
       DeviceIndex = x;
   return DeviceIndex;
 }
+
+
+/********************************************************************************************\
+* Find protocol index corresponding to protocol setting
+\*********************************************************************************************/
+byte getProtocolIndex(byte Number)
+{
+  byte ProtocolIndex = 0;
+  for (byte x = 0; x <= protocolCount ; x++)
+    if (Protocol[x].Number == Number)
+      ProtocolIndex = x;
+  return ProtocolIndex;
+}
+
 
 /********************************************************************************************\
 * Find positional parameter in a char string

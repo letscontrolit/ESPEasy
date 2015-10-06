@@ -10,6 +10,8 @@
 
 unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
+unsigned long Plugin_003_pulseTime[TASKS_MAX];
+unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
 
 boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 {
@@ -43,6 +45,23 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_003));
         break;
       }
+
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        char tmpString[80];
+        sprintf_P(tmpString, PSTR("<TR><TD>Debounce Time (mSec):<TD><input type='text' name='plugin_003' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        string += tmpString;
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        String plugin1 = WebServer.arg("plugin_003");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        success = true;
+        break;
+      }
       
     case PLUGIN_WEBFORM_VALUES:
       {
@@ -53,6 +72,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         string += ExtraTaskSettings.TaskDeviceValueNames[1];
         string += F(":");
         string += Plugin_003_pulseTotalCounter[event->TaskIndex];
+        string += F("<BR>Time:");
+        string += Plugin_003_pulseTime[event->TaskIndex];
         success = true;
         break;
       }
@@ -80,47 +101,55 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
 
 /*********************************************************************************************\
+ * Check Pulse Counters (called from irq handler)
+\*********************************************************************************************/
+void Plugin_003_pulsecheck(byte Index)
+{
+  unsigned long PulseTime=millis() - Plugin_003_pulseTimePrevious[Index];
+  if(PulseTime > Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
+    {
+      Plugin_003_pulseCounter[Index]++;
+      Plugin_003_pulseTotalCounter[Index]++;
+      Plugin_003_pulseTime[Index] = PulseTime;
+      Plugin_003_pulseTimePrevious[Index]=millis();
+    }
+}
+
+
+/*********************************************************************************************\
  * Pulse Counter IRQ handlers
 \*********************************************************************************************/
 void Plugin_003_pulse_interrupt1()
 {
-  Plugin_003_pulseCounter[0]++;
-  Plugin_003_pulseTotalCounter[0]++;
+  Plugin_003_pulsecheck(0);
 }
 void Plugin_003_pulse_interrupt2()
 {
-  Plugin_003_pulseCounter[1]++;
-  Plugin_003_pulseTotalCounter[1]++;
+  Plugin_003_pulsecheck(1);
 }
 void Plugin_003_pulse_interrupt3()
 {
-  Plugin_003_pulseCounter[2]++;
-  Plugin_003_pulseTotalCounter[2]++;
+  Plugin_003_pulsecheck(2);
 }
 void Plugin_003_pulse_interrupt4()
 {
-  Plugin_003_pulseCounter[3]++;
-  Plugin_003_pulseTotalCounter[3]++;
+  Plugin_003_pulsecheck(3);
 }
 void Plugin_003_pulse_interrupt5()
 {
-  Plugin_003_pulseCounter[4]++;
-  Plugin_003_pulseTotalCounter[4]++;
+  Plugin_003_pulsecheck(4);
 }
 void Plugin_003_pulse_interrupt6()
 {
-  Plugin_003_pulseCounter[5]++;
-  Plugin_003_pulseTotalCounter[5]++;
+  Plugin_003_pulsecheck(5);
 }
 void Plugin_003_pulse_interrupt7()
 {
-  Plugin_003_pulseCounter[6]++;
-  Plugin_003_pulseTotalCounter[6]++;
+  Plugin_003_pulsecheck(6);
 }
 void Plugin_003_pulse_interrupt8()
 {
-  Plugin_003_pulseCounter[7]++;
-  Plugin_003_pulseTotalCounter[7]++;
+  Plugin_003_pulsecheck(7);
 }
 
 
