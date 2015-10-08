@@ -61,7 +61,6 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
       {
         // MQTT publish structure:
         // /hooks/devices/idx/groupid/value name
-        char str[80];
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
@@ -80,9 +79,6 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
           case SENSOR_TYPE_DIMMER:
             pubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
             value = String(UserVar[event->BaseVarIndex]);
-            Serial.print(pubname);
-            Serial.print(":");
-            Serial.println(value);
             MQTTclient.publish(pubname, value);
             break;
           case SENSOR_TYPE_TEMP_HUM:

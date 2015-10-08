@@ -52,6 +52,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
           if (nvalue == 0)
             nvalue = nvaluealt;
 
+  // Direct Serial is allowed here, since this is still in development, it does not even work....
+    
           Serial.print(F("MQTT : idx="));
           Serial.print(idx);
           Serial.print(F(" name="));
@@ -127,8 +129,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
 
         char json[256];
         root.printTo(json, sizeof(json));
-        Serial.print("MQTT : ");
-        Serial.println(json);
+        String log = F("MQTT : ");
+        log += json;
         addLog(LOG_LEVEL_DEBUG, json);
 
         String pubname = Settings.MQTTpublish;
@@ -138,7 +140,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
 
         if (!MQTTclient.publish(pubname, json))
         {
-          Serial.println(F("MQTT publish failed"));
+          log = F("MQTT publish failed");
+          addLog(LOG_LEVEL_DEBUG, json);
           MQTTConnect();
           connectionFailures++;
         }

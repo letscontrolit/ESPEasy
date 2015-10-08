@@ -43,7 +43,8 @@ void WifiAPMode(boolean state)
 //********************************************************************************
 boolean WifiConnect()
 {
-  Serial.println(F("WIFI : Connecting..."));
+  String log = F("WIFI : Connecting...");
+  addLog(LOG_LEVEL_INFO,log);
   if (WiFi.status() != WL_CONNECTED)
   {
     if ((SecuritySettings.WifiSSID[0] != 0)  && (strcasecmp(SecuritySettings.WifiSSID, "ssid") != 0))
@@ -54,7 +55,6 @@ boolean WifiConnect()
         if (WiFi.status() != WL_CONNECTED)
         {
           delay(500);
-          Serial.println(".");
         }
         else
           break;
@@ -67,17 +67,19 @@ boolean WifiConnect()
         IPAddress gw = WiFi.gatewayIP();
         IPAddress subnet = WiFi.subnetMask();
         ip[3] = Settings.IP_Octet;
-        Serial.print(F("IP   : Fixed IP :"));
-        Serial.println(ip);
+        log = F("IP   : Fixed IP :");
+        log += ip;
+        addLog(LOG_LEVEL_INFO,log);
         WiFi.config(ip, gw, subnet);
       }
 
       if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
       {
-        Serial.print(F("IP   : Static IP :"));
         char str[20];
         sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
-        Serial.println(str);
+        log = F("IP   : Static IP :");
+        log += str;
+        addLog(LOG_LEVEL_INFO,log);
         IPAddress ip = Settings.IP;
         IPAddress gw = Settings.Gateway;
         IPAddress subnet = Settings.Subnet;
@@ -87,7 +89,8 @@ boolean WifiConnect()
     }
     else
     {
-      Serial.println(F("WIFI : No SSID!"));
+      log = F("WIFI : No SSID!");
+      addLog(LOG_LEVEL_INFO,log);
       NC_Count = 1;
       WifiAPMode(true);
     }
@@ -109,6 +112,7 @@ boolean WifiDisconnect()
 //********************************************************************************
 void WifiScan()
 {
+  // Direct Serial is allowed here, since this function will only be called from serial input.
   Serial.println(F("WIFI : SSID Scan start"));
   int n = WiFi.scanNetworks();
   if (n == 0)

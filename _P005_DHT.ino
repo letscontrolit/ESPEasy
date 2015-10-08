@@ -13,7 +13,7 @@ uint8_t Plugin_005_DHT_Pin;
 boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  
+
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -86,78 +86,76 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         boolean error = false;
 
         byte Par3 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-
         Plugin_005_DHT_Pin = Settings.TaskDevicePin1[event->TaskIndex];
 
-        do
+        pinMode(Plugin_005_DHT_Pin, OUTPUT);
+        // DHT start condition, pull-down i/o pin for 18ms
+        digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
+        delay(18);
+        digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
+        delayMicroseconds(40);
+        pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
+        //delayMicroseconds(40);
+
+        dht_in = digitalRead(Plugin_005_DHT_Pin);
+        if (!dht_in)
         {
-          pinMode(Plugin_005_DHT_Pin, OUTPUT);
-          // DHT start condition, pull-down i/o pin for 18ms
-          digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
-          delay(18);
-          digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
-          delayMicroseconds(40);
-          pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
-          //delayMicroseconds(40);
-
+          delayMicroseconds(80);
           dht_in = digitalRead(Plugin_005_DHT_Pin);
-          if (!dht_in)
+          if (dht_in)
           {
-            delayMicroseconds(80);
-            dht_in = digitalRead(Plugin_005_DHT_Pin);
-            if (dht_in)
+            delayMicroseconds(40);                     // now ready for data reception
+            for (i = 0; i < 5; i++)
             {
-              delayMicroseconds(40);                     // now ready for data reception
-              for (i = 0; i < 5; i++)
+              byte data = Plugin_005_read_dht_dat();
+              if (data != -1)
+                dht_dat[i] = data;
+              else
               {
-                byte data = Plugin_005_read_dht_dat();
-                if (data != -1)
-                  dht_dat[i] = data;
-                else
-                {
-                  addLog(LOG_LEVEL_ERROR, (char*)"DHT  : protocol timeout!");
-                  error = true;
-                }
+                addLog(LOG_LEVEL_ERROR, (char*)"DHT  : protocol timeout!");
+                error = true;
               }
+            }
 
-              if (!error)
+            if (!error)
+            {
+
+              // Checksum calculation is a Rollover Checksum by design!
+              byte dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
+
+              if (dht_dat[4] == dht_check_sum)
               {
 
-                // Checksum calculation is a Rollover Checksum by design!
-                byte dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
-
-                if (dht_dat[4] == dht_check_sum)
+                if (Par3 == 11)
                 {
+                  UserVar[event->BaseVarIndex] = float(dht_dat[2]); // Temperature
+                  UserVar[event->BaseVarIndex + 1] = float(dht_dat[0]); // Humidity
+                }
 
-                  if (Par3 == 11)
-                  {
-                    UserVar[event->BaseVarIndex] = float(dht_dat[2]); // Temperature
-                    UserVar[event->BaseVarIndex + 1] = float(dht_dat[0]); // Humidity
-                  }
-
-                  if (Par3 == 22)
-                  {
-                    if (dht_dat[2] & 0x80) // negative temperature
-                      UserVar[event->BaseVarIndex] = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
-                    else
-                      UserVar[event->BaseVarIndex] = 0.1 * word(dht_dat[2], dht_dat[3]);
-                    UserVar[event->BaseVarIndex + 1] = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
-                  }
-                  Serial.print(F("DHT  : Temperature: "));
-                  Serial.println(UserVar[event->BaseVarIndex]);
-                  Serial.print(F("DHT  : Humidity: "));
-                  Serial.println(UserVar[event->BaseVarIndex + 1]);
-                  success = true;
-                } // checksum
-
-              } // error
-            } // dht
-          }  // !dht
-          if (!success)
-          {
-            delay(2000);
-          }
-        } while (!success && ++Retry < 3);
+                if (Par3 == 22)
+                {
+                  if (dht_dat[2] & 0x80) // negative temperature
+                    UserVar[event->BaseVarIndex] = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
+                  else
+                    UserVar[event->BaseVarIndex] = 0.1 * word(dht_dat[2], dht_dat[3]);
+                  UserVar[event->BaseVarIndex + 1] = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
+                }
+                String log = F("DHT  : Temperature: ");
+                log += UserVar[event->BaseVarIndex];
+                addLog(LOG_LEVEL_INFO, log);
+                log = F("DHT  : Humidity: ");
+                log += UserVar[event->BaseVarIndex + 1];
+                addLog(LOG_LEVEL_INFO, log);
+                success = true;
+              } // checksum
+            } // error
+          } // dht
+        }  // !dht
+        if(!success)
+        {
+          UserVar[event->BaseVarIndex] = NAN;
+          UserVar[event->BaseVarIndex + 1] = NAN;
+        }
         break;
       }
   }

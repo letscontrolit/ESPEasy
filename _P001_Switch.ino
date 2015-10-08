@@ -129,8 +129,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         byte state = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
         if (state != switchstate[event->TaskIndex])
         {
-          Serial.print(F("SW   : State "));
-          Serial.println(state);
           switchstate[event->TaskIndex] = state;
           byte currentOutputState = outputstate[event->TaskIndex];
 
@@ -163,6 +161,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               event->sensorType = SENSOR_TYPE_DIMMER;
               UserVar[event->BaseVarIndex] = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
             }
+            String log = F("SW   : State ");
+            log += sendState;
+            addLog(LOG_LEVEL_INFO,log);
             sendData(event);
           }
         }

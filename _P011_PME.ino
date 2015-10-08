@@ -89,8 +89,9 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Wire.requestFrom(address, (uint8_t)0x1);
         if (Wire.available())
           UserVar[event->BaseVarIndex] = Wire.read();
-        Serial.print(F("PMini: PortValue: "));
-        Serial.println(UserVar[event->BaseVarIndex]);
+        String log = F("PMini: PortValue: ");
+        log += UserVar[event->BaseVarIndex];
+        addLog(LOG_LEVEL_INFO,log);
         success = true;
         break;
       }

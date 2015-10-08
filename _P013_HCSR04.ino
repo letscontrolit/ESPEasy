@@ -109,15 +109,17 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         {
           Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
           float value = Plugin_013_read();
+          String log = F("SR04 : Distance: ");
           if (value != -1)
           {
             UserVar[event->BaseVarIndex] = (float)Plugin_013_timer / 58;
-            Serial.print(F("SR04 : Distance: "));
-            Serial.println(UserVar[event->BaseVarIndex]);
+            log += UserVar[event->BaseVarIndex];
             success = true;
           }
           else
-            Serial.println(F("SR04 : Distance: No reading!"));
+            log += F("SR04 : Distance: No reading!");
+
+        addLog(LOG_LEVEL_INFO,log);
         }
         break;
       }
@@ -135,8 +137,9 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               state = 1;
             if (state != switchstate[event->TaskIndex])
             {
-              Serial.print(F("SR04 : State "));
-              Serial.println(state);
+              String log = F("SR04 : State ");
+              log += state;
+              addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
               UserVar[event->BaseVarIndex] = state;
               event->sensorType = SENSOR_TYPE_SWITCH;

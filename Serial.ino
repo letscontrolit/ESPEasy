@@ -1,7 +1,6 @@
 /********************************************************************************************\
 * Process data from Serial Interface
 \*********************************************************************************************/
-
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(char *Line)
 {
@@ -20,6 +19,36 @@ void ExecuteCommand(char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("gpio")) == 0)
+  {
+    pinMode(Par1, OUTPUT);
+    digitalWrite(Par1, Par2);
+  }
+  
+  if (strcasecmp_P(Command, PSTR("sensor")) == 0)
+  {
+    SensorSend();
+  }
+
+/*  if (strcasecmp_P(Command, PSTR("dallas")) == 0)
+  {
+    Plugin_004_DallasPin = Par1;
+    uint8_t addr[8];
+    for (byte x=0; x < 4; x++)
+      {
+        Serial.print("count: ");
+        Serial.print(Plugin_004_DS_scan(x, addr));
+        Serial.print(" rom ");
+        for (byte y=0; y < 8; y++)
+          {
+            if (y !=0)
+              Serial.print("-");
+            Serial.print(addr[y],HEX);
+          }
+        Serial.println();
+      }
+  }
+*/
   #if FEATURE_SPIFFS
   if (strcasecmp_P(Command, PSTR("format")) == 0)
   {

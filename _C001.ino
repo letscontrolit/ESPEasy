@@ -185,7 +185,6 @@ boolean Domoticz_getData(int idx, float *data)
       strValue.trim();
       float value = strValue.toFloat();
       *data = value;
-      Serial.println(F("Succes!"));
       success = true;
     }
   }

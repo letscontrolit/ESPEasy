@@ -70,8 +70,9 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
         {
           Wire.read(); // Read older value first (stored in chip)
           UserVar[event->BaseVarIndex] = (float)Wire.read(); // now read actual value and store into Nodo var
-          Serial.print(F("PCF  : Analog value: "));
-          Serial.println(UserVar[event->BaseVarIndex]);
+          String log = F("PCF  : Analog value: ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO,log);
           success = true;
         }
         break;

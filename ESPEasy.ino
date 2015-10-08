@@ -124,11 +124,12 @@
 #define PLUGIN_EVENTLIST_ADD                7
 #define PLUGIN_WEBFORM_SAVE                 8
 #define PLUGIN_WEBFORM_LOAD                 9
-#define PLUGIN_WEBFORM_VALUES              10
+#define PLUGIN_WEBFORM_SHOW_VALUES         10
 #define PLUGIN_GET_DEVICENAME              11
 #define PLUGIN_GET_DEVICEVALUENAMES        12
 #define PLUGIN_WRITE                       13
 #define PLUGIN_EVENT_OUT                   14
+#define PLUGIN_WEBFORM_SHOW_CONFIG         15
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -303,6 +304,7 @@ void setup()
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
   if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
   {
+    // Direct Serial is allowed here, since this is only an emergency task.
     Serial.println(Settings.PID);
     Serial.println(Settings.Version);
     Serial.println(F("INIT : Incorrect PID or version!"));
@@ -311,8 +313,9 @@ void setup()
   }
 
   Serial.begin(Settings.BaudRate);
-  Serial.print(F("\nINIT : Booting Build nr:"));
-  Serial.println(BUILD);
+  String log = F("\nINIT : Booting Build nr:");
+  log += BUILD;
+  addLog(LOG_LEVEL_INFO,log);
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
@@ -341,22 +344,28 @@ void setup()
     MQTTConnect();
 
   sendSysInfoUDP(3);
-  Serial.println(F("INIT : Boot OK"));
-  addLog(LOG_LEVEL_INFO, (char*)"Boot");
+
+  log = F("INIT : Boot OK");
+  addLog(LOG_LEVEL_INFO,log);
 
   if (Settings.deepSleep)
-    Serial.println(F("INIT : Deep sleep enabled"));
+    {
+      log = F("INIT : Deep sleep enabled");
+      addLog(LOG_LEVEL_INFO,log);
+    }
 
   byte bootMode = 0;
   if (readFromRTC(&bootMode))
   {
     if (bootMode == 1)
-      Serial.println(F("INIT : Reboot from deepsleep"));
+      log = F("INIT : Reboot from deepsleep");
     else
-      Serial.println(F("INIT : Normal boot"));
+      log = F("INIT : Normal boot");
   }
   else
-    Serial.println(F("INIT : RTC not read"));
+    log = F("INIT : RTC not read");
+
+  addLog(LOG_LEVEL_INFO,log);
 
   saveToRTC(0);
 
@@ -406,12 +415,12 @@ void loop()
   {
     wdcounter++;
     timerwd = millis() + 30000;
-    char str[40];
+    char str[60];
     str[0] = 0;
-    Serial.print("WD   : ");
     sprintf_P(str, PSTR("Uptime %u ConnectFailures %u FreeMem %u"), wdcounter / 2, connectionFailures, FreeMem());
-    Serial.println(str);
-    syslog(str);
+    String log = F("WD   : ");
+    log += str;
+    addLog(LOG_LEVEL_INFO,log);
     sendSysInfoUDP(1);
     refreshNodeList();
     MQTTCheck();
@@ -449,7 +458,8 @@ void loop()
     if (Settings.deepSleep)
     {
       saveToRTC(1);
-      Serial.println(F("Enter deep sleep..."));
+      String log = F("Enter deep sleep...");
+      addLog(LOG_LEVEL_INFO,log);
       ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
     }
   }

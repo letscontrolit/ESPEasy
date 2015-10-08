@@ -57,8 +57,9 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
       val=((b1<<8)|b2)/1.2;
       val=val+15;
       UserVar[event->BaseVarIndex] = val;
-      Serial.print(F("LUX  : Light intensity: "));
-      Serial.println(UserVar[event->BaseVarIndex]);
+      String log = F("LUX  : Light intensity: ");
+      log += UserVar[event->BaseVarIndex];
+      addLog(LOG_LEVEL_INFO,log);
       success=true;
       break;
     }

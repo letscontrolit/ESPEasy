@@ -42,8 +42,9 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         int value = analogRead(A0);
         UserVar[event->BaseVarIndex] = (float)value;
-        Serial.print(F("ADC  : Analog value: "));
-        Serial.println(value);
+        String log = F("ADC  : Analog value: ");
+        log += value;
+        addLog(LOG_LEVEL_INFO,log);
         success = true;
         break;
       }

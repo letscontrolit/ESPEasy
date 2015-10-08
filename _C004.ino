@@ -88,9 +88,6 @@ boolean CPlugin_004(byte function, struct EventStruct *event)
         postStr += F("\n\n");
         postStr += postDataStr;
 
-        if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          Serial.println(postStr);
-
         // This will send the request to the server
         client.print(postStr);
 
@@ -100,17 +97,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event)
 
         // Read all the lines of the reply from server and print them to Serial
         while (client.available()) {
-          if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          {
-            sprintf_P(log, PSTR("C1 WS %u FM %u"), WiFi.status(), FreeMem());
-            Serial.println(log);
-          }
           String line = client.readStringUntil('\n');
-          if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          {
-            sprintf_P(log, PSTR("C2 WS %u FM %u"), WiFi.status(), FreeMem());
-            Serial.println(log);
-          }
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == "HTTP/1.1 200 OK")

@@ -51,10 +51,12 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         }
         UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
         UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
-        Serial.print(F("BMP  : Temperature: "));
-        Serial.println(UserVar[event->BaseVarIndex]);
-        Serial.print(F("BMP  : Barometric Pressure: "));
-        Serial.println(UserVar[event->BaseVarIndex + 1]);
+        String log = F("BMP  : Temperature: ");
+        log += UserVar[event->BaseVarIndex];
+        addLog(LOG_LEVEL_INFO,log);
+        log = F("BMP  : Barometric Pressure: ");
+        log += UserVar[event->BaseVarIndex + 1];
+        addLog(LOG_LEVEL_INFO,log);
         success = true;
         break;
       }

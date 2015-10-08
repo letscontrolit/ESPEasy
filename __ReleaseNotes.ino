@@ -1,3 +1,7 @@
+// R31 08-10-2015
+// Added more information on dallas plugin and set value to NaN on read errors.
+// Changed all serial.print() commands to addlog() where they could conflict with future serial plugins
+
 // R30 06-10-2015
 // Moved all controller specific code to CPlugin mechanism (similar to device plugins)
 // Added debounce feature to pulsecounter plugin

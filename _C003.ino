@@ -58,7 +58,8 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
         url += value;
         url += "\n";
 
-        Serial.println(F("Sending enter"));
+        strcpy_P(log, PSTR("TELNT: Sending enter"));
+        addLog(LOG_LEVEL_ERROR, log);
         client.print(" \n");
 
         unsigned long timer = millis() + 200;
@@ -69,26 +70,29 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
         while (client.available() && millis() < timer && !success)
         {
           String line = client.readStringUntil('\n');
-          Serial.println(line);
+          //Serial.println(line);
           if (line.substring(0, 20) == "Enter your password:")
           {
             success = true;
-            Serial.println(F("Password request ok"));
+            strcpy_P(log, PSTR("TELNT: Password request ok"));
+            addLog(LOG_LEVEL_ERROR, log);
           }
           delay(1);
         }
 
-        Serial.println(F("Sending pw"));
+        strcpy_P(log, PSTR("TELNT: Sending pw"));
+        addLog(LOG_LEVEL_ERROR, log);
         client.println(SecuritySettings.ControllerPassword);
         delay(100);
         while (client.available())
-          Serial.write(client.read());
+          client.read();
 
-        Serial.println(F("Sending cmd"));
+        strcpy_P(log, PSTR("TELNT: Sending cmd"));
+        addLog(LOG_LEVEL_ERROR, log);
         client.print(url);
         delay(10);
         while (client.available())
-          Serial.write(client.read());
+          client.read();
 
         strcpy_P(log, PSTR("TELNT: closing connection"));
         addLog(LOG_LEVEL_DEBUG, log);

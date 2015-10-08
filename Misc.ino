@@ -3,13 +3,16 @@ void fileSystemCheck()
 {
   if (SPIFFS.begin())
   {
-    Serial.println(F("SPIFFS Mount succesfull"));
+    String log = F("SPIFFS Mount succesfull");
+    addLog(LOG_LEVEL_INFO,log);
     File f = SPIFFS.open("config.txt", "r");
     if (!f)
     {
-      Serial.println(F("formatting..."));
+      log = F("formatting...");
+      addLog(LOG_LEVEL_INFO,log);
       SPIFFS.format();
-      Serial.println(F("format done!"));
+      log = F("format done!");
+      addLog(LOG_LEVEL_INFO,log);
       File f = SPIFFS.open("config.txt", "w");
       if (f)
       {
@@ -27,7 +30,10 @@ void fileSystemCheck()
     }
   }
   else
-    Serial.println(F("SPIFFS Mount failed"));
+  {
+    String log = F("SPIFFS Mount failed");
+    addLog(LOG_LEVEL_INFO,log);
+  }
 }
 #endif
 
@@ -224,7 +230,8 @@ void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
       pointerToByteToSave++;
     }
     f.close();
-    Serial.println(F("FILE : File saved"));
+    String log = F("FILE : File saved");
+    addLog(LOG_LEVEL_INFO,log);
   }
 }
 
@@ -266,7 +273,6 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
 {
   if (index > 33791) // Limit usable flash area to 32+1k size
     {
-      Serial.println("Overflow!");
       return;
     }
   uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
@@ -276,21 +282,6 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
   uint8_t* dataIndex = data + sectorIndex;
   _sector += sectorOffset;
 
-  /*
-  Serial.println("Index");
-  Serial.println(index);
-  Serial.println("Sector Offset");
-  Serial.println(sectorOffset);
-  Serial.println("Sector Index");
-  Serial.println(sectorIndex);
-  Serial.println("Page Size");
-  Serial.println((uint32_t)&_SPIFFS_page);
-  Serial.println("Block Size");
-  Serial.println((uint32_t)&_SPIFFS_block);
-  Serial.println("Sector Size");
-  Serial.println(SPI_FLASH_SEC_SIZE);
-  */
-    
   // load entire sector from flash into memory
   noInterrupts();
   spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
@@ -308,7 +299,8 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
       }
   interrupts();
   delete [] data;
-  Serial.println(F("FLASH: Settings saved"));
+  String log = F("FLASH: Settings saved");
+  addLog(LOG_LEVEL_INFO,log);
 }
 
 
@@ -358,7 +350,8 @@ void EraseFlash()
   if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
     if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
       {
-        Serial.println(F("FLASH: Erase ok"));
+        String log = F("FLASH: Erase ok");
+        addLog(LOG_LEVEL_INFO,log);
       }
   }
   interrupts();
@@ -371,6 +364,7 @@ void EraseFlash()
 \*********************************************************************************************/
 void ResetFactory(void)
 {
+  // Direct Serial is allowed here, since this is only an emergency task.
   Serial.println(F("Reset!"));
 
   #if FEATURE_SPIFFS
@@ -435,6 +429,7 @@ void ResetFactory(void)
 
 void emergencyReset()
 {
+  // Direct Serial is allowed here, since this is only an emergency task.
   Serial.begin(115200);
   Serial.write(0xAA);
   Serial.write(0x55);
@@ -487,6 +482,14 @@ float ul2float(unsigned long ul)
 /********************************************************************************************\
 * Add to log
 \*********************************************************************************************/
+void addLog(byte loglevel, String& string)
+{
+  char log[80];
+  string.toCharArray(log,80);
+  addLog(loglevel, log);
+}
+
+
 void addLog(byte loglevel, char *line)
 {
   if (loglevel <= Settings.SerialLogLevel)
@@ -511,6 +514,7 @@ void addLog(byte loglevel, char *line)
 \*********************************************************************************************/
 void delayedReboot(int rebootDelay)
 {
+  // Direct Serial is allowed here, since this is only an emergency task.
   while (rebootDelay != 0 )
   {
     Serial.print(F("Delayed Reset "));

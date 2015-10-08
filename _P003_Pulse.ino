@@ -63,7 +63,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         break;
       }
       
-    case PLUGIN_WEBFORM_VALUES:
+    case PLUGIN_WEBFORM_SHOW_VALUES:
       {
         string += ExtraTaskSettings.TaskDeviceValueNames[0];
         string += F(":");
@@ -80,8 +80,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Serial.print(F("INIT : Pulse "));
-        Serial.println(Settings.TaskDevicePin1[event->TaskIndex]);
+        String log = F("INIT : Pulse ");
+        log += Settings.TaskDevicePin1[event->TaskIndex];
+        addLog(LOG_LEVEL_INFO,log);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex);
         success = true;
@@ -159,7 +160,9 @@ void Plugin_003_pulse_interrupt8()
 void Plugin_003_pulseinit(byte Par1, byte Index)
 {
   // Init IO pins
-  Serial.println(F("PULSE: Init"));
+  String log = F("PULSE: Init");
+  addLog(LOG_LEVEL_INFO,log);
+
   switch (Index)
   {
     case 0:

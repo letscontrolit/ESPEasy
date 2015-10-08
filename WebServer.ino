@@ -225,13 +225,15 @@ void handle_root() {
     // disconnect here could result into a crash/reboot...
     if (strcasecmp_P(command, PSTR("wifidisconnect")) == 0)
     {
-      Serial.println(F("WIFI : Disconnecting..."));
+      String log = F("WIFI : Disconnecting...");
+      addLog(LOG_LEVEL_INFO,log);
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
     if (strcasecmp_P(command, PSTR("reboot")) == 0)
     {
-      Serial.println(F("     : Rebooting..."));
+      String log = F("     : Rebooting...");
+      addLog(LOG_LEVEL_INFO,log);
       cmd_within_mainloop = CMD_REBOOT;
     }
 
@@ -576,9 +578,17 @@ void handle_devices() {
     reply += F("<TD>");
     reply += ExtraTaskSettings.TaskDeviceName;
     reply += F("<TD>");
-    if (Device[DeviceIndex].Ports != 0)
-      reply += Settings.TaskDevicePort[x];
+
+    #ifdef ESP_EASY
+      byte customConfig = false;
+      customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
+      if (!customConfig)
+        if (Device[DeviceIndex].Ports != 0)
+          reply += Settings.TaskDevicePort[x];
+    #endif
+
     reply += F("<TD>");
+    
     if (Settings.TaskDeviceID[x] != 0)
       reply += Settings.TaskDeviceID[x];
 
@@ -608,7 +618,7 @@ void handle_devices() {
     reply += F("<TD>");
     byte customValues = false;
 #ifdef ESP_EASY
-    customValues = PluginCall(PLUGIN_WEBFORM_VALUES, &TempEvent, reply);
+    customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
 #endif
 #ifdef ESP_CONNEXIO
     struct NodoEventStruct TempEvent;
@@ -1437,7 +1447,8 @@ void handleFileUpload() {
   if (!isLoggedIn()) return;
 
   static boolean valid = false;
-
+  String log = "";
+  
   HTTPUpload& upload = WebServer.upload();
 
   if (upload.filename.c_str()[0] == 0)
@@ -1448,7 +1459,9 @@ void handleFileUpload() {
 
   if (upload.status == UPLOAD_FILE_START)
   {
-    Serial.print(F("Upload: START, filename: ")); Serial.println(upload.filename);
+    log = F("Upload: START, filename: ");
+    log += upload.filename;
+    addLog(LOG_LEVEL_INFO,log);
     valid = false;
     uploadResult = 0;
   }
@@ -1468,8 +1481,6 @@ void handleFileUpload() {
           byte b = upload.buf[x];
           memcpy((byte*)&Temp + x, &b, 1);
         }
-        Serial.println(Temp.PID);
-        Serial.println(Temp.Version);
         if (Temp.Version == VERSION && Temp.PID == ESP_PROJECT_PID)
           valid = true;
       }
@@ -1480,19 +1491,22 @@ void handleFileUpload() {
       }
       if (valid)
       {
-        Serial.println(F("Create file"));
         // once we're safe, remove file and create empty one...
         SPIFFS.remove((char *)upload.filename.c_str());
         uploadFile = SPIFFS.open(upload.filename.c_str(), "w");
       }
     }
     if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
-    Serial.print(F("Upload: WRITE, Bytes: ")); Serial.println(upload.currentSize);
+    log = F("Upload: WRITE, Bytes: ");
+    log += upload.currentSize;
+    addLog(LOG_LEVEL_INFO,log);
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (uploadFile) uploadFile.close();
-    Serial.print(F("Upload: END, Size: ")); Serial.println(upload.totalSize);
+    log = F("Upload: END, Size: ");
+    log += upload.totalSize;
+    addLog(LOG_LEVEL_INFO,log);
   }
 
   if (valid)
@@ -1695,6 +1709,7 @@ void handleFileUpload()
 {
   if (!isLoggedIn()) return;
 
+  String log = "";
   static byte filetype = 0;
   static byte page = 0;
   static uint8_t* data;
@@ -1711,8 +1726,9 @@ void handleFileUpload()
       filetype = 2;
       Settings.CustomCSS = true;
     }
-    Serial.print(F("Upload start "));
-    Serial.println((char *)upload.filename.c_str());
+    log = F("Upload start ");
+    log += (char *)upload.filename.c_str();
+    addLog(LOG_LEVEL_INFO,log);
     page = 0;
     data = new uint8_t[FLASH_EEPROM_SIZE];
   }
@@ -1750,7 +1766,8 @@ void handleFileUpload()
 
   if (upload.status == UPLOAD_FILE_END)
   {
-    Serial.println(F("Upload end"));
+    log = F("Upload end");
+    addLog(LOG_LEVEL_INFO,log);
     delete [] data;
     if (filetype == 1)
       LoadSettings();

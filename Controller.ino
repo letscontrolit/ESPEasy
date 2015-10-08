@@ -59,18 +59,24 @@ void MQTTConnect()
 
   for (byte x = 1; x < 3; x++)
   {
+    String log = "";
     if (MQTTclient.connect(clientid))
     {
-      Serial.println(F("MQTT : Connected to broker"));
+      log = F("MQTT : Connected to broker");
+      addLog(LOG_LEVEL_INFO,log);
       subscribeTo = Settings.MQTTsubscribe;
       subscribeTo.replace("%sysname%", Settings.Name);
       MQTTclient.subscribe(subscribeTo);
-      Serial.print(F("Subscribed to: "));
-      Serial.println(subscribeTo);
+      log = F("Subscribed to: ");
+      log += subscribeTo;
+      addLog(LOG_LEVEL_INFO,log);
       break; // end loop if succesfull
     }
     else
-      Serial.println(F("MQTT : Failed to connected to broker"));
+      {
+        log = F("MQTT : Failed to connected to broker");
+        addLog(LOG_LEVEL_ERROR,log);
+      }
 
     delay(500);
   }

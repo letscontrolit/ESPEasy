@@ -49,13 +49,6 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
         struct EventStruct TempEvent;
         TempEvent.Par1 = topicSplit[2].toInt();
         TempEvent.Par2 = event->String2.toFloat();
-        /*Serial.print("CMD:");
-        Serial.println(cmd);
-        Serial.print("P1:");
-        Serial.println(TempEvent.Par1);
-        Serial.print("P2:");
-        Serial.println(TempEvent.Par2);
-        */
         PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
         break;
       }
@@ -64,7 +57,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
       {
         // MQTT publish structure:
         // /<unit name>/<task name>/<value name>
-        char str[80];
+
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
@@ -83,9 +76,6 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
           case SENSOR_TYPE_DIMMER:
             pubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
             value = String(UserVar[event->BaseVarIndex]);
-            Serial.print(pubname);
-            Serial.print(":");
-            Serial.println(value);
             MQTTclient.publish(pubname, value);
             break;
           case SENSOR_TYPE_TEMP_HUM:
