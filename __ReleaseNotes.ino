@@ -1,3 +1,6 @@
+// R32 09-10-2015
+// Fixed a bug in negative values on Dallas DS18b20 and added CRC check
+
 // R31 08-10-2015
 // Added more information on dallas plugin and set value to NaN on read errors.
 // Changed all serial.print() commands to addlog() where they could conflict with future serial plugins
