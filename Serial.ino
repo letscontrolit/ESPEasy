@@ -30,25 +30,6 @@ void ExecuteCommand(char *Line)
     SensorSend();
   }
 
-/*  if (strcasecmp_P(Command, PSTR("dallas")) == 0)
-  {
-    Plugin_004_DallasPin = Par1;
-    uint8_t addr[8];
-    for (byte x=0; x < 4; x++)
-      {
-        Serial.print("count: ");
-        Serial.print(Plugin_004_DS_scan(x, addr));
-        Serial.print(" rom ");
-        for (byte y=0; y < 8; y++)
-          {
-            if (y !=0)
-              Serial.print("-");
-            Serial.print(addr[y],HEX);
-          }
-        Serial.println();
-      }
-  }
-*/
   #if FEATURE_SPIFFS
   if (strcasecmp_P(Command, PSTR("format")) == 0)
   {
@@ -121,6 +102,12 @@ void ExecuteCommand(char *Line)
   if (strcasecmp_P(Command, PSTR("Restart")) == 0)
     ESP.restart();
 
+  if (strcasecmp_P(Command, PSTR("erase")) == 0)
+  {
+    EraseFlash();
+    saveToRTC(0);
+  }
+  
   if (strcasecmp_P(Command, PSTR("Reset")) == 0)
     ResetFactory();
 

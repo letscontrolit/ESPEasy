@@ -350,7 +350,8 @@ void EraseFlash()
   if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
     if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
       {
-        String log = F("FLASH: Erase ok");
+        String log = F("FLASH: Erase Sector: ");
+        log += _sector;
         addLog(LOG_LEVEL_INFO,log);
       }
   }
@@ -365,7 +366,23 @@ void EraseFlash()
 void ResetFactory(void)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.println(F("Reset!"));
+
+  byte bootCount = 0;
+  if (readFromRTC(&bootCount))
+  {
+    Serial.print(F("RESET: Reboot count: "));
+    Serial.println(bootCount);
+    if (bootCount > 3)
+      {
+        Serial.println(F("RESET: To many reset attempts"));
+        return;
+      }
+  }
+  else
+      Serial.println(F("RESET: Cold boot"));
+
+  bootCount++;
+  saveToRTC(bootCount);
 
   #if FEATURE_SPIFFS
   File f = SPIFFS.open("config.txt", "w");

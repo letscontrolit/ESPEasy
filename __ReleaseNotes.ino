@@ -1,3 +1,6 @@
+// R33 10-10-2015
+// Limit flash reset cycle to 3 attempts after cold boot. It will then enter resque mode.
+
 // R32 09-10-2015
 // Fixed a bug in negative values on Dallas DS18b20 and added CRC check
 

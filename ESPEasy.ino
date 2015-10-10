@@ -65,12 +65,12 @@
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
-                                                //   1 = Domoticz HTTP
-                                                //   2 = Domoticz MQTT
-                                                //   3 = Nodo Telnet
-                                                //   4 = ThingSpeak
-                                                //   5 = OpenHAB MQTT
-                                                //   6 = PiDome MQTT
+//   1 = Domoticz HTTP
+//   2 = Domoticz MQTT
+//   3 = Nodo Telnet
+//   4 = ThingSpeak
+//   5 = OpenHAB MQTT
+//   6 = PiDome MQTT
 #define UNIT                0
 
 // ********************************************************************************
@@ -79,7 +79,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              32
+#define BUILD                              33
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -139,7 +139,7 @@
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
 #if FEATURE_SPIFFS
-  #include <FS.h>
+#include <FS.h>
 #endif
 
 // MQTT client
@@ -284,6 +284,8 @@ byte CPlugin_id[PLUGIN_MAX];
 
 String dummyString = "";
 
+boolean systemOK = false;
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -291,94 +293,106 @@ void setup()
 {
   Serial.begin(115200);
 
-  #if FEATURE_SPIFFS
-    fileSystemCheck();
-  #endif
+#if FEATURE_SPIFFS
+  fileSystemCheck();
+#endif
 
   emergencyReset();
 
   LoadSettings();
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
-  
+
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
-  if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
+  if (Settings.Version == VERSION && Settings.PID == ESP_PROJECT_PID)
+  {
+    systemOK = true;
+  }
+  else
   {
     // Direct Serial is allowed here, since this is only an emergency task.
+    Serial.print("\nPID:");
     Serial.println(Settings.PID);
+    Serial.print("Version:");
     Serial.println(Settings.Version);
     Serial.println(F("INIT : Incorrect PID or version!"));
-    delay(10000);
+    delay(1000);
     ResetFactory();
   }
 
-  Serial.begin(Settings.BaudRate);
-  String log = F("\nINIT : Booting Build nr:");
-  log += BUILD;
-  addLog(LOG_LEVEL_INFO,log);
+  if (systemOK)
+  {
+    Serial.begin(Settings.BaudRate);
+    String log = F("\nINIT : Booting Build nr:");
+    log += BUILD;
+    addLog(LOG_LEVEL_INFO, log);
 
-  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-    Serial.setDebugOutput(true);
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      Serial.setDebugOutput(true);
 
-  WifiAPconfig();
-  WifiConnect();
+    WifiAPconfig();
+    WifiConnect();
 
-  hardwareInit();
-  PluginInit();
-  CPluginInit();
+    hardwareInit();
+    PluginInit();
+    CPluginInit();
 
-  WebServerInit();
+    WebServerInit();
 
-  // setup UDP
-  if (Settings.UDPPort != 0)
-    portRX.begin(Settings.UDPPort);
+    // setup UDP
+    if (Settings.UDPPort != 0)
+      portRX.begin(Settings.UDPPort);
 
-  // Setup LCD display
-  lcd.init();                      // initialize the lcd
-  lcd.backlight();
-  lcd.print("ESP Easy");
+    // Setup LCD display
+    lcd.init();                      // initialize the lcd
+    lcd.backlight();
+    lcd.print("ESP Easy");
 
-  // Setup MQTT Client
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-  if (Protocol[ProtocolIndex].usesMQTT)
-    MQTTConnect();
+    // Setup MQTT Client
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+    if (Protocol[ProtocolIndex].usesMQTT)
+      MQTTConnect();
 
-  sendSysInfoUDP(3);
+    sendSysInfoUDP(3);
 
-  log = F("INIT : Boot OK");
-  addLog(LOG_LEVEL_INFO,log);
+    log = F("INIT : Boot OK");
+    addLog(LOG_LEVEL_INFO, log);
 
-  if (Settings.deepSleep)
+    if (Settings.deepSleep)
     {
       log = F("INIT : Deep sleep enabled");
-      addLog(LOG_LEVEL_INFO,log);
+      addLog(LOG_LEVEL_INFO, log);
     }
 
-  byte bootMode = 0;
-  if (readFromRTC(&bootMode))
-  {
-    if (bootMode == 1)
-      log = F("INIT : Reboot from deepsleep");
+    byte bootMode = 0;
+    if (readFromRTC(&bootMode))
+    {
+      if (bootMode == 1)
+        log = F("INIT : Reboot from deepsleep");
+      else
+        log = F("INIT : Normal boot");
+    }
     else
-      log = F("INIT : Normal boot");
+      log = F("INIT : RTC not read");
+
+    addLog(LOG_LEVEL_INFO, log);
+
+    saveToRTC(0);
+
+    // Setup timers
+    if (bootMode == 0)
+      timer = millis() + 30000; // startup delay 30 sec
+    else
+      timer = millis() + 0; // no startup from deepsleep wake up
+
+    timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
+    timer1s = millis() + 1000; // timer for periodic actions once per/sec
+    timerwd = millis() + 30000; // timer for watchdog once per 30 sec
   }
   else
-    log = F("INIT : RTC not read");
-
-  addLog(LOG_LEVEL_INFO,log);
-
-  saveToRTC(0);
-
-  // Setup timers
-  if (bootMode == 0)
-    timer = millis() + 30000; // startup delay 30 sec
-  else
-    timer = millis() + 0; // no startup from deepsleep wake up
-
-  timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
-  timer1s = millis() + 1000; // timer for periodic actions once per/sec
-  timerwd = millis() + 30000; // timer for watchdog once per 30 sec
-
+  {
+    Serial.println(F("Entered Resque mode!"));
+  }
 }
 
 
@@ -390,85 +404,89 @@ void loop()
   if (Serial.available())
     serial();
 
-  checkUDP();
-
-  if (cmd_within_mainloop != 0)
+  if (systemOK)
   {
-    switch (cmd_within_mainloop)
+    checkUDP();
+
+    if (cmd_within_mainloop != 0)
     {
-      case CMD_WIFI_DISCONNECT:
-        {
-          WifiDisconnect();
-          break;
-        }
-      case CMD_REBOOT:
-        {
-          ESP.reset();
-          break;
-        }
+      switch (cmd_within_mainloop)
+      {
+        case CMD_WIFI_DISCONNECT:
+          {
+            WifiDisconnect();
+            break;
+          }
+        case CMD_REBOOT:
+          {
+            ESP.reset();
+            break;
+          }
+      }
+      cmd_within_mainloop = 0;
     }
-    cmd_within_mainloop = 0;
-  }
 
-  // Watchdog trigger
-  if (millis() > timerwd)
-  {
-    wdcounter++;
-    timerwd = millis() + 30000;
-    char str[60];
-    str[0] = 0;
-    sprintf_P(str, PSTR("Uptime %u ConnectFailures %u FreeMem %u"), wdcounter / 2, connectionFailures, FreeMem());
-    String log = F("WD   : ");
-    log += str;
-    addLog(LOG_LEVEL_INFO,log);
-    sendSysInfoUDP(1);
-    refreshNodeList();
-    MQTTCheck();
-  }
-
-  // Perform regular checks, 10 times/sec
-  if (millis() > timer100ms)
-  {
-    timer100ms = millis() + 100;
-    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-  }
-
-  // Perform regular checks, 1 time/sec
-  if (millis() > timer1s)
-  {
-    PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
-
-    timer1s = millis() + 1000;
-    WifiCheck();
-
-    if (SecuritySettings.Password[0] != 0)
+    // Watchdog trigger
+    if (millis() > timerwd)
     {
-      if (WebLoggedIn)
-        WebLoggedInTimer++;
-      if (WebLoggedInTimer > 300)
-        WebLoggedIn = false;
+      wdcounter++;
+      timerwd = millis() + 30000;
+      char str[60];
+      str[0] = 0;
+      sprintf_P(str, PSTR("Uptime %u ConnectFailures %u FreeMem %u"), wdcounter / 2, connectionFailures, FreeMem());
+      String log = F("WD   : ");
+      log += str;
+      addLog(LOG_LEVEL_INFO, log);
+      sendSysInfoUDP(1);
+      refreshNodeList();
+      MQTTCheck();
     }
-  }
 
-  // Check sensors and send data to controller when sensor timer has elapsed
-  if (millis() > timer)
-  {
-    timer = millis() + Settings.Delay * 1000;
-    SensorSend();
-    if (Settings.deepSleep)
+    // Perform regular checks, 10 times/sec
+    if (millis() > timer100ms)
     {
-      saveToRTC(1);
-      String log = F("Enter deep sleep...");
-      addLog(LOG_LEVEL_INFO,log);
-      ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+      timer100ms = millis() + 100;
+      PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
     }
+
+    // Perform regular checks, 1 time/sec
+    if (millis() > timer1s)
+    {
+      PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+
+      timer1s = millis() + 1000;
+      WifiCheck();
+
+      if (SecuritySettings.Password[0] != 0)
+      {
+        if (WebLoggedIn)
+          WebLoggedInTimer++;
+        if (WebLoggedInTimer > 300)
+          WebLoggedIn = false;
+      }
+    }
+
+    // Check sensors and send data to controller when sensor timer has elapsed
+    if (millis() > timer)
+    {
+      timer = millis() + Settings.Delay * 1000;
+      SensorSend();
+      if (Settings.deepSleep)
+      {
+        saveToRTC(1);
+        String log = F("Enter deep sleep...");
+        addLog(LOG_LEVEL_INFO, log);
+        ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+      }
+    }
+
+    if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
+      delayedReboot(60);
+
+    backgroundtasks();
   }
-
-  if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
-    delayedReboot(60);
-
-  backgroundtasks();
-
+  else
+    delay(1);
 }
 
 
@@ -488,11 +506,11 @@ void SensorSend()
       TempEvent.BaseVarIndex = varIndex;
       TempEvent.idx = Settings.TaskDeviceID[x];
       TempEvent.sensorType = Device[DeviceIndex].VType;
-      
+
       float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         preValue[varNr] = UserVar[varIndex + varNr];
-        
+
       success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
 
       if (success)
@@ -501,7 +519,7 @@ void SensorSend()
         {
           if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {
-            String spreValue= String(preValue[varNr]);
+            String spreValue = String(preValue[varNr]);
             String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
             float value = UserVar[varIndex + varNr];
             float result = 0;
