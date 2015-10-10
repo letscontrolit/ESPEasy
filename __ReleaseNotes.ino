@@ -1,5 +1,9 @@
+// R34 10-10-2015
+// Changed controller password length from 25 to 63 chars.
+// If you have set a system password, it will be cleared with this update
+
 // R33 10-10-2015
-// Limit flash reset cycle to 3 attempts after cold boot. It will then enter resque mode.
+// Limit flash reset cycle to 3 attempts after cold boot. It will then enter rescue mode.
 
 // R32 09-10-2015
 // Fixed a bug in negative values on Dallas DS18b20 and added CRC check

@@ -290,7 +290,7 @@ void handle_config() {
     controlleruser.toCharArray(tmpString, 26);
     urlDecode(tmpString);
     strcpy(SecuritySettings.ControllerUser, tmpString);
-    controllerpassword.toCharArray(tmpString, 26);
+    controllerpassword.toCharArray(tmpString, 64);
     urlDecode(tmpString);
     strcpy(SecuritySettings.ControllerPassword, tmpString);
     if (Settings.Protocol != protocol.toInt())
