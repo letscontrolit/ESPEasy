@@ -161,7 +161,7 @@ struct SecurityStruct
   char          WifiKey[64];
   char          WifiAPKey[64];
   char          ControllerUser[26];
-  char          ControllerPassword[26];
+  char          ControllerPassword[35];
   char          Password[26];
 } SecuritySettings;
 
