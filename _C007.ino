@@ -1,5 +1,5 @@
 //#######################################################################################################
-//########################### Controller Plugin 007: Emoncms ###########################################
+//########################### Controller Plugin 007: Emoncms ############################################
 //#######################################################################################################
 
 #define CPLUGIN_007
@@ -107,17 +107,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event)
 
         // Read all the lines of the reply from server and print them to Serial
         while (client.available()) {
-          if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          {
-            sprintf_P(log, PSTR("C1 WS %u FM %u"), WiFi.status(), FreeMem());
-            Serial.println(log);
-          }
           String line = client.readStringUntil('\n');
-          if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          {
-            sprintf_P(log, PSTR("C2 WS %u FM %u"), WiFi.status(), FreeMem());
-            Serial.println(log);
-          }
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == "HTTP/1.1 200 OK")
