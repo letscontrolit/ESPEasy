@@ -163,7 +163,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
             String log = F("SW   : State ");
             log += sendState;
-            addLog(LOG_LEVEL_INFO,log);
+            addLog(LOG_LEVEL_INFO, log);
             sendData(event);
           }
         }
@@ -232,6 +232,34 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
           }
         }
+
+        if (tmpString.equalsIgnoreCase("Servo"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 2)
+            switch (event->Par1)
+            {
+              case 1:
+                myservo1.attach(event->Par2);
+                myservo1.write(event->Par3);
+                break;
+              case 2:
+                myservo2.attach(event->Par2);
+                myservo2.write(event->Par3);
+                break;
+            }
+          {
+            if (printToWeb)
+            {
+              printWebString += F("GPIO ");
+              printWebString += event->Par2;
+              printWebString += F(" Servo set to ");
+              printWebString += event->Par3;
+              printWebString += F("<BR>");
+            }
+          }
+        }
+
         break;
       }
   }

@@ -10,10 +10,12 @@ void ExecuteCommand(char *Line)
   Command[0] = 0;
   int Par1 = 0;
   int Par2 = 0;
+  int Par3 = 0;
 
   GetArgv(Line, Command, 1);
   if (GetArgv(Line, TmpStr1, 2)) Par1 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
+  if (GetArgv(Line, TmpStr1, 4)) Par3 = str2int(TmpStr1);
 
   // ****************************************
   // commands for debugging

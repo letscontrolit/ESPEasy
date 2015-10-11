@@ -79,7 +79,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              35
+#define BUILD                              36
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -138,9 +138,13 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
+#include <Servo.h> 
 #if FEATURE_SPIFFS
 #include <FS.h>
 #endif
+
+Servo myservo1;
+Servo myservo2;
 
 // MQTT client
 PubSubClient MQTTclient("");
