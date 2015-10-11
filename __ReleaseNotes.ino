@@ -1,3 +1,7 @@
+// R35 11-10-2015
+// Finally finished the LCD plugin with some basic functionality
+// Preliminary controller support for EmonCMS
+
 // R34 10-10-2015
 // Changed controller password length from 25 to 63 chars.
 // If you have set a system password, it will be cleared with this update

@@ -213,6 +213,37 @@ void LoadTaskSettings(byte TaskIndex)
 #endif
 }
 
+
+/********************************************************************************************\
+* Save Custom Task settings to SPIFFS
+\*********************************************************************************************/
+void SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
+{
+if (datasize > 512)
+  return;
+#if FEATURE_SPIFFS
+  SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
+#else
+  SaveToFlash(4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
+#endif
+}
+
+
+/********************************************************************************************\
+* Save Custom Task settings to SPIFFS
+\*********************************************************************************************/
+void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
+{
+if (datasize > 512)
+  return;
+#if FEATURE_SPIFFS
+  LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
+#else
+  LoadFromFlash(4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
+#endif
+}
+
+
 #if FEATURE_SPIFFS
 /********************************************************************************************\
 * Save data into config file on SPIFFS
