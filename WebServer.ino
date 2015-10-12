@@ -1080,6 +1080,9 @@ void handle_i2cscanner() {
         case 0x23:
           reply += F("BH1750 Lux Sensor");
           break;
+        case 0x40:
+          reply += F("SI7021 Temp/Hum Sensor");
+          break;
         case 0x48:
           reply += F("PCF8591 ADC");
           break;
