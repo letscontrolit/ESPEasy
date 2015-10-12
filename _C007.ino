@@ -50,7 +50,10 @@ boolean CPlugin_007(byte function, struct EventStruct *event)
         if (connectionFailures)
           connectionFailures--;
 
-        String postDataStr = F("GET /emoncms/input/post.json?json=");
+        String postDataStr = F("GET /emoncms/input/post.json?node=");
+        
+        postDataStr += Settings.Unit;
+        postDataStr += F("&json=");
         
         switch (event->sensorType)
         {
