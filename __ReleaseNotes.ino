@@ -1,3 +1,6 @@
+// R38 13-10-2015
+// Added support for I2C TSL2561 Luminosity Sensor
+
 // R37 12-10-2015
 // Added support for I2C SI7021 Temperature Humidity sensor
 
