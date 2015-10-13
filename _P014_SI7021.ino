@@ -118,8 +118,8 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
           Plugin_014_init = Plugin_014_si7021_begin(res);
         }
 
-        // Read values
-        if (Plugin_014_si7021_readValues(res) == 0) {
+        // Read values only if init has been done okay
+        if (Plugin_014_init && Plugin_014_si7021_readValues(res) == 0) {
           UserVar[event->BaseVarIndex] = si7021_temperature/100.0;
           UserVar[event->BaseVarIndex + 1] = si7021_humidity;
           success = true;
