@@ -1,3 +1,6 @@
+// R39 17-10-2015
+// Added support for IR signal reception (needs a third party library!)
+
 // R38 13-10-2015
 // Added support for I2C TSL2561 Luminosity Sensor
 
