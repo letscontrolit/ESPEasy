@@ -1,3 +1,7 @@
+// R40 25-10-2015
+// Added support to read classic Mifare tags with PN532 NFC module
+// Fixed sending of Tag values as a real 32 bit long value (no rounding, no decimal fraction)
+
 // R39 17-10-2015
 // Added support for IR signal reception (needs a third party library!)
 

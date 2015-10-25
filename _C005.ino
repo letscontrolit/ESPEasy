@@ -78,6 +78,11 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
             value = String(UserVar[event->BaseVarIndex]);
             MQTTclient.publish(pubname, value);
             break;
+          case SENSOR_TYPE_LONG:
+            pubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
+            value += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+            MQTTclient.publish(pubname, value);
+            break;
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
             String tmppubname = pubname;

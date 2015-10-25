@@ -5,7 +5,7 @@
 #define PLUGIN_008
 #define PLUGIN_ID_008         8
 #define PLUGIN_NAME_008       "RFID Reader"
-#define PLUGIN_VALUENAME1_008 "RFID"
+#define PLUGIN_VALUENAME1_008 "Tag"
 
 #define PLUGIN_008_WGSIZE 26
 
@@ -26,7 +26,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_008;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_LONG;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -46,7 +46,18 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_008));
         break;
       }
-
+      
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+      {
+        string += F("<div class=\"div_l\">");
+        string += ExtraTaskSettings.TaskDeviceValueNames[0];
+        string += F(":</div><div class=\"div_r\">");
+        string += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+        string += F("</div>");
+        success = true;
+        break;
+      }
+      
     case PLUGIN_INIT:
       {
         Plugin_008_init = true;
@@ -75,8 +86,12 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
             Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1;          // Strip leading and trailing parity bits from the keyBuffer
             Plugin_008_keyBuffer &= 0xFFFFFF;
-            UserVar[event->BaseVarIndex] = Plugin_008_keyBuffer;
-            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
+            UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
+            String log = F("RFID : Tag: ");
+            log += Plugin_008_keyBuffer;
+            addLog(LOG_LEVEL_INFO, log);
+            event->sensorType = SENSOR_TYPE_LONG;
             sendData(event);
           }
 

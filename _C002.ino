@@ -93,6 +93,12 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
             values.toCharArray(str, 80);
             root["svalue"] =  str;
             break;
+          case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
+            root["nvalue"] = 0;
+            values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+            values.toCharArray(str, 80);
+            root["svalue"] =  str;
+            break;
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             root["nvalue"] = 0;
             values  = UserVar[event->BaseVarIndex];

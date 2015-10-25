@@ -60,6 +60,10 @@ boolean CPlugin_001(byte function, struct EventStruct *event)
             url += F("&svalue=");
             url += UserVar[event->BaseVarIndex];
             break;
+          case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
+            url += F("&svalue=");
+            url += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+            break;
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             url += F("&svalue=");
             url += UserVar[event->BaseVarIndex];

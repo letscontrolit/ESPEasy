@@ -71,6 +71,7 @@
 //   4 = ThingSpeak
 //   5 = OpenHAB MQTT
 //   6 = PiDome MQTT
+//   7 = EmonCMS
 #define UNIT                0
 
 // ********************************************************************************
@@ -79,7 +80,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              39
+#define BUILD                              40
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -114,6 +115,7 @@
 #define SENSOR_TYPE_TEMP_BARO               3
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
+#define SENSOR_TYPE_LONG                   20
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2

@@ -640,8 +640,7 @@ void handle_devices() {
             reply += F("<div class=\"div_br\"></div>");
           reply += F("<div class=\"div_l\">");
           reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-          reply += ":</div>";
-          reply += F("<div class=\"div_r\">");
+          reply += F(":</div><div class=\"div_r\">");
           reply += UserVar[x * VARS_PER_TASK + varNr];
           reply += "</div>";
         }
@@ -1079,6 +1078,9 @@ void handle_i2cscanner() {
           break;
         case 0x23:
           reply += F("BH1750 Lux Sensor");
+          break;
+        case 0x24:
+          reply += F("PN532 RFID Reader");
           break;
         case 0x39:
           reply += F("TLS2561 Lux Sensor");
