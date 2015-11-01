@@ -226,14 +226,14 @@ void handle_root() {
     if (strcasecmp_P(command, PSTR("wifidisconnect")) == 0)
     {
       String log = F("WIFI : Disconnecting...");
-      addLog(LOG_LEVEL_INFO,log);
+      addLog(LOG_LEVEL_INFO, log);
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
     if (strcasecmp_P(command, PSTR("reboot")) == 0)
     {
       String log = F("     : Rebooting...");
-      addLog(LOG_LEVEL_INFO,log);
+      addLog(LOG_LEVEL_INFO, log);
       cmd_within_mainloop = CMD_REBOOT;
     }
 
@@ -294,12 +294,12 @@ void handle_config() {
     urlDecode(tmpString);
     strcpy(SecuritySettings.ControllerPassword, tmpString);
     if (Settings.Protocol != protocol.toInt())
-      {
-        Settings.Protocol = protocol.toInt();
-        byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-        if (Protocol[ProtocolIndex].usesMQTT)
-          CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, 0);
-      }
+    {
+      Settings.Protocol = protocol.toInt();
+      byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+      if (Protocol[ProtocolIndex].usesMQTT)
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, 0);
+    }
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
     espip.toCharArray(tmpString, 26);
@@ -579,16 +579,16 @@ void handle_devices() {
     reply += ExtraTaskSettings.TaskDeviceName;
     reply += F("<TD>");
 
-    #ifdef ESP_EASY
-      byte customConfig = false;
-      customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
-      if (!customConfig)
-        if (Device[DeviceIndex].Ports != 0)
-          reply += Settings.TaskDevicePort[x];
-    #endif
+#ifdef ESP_EASY
+    byte customConfig = false;
+    customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
+    if (!customConfig)
+      if (Device[DeviceIndex].Ports != 0)
+        reply += Settings.TaskDevicePort[x];
+#endif
 
     reply += F("<TD>");
-    
+
     if (Settings.TaskDeviceID[x] != 0)
       reply += Settings.TaskDeviceID[x];
 
@@ -672,88 +672,94 @@ void handle_devices() {
 
       reply += F("<TR><TD>Name:<TD><input type='text' maxlength='25' name='taskdevicename' value='");
       reply += ExtraTaskSettings.TaskDeviceName;
-
-      if (Device[DeviceIndex].Ports != 0)
-      {
-        reply += F("'><TR><TD>Port:<TD><input type='text' name='taskdeviceport' value='");
-        reply += Settings.TaskDevicePort[index - 1];
-      }
-      reply += F("'><TR><TD>IDX / Var:<TD><input type='text' name='taskdeviceid' value='");
-      reply += Settings.TaskDeviceID[index - 1];
       reply += F("'>");
 
-      if (Device[DeviceIndex].Type == DEVICE_TYPE_SINGLE || Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
+      if (!Device[DeviceIndex].Custom)
       {
-        reply += F("<TR><TD>1st GPIO:<TD>");
-        addPinSelect(false, reply, "taskdevicepin1", Settings.TaskDevicePin1[index - 1]);
-      }
-      if (Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
-      {
-        reply += F("<TR><TD>2nd GPIO:<TD>");
-        addPinSelect(false, reply, "taskdevicepin2", Settings.TaskDevicePin2[index - 1]);
-      }
+        if (Device[DeviceIndex].Ports != 0)
+        {
+          reply += F("<TR><TD>Port:<TD><input type='text' name='taskdeviceport' value='");
+          reply += Settings.TaskDevicePort[index - 1];
+          reply += F("'>");
+        }
+        reply += F("<TR><TD>IDX / Var:<TD><input type='text' name='taskdeviceid' value='");
+        reply += Settings.TaskDeviceID[index - 1];
+        reply += F("'>");
 
-      if (Device[DeviceIndex].PullUpOption)
-      {
-        reply += F("<TR><TD>Pull UP:<TD>");
-        if (Settings.TaskDevicePin1PullUp[index - 1])
-          reply += F("<input type=checkbox name=taskdevicepin1pullup checked>");
-        else
-          reply += F("<input type=checkbox name=taskdevicepin1pullup>");
-      }
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_SINGLE || Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
+        {
+          reply += F("<TR><TD>1st GPIO:<TD>");
+          addPinSelect(false, reply, "taskdevicepin1", Settings.TaskDevicePin1[index - 1]);
+        }
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
+        {
+          reply += F("<TR><TD>2nd GPIO:<TD>");
+          addPinSelect(false, reply, "taskdevicepin2", Settings.TaskDevicePin2[index - 1]);
+        }
 
-      if (Device[DeviceIndex].InverseLogicOption)
-      {
-        reply += F("<TR><TD>Inversed:<TD>");
-        if (Settings.TaskDevicePin1Inversed[index - 1])
-          reply += F("<input type=checkbox name=taskdevicepin1inversed checked>");
-        else
-          reply += F("<input type=checkbox name=taskdevicepin1inversed>");
-      }
+        if (Device[DeviceIndex].PullUpOption)
+        {
+          reply += F("<TR><TD>Pull UP:<TD>");
+          if (Settings.TaskDevicePin1PullUp[index - 1])
+            reply += F("<input type=checkbox name=taskdevicepin1pullup checked>");
+          else
+            reply += F("<input type=checkbox name=taskdevicepin1pullup>");
+        }
 
+        if (Device[DeviceIndex].InverseLogicOption)
+        {
+          reply += F("<TR><TD>Inversed:<TD>");
+          if (Settings.TaskDevicePin1Inversed[index - 1])
+            reply += F("<input type=checkbox name=taskdevicepin1inversed checked>");
+          else
+            reply += F("<input type=checkbox name=taskdevicepin1inversed>");
+        }
+      }
+      
 #ifdef ESP_EASY
-      PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
+        PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 #endif
 
 #ifdef ESP_CONNEXIO
-      struct NodoEventStruct TempEvent;
-      char tmpString[256];
-      tmpString[0] = 0;
-      TempEvent.Par1 = index - 1;
-      PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, tmpString);
-      if (tmpString[0] != 0)
-        reply += tmpString;
+        struct NodoEventStruct TempEvent;
+        char tmpString[256];
+        tmpString[0] = 0;
+        TempEvent.Par1 = index - 1;
+        PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, tmpString);
+        if (tmpString[0] != 0)
+          reply += tmpString;
 #endif
-
-      reply += F("<TR><TH>Optional Settings<TH>Value");
-
-      if (Device[DeviceIndex].FormulaOption)
+      if (!Device[DeviceIndex].Custom)
       {
+        reply += F("<TR><TH>Optional Settings<TH>Value");
+
+        if (Device[DeviceIndex].FormulaOption)
+        {
+          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+          {
+            reply += F("<TR><TD>Formula ");
+            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+            reply += F(":<TD><input type='text' maxlength='25' name='taskdeviceformula");
+            reply += varNr + 1;
+            reply += F("' value='");
+            reply += ExtraTaskSettings.TaskDeviceFormula[varNr];
+            reply += F("'>");
+            if (varNr == 0)
+              reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
+          }
+        }
+
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
-          reply += F("<TR><TD>Formula ");
-          reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-          reply += F(":<TD><input type='text' maxlength='25' name='taskdeviceformula");
+          reply += F("<TR><TD>Value Name ");
+          reply += varNr + 1;
+          reply += F(":<TD><input type='text' maxlength='25' name='taskdevicevaluename");
           reply += varNr + 1;
           reply += F("' value='");
-          reply += ExtraTaskSettings.TaskDeviceFormula[varNr];
+          reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
           reply += F("'>");
-          if (varNr == 0)
-            reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
         }
       }
-
-      for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-      {
-        reply += F("<TR><TD>Value Name ");
-        reply += varNr + 1;
-        reply += F(":<TD><input type='text' maxlength='25' name='taskdevicevaluename");
-        reply += varNr + 1;
-        reply += F("' value='");
-        reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-        reply += F("'>");
-      }
-
 
     }
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices\">Close</a>");
@@ -881,6 +887,72 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
     str += F("</option>");
   }
   str += F("</select>");
+}
+
+
+//********************************************************************************
+// Add a task select dropdown list
+//********************************************************************************
+void addTaskSelect(String& str, String name,  int choice)
+{
+  struct EventStruct TempEvent;
+  String deviceName;
+
+  str += F("<select name='");
+  str += name;
+  str += F("' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\">");
+
+  for (byte x = 0; x < TASKS_MAX; x++)
+  {
+    deviceName = "";
+    if (Settings.TaskDeviceNumber[x] != 0 )
+    {
+      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+
+      if (Plugin_id[DeviceIndex] != 0)
+        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
+    }
+    LoadTaskSettings(x);
+    str += F("<option value='");
+    str += x;
+    str += "'";
+    if (choice == x)
+      str += " selected";
+    if (Settings.TaskDeviceNumber[x] == 0)
+      str += " disabled";
+    str += ">";
+    str += x + 1;
+    str += " - ";
+    str += deviceName;
+    str += " - ";
+    str += ExtraTaskSettings.TaskDeviceName;
+    str += "</option>";
+  }
+}
+
+
+//********************************************************************************
+// Add a Value select dropdown list, based on TaskIndex
+//********************************************************************************
+void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
+{
+  str += F("<select name='");
+  str += name;
+  str += "'>";
+
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+
+  for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+  {
+    str += F("<option value='");
+    str += x;
+    str += "'";
+    if (choice == x)
+      str += " selected";
+    str += ">";
+    str += ExtraTaskSettings.TaskDeviceValueNames[x];
+    str += "</option>";
+  }
 }
 
 
@@ -1456,7 +1528,7 @@ void handleFileUpload() {
 
   static boolean valid = false;
   String log = "";
-  
+
   HTTPUpload& upload = WebServer.upload();
 
   if (upload.filename.c_str()[0] == 0)
@@ -1469,7 +1541,7 @@ void handleFileUpload() {
   {
     log = F("Upload: START, filename: ");
     log += upload.filename;
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
     valid = false;
     uploadResult = 0;
   }
@@ -1507,14 +1579,14 @@ void handleFileUpload() {
     if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
     log = F("Upload: WRITE, Bytes: ");
     log += upload.currentSize;
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (uploadFile) uploadFile.close();
     log = F("Upload: END, Size: ");
     log += upload.totalSize;
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   if (valid)
@@ -1736,7 +1808,7 @@ void handleFileUpload()
     }
     log = F("Upload start ");
     log += (char *)upload.filename.c_str();
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
     page = 0;
     data = new uint8_t[FLASH_EEPROM_SIZE];
   }
@@ -1775,7 +1847,7 @@ void handleFileUpload()
   if (upload.status == UPLOAD_FILE_END)
   {
     log = F("Upload end");
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
     delete [] data;
     if (filetype == 1)
       LoadSettings();

@@ -1,3 +1,7 @@
+// R41 01-11-2015
+// Added support for Sharp GP2Y10 dust sensor
+// Added support for PCF8574 IO Expander
+
 // R40 25-10-2015
 // Added support to read classic Mifare tags with PN532 NFC module
 // Fixed sending of Tag values as a real 32 bit long value (no rounding, no decimal fraction)

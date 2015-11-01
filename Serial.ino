@@ -21,6 +21,11 @@ void ExecuteCommand(char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("variableset")) == 0)
+  {
+    UserVar[Par1-1]=Par2;
+  }
+
   if (strcasecmp_P(Command, PSTR("gpio")) == 0)
   {
     pinMode(Par1, OUTPUT);
