@@ -4,7 +4,7 @@
 
 #define PLUGIN_008
 #define PLUGIN_ID_008         8
-#define PLUGIN_NAME_008       "RFID Reader"
+#define PLUGIN_NAME_008       "RFID Reader - Wiegand"
 #define PLUGIN_VALUENAME1_008 "Tag"
 
 #define PLUGIN_008_WGSIZE 26

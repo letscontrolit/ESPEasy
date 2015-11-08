@@ -5,7 +5,7 @@
 
 #define PLUGIN_014
 #define PLUGIN_ID_014        14
-#define PLUGIN_NAME_014       "Temp + Hum SI7021"
+#define PLUGIN_NAME_014       "Temperature & Humidity - SI7021"
 #define PLUGIN_VALUENAME1_014 "Temperature"
 #define PLUGIN_VALUENAME2_014 "Humidity"
 

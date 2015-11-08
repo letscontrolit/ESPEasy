@@ -1,3 +1,8 @@
+// R42 08-11-2015
+// Added support for serial to WiFi bridge applications (very experimental state!)
+// Added limited support for local level control like thermostat function (questionable development for a sensor!)
+// Device dropdown list is alphabetically ordered
+
 // R41 01-11-2015
 // Added support for Sharp GP2Y10 dust sensor
 // Added support for PCF8574 IO Expander

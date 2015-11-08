@@ -10,7 +10,7 @@
 
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
-#define PLUGIN_NAME_012       "LCD Display"
+#define PLUGIN_NAME_012       "Display - LCD2004"
 #define PLUGIN_VALUENAME1_012 "LCD"
 
 boolean Plugin_012(byte function, struct EventStruct *event, String& string)

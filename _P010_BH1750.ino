@@ -4,7 +4,7 @@
 
 #define PLUGIN_010
 #define PLUGIN_ID_010         10
-#define PLUGIN_NAME_010       "LUX BH1750"
+#define PLUGIN_NAME_010       "Luminosity - BH1750"
 #define PLUGIN_VALUENAME1_010 "Lux"
 
 #define BH1750_ADDRESS    0x23

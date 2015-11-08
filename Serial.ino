@@ -23,7 +23,8 @@ void ExecuteCommand(char *Line)
 
   if (strcasecmp_P(Command, PSTR("variableset")) == 0)
   {
-    UserVar[Par1-1]=Par2;
+    if (GetArgv(Line, TmpStr1, 3))
+      UserVar[Par1-1] = atof(TmpStr1);
   }
 
   if (strcasecmp_P(Command, PSTR("gpio")) == 0)

@@ -402,6 +402,39 @@ void handle_config() {
 
 
 //********************************************************************************
+// Web Interface hardware page
+//********************************************************************************
+void handle_hardware() {
+  if (!isLoggedIn()) return;
+
+  String pin_i2c_sda = WebServer.arg("pini2csda");
+  String pin_i2c_scl = WebServer.arg("pini2cscl");
+
+  if (pin_i2c_sda.length() != 0)
+  {
+    Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
+    Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
+    SaveSettings();
+  }
+
+  String reply = "";
+  addMenu(reply);
+
+  reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
+  reply += F("<TR><TD>SDA:<TD>");
+  addPinSelect(true, reply, "pini2csda", Settings.Pin_i2c_sda);
+  reply += F("<TR><TD>SCL:<TD>");
+  addPinSelect(true, reply, "pini2cscl", Settings.Pin_i2c_scl);
+
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+
+  reply += F("</table></form>");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+}
+
+
+//********************************************************************************
 // Web Interface device page
 //********************************************************************************
 void handle_devices() {
@@ -774,45 +807,17 @@ void handle_devices() {
 }
 
 
-//********************************************************************************
-// Web Interface hardware page
-//********************************************************************************
-void handle_hardware() {
-  if (!isLoggedIn()) return;
-
-  String pin_i2c_sda = WebServer.arg("pini2csda");
-  String pin_i2c_scl = WebServer.arg("pini2cscl");
-
-  if (pin_i2c_sda.length() != 0)
-  {
-    Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
-    Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
-    SaveSettings();
-  }
-
-  String reply = "";
-  addMenu(reply);
-
-  reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
-  reply += F("<TR><TD>SDA:<TD>");
-  addPinSelect(true, reply, "pini2csda", Settings.Pin_i2c_sda);
-  reply += F("<TR><TD>SCL:<TD>");
-  addPinSelect(true, reply, "pini2cscl", Settings.Pin_i2c_scl);
-
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
-
-  reply += F("</table></form>");
-  addFooter(reply);
-  WebServer.send(200, "text/html", reply);
-}
-
-
+byte sortedIndex[DEVICES_MAX + 1];
 //********************************************************************************
 // Add a device select dropdown list
 //********************************************************************************
 void addDeviceSelect(String& str, String name,  int choice)
 {
-  struct EventStruct TempEvent;
+  // first get the list in alphabetic order
+  for (byte x = 0; x <= deviceCount; x++)
+    sortedIndex[x] = x;
+  sortDeviceArray();
+
   String deviceName;
 
   str += F("<select name='");
@@ -820,22 +825,106 @@ void addDeviceSelect(String& str, String name,  int choice)
   //str += "'>";
   str += "' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\">";
 
-
   str += F("<option value='0'></option>");
   for (byte x = 0; x <= deviceCount; x++)
   {
-    if (Plugin_id[x] != 0)
-      Plugin_ptr[x](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
+    byte index = sortedIndex[x];
+    if (Plugin_id[index] != 0)
+      Plugin_ptr[index](PLUGIN_GET_DEVICENAME, 0, deviceName);
     str += F("<option value='");
-    str += Device[x].Number;
+    str += Device[index].Number;
     str += "'";
-    if (choice == Device[x].Number)
+    if (choice == Device[index].Number)
       str += F(" selected");
     str += ">";
     str += deviceName;
     str += F("</option>");
   }
   str += F("</select>");
+}
+
+
+//********************************************************************************
+// Device Sort routine, switch array entries
+//********************************************************************************
+void switchArray(byte value)
+{
+  byte temp;
+  temp = sortedIndex[value-1];
+  sortedIndex[value-1] = sortedIndex[value];
+  sortedIndex[value] = temp;
+}
+
+
+//********************************************************************************
+// Device Sort routine, compare two array entries
+//********************************************************************************
+byte arrayLessThan(char *ptr_1, char *ptr_2)
+{
+  char check1;
+  char check2;
+  
+  int i = 0;
+  while (i < strlen(ptr_1))    // For each character in string 1, starting with the first:
+    {
+        check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
+        
+        //Serial.print("Check 1 is "); Serial.print(check1);
+          
+        if (strlen(ptr_2) < i)    // If string 2 is shorter, then switch them
+            {
+              return 1;
+            }
+        else
+            {
+              check2 = (char)ptr_2[i];
+           //   Serial.print("Check 2 is "); Serial.println(check2);
+
+              if (check2 > check1)
+                {
+                  return 1;       // String 2 is greater; so switch them
+                }
+              if (check2 < check1)
+                {
+                  return 0;       // String 2 is LESS; so DONT switch them
+                }
+               // OTHERWISE they're equal so far; check the next char !!
+             i++; 
+            }
+    }
+    
+return 0;  
+}
+
+
+//********************************************************************************
+// Device Sort routine, actual sorting
+//********************************************************************************
+void sortDeviceArray()
+{
+  String deviceName;
+  char deviceName1[41];
+  char deviceName2[41];
+  int innerLoop ;
+  int mainLoop ;
+
+  for ( mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
+    {
+      innerLoop = mainLoop;
+      while (innerLoop  >= 1)
+          {
+          Plugin_ptr[sortedIndex[innerLoop]](PLUGIN_GET_DEVICENAME, 0, deviceName);
+          deviceName.toCharArray(deviceName1,26);
+          Plugin_ptr[sortedIndex[innerLoop-1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
+          deviceName.toCharArray(deviceName2,26);
+         
+          if (arrayLessThan(deviceName1, deviceName2) == 1)
+            {
+              switchArray(innerLoop);
+            }
+            innerLoop--;
+          }
+    }
 }
 
 

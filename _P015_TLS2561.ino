@@ -5,7 +5,7 @@
 
 #define PLUGIN_015
 #define PLUGIN_ID_015        15
-#define PLUGIN_NAME_015       "Luminosity TLS2561"
+#define PLUGIN_NAME_015       "Luminosity - TLS2561"
 #define PLUGIN_VALUENAME1_015 "Lux"
 
 boolean Plugin_015_init = false;

@@ -4,7 +4,7 @@
 
 #define PLUGIN_019
 #define PLUGIN_ID_019         19
-#define PLUGIN_NAME_019       "PCF8574 input"
+#define PLUGIN_NAME_019       "Switch input - PCF8574"
 #define PLUGIN_VALUENAME1_019 "Switch"
 
 boolean Plugin_019(byte function, struct EventStruct *event, String& string)

@@ -4,7 +4,7 @@
 
 #define PLUGIN_017
 #define PLUGIN_ID_017         17
-#define PLUGIN_NAME_017       "RFID Reader PN532"
+#define PLUGIN_NAME_017       "RFID Reader - PN532"
 #define PLUGIN_VALUENAME1_017 "Tag"
 
 #define PN532_I2C_ADDRESS                   0x24

@@ -4,7 +4,7 @@
 
 #define PLUGIN_013
 #define PLUGIN_ID_013        13
-#define PLUGIN_NAME_013       "Ultrasonic Sensor HC-SR04"
+#define PLUGIN_NAME_013       "Ultrasonic Sensor - HC-SR04"
 #define PLUGIN_VALUENAME1_013 "Distance"
 
 boolean Plugin_013_init = false;
