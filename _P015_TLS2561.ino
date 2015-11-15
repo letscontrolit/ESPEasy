@@ -42,6 +42,11 @@ boolean Plugin_015_init = false;
 #define TSL2561_CHSCALE_TINT_120MS 0x0D6B // 322/96 * 2^CH_SCALE (120ms)
 #define TSL2561_CHSCALE_TINT_402MS (1 << TSL2561_CH_SCALE) // default No scaling
 
+// Clipping thresholds
+#define TSL2561_CLIPPING_13MS     (4900)
+#define TSL2561_CLIPPING_101MS    (37000)
+#define TSL2561_CLIPPING_402MS    (65000)
+
 #define TSL2561_K1T 0x0040   // 0.125 * 2^RATIO_SCALE
 #define TSL2561_B1T 0x01f2   // 0.0304 * 2^LUX_SCALE
 #define TSL2561_M1T 0x01be   // 0.0272 * 2^LUX_SCALE
@@ -260,6 +265,7 @@ int8_t Plugin_015_tsl2561_calcLux(uint8_t integration)
   unsigned long lux;
   unsigned int b, m;
   uint16_t ch0,ch1;
+  uint16_t clipThreshold;
   uint8_t msb, lsb;
   uint8_t err = 0;
 
@@ -267,12 +273,15 @@ int8_t Plugin_015_tsl2561_calcLux(uint8_t integration)
   Plugin_015_tsl2561_writeRegister(TSL2561_TIMING, integration);  
   if (integration == TSL2561_TIMING_402MS ) {
     chScale = TSL2561_CHSCALE_TINT_402MS ;
+    clipThreshold = TSL2561_CLIPPING_402MS ;
     delay(405);
   } else if (integration == TSL2561_TIMING_101MS ) {
     chScale = TSL2561_CHSCALE_TINT_101MS ;
+    clipThreshold = TSL2561_CLIPPING_101MS ;
     delay(103);
   } else {
     chScale = TSL2561_CHSCALE_TINT_13MS ;
+    clipThreshold = TSL2561_CLIPPING_13MS ;
     delay(15);
   }
 
@@ -289,9 +298,11 @@ int8_t Plugin_015_tsl2561_calcLux(uint8_t integration)
   if( err )
     return -2; 
 
-  // ch0 out of range, but ch1 not. the lux is not valid in this situation.
-  if( ch0/ch1 < 2 && ch0 > 4900) 
-    return -1;  
+  /* Sensor saturated the lux is not valid in this situation */
+  if ((ch0 > clipThreshold) || (ch1 > clipThreshold))
+  {
+    return -1;
+  }
 
   // gain is 1 so put it to 16X
   chScale <<= 4;
