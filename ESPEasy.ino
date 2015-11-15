@@ -80,7 +80,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              42
+#define BUILD                              43
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -135,6 +135,7 @@
 #define PLUGIN_EVENT_OUT                   14
 #define PLUGIN_WEBFORM_SHOW_CONFIG         15
 #define PLUGIN_SERIAL_IN                   16
+#define PLUGIN_UDP_IN                      17
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -235,6 +236,7 @@ struct EventStruct
   byte OriginTaskIndex;
   String String1;
   String String2;
+  byte *Data;
 };
 
 struct LogStruct

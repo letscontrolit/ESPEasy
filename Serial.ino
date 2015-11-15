@@ -168,7 +168,12 @@ void serial()
   {
     yield();
     SerialInByte = Serial.read();
-
+    if (SerialInByte == 255) // binary data...
+    {
+      Serial.flush();
+      return;      
+    }
+    
     if (isprint(SerialInByte))
     {
       if (SerialInByteCounter < INPUT_BUFFER_SIZE) // add char to string if it still fits

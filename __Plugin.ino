@@ -476,6 +476,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
     // Call to all plugins used in a task. Return at first match
     case PLUGIN_SERIAL_IN:
+    case PLUGIN_UDP_IN:
       {
         for (byte y = 0; y < TASKS_MAX; y++)
         {
@@ -485,7 +486,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             {
               if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
               {
-                if(Plugin_ptr[x](Function, &TempEvent, str))
+                if(Plugin_ptr[x](Function, event, str))
                   return true;
               }
             }
