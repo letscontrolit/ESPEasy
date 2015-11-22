@@ -55,6 +55,7 @@
 //   Direct GPIO output control to drive relais, mosfets, etc
 //   Arduino Pro Mini with IO extender sketch, connected through I2C
 //   Ser2Net server
+//   PCA9685 16 channel I2C PWM driver
 
 
 // ********************************************************************************
