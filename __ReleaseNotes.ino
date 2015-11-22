@@ -1,3 +1,7 @@
+// R45 22-11-2015
+// Bugfix: PCA9685 plugin needs to be listed in the dropdown list
+//   else counting/sorting will have issues. But it currently has no real purpose
+
 // R44 22-11-2015
 // Added basic support for PCA9685, simple pwm output using control web page
 

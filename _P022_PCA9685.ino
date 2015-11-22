@@ -21,8 +21,6 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-    // This plugin has no input, so these blocks are obsolete here (?)
-/*
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_022;
@@ -32,7 +30,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].ValueCount = 0;
+        Device[deviceCount].Custom = true;
         break;
       }
 
@@ -47,7 +46,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_022));
         break;
       }
-*/
+
     case PLUGIN_WRITE:
       {
         if (!Plugin_022_init)
