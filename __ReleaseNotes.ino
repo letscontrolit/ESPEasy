@@ -1,3 +1,6 @@
+// R44 22-11-2015
+// Added basic support for PCA9685, simple pwm output using control web page
+
 // R43 15-11-2015
 // UDP calls to plugins
 // Bugfix for TSL2561 plugin
