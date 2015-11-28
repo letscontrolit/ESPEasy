@@ -1,3 +1,7 @@
+// R46 28-11-2015
+// Added Wiki help button to Protocol dropdown
+// Added basic text message support for I2C OLED SSD1306 display
+
 // R45 22-11-2015
 // Bugfix: PCA9685 plugin needs to be listed in the dropdown list
 //   else counting/sorting will have issues. But it currently has no real purpose

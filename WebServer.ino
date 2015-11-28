@@ -348,6 +348,7 @@ void handle_config() {
     reply += F("</option>");
   }
   reply += F("</select>");
+  reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyProtocols\" target=\"_blank\">?</a>");
 
   reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
   char str[20];
@@ -1245,6 +1246,9 @@ void handle_i2cscanner() {
           break;
         case 0x39:
           reply += F("TLS2561 Lux Sensor");
+          break;
+        case 0x3C:
+          reply += F("OLED SSD1306 Display");
           break;
         case 0x40:
           reply += F("SI7021 Temp/Hum Sensor");
