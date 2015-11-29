@@ -162,11 +162,32 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           }
           char tmp[17];
           newString.toCharArray(tmp, 17);
-          Plugin_023_sendStrXY(tmp, x, 0);
+          if (tmp[0] !=0 )
+            Plugin_023_sendStrXY(tmp, x, 0);
         }
         success = false;
         break;
       }
+
+    case PLUGIN_WRITE:
+      {
+        String tmpString  = string;
+        int argIndex = tmpString.indexOf(',');
+        if (argIndex)
+          tmpString = tmpString.substring(0, argIndex);
+        if (tmpString.equalsIgnoreCase("OLED"))
+        {
+          success = true;
+          argIndex = string.lastIndexOf(',');
+          tmpString = string.substring(argIndex+1);
+          char tmp[40];
+          tmpString.toCharArray(tmp,40);
+          urlDecode(tmp);
+          Plugin_023_sendStrXY(tmp, event->Par1 - 1, event->Par2 - 1);
+        }
+        break;
+      }
+      
   }
   return success;
 }

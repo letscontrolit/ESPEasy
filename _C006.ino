@@ -31,6 +31,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
       
     case CPLUGIN_PROTOCOL_RECV:
       {
+        // topic structure /Home/Floor/Location/device/<systemname>/gpio/16
         // Split topic into array
         String tmpTopic = event->String1.substring(1);
         String topicSplit[10];
@@ -48,8 +49,15 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
         String name = topicSplit[4];
         String cmd = topicSplit[5];
         struct EventStruct TempEvent;
-        TempEvent.Par1 = topicSplit[2].toInt();
-        TempEvent.Par2 = event->String2.toFloat();
+        TempEvent.Par1 = topicSplit[6].toInt();
+        TempEvent.Par2 = 0;
+        if (event->String2 == "false" || event->String2 == "true")
+        {
+          if (event->String2 == "true")
+            TempEvent.Par2 = 1;
+        }
+        else
+          TempEvent.Par2 = event->String2.toFloat();
         if (name == Settings.Name)
         {
           PluginCall(PLUGIN_WRITE, &TempEvent, cmd);

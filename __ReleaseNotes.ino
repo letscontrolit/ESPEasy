@@ -1,3 +1,6 @@
+// R47 29-11-2015
+// Support for using http commands to control OLED en LCD displays
+
 // R46 28-11-2015
 // Added Wiki help button to Protocol dropdown
 // Added basic text message support for I2C OLED SSD1306 display
