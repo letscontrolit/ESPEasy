@@ -1,3 +1,6 @@
+// R48 01-12-2015
+// Code cleanup, candidate for Arduino ESP Core 2.0.0.
+
 // R47 29-11-2015
 // Support for using http commands to control OLED en LCD displays
 

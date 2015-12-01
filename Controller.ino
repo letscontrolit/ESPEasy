@@ -231,12 +231,7 @@ void checkUDP()
     {
       packetBuffer[len] = 0;
       addLog(LOG_LEVEL_DEBUG, packetBuffer);
-#ifdef ESP_CONNEXIO
-      ExecuteLine(packetBuffer, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
       ExecuteCommand(packetBuffer);
-#endif
     }
     else
     {

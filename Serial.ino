@@ -21,32 +21,6 @@ void ExecuteCommand(char *Line)
   // commands for debugging
   // ****************************************
 
-  if (strcasecmp_P(Command, PSTR("variableset")) == 0)
-  {
-    if (GetArgv(Line, TmpStr1, 3))
-      UserVar[Par1-1] = atof(TmpStr1);
-  }
-
-  if (strcasecmp_P(Command, PSTR("gpio")) == 0)
-  {
-    pinMode(Par1, OUTPUT);
-    digitalWrite(Par1, Par2);
-  }
-  
-  if (strcasecmp_P(Command, PSTR("sensor")) == 0)
-  {
-    SensorSend();
-  }
-
-  #if FEATURE_SPIFFS
-  if (strcasecmp_P(Command, PSTR("format")) == 0)
-  {
-    Serial.println(F("formatting..."));
-    SPIFFS.format();
-    Serial.println(F("format done!"));
-  }
-  #endif
-    
   if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
   {
     Settings.deepSleep = 0;
@@ -68,17 +42,6 @@ void ExecuteCommand(char *Line)
       UserVar[(VARS_PER_TASK * TASKS_MAX) - 1] = atof(TmpStr1);
       sendData(&TempEvent);
     }
-  }
-
-  if (strcasecmp_P(Command, PSTR("LCDWrite")) == 0)
-  {
-    GetArgv(Line, TmpStr1, 4);
-    TmpStr1[25] = 0;
-    for (byte x = 0; x < 25; x++)
-      if (TmpStr1[x] == '_')
-        TmpStr1[x] = ' ';
-    lcd.setCursor(Par2 - 1, Par1 - 1);
-    lcd.print(TmpStr1);
   }
 
   // ****************************************
@@ -110,7 +73,7 @@ void ExecuteCommand(char *Line)
   if (strcasecmp_P(Command, PSTR("Restart")) == 0)
     ESP.restart();
 
-  if (strcasecmp_P(Command, PSTR("erase")) == 0)
+  if (strcasecmp_P(Command, PSTR("Erase")) == 0)
   {
     EraseFlash();
     saveToRTC(0);

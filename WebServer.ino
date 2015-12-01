@@ -8,9 +8,6 @@ void WebServerInit()
   WebServer.on("/config", handle_config);
   WebServer.on("/hardware", handle_hardware);
   WebServer.on("/devices", handle_devices);
-#ifdef ESP_CONNEXIO
-  WebServer.on("/eventlist", handle_eventlist);
-#endif
   WebServer.on("/log", handle_log);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
@@ -80,13 +77,7 @@ void addMenu(String& str)
 
   str += F("</head>");
 
-  str += F("<h1>Welcome to ESP ");
-#ifdef ESP_CONNEXIO
-  str += F("Connexio : ");
-#endif
-#ifdef ESP_EASY
-  str += F("Easy : ");
-#endif
+  str += F("<h1>Welcome to ESP Easy");
   str += Settings.Name;
 
 #if FEATURE_SPIFFS
@@ -102,9 +93,6 @@ void addMenu(String& str)
   str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
   str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
   str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
-#ifdef ESP_CONNEXIO
-  str += F("<a class=\"button-menu\" href=\"eventlist\">Eventlist</a>");
-#endif
   str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
 }
 
@@ -138,12 +126,7 @@ void handle_root() {
 
     printToWeb = true;
     printWebString = "";
-#ifdef ESP_CONNEXIO
-    ExecuteLine(command, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
     ExecuteCommand(command);
-#endif
 
     reply += printWebString;
     reply += F("<form>");
@@ -545,19 +528,9 @@ void handle_devices() {
         urlDecode(tmpString);
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       }
-
-#ifdef ESP_EASY
       TempEvent.TaskIndex = index - 1;
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
       PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
-#endif
-#ifdef ESP_CONNEXIO
-      struct NodoEventStruct TempEvent;
-      TempEvent.Par1 = index - 1;
-      PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, 0);
-      PluginCall(PLUGIN_INIT, &TempEvent, 0);
-      createEventlist();
-#endif
     }
     SaveTaskSettings(index - 1);
     SaveSettings();
@@ -651,19 +624,7 @@ void handle_devices() {
 
     reply += F("<TD>");
     byte customValues = false;
-#ifdef ESP_EASY
     customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
-#endif
-#ifdef ESP_CONNEXIO
-    struct NodoEventStruct TempEvent;
-    char tmpString[256];
-    tmpString[0] = 0;
-    TempEvent.Par1 = x;
-    customValues = PluginCall(PLUGIN_WEBFORM_VALUES, &TempEvent, tmpString);
-    if (tmpString[0] != 0)
-      reply += tmpString;
-#endif
-
     if (!customValues)
     {
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
@@ -750,19 +711,8 @@ void handle_devices() {
         }
       }
       
-#ifdef ESP_EASY
-        PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
-#endif
+      PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
-#ifdef ESP_CONNEXIO
-        struct NodoEventStruct TempEvent;
-        char tmpString[256];
-        tmpString[0] = 0;
-        TempEvent.Par1 = index - 1;
-        PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, tmpString);
-        if (tmpString[0] != 0)
-          reply += tmpString;
-#endif
       if (!Device[DeviceIndex].Custom)
       {
         reply += F("<TR><TH>Optional Settings<TH>Value");
@@ -1046,76 +996,6 @@ void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
 }
 
 
-#ifdef ESP_CONNEXIO
-//********************************************************************************
-// Web Interface eventlist page
-//********************************************************************************
-void handle_eventlist() {
-  if (!isLoggedIn()) return;
-
-  char *TempString = (char*)malloc(80);
-  String reply = "";
-  addMenu(reply);
-
-  reply += F("<table><TH>Eventlist<td><TR><TD>");
-
-  if (WebServer.args() == 1)
-  {
-
-    struct NodoEventStruct TempEvent;
-    ClearEvent(&TempEvent);
-    byte x = 1;
-    while (Eventlist_Write(x++, 0, &TempEvent, &TempEvent)) delay(1);
-
-    String eventlist = WebServer.arg("eventlist");
-    eventlist.replace("%0D%0A", "\n");
-    int NewLineIndex = eventlist.indexOf('\n');
-    byte limit = 0;
-    byte messagecode = 0;
-    while ((NewLineIndex > 0) && (limit < EventlistMax))
-    {
-      limit++;
-      String line = eventlist.substring(0, NewLineIndex);
-      String strCommand = F("eventlistwrite 0,");
-      strCommand += line;
-      strCommand.toCharArray(TempString, 80);
-      urlDecode(TempString);
-
-      messagecode = ExecuteLine(TempString, VALUE_SOURCE_SERIAL);
-      if (messagecode > 0)
-      {
-        reply += TempString;
-        reply += " : ";
-        reply += MessageText_tabel[messagecode];
-        reply += "<BR>";
-      }
-      eventlist = eventlist.substring(NewLineIndex + 1);
-      NewLineIndex = eventlist.indexOf('\n');
-    }
-    EEPROM.commit();
-  }
-
-  reply += F("<form method='post'>");
-  reply += F("<TD><textarea name='eventlist' rows='15' cols='80' wrap='on'>");
-  byte x = 1;
-  while (EventlistEntry2str(x++, 0, TempString, false))
-    if (TempString[0] != 0)
-    {
-      reply += TempString;
-      reply += '\n';
-    }
-
-  reply += F("</textarea>");
-
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
-  reply += F("</table></form>");
-  addFooter(reply);
-  WebServer.send(200, "text/html", reply);
-  free(TempString);
-}
-#endif
-
-
 //********************************************************************************
 // Web Interface log page
 //********************************************************************************
@@ -1193,12 +1073,7 @@ void handle_tools() {
 
   printToWeb = true;
   printWebString = "<BR>";
-#ifdef ESP_CONNEXIO
-  ExecuteLine(command, VALUE_SOURCE_SERIAL);
-#endif
-#ifdef ESP_EASY
   ExecuteCommand(command);
-#endif
   reply += printWebString;
   reply += F("</table></form>");
   addFooter(reply);
