@@ -181,7 +181,7 @@ WiFiUDP portTX;
 struct SecurityStruct
 {
   char          WifiSSID[32];
-  char          WifiKey[64];
+  char          WifiKey[76];
   char          WifiAPKey[64];
   char          ControllerUser[26];
   char          ControllerPassword[64];
