@@ -261,7 +261,7 @@ void handle_config() {
     ssid.toCharArray(tmpString, 26);
     urlDecode(tmpString);
     strcpy(SecuritySettings.WifiSSID, tmpString);
-    key.toCharArray(tmpString, 64);
+    key.toCharArray(tmpString, sizeof(SecuritySettings.WifiKey));
     urlDecode(tmpString);
     strcpy(SecuritySettings.WifiKey, tmpString);
     apkey.toCharArray(tmpString, 64);
