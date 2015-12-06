@@ -551,7 +551,6 @@ void addLog(byte loglevel, const char *line)
     Logging[logcount].timeStamp = millis();
     Logging[logcount].Message = line;
   }
-  Serial.println(line);  
 }
 
 
