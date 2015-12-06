@@ -73,11 +73,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           String arg = "Plugin_023_template";
           arg += varNr + 1;
           arg.toCharArray(argc, 25);
-          String tmpString = WebServer.arg(argc);
-          char tmp[64];
-          tmpString.toCharArray(tmp, 64);
-          urlDecode(tmp);
-          strcpy(deviceTemplate[varNr], tmp);
+          String tmpString = urlDecode(WebServer.arg(argc).c_str());
+          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
         }
 
         Settings.TaskDeviceID[event->TaskIndex] = 1; // temp fix, needs a dummy value
@@ -91,7 +88,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       {
         Plugin_023_StartUp_OLED();
         Plugin_023_clear_display();
-        Plugin_023_sendStrXY((char*)"ESP Easy ", 0, 0);
+        Plugin_023_sendStrXY("ESP Easy ", 0, 0);
         success = true;
         break;
       }
@@ -160,10 +157,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
             }
             newString += tmpString;
           }
-          char tmp[17];
-          newString.toCharArray(tmp, 17);
-          if (tmp[0] !=0 )
-            Plugin_023_sendStrXY(tmp, x, 0);
+          if (newString.length() )
+            Plugin_023_sendStrXY(newString.c_str(), x, 0);
         }
         success = false;
         break;
@@ -179,11 +174,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex+1);
-          char tmp[40];
-          tmpString.toCharArray(tmp,40);
-          urlDecode(tmp);
-          Plugin_023_sendStrXY(tmp, event->Par1 - 1, event->Par2 - 1);
+          tmpString = urlDecode(string.substring(argIndex+1).c_str());
+          Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         break;
       }
@@ -400,7 +392,7 @@ static void Plugin_023_sendStr(unsigned char *string)
 
 // Prints a string in coordinates X Y, being multiples of 8.
 // This means we have 16 COLS (0-15) and 8 ROWS (0-7).
-static void Plugin_023_sendStrXY( char *string, int X, int Y)
+static void Plugin_023_sendStrXY(const char *string, int X, int Y)
 {
   Plugin_023_setXY(X, Y);
   unsigned char i = 0;

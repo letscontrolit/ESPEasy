@@ -166,7 +166,7 @@ Servo myservo1;
 Servo myservo2;
 
 // MQTT client
-PubSubClient MQTTclient("");
+PubSubClient MQTTclient("", 1886);
 
 // LCD
 LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -181,7 +181,7 @@ WiFiUDP portTX;
 struct SecurityStruct
 {
   char          WifiSSID[32];
-  char          WifiKey[76];
+  char          WifiKey[64];
   char          WifiAPKey[64];
   char          ControllerUser[26];
   char          ControllerPassword[64];
@@ -571,9 +571,7 @@ void SensorSend()
             String svalue = String(value);
             formula.replace("%pvalue%", spreValue);
             formula.replace("%value%", svalue);
-            char TmpStr[26];
-            formula.toCharArray(TmpStr, 25);
-            byte error = Calculate(TmpStr, &result);
+            byte error = Calculate(formula.c_str(), &result);
             if (error == 0)
               UserVar[varIndex + varNr] = result;
           }
