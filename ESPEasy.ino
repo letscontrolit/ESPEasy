@@ -571,9 +571,7 @@ void SensorSend()
             String svalue = String(value);
             formula.replace("%pvalue%", spreValue);
             formula.replace("%value%", svalue);
-            char TmpStr[26];
-            formula.toCharArray(TmpStr, 25);
-            byte error = Calculate(TmpStr, &result);
+            byte error = Calculate(formula.c_str(), &result);
             if (error == 0)
               UserVar[varIndex + varNr] = result;
           }

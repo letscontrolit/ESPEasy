@@ -73,11 +73,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           String arg = "Plugin_012_template";
           arg += varNr + 1;
           arg.toCharArray(argc, 25);
-          String tmpString = WebServer.arg(argc);
-          char tmp[81];
-          tmpString.toCharArray(tmp, 81);
-          urlDecode(tmp);
-          strcpy(deviceTemplate[varNr], tmp);
+          String tmpString = urlDecode(WebServer.arg(argc).c_str());
+          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
         }
 
         Settings.TaskDeviceID[event->TaskIndex] = 1; // temp fix, needs a dummy value
@@ -169,12 +166,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          char tmp[40];
-          tmpString.toCharArray(tmp, 40);
-          urlDecode(tmp);
+          tmpString = urlDecode(string.substring(argIndex + 1).c_str());
           lcd.setCursor(event->Par2 - 1, event->Par1 - 1);
-          lcd.print(tmp);
+          lcd.print(tmpString.c_str());
         }
         break;
       }

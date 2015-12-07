@@ -2,7 +2,7 @@
 * Process data from Serial Interface
 \*********************************************************************************************/
 #define INPUT_COMMAND_SIZE          80
-void ExecuteCommand(char *Line)
+void ExecuteCommand(const char *Line)
 {
   char TmpStr1[80];
   TmpStr1[0] = 0;

@@ -34,7 +34,7 @@ void callback(const MQTT::Publish& pub) {
   topic.toCharArray(c_topic, 80);
   sprintf_P(log, PSTR("%s%s"), "MQTT : Topic ", c_topic);
   addLog(LOG_LEVEL_DEBUG, log);
-
+  
   struct EventStruct TempEvent;
   TempEvent.String1 = topic;
   TempEvent.String2 = message;
@@ -197,7 +197,7 @@ boolean nodeVariableCopy(byte var, byte unit)
 /*********************************************************************************************\
  * Syslog client
 \*********************************************************************************************/
-void syslog(char *message)
+void syslog(const char *message)
 {
   if (Settings.Syslog_IP[0] != 0)
   {
