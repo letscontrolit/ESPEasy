@@ -17,8 +17,9 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
         Protocol[++protocolCount].Number = CPLUGIN_ID_002;
         strcpy_P(Protocol[protocolCount].Name, PSTR(CPLUGIN_NAME_002));
         Protocol[protocolCount].usesMQTT = true;
-        Protocol[protocolCount].usesAccount = false;
-        Protocol[protocolCount].usesPassword = false;
+        Protocol[protocolCount].usesAccount = true;
+        Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].defaultPort = 1883;
         break;
       }
 

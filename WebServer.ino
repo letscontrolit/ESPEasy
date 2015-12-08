@@ -229,8 +229,6 @@ void handle_config() {
 
   char tmpString[64];
 
-  
-
   String name = urlDecode(WebServer.arg("name").c_str());
   String password = urlDecode(WebServer.arg("password").c_str());
   String ssid = urlDecode(WebServer.arg("ssid").c_str());
@@ -266,6 +264,7 @@ void handle_config() {
     {
       Settings.Protocol = protocol.toInt();
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+      Settings.ControllerPort = Protocol[ProtocolIndex].defaultPort;
       if (Protocol[ProtocolIndex].usesMQTT)
         CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, 0);
     }
@@ -327,13 +326,13 @@ void handle_config() {
   reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
   reply += Settings.ControllerPort;
 
-  if (Settings.Protocol == 9999)
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+  if (Protocol[ProtocolIndex].usesAccount)
   {
     reply += F("'><TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
     reply += SecuritySettings.ControllerUser;
   }
 
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
   if (Protocol[ProtocolIndex].usesPassword)
   {
     reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");

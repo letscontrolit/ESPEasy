@@ -60,8 +60,15 @@ void MQTTConnect()
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
-    if (MQTTclient.connect(clientid))
-    {
+   boolean MQTTresult = false;
+   
+   if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
+     MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
+   else
+     MQTTresult = (MQTTclient.connect(clientid));
+     
+   if (MQTTresult)
+   {
       log = F("MQTT : Connected to broker");
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = Settings.MQTTsubscribe;
