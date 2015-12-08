@@ -1,3 +1,8 @@
+// R49 08-12-2015
+// Changes to urldecode and WPAKey handling (contributed by ixtrader)
+// Added MQTT authentication (contributed by Chrille)
+// Changing protocol sets default TCP port
+
 // R48 01-12-2015
 // Code cleanup, candidate for Arduino ESP Core 2.0.0.
 
@@ -36,10 +41,10 @@
 // Added support for IR signal reception (needs a third party library!)
 
 // R38 13-10-2015
-// Added support for I2C TSL2561 Luminosity Sensor
+// Added support for I2C TSL2561 Luminosity Sensor (contributed by Hallard)
 
 // R37 12-10-2015
-// Added support for I2C SI7021 Temperature Humidity sensor
+// Added support for I2C SI7021 Temperature Humidity sensor (contributed by Hallard)
 
 // R36 11-10-2015
 // Added support to control (max 2) Servo motors using http control commands

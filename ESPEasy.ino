@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              48
+#define BUILD                              49
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -279,6 +279,7 @@ struct ProtocolStruct
   boolean usesAccount;
   boolean usesPassword;
   char Name[20];
+  int defaultPort;
 } Protocol[CPLUGIN_MAX];
 
 int deviceCount = -1;

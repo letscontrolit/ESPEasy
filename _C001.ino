@@ -19,6 +19,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event)
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = false;
+        Protocol[protocolCount].defaultPort = 8080;
         break;
       }
 
