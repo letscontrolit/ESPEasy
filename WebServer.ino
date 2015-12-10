@@ -1314,10 +1314,10 @@ void handle_advanced() {
   reply += F("<form  method='post'><table>");
   reply += F("<TH>Advanced Settings<TH>Value");
 
-  reply += F("<TR><TD>MQTT Subscribe Template:<TD><input type='text' name='mqttsubscribe' size=80 value='");
+  reply += F("<TR><TD>Subscribe Template:<TD><input type='text' name='mqttsubscribe' size=80 value='");
   reply += Settings.MQTTsubscribe;
 
-  reply += F("'><TR><TD>MQTT Publish Template:<TD><input type='text' name='mqttpublish' size=80 value='");
+  reply += F("'><TR><TD>Publish Template:<TD><input type='text' name='mqttpublish' size=80 value='");
   reply += Settings.MQTTpublish;
 
   reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");

@@ -1,3 +1,6 @@
+// R50 10-12-2015
+// First attempt on having a generic HTTP controller interface
+
 // R49 08-12-2015
 // Changes to urldecode and WPAKey handling (contributed by ixtrader)
 // Added MQTT authentication (contributed by Chrille)
