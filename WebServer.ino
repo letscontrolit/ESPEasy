@@ -524,114 +524,119 @@ void handle_devices() {
   String reply = "";
   addMenu(reply);
 
+  if (index == 0)
+  { // only show task table if edit button was not pressed. 
+    // this saves a lot bytes in the reply String. A String longer than about 3000 Bytes seems to be 
+    // a problem. In most cases the reply was truncated I dont know why. 
+    // One reason might be a very small stack size (about 5k)
+    // https://blog.cesanta.com/esp8266_vs_stack
 
-  // show all tasks as table
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
-  reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page > 1)
-    reply += page - 1;
-  else
-    reply += page;
-  reply += F("\"><</a>");
-  reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page < 4)
-    reply += page + 1;
-  else
-    reply += page;
-  reply += F("\">></a>");
-
-  reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
-
-  String deviceName;
-
-  for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
-  {
-    LoadTaskSettings(x);
-    DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-    TempEvent.TaskIndex = x;
-
-    if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-      PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
-
-    deviceName = "";
-    if (Settings.TaskDeviceNumber[x] != 0)
-      Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
-
-    reply += F("<TR><TD>");
-    reply += F("<a class=\"button-link\" href=\"devices?index=");
-    reply += x + 1;
-    reply += F("&page=");
-    reply += page;
-    reply += F("\">Edit</a>");
-    reply += F("<TD>");
-    reply += x + 1;
-    reply += F("<TD>");
-    reply += deviceName;
-    reply += F("<TD>");
-    reply += ExtraTaskSettings.TaskDeviceName;
-    reply += F("<TD>");
-
-#ifdef ESP_EASY
-    byte customConfig = false;
-    customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
-    if (!customConfig)
-      if (Device[DeviceIndex].Ports != 0)
-        reply += Settings.TaskDevicePort[x];
-#endif
-
-    reply += F("<TD>");
-
-    if (Settings.TaskDeviceID[x] != 0)
-      reply += Settings.TaskDeviceID[x];
-
-    reply += F("<TD>");
-    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
+    // show all tasks as table
+    reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
+    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    if (page > 1)
+      reply += page - 1;
+    else
+      reply += page;
+    reply += F("\"><</a>");
+    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    if (page < 4)
+      reply += page + 1;
+    else
+      reply += page;
+    reply += F("\">></a>");
+  
+    reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
+  
+    String deviceName;
+  
+    for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
     {
-      reply += F("GPIO-");
-      reply += Settings.Pin_i2c_sda;
-      reply += F("<BR>GPIO-");
-      reply += Settings.Pin_i2c_scl;
-    }
-    if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
-      reply += F("ADC (TOUT)");
-
-    if (Settings.TaskDevicePin1[x] != -1)
-    {
-      reply += F("GPIO-");
-      reply += Settings.TaskDevicePin1[x];
-    }
-
-    if (Settings.TaskDevicePin2[x] != -1)
-    {
-      reply += F("<BR>GPIO-");
-      reply += Settings.TaskDevicePin2[x];
-    }
-
-    reply += F("<TD>");
-    byte customValues = false;
-    customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
-    if (!customValues)
-    {
-      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      LoadTaskSettings(x);
+      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+      TempEvent.TaskIndex = x;
+  
+      if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+  
+      deviceName = "";
+      if (Settings.TaskDeviceNumber[x] != 0)
+        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
+  
+      reply += F("<TR><TD>");
+      reply += F("<a class=\"button-link\" href=\"devices?index=");
+      reply += x + 1;
+      reply += F("&page=");
+      reply += page;
+      reply += F("\">Edit</a>");
+      reply += F("<TD>");
+      reply += x + 1;
+      reply += F("<TD>");
+      reply += deviceName;
+      reply += F("<TD>");
+      reply += ExtraTaskSettings.TaskDeviceName;
+      reply += F("<TD>");
+  
+  #ifdef ESP_EASY
+      byte customConfig = false;
+      customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
+      if (!customConfig)
+        if (Device[DeviceIndex].Ports != 0)
+          reply += Settings.TaskDevicePort[x];
+  #endif
+  
+      reply += F("<TD>");
+  
+      if (Settings.TaskDeviceID[x] != 0)
+        reply += Settings.TaskDeviceID[x];
+  
+      reply += F("<TD>");
+      if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
       {
-        if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+        reply += F("GPIO-");
+        reply += Settings.Pin_i2c_sda;
+        reply += F("<BR>GPIO-");
+        reply += Settings.Pin_i2c_scl;
+      }
+      if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
+        reply += F("ADC (TOUT)");
+  
+      if (Settings.TaskDevicePin1[x] != -1)
+      {
+        reply += F("GPIO-");
+        reply += Settings.TaskDevicePin1[x];
+      }
+  
+      if (Settings.TaskDevicePin2[x] != -1)
+      {
+        reply += F("<BR>GPIO-");
+        reply += Settings.TaskDevicePin2[x];
+      }
+  
+      reply += F("<TD>");
+      byte customValues = false;
+      customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
+      if (!customValues)
+      {
+        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
-          if (varNr > 0)
-            reply += F("<div class=\"div_br\"></div>");
-          reply += F("<div class=\"div_l\">");
-          reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-          reply += F(":</div><div class=\"div_r\">");
-          reply += UserVar[x * VARS_PER_TASK + varNr];
-          reply += "</div>";
+          if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+          {
+            if (varNr > 0)
+              reply += F("<div class=\"div_br\"></div>");
+            reply += F("<div class=\"div_l\">");
+            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+            reply += F(":</div><div class=\"div_r\">");
+            reply += UserVar[x * VARS_PER_TASK + varNr];
+            reply += "</div>";
+          }
         }
       }
     }
+    reply += F("</table>");
   }
-  reply += F("</table>");
-
-  // Show edit form if a specific entry is chosen with the edit button
-  if (index != 0)
-  {
+  else
+  { // Show edit form if a specific entry is chosen with the edit button
     LoadTaskSettings(index - 1);
     DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
     TempEvent.TaskIndex = index - 1;
