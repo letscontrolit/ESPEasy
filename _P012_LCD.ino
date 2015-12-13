@@ -8,6 +8,9 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 
+// LCD
+LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
+
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
 #define PLUGIN_NAME_012       "Display - LCD2004"
@@ -83,7 +86,17 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-
+      
+    case PLUGIN_INIT:
+      {
+        // Setup LCD display
+        lcd.init();                      // initialize the lcd
+        lcd.backlight();
+        lcd.print("ESP Easy");
+        success = true;
+        break;
+      }
+      
     case PLUGIN_READ:
       {
         char deviceTemplate[4][80];

@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              50
+#define BUILD                              51
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -168,15 +168,11 @@ Servo myservo2;
 // MQTT client
 PubSubClient MQTTclient("");
 
-// LCD
-LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
-
 // WebServer
 ESP8266WebServer WebServer(80);
 
 // syslog stuff
-WiFiUDP portRX;
-WiFiUDP portTX;
+WiFiUDP portUDP;
 
 struct SecurityStruct
 {
@@ -369,12 +365,7 @@ void setup()
 
     // setup UDP
     if (Settings.UDPPort != 0)
-      portRX.begin(Settings.UDPPort);
-
-    // Setup LCD display
-    lcd.init();                      // initialize the lcd
-    lcd.backlight();
-    lcd.print("ESP Easy");
+      portUDP.begin(Settings.UDPPort);
 
     // Setup MQTT Client
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);

@@ -1,3 +1,8 @@
+// R51 13-12-2015
+// Changed UDP handling back to a single socket for RX/TX
+// Moved LCD init from main tab to LCD plugin
+// Added pulse support on MCP23017, contributed by fgmx85
+
 // R50 10-12-2015
 // First attempt on having a generic HTTP controller interface
 
