@@ -89,6 +89,24 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             printWebString += F("<BR>");
           }
         }
+		if (tmpString.equalsIgnoreCase("MCPGPIOPulse"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 1023)
+          {
+            Plugin_009_Write(event->Par1, event->Par2);
+            delay(event->Par3);
+            Plugin_009_Write(event->Par1, !event->Par2);
+            if (printToWeb)
+            {
+              printWebString += F("MCPGPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Pulsed for ");
+              printWebString += event->Par3;
+              printWebString += F(" mS<BR>");
+            }
+          }
+        }
         break;
       }
   }
