@@ -3,21 +3,28 @@
 //********************************************************************************
 boolean sendData(struct EventStruct *event)
 {
-  LoadTaskSettings(event->TaskIndex);
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event);
 
-  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  if (!Settings.TaskDeviceSendData[event->TaskIndex])
+    return false;
 
   if (Settings.MessageDelay != 0)
   {
-    char log[30];
-    sprintf_P(log, PSTR("HTTP : Delay %u ms"), Settings.MessageDelay);
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
-    unsigned long timer = millis() + Settings.MessageDelay;
-    while (millis() < timer)
-      backgroundtasks();
+    if ((millis() - lastSend) < Settings.MessageDelay)
+    {
+      char log[30];
+      sprintf_P(log, PSTR("HTTP : Delay %u ms"), Settings.MessageDelay);
+      addLog(LOG_LEVEL_DEBUG_MORE, log);
+      unsigned long timer = millis() + Settings.MessageDelay;
+      while (millis() < timer)
+        backgroundtasks();
+    }
   }
+
+  LoadTaskSettings(event->TaskIndex);
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event);
+  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  lastSend = millis();
 }
 
 
@@ -34,7 +41,7 @@ void callback(const MQTT::Publish& pub) {
   topic.toCharArray(c_topic, 80);
   sprintf_P(log, PSTR("%s%s"), "MQTT : Topic ", c_topic);
   addLog(LOG_LEVEL_DEBUG, log);
-  
+
   struct EventStruct TempEvent;
   TempEvent.String1 = topic;
   TempEvent.String2 = message;
@@ -60,15 +67,15 @@ void MQTTConnect()
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
-   boolean MQTTresult = false;
-   
-   if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
-     MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
-   else
-     MQTTresult = (MQTTclient.connect(clientid));
-     
-   if (MQTTresult)
-   {
+    boolean MQTTresult = false;
+
+    if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
+      MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
+    else
+      MQTTresult = (MQTTclient.connect(clientid));
+
+    if (MQTTresult)
+    {
       log = F("MQTT : Connected to broker");
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = Settings.MQTTsubscribe;

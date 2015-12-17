@@ -1,3 +1,10 @@
+// R52 17-12-2015
+// Changed send delay routine
+// Added feature "Send data" enable/disable to all tasks
+// Removed "send data" setting from Level Control plugin since this is now standard
+// Check on build changes to fix some changes in tasks
+// Removed all urlDecode() since this is handled in the ESP Core as of stable 2.0.0
+
 // R51 13-12-2015
 // Changed UDP handling back to a single socket for RX/TX
 // Moved LCD init from main tab to LCD plugin

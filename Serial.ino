@@ -21,6 +21,18 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("VariableSet")) == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 3))
+      UserVar[Par1-1] = atof(TmpStr1);
+  }
+
+  if (strcasecmp_P(Command, PSTR("build")) == 0)
+  {
+    Settings.Build = Par1;
+    SaveSettings(); 
+  }
+  
   if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
   {
     Settings.deepSleep = 0;

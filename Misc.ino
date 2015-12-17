@@ -1,18 +1,36 @@
+void BuildFixes()
+{
+  Serial.println("\nBuild changed!");
+
+  // fix default send data on active tasks, new to R52
+  if (Settings.Build < 52)
+  {
+    Serial.println("Fix SendData");
+    for (byte x = 0; x < TASKS_MAX; x++)
+    {
+      Settings.TaskDeviceSendData[x] = true;
+    }
+  }
+
+  Settings.Build = BUILD;
+  SaveSettings();
+}
+
 #if FEATURE_SPIFFS
 void fileSystemCheck()
 {
   if (SPIFFS.begin())
   {
     String log = F("SPIFFS Mount succesfull");
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
     File f = SPIFFS.open("config.txt", "r");
     if (!f)
     {
       log = F("formatting...");
-      addLog(LOG_LEVEL_INFO,log);
+      addLog(LOG_LEVEL_INFO, log);
       SPIFFS.format();
       log = F("format done!");
-      addLog(LOG_LEVEL_INFO,log);
+      addLog(LOG_LEVEL_INFO, log);
       File f = SPIFFS.open("config.txt", "w");
       if (f)
       {
@@ -32,7 +50,7 @@ void fileSystemCheck()
   else
   {
     String log = F("SPIFFS Mount failed");
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
   }
 }
 #endif
@@ -204,7 +222,7 @@ void SaveTaskSettings(byte TaskIndex)
 void LoadTaskSettings(byte TaskIndex)
 {
 #if FEATURE_SPIFFS
-  if(ExtraTaskSettings.TaskIndex == TaskIndex)
+  if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return;
   LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // store active index
@@ -219,8 +237,8 @@ void LoadTaskSettings(byte TaskIndex)
 \*********************************************************************************************/
 void SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
-if (datasize > 512)
-  return;
+  if (datasize > 512)
+    return;
 #if FEATURE_SPIFFS
   SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
 #else
@@ -234,8 +252,8 @@ if (datasize > 512)
 \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
-if (datasize > 512)
-  return;
+  if (datasize > 512)
+    return;
 #if FEATURE_SPIFFS
   LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
 #else
@@ -262,7 +280,7 @@ void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     }
     f.close();
     String log = F("FILE : File saved");
-    addLog(LOG_LEVEL_INFO,log);
+    addLog(LOG_LEVEL_INFO, log);
   }
 }
 
@@ -303,9 +321,9 @@ extern "C" uint32_t _SPIFFS_block;
 void SaveToFlash(int index, byte* memAddress, int datasize)
 {
   if (index > 33791) // Limit usable flash area to 32+1k size
-    {
-      return;
-    }
+  {
+    return;
+  }
   uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
   uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
   int sectorOffset = index / SPI_FLASH_SEC_SIZE;
@@ -319,19 +337,19 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
   interrupts();
 
   // store struct into this block
-  memcpy(dataIndex,memAddress,datasize);
+  memcpy(dataIndex, memAddress, datasize);
 
   noInterrupts();
   // write sector back to flash
-  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-    if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-      {
-        //Serial.println("flash save ok");
-      }
+  if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+    if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+    {
+      //Serial.println("flash save ok");
+    }
   interrupts();
   delete [] data;
   String log = F("FLASH: Settings saved");
-  addLog(LOG_LEVEL_INFO,log);
+  addLog(LOG_LEVEL_INFO, log);
 }
 
 
@@ -353,7 +371,7 @@ void LoadFromFlash(int index, byte* memAddress, int datasize)
   interrupts();
 
   // load struct from this block
-  memcpy(memAddress,dataIndex,datasize);
+  memcpy(memAddress, dataIndex, datasize);
   delete [] data;
 }
 
@@ -364,26 +382,26 @@ void LoadFromFlash(int index, byte* memAddress, int datasize)
 void EraseFlash()
 {
   uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint32_t _sectorEnd = _sectorStart + 32+1; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint32_t _sectorEnd = _sectorStart + 32 + 1; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
   uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
 
   uint8_t* tmpdata = data;
-  for (int x=0; x < FLASH_EEPROM_SIZE; x++)
+  for (int x = 0; x < FLASH_EEPROM_SIZE; x++)
   {
     *tmpdata = 0;
     tmpdata++;
   }
 
   noInterrupts();
-  for (uint32_t _sector=_sectorStart; _sector < _sectorEnd; _sector++)
+  for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
   {
-  // write sector to flash
-  if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-    if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+    // write sector to flash
+    if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+      if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
       {
         String log = F("FLASH: Erase Sector: ");
         log += _sector;
-        addLog(LOG_LEVEL_INFO,log);
+        addLog(LOG_LEVEL_INFO, log);
       }
   }
   interrupts();
@@ -404,18 +422,18 @@ void ResetFactory(void)
     Serial.print(F("RESET: Reboot count: "));
     Serial.println(bootCount);
     if (bootCount > 3)
-      {
-        Serial.println(F("RESET: To many reset attempts"));
-        return;
-      }
+    {
+      Serial.println(F("RESET: To many reset attempts"));
+      return;
+    }
   }
   else
-      Serial.println(F("RESET: Cold boot"));
+    Serial.println(F("RESET: Cold boot"));
 
   bootCount++;
   saveToRTC(bootCount);
 
-  #if FEATURE_SPIFFS
+#if FEATURE_SPIFFS
   File f = SPIFFS.open("config.txt", "w");
   if (f)
   {
@@ -431,9 +449,9 @@ void ResetFactory(void)
       f.write(0);
     f.close();
   }
-  #else
-    EraseFlash();
-  #endif
+#else
+  EraseFlash();
+#endif
 
   LoadSettings();
   // now we set all parameters that need to be non-zero as default value
@@ -443,7 +461,7 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
-  SecuritySettings.Password[0] =0;
+  SecuritySettings.Password[0] = 0;
   str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
   Settings.ControllerPort      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
@@ -463,7 +481,9 @@ void ResetFactory(void)
     Settings.TaskDevicePin2[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
+    Settings.TaskDeviceSendData[x] = true;
   }
+  Settings.Build = BUILD;
   SaveSettings();
   delay(1000);
   WifiDisconnect();

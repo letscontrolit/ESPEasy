@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              51
+#define BUILD                              52
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -222,6 +222,8 @@ struct SettingsStruct
   boolean       CustomCSS;
   float         TaskDevicePluginConfigFloat[TASKS_MAX][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
+  boolean       TaskDeviceSendData[TASKS_MAX];
+  int16_t       Build;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -266,6 +268,7 @@ struct DeviceStruct
   boolean FormulaOption;
   byte ValueCount;
   boolean Custom;
+  boolean SendDataOption;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
@@ -290,6 +293,7 @@ unsigned long timer;
 unsigned long timer100ms;
 unsigned long timer1s;
 unsigned long timerwd;
+unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 boolean AP_Mode = false;
@@ -347,6 +351,10 @@ void setup()
   if (systemOK)
   {
     Serial.begin(Settings.BaudRate);
+    
+    if (Settings.Build != BUILD)
+      BuildFixes();
+      
     String log = F("\nINIT : Booting Build nr:");
     log += BUILD;
     addLog(LOG_LEVEL_INFO, log);

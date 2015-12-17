@@ -33,6 +33,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 0;
+        Device[deviceCount].SendDataOption = false;
         break;
       }
 
@@ -76,7 +77,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           String arg = "Plugin_012_template";
           arg += varNr + 1;
           arg.toCharArray(argc, 25);
-          String tmpString = urlDecode(WebServer.arg(argc).c_str());
+          String tmpString = WebServer.arg(argc);
           strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
         }
 
@@ -179,7 +180,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
-          tmpString = urlDecode(string.substring(argIndex + 1).c_str());
+          tmpString = string.substring(argIndex + 1);
           lcd.setCursor(event->Par2 - 1, event->Par1 - 1);
           lcd.print(tmpString.c_str());
         }
