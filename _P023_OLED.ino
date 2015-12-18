@@ -75,6 +75,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           arg.toCharArray(argc, 25);
           String tmpString = urlDecode(WebServer.arg(argc).c_str());
           strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
+          deviceTemplate[varNr][sizeof(deviceTemplate[varNr])-1]=0;
+
         }
 
         Settings.TaskDeviceID[event->TaskIndex] = 1; // temp fix, needs a dummy value
@@ -441,4 +443,5 @@ static void Plugin_023_init_OLED(void)
   Plugin_023_sendcommand(0x20);            //Set Memory Addressing Mode
   Plugin_023_sendcommand(0x00);            //Set Memory Addressing Mode ab Horizontal addressing mode
 }
+
 
