@@ -1,8 +1,6 @@
 //********************************************************************************
 // Web Interface init
 //********************************************************************************
-#define HTTPStart "HTTP/1.1 200 OK\r\nContent-Length: 0000\r\nContent-Type: text/html\r\n\r\n"
-
 void WebServerInit()
 {
   // Prepare webserver pages
@@ -469,25 +467,11 @@ void getTaskSettingsFromParameters(int index)
     paramName += (varNr+1);
     taskdeviceformula[varNr] = urlDecode(WebServer.arg(paramName.c_str()).c_str());
 
-    Serial.print(paramName + " = " + taskdeviceformula[varNr]);
-
     paramName = "taskdevicevaluename";
     paramName += (varNr+1);
     taskdevicevaluename[varNr] = urlDecode(WebServer.arg(paramName.c_str()).c_str());
-
-    Serial.println(paramName + " = " + taskdevicevaluename[varNr]);
   }
 
-
-  Serial.println(String("taskdevicenumber:") + taskdevicenumber
-                 + ", taskdeviceid:" + taskdeviceid
-                 + ", taskdevicepin1:" + taskdevicepin1
-                 + ", taskdevicepin2:" + taskdevicepin2
-                 + ", taskdevicepin1pullup:" + taskdevicepin1pullup
-                 + ", taskdevicepin1inversed:" + taskdevicepin1inversed
-                 + ", taskdevicename:" + taskdevicename
-                 + ", taskdeviceport:" + taskdeviceport
-                 );
 
   Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
   int DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
@@ -553,7 +537,8 @@ void addTaskTable(int page, String &reply)
     reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
   
     String deviceName;
-  
+ 
+
     for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
     {
       LoadTaskSettings(x);
@@ -579,7 +564,7 @@ void addTaskTable(int page, String &reply)
       reply += F("&page=");
       reply += page;
       reply += F("&edit=2");
-      reply += F("\">delete</a>");
+      reply += F("\">Clear</a>");
       reply += F("<TD>");
       reply += x + 1;
       reply += F("<TD>");
@@ -587,7 +572,7 @@ void addTaskTable(int page, String &reply)
       reply += F("<TD>");
       reply += ExtraTaskSettings.TaskDeviceName;
       reply += F("<TD>");
-  
+
   #ifdef ESP_EASY
       byte customConfig = false;
       customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
@@ -656,7 +641,7 @@ void addParametersForTask(int index, String &reply)
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
   
-  reply += F("<BR><BR><form name='frmselect' method='post'><table><TH>Task Settings<TH>Value");
+  reply += String(F("<BR><BR><form name='frmselect' method='post'><table><TH>Task ")) + index + F(" Settings<TH>Value");
   
   reply += F("<TR><TD>Device:<TD>");
   addDeviceSelect(reply, "taskdevicenumber", Settings.TaskDeviceNumber[index - 1]);
@@ -754,14 +739,10 @@ void addParametersForTask(int index, String &reply)
   
 }
 
-char *myCharBuffer = 0;
 //********************************************************************************
 // Web Interface device page
 //********************************************************************************
 void handle_devices() {
-  Serial.println("handle_devices()");
-  Serial.print("FreeMem:");
-  Serial.println(FreeMem());
   if (!isLoggedIn()) return;
 
   String taskindex         = urlDecode(WebServer.arg("index").c_str());
@@ -784,29 +765,19 @@ void handle_devices() {
 
   // byte DeviceIndex = 0;
 
-  Serial.println(String("edit: ") + edit
-                 + ", page:" + page
-                 + ", setpage:" + setpage
-                 + ", index:" + index
-                 + ", taskdevicenumber:" + taskdevicenumber
-                 );
-
   if (index && taskdevicenumber.toInt() != 0 && Settings.TaskDeviceNumber[index - 1] != taskdevicenumber.toInt()) // change of device, clear all other values
   {
-    Serial.println("Sensor Type changed show n!");
     initializeTaskSettings(index);
     Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
   }
   else if (taskdevicenumber.toInt() != 0)
   {
-    Serial.println("Read parameters from web formular!");
     getTaskSettingsFromParameters(index);
   }
 
   if (edit.toInt() == 1)
   { // save changed Data
     struct EventStruct TempEvent;
-    Serial.println("save changed Data");
     TempEvent.TaskIndex = index - 1;
     PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
@@ -819,7 +790,6 @@ void handle_devices() {
   else if (edit.toInt() == 2)
   {   // delete entry
       // cleare Settings
-      Serial.println("delet enty");
       initializeTaskSettings(index);
       SaveTaskSettings(index - 1);
       SaveSettings();
@@ -829,7 +799,6 @@ void handle_devices() {
   else if (edit.toInt() == 3)
   {   // cancel changes 
       // reload saved Settings
-      Serial.println("cancel");
       initializeTaskSettings(index);
       LoadSettings();
       LoadTaskSettings(index - 1);
@@ -842,18 +811,7 @@ void handle_devices() {
   }
 
   String reply = "";
-  if (myCharBuffer == 0)
-  {
-    myCharBuffer = new char[8000];
-  }
-  strcpy(myCharBuffer, HTTPStart);
   addPageStart(reply);
-  addMenuOnly(reply);
-  strcat(myCharBuffer,reply.c_str());
-  reply = "";
-  addTaskTable(page, reply);
-  strcat(myCharBuffer,reply.c_str());
-  reply = "";
   
   if (index == 0 && taskdevicenumber.toInt() == 0)
   { // only show task table if edit button was not pressed. 
@@ -861,75 +819,17 @@ void handle_devices() {
     // a problem. In most cases the reply was truncated I dont know why. 
     // One reason might be a very small stack size (about 5k)
     // https://blog.cesanta.com/esp8266_vs_stack
-    Serial.println("Show task table!");
-    Serial.print("Vor  addTaskTable. reply.lengh()=");
-    Serial.println(reply.length());
-    Serial.print("Nach addTaskTable. reply.lengh()=");
-    Serial.println(reply.length());
+    addMenuOnly(reply);
+    addTaskTable(page, reply);
   }
   else
   { // Show edit form if a specific entry is chosen with the edit button
-    Serial.println("Show Parameter Dialog");
     LoadTaskSettings(index - 1);
-    Serial.print("Vor  addParametersForTask. reply.lengh()=");
-    Serial.println(reply.length());
     addParametersForTask(index, reply);
-    Serial.print("Nach addParametersForTask. reply.lengh()=");
-    Serial.println(reply.length());
   }
-  strcat(myCharBuffer,reply.c_str());
-  reply = "";
-
   addFooter(reply);
-  strcat(myCharBuffer,reply.c_str());
-  reply = "";
-  Serial.println("Vor WebServer.send()");
-  sendContent(myCharBuffer,strlen(myCharBuffer));
-  Serial.print("buffersize:");
-  Serial.println(strlen(myCharBuffer));
-  
-  Serial.print("FreeMem:");
-  Serial.println(FreeMem());
-  Serial.println("handle_devices finished()");
+  WebServer.send(200, "text/html", reply);
 }
-
-
-void sendContent(char *content, size_t contSize) 
-{
-  size_t size_to_send = contSize;
-  size_t startLen = strlen(HTTPStart);
-  char* pos = strstr(content, "0000");
-  if (!pos || contSize>9999)
-  {
-     Serial.println(F("Invalid Block!!!!!!!!!!!!!!!!!!!"));
-     return;
-  }
-
-  String sLen = String(contSize-startLen);
-  strncpy(pos + 4 - sLen.length(),sLen.c_str(), sLen.length());
-  Serial.println(String("Nun kommt die Laenge:") + sLen);
-  Serial.println(content);
-
-   
-  size_t size_sent = 0;
-  while(size_to_send) {
-    const size_t unit_size = HTTP_DOWNLOAD_UNIT_SIZE;
-    size_t will_send = (size_to_send < unit_size) ? size_to_send : unit_size;
-    size_t sent = WebServer.client().write(content + size_sent, will_send);
-    size_to_send -= sent;
-    size_sent += sent;
-    if (sent == 0) {
-      break;
-    }
-  }
-}
-
-
-
-
-
-
-
 
 
 byte sortedIndex[DEVICES_MAX + 1];
