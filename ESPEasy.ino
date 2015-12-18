@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              49
+#define BUILD                              52
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -168,15 +168,11 @@ Servo myservo2;
 // MQTT client
 PubSubClient MQTTclient("");
 
-// LCD
-LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
-
 // WebServer
 ESP8266WebServer WebServer(80);
 
 // syslog stuff
-WiFiUDP portRX;
-WiFiUDP portTX;
+WiFiUDP portUDP;
 
 struct SecurityStruct
 {
@@ -226,6 +222,8 @@ struct SettingsStruct
   boolean       CustomCSS;
   float         TaskDevicePluginConfigFloat[TASKS_MAX][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
+  boolean       TaskDeviceSendData[TASKS_MAX];
+  int16_t       Build;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -270,6 +268,7 @@ struct DeviceStruct
   boolean FormulaOption;
   byte ValueCount;
   boolean Custom;
+  boolean SendDataOption;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
@@ -294,6 +293,7 @@ unsigned long timer;
 unsigned long timer100ms;
 unsigned long timer1s;
 unsigned long timerwd;
+unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 boolean AP_Mode = false;
@@ -351,6 +351,10 @@ void setup()
   if (systemOK)
   {
     Serial.begin(Settings.BaudRate);
+    
+    if (Settings.Build != BUILD)
+      BuildFixes();
+      
     String log = F("\nINIT : Booting Build nr:");
     log += BUILD;
     addLog(LOG_LEVEL_INFO, log);
@@ -369,12 +373,7 @@ void setup()
 
     // setup UDP
     if (Settings.UDPPort != 0)
-      portRX.begin(Settings.UDPPort);
-
-    // Setup LCD display
-    lcd.init();                      // initialize the lcd
-    lcd.backlight();
-    lcd.print("ESP Easy");
+      portUDP.begin(Settings.UDPPort);
 
     // Setup MQTT Client
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);

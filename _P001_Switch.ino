@@ -25,6 +25,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].SendDataOption = true;
         break;
       }
 
