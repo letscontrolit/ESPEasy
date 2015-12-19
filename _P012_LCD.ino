@@ -79,6 +79,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           arg.toCharArray(argc, 25);
           String tmpString = WebServer.arg(argc);
           strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
+          deviceTemplate[varNr][sizeof(deviceTemplate[varNr])-1]=0;
+
         }
 
         Settings.TaskDeviceID[event->TaskIndex] = 1; // temp fix, needs a dummy value
@@ -190,3 +192,4 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+

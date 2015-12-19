@@ -28,10 +28,32 @@ void WebServerInit()
 }
 
 
+
 //********************************************************************************
 // Add top menu
 //********************************************************************************
 void addMenu(String& str)
+{
+    addPageStart(str);
+    addMenuOnly(str);
+}
+
+//********************************************************************************
+// Add Title
+//********************************************************************************
+void addMenuOnly(String& str)
+{
+    str += F("<a class=\"button-menu\" href=\".\">Main</a>");
+    str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
+    str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
+    str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
+    str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
+}
+
+//********************************************************************************
+// Add Title
+//********************************************************************************
+void addPageStart(String& str)
 {
   boolean cssfile = false;
 
@@ -89,11 +111,7 @@ void addMenu(String& str)
   }
 #endif
 
-  str += F("</h1><BR><a class=\"button-menu\" href=\".\">Main</a>");
-  str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
-  str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
-  str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
-  str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
+  str += F("</h1><BR>");
 }
 
 
@@ -253,6 +271,11 @@ void handle_config() {
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     strncpy(SecuritySettings.WifiKey, key.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
+    Settings.Name[sizeof(Settings.Name)-1]=0;
+    SecuritySettings.Password[sizeof(SecuritySettings.Password)-1]=0;
+    SecuritySettings.WifiSSID[sizeof(SecuritySettings.WifiSSID)-1]=0;
+    SecuritySettings.WifiKey[sizeof(SecuritySettings.WifiKey)-1]=0;
+    SecuritySettings.WifiAPKey[sizeof(SecuritySettings.WifiAPKey)-1]=0;
 
     controllerip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Controller_IP);
@@ -260,6 +283,8 @@ void handle_config() {
 
     strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
     strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
+    SecuritySettings.ControllerUser[sizeof(SecuritySettings.ControllerUser)-1]=0;
+    SecuritySettings.ControllerPassword[sizeof(SecuritySettings.ControllerPassword)-1]=0;
     if (Settings.Protocol != protocol.toInt())
     {
       Settings.Protocol = protocol.toInt();
@@ -402,64 +427,11 @@ void handle_hardware() {
   WebServer.send(200, "text/html", reply);
 }
 
-
-//********************************************************************************
-// Web Interface device page
-//********************************************************************************
-void handle_devices() {
-  if (!isLoggedIn()) return;
-
-  char tmpString[41];
-  struct EventStruct TempEvent;
-
-  String taskindex = WebServer.arg("index");
-  String taskdevicenumber = WebServer.arg("taskdevicenumber");
-  String taskdeviceid = WebServer.arg("taskdeviceid");
-  String taskdevicepin1 = WebServer.arg("taskdevicepin1");
-  String taskdevicepin2 = WebServer.arg("taskdevicepin2");
-  String taskdevicepin1pullup = WebServer.arg("taskdevicepin1pullup");
-  String taskdevicepin1inversed = WebServer.arg("taskdevicepin1inversed");
-  String taskdevicename = WebServer.arg("taskdevicename");
-  String taskdeviceport = WebServer.arg("taskdeviceport");
-  String taskdeviceformula[VARS_PER_TASK];
-  String taskdevicevaluename[VARS_PER_TASK];
-  String taskdevicesenddata = WebServer.arg("taskdevicesenddata");
-  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
-    char argc[25];
-    String arg = "taskdeviceformula";
-    arg += varNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdeviceformula[varNr] = WebServer.arg(argc);
-
-    arg = "taskdevicevaluename";
-    arg += varNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdevicevaluename[varNr] = WebServer.arg(argc);
-  }
-
-  String edit = WebServer.arg("edit");
-  byte page = WebServer.arg("page").toInt();
-  if (page == 0)
-    page = 1;
-  byte setpage = WebServer.arg("setpage").toInt();
-  if (setpage > 0)
-  {
-    if (setpage <= (TASKS_MAX / 4))
-      page = setpage;
-    else
-      page = TASKS_MAX / 4;
-  }
-
-  byte index = taskindex.toInt();
-
-  byte DeviceIndex = 0;
-
-  if (edit.toInt() != 0)
-  {
-    if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber.toInt()) // change of device, clear all other values
+void initializeTaskSettings(int index)
     {
-      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
+  if (index < 1 || index > TASKS_MAX)
+     return;  
+  Settings.TaskDeviceNumber[index - 1] = 0;
       ExtraTaskSettings.TaskDeviceName[0] = 0;
       Settings.TaskDeviceID[index - 1] = 0;
       Settings.TaskDevicePin1[index - 1] = -1;
@@ -472,12 +444,42 @@ void handle_devices() {
         ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
       }
     }
-    else if (taskdevicenumber.toInt() != 0)
+
+void getTaskSettingsFromParameters(int index)
     {
+  if (index < 1 || index > TASKS_MAX)
+     return;  
+  char tmpString[41];
+     
+  String taskdevicenumber = WebServer.arg("taskdevicenumber");
+  String taskdeviceid = WebServer.arg("taskdeviceid");
+  String taskdevicepin1 = WebServer.arg("taskdevicepin1");
+  String taskdevicepin2 = WebServer.arg("taskdevicepin2");
+  String taskdevicepin1pullup = WebServer.arg("taskdevicepin1pullup");
+  String taskdevicepin1inversed = WebServer.arg("taskdevicepin1inversed");
+  String taskdevicename = WebServer.arg("taskdevicename");
+  String taskdeviceport = WebServer.arg("taskdeviceport");
+  String taskdeviceformula[VARS_PER_TASK];
+  String taskdevicevaluename[VARS_PER_TASK];
+  String taskdevicesenddata = WebServer.arg("taskdevicesenddata");
+
+  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+  {
+    String paramName = "taskdeviceformula";
+    paramName += (varNr+1);
+    taskdeviceformula[varNr] = WebServer.arg(paramName.c_str()).c_str();
+
+    paramName = "taskdevicevaluename";
+    paramName += (varNr+1);
+    taskdevicevaluename[varNr] = WebServer.arg(paramName.c_str()).c_str();
+  }
+
+
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
-      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
-      taskdevicename.toCharArray(tmpString, 26);
-      strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
+  int DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
+  strncpy(ExtraTaskSettings.TaskDeviceName, taskdevicename.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
+  ExtraTaskSettings.TaskDeviceName[sizeof(ExtraTaskSettings.TaskDeviceName)-1]=0;
+  
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
       if (Settings.TaskDeviceNumber[index - 1] != 0)
         Settings.TaskDeviceID[index - 1] = taskdeviceid.toInt();
@@ -508,145 +510,146 @@ void handle_devices() {
       }
 
       // task value names handling.
-      TempEvent.TaskIndex = index - 1;
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
         taskdevicevaluename[varNr].toCharArray(tmpString, 26);
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       }
-      TempEvent.TaskIndex = index - 1;
-      PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
-      PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
-    }
-    SaveTaskSettings(index - 1);
-    SaveSettings();
-  }
 
-  String reply = "";
-  addMenu(reply);
+}
 
+void addTaskTable(int page, String &reply)
+{
 
-  // show all tasks as table
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
-  reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page > 1)
-    reply += page - 1;
-  else
-    reply += page;
-  reply += F("\"><</a>");
-  reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page < 4)
-    reply += page + 1;
-  else
-    reply += page;
-  reply += F("\">></a>");
+    // show all tasks as table
+    reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
+    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    if (page > 1)
+      reply += page - 1;
+    else
+      reply += page;
+    reply += F("\"><</a>");
+    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    if (page < 4)
+      reply += page + 1;
+    else
+      reply += page;
+    reply += F("\">></a>");
+  
+    reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
+  
+    String deviceName;
+  
 
-  reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
-
-  String deviceName;
-
-  for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
-  {
-    LoadTaskSettings(x);
-    DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-    TempEvent.TaskIndex = x;
-
-    if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-      PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
-
-    deviceName = "";
-    if (Settings.TaskDeviceNumber[x] != 0)
-      Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
-
-    reply += F("<TR><TD>");
-    reply += F("<a class=\"button-link\" href=\"devices?index=");
-    reply += x + 1;
-    reply += F("&page=");
-    reply += page;
-    reply += F("\">Edit</a>");
-    reply += F("<TD>");
-    reply += x + 1;
-    reply += F("<TD>");
-    reply += deviceName;
-    reply += F("<TD>");
-    reply += ExtraTaskSettings.TaskDeviceName;
-    reply += F("<TD>");
-
-#ifdef ESP_EASY
-    byte customConfig = false;
-    customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
-    if (!customConfig)
-      if (Device[DeviceIndex].Ports != 0)
-        reply += Settings.TaskDevicePort[x];
-#endif
-
-    reply += F("<TD>");
-
-    if (Settings.TaskDeviceID[x] != 0)
-      reply += Settings.TaskDeviceID[x];
-
-    reply += F("<TD>");
-    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
+    for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
     {
-      reply += F("GPIO-");
-      reply += Settings.Pin_i2c_sda;
-      reply += F("<BR>GPIO-");
-      reply += Settings.Pin_i2c_scl;
-    }
-    if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
-      reply += F("ADC (TOUT)");
-
-    if (Settings.TaskDevicePin1[x] != -1)
-    {
-      reply += F("GPIO-");
-      reply += Settings.TaskDevicePin1[x];
-    }
-
-    if (Settings.TaskDevicePin2[x] != -1)
-    {
-      reply += F("<BR>GPIO-");
-      reply += Settings.TaskDevicePin2[x];
-    }
-
-    reply += F("<TD>");
-    byte customValues = false;
-    customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
-    if (!customValues)
-    {
-      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      LoadTaskSettings(x);
+      int DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+      struct EventStruct TempEvent;
+      TempEvent.TaskIndex = x;
+  
+      if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+  
+      deviceName = "";
+      if (Settings.TaskDeviceNumber[x] != 0)
+        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
+  
+      reply += F("<TR><TD>");
+      reply += F("<a class=\"button-link\" href=\"devices?index=");
+      reply += x + 1;
+      reply += F("&page=");
+      reply += page;
+      reply += F("\">Edit</a>");
+      reply += F("<a class=\"button-link\" href=\"devices?index=");
+      reply += x + 1;
+      reply += F("&page=");
+      reply += page;
+      reply += F("&edit=2");
+      reply += F("\">Clear</a>");
+      reply += F("<TD>");
+      reply += x + 1;
+      reply += F("<TD>");
+      reply += deviceName;
+      reply += F("<TD>");
+      reply += ExtraTaskSettings.TaskDeviceName;
+      reply += F("<TD>");
+  
+  #ifdef ESP_EASY
+      byte customConfig = false;
+      customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
+      if (!customConfig)
+        if (Device[DeviceIndex].Ports != 0)
+          reply += Settings.TaskDevicePort[x];
+  #endif
+  
+      reply += F("<TD>");
+  
+      if (Settings.TaskDeviceID[x] != 0)
+        reply += Settings.TaskDeviceID[x];
+  
+      reply += F("<TD>");
+      if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
       {
-        if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+        reply += F("GPIO-");
+        reply += Settings.Pin_i2c_sda;
+        reply += F("<BR>GPIO-");
+        reply += Settings.Pin_i2c_scl;
+      }
+      if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
+        reply += F("ADC (TOUT)");
+  
+      if (Settings.TaskDevicePin1[x] != -1)
+      {
+        reply += F("GPIO-");
+        reply += Settings.TaskDevicePin1[x];
+      }
+  
+      if (Settings.TaskDevicePin2[x] != -1)
+      {
+        reply += F("<BR>GPIO-");
+        reply += Settings.TaskDevicePin2[x];
+      }
+  
+      reply += F("<TD>");
+      byte customValues = false;
+      customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
+      if (!customValues)
+      {
+        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
-          if (varNr > 0)
-            reply += F("<div class=\"div_br\"></div>");
-          reply += F("<div class=\"div_l\">");
-          reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-          reply += F(":</div><div class=\"div_r\">");
-          reply += UserVar[x * VARS_PER_TASK + varNr];
-          reply += "</div>";
+          if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+          {
+            if (varNr > 0)
+              reply += F("<div class=\"div_br\"></div>");
+            reply += F("<div class=\"div_l\">");
+            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+            reply += F(":</div><div class=\"div_r\">");
+            reply += UserVar[x * VARS_PER_TASK + varNr];
+            reply += "</div>";
+          }
         }
       }
     }
+    reply += F("</table>");
   }
-  reply += F("</table>");
 
-  // Show edit form if a specific entry is chosen with the edit button
-  if (index != 0)
-  {
-    LoadTaskSettings(index - 1);
-    DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
+void addParametersForTask(int index, String &reply)
+{
+  int DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
+  struct EventStruct TempEvent;
     TempEvent.TaskIndex = index - 1;
 
     if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
       PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
 
-    reply += F("<BR><BR><form name='frmselect' method='post'><table><TH>Task Settings<TH>Value");
+  reply += String(F("<BR><BR><form name='frmselect' method='post'><table><TH>Task ")) + index + F(" Settings<TH>Value");
 
     reply += F("<TR><TD>Device:<TD>");
     addDeviceSelect(reply, "taskdevicenumber", Settings.TaskDeviceNumber[index - 1]);
 
     if (Settings.TaskDeviceNumber[index - 1] != 0 )
-    {
+  { // configuring preselected device 
       reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/plugin");
       reply += Settings.TaskDeviceNumber[index - 1];
       reply += F("\" target=\"_blank\">?</a>");
@@ -739,15 +742,102 @@ void handle_devices() {
           reply += F("'>");
         }
       }
-
     }
-    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices\">Close</a>");
-    reply += F("<input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
-    reply += F("<input type='hidden' name='edit' value='1'>");
-    reply += F("<input type='hidden' name='page' value='1'>");
+  reply += F("<TR><TD><TD>");
+  reply += F("<button type='submit' class=\"button-link\" value='3' name='edit'>Cancel</button>");
+  reply += F("<button type='submit' class=\"button-link\" value='1' name='edit'>Save</button><TR><TD>");
     reply += F("</table></form>");
+  
   }
 
+//********************************************************************************
+// Web Interface device page
+//********************************************************************************
+void handle_devices() {
+  if (!isLoggedIn()) return;
+
+  String taskindex         = WebServer.arg("index");
+  String taskdevicenumber  = WebServer.arg("taskdevicenumber");
+
+  String edit = WebServer.arg("edit");
+  byte   page = WebServer.arg("page").toInt();
+  if (page < 1)
+    page = 1;
+  byte setpage = WebServer.arg("setpage").toInt();
+  if (setpage > 0)
+  {
+    if (setpage <= (TASKS_MAX / 4))
+      page = setpage;
+    else
+      page = TASKS_MAX / 4;
+  }
+
+  byte index = taskindex.toInt();
+
+  // byte DeviceIndex = 0;
+
+  if (index && taskdevicenumber.toInt() != 0 && Settings.TaskDeviceNumber[index - 1] != taskdevicenumber.toInt()) // change of device, clear all other values
+  {
+    initializeTaskSettings(index);
+    Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
+  }
+  else if (taskdevicenumber.toInt() != 0)
+  {
+    getTaskSettingsFromParameters(index);
+  }
+
+  if (edit.toInt() == 1)
+  { // save changed Data
+    struct EventStruct TempEvent;
+    TempEvent.TaskIndex = index - 1;
+    PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
+    PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
+    SaveTaskSettings(index - 1);
+    SaveSettings();
+    // show the task table again
+    index = 0;
+    taskdevicenumber = "0";
+  }
+  else if (edit.toInt() == 2)
+  {   // delete entry
+      // cleare Settings
+      initializeTaskSettings(index);
+      SaveTaskSettings(index - 1);
+      SaveSettings();
+      index = 0;
+      taskdevicenumber = "0";
+  }
+  else if (edit.toInt() == 3)
+  {   // cancel changes 
+      // reload saved Settings
+      initializeTaskSettings(index);
+      LoadSettings();
+      LoadTaskSettings(index - 1);
+      struct EventStruct TempEvent;
+      TempEvent.TaskIndex = index - 1;
+      PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, dummyString);
+      PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
+      index = 0;
+      taskdevicenumber = "0";
+  }
+
+  String reply = "";
+  addPageStart(reply);
+  
+  if (index == 0 && taskdevicenumber.toInt() == 0)
+  { // only show task table if edit button was not pressed. 
+    // this saves a lot bytes in the reply String. A String longer than about 3000 Bytes seems to be 
+    // a problem. In most cases the reply was truncated I dont know why. 
+    // One reason might be a very small stack size (about 5k)
+    // https://blog.cesanta.com/esp8266_vs_stack
+    addMenuOnly(reply);
+    addTaskTable(page, reply);
+  }
+  else
+  { // Show edit form if a specific entry is chosen with the edit button
+    LoadTaskSettings(index - 1);
+    addParametersForTask(index, reply);
+  }
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
 }
@@ -1434,7 +1524,10 @@ void handle_upload() {
       reply += F("<font color=\"red\">No filename!</font>");
   }
 
-  reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br>"
+             "<input type=\"file\" name=\"datafile\" size=\"40\"></p>"
+             "<div><input class=\"button-link\" type='submit' value='Upload'></div>"
+             "<input type='hidden' name='edit' value='1'></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
   printWebString = "";
@@ -1777,5 +1870,7 @@ void handleFileUpload()
       SaveSettings();
   }
 }
+
+
 #endif
 
