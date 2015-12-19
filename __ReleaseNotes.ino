@@ -1,3 +1,10 @@
+// R53 19-12-2015
+// Added some serial debug commands:
+// "load" to load settings from flash while running
+// "flashdump <start>, <end>" to show flash contents
+// Changed WifiConnect, added retry and changed delays, set static ip before connecting
+// Wifi config is no longer persistent in SDK controlled flash memory
+
 // R52 17-12-2015
 // Changed send delay routine
 // Added feature "Send data" enable/disable to all tasks

@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              52
+#define BUILD                              53
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -362,6 +362,7 @@ void setup()
     if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
       Serial.setDebugOutput(true);
 
+    WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
     WifiAPconfig();
     WifiConnect();
 

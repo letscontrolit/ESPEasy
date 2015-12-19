@@ -486,7 +486,9 @@ void ResetFactory(void)
   Settings.Build = BUILD;
   SaveSettings();
   delay(1000);
-  WifiDisconnect();
+  WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+  WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
+  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   ESP.reset();
 }
 
@@ -594,7 +596,7 @@ void delayedReboot(int rebootDelay)
 /********************************************************************************************\
 * Save a byte to RTC memory
 \*********************************************************************************************/
-#define RTC_BASE 28 // 64
+#define RTC_BASE 65 // system doc says user area starts at 64, but it does not work (?)
 void saveToRTC(byte Par1)
 {
   byte buf[3] = {0xAA, 0x55, 0};

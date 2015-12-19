@@ -43,21 +43,61 @@ void WifiAPMode(boolean state)
 //********************************************************************************
 boolean WifiConnect()
 {
-  String log = F("WIFI : Connecting...");
-  addLog(LOG_LEVEL_INFO,log);
+  String log = "";
+  
+  if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
+  {
+    char str[20];
+    sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
+    log = F("IP   : Static IP :");
+    log += str;
+    addLog(LOG_LEVEL_INFO, log);
+    IPAddress ip = Settings.IP;
+    IPAddress gw = Settings.Gateway;
+    IPAddress subnet = Settings.Subnet;
+    WiFi.config(ip, gw, subnet);
+  }
+
+
   if (WiFi.status() != WL_CONNECTED)
   {
     if ((SecuritySettings.WifiSSID[0] != 0)  && (strcasecmp(SecuritySettings.WifiSSID, "ssid") != 0))
     {
-      WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
-      for (byte x = 0; x < 10; x++)
+      for (byte tryConnect = 1; tryConnect < 4; tryConnect++)
       {
-        if (WiFi.status() != WL_CONNECTED)
+        log = F("WIFI : Connecting... ");
+        log += tryConnect;
+        addLog(LOG_LEVEL_INFO, log);
+        
+        if (tryConnect == 1)
+          WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
+        else
+          WiFi.begin();
+          
+        for (byte x = 0; x < 20; x++)
         {
-          delay(500);
+          if (WiFi.status() != WL_CONNECTED)
+          {
+            delay(500);
+          }
+          else
+            break;
+        }
+        if (WiFi.status() == WL_CONNECTED)
+        {
+          log = F("WIFI : Connected!");
+          addLog(LOG_LEVEL_INFO, log);
+          break;
         }
         else
-          break;
+        {
+          log = F("WIFI : Disconnecting!");
+          addLog(LOG_LEVEL_INFO, log);
+          ETS_UART_INTR_DISABLE();
+          wifi_station_disconnect();
+          ETS_UART_INTR_ENABLE();
+          delay(1000);
+        }
       }
 
       // fix ip if last octet is set
@@ -69,28 +109,14 @@ boolean WifiConnect()
         ip[3] = Settings.IP_Octet;
         log = F("IP   : Fixed IP :");
         log += ip;
-        addLog(LOG_LEVEL_INFO,log);
+        addLog(LOG_LEVEL_INFO, log);
         WiFi.config(ip, gw, subnet);
       }
-
-      if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
-      {
-        char str[20];
-        sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
-        log = F("IP   : Static IP :");
-        log += str;
-        addLog(LOG_LEVEL_INFO,log);
-        IPAddress ip = Settings.IP;
-        IPAddress gw = Settings.Gateway;
-        IPAddress subnet = Settings.Subnet;
-        WiFi.config(ip, gw, subnet);
-      }
-
     }
     else
     {
       log = F("WIFI : No SSID!");
-      addLog(LOG_LEVEL_INFO,log);
+      addLog(LOG_LEVEL_INFO, log);
       NC_Count = 1;
       WifiAPMode(true);
     }
