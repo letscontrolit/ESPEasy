@@ -352,6 +352,29 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
   addLog(LOG_LEVEL_INFO, log);
 }
 
+// Try to allocate a block of n*500 Bytes to detemine the possible Limit
+unsigned long TestHeap(int logLevel)
+{
+   int meminkrement = 500;
+   unsigned long mem = 0;
+   while(1)
+   {
+       mem += meminkrement;
+       char * ptr = new char[mem];
+       if (ptr)
+       {
+          delete [] ptr;
+       }
+       else
+       {
+          mem -= meminkrement;
+          String log = F("Heap allocation limit: ");
+          log += mem;
+          addLog(logLevel, log);
+          return mem;
+       }
+   }
+}
 
 /********************************************************************************************\
 * Load data from flash
@@ -360,6 +383,18 @@ void LoadFromFlash(int index, byte* memAddress, int datasize)
 {
   uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
   uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+  if (!data)
+  {
+    // There is a heap overflow so finish all work and reboot.
+    // there is not enough dynamic memory to allocate the required FLASH_EEPROM_SIZE
+    TestHeap(LOG_LEVEL_ERROR);
+    Serial.print("FreeMem:");
+    Serial.println(FreeMem());
+    String log = F("Cannot allocate required bytes:");
+    log += FLASH_EEPROM_SIZE;
+    addLog(LOG_LEVEL_ERROR, log);
+    delayedReboot(20);
+  }
   int sectorOffset = index / SPI_FLASH_SEC_SIZE;
   int sectorIndex = index % SPI_FLASH_SEC_SIZE;
   uint8_t* dataIndex = data + sectorIndex;
