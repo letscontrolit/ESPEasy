@@ -1,3 +1,9 @@
+// R54 20-12-2015
+// LCD I2C address and display size can be configured in the webgui
+// OLED I2C address and display rotation can be configured in the webgui
+// OLEDCMD and LCDCMD commands added to turn the display on or off
+// Removed the +15 offset in BH1750 plugin
+
 // R53 19-12-2015
 // Added some serial debug commands:
 // "load" to load settings from flash while running

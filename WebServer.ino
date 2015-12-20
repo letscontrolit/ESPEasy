@@ -1105,6 +1105,7 @@ void handle_i2cscanner() {
       {
         case 0x20:
         case 0x27:
+        case 0x3F:
           reply += F("PCF8574, MCP23017, LCD Modules");
           break;
         case 0x23:
@@ -1117,6 +1118,7 @@ void handle_i2cscanner() {
           reply += F("TLS2561 Lux Sensor");
           break;
         case 0x3C:
+        case 0x3D:
           reply += F("OLED SSD1306 Display");
           break;
         case 0x40:
