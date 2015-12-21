@@ -622,6 +622,111 @@ boolean readFromRTC(byte* data)
 
 
 /********************************************************************************************\
+* Convert a string like "Sun,12:30" into a 32 bit integer
+\*********************************************************************************************/
+unsigned long string2TimeLong(String &str)
+{
+  // format 0000WWWWAAAABBBBCCCCDDDD
+  // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
+
+  char command[20];
+  char TmpStr1[10];
+  int w, x, y;
+  unsigned long a;
+  str.toCharArray(command, 20);
+  unsigned long lngTime;
+
+  if (GetArgv(command, TmpStr1, 1))
+  {
+    String day = TmpStr1;
+    String weekDays = F("AllSunMonTueWedThuFriSat");
+    y = weekDays.indexOf(TmpStr1)/3;
+    if (y==0)
+      y=0xf; // wildcard is 0xf
+    lngTime |= (unsigned long)y << 16;
+  }
+  
+  if (GetArgv(command, TmpStr1, 2))
+  {
+    y = 0;
+    for (x = strlen(TmpStr1) - 1; x >= 0; x--)
+    {
+      w = TmpStr1[x];
+      if (w >= '0' && w <= '9' || w == '*')
+      {
+        a = 0xffffffff  ^ (0xfUL << y); // create mask to clean nibble position y
+        lngTime &= a; // maak nibble leeg
+        if (w == '*')
+          lngTime |= (0xFUL << y); // fill nibble with wildcard value
+        else
+          lngTime |= (w - '0') << y; // fill nibble with token
+        y += 4;
+      }
+      else if (w == ':');
+      else
+      {
+        break;
+      }
+    }
+  }
+  return lngTime;
+}
+
+
+/********************************************************************************************\
+* Convert  a 32 bit integer into a string like "Sun,12:30"
+\*********************************************************************************************/
+String timeLong2String(unsigned long lngTime)
+{
+  unsigned long x = 0;
+  String time = "";
+
+  x = (lngTime >> 16) & 0xf;
+  if (x==0x0f)
+    x=0;
+  String weekDays = F("AllSunMonTueWedThuFriSat");
+  time = weekDays.substring(x*3,x*3+3);
+  time += ",";
+  
+  x = (lngTime >> 12) & 0xf;
+  if (x == 0xf)
+    time += "*";
+  else if (x == 0xe)
+    time += "-";
+  else
+    time += x;
+
+  x = (lngTime >> 8) & 0xf;
+  if (x == 0xf)
+    time += "*";
+  else if (x == 0xe)
+    time += "-";
+  else
+    time += x;
+
+  time += ":";
+
+  x = (lngTime >> 4) & 0xf;
+  if (x == 0xf)
+    time += "*";
+  else if (x == 0xe)
+    time += "-";
+  else
+    time += x;
+
+  x = (lngTime) & 0xf;
+  if (x == 0xf)
+    time += "*";
+  else if (x == 0xe)
+    time += "-";
+  else
+    time += x;
+
+  return time;
+}
+
+
+/********************************************************************************************\
 * Calculate function for simple expressions
 \*********************************************************************************************/
 #define CALCULATE_OK                            0

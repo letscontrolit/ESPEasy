@@ -239,6 +239,11 @@ void checkUDP()
   if (packetSize)
   {
     IPAddress remoteIP = portUDP.remoteIP();
+    if (portUDP.remotePort() == 123)
+    {
+      // unexpected NTP reply, drop for now...
+      return;
+    }
     char packetBuffer[128];
     int len = portUDP.read(packetBuffer, 128);
     if (packetBuffer[0] != 255)
@@ -348,5 +353,55 @@ void sendSysInfoUDP(byte repeats)
     Nodes[Settings.Unit].ip[x] = ip[x];
   Nodes[Settings.Unit].age = 0;
 
+}
+
+
+time_t getNtpTime()
+{
+  WiFiUDP udp;
+  udp.begin(123);
+  String log="NTP  : NTP sync requested";
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
+
+  const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+  byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
+
+  IPAddress timeServerIP;
+  const char* ntpServerName = "pool.ntp.org";
+  WiFi.hostByName(ntpServerName, timeServerIP);
+  while (udp.parsePacket() > 0) ; // discard any previously received packets
+
+  memset(packetBuffer, 0, NTP_PACKET_SIZE);
+  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+  packetBuffer[1] = 0;     // Stratum, or type of clock
+  packetBuffer[2] = 6;     // Polling Interval
+  packetBuffer[3] = 0xEC;  // Peer Clock Precision
+  packetBuffer[12]  = 49;
+  packetBuffer[13]  = 0x4E;
+  packetBuffer[14]  = 49;
+  packetBuffer[15]  = 52;
+  udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
+  udp.write(packetBuffer, NTP_PACKET_SIZE);
+  udp.endPacket();
+
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 1500) {
+    int size = udp.parsePacket();
+    if (size >= NTP_PACKET_SIZE) {
+      udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+      unsigned long secsSince1900;
+      // convert four bytes starting at location 40 to a long integer
+      secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
+      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+      secsSince1900 |= (unsigned long)packetBuffer[43];
+      log="NTP  : NTP replied!";
+      addLog(LOG_LEVEL_DEBUG_MORE, log);
+      return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
+    }
+  }
+  log="NTP  : No reply";
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  return 0;
 }
 

@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              54
+#define BUILD                              55
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -149,7 +149,9 @@
 #define PLUGIN_WEBFORM_SHOW_CONFIG         15
 #define PLUGIN_SERIAL_IN                   16
 #define PLUGIN_UDP_IN                      17
+#define PLUGIN_CLOCK_IN                    18
 
+#include <TimeLib.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
@@ -161,6 +163,10 @@
 #if FEATURE_SPIFFS
 #include <FS.h>
 #endif
+
+time_t systemTime = 0;
+const int timeZone = 1;     // Central European Time
+byte PrevMinutes = 0;
 
 Servo myservo1;
 Servo myservo2;
@@ -416,6 +422,10 @@ void setup()
     timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
     timer1s = millis() + 1000; // timer for periodic actions once per/sec
     timerwd = millis() + 30000; // timer for watchdog once per 30 sec
+
+    setSyncProvider(getNtpTime);
+    setSyncInterval(3600); // default 300 ?
+    
   }
   else
   {
@@ -529,6 +539,16 @@ void loop()
     if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
       delayedReboot(60);
 
+    // clock events
+    systemTime = now();
+    byte Hours = hour(systemTime);
+    byte Minutes = minute(systemTime);
+    if (Minutes != PrevMinutes)
+    {
+      PluginCall(PLUGIN_CLOCK_IN, 0, dummyString);
+      PrevMinutes = Minutes;
+    }
+  
     backgroundtasks();
   }
   else

@@ -141,7 +141,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           {
             byte row=2;
             byte col=16;
-            if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
+            if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
             {
               row=4;
               col=20;

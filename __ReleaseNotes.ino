@@ -1,3 +1,7 @@
+// R55 21-12-2015
+// Experimental development: Added time lib and NTP support
+// Bugfix for LCD plugin display size
+
 // R54 20-12-2015
 // LCD I2C address and display size can be configured in the webgui
 // OLED I2C address and display rotation can be configured in the webgui

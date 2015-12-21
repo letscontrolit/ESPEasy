@@ -21,10 +21,22 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("ntp")) == 0)
+    getNtpTime();
+
   if (strcasecmp_P(Command, PSTR("setsdk")) == 0)
   {
-    WiFi.disconnect();
     WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+    WiFi.disconnect();
+    WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
+    WiFi.persistent(false);
+  }
+
+  if (strcasecmp_P(Command, PSTR("clearsdk")) == 0)
+  {
+    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+    WiFi.disconnect();
+    WiFi.persistent(false);
     WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
   }
 

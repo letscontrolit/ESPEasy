@@ -500,6 +500,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_ONCE_A_SECOND:
     case PLUGIN_TEN_PER_SECOND:
     case PLUGIN_INIT_ALL:
+    case PLUGIN_CLOCK_IN:
     case PLUGIN_EVENT_OUT:
       {
         if (Function == PLUGIN_INIT_ALL)
