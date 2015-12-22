@@ -368,7 +368,18 @@ time_t getNtpTime()
 
   IPAddress timeServerIP;
   const char* ntpServerName = "pool.ntp.org";
-  WiFi.hostByName(ntpServerName, timeServerIP);
+
+  if (Settings.NTPHost[0] !=0)
+    WiFi.hostByName(Settings.NTPHost, timeServerIP);
+  else
+    WiFi.hostByName(ntpServerName, timeServerIP);
+
+  char host[20];
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
+  log="NTP  : NTP send to ";
+  log += host;
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
+
   while (udp.parsePacket() > 0) ; // discard any previously received packets
 
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -397,7 +408,7 @@ time_t getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[43];
       log="NTP  : NTP replied!";
       addLog(LOG_LEVEL_DEBUG_MORE, log);
-      return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
+      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_HOUR;
     }
   }
   log="NTP  : No reply";

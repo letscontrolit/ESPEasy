@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              55
+#define BUILD                              56
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -165,7 +165,6 @@
 #endif
 
 time_t systemTime = 0;
-const int timeZone = 1;     // Central European Time
 byte PrevMinutes = 0;
 
 Servo myservo1;
@@ -198,7 +197,7 @@ struct SettingsStruct
   byte          Controller_IP[4];
   unsigned int  ControllerPort;
   byte          IP_Octet;
-  char          _obsolete[64];
+  char          NTPHost[64];
   unsigned long Delay;
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
@@ -230,6 +229,9 @@ struct SettingsStruct
   long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
   boolean       TaskDeviceSendData[TASKS_MAX];
   int16_t       Build;
+  byte          DNS[4];
+  int8_t        TimeZone;
+  char          ControllerHostName[64];
 } Settings;
 
 struct ExtraTaskSettingsStruct

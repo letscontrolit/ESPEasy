@@ -124,14 +124,23 @@ void handle_root() {
     printWebString = "";
     ExecuteCommand(sCommand.c_str());
 
-    reply += printWebString;
-    reply += F("<form>");
-    reply += F("<table><TH>System Info<TH><TH><TR><TD>");
-
     IPAddress ip = WiFi.localIP();
     IPAddress gw = WiFi.gatewayIP();
 
-    reply += F("Uptime:<TD>");
+    reply += printWebString;
+    reply += F("<form>");
+    reply += F("<table><TH>System Info<TH><TH>");
+
+    reply += F("<TR><TD>System Time:<TD>");
+    byte hours = hour(systemTime);
+    byte minutes = minute(systemTime);
+    reply += hours;
+    reply += ":";
+    if (minutes < 10)
+      reply += "0";
+    reply += minutes;
+
+    reply += F("<TR><TD>Uptime:<TD>");
     reply += wdcounter / 2;
     reply += F(" minutes");
 
@@ -234,6 +243,7 @@ void handle_config() {
   String ssid = WebServer.arg("ssid");
   String key = WebServer.arg("key");
   String controllerip = WebServer.arg("controllerip");
+  String controllerhostname = WebServer.arg("controllerhostname");
   String controllerport = WebServer.arg("controllerport");
   String protocol = WebServer.arg("protocol");
   String controlleruser = WebServer.arg("controlleruser");
@@ -243,6 +253,7 @@ void handle_config() {
   String espip = WebServer.arg("espip");
   String espgateway = WebServer.arg("espgateway");
   String espsubnet = WebServer.arg("espsubnet");
+  String espdns = WebServer.arg("espdns");
   String unit = WebServer.arg("unit");
   String apkey = WebServer.arg("apkey");
 
@@ -256,8 +267,10 @@ void handle_config() {
 
     controllerip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Controller_IP);
+    strncpy(Settings.ControllerHostName, controllerhostname.c_str(), sizeof(Settings.ControllerHostName));
+    getIPfromHostName();
     Settings.ControllerPort = controllerport.toInt();
-
+    
     strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
     strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
     if (Settings.Protocol != protocol.toInt())
@@ -276,6 +289,8 @@ void handle_config() {
     str2ip(tmpString, Settings.Gateway);
     espsubnet.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Subnet);
+    espdns.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.DNS);
     Settings.Unit = unit.toInt();
     SaveSettings();
   }
@@ -326,6 +341,9 @@ void handle_config() {
   reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
   reply += Settings.ControllerPort;
 
+  reply += F("'><TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
+  reply += Settings.ControllerHostName;
+
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
   if (Protocol[ProtocolIndex].usesAccount)
   {
@@ -361,6 +379,10 @@ void handle_config() {
 
   reply += F("'><TR><TD>ESP Subnet:<TD><input type='text' name='espsubnet' value='");
   sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Subnet[0], Settings.Subnet[1], Settings.Subnet[2], Settings.Subnet[3]);
+  reply += str;
+
+  reply += F("'><TR><TD>ESP DNS:<TD><input type='text' name='espdns' value='");
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.DNS[0], Settings.DNS[1], Settings.DNS[2], Settings.DNS[3]);
   reply += str;
 
   reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
@@ -1282,6 +1304,8 @@ void handle_advanced() {
   String messagedelay = WebServer.arg("messagedelay");
   String ip = WebServer.arg("ip");
   String syslogip = WebServer.arg("syslogip");
+  String ntphost = WebServer.arg("ntphost");
+  String timezone = WebServer.arg("timezone");
   String sysloglevel = WebServer.arg("sysloglevel");
   String udpport = WebServer.arg("udpport");
   String serialloglevel = WebServer.arg("serialloglevel");
@@ -1300,6 +1324,9 @@ void handle_advanced() {
     strcpy(Settings.MQTTpublish, tmpString);
     Settings.MessageDelay = messagedelay.toInt();
     Settings.IP_Octet = ip.toInt();
+    ntphost.toCharArray(tmpString, 64);
+    strcpy(Settings.NTPHost, tmpString);
+    Settings.TimeZone = timezone.toInt();
     syslogip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
@@ -1332,6 +1359,12 @@ void handle_advanced() {
 
   reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
+
+  reply += F("'><TR><TD>NTP Hostname:<TD><input type='text' name='ntphost' size=64 value='");
+  reply += Settings.NTPHost;
+
+  reply += F("'><TR><TD>Timezone Offset:<TD><input type='text' name='timezone' size=2 value='");
+  reply += Settings.TimeZone;
 
   reply += F("'><TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
   str[0] = 0;

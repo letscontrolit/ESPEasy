@@ -1,3 +1,11 @@
+// R56 22-12-2015
+// Added DNS static config option
+// Added NTP host name config (optional, defaults to pool.ntp.org)
+// Added TimeZone config
+// Added Controller Hostname config (optional, use instead of IP)
+// Added System time to main info page
+// Added switch case to ThingSpeak controller
+
 // R55 21-12-2015
 // Experimental development: Added time lib and NTP support
 // Bugfix for LCD plugin display size

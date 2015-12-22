@@ -55,7 +55,8 @@ boolean WifiConnect()
     IPAddress ip = Settings.IP;
     IPAddress gw = Settings.Gateway;
     IPAddress subnet = Settings.Subnet;
-    WiFi.config(ip, gw, subnet);
+    IPAddress dns = Settings.DNS;
+    WiFi.config(ip, gw, subnet, dns);
   }
 
 

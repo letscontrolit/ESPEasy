@@ -1,3 +1,14 @@
+void getIPfromHostName()
+{
+  IPAddress IP;
+  if (Settings.ControllerHostName[0] !=0)
+  {
+    WiFi.hostByName(Settings.ControllerHostName, IP);
+    for (byte x=0; x<4; x++)
+      Settings.Controller_IP[x]=IP[x];
+  }
+}
+
 void BuildFixes()
 {
   Serial.println("\nBuild changed!");
