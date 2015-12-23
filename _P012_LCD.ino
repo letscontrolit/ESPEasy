@@ -161,65 +161,18 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[4][80];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte x = 0; x < 4; x++)
-        {
-          String newString = "";
-          String tmpString = deviceTemplate[x];
-          String tmpStringMid = "";
-          int leftBracketIndex = tmpString.indexOf('[');
-          if (leftBracketIndex == -1)
-            newString = tmpString;
-          else
+        byte row=2;
+        byte col=16;
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
           {
-            byte count = 0;
-            while (leftBracketIndex >= 0 && count < 10 - 1)
-            {
-              newString += tmpString.substring(0, leftBracketIndex);
-              tmpString = tmpString.substring(leftBracketIndex + 1);
-              int rightBracketIndex = tmpString.indexOf(']');
-              if (rightBracketIndex)
-              {
-                tmpStringMid = tmpString.substring(0, rightBracketIndex);
-                tmpString = tmpString.substring(rightBracketIndex + 1);
-                int hashtagIndex = tmpStringMid.indexOf('#');
-                String deviceName = tmpStringMid.substring(0, hashtagIndex);
-                String valueName = tmpStringMid.substring(hashtagIndex + 1);
-                String valueFormat = "";
-                hashtagIndex = valueName.indexOf('#');
-                if (hashtagIndex >= 0)
-                {
-                  valueFormat = valueName.substring(hashtagIndex + 1);
-                  valueName = valueName.substring(0, hashtagIndex);
-                }
-                for (byte y = 0; y < TASKS_MAX; y++)
-                {
-                  LoadTaskSettings(y);
-                  if (ExtraTaskSettings.TaskDeviceName[0] != 0)
-                  {
-                    if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
-                    {
-                      for (byte z = 0; z < VARS_PER_TASK; z++)
-                        if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                        {
-                          // here we know the task and value, so find the uservar
-                          String value = String(UserVar[y * VARS_PER_TASK + z]);
-                          if (valueFormat == "R")
-                          {
-                            int filler = 20 - newString.length() - value.length() - tmpString.length() ;
-                            for (byte f = 0; f < filler; f++)
-                              newString += " ";
-                          }
-                          newString += String(value);
-                        }
-                    }
-                  }
-                }
-              }
-              leftBracketIndex = tmpString.indexOf('[');
-              count++;
-            }
-            newString += tmpString;
+           row=4;
+           col=20;
           }
+          
+        for (byte x = 0; x < row; x++)
+        {
+          String tmpString = deviceTemplate[x];
+          String newString = parseTemplate(tmpString, col);
           lcd->setCursor(0, x);
           if (newString != "")
             lcd->print(newString);
@@ -251,6 +204,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
             lcd->noBacklight();
           else if (tmpString.equalsIgnoreCase("On"))
             lcd->backlight();
+          else if (tmpString.equalsIgnoreCase("Clear"))
+            lcd->clear();
         }
         break;
       }

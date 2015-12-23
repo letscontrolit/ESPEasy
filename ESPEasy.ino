@@ -93,7 +93,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              56
+#define BUILD                              57
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -232,6 +232,7 @@ struct SettingsStruct
   byte          DNS[4];
   int8_t        TimeZone;
   char          ControllerHostName[64];
+  boolean       UseNTP;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -425,9 +426,11 @@ void setup()
     timer1s = millis() + 1000; // timer for periodic actions once per/sec
     timerwd = millis() + 30000; // timer for watchdog once per 30 sec
 
-    setSyncProvider(getNtpTime);
-    setSyncInterval(3600); // default 300 ?
-    
+    if (Settings.UseNTP)
+    {
+      setSyncProvider(getNtpTime);
+      setSyncInterval(3600); // default 300 ?
+    }
   }
   else
   {

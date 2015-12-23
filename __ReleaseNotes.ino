@@ -1,3 +1,9 @@
+// R57 23-12-2015
+// Moved display template handling to generic function parseTemplate() to avoid a lot of similar code in both plugins.
+// Added some variable features to LCD/OLED template, you can use %sysname%, %systime% and %ip%
+// NTP time can be enabled through advanced settings and defaults to disabled
+// Added clear command to LCD/OLED plugins
+
 // R56 22-12-2015
 // Added DNS static config option
 // Added NTP host name config (optional, defaults to pool.ntp.org)

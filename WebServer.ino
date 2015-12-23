@@ -1314,6 +1314,7 @@ void handle_advanced() {
 #if !FEATURE_SPIFFS
   String customcss = WebServer.arg("customcss");
 #endif
+  String usentp = WebServer.arg("usentp");
   String edit = WebServer.arg("edit");
 
   if (edit.length() != 0)
@@ -1337,6 +1338,7 @@ void handle_advanced() {
 #if !FEATURE_SPIFFS
     Settings.CustomCSS = (customcss == "on");
 #endif
+    Settings.UseNTP = (usentp == "on");
     SaveSettings();
   }
 
@@ -1359,8 +1361,15 @@ void handle_advanced() {
 
   reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
+  reply += F("'>");
+  
+  reply += F("<TR><TD>Use NTP:<TD>");
+  if (Settings.UseNTP)
+    reply += F("<input type=checkbox name='usentp' checked>");
+  else
+    reply += F("<input type=checkbox name='usentp'>");
 
-  reply += F("'><TR><TD>NTP Hostname:<TD><input type='text' name='ntphost' size=64 value='");
+  reply += F("<TR><TD>NTP Hostname:<TD><input type='text' name='ntphost' size=64 value='");
   reply += Settings.NTPHost;
 
   reply += F("'><TR><TD>Timezone Offset:<TD><input type='text' name='timezone' size=2 value='");

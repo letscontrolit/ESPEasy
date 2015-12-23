@@ -115,7 +115,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         String plugin2 = WebServer.arg("plugin_023_rotate");
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        
+
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)
         {
@@ -156,64 +156,9 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
         for (byte x = 0; x < 8; x++)
         {
-          String newString = "";
           String tmpString = deviceTemplate[x];
-          String tmpStringMid = "";
-          int leftBracketIndex = tmpString.indexOf('[');
-          if (leftBracketIndex == -1)
-            newString = tmpString;
-          else
-          {
-            byte count = 0;
-            while (leftBracketIndex >= 0 && count < 10 - 1)
-            {
-              newString += tmpString.substring(0, leftBracketIndex);
-              tmpString = tmpString.substring(leftBracketIndex + 1);
-              int rightBracketIndex = tmpString.indexOf(']');
-              if (rightBracketIndex)
-              {
-                tmpStringMid = tmpString.substring(0, rightBracketIndex);
-                tmpString = tmpString.substring(rightBracketIndex + 1);
-                int hashtagIndex = tmpStringMid.indexOf('#');
-                String deviceName = tmpStringMid.substring(0, hashtagIndex);
-                String valueName = tmpStringMid.substring(hashtagIndex + 1);
-                String valueFormat = "";
-                hashtagIndex = valueName.indexOf('#');
-                if (hashtagIndex >= 0)
-                {
-                  valueFormat = valueName.substring(hashtagIndex + 1);
-                  valueName = valueName.substring(0, hashtagIndex);
-                }
-                for (byte y = 0; y < TASKS_MAX; y++)
-                {
-                  LoadTaskSettings(y);
-                  if (ExtraTaskSettings.TaskDeviceName[0] != 0)
-                  {
-                    if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
-                    {
-                      for (byte z = 0; z < VARS_PER_TASK; z++)
-                        if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                        {
-                          // here we know the task and value, so find the uservar
-                          String value = String(UserVar[y * VARS_PER_TASK + z]);
-                          if (valueFormat == "R")
-                          {
-                            int filler = 16 - newString.length() - value.length() - tmpString.length() ;
-                            for (byte f = 0; f < filler; f++)
-                              newString += " ";
-                          }
-                          newString += String(value);
-                        }
-                    }
-                  }
-                }
-              }
-              leftBracketIndex = tmpString.indexOf('[');
-              count++;
-            }
-            newString += tmpString;
-          }
-          if (newString.length() )
+          String newString = parseTemplate(tmpString, 16);
+          if (newString.length())
             Plugin_023_sendStrXY(newString.c_str(), x, 0);
         }
         success = false;
@@ -230,22 +175,24 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex+1);
+          tmpString = string.substring(argIndex + 1);
           Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         if (tmpString.equalsIgnoreCase("OLEDCMD"))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex+1);
+          tmpString = string.substring(argIndex + 1);
           if (tmpString.equalsIgnoreCase("Off"))
             Plugin_023_displayOff();
           else if (tmpString.equalsIgnoreCase("On"))
             Plugin_023_displayOn();
+          else if (tmpString.equalsIgnoreCase("Clear"))
+            Plugin_023_clear_display();
         }
         break;
       }
-      
+
   }
   return success;
 }
