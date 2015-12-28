@@ -1,3 +1,10 @@
+// R58 28-12-2015
+// Fixed bug with right align on LCD 4x20
+// Time feature can be disabled with #define at compile time
+// No longer using time library, moved relevant parts to Misc tab
+// Set system name as DHCP hostname
+// Fixed bug with levelcontrol for other values in taskvalue dropdown list
+
 // R57 23-12-2015
 // Moved display template handling to generic function parseTemplate() to avoid a lot of similar code in both plugins.
 // Added some variable features to LCD/OLED template, you can use %sysname%, %systime% and %ip%

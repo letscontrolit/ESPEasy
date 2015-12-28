@@ -96,7 +96,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       {
         // we're checking a var from another task, so calculate that basevar
         byte TaskIndex = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+        byte BaseVarIndex = TaskIndex * VARS_PER_TASK + Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         float value = UserVar[BaseVarIndex];
         byte state = switchstate[event->TaskIndex];
         // compare with threshold value

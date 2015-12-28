@@ -34,17 +34,20 @@ boolean sendData(struct EventStruct *event)
 // handle MQTT messages
 void callback(const MQTT::Publish& pub) {
   char log[80];
-  String message = pub.payload_string();
+  char tmp[80];
   String topic = pub.topic();
+  String payload = pub.payload_string();
 
-  char c_topic[80];
-  topic.toCharArray(c_topic, 80);
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic ", c_topic);
+  topic.toCharArray(tmp, 80);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", tmp);
+  addLog(LOG_LEVEL_DEBUG, log);
+  payload.toCharArray(tmp, 80);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", tmp);
   addLog(LOG_LEVEL_DEBUG, log);
 
   struct EventStruct TempEvent;
   TempEvent.String1 = topic;
-  TempEvent.String2 = message;
+  TempEvent.String2 = payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
   CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
@@ -353,66 +356,5 @@ void sendSysInfoUDP(byte repeats)
     Nodes[Settings.Unit].ip[x] = ip[x];
   Nodes[Settings.Unit].age = 0;
 
-}
-
-
-time_t getNtpTime()
-{
-  WiFiUDP udp;
-  udp.begin(123);
-  String log="NTP  : NTP sync requested";
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-  const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
-  byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
-
-  IPAddress timeServerIP;
-  const char* ntpServerName = "pool.ntp.org";
-
-  if (Settings.NTPHost[0] !=0)
-    WiFi.hostByName(Settings.NTPHost, timeServerIP);
-  else
-    WiFi.hostByName(ntpServerName, timeServerIP);
-
-  char host[20];
-  sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
-  log="NTP  : NTP send to ";
-  log += host;
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-  while (udp.parsePacket() > 0) ; // discard any previously received packets
-
-  memset(packetBuffer, 0, NTP_PACKET_SIZE);
-  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
-  packetBuffer[1] = 0;     // Stratum, or type of clock
-  packetBuffer[2] = 6;     // Polling Interval
-  packetBuffer[3] = 0xEC;  // Peer Clock Precision
-  packetBuffer[12]  = 49;
-  packetBuffer[13]  = 0x4E;
-  packetBuffer[14]  = 49;
-  packetBuffer[15]  = 52;
-  udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
-  udp.write(packetBuffer, NTP_PACKET_SIZE);
-  udp.endPacket();
-
-  uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500) {
-    int size = udp.parsePacket();
-    if (size >= NTP_PACKET_SIZE) {
-      udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
-      unsigned long secsSince1900;
-      // convert four bytes starting at location 40 to a long integer
-      secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
-      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-      secsSince1900 |= (unsigned long)packetBuffer[43];
-      log="NTP  : NTP replied!";
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
-      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_HOUR;
-    }
-  }
-  log="NTP  : No reply";
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
-  return 0;
 }
 

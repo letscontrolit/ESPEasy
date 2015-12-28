@@ -131,14 +131,14 @@ void handle_root() {
     reply += F("<form>");
     reply += F("<table><TH>System Info<TH><TH>");
 
+#if FEATURE_TIME
     reply += F("<TR><TD>System Time:<TD>");
-    byte hours = hour(systemTime);
-    byte minutes = minute(systemTime);
-    reply += hours;
+    reply += hour();
     reply += ":";
-    if (minutes < 10)
+    if (minute() < 10)
       reply += "0";
-    reply += minutes;
+    reply += minute();
+#endif
 
     reply += F("<TR><TD>Uptime:<TD>");
     reply += wdcounter / 2;
@@ -270,7 +270,7 @@ void handle_config() {
     strncpy(Settings.ControllerHostName, controllerhostname.c_str(), sizeof(Settings.ControllerHostName));
     getIPfromHostName();
     Settings.ControllerPort = controllerport.toInt();
-    
+
     strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
     strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
     if (Settings.Protocol != protocol.toInt())
@@ -1060,7 +1060,7 @@ void handle_tools() {
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
-  
+
   String reply = "";
   addMenu(reply);
 
@@ -1306,6 +1306,7 @@ void handle_advanced() {
   String syslogip = WebServer.arg("syslogip");
   String ntphost = WebServer.arg("ntphost");
   String timezone = WebServer.arg("timezone");
+  String dst = WebServer.arg("dst");
   String sysloglevel = WebServer.arg("sysloglevel");
   String udpport = WebServer.arg("udpport");
   String serialloglevel = WebServer.arg("serialloglevel");
@@ -1339,6 +1340,7 @@ void handle_advanced() {
     Settings.CustomCSS = (customcss == "on");
 #endif
     Settings.UseNTP = (usentp == "on");
+    Settings.DST = (dst == "on");
     SaveSettings();
   }
 
@@ -1362,7 +1364,8 @@ void handle_advanced() {
   reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
   reply += F("'>");
-  
+
+#if FEATURE_TIME
   reply += F("<TR><TD>Use NTP:<TD>");
   if (Settings.UseNTP)
     reply += F("<input type=checkbox name='usentp' checked>");
@@ -1374,8 +1377,17 @@ void handle_advanced() {
 
   reply += F("'><TR><TD>Timezone Offset:<TD><input type='text' name='timezone' size=2 value='");
   reply += Settings.TimeZone;
+  reply += F("'>");
 
-  reply += F("'><TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
+  reply += F("<TR><TD>DST:<TD>");
+  if (Settings.DST)
+    reply += F("<input type=checkbox name='dst' checked>");
+  else
+    reply += F("<input type=checkbox name='dst'>");
+
+#endif
+
+  reply += F("<TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
   str[0] = 0;
   sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
   reply += str;

@@ -87,13 +87,15 @@
 //   7 = EmonCMS
 #define UNIT                0
 
+#define FEATURE_TIME                     true
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              57
+#define BUILD                              58
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -151,7 +153,6 @@
 #define PLUGIN_UDP_IN                      17
 #define PLUGIN_CLOCK_IN                    18
 
-#include <TimeLib.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
@@ -159,13 +160,10 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
-#include <Servo.h> 
+#include <Servo.h>
 #if FEATURE_SPIFFS
 #include <FS.h>
 #endif
-
-time_t systemTime = 0;
-byte PrevMinutes = 0;
 
 Servo myservo1;
 Servo myservo2;
@@ -233,6 +231,7 @@ struct SettingsStruct
   int8_t        TimeZone;
   char          ControllerHostName[64];
   boolean       UseNTP;
+  boolean       DST;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -360,10 +359,10 @@ void setup()
   if (systemOK)
   {
     Serial.begin(Settings.BaudRate);
-    
+
     if (Settings.Build != BUILD)
       BuildFixes();
-      
+
     String log = F("\nINIT : Booting Build nr:");
     log += BUILD;
     addLog(LOG_LEVEL_INFO, log);
@@ -426,11 +425,11 @@ void setup()
     timer1s = millis() + 1000; // timer for periodic actions once per/sec
     timerwd = millis() + 30000; // timer for watchdog once per 30 sec
 
+#if FEATURE_TIME
     if (Settings.UseNTP)
-    {
-      setSyncProvider(getNtpTime);
-      setSyncInterval(3600); // default 300 ?
-    }
+      initTime();
+#endif
+
   }
   else
   {
@@ -449,10 +448,10 @@ void loop()
 {
   if (Serial.available())
   {
-    if(!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+    if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
       serial();
   }
-  
+
   if (systemOK)
   {
     checkUDP();
@@ -503,10 +502,15 @@ void loop()
     // Perform regular checks, 1 time/sec
     if (millis() > timer1s)
     {
+#if FEATURE_TIME
+      // clock events
+      if (Settings.UseNTP)
+        checkTime();
+#endif
       unsigned long timer = micros();
       PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
       timer = micros() - timer;
-      
+
       timer1s = millis() + 1000;
       WifiCheck();
 
@@ -544,16 +548,6 @@ void loop()
     if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
       delayedReboot(60);
 
-    // clock events
-    systemTime = now();
-    byte Hours = hour(systemTime);
-    byte Minutes = minute(systemTime);
-    if (Minutes != PrevMinutes)
-    {
-      PluginCall(PLUGIN_CLOCK_IN, 0, dummyString);
-      PrevMinutes = Minutes;
-    }
-  
     backgroundtasks();
   }
   else
