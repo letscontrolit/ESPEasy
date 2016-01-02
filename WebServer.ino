@@ -1316,6 +1316,7 @@ void handle_advanced() {
   String customcss = WebServer.arg("customcss");
 #endif
   String usentp = WebServer.arg("usentp");
+  String wdi2caddress = WebServer.arg("wdi2caddress");
   String edit = WebServer.arg("edit");
 
   if (edit.length() != 0)
@@ -1341,6 +1342,7 @@ void handle_advanced() {
 #endif
     Settings.UseNTP = (usentp == "on");
     Settings.DST = (dst == "on");
+    Settings.WDI2CAddress = wdi2caddress.toInt();
     SaveSettings();
   }
 
@@ -1406,6 +1408,10 @@ void handle_advanced() {
 
   reply += F("'><TR><TD>Baud Rate:<TD><input type='text' name='baudrate' value='");
   reply += Settings.BaudRate;
+  reply += F("'>");
+
+  reply += F("<TR><TD>WD I2C Address:<TD><input type='text' name='wdi2caddress' value='");
+  reply += Settings.WDI2CAddress;
   reply += F("'>");
 
 #if !FEATURE_SPIFFS

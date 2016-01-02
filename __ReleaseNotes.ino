@@ -1,3 +1,9 @@
+// R59 02-01-2016
+// Replaced delay(10) with yield in backgroundtasks()
+// Changed PN532 plugin init stage en reduced sample frequency
+// Restored original I2C Watchdog feed for further development
+// Fixed bug in HCSR04 and other plugins where buffersize was too short
+
 // R58 28-12-2015
 // Fixed bug with right align on LCD 4x20
 // Time feature can be disabled with #define at compile time

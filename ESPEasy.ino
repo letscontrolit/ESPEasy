@@ -95,7 +95,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              58
+#define BUILD                              59
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -232,6 +232,7 @@ struct SettingsStruct
   char          ControllerHostName[64];
   boolean       UseNTP;
   boolean       DST;
+  byte          WDI2CAddress;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -521,6 +522,15 @@ void loop()
         if (WebLoggedInTimer > 300)
           WebLoggedIn = false;
       }
+
+      // I2C Watchdog feed
+      if (Settings.WDI2CAddress != 0)
+      {
+        Wire.beginTransmission(Settings.WDI2CAddress);
+        Wire.write(0xA5);
+        Wire.endTransmission();
+      }
+
       if (Settings.SerialLogLevel == 5)
       {
         Serial.print("10 ps:");
@@ -606,6 +616,6 @@ void backgroundtasks()
 {
   WebServer.handleClient();
   MQTTclient.loop();
-  delay(10);
+  yield();
 }
 

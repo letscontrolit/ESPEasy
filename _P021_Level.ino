@@ -43,7 +43,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[80];
+        char tmpString[128];
 
         string += F("<TR><TD>Check Task:<TD>");
         addTaskSelect(string, "plugin_021_task", Settings.TaskDevicePluginConfig[event->TaskIndex][0]);

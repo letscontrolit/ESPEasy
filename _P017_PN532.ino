@@ -74,11 +74,10 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_TEN_PER_SECOND:
+    case PLUGIN_INIT:
       {
         if (!Plugin_017_init)
         {
-          Plugin_017_init = true;
           Wire.beginTransmission(PN532_I2C_ADDRESS);
           delay(20);
           Wire.endTransmission();
@@ -92,6 +91,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             log += F(".");
             log += String((versiondata >> 8) & 0xFF, HEX);
             addLog(LOG_LEVEL_INFO, log);
+            Plugin_017_init = true;
           }
 
           Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_SAMCONFIGURATION;
@@ -102,24 +102,41 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           if (writeCommand(Plugin_017_pn532_packetbuffer, 4))
             return false;
         }
+      }
 
-        uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
-        uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
-        success = readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+    case PLUGIN_TEN_PER_SECOND:
+      {
+static unsigned long tempcounter=0;
 
-        if (success) {
-          unsigned long key=uid[0];
-          for (uint8_t i = 1; i < 4; i++) {
-            key <<= 8;
-            key += uid[i];
+        static byte counter;
+        counter++;
+        if (counter == 3)
+        {
+          counter = 0;
+        if (Plugin_017_init)
+        {
+          uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
+          uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+          success = readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+
+          if (success) {
+            unsigned long key = uid[0];
+            for (uint8_t i = 1; i < 4; i++) {
+              key <<= 8;
+              key += uid[i];
+            }
+            UserVar[event->BaseVarIndex] = (key & 0xFFFF);
+            UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
+            String log = F("PN532: Tag: ");
+            log += key;
+tempcounter++;
+log += " ";
+log += tempcounter;
+            addLog(LOG_LEVEL_INFO, log);
+            event->sensorType = SENSOR_TYPE_LONG;
+            sendData(event);
           }
-          UserVar[event->BaseVarIndex] = (key & 0xFFFF);
-          UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
-          String log = F("PN532: Tag: ");
-          log += key;
-          addLog(LOG_LEVEL_INFO, log);
-          event->sensorType = SENSOR_TYPE_LONG;
-          sendData(event);
+        }
         }
         break;
       }
@@ -142,7 +159,7 @@ uint32_t getFirmwareVersion(void)
   }
 
   // read data packet
-  int16_t status = readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer),10);
+  int16_t status = readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer), 10);
   if (0 > status) {
     return 0;
   }
