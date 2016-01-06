@@ -557,7 +557,7 @@ void handle_devices() {
     reply += page;
   reply += F("\"><</a>");
   reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page < 4)
+  if (page < (TASKS_MAX / 4))
     reply += page + 1;
   else
     reply += page;

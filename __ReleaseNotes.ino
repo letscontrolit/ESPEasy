@@ -1,3 +1,9 @@
+// R60
+// Prepared for plugin numbers ranging between 1-255 (maximum active is still limited to 64!)
+// Changed hardcoded page limit 4 to TASK_MAX/4
+// Added support for MLX90614 IIR Temperature sensor (contributed by lindeger)
+// Added support for ADS1115 ADC (contributed by lindeger)
+
 // R59 02-01-2016
 // Replaced delay(10) with yield in backgroundtasks()
 // Changed PN532 plugin init stage en reduced sample frequency
@@ -52,7 +58,7 @@
 // R51 13-12-2015
 // Changed UDP handling back to a single socket for RX/TX
 // Moved LCD init from main tab to LCD plugin
-// Added pulse support on MCP23017, contributed by fgmx85
+// Added pulse support on MCP23017 (contributed by fgmx85)
 
 // R50 10-12-2015
 // First attempt on having a generic HTTP controller interface
