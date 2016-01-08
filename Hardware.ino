@@ -16,12 +16,21 @@ void hardwareInit()
   if (Settings.WDI2CAddress != 0)
   {
     delay(500);
+    Wire.beginTransmission(Settings.WDI2CAddress);
+    Wire.write(0x83);             // command to set pointer
+    Wire.write(17);               // pointer value to status byte
+    Wire.endTransmission();
+   
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
     if (Wire.available())
     {
       byte status = Wire.read();
-      Serial.print(F("External WD status: "));
-      Serial.println(status);
+      if (status & 0x1)
+      {
+        String log = F("INIT : Reset by WD!");
+        addLog(LOG_LEVEL_ERROR, log);
+        lastBootCause = BOOT_CAUSE_EXT_WD;
+      }
     }
   }
 }

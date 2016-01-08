@@ -180,6 +180,20 @@ void handle_root() {
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
 
+    reply += F("<TR><TD>Boot cause:<TD>");
+    switch(lastBootCause)
+    {
+      case BOOT_CAUSE_MANUAL_REBOOT:
+        reply += F("Manual reboot");
+        break;
+      case BOOT_CAUSE_COLD_BOOT:
+        reply += F("Cold boot");
+        break;
+      case BOOT_CAUSE_EXT_WD:
+        reply += F("External Watchdog");
+        break;
+    }
+    
     reply += F("<TR><TH>Node List:<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < 32; x++)
     {

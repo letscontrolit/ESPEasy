@@ -44,12 +44,38 @@ void ExecuteCommand(const char *Line)
     SaveSettings();
   }
 
+  if (strcasecmp_P(Command, PSTR("resetinfo")) == 0)
+  {
+    Serial.print("getResetInfo: ");
+    Serial.println(ESP.getResetInfo());
+  }
+  
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
     Wire.beginTransmission(Par1);  // address
     Wire.write(Par2);              // command
     Wire.write(Par3);              // data
     Wire.endTransmission();
+  }
+
+  if (strcasecmp_P(Command, PSTR("wdread")) == 0)
+  {
+    Wire.beginTransmission(Par1);  // address
+    Wire.write(0x83);              // command to set pointer
+    Wire.write(Par2);              // pointer value
+    Wire.endTransmission();
+    Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
+    if (Wire.available())
+    {
+      byte value = Wire.read();
+      if(printToWeb)
+      {
+        printWebString += F("Reg value: ");
+        printWebString += value;
+      }      
+      Serial.print(F("Reg value: "));
+      Serial.println(value);
+    }
   }
 
 #if FEATURE_TIME

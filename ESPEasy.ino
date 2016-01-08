@@ -95,7 +95,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              60
+#define BUILD                              61
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -152,6 +152,10 @@
 #define PLUGIN_SERIAL_IN                   16
 #define PLUGIN_UDP_IN                      17
 #define PLUGIN_CLOCK_IN                    18
+
+#define BOOT_CAUSE_MANUAL_REBOOT            0
+#define BOOT_CAUSE_COLD_BOOT                1
+#define BOOT_CAUSE_EXT_WD                  10
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -322,6 +326,7 @@ byte CPlugin_id[PLUGIN_MAX];
 String dummyString = "";
 
 boolean systemOK = false;
+byte lastBootCause = 0;
 
 /*********************************************************************************************\
  * SETUP
@@ -410,8 +415,13 @@ void setup()
         log = F("INIT : Normal boot");
     }
     else
-      log = F("INIT : RTC not read");
-
+    {
+      // cold boot situation
+      if (lastBootCause == 0) // only set this if not set earlier during boot stage.
+        lastBootCause = BOOT_CAUSE_COLD_BOOT;
+      log = F("INIT : Cold Boot");
+    }
+    
     addLog(LOG_LEVEL_INFO, log);
 
     saveToRTC(0);

@@ -1,4 +1,9 @@
-// R60
+// R61 08-01-2016
+// Fix SI7021 plugin for compatibility with HTU21D (contributed by Hallard)
+//   added a few more mSec to each settings, because my SI7021 sample still had read errors...
+// Added boot cause info for external watchdog
+
+// R60 05-01-2016
 // Prepared for plugin numbers ranging between 1-255 (maximum active is still limited to 64!)
 // Changed hardcoded page limit 4 to TASK_MAX/4
 // Added support for MLX90614 IIR Temperature sensor (contributed by lindeger)
