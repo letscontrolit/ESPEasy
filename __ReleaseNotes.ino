@@ -1,7 +1,69 @@
+// R61 08-01-2016
+// Fix SI7021 plugin for compatibility with HTU21D (contributed by Hallard)
+//   added a few more mSec to each settings, because my SI7021 sample still had read errors...
+// Added boot cause info for external watchdog
+
+// R60 05-01-2016
+// Prepared for plugin numbers ranging between 1-255 (maximum active is still limited to 64!)
+// Changed hardcoded page limit 4 to TASK_MAX/4
+// Added support for MLX90614 IIR Temperature sensor (contributed by lindeger)
+// Added support for ADS1115 ADC (contributed by lindeger)
+
+// R59 02-01-2016
+// Replaced delay(10) with yield in backgroundtasks()
+// Changed PN532 plugin init stage en reduced sample frequency
+// Restored original I2C Watchdog feed for further development
+// Fixed bug in HCSR04 and other plugins where buffersize was too short
+
+// R58 28-12-2015
+// Fixed bug with right align on LCD 4x20
+// Time feature can be disabled with #define at compile time
+// No longer using time library, moved relevant parts to Misc tab
+// Set system name as DHCP hostname
+// Fixed bug with levelcontrol for other values in taskvalue dropdown list
+
+// R57 23-12-2015
+// Moved display template handling to generic function parseTemplate() to avoid a lot of similar code in both plugins.
+// Added some variable features to LCD/OLED template, you can use %sysname%, %systime% and %ip%
+// NTP time can be enabled through advanced settings and defaults to disabled
+// Added clear command to LCD/OLED plugins
+
+// R56 22-12-2015
+// Added DNS static config option
+// Added NTP host name config (optional, defaults to pool.ntp.org)
+// Added TimeZone config
+// Added Controller Hostname config (optional, use instead of IP)
+// Added System time to main info page
+// Added switch case to ThingSpeak controller
+
+// R55 21-12-2015
+// Experimental development: Added time lib and NTP support
+// Bugfix for LCD plugin display size
+
+// R54 20-12-2015
+// LCD I2C address and display size can be configured in the webgui
+// OLED I2C address and display rotation can be configured in the webgui
+// OLEDCMD and LCDCMD commands added to turn the display on or off
+// Removed the +15 offset in BH1750 plugin
+
+// R53 19-12-2015
+// Added some serial debug commands:
+// "load" to load settings from flash while running
+// "flashdump <start>, <end>" to show flash contents
+// Changed WifiConnect, added retry and changed delays, set static ip before connecting
+// Wifi config is no longer persistent in SDK controlled flash memory
+
+// R52 17-12-2015
+// Changed send delay routine
+// Added feature "Send data" enable/disable to all tasks
+// Removed "send data" setting from Level Control plugin since this is now standard
+// Check on build changes to fix some changes in tasks
+// Removed all urlDecode() since this is handled in the ESP Core as of stable 2.0.0
+
 // R51 13-12-2015
 // Changed UDP handling back to a single socket for RX/TX
 // Moved LCD init from main tab to LCD plugin
-// Added pulse support on MCP23017, contributed by fgmx85
+// Added pulse support on MCP23017 (contributed by fgmx85)
 
 // R50 10-12-2015
 // First attempt on having a generic HTTP controller interface

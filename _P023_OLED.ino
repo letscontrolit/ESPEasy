@@ -13,6 +13,8 @@
 #define PLUGIN_NAME_023       "Display - OLED SSD1306"
 #define PLUGIN_VALUENAME1_023 "OLED"
 
+byte Plugin_023_OLED_address = 0x3c;
+
 boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -30,6 +32,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 0;
+        Device[deviceCount].SendDataOption = false;
         break;
       }
 
@@ -47,6 +50,48 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options[2];
+        options[0] = F("3C");
+        options[1] = F("3D");
+        int optionValues[2];
+        optionValues[0] = 0x3C;
+        optionValues[1] = 0x3D;
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_023_adr'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues[x];
+          string += "'";
+          if (choice == optionValues[x])
+            string += F(" selected");
+          string += ">";
+          string += options[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        String options2[2];
+        options2[0] = F("Normal");
+        options2[1] = F("Rotated");
+        int optionValues2[2];
+        optionValues2[0] = 1;
+        optionValues2[1] = 2;
+        string += F("<TR><TD>Rotation:<TD><select name='plugin_023_rotate'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues2[x];
+          string += "'";
+          if (choice2 == optionValues2[x])
+            string += F(" selected");
+          string += ">";
+          string += options2[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
         char deviceTemplate[8][64];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
@@ -66,6 +111,11 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        String plugin1 = WebServer.arg("plugin_023_adr");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        String plugin2 = WebServer.arg("plugin_023_rotate");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)
         {
@@ -73,7 +123,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           String arg = "Plugin_023_template";
           arg += varNr + 1;
           arg.toCharArray(argc, 25);
-          String tmpString = urlDecode(WebServer.arg(argc).c_str());
+          String tmpString = WebServer.arg(argc);
           strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
         }
 
@@ -86,8 +136,14 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        Plugin_023_OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Plugin_023_StartUp_OLED();
         Plugin_023_clear_display();
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
+        {
+          Plugin_023_sendcommand(0xA0 | 0x1);      //SEGREMAP   //Rotate screen 180 deg
+          Plugin_023_sendcommand(0xC8);            //COMSCANDEC  Rotate screen 180 Deg
+        }
         Plugin_023_sendStrXY("ESP Easy ", 0, 0);
         success = true;
         break;
@@ -100,64 +156,9 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
         for (byte x = 0; x < 8; x++)
         {
-          String newString = "";
           String tmpString = deviceTemplate[x];
-          String tmpStringMid = "";
-          int leftBracketIndex = tmpString.indexOf('[');
-          if (leftBracketIndex == -1)
-            newString = tmpString;
-          else
-          {
-            byte count = 0;
-            while (leftBracketIndex >= 0 && count < 10 - 1)
-            {
-              newString += tmpString.substring(0, leftBracketIndex);
-              tmpString = tmpString.substring(leftBracketIndex + 1);
-              int rightBracketIndex = tmpString.indexOf(']');
-              if (rightBracketIndex)
-              {
-                tmpStringMid = tmpString.substring(0, rightBracketIndex);
-                tmpString = tmpString.substring(rightBracketIndex + 1);
-                int hashtagIndex = tmpStringMid.indexOf('#');
-                String deviceName = tmpStringMid.substring(0, hashtagIndex);
-                String valueName = tmpStringMid.substring(hashtagIndex + 1);
-                String valueFormat = "";
-                hashtagIndex = valueName.indexOf('#');
-                if (hashtagIndex >= 0)
-                {
-                  valueFormat = valueName.substring(hashtagIndex + 1);
-                  valueName = valueName.substring(0, hashtagIndex);
-                }
-                for (byte y = 0; y < TASKS_MAX; y++)
-                {
-                  LoadTaskSettings(y);
-                  if (ExtraTaskSettings.TaskDeviceName[0] != 0)
-                  {
-                    if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
-                    {
-                      for (byte z = 0; z < VARS_PER_TASK; z++)
-                        if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                        {
-                          // here we know the task and value, so find the uservar
-                          String value = String(UserVar[y * VARS_PER_TASK + z]);
-                          if (valueFormat == "R")
-                          {
-                            int filler = 16 - newString.length() - value.length() - tmpString.length() ;
-                            for (byte f = 0; f < filler; f++)
-                              newString += " ";
-                          }
-                          newString += String(value);
-                        }
-                    }
-                  }
-                }
-              }
-              leftBracketIndex = tmpString.indexOf('[');
-              count++;
-            }
-            newString += tmpString;
-          }
-          if (newString.length() )
+          String newString = parseTemplate(tmpString, 16);
+          if (newString.length())
             Plugin_023_sendStrXY(newString.c_str(), x, 0);
         }
         success = false;
@@ -174,12 +175,24 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
-          tmpString = urlDecode(string.substring(argIndex+1).c_str());
+          tmpString = string.substring(argIndex + 1);
           Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
+        }
+        if (tmpString.equalsIgnoreCase("OLEDCMD"))
+        {
+          success = true;
+          argIndex = string.lastIndexOf(',');
+          tmpString = string.substring(argIndex + 1);
+          if (tmpString.equalsIgnoreCase("Off"))
+            Plugin_023_displayOff();
+          else if (tmpString.equalsIgnoreCase("On"))
+            Plugin_023_displayOn();
+          else if (tmpString.equalsIgnoreCase("Clear"))
+            Plugin_023_clear_display();
         }
         break;
       }
-      
+
   }
   return success;
 }
@@ -283,8 +296,6 @@ const char Plugin_023_myFont[][8] PROGMEM = {
   {0x00, 0x02, 0x05, 0x05, 0x02, 0x00, 0x00, 0x00}
 };
 
-#define OLED_address  0x3c
-
 static void Plugin_023_reset_display(void)
 {
   Plugin_023_displayOff();
@@ -335,7 +346,7 @@ static void Plugin_023_clear_display(void)
 // Actually this sends a byte, not a char to draw in the display.
 static void Plugin_023_SendChar(unsigned char data)
 {
-  Wire.beginTransmission(OLED_address);  // begin transmitting
+  Wire.beginTransmission(Plugin_023_OLED_address);  // begin transmitting
   Wire.write(0x40);                      //data mode
   Wire.write(data);
   Wire.endTransmission();              // stop transmitting
@@ -347,7 +358,7 @@ static void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
 {
   //if (interrupt && !doing_menu) return; // Stop printing only if interrupt is call but not in button functions
   Plugin_023_setXY(X, Y);
-  Wire.beginTransmission(OLED_address); // begin transmitting
+  Wire.beginTransmission(Plugin_023_OLED_address); // begin transmitting
   Wire.write(0x40);//data mode
 
   for (int i = 0; i < 8; i++)
@@ -359,7 +370,7 @@ static void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
 
 static void Plugin_023_sendcommand(unsigned char com)
 {
-  Wire.beginTransmission(OLED_address);     //begin transmitting
+  Wire.beginTransmission(Plugin_023_OLED_address);     //begin transmitting
   Wire.write(0x80);                          //command mode
   Wire.write(com);
   Wire.endTransmission();                    // stop transmitting

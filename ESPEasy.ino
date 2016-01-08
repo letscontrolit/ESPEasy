@@ -87,13 +87,15 @@
 //   7 = EmonCMS
 #define UNIT                0
 
+#define FEATURE_TIME                     true
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              51
+#define BUILD                              61
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -149,6 +151,11 @@
 #define PLUGIN_WEBFORM_SHOW_CONFIG         15
 #define PLUGIN_SERIAL_IN                   16
 #define PLUGIN_UDP_IN                      17
+#define PLUGIN_CLOCK_IN                    18
+
+#define BOOT_CAUSE_MANUAL_REBOOT            0
+#define BOOT_CAUSE_COLD_BOOT                1
+#define BOOT_CAUSE_EXT_WD                  10
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -157,7 +164,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
-#include <Servo.h> 
+#include <Servo.h>
 #if FEATURE_SPIFFS
 #include <FS.h>
 #endif
@@ -192,7 +199,7 @@ struct SettingsStruct
   byte          Controller_IP[4];
   unsigned int  ControllerPort;
   byte          IP_Octet;
-  char          _obsolete[64];
+  char          NTPHost[64];
   unsigned long Delay;
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
@@ -222,6 +229,14 @@ struct SettingsStruct
   boolean       CustomCSS;
   float         TaskDevicePluginConfigFloat[TASKS_MAX][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
+  boolean       TaskDeviceSendData[TASKS_MAX];
+  int16_t       Build;
+  byte          DNS[4];
+  int8_t        TimeZone;
+  char          ControllerHostName[64];
+  boolean       UseNTP;
+  boolean       DST;
+  byte          WDI2CAddress;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -266,6 +281,7 @@ struct DeviceStruct
   boolean FormulaOption;
   byte ValueCount;
   boolean Custom;
+  boolean SendDataOption;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
@@ -290,6 +306,7 @@ unsigned long timer;
 unsigned long timer100ms;
 unsigned long timer1s;
 unsigned long timerwd;
+unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 boolean AP_Mode = false;
@@ -309,6 +326,7 @@ byte CPlugin_id[PLUGIN_MAX];
 String dummyString = "";
 
 boolean systemOK = false;
+byte lastBootCause = 0;
 
 /*********************************************************************************************\
  * SETUP
@@ -347,6 +365,10 @@ void setup()
   if (systemOK)
   {
     Serial.begin(Settings.BaudRate);
+
+    if (Settings.Build != BUILD)
+      BuildFixes();
+
     String log = F("\nINIT : Booting Build nr:");
     log += BUILD;
     addLog(LOG_LEVEL_INFO, log);
@@ -354,6 +376,7 @@ void setup()
     if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
       Serial.setDebugOutput(true);
 
+    WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
     WifiAPconfig();
     WifiConnect();
 
@@ -392,8 +415,13 @@ void setup()
         log = F("INIT : Normal boot");
     }
     else
-      log = F("INIT : RTC not read");
-
+    {
+      // cold boot situation
+      if (lastBootCause == 0) // only set this if not set earlier during boot stage.
+        lastBootCause = BOOT_CAUSE_COLD_BOOT;
+      log = F("INIT : Cold Boot");
+    }
+    
     addLog(LOG_LEVEL_INFO, log);
 
     saveToRTC(0);
@@ -407,6 +435,12 @@ void setup()
     timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
     timer1s = millis() + 1000; // timer for periodic actions once per/sec
     timerwd = millis() + 30000; // timer for watchdog once per 30 sec
+
+#if FEATURE_TIME
+    if (Settings.UseNTP)
+      initTime();
+#endif
+
   }
   else
   {
@@ -425,10 +459,10 @@ void loop()
 {
   if (Serial.available())
   {
-    if(!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+    if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
       serial();
   }
-  
+
   if (systemOK)
   {
     checkUDP();
@@ -479,10 +513,15 @@ void loop()
     // Perform regular checks, 1 time/sec
     if (millis() > timer1s)
     {
+#if FEATURE_TIME
+      // clock events
+      if (Settings.UseNTP)
+        checkTime();
+#endif
       unsigned long timer = micros();
       PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
       timer = micros() - timer;
-      
+
       timer1s = millis() + 1000;
       WifiCheck();
 
@@ -493,6 +532,15 @@ void loop()
         if (WebLoggedInTimer > 300)
           WebLoggedIn = false;
       }
+
+      // I2C Watchdog feed
+      if (Settings.WDI2CAddress != 0)
+      {
+        Wire.beginTransmission(Settings.WDI2CAddress);
+        Wire.write(0xA5);
+        Wire.endTransmission();
+      }
+
       if (Settings.SerialLogLevel == 5)
       {
         Serial.print("10 ps:");
@@ -578,6 +626,6 @@ void backgroundtasks()
 {
   WebServer.handleClient();
   MQTTclient.loop();
-  delay(10);
+  yield();
 }
 

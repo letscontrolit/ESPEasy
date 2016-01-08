@@ -26,6 +26,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].SendDataOption = true;
         break;
       }
 
@@ -55,7 +56,6 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
       byte b2 = Wire.read();
       float val=0;     
       val=((b1<<8)|b2)/1.2;
-      val=val+15;
       UserVar[event->BaseVarIndex] = val;
       String log = F("LUX  : Light intensity: ");
       log += UserVar[event->BaseVarIndex];

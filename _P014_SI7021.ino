@@ -50,6 +50,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 2;
+        Device[deviceCount].SendDataOption = true;
         break;
       }
 
@@ -254,14 +255,23 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   // Tried clock streching and looping until no NACK from SI7021 to know
   // when conversion's done. None have worked so far !!!
   // I fade up, I'm waiting maximum conversion time + 1ms, this works !!
+  // I increased these value to add HTU21D compatibility
+  // Max for SI7021 is 3/5/7/12 ms
+  // max for HTU21D is 3/5/8/16 ms
+
+  // Martinus modification 2016-01-07:
+  // My test sample was still not working with 11 bit
+  // So to be more safe, we add 5 ms to each and use 8,10,13,21 ms
+  // But for ESP Easy, I think it does not matter at all...
+  
   if (resolution == SI7021_RESOLUTION_11T_11RH)
-    delay(4);
-  else if (resolution == SI7021_RESOLUTION_12T_08RH)
-    delay(5);
-  else if (resolution == SI7021_RESOLUTION_13T_10RH)
     delay(8);
+  else if (resolution == SI7021_RESOLUTION_12T_08RH)
+    delay(10);
+  else if (resolution == SI7021_RESOLUTION_13T_10RH)
+    delay(13);
   else 
-    delay(12);
+    delay(21);
 
   /*
   // Wait for data to become available, device will NACK during conversion

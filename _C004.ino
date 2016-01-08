@@ -56,6 +56,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event)
         switch (event->sensorType)
         {
           case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
+          case SENSOR_TYPE_SWITCH:
             postDataStr += F("&field");
             postDataStr += event->idx;
             postDataStr += "=";
@@ -71,8 +72,6 @@ boolean CPlugin_004(byte function, struct EventStruct *event)
             postDataStr += event->idx + 1;
             postDataStr += "=";
             postDataStr += String(UserVar[event->BaseVarIndex + 1]);
-            break;
-          case SENSOR_TYPE_SWITCH:
             break;
         }
         postDataStr += F("\r\n\r\n");

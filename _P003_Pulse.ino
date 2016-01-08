@@ -30,6 +30,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 2;
+        Device[deviceCount].SendDataOption = true;
         break;
       }
       
@@ -48,7 +49,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[80];
+        char tmpString[128];
         sprintf_P(tmpString, PSTR("<TR><TD>Debounce Time (mSec):<TD><input type='text' name='plugin_003' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
         string += tmpString;
         success = true;

@@ -25,6 +25,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].SendDataOption = true;
         break;
       }
       
@@ -42,7 +43,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[80];
+        char tmpString[128];
 
         string += F("<TR><TD>Check Task:<TD>");
         addTaskSelect(string, "plugin_021_task", Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
@@ -63,12 +64,6 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         string += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
         string += F("'>");
 
-        string += F("<TR><TD>Send Data:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-          string += F("<input type=checkbox name=plugin_021_data checked>");
-        else
-          string += F("<input type=checkbox name=plugin_021_data>");
-
         LoadTaskSettings(event->TaskIndex);
         success = true;
         break;
@@ -80,12 +75,10 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         String plugin2 = WebServer.arg("plugin_021_value");
         String plugin3 = WebServer.arg("plugin_021_setvalue");
         String plugin4 = WebServer.arg("plugin_021_hyst");
-        String plugin5 = WebServer.arg("plugin_021_data");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = plugin3.toFloat();
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = plugin4.toFloat();
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin5 == "on");
         success = true;
         break;
       }
@@ -103,7 +96,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       {
         // we're checking a var from another task, so calculate that basevar
         byte TaskIndex = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+        byte BaseVarIndex = TaskIndex * VARS_PER_TASK + Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         float value = UserVar[BaseVarIndex];
         byte state = switchstate[event->TaskIndex];
         // compare with threshold value
@@ -120,11 +113,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
           switchstate[event->TaskIndex] = state;
           digitalWrite(Settings.TaskDevicePin1[event->TaskIndex],state);
           UserVar[event->BaseVarIndex] = state;
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
-          {
-            byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
-            sendData(event);
-          }
+          sendData(event);
         }
 
         success = true;

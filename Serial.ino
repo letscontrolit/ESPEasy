@@ -21,6 +21,112 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
+  {
+
+    Settings.TaskDeviceNumber[Par1 - 1] = 0;
+    ExtraTaskSettings.TaskDeviceName[0] = 0;
+    Settings.TaskDeviceID[Par1 - 1] = 0;
+    Settings.TaskDevicePin1[Par1 - 1] = -1;
+    Settings.TaskDevicePin2[Par1 - 1] = -1;
+    Settings.TaskDevicePort[Par1 - 1] = 0;
+    Settings.TaskDeviceSendData[Par1 - 1] = true;
+
+    for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
+      Settings.TaskDevicePluginConfig[Par1 - 1][x] = 0;
+
+    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+    {
+      ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
+      ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
+    }
+    SaveTaskSettings(Par1 - 1);
+    SaveSettings();
+  }
+
+  if (strcasecmp_P(Command, PSTR("resetinfo")) == 0)
+  {
+    Serial.print("getResetInfo: ");
+    Serial.println(ESP.getResetInfo());
+  }
+  
+  if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
+  {
+    Wire.beginTransmission(Par1);  // address
+    Wire.write(Par2);              // command
+    Wire.write(Par3);              // data
+    Wire.endTransmission();
+  }
+
+  if (strcasecmp_P(Command, PSTR("wdread")) == 0)
+  {
+    Wire.beginTransmission(Par1);  // address
+    Wire.write(0x83);              // command to set pointer
+    Wire.write(Par2);              // pointer value
+    Wire.endTransmission();
+    Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
+    if (Wire.available())
+    {
+      byte value = Wire.read();
+      if(printToWeb)
+      {
+        printWebString += F("Reg value: ");
+        printWebString += value;
+      }      
+      Serial.print(F("Reg value: "));
+      Serial.println(value);
+    }
+  }
+
+#if FEATURE_TIME
+  if (strcasecmp_P(Command, PSTR("ntp")) == 0)
+    getNtpTime();
+#endif
+
+  if (strcasecmp_P(Command, PSTR("setsdk")) == 0)
+  {
+    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+    WiFi.disconnect();
+    WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
+    WiFi.persistent(false);
+  }
+
+  if (strcasecmp_P(Command, PSTR("clearsdk")) == 0)
+  {
+    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+    WiFi.disconnect();
+    WiFi.persistent(false);
+    WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
+  }
+
+  if (strcasecmp_P(Command, PSTR("getssid")) == 0)
+  {
+    struct station_config conf;
+    if (wifi_station_get_config(&conf))
+    {
+      Serial.print(F("SDK current: "));
+      Serial.println(String(reinterpret_cast<char*>(conf.ssid)));
+    }
+    struct station_config sconf;
+    if (wifi_station_get_config_default(&sconf))
+    {
+      Serial.print(F("SDK default: "));
+      Serial.println(String(reinterpret_cast<char*>(sconf.ssid)));
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("VariableSet")) == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 3))
+      UserVar[Par1 - 1] = atof(TmpStr1);
+  }
+
+  if (strcasecmp_P(Command, PSTR("build")) == 0)
+  {
+    Settings.Build = Par1;
+    SaveSettings();
+  }
+
   if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
   {
     Settings.deepSleep = 0;
@@ -63,13 +169,13 @@ void ExecuteCommand(const char *Line)
     WifiDisconnect();
 
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
-    {
-      pinMode(0,INPUT);
-      pinMode(2,INPUT);
-      pinMode(15,INPUT);
-      ESP.reset();
-    }
-    
+  {
+    pinMode(0, INPUT);
+    pinMode(2, INPUT);
+    pinMode(15, INPUT);
+    ESP.reset();
+  }
+
   if (strcasecmp_P(Command, PSTR("Restart")) == 0)
     ESP.restart();
 
@@ -77,13 +183,40 @@ void ExecuteCommand(const char *Line)
   {
     EraseFlash();
     saveToRTC(0);
+    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+    WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
+    WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   }
-  
+
   if (strcasecmp_P(Command, PSTR("Reset")) == 0)
     ResetFactory();
 
   if (strcasecmp_P(Command, PSTR("Save")) == 0)
     SaveSettings();
+
+  if (strcasecmp_P(Command, PSTR("Load")) == 0)
+    LoadSettings();
+
+  if (strcasecmp_P(Command, PSTR("FlashDump")) == 0)
+  {
+    uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+
+    Serial.print(F("Flash start sector: "));
+    Serial.println(_sectorStart);
+    Serial.print(F("Flash end sector  : "));
+    Serial.println(_sectorEnd);
+    char data[80];
+    if (Par2 == 0) Par2 = Par1;
+    for (int x = Par1; x <= Par2; x++)
+    {
+      LoadFromFlash(x * 1024, (byte*)&data, sizeof(data));
+      Serial.print(F("Offset: "));
+      Serial.print(x);
+      Serial.print(" : ");
+      Serial.println(data);
+    }
+  }
 
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
     Settings.Delay = Par1;
@@ -134,9 +267,9 @@ void serial()
     if (SerialInByte == 255) // binary data...
     {
       Serial.flush();
-      return;      
+      return;
     }
-    
+
     if (isprint(SerialInByte))
     {
       if (SerialInByteCounter < INPUT_BUFFER_SIZE) // add char to string if it still fits

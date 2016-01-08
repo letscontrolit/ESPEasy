@@ -77,7 +77,7 @@ void addMenu(String& str)
 
   str += F("</head>");
 
-  str += F("<h1>Welcome to ESP Easy");
+  str += F("<h1>Welcome to ESP Easy: ");
   str += Settings.Name;
 
 #if FEATURE_SPIFFS
@@ -113,7 +113,7 @@ void handle_root() {
   if (!isLoggedIn()) return;
 
   int freeMem = ESP.getFreeHeap();
-  String sCommand = urlDecode(WebServer.arg("cmd").c_str());
+  String sCommand = WebServer.arg("cmd");
 
   if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
   {
@@ -124,14 +124,23 @@ void handle_root() {
     printWebString = "";
     ExecuteCommand(sCommand.c_str());
 
-    reply += printWebString;
-    reply += F("<form>");
-    reply += F("<table><TH>System Info<TH><TH><TR><TD>");
-
     IPAddress ip = WiFi.localIP();
     IPAddress gw = WiFi.gatewayIP();
 
-    reply += F("Uptime:<TD>");
+    reply += printWebString;
+    reply += F("<form>");
+    reply += F("<table><TH>System Info<TH><TH>");
+
+#if FEATURE_TIME
+    reply += F("<TR><TD>System Time:<TD>");
+    reply += hour();
+    reply += ":";
+    if (minute() < 10)
+      reply += "0";
+    reply += minute();
+#endif
+
+    reply += F("<TR><TD>Uptime:<TD>");
     reply += wdcounter / 2;
     reply += F(" minutes");
 
@@ -171,6 +180,20 @@ void handle_root() {
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
 
+    reply += F("<TR><TD>Boot cause:<TD>");
+    switch(lastBootCause)
+    {
+      case BOOT_CAUSE_MANUAL_REBOOT:
+        reply += F("Manual reboot");
+        break;
+      case BOOT_CAUSE_COLD_BOOT:
+        reply += F("Cold boot");
+        break;
+      case BOOT_CAUSE_EXT_WD:
+        reply += F("External Watchdog");
+        break;
+    }
+    
     reply += F("<TR><TH>Node List:<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < 32; x++)
     {
@@ -229,22 +252,24 @@ void handle_config() {
 
   char tmpString[64];
 
-  String name = urlDecode(WebServer.arg("name").c_str());
-  String password = urlDecode(WebServer.arg("password").c_str());
-  String ssid = urlDecode(WebServer.arg("ssid").c_str());
-  String key = urlDecode(WebServer.arg("key").c_str());
-  String controllerip = urlDecode(WebServer.arg("controllerip").c_str());
-  String controllerport = urlDecode(WebServer.arg("controllerport").c_str());
-  String protocol = urlDecode(WebServer.arg("protocol").c_str());
-  String controlleruser = urlDecode(WebServer.arg("controlleruser").c_str());
-  String controllerpassword = urlDecode(WebServer.arg("controllerpassword").c_str());
-  String sensordelay = urlDecode(WebServer.arg("delay").c_str());
-  String deepsleep = urlDecode(WebServer.arg("deepsleep").c_str());
-  String espip = urlDecode(WebServer.arg("espip").c_str());
-  String espgateway = urlDecode(WebServer.arg("espgateway").c_str());
-  String espsubnet = urlDecode(WebServer.arg("espsubnet").c_str());
-  String unit = urlDecode(WebServer.arg("unit").c_str());
-  String apkey = urlDecode(WebServer.arg("apkey").c_str());
+  String name = WebServer.arg("name");
+  String password = WebServer.arg("password");
+  String ssid = WebServer.arg("ssid");
+  String key = WebServer.arg("key");
+  String controllerip = WebServer.arg("controllerip");
+  String controllerhostname = WebServer.arg("controllerhostname");
+  String controllerport = WebServer.arg("controllerport");
+  String protocol = WebServer.arg("protocol");
+  String controlleruser = WebServer.arg("controlleruser");
+  String controllerpassword = WebServer.arg("controllerpassword");
+  String sensordelay = WebServer.arg("delay");
+  String deepsleep = WebServer.arg("deepsleep");
+  String espip = WebServer.arg("espip");
+  String espgateway = WebServer.arg("espgateway");
+  String espsubnet = WebServer.arg("espsubnet");
+  String espdns = WebServer.arg("espdns");
+  String unit = WebServer.arg("unit");
+  String apkey = WebServer.arg("apkey");
 
   if (ssid[0] != 0)
   {
@@ -256,8 +281,10 @@ void handle_config() {
 
     controllerip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Controller_IP);
+    strncpy(Settings.ControllerHostName, controllerhostname.c_str(), sizeof(Settings.ControllerHostName));
+    getIPfromHostName();
     Settings.ControllerPort = controllerport.toInt();
-    
+
     strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
     strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
     if (Settings.Protocol != protocol.toInt())
@@ -276,6 +303,8 @@ void handle_config() {
     str2ip(tmpString, Settings.Gateway);
     espsubnet.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Subnet);
+    espdns.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.DNS);
     Settings.Unit = unit.toInt();
     SaveSettings();
   }
@@ -326,6 +355,9 @@ void handle_config() {
   reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
   reply += Settings.ControllerPort;
 
+  reply += F("'><TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
+  reply += Settings.ControllerHostName;
+
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
   if (Protocol[ProtocolIndex].usesAccount)
   {
@@ -361,6 +393,10 @@ void handle_config() {
 
   reply += F("'><TR><TD>ESP Subnet:<TD><input type='text' name='espsubnet' value='");
   sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Subnet[0], Settings.Subnet[1], Settings.Subnet[2], Settings.Subnet[3]);
+  reply += str;
+
+  reply += F("'><TR><TD>ESP DNS:<TD><input type='text' name='espdns' value='");
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.DNS[0], Settings.DNS[1], Settings.DNS[2], Settings.DNS[3]);
   reply += str;
 
   reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
@@ -423,6 +459,7 @@ void handle_devices() {
   String taskdeviceport = WebServer.arg("taskdeviceport");
   String taskdeviceformula[VARS_PER_TASK];
   String taskdevicevaluename[VARS_PER_TASK];
+  String taskdevicesenddata = WebServer.arg("taskdevicesenddata");
   for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
     char argc[25];
@@ -464,6 +501,7 @@ void handle_devices() {
       Settings.TaskDevicePin1[index - 1] = -1;
       Settings.TaskDevicePin2[index - 1] = -1;
       Settings.TaskDevicePort[index - 1] = 0;
+      Settings.TaskDeviceSendData[index - 1] = true;
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
       {
         ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
@@ -475,7 +513,6 @@ void handle_devices() {
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
       DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
       taskdevicename.toCharArray(tmpString, 26);
-      urlDecode(tmpString);
       strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
       if (Settings.TaskDeviceNumber[index - 1] != 0)
@@ -498,10 +535,11 @@ void handle_devices() {
       if (Device[DeviceIndex].InverseLogicOption)
         Settings.TaskDevicePin1Inversed[index - 1] = (taskdevicepin1inversed == "on");
 
+      Settings.TaskDeviceSendData[index - 1] = (taskdevicesenddata == "on");
+
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
         taskdeviceformula[varNr].toCharArray(tmpString, 41);
-        urlDecode(tmpString);
         strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
       }
 
@@ -510,7 +548,6 @@ void handle_devices() {
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
         taskdevicevaluename[varNr].toCharArray(tmpString, 26);
-        urlDecode(tmpString);
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       }
       TempEvent.TaskIndex = index - 1;
@@ -534,7 +571,7 @@ void handle_devices() {
     reply += page;
   reply += F("\"><</a>");
   reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page < 4)
+  if (page < (TASKS_MAX / 4))
     reply += page + 1;
   else
     reply += page;
@@ -695,8 +732,17 @@ void handle_devices() {
             reply += F("<input type=checkbox name=taskdevicepin1inversed>");
         }
       }
-      
+
       PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
+
+      if (Device[DeviceIndex].SendDataOption)
+      {
+        reply += F("<TR><TD>Send Data:<TD>");
+        if (Settings.TaskDeviceSendData[index - 1])
+          reply += F("<input type=checkbox name=taskdevicesenddata checked>");
+        else
+          reply += F("<input type=checkbox name=taskdevicesenddata>");
+      }
 
       if (!Device[DeviceIndex].Custom)
       {
@@ -786,8 +832,8 @@ void addDeviceSelect(String& str, String name,  int choice)
 void switchArray(byte value)
 {
   byte temp;
-  temp = sortedIndex[value-1];
-  sortedIndex[value-1] = sortedIndex[value];
+  temp = sortedIndex[value - 1];
+  sortedIndex[value - 1] = sortedIndex[value];
   sortedIndex[value] = temp;
 }
 
@@ -799,37 +845,37 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
 {
   char check1;
   char check2;
-  
+
   int i = 0;
   while (i < strlen(ptr_1))    // For each character in string 1, starting with the first:
-    {
-        check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
-        
-        //Serial.print("Check 1 is "); Serial.print(check1);
-          
-        if (strlen(ptr_2) < i)    // If string 2 is shorter, then switch them
-            {
-              return 1;
-            }
-        else
-            {
-              check2 = (char)ptr_2[i];
-           //   Serial.print("Check 2 is "); Serial.println(check2);
+  {
+    check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
 
-              if (check2 > check1)
-                {
-                  return 1;       // String 2 is greater; so switch them
-                }
-              if (check2 < check1)
-                {
-                  return 0;       // String 2 is LESS; so DONT switch them
-                }
-               // OTHERWISE they're equal so far; check the next char !!
-             i++; 
-            }
+    //Serial.print("Check 1 is "); Serial.print(check1);
+
+    if (strlen(ptr_2) < i)    // If string 2 is shorter, then switch them
+    {
+      return 1;
     }
-    
-return 0;  
+    else
+    {
+      check2 = (char)ptr_2[i];
+      //   Serial.print("Check 2 is "); Serial.println(check2);
+
+      if (check2 > check1)
+      {
+        return 1;       // String 2 is greater; so switch them
+      }
+      if (check2 < check1)
+      {
+        return 0;       // String 2 is LESS; so DONT switch them
+      }
+      // OTHERWISE they're equal so far; check the next char !!
+      i++;
+    }
+  }
+
+  return 0;
 }
 
 
@@ -845,22 +891,22 @@ void sortDeviceArray()
   int mainLoop ;
 
   for ( mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
+  {
+    innerLoop = mainLoop;
+    while (innerLoop  >= 1)
     {
-      innerLoop = mainLoop;
-      while (innerLoop  >= 1)
-          {
-          Plugin_ptr[sortedIndex[innerLoop]](PLUGIN_GET_DEVICENAME, 0, deviceName);
-          deviceName.toCharArray(deviceName1,26);
-          Plugin_ptr[sortedIndex[innerLoop-1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
-          deviceName.toCharArray(deviceName2,26);
-         
-          if (arrayLessThan(deviceName1, deviceName2) == 1)
-            {
-              switchArray(innerLoop);
-            }
-            innerLoop--;
-          }
+      Plugin_ptr[sortedIndex[innerLoop]](PLUGIN_GET_DEVICENAME, 0, deviceName);
+      deviceName.toCharArray(deviceName1, 26);
+      Plugin_ptr[sortedIndex[innerLoop - 1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
+      deviceName.toCharArray(deviceName2, 26);
+
+      if (arrayLessThan(deviceName1, deviceName2) == 1)
+      {
+        switchArray(innerLoop);
+      }
+      innerLoop--;
     }
+  }
 }
 
 
@@ -1028,7 +1074,6 @@ void handle_tools() {
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
-  urlDecode(command);
 
   String reply = "";
   addMenu(reply);
@@ -1096,6 +1141,7 @@ void handle_i2cscanner() {
       {
         case 0x20:
         case 0x27:
+        case 0x3F:
           reply += F("PCF8574, MCP23017, LCD Modules");
           break;
         case 0x23:
@@ -1108,6 +1154,7 @@ void handle_i2cscanner() {
           reply += F("TLS2561 Lux Sensor");
           break;
         case 0x3C:
+        case 0x3D:
           reply += F("OLED SSD1306 Display");
           break;
         case 0x40:
@@ -1188,7 +1235,6 @@ void handle_login() {
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
-  urlDecode(command);
 
   String reply = "";
   reply += F("<form method='post'>");
@@ -1228,7 +1274,6 @@ void handle_control() {
   char command[80];
   command[0] = 0;
   webrequest.toCharArray(command, 80);
-  urlDecode(command);
   boolean validCmd = false;
 
   struct EventStruct TempEvent;
@@ -1238,9 +1283,9 @@ void handle_control() {
   TempEvent.Par2 = 0;
   TempEvent.Par3 = 0;
 
-  char Cmd[40];
-  Cmd[0] = 0;
-  GetArgv(command, Cmd, 1);
+  //char Cmd[40];
+  //Cmd[0] = 0;
+  //GetArgv(command, Cmd, 1);
   if (GetArgv(command, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 3)) TempEvent.Par2 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 4)) TempEvent.Par3 = str2int(TmpStr1);
@@ -1273,6 +1318,9 @@ void handle_advanced() {
   String messagedelay = WebServer.arg("messagedelay");
   String ip = WebServer.arg("ip");
   String syslogip = WebServer.arg("syslogip");
+  String ntphost = WebServer.arg("ntphost");
+  String timezone = WebServer.arg("timezone");
+  String dst = WebServer.arg("dst");
   String sysloglevel = WebServer.arg("sysloglevel");
   String udpport = WebServer.arg("udpport");
   String serialloglevel = WebServer.arg("serialloglevel");
@@ -1281,18 +1329,21 @@ void handle_advanced() {
 #if !FEATURE_SPIFFS
   String customcss = WebServer.arg("customcss");
 #endif
+  String usentp = WebServer.arg("usentp");
+  String wdi2caddress = WebServer.arg("wdi2caddress");
   String edit = WebServer.arg("edit");
 
   if (edit.length() != 0)
   {
     mqttsubscribe.toCharArray(tmpString, 81);
-    urlDecode(tmpString);
     strcpy(Settings.MQTTsubscribe, tmpString);
     mqttpublish.toCharArray(tmpString, 81);
-    urlDecode(tmpString);
     strcpy(Settings.MQTTpublish, tmpString);
     Settings.MessageDelay = messagedelay.toInt();
     Settings.IP_Octet = ip.toInt();
+    ntphost.toCharArray(tmpString, 64);
+    strcpy(Settings.NTPHost, tmpString);
+    Settings.TimeZone = timezone.toInt();
     syslogip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
@@ -1303,6 +1354,9 @@ void handle_advanced() {
 #if !FEATURE_SPIFFS
     Settings.CustomCSS = (customcss == "on");
 #endif
+    Settings.UseNTP = (usentp == "on");
+    Settings.DST = (dst == "on");
+    Settings.WDI2CAddress = wdi2caddress.toInt();
     SaveSettings();
   }
 
@@ -1325,8 +1379,31 @@ void handle_advanced() {
 
   reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
   reply += Settings.IP_Octet;
+  reply += F("'>");
 
-  reply += F("'><TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
+#if FEATURE_TIME
+  reply += F("<TR><TD>Use NTP:<TD>");
+  if (Settings.UseNTP)
+    reply += F("<input type=checkbox name='usentp' checked>");
+  else
+    reply += F("<input type=checkbox name='usentp'>");
+
+  reply += F("<TR><TD>NTP Hostname:<TD><input type='text' name='ntphost' size=64 value='");
+  reply += Settings.NTPHost;
+
+  reply += F("'><TR><TD>Timezone Offset:<TD><input type='text' name='timezone' size=2 value='");
+  reply += Settings.TimeZone;
+  reply += F("'>");
+
+  reply += F("<TR><TD>DST:<TD>");
+  if (Settings.DST)
+    reply += F("<input type=checkbox name='dst' checked>");
+  else
+    reply += F("<input type=checkbox name='dst'>");
+
+#endif
+
+  reply += F("<TR><TD>Syslog IP:<TD><input type='text' name='syslogip' value='");
   str[0] = 0;
   sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
   reply += str;
@@ -1345,6 +1422,10 @@ void handle_advanced() {
 
   reply += F("'><TR><TD>Baud Rate:<TD><input type='text' name='baudrate' value='");
   reply += Settings.BaudRate;
+  reply += F("'>");
+
+  reply += F("<TR><TD>WD I2C Address:<TD><input type='text' name='wdi2caddress' value='");
+  reply += Settings.WDI2CAddress;
   reply += F("'>");
 
 #if !FEATURE_SPIFFS
@@ -1384,49 +1465,6 @@ boolean isLoggedIn()
   return WebLoggedIn;
 }
 
-//********************************************************************************
-// Decode special characters in URL of get/post data
-//********************************************************************************
-String urlDecode(const char *src)
-{
-  String rString;
-  const char* dst = src;
-  char a, b;
-
-  while (*src) {
-
-    if (*src == '+')
-    {
-      rString += ' ';
-      src++;
-    }
-    else
-    {
-      if ((*src == '%') &&
-          ((a = src[1]) && (b = src[2])) &&
-          (isxdigit(a) && isxdigit(b))) {
-        if (a >= 'a')
-          a -= 'a' - 'A';
-        if (a >= 'A')
-          a -= ('A' - 10);
-        else
-          a -= '0';
-        if (b >= 'a')
-          b -= 'a' - 'A';
-        if (b >= 'A')
-          b -= ('A' - 10);
-        else
-          b -= '0';
-        rString += (char)(16 * a + b);
-        src += 3;
-      }
-      else {
-        rString += *src++;
-      }
-    }
-  }
-  return rString;
-}
 
 #if FEATURE_SPIFFS
 //********************************************************************************

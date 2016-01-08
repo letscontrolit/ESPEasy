@@ -25,6 +25,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].SendDataOption = true;
         break;
       }
 
@@ -65,7 +66,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          char tmpString[80];
+          char tmpString[128];
           sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
           string += tmpString;
         }

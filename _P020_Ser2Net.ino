@@ -41,7 +41,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[80];
+        char tmpString[128];
         sprintf_P(tmpString, PSTR("<TR><TD>TCP Port:<TD><input type='text' name='plugin_020_port' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
         string += tmpString;
         sprintf_P(tmpString, PSTR("<TR><TD>Baud Rate:<TD><input type='text' name='plugin_020_baud' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);

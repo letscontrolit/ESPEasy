@@ -3,21 +3,28 @@
 //********************************************************************************
 boolean sendData(struct EventStruct *event)
 {
-  LoadTaskSettings(event->TaskIndex);
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event);
 
-  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  if (!Settings.TaskDeviceSendData[event->TaskIndex])
+    return false;
 
   if (Settings.MessageDelay != 0)
   {
-    char log[30];
-    sprintf_P(log, PSTR("HTTP : Delay %u ms"), Settings.MessageDelay);
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
-    unsigned long timer = millis() + Settings.MessageDelay;
-    while (millis() < timer)
-      backgroundtasks();
+    if ((millis() - lastSend) < Settings.MessageDelay)
+    {
+      char log[30];
+      sprintf_P(log, PSTR("HTTP : Delay %u ms"), Settings.MessageDelay);
+      addLog(LOG_LEVEL_DEBUG_MORE, log);
+      unsigned long timer = millis() + Settings.MessageDelay;
+      while (millis() < timer)
+        backgroundtasks();
+    }
   }
+
+  LoadTaskSettings(event->TaskIndex);
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event);
+  PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
+  lastSend = millis();
 }
 
 
@@ -27,17 +34,20 @@ boolean sendData(struct EventStruct *event)
 // handle MQTT messages
 void callback(const MQTT::Publish& pub) {
   char log[80];
-  String message = pub.payload_string();
+  char tmp[80];
   String topic = pub.topic();
+  String payload = pub.payload_string();
 
-  char c_topic[80];
-  topic.toCharArray(c_topic, 80);
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic ", c_topic);
+  topic.toCharArray(tmp, 80);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", tmp);
   addLog(LOG_LEVEL_DEBUG, log);
-  
+  payload.toCharArray(tmp, 80);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", tmp);
+  addLog(LOG_LEVEL_DEBUG, log);
+
   struct EventStruct TempEvent;
   TempEvent.String1 = topic;
-  TempEvent.String2 = message;
+  TempEvent.String2 = payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
   CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
@@ -60,15 +70,15 @@ void MQTTConnect()
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
-   boolean MQTTresult = false;
-   
-   if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
-     MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
-   else
-     MQTTresult = (MQTTclient.connect(clientid));
-     
-   if (MQTTresult)
-   {
+    boolean MQTTresult = false;
+
+    if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
+      MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
+    else
+      MQTTresult = (MQTTclient.connect(clientid));
+
+    if (MQTTresult)
+    {
       log = F("MQTT : Connected to broker");
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = Settings.MQTTsubscribe;
@@ -232,6 +242,11 @@ void checkUDP()
   if (packetSize)
   {
     IPAddress remoteIP = portUDP.remoteIP();
+    if (portUDP.remotePort() == 123)
+    {
+      // unexpected NTP reply, drop for now...
+      return;
+    }
     char packetBuffer[128];
     int len = portUDP.read(packetBuffer, 128);
     if (packetBuffer[0] != 255)
