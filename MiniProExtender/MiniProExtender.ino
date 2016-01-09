@@ -1,5 +1,5 @@
 /****************************************************************************************************************************\
- * Arduino project "ESP Easy" © Copyright www.esp8266.nu
+ * Arduino project "ESP Easy" ï¿½ Copyright www.esp8266.nu
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -24,7 +24,16 @@
 // Arduino Mini Pro uses A4 and A5 for I2C bus. ESP I2C can be configured but they are on GPIO-4 and GPIO-5 by default.
 
 #include <Wire.h>
-volatile int valueRead=0;
+
+#define I2C_MSG_IN_SIZE    4
+#define I2C_MSG_OUT_SIZE   4
+
+#define CMD_DIGITAL_WRITE  1
+#define CMD_DIGITAL_READ   2
+#define CMD_ANALOG_WRITE   3
+#define CMD_ANALOG_READ    4
+
+volatile uint8_t sendBuffer[I2C_MSG_OUT_SIZE];
 
 void setup()
 {
@@ -37,7 +46,7 @@ void loop() {}
 
 void receiveEvent(int count)
 {
-  if (count == 4)
+  if (count == I2C_MSG_IN_SIZE)
   {
     byte cmd = Wire.read();
     byte port = Wire.read();
@@ -45,27 +54,36 @@ void receiveEvent(int count)
     value += Wire.read()*256;
     switch(cmd)
       {
-        case 1:
+        case CMD_DIGITAL_WRITE:
           pinMode(port,OUTPUT);
           digitalWrite(port,value);
           break;
-        case 2:
+        case CMD_DIGITAL_READ:
           pinMode(port,INPUT_PULLUP);
-          valueRead = digitalRead(port);
+          clearSendBuffer();
+          sendBuffer[0] = digitalRead(port);
           break;
-        case 3:
+        case CMD_ANALOG_WRITE:
           analogWrite(port,value);
           break;
-        case 4:
-          valueRead = analogRead(port)/4;
+        case CMD_ANALOG_READ:
+          clearSendBuffer();
+          int valueRead = analogRead(port);
+          sendBuffer[0] = valueRead & 0xff;
+          sendBuffer[1] = valueRead >> 8;
           break;
       }
   }
 }
 
+void clearSendBuffer()
+{
+  for(byte x=0; x < sizeof(sendBuffer); x++)
+    sendBuffer[x]=0;
+}
+
 void requestEvent()
 {
-  Wire.write(valueRead & 0xff);
-  //Wire.write(valueRead >> 8);
+  Wire.write((const uint8_t*)sendBuffer,sizeof(sendBuffer));
 }
 

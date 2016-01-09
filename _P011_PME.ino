@@ -86,11 +86,16 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Wire.write(0);
         Wire.write(0);
         Wire.endTransmission();
-        delay(1);  // remote unit needs some time ?
-        Wire.requestFrom(address, (uint8_t)0x1);
-        if (Wire.available())
-          UserVar[event->BaseVarIndex] = Wire.read();
-        String log = F("PMini: PortValue: ");
+        delay(1);  // remote unit needs some time for conversion...
+        Wire.requestFrom(address, (uint8_t)0x4);
+        byte buffer[4];
+        if (Wire.available() == 4)
+        {
+          for (byte x=0; x < 4; x++)
+            buffer[x]=Wire.read();
+          UserVar[event->BaseVarIndex] = buffer[0] + 256 * buffer[1];
+        }
+        String log = F("PME  : PortValue: ");
         log += UserVar[event->BaseVarIndex];
         addLog(LOG_LEVEL_INFO,log);
         success = true;

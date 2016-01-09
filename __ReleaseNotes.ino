@@ -1,3 +1,7 @@
+// R62 09-01-2016
+// Changed Pro Mini Expander plugin to read 10 bit analog values
+//  Pro Mini sketch is also updated, so reprogram your Pro Mini too!
+
 // R61 08-01-2016
 // Fix SI7021 plugin for compatibility with HTU21D (contributed by Hallard)
 //   added a few more mSec to each settings, because my SI7021 sample still had read errors...
