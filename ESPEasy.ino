@@ -95,7 +95,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              62
+#define BUILD                              63
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -158,6 +158,7 @@
 #define BOOT_CAUSE_EXT_WD                  10
 
 #include <ESP8266WiFi.h>
+#include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
 #include <Wire.h>
@@ -168,6 +169,11 @@
 #if FEATURE_SPIFFS
 #include <FS.h>
 #endif
+
+// Setup DNS, only used if the ESP has no valid WiFi config
+const byte DNS_PORT = 53;
+IPAddress apIP(192, 168, 4, 1);
+DNSServer dnsServer;
 
 Servo myservo1;
 Servo myservo2;
@@ -328,6 +334,9 @@ String dummyString = "";
 boolean systemOK = false;
 byte lastBootCause = 0;
 
+boolean wifiSetup = false;
+boolean wifiSetupConnect = false;
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -342,6 +351,9 @@ void setup()
   emergencyReset();
 
   LoadSettings();
+  if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+    wifiSetup = true;
+  
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
   // if different version, eeprom settings structure has changed. Full Reset needed
@@ -441,6 +453,12 @@ void setup()
       initTime();
 #endif
 
+  // Start DNS, only used if the ESP has no valid WiFi config
+  // It will reply with it's own address on all DNS requests
+  // (captive portal concept)
+  if(wifiSetup)
+    dnsServer.start(DNS_PORT, "*", apIP);
+  
   }
   else
   {
@@ -457,6 +475,13 @@ unsigned long elapsed = 0;
 \*********************************************************************************************/
 void loop()
 {
+  if (wifiSetupConnect)
+  {
+    // try to connect for setup wizard
+    WifiConnect();
+    wifiSetupConnect = false;
+  }
+  
   if (Serial.available())
   {
     if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
@@ -624,6 +649,10 @@ void SensorSend()
 
 void backgroundtasks()
 {
+  // process DNS, only used if the ESP has no valid WiFi config
+  if(wifiSetup)
+    dnsServer.processNextRequest();
+    
   WebServer.handleClient();
   MQTTclient.loop();
   yield();

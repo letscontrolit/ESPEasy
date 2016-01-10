@@ -21,6 +21,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].FormulaOption = true;
         Device[deviceCount].Ports = 14;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;

@@ -44,7 +44,10 @@ void WifiAPMode(boolean state)
 boolean WifiConnect()
 {
   String log = "";
-  
+  byte connectAttempts = 3;
+  if (wifiSetup)
+    connectAttempts = 1;
+    
   char hostName[sizeof(Settings.Name)];
   strcpy(hostName,Settings.Name);
   for(byte x=0; x< sizeof(hostName); x++)
@@ -71,7 +74,7 @@ boolean WifiConnect()
   {
     if ((SecuritySettings.WifiSSID[0] != 0)  && (strcasecmp(SecuritySettings.WifiSSID, "ssid") != 0))
     {
-      for (byte tryConnect = 1; tryConnect < 4; tryConnect++)
+      for (byte tryConnect = 1; tryConnect <= connectAttempts; tryConnect++)
       {
         log = F("WIFI : Connecting... ");
         log += tryConnect;
@@ -179,6 +182,9 @@ void WifiScan()
 //********************************************************************************
 void WifiCheck()
 {
+  if(wifiSetup)
+    return;
+  
   if (WiFi.status() != WL_CONNECTED)
   {
     NC_Count++;

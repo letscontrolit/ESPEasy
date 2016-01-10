@@ -64,7 +64,7 @@ void ExecuteCommand(const char *Line)
     Wire.write(0x83);              // command to set pointer
     Wire.write(Par2);              // pointer value
     Wire.endTransmission();
-    Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
+    Wire.requestFrom((uint8_t)Par1, (uint8_t)1);
     if (Wire.available())
     {
       byte value = Wire.read();

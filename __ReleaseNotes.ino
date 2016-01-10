@@ -1,3 +1,7 @@
+// R63 10-01-2016
+// Added Wifi connect setup 'wizard' using captive portal
+// Enabled formula for PME plugin
+
 // R62 09-01-2016
 // Changed Pro Mini Expander plugin to read 10 bit analog values
 //  Pro Mini sketch is also updated, so reprogram your Pro Mini too!

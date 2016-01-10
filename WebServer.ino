@@ -17,13 +17,14 @@ void WebServerInit()
   WebServer.on("/download", handle_download);
   WebServer.on("/upload", handle_upload);
   WebServer.onFileUpload(handleFileUpload);
+  WebServer.onNotFound(handleNotFound);
 #if FEATURE_SPIFFS
   WebServer.on("/filelist", handle_filelist);
-  WebServer.onNotFound(handleNotFound);
 #else
   WebServer.on("/esp.css", handle_css);
 #endif
   WebServer.on("/advanced", handle_advanced);
+  WebServer.on("/setup", handle_setup);
   WebServer.begin();
 }
 
@@ -31,7 +32,7 @@ void WebServerInit()
 //********************************************************************************
 // Add top menu
 //********************************************************************************
-void addMenu(String& str)
+void addHeader(boolean showMenu, String& str)
 {
   boolean cssfile = false;
 
@@ -89,11 +90,16 @@ void addMenu(String& str)
   }
 #endif
 
-  str += F("</h1><BR><a class=\"button-menu\" href=\".\">Main</a>");
-  str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
-  str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
-  str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
-  str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
+  str += F("</h1>");
+  
+  if (showMenu)
+  {
+    str += F("<BR><a class=\"button-menu\" href=\".\">Main</a>");
+    str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
+    str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
+    str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
+    str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
+  }
 }
 
 
@@ -110,6 +116,15 @@ void addFooter(String& str)
 // Web Interface root page
 //********************************************************************************
 void handle_root() {
+
+  // if Wifi setup, launch setup wizard
+  if (wifiSetup)
+  {
+    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=http://192.168.4.1/setup'>");
+    //WebServer.send(200, "text/html", "<a class=\"button-menu\" href=\"setup\">Setup</a>");
+    return;
+  }
+
   if (!isLoggedIn()) return;
 
   int freeMem = ESP.getFreeHeap();
@@ -118,7 +133,7 @@ void handle_root() {
   if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
   {
     String reply = "";
-    addMenu(reply);
+    addHeader(true, reply);
 
     printToWeb = true;
     printWebString = "";
@@ -181,7 +196,7 @@ void handle_root() {
     reply += freeMem;
 
     reply += F("<TR><TD>Boot cause:<TD>");
-    switch(lastBootCause)
+    switch (lastBootCause)
     {
       case BOOT_CAUSE_MANUAL_REBOOT:
         reply += F("Manual reboot");
@@ -193,7 +208,7 @@ void handle_root() {
         reply += F("External Watchdog");
         break;
     }
-    
+
     reply += F("<TR><TH>Node List:<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < 32; x++)
     {
@@ -310,7 +325,7 @@ void handle_config() {
   }
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
 
   reply += F("<form name='frmselect' method='post'><table>");
   reply += F("<TH>Main Settings<TH><TR><TD>Name:<TD><input type='text' name='name' value='");
@@ -423,7 +438,7 @@ void handle_hardware() {
   }
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
 
   reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
   reply += F("<TR><TD>SDA:<TD>");
@@ -559,7 +574,7 @@ void handle_devices() {
   }
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
 
 
   // show all tasks as table
@@ -1036,7 +1051,7 @@ void handle_log() {
   char *TempString = (char*)malloc(80);
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
   reply += F("<script language='JavaScript'>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
   reply += F("<table><TH>Log<TR><TD>");
 
@@ -1076,7 +1091,7 @@ void handle_tools() {
   webrequest.toCharArray(command, 80);
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
 
   reply += F("<form>");
   reply += F("<table><TH>Tools<TH>");
@@ -1122,7 +1137,7 @@ void handle_i2cscanner() {
   char *TempString = (char*)malloc(80);
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
   reply += F("<table><TH>I2C Addresses in use<TH>Known devices");
 
   byte error, address;
@@ -1201,7 +1216,7 @@ void handle_wifiscanner() {
   char *TempString = (char*)malloc(80);
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
   reply += F("<table><TH>Access Points:<TH>RSSI");
 
   int n = WiFi.scanNetworks();
@@ -1361,7 +1376,7 @@ void handle_advanced() {
   }
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
 
   char str[20];
 
@@ -1493,7 +1508,7 @@ void handle_upload() {
   String edit = WebServer.arg("edit");
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
 
   if (edit.length() != 0)
   {
@@ -1628,25 +1643,6 @@ bool loadFromSPIFFS(String path) {
   return true;
 }
 
-//********************************************************************************
-// Web Interface handle other requests
-//********************************************************************************
-void handleNotFound() {
-  if (!isLoggedIn()) return;
-  if (loadFromSPIFFS(WebServer.uri())) return;
-  String message = "URI: ";
-  message += WebServer.uri();
-  message += "\nMethod: ";
-  message += (WebServer.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += WebServer.args();
-  message += "\n";
-  for (uint8_t i = 0; i < WebServer.args(); i++) {
-    message += " NAME:" + WebServer.argName(i) + "\n VALUE:" + WebServer.arg(i) + "\n";
-  }
-  WebServer.send(404, "text/plain", message);
-}
-
 
 //********************************************************************************
 // Web Interface file list)
@@ -1661,7 +1657,7 @@ void handle_filelist() {
   }
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
   reply += F("<table border='1'><TH><TH>Filename:<TH>Size");
 
   Dir dir = SPIFFS.openDir("/");
@@ -1771,7 +1767,7 @@ void handle_upload() {
   if (!isLoggedIn()) return;
 
   String reply = "";
-  addMenu(reply);
+  addHeader(true, reply);
   reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -1854,4 +1850,163 @@ void handleFileUpload()
   }
 }
 #endif
+
+
+//********************************************************************************
+// Web Interface handle other requests
+//********************************************************************************
+void handleNotFound() {
+
+  if (wifiSetup)
+  {
+    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=http://192.168.4.1/setup'>");
+    //WebServer.send(200, "text/html", "<a class=\"button-menu\" href=\"setup\">Setup</a>");
+    return;
+  }
+
+  if (!isLoggedIn()) return;
+#if FEATURE_SPIFFS
+  if (loadFromSPIFFS(WebServer.uri())) return;
+#endif
+  String message = "URI: ";
+  message += WebServer.uri();
+  message += "\nMethod: ";
+  message += (WebServer.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += WebServer.args();
+  message += "\n";
+  for (uint8_t i = 0; i < WebServer.args(); i++) {
+    message += " NAME:" + WebServer.argName(i) + "\n VALUE:" + WebServer.arg(i) + "\n";
+  }
+  WebServer.send(404, "text/plain", message);
+}
+
+
+//********************************************************************************
+// Web Interface Setup Wizard
+//********************************************************************************
+void handle_setup() {
+
+  String reply = "";
+  addHeader(false, reply);
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    SaveSettings();
+    IPAddress ip = WiFi.localIP();
+    char host[20];
+    sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+    reply += F("<BR>ESP is connected and using IP Address: ");
+    reply += host;
+    reply += F("<BR><BR>Connect your laptop / tablet / phone back to your main Wifi network and ");
+    reply += F("<a class=\"button-menu\" href='http://");
+    reply += host;
+    reply += F("/config'>Proceed to main config</a>");
+    addFooter(reply);
+    WebServer.send(200, "text/html", reply);
+    wifiSetup = false;
+    WifiAPMode(false);
+    return;
+  }
+
+  static byte status = 0;
+  static int n = 0;
+  static byte refreshCount = 0;
+  String ssid = WebServer.arg("ssid");
+  String other = WebServer.arg("other");
+  String password = WebServer.arg("pass");
+
+  if (other.length() != 0)
+  {
+    ssid = other;
+  }
+
+  // if ssid config not set and params are both provided
+  if (status == 0 && ssid.length() != 0 && password.length() != 0 && strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+  {
+    Serial.println("config set!");
+    strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
+    strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    wifiSetupConnect = true;
+    status = 1;
+    refreshCount = 0;
+  }
+
+  reply += F("<h1>Wifi Setup wizard</h1><BR>");
+  reply += F("<form name='frmselect' method='post'>");
+
+  if (status == 0)  // first step, scan and show access points within reach...
+  {
+    if (n == 0)
+      n = WiFi.scanNetworks();
+
+    if (n == 0)
+      reply += F("No Access Points found");
+    else
+    {
+      for (int i = 0; i < n; ++i)
+      {
+        reply += F("<input type='radio' name='ssid' value='");
+        reply += WiFi.SSID(i);
+        reply += F("'");
+        if (WiFi.SSID(i) == ssid)
+          reply += F(" checked ");
+        reply += F(">");
+        reply += WiFi.SSID(i);
+        reply += F("</input><br>");
+      }
+    }
+
+    reply += F("<input type='radio' name='ssid' id='other_ssid' value='other' >other SSID:</input>");
+    reply += F("<input type ='text' name='other' value='");
+    reply += other;
+    reply += F("'><br><br>");
+    reply += F("Password: <input type ='text' name='pass' value='");
+    reply += password;
+    reply += F("'><br>");
+
+    reply += F("<input type='submit' value='Connect'>");
+  }
+
+  if (status == 1)  // connecting stage...
+  {
+    if (refreshCount > 0)
+    {
+      status = 0;
+      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
+      SecuritySettings.WifiKey[0] = 0;
+      reply += F("<a class=\"button-menu\" href=\"setup\">Back to Setup</a>");
+    }
+    else
+    {
+      int wait = 20;
+      if (refreshCount != 0)
+        wait = 3;
+      reply += F("Please wait for <h1 id=\"countdown\">20..</h1>");
+      reply += F("<script type=\"text/JavaScript\">");
+      reply += F("function timedRefresh(timeoutPeriod) {");
+      reply += F("   var timer = setInterval(function() {");
+      reply += F("   if (timeoutPeriod > 0) {");
+      reply += F("       timeoutPeriod -= 1;");
+      reply += F("       document.getElementById(\"countdown\").innerHTML = timeoutPeriod + \"..\" + \"<br />\";");
+      reply += F("   } else {");
+      reply += F("       clearInterval(timer);");
+      reply += F("            window.location.href = window.location.href;");
+      reply += F("       };");
+      reply += F("   }, 1000);");
+      reply += F("};");
+      reply += F("timedRefresh(");
+      reply += wait;
+      reply += F(");");
+      reply += F("</script>");
+      reply += F("seconds while trying to connect");
+    }
+    refreshCount++;
+  }
+
+  reply += F("</form>");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+  delay(10);
+}
 
