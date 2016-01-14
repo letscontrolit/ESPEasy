@@ -1,3 +1,14 @@
+// R64 14-01-2016
+// Experimental: Added simple json interface to retrieve sensor data using http
+// Experimental: Prepare tasks for remote data feed (Work in progress...)
+// Added %uptime% as variable for display
+// Added padding to LCD/OLED display
+// Added support for local button to turn on LCD/OLED display with configurable timeout
+// Changed: no system time displayed when NTP is disabled
+// Added protocol option "Standalone" for units without a controller
+// Fixed UNIT_MAX in node list
+// Added boot config for GPIO pin states
+
 // R63 10-01-2016
 // Added Wifi connect setup 'wizard' using captive portal
 // Enabled formula for PME plugin

@@ -95,7 +95,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              63
+#define BUILD                              64
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -121,6 +121,7 @@
 #define PLUGIN_CONFIGLONGVAR_MAX            4
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
 #define CPLUGIN_MAX                        16
+#define UNIT_MAX                           32
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
@@ -243,6 +244,10 @@ struct SettingsStruct
   boolean       UseNTP;
   boolean       DST;
   byte          WDI2CAddress;
+  boolean       TaskDeviceGlobalSync[TASKS_MAX];
+  int8_t        TaskDevicePin3[TASKS_MAX];
+  byte          TaskDeviceDataFeed[TASKS_MAX];
+  int8_t        PinStates[17];
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -288,6 +293,7 @@ struct DeviceStruct
   byte ValueCount;
   boolean Custom;
   boolean SendDataOption;
+  boolean GlobalSyncOption;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
@@ -545,6 +551,7 @@ void loop()
 #endif
       unsigned long timer = micros();
       PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+        
       timer = micros() - timer;
 
       timer1s = millis() + 1000;
@@ -604,7 +611,7 @@ void SensorSend()
 {
   for (byte x = 0; x < TASKS_MAX; x++)
   {
-    if (Settings.TaskDeviceID[x] != 0)
+    if (Settings.TaskDeviceDataFeed[x] == 0 && Settings.TaskDeviceID[x] != 0)
     {
       byte varIndex = x * VARS_PER_TASK;
       boolean success = false;

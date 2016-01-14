@@ -4,6 +4,22 @@
 
 void hardwareInit()
 {
+
+  // set GPIO pins state if not set to default
+  for (byte x=0; x < 17; x++)
+    if (Settings.PinStates[x] != 0)
+      switch(Settings.PinStates[x])
+      {
+        case 1:
+          pinMode(x,OUTPUT);
+          digitalWrite(x,LOW);
+          break;
+        case 2:
+          pinMode(x,OUTPUT);
+          digitalWrite(x,HIGH);
+          break;
+      }
+
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
   {

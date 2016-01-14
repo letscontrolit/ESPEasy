@@ -416,599 +416,599 @@ void PluginInit(void)
 #endif
 
 #ifdef PLUGIN_101
-    Plugin_id[x] = 101; Plugin_ptr[x++] = &Plugin_101
+  Plugin_id[x] = 101; Plugin_ptr[x++] = &Plugin_101;
 #endif
 
 #ifdef PLUGIN_102
-    Plugin_id[x] = 102; Plugin_ptr[x++] = &Plugin_102
+  Plugin_id[x] = 102; Plugin_ptr[x++] = &Plugin_102;
 #endif
 
 #ifdef PLUGIN_103
-    Plugin_id[x] = 103; Plugin_ptr[x++] = &Plugin_103
+  Plugin_id[x] = 103; Plugin_ptr[x++] = &Plugin_103;
 #endif
 
 #ifdef PLUGIN_104
-    Plugin_id[x] = 104; Plugin_ptr[x++] = &Plugin_104
+  Plugin_id[x] = 104; Plugin_ptr[x++] = &Plugin_104;
 #endif
 
 #ifdef PLUGIN_105
-    Plugin_id[x] = 105; Plugin_ptr[x++] = &Plugin_105
+  Plugin_id[x] = 105; Plugin_ptr[x++] = &Plugin_105;
 #endif
 
 #ifdef PLUGIN_106
-    Plugin_id[x] = 106; Plugin_ptr[x++] = &Plugin_106
+  Plugin_id[x] = 106; Plugin_ptr[x++] = &Plugin_106;
 #endif
 
 #ifdef PLUGIN_107
-    Plugin_id[x] = 107; Plugin_ptr[x++] = &Plugin_107
+  Plugin_id[x] = 107; Plugin_ptr[x++] = &Plugin_107;
 #endif
 
 #ifdef PLUGIN_108
-    Plugin_id[x] = 108; Plugin_ptr[x++] = &Plugin_108
+  Plugin_id[x] = 108; Plugin_ptr[x++] = &Plugin_108;
 #endif
 
 #ifdef PLUGIN_109
-    Plugin_id[x] = 109; Plugin_ptr[x++] = &Plugin_109
+  Plugin_id[x] = 109; Plugin_ptr[x++] = &Plugin_109;
 #endif
 
 #ifdef PLUGIN_110
-    Plugin_id[x] = 110; Plugin_ptr[x++] = &Plugin_110
+  Plugin_id[x] = 110; Plugin_ptr[x++] = &Plugin_110;
 #endif
 
 #ifdef PLUGIN_111
-    Plugin_id[x] = 111; Plugin_ptr[x++] = &Plugin_111
+  Plugin_id[x] = 111; Plugin_ptr[x++] = &Plugin_111;
 #endif
 
 #ifdef PLUGIN_112
-    Plugin_id[x] = 112; Plugin_ptr[x++] = &Plugin_112
+  Plugin_id[x] = 112; Plugin_ptr[x++] = &Plugin_112;
 #endif
 
 #ifdef PLUGIN_113
-    Plugin_id[x] = 113; Plugin_ptr[x++] = &Plugin_113
+  Plugin_id[x] = 113; Plugin_ptr[x++] = &Plugin_113;
 #endif
 
 #ifdef PLUGIN_114
-    Plugin_id[x] = 114; Plugin_ptr[x++] = &Plugin_114
+  Plugin_id[x] = 114; Plugin_ptr[x++] = &Plugin_114;
 #endif
 
 #ifdef PLUGIN_115
-    Plugin_id[x] = 115; Plugin_ptr[x++] = &Plugin_115
+  Plugin_id[x] = 115; Plugin_ptr[x++] = &Plugin_115;
 #endif
 
 #ifdef PLUGIN_116
-    Plugin_id[x] = 116; Plugin_ptr[x++] = &Plugin_116
+  Plugin_id[x] = 116; Plugin_ptr[x++] = &Plugin_116;
 #endif
 
 #ifdef PLUGIN_117
-    Plugin_id[x] = 117; Plugin_ptr[x++] = &Plugin_117
+  Plugin_id[x] = 117; Plugin_ptr[x++] = &Plugin_117;
 #endif
 
 #ifdef PLUGIN_118
-    Plugin_id[x] = 118; Plugin_ptr[x++] = &Plugin_118
+  Plugin_id[x] = 118; Plugin_ptr[x++] = &Plugin_118;
 #endif
 
 #ifdef PLUGIN_119
-    Plugin_id[x] = 119; Plugin_ptr[x++] = &Plugin_119
+  Plugin_id[x] = 119; Plugin_ptr[x++] = &Plugin_119;
 #endif
 
 #ifdef PLUGIN_120
-    Plugin_id[x] = 120; Plugin_ptr[x++] = &Plugin_120
+  Plugin_id[x] = 120; Plugin_ptr[x++] = &Plugin_120;
 #endif
 
 #ifdef PLUGIN_121
-    Plugin_id[x] = 121; Plugin_ptr[x++] = &Plugin_121
+  Plugin_id[x] = 121; Plugin_ptr[x++] = &Plugin_121;
 #endif
 
 #ifdef PLUGIN_122
-    Plugin_id[x] = 122; Plugin_ptr[x++] = &Plugin_122
+  Plugin_id[x] = 122; Plugin_ptr[x++] = &Plugin_122;
 #endif
 
 #ifdef PLUGIN_123
-    Plugin_id[x] = 123; Plugin_ptr[x++] = &Plugin_123
+  Plugin_id[x] = 123; Plugin_ptr[x++] = &Plugin_123;
 #endif
 
 #ifdef PLUGIN_124
-    Plugin_id[x] = 124; Plugin_ptr[x++] = &Plugin_124
+  Plugin_id[x] = 124; Plugin_ptr[x++] = &Plugin_124;
 #endif
 
 #ifdef PLUGIN_125
-    Plugin_id[x] = 125; Plugin_ptr[x++] = &Plugin_125
+  Plugin_id[x] = 125; Plugin_ptr[x++] = &Plugin_125;
 #endif
 
 #ifdef PLUGIN_126
-    Plugin_id[x] = 126; Plugin_ptr[x++] = &Plugin_126
+  Plugin_id[x] = 126; Plugin_ptr[x++] = &Plugin_126;
 #endif
 
 #ifdef PLUGIN_127
-    Plugin_id[x] = 127; Plugin_ptr[x++] = &Plugin_127
+  Plugin_id[x] = 127; Plugin_ptr[x++] = &Plugin_127;
 #endif
 
 #ifdef PLUGIN_128
-    Plugin_id[x] = 128; Plugin_ptr[x++] = &Plugin_128
+  Plugin_id[x] = 128; Plugin_ptr[x++] = &Plugin_128;
 #endif
 
 #ifdef PLUGIN_129
-    Plugin_id[x] = 129; Plugin_ptr[x++] = &Plugin_129
+  Plugin_id[x] = 129; Plugin_ptr[x++] = &Plugin_129;
 #endif
 
 #ifdef PLUGIN_130
-    Plugin_id[x] = 130; Plugin_ptr[x++] = &Plugin_130
+  Plugin_id[x] = 130; Plugin_ptr[x++] = &Plugin_130;
 #endif
 
 #ifdef PLUGIN_131
-    Plugin_id[x] = 131; Plugin_ptr[x++] = &Plugin_131
+  Plugin_id[x] = 131; Plugin_ptr[x++] = &Plugin_131;
 #endif
 
 #ifdef PLUGIN_132
-    Plugin_id[x] = 132; Plugin_ptr[x++] = &Plugin_132
+  Plugin_id[x] = 132; Plugin_ptr[x++] = &Plugin_132;
 #endif
 
 #ifdef PLUGIN_133
-    Plugin_id[x] = 133; Plugin_ptr[x++] = &Plugin_133
+  Plugin_id[x] = 133; Plugin_ptr[x++] = &Plugin_133;
 #endif
 
 #ifdef PLUGIN_134
-    Plugin_id[x] = 134; Plugin_ptr[x++] = &Plugin_134
+  Plugin_id[x] = 134; Plugin_ptr[x++] = &Plugin_134;
 #endif
 
 #ifdef PLUGIN_135
-    Plugin_id[x] = 135; Plugin_ptr[x++] = &Plugin_135
+  Plugin_id[x] = 135; Plugin_ptr[x++] = &Plugin_135;
 #endif
 
 #ifdef PLUGIN_136
-    Plugin_id[x] = 136; Plugin_ptr[x++] = &Plugin_136
+  Plugin_id[x] = 136; Plugin_ptr[x++] = &Plugin_136;
 #endif
 
 #ifdef PLUGIN_137
-    Plugin_id[x] = 137; Plugin_ptr[x++] = &Plugin_137
+  Plugin_id[x] = 137; Plugin_ptr[x++] = &Plugin_137;
 #endif
 
 #ifdef PLUGIN_138
-    Plugin_id[x] = 138; Plugin_ptr[x++] = &Plugin_138
+  Plugin_id[x] = 138; Plugin_ptr[x++] = &Plugin_138;
 #endif
 
 #ifdef PLUGIN_139
-    Plugin_id[x] = 139; Plugin_ptr[x++] = &Plugin_139
+  Plugin_id[x] = 139; Plugin_ptr[x++] = &Plugin_139;
 #endif
 
 #ifdef PLUGIN_140
-    Plugin_id[x] = 140; Plugin_ptr[x++] = &Plugin_140
+  Plugin_id[x] = 140; Plugin_ptr[x++] = &Plugin_140;
 #endif
 
 #ifdef PLUGIN_141
-    Plugin_id[x] = 141; Plugin_ptr[x++] = &Plugin_141
+  Plugin_id[x] = 141; Plugin_ptr[x++] = &Plugin_141;
 #endif
 
 #ifdef PLUGIN_142
-    Plugin_id[x] = 142; Plugin_ptr[x++] = &Plugin_142
+  Plugin_id[x] = 142; Plugin_ptr[x++] = &Plugin_142;
 #endif
 
 #ifdef PLUGIN_143
-    Plugin_id[x] = 143; Plugin_ptr[x++] = &Plugin_143
+  Plugin_id[x] = 143; Plugin_ptr[x++] = &Plugin_143;
 #endif
 
 #ifdef PLUGIN_144
-    Plugin_id[x] = 144; Plugin_ptr[x++] = &Plugin_144
+  Plugin_id[x] = 144; Plugin_ptr[x++] = &Plugin_144;
 #endif
 
 #ifdef PLUGIN_145
-    Plugin_id[x] = 145; Plugin_ptr[x++] = &Plugin_145
+  Plugin_id[x] = 145; Plugin_ptr[x++] = &Plugin_145;
 #endif
 
 #ifdef PLUGIN_146
-    Plugin_id[x] = 146; Plugin_ptr[x++] = &Plugin_146
+  Plugin_id[x] = 146; Plugin_ptr[x++] = &Plugin_146;
 #endif
 
 #ifdef PLUGIN_147
-    Plugin_id[x] = 147; Plugin_ptr[x++] = &Plugin_147
+  Plugin_id[x] = 147; Plugin_ptr[x++] = &Plugin_147;
 #endif
 
 #ifdef PLUGIN_148
-    Plugin_id[x] = 148; Plugin_ptr[x++] = &Plugin_148
+  Plugin_id[x] = 148; Plugin_ptr[x++] = &Plugin_148;
 #endif
 
 #ifdef PLUGIN_149
-    Plugin_id[x] = 149; Plugin_ptr[x++] = &Plugin_149
+  Plugin_id[x] = 149; Plugin_ptr[x++] = &Plugin_149;
 #endif
 
 #ifdef PLUGIN_150
-    Plugin_id[x] = 150; Plugin_ptr[x++] = &Plugin_150
+  Plugin_id[x] = 150; Plugin_ptr[x++] = &Plugin_150;
 #endif
 
 #ifdef PLUGIN_151
-    Plugin_id[x] = 151; Plugin_ptr[x++] = &Plugin_151
+  Plugin_id[x] = 151; Plugin_ptr[x++] = &Plugin_151;
 #endif
 
 #ifdef PLUGIN_152
-    Plugin_id[x] = 152; Plugin_ptr[x++] = &Plugin_152
+  Plugin_id[x] = 152; Plugin_ptr[x++] = &Plugin_152;
 #endif
 
 #ifdef PLUGIN_153
-    Plugin_id[x] = 153; Plugin_ptr[x++] = &Plugin_153
+  Plugin_id[x] = 153; Plugin_ptr[x++] = &Plugin_153;
 #endif
 
 #ifdef PLUGIN_154
-    Plugin_id[x] = 154; Plugin_ptr[x++] = &Plugin_154
+  Plugin_id[x] = 154; Plugin_ptr[x++] = &Plugin_154;
 #endif
 
 #ifdef PLUGIN_155
-    Plugin_id[x] = 155; Plugin_ptr[x++] = &Plugin_155
+  Plugin_id[x] = 155; Plugin_ptr[x++] = &Plugin_155;
 #endif
 
 #ifdef PLUGIN_156
-    Plugin_id[x] = 156; Plugin_ptr[x++] = &Plugin_156
+  Plugin_id[x] = 156; Plugin_ptr[x++] = &Plugin_156;
 #endif
 
 #ifdef PLUGIN_157
-    Plugin_id[x] = 157; Plugin_ptr[x++] = &Plugin_157
+  Plugin_id[x] = 157; Plugin_ptr[x++] = &Plugin_157;
 #endif
 
 #ifdef PLUGIN_158
-    Plugin_id[x] = 158; Plugin_ptr[x++] = &Plugin_158
+  Plugin_id[x] = 158; Plugin_ptr[x++] = &Plugin_158;
 #endif
 
 #ifdef PLUGIN_159
-    Plugin_id[x] = 159; Plugin_ptr[x++] = &Plugin_159
+  Plugin_id[x] = 159; Plugin_ptr[x++] = &Plugin_159;
 #endif
 
 #ifdef PLUGIN_160
-    Plugin_id[x] = 160; Plugin_ptr[x++] = &Plugin_160
+  Plugin_id[x] = 160; Plugin_ptr[x++] = &Plugin_160;
 #endif
 
 #ifdef PLUGIN_161
-    Plugin_id[x] = 161; Plugin_ptr[x++] = &Plugin_161
+  Plugin_id[x] = 161; Plugin_ptr[x++] = &Plugin_161;
 #endif
 
 #ifdef PLUGIN_162
-    Plugin_id[x] = 162; Plugin_ptr[x++] = &Plugin_162
+  Plugin_id[x] = 162; Plugin_ptr[x++] = &Plugin_162;
 #endif
 
 #ifdef PLUGIN_163
-    Plugin_id[x] = 163; Plugin_ptr[x++] = &Plugin_163
+  Plugin_id[x] = 163; Plugin_ptr[x++] = &Plugin_163;
 #endif
 
 #ifdef PLUGIN_164
-    Plugin_id[x] = 164; Plugin_ptr[x++] = &Plugin_164
+  Plugin_id[x] = 164; Plugin_ptr[x++] = &Plugin_164;
 #endif
 
 #ifdef PLUGIN_165
-    Plugin_id[x] = 165; Plugin_ptr[x++] = &Plugin_165
+  Plugin_id[x] = 165; Plugin_ptr[x++] = &Plugin_165;
 #endif
 
 #ifdef PLUGIN_166
-    Plugin_id[x] = 166; Plugin_ptr[x++] = &Plugin_166
+  Plugin_id[x] = 166; Plugin_ptr[x++] = &Plugin_166;
 #endif
 
 #ifdef PLUGIN_167
-    Plugin_id[x] = 167; Plugin_ptr[x++] = &Plugin_167
+  Plugin_id[x] = 167; Plugin_ptr[x++] = &Plugin_167;
 #endif
 
 #ifdef PLUGIN_168
-    Plugin_id[x] = 168; Plugin_ptr[x++] = &Plugin_168
+  Plugin_id[x] = 168; Plugin_ptr[x++] = &Plugin_168;
 #endif
 
 #ifdef PLUGIN_169
-    Plugin_id[x] = 169; Plugin_ptr[x++] = &Plugin_169
+  Plugin_id[x] = 169; Plugin_ptr[x++] = &Plugin_169;
 #endif
 
 #ifdef PLUGIN_170
-    Plugin_id[x] = 170; Plugin_ptr[x++] = &Plugin_170
+  Plugin_id[x] = 170; Plugin_ptr[x++] = &Plugin_170;
 #endif
 
 #ifdef PLUGIN_171
-    Plugin_id[x] = 171; Plugin_ptr[x++] = &Plugin_171
+  Plugin_id[x] = 171; Plugin_ptr[x++] = &Plugin_171;
 #endif
 
 #ifdef PLUGIN_172
-    Plugin_id[x] = 172; Plugin_ptr[x++] = &Plugin_172
+  Plugin_id[x] = 172; Plugin_ptr[x++] = &Plugin_172;
 #endif
 
 #ifdef PLUGIN_173
-    Plugin_id[x] = 173; Plugin_ptr[x++] = &Plugin_173
+  Plugin_id[x] = 173; Plugin_ptr[x++] = &Plugin_173;
 #endif
 
 #ifdef PLUGIN_174
-    Plugin_id[x] = 174; Plugin_ptr[x++] = &Plugin_174
+  Plugin_id[x] = 174; Plugin_ptr[x++] = &Plugin_174;
 #endif
 
 #ifdef PLUGIN_175
-    Plugin_id[x] = 175; Plugin_ptr[x++] = &Plugin_175
+  Plugin_id[x] = 175; Plugin_ptr[x++] = &Plugin_175;
 #endif
 
 #ifdef PLUGIN_176
-    Plugin_id[x] = 176; Plugin_ptr[x++] = &Plugin_176
+  Plugin_id[x] = 176; Plugin_ptr[x++] = &Plugin_176;
 #endif
 
 #ifdef PLUGIN_177
-    Plugin_id[x] = 177; Plugin_ptr[x++] = &Plugin_177
+  Plugin_id[x] = 177; Plugin_ptr[x++] = &Plugin_177;
 #endif
 
 #ifdef PLUGIN_178
-    Plugin_id[x] = 178; Plugin_ptr[x++] = &Plugin_178
+  Plugin_id[x] = 178; Plugin_ptr[x++] = &Plugin_178;
 #endif
 
 #ifdef PLUGIN_179
-    Plugin_id[x] = 179; Plugin_ptr[x++] = &Plugin_179
+  Plugin_id[x] = 179; Plugin_ptr[x++] = &Plugin_179;
 #endif
 
 #ifdef PLUGIN_180
-    Plugin_id[x] = 180; Plugin_ptr[x++] = &Plugin_180
+  Plugin_id[x] = 180; Plugin_ptr[x++] = &Plugin_180;
 #endif
 
 #ifdef PLUGIN_181
-    Plugin_id[x] = 181; Plugin_ptr[x++] = &Plugin_181
+  Plugin_id[x] = 181; Plugin_ptr[x++] = &Plugin_181;
 #endif
 
 #ifdef PLUGIN_182
-    Plugin_id[x] = 182; Plugin_ptr[x++] = &Plugin_182
+  Plugin_id[x] = 182; Plugin_ptr[x++] = &Plugin_182;
 #endif
 
 #ifdef PLUGIN_183
-    Plugin_id[x] = 183; Plugin_ptr[x++] = &Plugin_183
+  Plugin_id[x] = 183; Plugin_ptr[x++] = &Plugin_183;
 #endif
 
 #ifdef PLUGIN_184
-    Plugin_id[x] = 184; Plugin_ptr[x++] = &Plugin_184
+  Plugin_id[x] = 184; Plugin_ptr[x++] = &Plugin_184;
 #endif
 
 #ifdef PLUGIN_185
-    Plugin_id[x] = 185; Plugin_ptr[x++] = &Plugin_185
+  Plugin_id[x] = 185; Plugin_ptr[x++] = &Plugin_185;
 #endif
 
 #ifdef PLUGIN_186
-    Plugin_id[x] = 186; Plugin_ptr[x++] = &Plugin_186
+  Plugin_id[x] = 186; Plugin_ptr[x++] = &Plugin_186;
 #endif
 
 #ifdef PLUGIN_187
-    Plugin_id[x] = 187; Plugin_ptr[x++] = &Plugin_187
+  Plugin_id[x] = 187; Plugin_ptr[x++] = &Plugin_187;
 #endif
 
 #ifdef PLUGIN_188
-    Plugin_id[x] = 188; Plugin_ptr[x++] = &Plugin_188
+  Plugin_id[x] = 188; Plugin_ptr[x++] = &Plugin_188;
 #endif
 
 #ifdef PLUGIN_189
-    Plugin_id[x] = 189; Plugin_ptr[x++] = &Plugin_189
+  Plugin_id[x] = 189; Plugin_ptr[x++] = &Plugin_189;
 #endif
 
 #ifdef PLUGIN_190
-    Plugin_id[x] = 190; Plugin_ptr[x++] = &Plugin_190
+  Plugin_id[x] = 190; Plugin_ptr[x++] = &Plugin_190;
 #endif
 
 #ifdef PLUGIN_191
-    Plugin_id[x] = 191; Plugin_ptr[x++] = &Plugin_191
+  Plugin_id[x] = 191; Plugin_ptr[x++] = &Plugin_191;
 #endif
 
 #ifdef PLUGIN_192
-    Plugin_id[x] = 192; Plugin_ptr[x++] = &Plugin_192
+  Plugin_id[x] = 192; Plugin_ptr[x++] = &Plugin_192;
 #endif
 
 #ifdef PLUGIN_193
-    Plugin_id[x] = 193; Plugin_ptr[x++] = &Plugin_193
+  Plugin_id[x] = 193; Plugin_ptr[x++] = &Plugin_193;
 #endif
 
 #ifdef PLUGIN_194
-    Plugin_id[x] = 194; Plugin_ptr[x++] = &Plugin_194
+  Plugin_id[x] = 194; Plugin_ptr[x++] = &Plugin_194;
 #endif
 
 #ifdef PLUGIN_195
-    Plugin_id[x] = 195; Plugin_ptr[x++] = &Plugin_195
+  Plugin_id[x] = 195; Plugin_ptr[x++] = &Plugin_195;
 #endif
 
 #ifdef PLUGIN_196
-    Plugin_id[x] = 196; Plugin_ptr[x++] = &Plugin_196
+  Plugin_id[x] = 196; Plugin_ptr[x++] = &Plugin_196;
 #endif
 
 #ifdef PLUGIN_197
-    Plugin_id[x] = 197; Plugin_ptr[x++] = &Plugin_197
+  Plugin_id[x] = 197; Plugin_ptr[x++] = &Plugin_197;
 #endif
 
 #ifdef PLUGIN_198
-    Plugin_id[x] = 198; Plugin_ptr[x++] = &Plugin_198
+  Plugin_id[x] = 198; Plugin_ptr[x++] = &Plugin_198;
 #endif
 
 #ifdef PLUGIN_199
-    Plugin_id[x] = 199; Plugin_ptr[x++] = &Plugin_199
+  Plugin_id[x] = 199; Plugin_ptr[x++] = &Plugin_199;
 #endif
 
 #ifdef PLUGIN_200
-    Plugin_id[x] = 200; Plugin_ptr[x++] = &Plugin_200
+  Plugin_id[x] = 200; Plugin_ptr[x++] = &Plugin_200;
 #endif
 
 #ifdef PLUGIN_201
-    Plugin_id[x] = 201; Plugin_ptr[x++] = &Plugin_201
+  Plugin_id[x] = 201; Plugin_ptr[x++] = &Plugin_201;
 #endif
 
 #ifdef PLUGIN_202
-    Plugin_id[x] = 202; Plugin_ptr[x++] = &Plugin_202
+  Plugin_id[x] = 202; Plugin_ptr[x++] = &Plugin_202;
 #endif
 
 #ifdef PLUGIN_203
-    Plugin_id[x] = 203; Plugin_ptr[x++] = &Plugin_203
+  Plugin_id[x] = 203; Plugin_ptr[x++] = &Plugin_203;
 #endif
 
 #ifdef PLUGIN_204
-    Plugin_id[x] = 204; Plugin_ptr[x++] = &Plugin_204
+  Plugin_id[x] = 204; Plugin_ptr[x++] = &Plugin_204;
 #endif
 
 #ifdef PLUGIN_205
-    Plugin_id[x] = 205; Plugin_ptr[x++] = &Plugin_205
+  Plugin_id[x] = 205; Plugin_ptr[x++] = &Plugin_205;
 #endif
 
 #ifdef PLUGIN_206
-    Plugin_id[x] = 206; Plugin_ptr[x++] = &Plugin_206
+  Plugin_id[x] = 206; Plugin_ptr[x++] = &Plugin_206;
 #endif
 
 #ifdef PLUGIN_207
-    Plugin_id[x] = 207; Plugin_ptr[x++] = &Plugin_207
+  Plugin_id[x] = 207; Plugin_ptr[x++] = &Plugin_207;
 #endif
 
 #ifdef PLUGIN_208
-    Plugin_id[x] = 208; Plugin_ptr[x++] = &Plugin_208
+  Plugin_id[x] = 208; Plugin_ptr[x++] = &Plugin_208;
 #endif
 
 #ifdef PLUGIN_209
-    Plugin_id[x] = 209; Plugin_ptr[x++] = &Plugin_209
+  Plugin_id[x] = 209; Plugin_ptr[x++] = &Plugin_209;
 #endif
 
 #ifdef PLUGIN_210
-    Plugin_id[x] = 210; Plugin_ptr[x++] = &Plugin_210
+  Plugin_id[x] = 210; Plugin_ptr[x++] = &Plugin_210;
 #endif
 
 #ifdef PLUGIN_211
-    Plugin_id[x] = 211; Plugin_ptr[x++] = &Plugin_211
+  Plugin_id[x] = 211; Plugin_ptr[x++] = &Plugin_211;
 #endif
 
 #ifdef PLUGIN_212
-    Plugin_id[x] = 212; Plugin_ptr[x++] = &Plugin_212
+  Plugin_id[x] = 212; Plugin_ptr[x++] = &Plugin_212;
 #endif
 
 #ifdef PLUGIN_213
-    Plugin_id[x] = 213; Plugin_ptr[x++] = &Plugin_213
+  Plugin_id[x] = 213; Plugin_ptr[x++] = &Plugin_213;
 #endif
 
 #ifdef PLUGIN_214
-    Plugin_id[x] = 214; Plugin_ptr[x++] = &Plugin_214
+  Plugin_id[x] = 214; Plugin_ptr[x++] = &Plugin_214;
 #endif
 
 #ifdef PLUGIN_215
-    Plugin_id[x] = 215; Plugin_ptr[x++] = &Plugin_215
+  Plugin_id[x] = 215; Plugin_ptr[x++] = &Plugin_215;
 #endif
 
 #ifdef PLUGIN_216
-    Plugin_id[x] = 216; Plugin_ptr[x++] = &Plugin_216
+  Plugin_id[x] = 216; Plugin_ptr[x++] = &Plugin_216;
 #endif
 
 #ifdef PLUGIN_217
-    Plugin_id[x] = 217; Plugin_ptr[x++] = &Plugin_217
+  Plugin_id[x] = 217; Plugin_ptr[x++] = &Plugin_217;
 #endif
 
 #ifdef PLUGIN_218
-    Plugin_id[x] = 218; Plugin_ptr[x++] = &Plugin_218
+  Plugin_id[x] = 218; Plugin_ptr[x++] = &Plugin_218;
 #endif
 
 #ifdef PLUGIN_219
-    Plugin_id[x] = 219; Plugin_ptr[x++] = &Plugin_219
+  Plugin_id[x] = 219; Plugin_ptr[x++] = &Plugin_219;
 #endif
 
 #ifdef PLUGIN_220
-    Plugin_id[x] = 220; Plugin_ptr[x++] = &Plugin_220
+  Plugin_id[x] = 220; Plugin_ptr[x++] = &Plugin_220;
 #endif
 
 #ifdef PLUGIN_221
-    Plugin_id[x] = 221; Plugin_ptr[x++] = &Plugin_221
+  Plugin_id[x] = 221; Plugin_ptr[x++] = &Plugin_221;
 #endif
 
 #ifdef PLUGIN_222
-    Plugin_id[x] = 222; Plugin_ptr[x++] = &Plugin_222
+  Plugin_id[x] = 222; Plugin_ptr[x++] = &Plugin_222;
 #endif
 
 #ifdef PLUGIN_223
-    Plugin_id[x] = 223; Plugin_ptr[x++] = &Plugin_223
+  Plugin_id[x] = 223; Plugin_ptr[x++] = &Plugin_223;
 #endif
 
 #ifdef PLUGIN_224
-    Plugin_id[x] = 224; Plugin_ptr[x++] = &Plugin_224
+  Plugin_id[x] = 224; Plugin_ptr[x++] = &Plugin_224;
 #endif
 
 #ifdef PLUGIN_225
-    Plugin_id[x] = 225; Plugin_ptr[x++] = &Plugin_225
+  Plugin_id[x] = 225; Plugin_ptr[x++] = &Plugin_225;
 #endif
 
 #ifdef PLUGIN_226
-    Plugin_id[x] = 226; Plugin_ptr[x++] = &Plugin_226
+  Plugin_id[x] = 226; Plugin_ptr[x++] = &Plugin_226;
 #endif
 
 #ifdef PLUGIN_227
-    Plugin_id[x] = 227; Plugin_ptr[x++] = &Plugin_227
+  Plugin_id[x] = 227; Plugin_ptr[x++] = &Plugin_227;
 #endif
 
 #ifdef PLUGIN_228
-    Plugin_id[x] = 228; Plugin_ptr[x++] = &Plugin_228
+  Plugin_id[x] = 228; Plugin_ptr[x++] = &Plugin_228;
 #endif
 
 #ifdef PLUGIN_229
-    Plugin_id[x] = 229; Plugin_ptr[x++] = &Plugin_229
+  Plugin_id[x] = 229; Plugin_ptr[x++] = &Plugin_229;
 #endif
 
 #ifdef PLUGIN_230
-    Plugin_id[x] = 230; Plugin_ptr[x++] = &Plugin_230
+  Plugin_id[x] = 230; Plugin_ptr[x++] = &Plugin_230;
 #endif
 
 #ifdef PLUGIN_231
-    Plugin_id[x] = 231; Plugin_ptr[x++] = &Plugin_231
+  Plugin_id[x] = 231; Plugin_ptr[x++] = &Plugin_231;
 #endif
 
 #ifdef PLUGIN_232
-    Plugin_id[x] = 232; Plugin_ptr[x++] = &Plugin_232
+  Plugin_id[x] = 232; Plugin_ptr[x++] = &Plugin_232;
 #endif
 
 #ifdef PLUGIN_233
-    Plugin_id[x] = 233; Plugin_ptr[x++] = &Plugin_233
+  Plugin_id[x] = 233; Plugin_ptr[x++] = &Plugin_233;
 #endif
 
 #ifdef PLUGIN_234
-    Plugin_id[x] = 234; Plugin_ptr[x++] = &Plugin_234
+  Plugin_id[x] = 234; Plugin_ptr[x++] = &Plugin_234;
 #endif
 
 #ifdef PLUGIN_235
-    Plugin_id[x] = 235; Plugin_ptr[x++] = &Plugin_235
+  Plugin_id[x] = 235; Plugin_ptr[x++] = &Plugin_235;
 #endif
 
 #ifdef PLUGIN_236
-    Plugin_id[x] = 236; Plugin_ptr[x++] = &Plugin_236
+  Plugin_id[x] = 236; Plugin_ptr[x++] = &Plugin_236;
 #endif
 
 #ifdef PLUGIN_237
-    Plugin_id[x] = 237; Plugin_ptr[x++] = &Plugin_237
+  Plugin_id[x] = 237; Plugin_ptr[x++] = &Plugin_237;
 #endif
 
 #ifdef PLUGIN_238
-    Plugin_id[x] = 238; Plugin_ptr[x++] = &Plugin_238
+  Plugin_id[x] = 238; Plugin_ptr[x++] = &Plugin_238;
 #endif
 
 #ifdef PLUGIN_239
-    Plugin_id[x] = 239; Plugin_ptr[x++] = &Plugin_239
+  Plugin_id[x] = 239; Plugin_ptr[x++] = &Plugin_239;
 #endif
 
 #ifdef PLUGIN_240
-    Plugin_id[x] = 240; Plugin_ptr[x++] = &Plugin_240
+  Plugin_id[x] = 240; Plugin_ptr[x++] = &Plugin_240;
 #endif
 
 #ifdef PLUGIN_241
-    Plugin_id[x] = 241; Plugin_ptr[x++] = &Plugin_241
+  Plugin_id[x] = 241; Plugin_ptr[x++] = &Plugin_241;
 #endif
 
 #ifdef PLUGIN_242
-    Plugin_id[x] = 242; Plugin_ptr[x++] = &Plugin_242
+  Plugin_id[x] = 242; Plugin_ptr[x++] = &Plugin_242;
 #endif
 
 #ifdef PLUGIN_243
-    Plugin_id[x] = 243; Plugin_ptr[x++] = &Plugin_243
+  Plugin_id[x] = 243; Plugin_ptr[x++] = &Plugin_243;
 #endif
 
 #ifdef PLUGIN_244
-    Plugin_id[x] = 244; Plugin_ptr[x++] = &Plugin_244
+  Plugin_id[x] = 244; Plugin_ptr[x++] = &Plugin_244;
 #endif
 
 #ifdef PLUGIN_245
-    Plugin_id[x] = 245; Plugin_ptr[x++] = &Plugin_245
+  Plugin_id[x] = 245; Plugin_ptr[x++] = &Plugin_245;
 #endif
 
 #ifdef PLUGIN_246
-    Plugin_id[x] = 246; Plugin_ptr[x++] = &Plugin_246
+  Plugin_id[x] = 246; Plugin_ptr[x++] = &Plugin_246;
 #endif
 
 #ifdef PLUGIN_247
-    Plugin_id[x] = 247; Plugin_ptr[x++] = &Plugin_247
+  Plugin_id[x] = 247; Plugin_ptr[x++] = &Plugin_247;
 #endif
 
 #ifdef PLUGIN_248
-    Plugin_id[x] = 248; Plugin_ptr[x++] = &Plugin_248
+  Plugin_id[x] = 248; Plugin_ptr[x++] = &Plugin_248;
 #endif
 
 #ifdef PLUGIN_249
-    Plugin_id[x] = 249; Plugin_ptr[x++] = &Plugin_249
+  Plugin_id[x] = 249; Plugin_ptr[x++] = &Plugin_249;
 #endif
 
 #ifdef PLUGIN_250
@@ -1049,9 +1049,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
   int x;
   struct EventStruct TempEvent;
 
- if (event == 0)
-    event=&TempEvent;
-    
+  if (event == 0)
+    event = &TempEvent;
+
   switch (Function)
   {
     // Unconditional calls to all plugins
@@ -1082,7 +1082,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             {
               if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
               {
-                if(Plugin_ptr[x](Function, event, str))
+                if (Plugin_ptr[x](Function, event, str))
                   return true;
               }
             }
@@ -1105,17 +1105,20 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         {
           if (Settings.TaskDeviceNumber[y] != 0)
           {
-            byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-            TempEvent.TaskIndex = y;
-            TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-            TempEvent.idx = Settings.TaskDeviceID[y];
-            TempEvent.sensorType = Device[DeviceIndex].VType;
-            TempEvent.OriginTaskIndex=event->TaskIndex;
-            for (x = 0; x < PLUGIN_MAX; x++)
+            if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
             {
-              if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
+              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+              TempEvent.TaskIndex = y;
+              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+              TempEvent.idx = Settings.TaskDeviceID[y];
+              TempEvent.sensorType = Device[DeviceIndex].VType;
+              TempEvent.OriginTaskIndex = event->TaskIndex;
+              for (x = 0; x < PLUGIN_MAX; x++)
               {
-                Plugin_ptr[x](Function, &TempEvent, str);
+                if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
+                {
+                  Plugin_ptr[x](Function, &TempEvent, str);
+                }
               }
             }
           }

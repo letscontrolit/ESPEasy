@@ -52,7 +52,6 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         if (!Plugin_022_init)
         {
           // default mode is open drain ouput, drive leds connected to VCC
-          Serial.println("PCA Init");
           Plugin_022_writeRegister(PCA9685_MODE1, (byte)0x01); // reset the device
           delay(1);
           Plugin_022_writeRegister(PCA9685_MODE1, (byte)B10100000);  // set up for auto increment

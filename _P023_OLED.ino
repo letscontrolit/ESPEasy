@@ -18,7 +18,8 @@ byte Plugin_023_OLED_address = 0x3c;
 boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-
+  static byte displayTimer = 0;
+  
   switch (function)
   {
 
@@ -105,6 +106,14 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           string += F("'>");
         }
 
+        string += F("<TR><TD>Display button:<TD>");
+        addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+
+        char tmpString[128];
+
+        sprintf_P(tmpString, PSTR("<TR><TD>Display Timeout:<TD><input type='text' name='plugin_23_timer' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        string += tmpString;
+
         success = true;
         break;
       }
@@ -115,12 +124,14 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         String plugin2 = WebServer.arg("plugin_023_rotate");
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        String plugin3 = WebServer.arg("plugin_23_timer");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
 
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)
         {
           char argc[25];
-          String arg = "Plugin_023_template";
+          String arg = F("Plugin_023_template");
           arg += varNr + 1;
           arg.toCharArray(argc, 25);
           String tmpString = WebServer.arg(argc);
@@ -145,7 +156,34 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           Plugin_023_sendcommand(0xC8);            //COMSCANDEC  Rotate screen 180 Deg
         }
         Plugin_023_sendStrXY("ESP Easy ", 0, 0);
+        displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+          pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
         success = true;
+        break;
+      }
+
+    case PLUGIN_TEN_PER_SECOND:
+      {
+        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        {
+          if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
+          {
+            Plugin_023_displayOn();
+            displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+          }
+        }
+        break;
+      }
+
+    case PLUGIN_ONCE_A_SECOND:
+      {
+        if ( displayTimer > 0)
+        {
+          displayTimer--;
+          if (displayTimer == 0)
+            Plugin_023_displayOff();
+        }
         break;
       }
 

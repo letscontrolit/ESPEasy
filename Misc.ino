@@ -1,3 +1,31 @@
+void taskClear(byte taskIndex, boolean save)
+{
+    Settings.TaskDeviceNumber[taskIndex] = 0;
+    ExtraTaskSettings.TaskDeviceName[0] = 0;
+    Settings.TaskDeviceID[taskIndex] = 0;
+    Settings.TaskDeviceDataFeed[taskIndex] = 0;
+    Settings.TaskDevicePin1[taskIndex] = -1;
+    Settings.TaskDevicePin2[taskIndex] = -1;
+    Settings.TaskDevicePin3[taskIndex] = -1;
+    Settings.TaskDevicePort[taskIndex] = 0;
+    Settings.TaskDeviceSendData[taskIndex] = true;
+    Settings.TaskDeviceGlobalSync[taskIndex] = false;
+
+    for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
+      Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
+
+    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+    {
+      ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
+      ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
+    }
+    if (save)
+    {
+      SaveTaskSettings(taskIndex);
+      SaveSettings();
+    }
+  }
+
 void getIPfromHostName()
 {
   IPAddress IP;
@@ -11,15 +39,24 @@ void getIPfromHostName()
 
 void BuildFixes()
 {
-  Serial.println("\nBuild changed!");
+  Serial.println(F("\nBuild changed!"));
 
   // fix default send data on active tasks, new to R52
   if (Settings.Build < 52)
   {
-    Serial.println("Fix SendData");
+    Serial.println(F("Fix SendData"));
     for (byte x = 0; x < TASKS_MAX; x++)
     {
       Settings.TaskDeviceSendData[x] = true;
+    }
+  }
+
+  if (Settings.Build < 64)
+  {
+    Serial.println(F("Fix Pin3"));
+    for (byte x = 0; x < TASKS_MAX; x++)
+    {
+      Settings.TaskDevicePin3[x] = -1;
     }
   }
 
@@ -490,6 +527,7 @@ void ResetFactory(void)
   {
     Settings.TaskDevicePin1[x] = -1;
     Settings.TaskDevicePin2[x] = -1;
+    Settings.TaskDevicePin3[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
     Settings.TaskDeviceSendData[x] = true;
@@ -803,6 +841,8 @@ String parseTemplate(String &tmpString, byte lineSize)
 
 #if FEATURE_TIME
   String strTime = "";
+  if (hour() < 10)
+    strTime += " ";
   strTime += hour();
   strTime += ":";
   if (minute() < 10)
@@ -811,11 +851,18 @@ String parseTemplate(String &tmpString, byte lineSize)
   newString.replace("%systime%", strTime);
 #endif
 
+  newString.replace("%uptime%", String(wdcounter / 2));
+
   IPAddress ip = WiFi.localIP();
   char strIP[20];
   sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
   newString.replace("%ip%", strIP);
 
+  // padding spaces
+  if (newString.length() < lineSize)
+    for (byte x=0; x < (lineSize - newString.length()); x++)
+      newString += " ";
+      
   return newString;
 }
 
@@ -1225,7 +1272,7 @@ unsigned long getNtpTime()
 {
   WiFiUDP udp;
   udp.begin(123);
-  String log = "NTP  : NTP sync requested";
+  String log = F("NTP  : NTP sync requested");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
@@ -1241,7 +1288,7 @@ unsigned long getNtpTime()
 
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
-  log = "NTP  : NTP send to ";
+  log = F("NTP  : NTP send to ");
   log += host;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
@@ -1271,12 +1318,12 @@ unsigned long getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      log = "NTP  : NTP replied!";
+      log = F("NTP  : NTP replied!");
       addLog(LOG_LEVEL_DEBUG_MORE, log);
       return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_HOUR;
     }
   }
-  log = "NTP  : No reply";
+  log = F("NTP  : No reply");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
   return 0;
 }

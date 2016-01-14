@@ -21,32 +21,38 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("getudptaskinfo")) == 0) // local task, remote unit, remote task
+  {
+    char data[6];
+    data[0]= 255;
+    data[1]= 2;
+    data[2]= Settings.Unit; // source unit
+    data[3]= Par2; // dest unit
+    data[4]= Par1-1; // local task
+    data[5]= Par3-1; // task index to request
+    sendUDP(Par2, (byte*) &data, sizeof(data));
+  }
+
+  if (strcasecmp_P(Command, PSTR("getudptaskdata")) == 0) // local task, remote unit, remote task
+  {
+    char data[6];
+    data[0]= 255;
+    data[1]= 4;
+    data[2]= Settings.Unit; // source unit
+    data[3]= Par2; // dest unit
+    data[4]= Par1-1; // local task
+    data[5]= Par3-1; // task index to request
+    sendUDP(Par2, (byte*) &data, sizeof(data));
+  }
+
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
-
-    Settings.TaskDeviceNumber[Par1 - 1] = 0;
-    ExtraTaskSettings.TaskDeviceName[0] = 0;
-    Settings.TaskDeviceID[Par1 - 1] = 0;
-    Settings.TaskDevicePin1[Par1 - 1] = -1;
-    Settings.TaskDevicePin2[Par1 - 1] = -1;
-    Settings.TaskDevicePort[Par1 - 1] = 0;
-    Settings.TaskDeviceSendData[Par1 - 1] = true;
-
-    for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
-      Settings.TaskDevicePluginConfig[Par1 - 1][x] = 0;
-
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-    {
-      ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
-      ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
-    }
-    SaveTaskSettings(Par1 - 1);
-    SaveSettings();
+    taskClear(Par1 - 1,true);
   }
 
   if (strcasecmp_P(Command, PSTR("resetinfo")) == 0)
   {
-    Serial.print("getResetInfo: ");
+    Serial.print(F("getResetInfo: "));
     Serial.println(ESP.getResetInfo());
   }
   
@@ -150,6 +156,18 @@ void ExecuteCommand(const char *Line)
     }
   }
 
+  if (strcasecmp(Command, "DomoticzGet") == 0)
+  {
+    float value = 0;
+    if (Domoticz_getData(Par2, &value))
+    {
+      Serial.print("DomoticzGet ");
+      Serial.println(value);
+    }
+    else
+      Serial.println("Error getting data");
+  }
+  
   // ****************************************
   // configure settings commands
   // ****************************************
