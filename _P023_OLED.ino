@@ -195,9 +195,11 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < 8; x++)
         {
           String tmpString = deviceTemplate[x];
-          String newString = parseTemplate(tmpString, 16);
-          if (newString.length())
+          if (tmpString.length())
+          {
+            String newString = parseTemplate(tmpString, 16);
             Plugin_023_sendStrXY(newString.c_str(), x, 0);
+          }
         }
         success = false;
         break;

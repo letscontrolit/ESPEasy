@@ -1438,6 +1438,20 @@ boolean handle_json()
   String tasknr = WebServer.arg("tasknr");
   String reply = "";
 
+  if (tasknr.length() == 0)
+  {
+    reply += F("{\"System\":{\n");
+    reply += F("\"Build\": ");
+    reply += BUILD;
+    reply += F(",\n\"Unit\": ");
+    reply += Settings.Unit;
+    reply += F(",\n\"Uptime\": ");
+    reply += wdcounter / 2;
+    reply += F(",\n\"Free RAM\": ");
+    reply += ESP.getFreeHeap();
+    reply += F("\n},\n");
+  }
+  
   byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
@@ -1453,7 +1467,7 @@ boolean handle_json()
       lastActiveTaskIndex = TaskIndex;
 
   if (taskNr == 0 )
-    reply += F("{\"Sensors\":[\n");
+    reply += F("\"Sensors\":[\n");
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
   {
     if (Settings.TaskDeviceNumber[TaskIndex])
@@ -1465,7 +1479,10 @@ boolean handle_json()
 
       reply += F("\"TaskName\": \"");
       reply += ExtraTaskSettings.TaskDeviceName;
-      reply += F("\",\n");
+      reply += F("\"");
+      if (Device[DeviceIndex].ValueCount !=0)
+        reply += F(",");
+      reply += F("\n");
 
       for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
       {

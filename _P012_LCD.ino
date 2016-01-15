@@ -210,10 +210,12 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < row; x++)
         {
           String tmpString = deviceTemplate[x];
-          String newString = parseTemplate(tmpString, col);
-          lcd->setCursor(0, x);
-          if (newString != "")
+          if (tmpString.length())
+          {
+            String newString = parseTemplate(tmpString, col);
+            lcd->setCursor(0, x);
             lcd->print(newString);
+          }
         }
         success = false;
         break;

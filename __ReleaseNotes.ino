@@ -1,3 +1,9 @@
+// R65 15-01-2016
+// Changed UDP transmit delays
+// Fixed padding feature that broke the option to skip empty lines for local display
+// Added system info plugin (single value device type)
+// Added some system info to http json request output
+
 // R64 14-01-2016
 // Experimental: Added simple json interface to retrieve sensor data using http
 // Experimental: Prepare tasks for remote data feed (Work in progress...)

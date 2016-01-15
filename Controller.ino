@@ -251,16 +251,16 @@ struct infoStruct
   char ValueNames[VARS_PER_TASK][26];
 };
 
-  struct dataStruct
-  {
-    byte header = 255;
-    byte ID = 5;
-    byte sourcelUnit;
-    byte destUnit;
-    byte sourceTaskIndex;
-    byte destTaskIndex;
-    float Values[VARS_PER_TASK];
-  };
+struct dataStruct
+{
+  byte header = 255;
+  byte ID = 5;
+  byte sourcelUnit;
+  byte destUnit;
+  byte sourceTaskIndex;
+  byte destTaskIndex;
+  float Values[VARS_PER_TASK];
+};
 
 /*********************************************************************************************\
  * Check UDP messages
@@ -290,16 +290,17 @@ void checkUDP()
     }
     else
     {
-      if(packetBuffer[1] > 1 && packetBuffer[1] < 6)
+      if (packetBuffer[1] > 1 && packetBuffer[1] < 6)
       {
-            Serial.println(F("UDP sensor message"));
-            Serial.println((int)packetBuffer[1]); // unit
-            Serial.println((int)packetBuffer[2]); // unit
-            Serial.println((int)packetBuffer[3]); // unit
-            Serial.println((int)packetBuffer[4]); // taskindex
-            Serial.println((int)packetBuffer[5]); // taskindex
+        Serial.print(F("UDP sensor msg: "));
+        for (byte x = 1; x < 6; x++)
+        {
+          Serial.print(" ");
+          Serial.print((int)packetBuffer[x]);
+        }
+        Serial.println();
       }
-      
+
       // binary data!
       switch (packetBuffer[1])
       {
@@ -354,17 +355,6 @@ void checkUDP()
               SaveTaskSettings(infoReply.destTaskIndex);
               SaveSettings();
             }
-
-            // display stuff for debugging
-/*            Serial.println(infoReply.deviceNumber);
-            String deviceName = "";
-            byte DeviceIndex = getDeviceIndex(infoReply.deviceNumber);
-            Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
-            Serial.println(deviceName);
-            Serial.println(infoReply.taskName);
-            for (byte x = 0; x < VARS_PER_TASK; x++)
-              Serial.println(infoReply.ValueNames[x]);
-*/              
             break;
           }
 
@@ -433,6 +423,7 @@ void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
     sendUDP(x, (byte*)&infoReply, sizeof(infoStruct));
     delay(10);
   }
+  delay(50);
 }
 
 
@@ -461,6 +452,7 @@ void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
     sendUDP(x, (byte*) &dataReply, sizeof(dataStruct));
     delay(10);
   }
+  delay(50);
 }
 
 
@@ -471,6 +463,9 @@ void sendUDP(byte unit, byte* data, byte size)
 {
   if (Nodes[unit].ip[0] == 0)
     return;
+  String log = "UDP  : Send UDP message to ";
+  log += unit;
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   IPAddress remoteNodeIP(Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
