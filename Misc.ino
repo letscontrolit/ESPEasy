@@ -859,9 +859,8 @@ String parseTemplate(String &tmpString, byte lineSize)
   newString.replace("%ip%", strIP);
 
   // padding spaces
-  if (newString.length() < lineSize)
-    for (byte x=0; x < (lineSize - newString.length()); x++)
-      newString += " ";
+  while (newString.length() < lineSize)
+    newString += " ";
       
   return newString;
 }

@@ -1,3 +1,7 @@
+// R66 16-01-2016
+// Added plugin for INA219 voltage & current sensor
+// Fixed LCD/OLED padding and now it should actually work in all cases...
+
 // R65 15-01-2016
 // Changed UDP transmit delays
 // Fixed padding feature that broke the option to skip empty lines for local display
