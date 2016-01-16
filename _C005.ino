@@ -29,7 +29,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
         strcpy_P(Settings.MQTTpublish, PSTR("/%sysname%/%tskname%/%valname%"));
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_RECV:
       {
         // Split topic into array
@@ -86,15 +86,33 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
             break;
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
-            String tmppubname = pubname;
-            tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
-            value = String(UserVar[event->BaseVarIndex]);
-            MQTTclient.publish(tmppubname, value);
-            tmppubname = pubname;
-            tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[1]);
-            value = String(UserVar[event->BaseVarIndex + 1]);
-            MQTTclient.publish(tmppubname, value);
-            break;
+            {
+              String tmppubname = pubname;
+              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
+              value = String(UserVar[event->BaseVarIndex]);
+              MQTTclient.publish(tmppubname, value);
+              tmppubname = pubname;
+              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[1]);
+              value = String(UserVar[event->BaseVarIndex + 1]);
+              MQTTclient.publish(tmppubname, value);
+              break;
+            }
+          case SENSOR_TYPE_TEMP_HUM_BARO:
+            {
+              String tmppubname = pubname;
+              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
+              value = String(UserVar[event->BaseVarIndex]);
+              MQTTclient.publish(tmppubname, value);
+              tmppubname = pubname;
+              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[1]);
+              value = String(UserVar[event->BaseVarIndex + 1]);
+              MQTTclient.publish(tmppubname, value);
+              tmppubname = pubname;
+              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[2]);
+              value = String(UserVar[event->BaseVarIndex + 2]);
+              MQTTclient.publish(tmppubname, value);
+              break;
+            }
         }
 
       }

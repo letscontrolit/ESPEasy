@@ -1,3 +1,6 @@
+// R67 16-01-2016
+// Added plugin for BME280 Temperature/Humidity/Barometric pressure sensor
+
 // R66 16-01-2016
 // Added plugin for INA219 voltage & current sensor
 // Fixed LCD/OLED padding and now it should actually work in all cases...

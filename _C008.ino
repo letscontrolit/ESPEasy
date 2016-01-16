@@ -37,12 +37,27 @@ boolean CPlugin_008(byte function, struct EventStruct *event)
             break;
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
-            HTTPSend(event, 0, UserVar[event->BaseVarIndex]);
-            unsigned long timer = millis() + Settings.MessageDelay;
-            while (millis() < timer)
-              backgroundtasks();
-            HTTPSend(event, 1, UserVar[event->BaseVarIndex + 1]);
-            break;
+            {
+              HTTPSend(event, 0, UserVar[event->BaseVarIndex]);
+              unsigned long timer = millis() + Settings.MessageDelay;
+              while (millis() < timer)
+                backgroundtasks();
+              HTTPSend(event, 1, UserVar[event->BaseVarIndex + 1]);
+              break;
+            }
+          case SENSOR_TYPE_TEMP_HUM_BARO:
+            {
+              HTTPSend(event, 0, UserVar[event->BaseVarIndex]);
+              unsigned long timer = millis() + Settings.MessageDelay;
+              while (millis() < timer)
+                backgroundtasks();
+              HTTPSend(event, 1, UserVar[event->BaseVarIndex + 1]);
+              timer = millis() + Settings.MessageDelay;
+              while (millis() < timer)
+                backgroundtasks();
+              HTTPSend(event, 2, UserVar[event->BaseVarIndex + 2]);
+              break;
+            }
         }
         break;
       }
@@ -84,8 +99,8 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value)
     connectionFailures--;
 
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
-          
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+
   String url = "/";
   url += Settings.MQTTpublish;
   url.replace("%sysname%", Settings.Name);
@@ -93,10 +108,10 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value)
   url.replace("%id%", String(event->idx));
   url.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[varIndex]);
   url.replace("%value%", String(value));
-           
+
   Serial.print("URL: ");
   Serial.println(url);
-  
+
   url.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, log);
   if (printToWeb)

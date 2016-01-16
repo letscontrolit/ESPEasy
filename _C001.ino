@@ -79,6 +79,15 @@ boolean CPlugin_001(byte function, struct EventStruct *event)
             url += UserVar[event->BaseVarIndex + 1];
             url += ";0";
             break;
+          case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
+            url += F("&svalue=");
+            url += UserVar[event->BaseVarIndex];
+            url += ";";
+            url += UserVar[event->BaseVarIndex + 1];
+            url += ";0;";
+            url += UserVar[event->BaseVarIndex + 2];
+            url += ";0";
+            break;
           case SENSOR_TYPE_SWITCH:
             url = F("/json.htm?type=command&param=switchlight&idx=");
             url += event->idx;

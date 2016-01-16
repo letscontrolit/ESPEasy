@@ -1285,13 +1285,16 @@ void handle_i2cscanner() {
           reply += F("OLED SSD1306 Display");
           break;
         case 0x40:
-          reply += F("SI7021 Temp/Hum Sensor");
+          reply += F("SI7021 Temp/Hum Sensor, INA219");
           break;
         case 0x48:
           reply += F("PCF8591 ADC");
           break;
         case 0x68:
           reply += F("DS1307 RTC");
+          break;
+        case 0x76:
+          reply += F("BME280");
           break;
         case 0x77:
           reply += F("BMP085");

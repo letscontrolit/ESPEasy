@@ -62,7 +62,6 @@ uint32_t ina219_calValue;
 // The following multipliers are used to convert raw current and power
 // values to mA and mW, taking into account the current config settings
 uint32_t ina219_currentDivider_mA;
-uint32_t ina219_powerDivider_mW;
 
 boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 {
@@ -215,7 +214,6 @@ void Plugin_027_setCalibration_32V_2A(void)
 
   // Set multipliers to convert raw current/power values
   ina219_currentDivider_mA = 10;  // Current LSB = 100uA per bit (1000/100 = 10)
-  ina219_powerDivider_mW = 2;     // Power LSB = 1mW per bit (2/1)
 
   // Set Calibration register to 'Cal' calculated above
   Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
@@ -239,7 +237,6 @@ void Plugin_027_setCalibration_32V_1A(void)
 
   // Set multipliers to convert raw current/power values
   ina219_currentDivider_mA = 25;      // Current LSB = 40uA per bit (1000/40 = 25)
-  ina219_powerDivider_mW = 1;         // Power LSB = 800?W per bit
 
   // Set Calibration register to 'Cal' calculated above
   Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
@@ -262,7 +259,6 @@ void Plugin_027_setCalibration_16V_400mA(void) {
 
   // Set multipliers to convert raw current/power values
   ina219_currentDivider_mA = 20;  // Current LSB = 50uA per bit (1000/50 = 20)
-  ina219_powerDivider_mW = 1;     // Power LSB = 1mW per bit
 
   // Set Calibration register to 'Cal' calculated above
   Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
@@ -284,7 +280,6 @@ void Plugin_027_setCalibration_16V_400mA(void) {
 void Plugin_027_begin(void) {
   ina219_i2caddr = INA219_ADDRESS;
   ina219_currentDivider_mA = 0;
-  ina219_powerDivider_mW = 0;
 
   // Set chip to large range config values to start
   Plugin_027_setCalibration_32V_2A();

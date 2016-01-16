@@ -118,6 +118,17 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
             values.toCharArray(str, 80);
             root["svalue"] =  str;
             break;
+          case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
+            root["nvalue"] = 0;
+            values  = UserVar[event->BaseVarIndex];
+            values += ";";
+            values += UserVar[event->BaseVarIndex + 1];
+            values += ";0;";
+            values += UserVar[event->BaseVarIndex + 2];
+            values += ";0";
+            values.toCharArray(str, 80);
+            root["svalue"] =  str;
+            break;
           case SENSOR_TYPE_SWITCH:
             root["command"] = "switchlight";
             if (UserVar[event->BaseVarIndex] == 0)
