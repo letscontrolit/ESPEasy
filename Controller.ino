@@ -292,13 +292,13 @@ void checkUDP()
     {
       if (packetBuffer[1] > 1 && packetBuffer[1] < 6)
       {
-        Serial.print(F("UDP sensor msg: "));
+        String log = (F("UDP sensor msg: "));
         for (byte x = 1; x < 6; x++)
         {
-          Serial.print(" ");
-          Serial.print((int)packetBuffer[x]);
+          log += " ";
+          log += (int)packetBuffer[x];
         }
-        Serial.println();
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
 
       // binary data!

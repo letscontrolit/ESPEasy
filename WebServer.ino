@@ -15,8 +15,8 @@ void WebServerInit()
   WebServer.on("/login", handle_login);
   WebServer.on("/control", handle_control);
   WebServer.on("/download", handle_download);
-  WebServer.on("/upload", handle_upload);
-  WebServer.onFileUpload(handleFileUpload);
+  WebServer.on("/upload", HTTP_GET, handle_upload);
+  WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
 #if FEATURE_SPIFFS
   WebServer.on("/filelist", handle_filelist);
@@ -26,6 +26,10 @@ void WebServerInit()
   WebServer.on("/advanced", handle_advanced);
   WebServer.on("/setup", handle_setup);
   WebServer.on("/json", handle_json);
+
+  if(ESP.getFlashChipRealSize() > 524288)
+    httpUpdater.setup(&WebServer);
+
   WebServer.begin();
 }
 
@@ -1216,6 +1220,8 @@ void handle_tools() {
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
   reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
   reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
+  if(ESP.getFlashChipRealSize() > 524288)
+    reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
 
 #if FEATURE_SPIFFS
   reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
@@ -1965,6 +1971,21 @@ void handle_upload() {
   printToWeb = false;
 }
 
+//********************************************************************************
+// Web Interface upload page
+//********************************************************************************
+void handle_upload_post() {
+  if (!isLoggedIn()) return;
+
+  String reply = "";
+  addHeader(true, reply);
+  reply += F("Upload finished");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+  printWebString = "";
+  printToWeb = false;
+}
+
 
 //********************************************************************************
 // Upload handler
@@ -1972,7 +1993,6 @@ void handle_upload() {
 void handleFileUpload()
 {
   if (!isLoggedIn()) return;
-
   String log = "";
   static byte filetype = 0;
   static byte page = 0;

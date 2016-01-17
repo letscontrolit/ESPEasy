@@ -1,3 +1,8 @@
+// R68 17-01-2016
+// Changed UDP logging
+// Added OTA update using bin file upload through the ESP Easy webgui (NOT from arduino IDE!)
+//   THIS WILL ONLY WORK ON MODULES WITH MORE THAN 512K FLASH, like the ESP12E modules!
+
 // R67 16-01-2016
 // Added plugin for BME280 Temperature/Humidity/Barometric pressure sensor
 

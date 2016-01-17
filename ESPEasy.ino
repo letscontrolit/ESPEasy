@@ -95,7 +95,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              67
+#define BUILD                              68
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -171,6 +171,8 @@
 #if FEATURE_SPIFFS
 #include <FS.h>
 #endif
+#include <ESP8266HTTPUpdateServer.h>
+ESP8266HTTPUpdateServer httpUpdater(true);
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -465,7 +467,7 @@ void setup()
   // (captive portal concept)
   if(wifiSetup)
     dnsServer.start(DNS_PORT, "*", apIP);
-  
+
   }
   else
   {
