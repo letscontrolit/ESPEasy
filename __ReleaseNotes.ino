@@ -1,3 +1,14 @@
+// R69 20-01-2016
+// Cosmetic: removed last empty table row in device edit screen
+// Added help button to firmware upload
+// Added delay to DHT sensor
+// Removed interrupt blocking from DHT sensor to avoid Wifi/Network handling issues in the ESP core
+// Removed interrupt blocking from Dallas sensor to avoid Wifi/Network handling issues in the ESP core
+// Moved UDP check from main loop to background routine
+// Webgui now reports ESP.getFlashChipRealSize()
+// Added detection of missing BMP085 sensor during init
+// Added option to reset target device when the Ser2Net plugin has initialized.
+
 // R68 17-01-2016
 // Changed UDP logging
 // Added OTA update using bin file upload through the ESP Easy webgui (NOT from arduino IDE!)

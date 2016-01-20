@@ -54,13 +54,17 @@
 //   PN532 RFID reader
 //   Sharp GP2Y10 dust sensor
 //   PCF8574 I2C IO Expanders
+//   PCA9685 I2C 16 channel PWM driver
 //   OLED I2C display with SSD1306 driver
+//   MLX90614 I2C IR temperature sensor
+//   ADS1115 I2C ADC
+//   INA219 I2C voltage/current sensor
+//   BME280 I2C temp/hum/baro sensor
 
 //   Experimental/Preliminary:
 //   =========================
 //   Ser2Net server
 //   Local Level Control to GPIO
-//   PCA9685 16 channel I2C PWM driver
 
 // ********************************************************************************
 //   User specific configuration
@@ -95,7 +99,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              68
+#define BUILD                              69
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -499,7 +503,6 @@ void loop()
 
   if (systemOK)
   {
-    checkUDP();
 
     if (cmd_within_mainloop != 0)
     {
@@ -662,7 +665,8 @@ void backgroundtasks()
   // process DNS, only used if the ESP has no valid WiFi config
   if(wifiSetup)
     dnsServer.processNextRequest();
-    
+
+  checkUDP();
   WebServer.handleClient();
   MQTTclient.loop();
   yield();

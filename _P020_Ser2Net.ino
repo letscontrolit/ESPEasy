@@ -23,6 +23,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_020;
+        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].Custom = true;
         break;
       }
@@ -74,6 +75,10 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
         sprintf_P(tmpString, PSTR("<TR><TD>Stop bits:<TD><input type='text' name='plugin_020_stop' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
         string += tmpString;
+
+        string += F("<TR><TD>Reset target after boot:<TD>");
+        addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+
         success = true;
         break;
       }
@@ -109,6 +114,16 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
           ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           ser2netServer->begin();
+
+          if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+          {
+            pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
+            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
+            delay(500);
+            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
+            pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+          }
+          
           Plugin_020_init = true;
         }
         success = true;

@@ -198,7 +198,7 @@ void handle_root() {
     reply += ESP.getChipId();
 
     reply += F("<TR><TD>ESP Flash Size:<TD>");
-    reply += ESP.getFlashChipSize();
+    reply += ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
 
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
@@ -909,7 +909,7 @@ void handle_devices() {
 
     }
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices\">Close</a>");
-    reply += F("<input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+    reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
     reply += F("<input type='hidden' name='edit' value='1'>");
     reply += F("<input type='hidden' name='page' value='1'>");
     reply += F("</table></form>");
@@ -1221,8 +1221,10 @@ void handle_tools() {
   reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
   reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
   if(ESP.getFlashChipRealSize() > 524288)
-    reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
-
+    {
+      reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
+      reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyOTA\" target=\"_blank\">?</a>");
+    }
 #if FEATURE_SPIFFS
   reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
 #else

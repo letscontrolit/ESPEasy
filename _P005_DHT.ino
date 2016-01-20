@@ -96,7 +96,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
         delayMicroseconds(40);
         pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
-        //delayMicroseconds(40);
+        delayMicroseconds(10);
 
         dht_in = digitalRead(Plugin_005_DHT_Pin);
         if (!dht_in)
@@ -172,7 +172,7 @@ int Plugin_005_read_dht_dat(void)
   byte i = 0;
   byte result = 0;
   byte counter = 0;
-  noInterrupts();
+  //noInterrupts();
   for (i = 0; i < 8; i++)
   {
     while ((!digitalRead(Plugin_005_DHT_Pin)) && (counter < 100))
@@ -182,7 +182,7 @@ int Plugin_005_read_dht_dat(void)
     }
     if (counter >= 100)
     {
-      interrupts();
+      //interrupts();
       return -1;
     }
     delayMicroseconds(30);
@@ -196,11 +196,11 @@ int Plugin_005_read_dht_dat(void)
     }
     if (counter >= 100)
     {
-      interrupts();
+      //interrupts();
       return -1;
     }
   }
-  interrupts();
+  //interrupts();
   return result;
 }
 

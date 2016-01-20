@@ -47,18 +47,22 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_006_init)
         {
-          Plugin_006_init = true;
-          Plugin_006_bmp085_begin();
+          if (Plugin_006_bmp085_begin())
+            Plugin_006_init = true;
         }
-        UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
-        UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
-        String log = F("BMP  : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO,log);
-        log = F("BMP  : Barometric Pressure: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO,log);
-        success = true;
+
+        if (Plugin_006_init)
+        {
+          UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
+          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
+          String log = F("BMP  : Temperature: ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BMP  : Barometric Pressure: ");
+          log += UserVar[event->BaseVarIndex + 1];
+          addLog(LOG_LEVEL_INFO, log);
+          success = true;
+        }
         break;
       }
 
@@ -240,11 +244,14 @@ uint16_t Plugin_006_bmp085_read16(uint8_t a)
 }
 
 /*********************************************************************/
-void Plugin_006_bmp085_write8(uint8_t a, uint8_t d)
+boolean Plugin_006_bmp085_write8(uint8_t a, uint8_t d)
 /*********************************************************************/
 {
   Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
   Wire.write(a); // sends register address to read from
   Wire.write(d);  // write data
-  Wire.endTransmission(); // end transmission
+  if(Wire.endTransmission() != 0)
+    return false;
+
+  return true;
 }
