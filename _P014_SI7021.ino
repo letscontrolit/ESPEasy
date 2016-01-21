@@ -14,14 +14,15 @@ boolean Plugin_014_init = false;
 // ======================================
 // SI7021 sensor 
 // ======================================
-#define SI7021_I2C_ADDRESS    0x40 // I2C address for the sensor
-#define SI7021_MEASURE_TEMP0  0xE0 // Can be read only after a RH conversion done
-#define SI7021_MEASURE_TEMP   0xE3 // Default hold
-#define SI7021_MEASURE_HUM    0xE5 // Default hold
-#define SI7021_MEASURE_NOHOLD 0x80 // NO HOLD Bit flag
-#define SI7021_WRITE_REG      0xE6
-#define SI7021_READ_REG       0xE7
-#define SI7021_SOFT_RESET     0xFE
+#define SI7021_I2C_ADDRESS      0x40 // I2C address for the sensor
+#define SI7021_MEASURE_TEMP_HUM 0xE0 // Measure Temp only after a RH conversion done
+#define SI7021_MEASURE_TEMP_HM  0xE3 // Default hold Master
+#define SI7021_MEASURE_HUM_HM   0xE5 // Default hold Master
+#define SI7021_MEASURE_TEMP     0xF3 // No hold
+#define SI7021_MEASURE_HUM      0xF5 // No hold
+#define SI7021_WRITE_REG        0xE6
+#define SI7021_READ_REG         0xE7
+#define SI7021_SOFT_RESET       0xFE
 
 // SI7021 Sensor resolution
 // default at power up is SI7021_RESOLUTION_14T_12RH
@@ -263,15 +264,25 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   // My test sample was still not working with 11 bit
   // So to be more safe, we add 5 ms to each and use 8,10,13,21 ms
   // But for ESP Easy, I think it does not matter at all...
+
+  // Martinus is correct there was a bug Mesasure HUM need 
+  // hum+temp delay because it also measure temp
   
   if (resolution == SI7021_RESOLUTION_11T_11RH)
-    delay(8);
+    tmp = 4;
   else if (resolution == SI7021_RESOLUTION_12T_08RH)
-    delay(10);
+    tmp = 6;
   else if (resolution == SI7021_RESOLUTION_13T_10RH)
-    delay(13);
+    tmp = 9;
   else 
-    delay(21);
+    tmp = 17;
+
+  // Humidity fire also temp measurment so delay 
+  // need to be increased by 2 if no Hold Master
+  if (datatype == SI7021_MEASURE_HUM)
+    tmp *=2;
+
+  delay(tmp);
 
   /*
   // Wait for data to become available, device will NACK during conversion
@@ -288,8 +299,8 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   // https://www.silabs.com/Support%20Documents/TechnicalDocs/Si7021-A20.pdf page 5
   while(error!=0 && tmp++<=12 );
   */
-  Wire.requestFrom(SI7021_I2C_ADDRESS, 3);
-  while ( Wire.available()<3 ) {
+  if ( Wire.requestFrom(SI7021_I2C_ADDRESS, 3) < 3 ) {
+    return -1;
   }
 
   // Comes back in three bytes, data(MSB) / data(LSB) / Checksum
@@ -305,7 +316,7 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   }
 
   // Humidity 
-  if (datatype == SI7021_MEASURE_HUM) {
+  if (datatype == SI7021_MEASURE_HUM || datatype == SI7021_MEASURE_HUM_HM) {
     // Convert value to Himidity percent 
     data = ((125 * (long)raw) >> 16) - 6;
 
@@ -317,7 +328,7 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
     si7021_humidity = (uint8_t) data;
 
   // Temperature
-  } else {
+  } else  if (datatype == SI7021_MEASURE_TEMP ||datatype == SI7021_MEASURE_TEMP_HM || datatype == SI7021_MEASURE_TEMP_HUM) {
     // Convert value to Temperature (*100)
     // for 23.45C value will be 2345
     data =  ((17572 * (long)raw) >> 16) - 4685;
