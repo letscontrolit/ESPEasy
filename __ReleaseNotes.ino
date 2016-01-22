@@ -1,3 +1,7 @@
+// R70
+// Avoid reporting DHT nul readings.
+// Changed timing SI7021 (contributed by Hallard)
+
 // R69 20-01-2016
 // Cosmetic: removed last empty table row in device edit screen
 // Added help button to firmware upload

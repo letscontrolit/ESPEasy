@@ -126,28 +126,41 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
               if (dht_dat[4] == dht_check_sum)
               {
-
+                float temperature = 0;
+                float humidity = 0;
+                
                 if (Par3 == 11)
                 {
-                  UserVar[event->BaseVarIndex] = float(dht_dat[2]); // Temperature
-                  UserVar[event->BaseVarIndex + 1] = float(dht_dat[0]); // Humidity
+                  temperature = float(dht_dat[2]); // Temperature
+                  humidity = float(dht_dat[0]); // Humidity
                 }
 
                 if (Par3 == 22)
                 {
                   if (dht_dat[2] & 0x80) // negative temperature
-                    UserVar[event->BaseVarIndex] = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
+                    temperature = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
                   else
-                    UserVar[event->BaseVarIndex] = 0.1 * word(dht_dat[2], dht_dat[3]);
-                  UserVar[event->BaseVarIndex + 1] = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
+                    temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
+                  humidity = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
                 }
-                String log = F("DHT  : Temperature: ");
-                log += UserVar[event->BaseVarIndex];
-                addLog(LOG_LEVEL_INFO, log);
-                log = F("DHT  : Humidity: ");
-                log += UserVar[event->BaseVarIndex + 1];
-                addLog(LOG_LEVEL_INFO, log);
-                success = true;
+                if (temperature !=0 && humidity !=0)
+                {
+                  UserVar[event->BaseVarIndex] = temperature;
+                  UserVar[event->BaseVarIndex + 1] = humidity;
+                  String log = F("DHT  : Temperature: ");
+                  log += UserVar[event->BaseVarIndex];
+                  addLog(LOG_LEVEL_INFO, log);
+                  log = F("DHT  : Humidity: ");
+                  log += UserVar[event->BaseVarIndex + 1];
+                  addLog(LOG_LEVEL_INFO, log);
+                  success = true;
+                }
+                else
+                {
+                  String log = F("DHT  : No reading!");
+                  log += UserVar[event->BaseVarIndex];
+                  addLog(LOG_LEVEL_INFO, log);
+                }
               } // checksum
             } // error
           } // dht
