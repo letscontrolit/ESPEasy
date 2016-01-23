@@ -54,11 +54,11 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        addLog(LOG_LEVEL_INFO, (char*)"INIT : SRF01");
         Plugin_029_SRF_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         Plugin_029_SRF = new SoftwareSerial(Plugin_029_SRF_Pin, Plugin_029_SRF_Pin);
-
         Plugin_029_SRF01_Cmd(PLUGIN_029_srfAddress, PLUGIN_029_getSoft);
-        for (timeout = 0; timeout < 5; timeout++) {
+        for (timeout = 0; timeout < 10; timeout++) {
           if (Plugin_029_SRF->available() < 1 ) {
             delay(10);
           } else {
@@ -67,9 +67,10 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
             log += softVer;
             addLog(LOG_LEVEL_INFO, log);
             success = true;
-            break;
+            return success;
           };
         };
+        addLog(LOG_LEVEL_ERROR, (char*)"SRF01-Init: protocol timeout!");
         success = false;
         break;
       }
@@ -77,7 +78,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         Plugin_029_SRF01_Cmd(PLUGIN_029_srfAddress, PLUGIN_029_getRange);
-        for (timeout = 0; timeout < 5; timeout++) {
+        for (timeout = 0; timeout < 10; timeout++) {
           if (Plugin_029_SRF->available() < 2 ) {
             delay(10);
           } else {
@@ -85,13 +86,11 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
             byte lowByte = Plugin_029_SRF->read();
             int dist = ((highByte << 8) + lowByte);
             UserVar[event->BaseVarIndex] = dist;
-            
             String log = F("SRF1 : Distance: ");
             log += dist;
-            addLog(LOG_LEVEL_INFO,log);
-            
+            addLog(LOG_LEVEL_INFO, log);
             success = true;
-            break;
+            return success;
           };
         };
         addLog(LOG_LEVEL_ERROR, (char*)"SRF01  : protocol timeout!");
@@ -108,6 +107,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
 // Send SRF01 Command
 //**************************************************************************/
 void Plugin_029_SRF01_Cmd(byte Address, byte cmd) {
+  Plugin_029_SRF->flush();
   pinMode(Plugin_029_SRF_Pin, OUTPUT);
   digitalWrite(Plugin_029_SRF_Pin, LOW);
   delay(2);
