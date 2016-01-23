@@ -243,6 +243,11 @@ void ExecuteCommand(const char *Line)
     }
   }
 
+  if (strcasecmp_P(Command, PSTR("flashcheck")) == 0)
+  {
+    CheckFlash(Par1, Par2);
+  }
+
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
     Settings.Delay = Par1;
 

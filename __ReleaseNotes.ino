@@ -1,3 +1,6 @@
+// R72
+// Added flashcheck <start>,<end> command (simple read check)
+
 // R71 23-01-2016
 // Changed DHT nul reading logic
 // Added connect failure check in MQTT protocol

@@ -1,30 +1,30 @@
 void taskClear(byte taskIndex, boolean save)
 {
-    Settings.TaskDeviceNumber[taskIndex] = 0;
-    ExtraTaskSettings.TaskDeviceName[0] = 0;
-    Settings.TaskDeviceID[taskIndex] = 0;
-    Settings.TaskDeviceDataFeed[taskIndex] = 0;
-    Settings.TaskDevicePin1[taskIndex] = -1;
-    Settings.TaskDevicePin2[taskIndex] = -1;
-    Settings.TaskDevicePin3[taskIndex] = -1;
-    Settings.TaskDevicePort[taskIndex] = 0;
-    Settings.TaskDeviceSendData[taskIndex] = true;
-    Settings.TaskDeviceGlobalSync[taskIndex] = false;
+  Settings.TaskDeviceNumber[taskIndex] = 0;
+  ExtraTaskSettings.TaskDeviceName[0] = 0;
+  Settings.TaskDeviceID[taskIndex] = 0;
+  Settings.TaskDeviceDataFeed[taskIndex] = 0;
+  Settings.TaskDevicePin1[taskIndex] = -1;
+  Settings.TaskDevicePin2[taskIndex] = -1;
+  Settings.TaskDevicePin3[taskIndex] = -1;
+  Settings.TaskDevicePort[taskIndex] = 0;
+  Settings.TaskDeviceSendData[taskIndex] = true;
+  Settings.TaskDeviceGlobalSync[taskIndex] = false;
 
-    for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
-      Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
+  for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
+    Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
 
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-    {
-      ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
-      ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
-    }
-    if (save)
-    {
-      SaveTaskSettings(taskIndex);
-      SaveSettings();
-    }
+  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+  {
+    ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
+    ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
   }
+  if (save)
+  {
+    SaveTaskSettings(taskIndex);
+    SaveSettings();
+  }
+}
 
 void getIPfromHostName()
 {
@@ -463,7 +463,6 @@ void ZeroFillFlash()
 /********************************************************************************************\
 * Erase all content on flash (except sketch)
 \*********************************************************************************************/
-
 void EraseFlash()
 {
   uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
@@ -473,23 +472,69 @@ void EraseFlash()
   {
     noInterrupts();
     if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-      {
-        interrupts();
-        Serial.print(F("FLASH: Erase Sector: "));
-        Serial.println(_sector);
-        delay(10);
-      }
+    {
+      interrupts();
+      Serial.print(F("FLASH: Erase Sector: "));
+      Serial.println(_sector);
+      delay(10);
+    }
     interrupts();
   }
 }
 
 
+/********************************************************************************************\
+* Check SPIFFS area settings
+\*********************************************************************************************/
 int SpiffsSectors()
 {
   uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
   uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
   return _sectorEnd - _sectorStart;
 }
+
+
+/********************************************************************************************\
+* Check flash chip (beyond sketch size)
+\*********************************************************************************************/
+void CheckFlash(int start, int end)
+{
+  //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
+  //uint32_t _sectorEnd = _sectorStart + (ESP.getFlashChipRealSize() / SPI_FLASH_SEC_SIZE);
+
+  uint32_t _sectorStart = start;
+  uint32_t _sectorEnd = end;
+
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+
+  uint8_t* tmpdata = data;
+  for (int x = 0; x < FLASH_EEPROM_SIZE; x++)
+  {
+    *tmpdata = 0xA5;
+    tmpdata++;
+  }
+
+  for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
+  {
+    boolean success = 0;
+    Serial.print(F("FLASH: Verify Sector: "));
+    Serial.print(_sector);
+    Serial.print(F(" : "));
+    delay(10);
+    noInterrupts();
+    //if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+      //if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+        if (spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+          success = true;
+    interrupts();
+    if (success)
+      Serial.println(F("OK"));
+    else
+      Serial.println(F("Fail"));
+  }
+  delete [] data;
+}
+
 
 /********************************************************************************************\
 * Reset all settings to factory defaults
@@ -896,7 +941,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   // padding spaces
   while (newString.length() < lineSize)
     newString += " ";
-      
+
   return newString;
 }
 
