@@ -1,4 +1,11 @@
-// R70
+// R71 23-01-2016
+// Changed DHT nul reading logic
+// Added connect failure check in MQTT protocol
+// Added more info on 'flashdump' serial command
+// Factory reset erases entire flash except the sketch and zero fills 64k SPIFFS block
+// System halts with error message if no SPIFFS area set.
+
+// R70 22-01-2016
 // Avoid reporting DHT nul readings.
 // Changed timing SI7021 (contributed by Hallard)
 

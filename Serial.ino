@@ -200,12 +200,13 @@ void ExecuteCommand(const char *Line)
   if (strcasecmp_P(Command, PSTR("Erase")) == 0)
   {
     EraseFlash();
+    ZeroFillFlash();
     saveToRTC(0);
     WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
     WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   }
-
+  
   if (strcasecmp_P(Command, PSTR("Reset")) == 0)
     ResetFactory();
 
@@ -220,9 +221,15 @@ void ExecuteCommand(const char *Line)
     uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
 
-    Serial.print(F("Flash start sector: "));
+    Serial.print(F("Sketch size        : "));
+    Serial.println(ESP.getSketchSize());
+    Serial.print(F("Sketch free space  : "));
+    Serial.println(ESP.getFreeSketchSpace());
+    Serial.print(F("Flash size         : "));
+    Serial.println(ESP.getFlashChipRealSize());
+    Serial.print(F("SPIFFS start sector: "));
     Serial.println(_sectorStart);
-    Serial.print(F("Flash end sector  : "));
+    Serial.print(F("SPIFFS end sector  : "));
     Serial.println(_sectorEnd);
     char data[80];
     if (Par2 == 0) Par2 = Par1;

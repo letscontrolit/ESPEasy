@@ -427,10 +427,11 @@ void LoadFromFlash(int index, byte* memAddress, int datasize)
 /********************************************************************************************\
 * Erase data on flash
 \*********************************************************************************************/
-void EraseFlash()
+void ZeroFillFlash()
 {
+  // this will fill the SPIFFS area with a 64k block of all zeroes.
   uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint32_t _sectorEnd = _sectorStart + 32 + 1; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint32_t _sectorEnd = _sectorStart + 16 ; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
   uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
 
   uint8_t* tmpdata = data;
@@ -440,22 +441,55 @@ void EraseFlash()
     tmpdata++;
   }
 
-  noInterrupts();
+
   for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
   {
     // write sector to flash
+    noInterrupts();
     if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
       if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
       {
-        String log = F("FLASH: Erase Sector: ");
-        log += _sector;
-        addLog(LOG_LEVEL_INFO, log);
+        interrupts();
+        Serial.print(F("FLASH: Zero Fill Sector: "));
+        Serial.println(_sector);
+        delay(10);
       }
   }
   interrupts();
   delete [] data;
 }
 
+
+/********************************************************************************************\
+* Erase all content on flash (except sketch)
+\*********************************************************************************************/
+
+void EraseFlash()
+{
+  uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
+  uint32_t _sectorEnd = _sectorStart + (ESP.getFlashChipRealSize() / SPI_FLASH_SEC_SIZE);
+
+  for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
+  {
+    noInterrupts();
+    if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
+      {
+        interrupts();
+        Serial.print(F("FLASH: Erase Sector: "));
+        Serial.println(_sector);
+        delay(10);
+      }
+    interrupts();
+  }
+}
+
+
+int SpiffsSectors()
+{
+  uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  return _sectorEnd - _sectorStart;
+}
 
 /********************************************************************************************\
 * Reset all settings to factory defaults
@@ -499,6 +533,7 @@ void ResetFactory(void)
   }
 #else
   EraseFlash();
+  ZeroFillFlash();
 #endif
 
   LoadSettings();
