@@ -99,7 +99,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              70
+#define BUILD                              72
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -357,6 +357,13 @@ void setup()
 {
   Serial.begin(115200);
 
+  if (SpiffsSectors() == 0)
+  {
+    Serial.println("\nNo SPIFFS area..\nSystem Halted\nPlease reflash with SPIFFS");
+    while(true)
+      delay(1);
+  }
+  
 #if FEATURE_SPIFFS
   fileSystemCheck();
 #endif

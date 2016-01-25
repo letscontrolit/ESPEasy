@@ -143,7 +143,13 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
                     temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
                   humidity = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
                 }
-                if (temperature !=0 && humidity !=0)
+                if (temperature == 0 && humidity == 0)
+                {
+                  String log = F("DHT  : No reading!");
+                  log += UserVar[event->BaseVarIndex];
+                  addLog(LOG_LEVEL_INFO, log);
+                }
+                else
                 {
                   UserVar[event->BaseVarIndex] = temperature;
                   UserVar[event->BaseVarIndex + 1] = humidity;
@@ -154,12 +160,6 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
                   log += UserVar[event->BaseVarIndex + 1];
                   addLog(LOG_LEVEL_INFO, log);
                   success = true;
-                }
-                else
-                {
-                  String log = F("DHT  : No reading!");
-                  log += UserVar[event->BaseVarIndex];
-                  addLog(LOG_LEVEL_INFO, log);
                 }
               } // checksum
             } // error

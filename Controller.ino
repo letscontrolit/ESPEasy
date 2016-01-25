@@ -115,10 +115,16 @@ void MQTTCheck()
   if (Protocol[ProtocolIndex].usesMQTT)
     if (!MQTTclient.connected())
     {
+      String log = F("MQTT : Connection lost");
+      addLog(LOG_LEVEL_ERROR, log);
+      connectionFailures += 2;
       MQTTclient.disconnect();
       delay(1000);
       MQTTConnect();
     }
+    else
+      if (connectionFailures)
+        connectionFailures--;
 }
 
 

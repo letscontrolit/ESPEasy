@@ -27,7 +27,7 @@ void WebServerInit()
   WebServer.on("/setup", handle_setup);
   WebServer.on("/json", handle_json);
 
-  if(ESP.getFlashChipRealSize() > 524288)
+  if (ESP.getFlashChipRealSize() > 524288)
     httpUpdater.setup(&WebServer);
 
   WebServer.begin();
@@ -197,7 +197,10 @@ void handle_root() {
     reply += F("<TR><TD>ESP Chip ID:<TD>");
     reply += ESP.getChipId();
 
-    reply += F("<TR><TD>ESP Flash Size:<TD>");
+    reply += F("<TR><TD>Flash Chip ID:<TD>");
+    reply += ESP.getFlashChipId();
+
+    reply += F("<TR><TD>Flash Size:<TD>");
     reply += ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
 
     reply += F("<TR><TD>Free Mem:<TD>");
@@ -1220,11 +1223,11 @@ void handle_tools() {
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
   reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
   reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
-  if(ESP.getFlashChipRealSize() > 524288)
-    {
-      reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
-      reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyOTA\" target=\"_blank\">?</a>");
-    }
+  if (ESP.getFlashChipRealSize() > 524288)
+  {
+    reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
+    reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyOTA\" target=\"_blank\">?</a>");
+  }
 #if FEATURE_SPIFFS
   reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
 #else
@@ -1462,7 +1465,7 @@ boolean handle_json()
     reply += ESP.getFreeHeap();
     reply += F("\n},\n");
   }
-  
+
   byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
@@ -1491,7 +1494,7 @@ boolean handle_json()
       reply += F("\"TaskName\": \"");
       reply += ExtraTaskSettings.TaskDeviceName;
       reply += F("\"");
-      if (Device[DeviceIndex].ValueCount !=0)
+      if (Device[DeviceIndex].ValueCount != 0)
         reply += F(",");
       reply += F("\n");
 
