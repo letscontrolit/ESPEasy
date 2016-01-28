@@ -1,4 +1,8 @@
-// R72
+// R73 28-01-2016
+// Removed flashcheck (did not prove much) and many other debug commands
+// Update PN532 plugin, should work better now. And added optional reset GPIO pin.
+
+// R72 23-01-2016
 // Added flashcheck <start>,<end> command (simple read check)
 
 // R71 23-01-2016

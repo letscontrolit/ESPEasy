@@ -21,41 +21,12 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
-  if (strcasecmp_P(Command, PSTR("getudptaskinfo")) == 0) // local task, remote unit, remote task
-  {
-    char data[6];
-    data[0]= 255;
-    data[1]= 2;
-    data[2]= Settings.Unit; // source unit
-    data[3]= Par2; // dest unit
-    data[4]= Par1-1; // local task
-    data[5]= Par3-1; // task index to request
-    sendUDP(Par2, (byte*) &data, sizeof(data));
-  }
-
-  if (strcasecmp_P(Command, PSTR("getudptaskdata")) == 0) // local task, remote unit, remote task
-  {
-    char data[6];
-    data[0]= 255;
-    data[1]= 4;
-    data[2]= Settings.Unit; // source unit
-    data[3]= Par2; // dest unit
-    data[4]= Par1-1; // local task
-    data[5]= Par3-1; // task index to request
-    sendUDP(Par2, (byte*) &data, sizeof(data));
-  }
 
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
     taskClear(Par1 - 1,true);
   }
-
-  if (strcasecmp_P(Command, PSTR("resetinfo")) == 0)
-  {
-    Serial.print(F("getResetInfo: "));
-    Serial.println(ESP.getResetInfo());
-  }
-  
+ 
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
     Wire.beginTransmission(Par1);  // address
@@ -81,43 +52,6 @@ void ExecuteCommand(const char *Line)
       }      
       Serial.print(F("Reg value: "));
       Serial.println(value);
-    }
-  }
-
-#if FEATURE_TIME
-  if (strcasecmp_P(Command, PSTR("ntp")) == 0)
-    getNtpTime();
-#endif
-
-  if (strcasecmp_P(Command, PSTR("setsdk")) == 0)
-  {
-    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
-    WiFi.disconnect();
-    WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
-    WiFi.persistent(false);
-  }
-
-  if (strcasecmp_P(Command, PSTR("clearsdk")) == 0)
-  {
-    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
-    WiFi.disconnect();
-    WiFi.persistent(false);
-    WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
-  }
-
-  if (strcasecmp_P(Command, PSTR("getssid")) == 0)
-  {
-    struct station_config conf;
-    if (wifi_station_get_config(&conf))
-    {
-      Serial.print(F("SDK current: "));
-      Serial.println(String(reinterpret_cast<char*>(conf.ssid)));
-    }
-    struct station_config sconf;
-    if (wifi_station_get_config_default(&sconf))
-    {
-      Serial.print(F("SDK default: "));
-      Serial.println(String(reinterpret_cast<char*>(sconf.ssid)));
     }
   }
 
