@@ -1,3 +1,9 @@
+// R74 30-01-2016
+// Fixed a bug where using both controller IP and (DNS) hostname leads to unwanted behavior
+//   more specifically if there is confusion between ESP hostname and controller hostname
+//   now you have to select location by IP or DNS and can't enter both fields simultaniously
+// Fixed a bug for RFID plugins that provide long values to the controller plugin, did not work for the generic http controller plugin
+
 // R73 28-01-2016
 // Removed flashcheck (did not prove much) and many other debug commands
 // Update PN532 plugin, should work better now. And added optional reset GPIO pin.

@@ -282,6 +282,7 @@ void handle_config() {
   String password = WebServer.arg("password");
   String ssid = WebServer.arg("ssid");
   String key = WebServer.arg("key");
+  String usedns = WebServer.arg("usedns");
   String controllerip = WebServer.arg("controllerip");
   String controllerhostname = WebServer.arg("controllerhostname");
   String controllerport = WebServer.arg("controllerport");
@@ -317,10 +318,21 @@ void handle_config() {
     {
       if (Settings.Protocol != 0)
       {
-        controllerip.toCharArray(tmpString, 26);
-        str2ip(tmpString, Settings.Controller_IP);
-        strncpy(Settings.ControllerHostName, controllerhostname.c_str(), sizeof(Settings.ControllerHostName));
-        getIPfromHostName();
+        Settings.UseDNS = usedns.toInt();
+        if (Settings.UseDNS)
+        {
+          strncpy(Settings.ControllerHostName, controllerhostname.c_str(), sizeof(Settings.ControllerHostName));
+          getIPfromHostName();
+        }
+        else
+        {
+          if(controllerip.length() != 0)
+          {
+            controllerip.toCharArray(tmpString, 26);
+            str2ip(tmpString, Settings.Controller_IP);
+          }
+        }
+        
         Settings.ControllerPort = controllerport.toInt();
         strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
         strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
@@ -380,19 +392,46 @@ void handle_config() {
   reply += F("</select>");
   reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyProtocols\" target=\"_blank\">?</a>");
 
+
   char str[20];
 
   if (Settings.Protocol)
   {
-    reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
-    reply += str;
+    byte choice = Settings.UseDNS;
+    String options[2];
+    options[0] = F("Use IP address");
+    options[1] = F("Use Hostname");
+    int optionValues[2];
+    optionValues[0] = 0;
+    optionValues[1] = 1;
+    reply += F("<TR><TD>Locate Controller:<TD><select name='usedns' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\" >");
+    for (byte x = 0; x < 2; x++)
+    {
+      reply += F("<option value='");
+      reply += optionValues[x];
+      reply += "'";
+      if (choice == optionValues[x])
+        reply += F(" selected");
+      reply += ">";
+      reply += options[x];
+      reply += F("</option>");
+    }
+    reply += F("</select>");
+
+    if (Settings.UseDNS)
+    {
+      reply += F("<TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
+      reply += Settings.ControllerHostName;
+    }
+    else
+    {
+      reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
+      sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+      reply += str;
+    }
 
     reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
     reply += Settings.ControllerPort;
-
-    reply += F("'><TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
-    reply += Settings.ControllerHostName;
 
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
     if (Protocol[ProtocolIndex].usesAccount)

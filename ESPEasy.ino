@@ -99,7 +99,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              73
+#define BUILD                              74
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -255,6 +255,7 @@ struct SettingsStruct
   int8_t        TaskDevicePin3[TASKS_MAX];
   byte          TaskDeviceDataFeed[TASKS_MAX];
   int8_t        PinStates[17];
+  byte          UseDNS;
 } Settings;
 
 struct ExtraTaskSettingsStruct
