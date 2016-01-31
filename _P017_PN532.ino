@@ -84,7 +84,12 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
+        for(byte x=0; x < 3; x++)
+        {
+          if(Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]))
+            break;
+          delay(1000);
+        }
         break;
       }
 
@@ -204,7 +209,9 @@ boolean Plugin_017_Init(int8_t resetPin)
     log += String((versiondata >> 8) & 0xFF, HEX);
     addLog(LOG_LEVEL_INFO, log);
   }
-
+  else
+    return false;
+    
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_SAMCONFIGURATION;
   Plugin_017_pn532_packetbuffer[1] = 0x01; // normal mode;
   Plugin_017_pn532_packetbuffer[2] = 0x2; // timeout 50ms * 2 = 100 mS
@@ -212,6 +219,8 @@ boolean Plugin_017_Init(int8_t resetPin)
 
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 4))
     return false;
+
+  return true;
 }
 
 

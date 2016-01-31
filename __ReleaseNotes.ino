@@ -1,3 +1,6 @@
+// R76 31-01-2016
+// Added retry to PN532 init step
+
 // R75 31-01-2016
 // Fixed a bug for generic http url request variables that needed URLEncoding
 // Fixed too aggresive reset action, PN532 now only resets after three consecutive read errors.
