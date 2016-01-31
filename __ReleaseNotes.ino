@@ -1,3 +1,7 @@
+// R75 31-01-2016
+// Fixed a bug for generic http url request variables that needed URLEncoding
+// Fixed too aggresive reset action, PN532 now only resets after three consecutive read errors.
+
 // R74 30-01-2016
 // Fixed a bug where using both controller IP and (DNS) hostname leads to unwanted behavior
 //   more specifically if there is confusion between ESP hostname and controller hostname

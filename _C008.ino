@@ -103,17 +103,14 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   String url = "/";
   url += Settings.MQTTpublish;
-  url.replace("%sysname%", Settings.Name);
-  url.replace("%tskname%", ExtraTaskSettings.TaskDeviceName);
+  url.replace("%sysname%", URLEncode(Settings.Name));
+  url.replace("%tskname%", URLEncode(ExtraTaskSettings.TaskDeviceName));
   url.replace("%id%", String(event->idx));
-  url.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[varIndex]);
+  url.replace("%valname%", URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
   if (longValue)
     url.replace("%value%", String(longValue));
   else
     url.replace("%value%", String(value));
-
-  Serial.print("URL: ");
-  Serial.println(url);
 
   url.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, log);

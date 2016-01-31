@@ -105,6 +105,8 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
       {
         static unsigned long tempcounter = 0;
         static byte counter;
+        static byte errorCount=0;
+        
         counter++;
         if (counter == 3)
         {
@@ -130,7 +132,16 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           uint8_t uidLength;
           byte error = Plugin_017_readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
 
-          if (error == 1) // on I2C error, reset PN532
+          if (error == 1)
+          {
+            errorCount++;
+            Serial.print("PN532: Read errors: ");
+            Serial.println(errorCount);
+          }
+          else
+            errorCount=0;
+                    
+          if (errorCount > 2) // if three consecutive I2C errors, reset PN532
           {
             pollcounter = 0;
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);

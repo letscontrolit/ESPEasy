@@ -326,13 +326,13 @@ void handle_config() {
         }
         else
         {
-          if(controllerip.length() != 0)
+          if (controllerip.length() != 0)
           {
             controllerip.toCharArray(tmpString, 26);
             str2ip(tmpString, Settings.Controller_IP);
           }
         }
-        
+
         Settings.ControllerPort = controllerport.toInt();
         strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
         strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
@@ -2261,5 +2261,29 @@ void handle_setup() {
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
   delay(10);
+}
+
+
+//********************************************************************************
+// URNEncode char string to string object
+//********************************************************************************
+String URLEncode(const char* msg)
+{
+    const char *hex = "0123456789abcdef";
+    String encodedMsg = "";
+
+    while (*msg!='\0'){
+        if( ('a' <= *msg && *msg <= 'z')
+                || ('A' <= *msg && *msg <= 'Z')
+                || ('0' <= *msg && *msg <= '9') ) {
+            encodedMsg += *msg;
+        } else {
+            encodedMsg += '%';
+            encodedMsg += hex[*msg >> 4];
+            encodedMsg += hex[*msg & 15];
+        }
+        msg++;
+    }
+    return encodedMsg;
 }
 
