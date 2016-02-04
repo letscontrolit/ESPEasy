@@ -1,3 +1,10 @@
+// R77 04-02-2016
+// Bugfix PN532, code cleanup
+//  The PN532 will not work properly with the current ESP Arduino Core 2.0.0. (!)
+//  Connect the PN532 RSTPDN pin to a GPIO port and configure this in the device settings as reset pin
+//  It will likely reset the PN532 several times a day.
+//  Best we can get so far. May be fixed in Arduino ESP core 2.1.0
+
 // R76 31-01-2016
 // Added retry to PN532 init step
 

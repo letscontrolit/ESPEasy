@@ -33,7 +33,6 @@ uint8_t Plugin_017_command;
 boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static unsigned long pollcounter = 0;
   
   switch (function)
   {
@@ -92,19 +91,6 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-
-    case PLUGIN_ONCE_A_SECOND:
-      {
-        static byte counter=0;
-        counter++;
-        if (counter == 30)
-        {
-          counter=0;
-          Serial.print("PN532: poll count: ");
-          Serial.println(pollcounter);
-        }
-        break;
-      }
       
     case PLUGIN_TEN_PER_SECOND:
       {
@@ -115,24 +101,14 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         counter++;
         if (counter == 3)
         {
-          byte sda_state = 0;
-          byte scl_state = 0;
-          sda_state = digitalRead(4);
-          scl_state = digitalRead(5);
-          if (sda_state == 0 || scl_state == 0)
+          if (digitalRead(4) == 0 || digitalRead(5) == 0)
           {
-            Serial.print("PN532: poll count: ");
-            Serial.print(pollcounter);
-            Serial.print(" sda: ");
-            Serial.print(sda_state);
-            Serial.print(" scl: ");
-            Serial.println(scl_state);
-            pollcounter = 0;
+            String log = F("PN532: BUS error");
+            addLog(LOG_LEVEL_ERROR, log);
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
             delay(1000);
           }
           counter = 0;
-
           uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
           uint8_t uidLength;
           byte error = Plugin_017_readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
@@ -140,19 +116,17 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           if (error == 1)
           {
             errorCount++;
-            Serial.print("PN532: Read errors: ");
-            Serial.println(errorCount);
+            String log = F("PN532: Read error: ");
+            log += errorCount;
+            addLog(LOG_LEVEL_ERROR, log);
           }
           else
             errorCount=0;
                     
           if (errorCount > 2) // if three consecutive I2C errors, reset PN532
           {
-            pollcounter = 0;
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
           }
-          else
-            pollcounter++;
 
           if (error == 0) {
             unsigned long key = uid[0];
@@ -186,18 +160,20 @@ boolean Plugin_017_Init(int8_t resetPin)
 {
   if (resetPin != -1)
   {
-    Serial.println("Reset Pin low...");
+    String log = F("PN532: Reset on pin: ");
+    log += resetPin;
+    addLog(LOG_LEVEL_INFO, log);
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     delay(100);
-    Serial.println("Reset Pin high...");
     digitalWrite(resetPin, HIGH);
     pinMode(resetPin, INPUT_PULLUP);
     delay(10);
   }
+
   Wire.beginTransmission(PN532_I2C_ADDRESS);
-  delay(20);
   Wire.endTransmission();
+  delay(5);
 
   uint32_t versiondata = getFirmwareVersion();
   if (versiondata) {
@@ -219,6 +195,11 @@ boolean Plugin_017_Init(int8_t resetPin)
 
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 4))
     return false;
+ 
+  // to prevent nack on next read
+  Wire.beginTransmission(PN532_I2C_ADDRESS);
+  Wire.endTransmission();
+  delay(5);
 
   return true;
 }
@@ -274,10 +255,12 @@ byte Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t 
 
   // read data packet
   if (Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer)) < 0) {
-    // no tag read, need to clear something ?
+
+    // if no tag read, need to clear something ?
     // it seems that without this code, the next read fails, taking another read to work again...
+
+    // to prevent nack on next read
     Wire.beginTransmission(PN532_I2C_ADDRESS);
-    delay(20);
     Wire.endTransmission();
     return 0x2;
   }
