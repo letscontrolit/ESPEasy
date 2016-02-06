@@ -1,3 +1,6 @@
+// R78 06-02-2016
+// Bugfix for PCF8574 plugin, could not address PCF8574A chip types
+
 // R77 04-02-2016
 // Bugfix PN532, code cleanup
 //  The PN532 will not work properly with the current ESP Arduino Core 2.0.0. (!)

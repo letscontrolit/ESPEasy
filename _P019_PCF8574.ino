@@ -104,6 +104,8 @@ int Plugin_019_Read(byte Par1)
   byte unit = (Par1 - 1) / 8;
   byte port = Par1 - (unit * 8);
   uint8_t address = 0x20 + unit;
+  if (unit > 7) address += 0x10;
+
   // get the current pin status
   Wire.requestFrom(address, (uint8_t)0x1);
   if (Wire.available())
@@ -124,6 +126,8 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
   byte unit = (Par1 - 1) / 8;
   byte port = Par1 - (unit * 8);
   uint8_t address = 0x20 + unit;
+  if (unit > 7) address += 0x10;
+
   // get the current pin status
   Wire.requestFrom(address, (uint8_t)0x1);
   if (Wire.available())
