@@ -1709,8 +1709,7 @@ boolean isLoggedIn()
 
   if (!WebLoggedIn)
   {
-    String reply = F("<a class=\"button-link\" href=\"login\">Login</a>");
-    WebServer.send(200, "text/html", reply);
+    WebServer.sendContent(F("HTTP/1.1 302 \r\nLocation: /login\r\n"));
   }
   else
   {
