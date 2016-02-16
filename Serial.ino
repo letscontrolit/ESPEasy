@@ -21,7 +21,6 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
-
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
     taskClear(Par1 - 1,true);
@@ -70,6 +69,38 @@ void ExecuteCommand(const char *Line)
   if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
   {
     Settings.deepSleep = 0;
+  }
+
+
+  // ****************************************
+  // commands for rules
+  // ****************************************
+
+  if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
+  {
+    RulesTimer[Par1-1] = millis() + (1000 * Par2);
+  }
+
+  if (strcasecmp_P(Command, PSTR("Delay")) == 0)
+  {
+    delayMillis(Par1);
+  }
+
+  if (strcasecmp_P(Command, PSTR("Rules")) == 0)
+  {
+    if(Par1 == 1)
+      Settings.UseRules = true;
+    else
+      Settings.UseRules = false;
+  }
+
+  if (strcasecmp_P(Command, PSTR("Event")) == 0)
+  {
+    String event = Line;
+    event = event.substring(6);
+    event.replace("$","#");
+    if (Settings.UseRules)
+      rulesProcessing(event);
   }
 
   // ****************************************
@@ -181,9 +212,6 @@ void ExecuteCommand(const char *Line)
   {
     CheckFlash(Par1, Par2);
   }
-
-  if (strcasecmp_P(Command, PSTR("Delay")) == 0)
-    Settings.Delay = Par1;
 
   if (strcasecmp_P(Command, PSTR("Debug")) == 0)
     Settings.SerialLogLevel = Par1;

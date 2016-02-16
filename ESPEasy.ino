@@ -99,7 +99,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              78
+#define BUILD                              79
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -126,6 +126,7 @@
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
 #define CPLUGIN_MAX                        16
 #define UNIT_MAX                           32
+#define RULES_TIMER_MAX                     8
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
@@ -256,6 +257,10 @@ struct SettingsStruct
   byte          TaskDeviceDataFeed[TASKS_MAX];
   int8_t        PinStates[17];
   byte          UseDNS;
+  boolean       UseRules;
+  int8_t        Pin_status_led;
+  boolean       UseSerial;
+  unsigned long TaskDeviceTimer[TASKS_MAX];
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -302,6 +307,7 @@ struct DeviceStruct
   boolean Custom;
   boolean SendDataOption;
   boolean GlobalSyncOption;
+  boolean TimerOption;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
@@ -321,7 +327,9 @@ boolean printToWeb = false;
 String printWebString = "";
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
+unsigned long RulesTimer[RULES_TIMER_MAX];
 
+unsigned long timerSensor[TASKS_MAX];
 unsigned long timer;
 unsigned long timer100ms;
 unsigned long timer1s;
@@ -361,10 +369,10 @@ void setup()
   if (SpiffsSectors() == 0)
   {
     Serial.println("\nNo SPIFFS area..\nSystem Halted\nPlease reflash with SPIFFS");
-    while(true)
+    while (true)
       delay(1);
   }
-  
+
 #if FEATURE_SPIFFS
   fileSystemCheck();
 #endif
@@ -374,7 +382,7 @@ void setup()
   LoadSettings();
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
-  
+
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
   // if different version, eeprom settings structure has changed. Full Reset needed
@@ -397,7 +405,8 @@ void setup()
 
   if (systemOK)
   {
-    Serial.begin(Settings.BaudRate);
+    if (Settings.UseSerial)
+      Serial.begin(Settings.BaudRate);
 
     if (Settings.Build != BUILD)
       BuildFixes();
@@ -406,7 +415,7 @@ void setup()
     log += BUILD;
     addLog(LOG_LEVEL_INFO, log);
 
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+    if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
       Serial.setDebugOutput(true);
 
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
@@ -454,16 +463,30 @@ void setup()
         lastBootCause = BOOT_CAUSE_COLD_BOOT;
       log = F("INIT : Cold Boot");
     }
-    
+
     addLog(LOG_LEVEL_INFO, log);
 
     saveToRTC(0);
 
+    if (Settings.UseRules)
+    {
+      String event = F("System#Boot");
+      rulesProcessing(event);
+    }
+
     // Setup timers
     if (bootMode == 0)
+    {
+      for (byte x = 0; x < TASKS_MAX; x++)
+        timerSensor[x] = millis() + 30000;
       timer = millis() + 30000; // startup delay 30 sec
+    }
     else
+    {
+      for (byte x = 0; x < TASKS_MAX; x++)
+        timerSensor[x] = millis() + 0;
       timer = millis() + 0; // no startup from deepsleep wake up
+    }
 
     timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
     timer1s = millis() + 1000; // timer for periodic actions once per/sec
@@ -474,11 +497,11 @@ void setup()
       initTime();
 #endif
 
-  // Start DNS, only used if the ESP has no valid WiFi config
-  // It will reply with it's own address on all DNS requests
-  // (captive portal concept)
-  if(wifiSetup)
-    dnsServer.start(DNS_PORT, "*", apIP);
+    // Start DNS, only used if the ESP has no valid WiFi config
+    // It will reply with it's own address on all DNS requests
+    // (captive portal concept)
+    if (wifiSetup)
+      dnsServer.start(DNS_PORT, "*", apIP);
 
   }
   else
@@ -502,12 +525,11 @@ void loop()
     WifiConnect();
     wifiSetupConnect = false;
   }
-  
-  if (Serial.available())
-  {
-    if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-      serial();
-  }
+
+  if (Settings.UseSerial)
+    if (Serial.available())
+      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+        serial();
 
   if (systemOK)
   {
@@ -565,7 +587,10 @@ void loop()
 #endif
       unsigned long timer = micros();
       PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
-        
+
+      if (Settings.UseRules)
+        rulesTimers();
+
       timer = micros() - timer;
 
       timer1s = millis() + 1000;
@@ -598,16 +623,28 @@ void loop()
     }
 
     // Check sensors and send data to controller when sensor timer has elapsed
-    if (millis() > timer)
+    // If deepsleep, use the single timer
+    if (Settings.deepSleep)
     {
-      timer = millis() + Settings.Delay * 1000;
-      SensorSend();
-      if (Settings.deepSleep)
+      if (millis() > timer)
       {
+        timer = millis() + Settings.Delay * 1000;
+        SensorSend();
         saveToRTC(1);
         String log = F("Enter deep sleep...");
         addLog(LOG_LEVEL_INFO, log);
         ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+      }
+    }
+    else // use individual timers for tasks
+    {
+      for (byte x = 0; x < TASKS_MAX; x++)
+      {
+        if(millis() > timerSensor[x])
+          {
+            timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
+            SensorSendTask(x);
+          }
       }
     }
 
@@ -620,50 +657,55 @@ void loop()
     delay(1);
 }
 
-
 void SensorSend()
 {
   for (byte x = 0; x < TASKS_MAX; x++)
   {
-    if (Settings.TaskDeviceDataFeed[x] == 0 && Settings.TaskDeviceID[x] != 0)
+    SensorSendTask(x);
+  }
+}
+
+void SensorSendTask(byte TaskIndex)
+{
+  if (Settings.TaskDeviceDataFeed[TaskIndex] == 0 && Settings.TaskDeviceID[TaskIndex] != 0)
+  {
+    byte varIndex = TaskIndex * VARS_PER_TASK;
+
+    boolean success = false;
+    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    LoadTaskSettings(TaskIndex);
+
+    struct EventStruct TempEvent;
+    TempEvent.TaskIndex = TaskIndex;
+    TempEvent.BaseVarIndex = varIndex;
+    TempEvent.idx = Settings.TaskDeviceID[TaskIndex];
+    TempEvent.sensorType = Device[DeviceIndex].VType;
+
+    float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
+    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      preValue[varNr] = UserVar[varIndex + varNr];
+
+    success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
+
+    if (success)
     {
-      byte varIndex = x * VARS_PER_TASK;
-      boolean success = false;
-      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-      LoadTaskSettings(x);
-
-      struct EventStruct TempEvent;
-      TempEvent.TaskIndex = x;
-      TempEvent.BaseVarIndex = varIndex;
-      TempEvent.idx = Settings.TaskDeviceID[x];
-      TempEvent.sensorType = Device[DeviceIndex].VType;
-
-      float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-        preValue[varNr] = UserVar[varIndex + varNr];
-
-      success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
-
-      if (success)
       {
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
         {
-          if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
-          {
-            String spreValue = String(preValue[varNr]);
-            String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
-            float value = UserVar[varIndex + varNr];
-            float result = 0;
-            String svalue = String(value);
-            formula.replace("%pvalue%", spreValue);
-            formula.replace("%value%", svalue);
-            byte error = Calculate(formula.c_str(), &result);
-            if (error == 0)
-              UserVar[varIndex + varNr] = result;
-          }
+          String spreValue = String(preValue[varNr]);
+          String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+          float value = UserVar[varIndex + varNr];
+          float result = 0;
+          String svalue = String(value);
+          formula.replace("%pvalue%", spreValue);
+          formula.replace("%value%", svalue);
+          byte error = Calculate(formula.c_str(), &result);
+          if (error == 0)
+            UserVar[varIndex + varNr] = result;
         }
-        sendData(&TempEvent);
       }
+      sendData(&TempEvent);
     }
   }
 }
@@ -671,7 +713,7 @@ void SensorSend()
 void backgroundtasks()
 {
   // process DNS, only used if the ESP has no valid WiFi config
-  if(wifiSetup)
+  if (wifiSetup)
     dnsServer.processNextRequest();
 
   checkUDP();

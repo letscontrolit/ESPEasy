@@ -25,6 +25,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_020;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].Custom = true;
+        Device[deviceCount].TimerOption = false;
         break;
       }
 

@@ -26,6 +26,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = false;
         break;
       }
 
@@ -58,7 +59,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           {
             String log = F("PCF  : State ");
             log += state;
-            addLog(LOG_LEVEL_INFO,log);
+            addLog(LOG_LEVEL_INFO, log);
             switchstate[event->TaskIndex] = state;
             UserVar[event->BaseVarIndex] = state;
             event->sensorType = SENSOR_TYPE_SWITCH;
@@ -75,6 +76,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
+
         if (tmpString.equalsIgnoreCase("PCFGPIO"))
         {
           success = true;
@@ -86,6 +88,22 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             printWebString += F(" Set to ");
             printWebString += event->Par2;
             printWebString += F("<BR>");
+          }
+        }
+
+        if (tmpString.equalsIgnoreCase("PCFGPIOPulse"))
+        {
+          success = true;
+          Plugin_009_Write(event->Par1, event->Par2);
+          delay(event->Par3);
+          Plugin_009_Write(event->Par1, !event->Par2);
+          if (printToWeb)
+          {
+            printWebString += F("PCFGPIO ");
+            printWebString += event->Par1;
+            printWebString += F(" Pulsed for ");
+            printWebString += event->Par3;
+            printWebString += F(" mS<BR>");
           }
         }
         break;

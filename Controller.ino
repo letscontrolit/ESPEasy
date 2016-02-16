@@ -3,6 +3,26 @@
 //********************************************************************************
 boolean sendData(struct EventStruct *event)
 {
+  LoadTaskSettings(event->TaskIndex);
+  if (Settings.UseRules)
+  {
+    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+    {
+      LoadTaskSettings(event->TaskIndex);
+      String eventString = ExtraTaskSettings.TaskDeviceName;
+      eventString += F("#");
+      eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+      eventString += F("=");
+      
+      if (event->sensorType == SENSOR_TYPE_LONG)
+        eventString += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+      else
+        eventString += UserVar[event->BaseVarIndex + varNr];
+      
+      rulesProcessing(eventString);
+    }
+  }
 
   if (!Settings.TaskDeviceSendData[event->TaskIndex])
     return false;
@@ -23,7 +43,6 @@ boolean sendData(struct EventStruct *event)
   if (Settings.TaskDeviceGlobalSync[event->TaskIndex])
     SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
 
-  LoadTaskSettings(event->TaskIndex);
   if (Settings.Protocol)
   {
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
@@ -122,9 +141,8 @@ void MQTTCheck()
       delay(1000);
       MQTTConnect();
     }
-    else
-      if (connectionFailures)
-        connectionFailures--;
+    else if (connectionFailures)
+      connectionFailures--;
 }
 
 

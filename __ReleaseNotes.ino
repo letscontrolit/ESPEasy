@@ -1,3 +1,11 @@
+// R79 16-02-2016
+// Bugfix: I2C Scanner mentions PCA9685 as possible device for address 0x40
+// Added missing pulse feature for PCF8574
+// Added Wifi status LED
+// Added option to send boot state on Switch Input device
+// Added option to use GPIO-1 and GPIO-3 for other purposes than Serial (must disable serial in tools/advanced!)
+// Added individual timers per task
+
 // R78 06-02-2016
 // Bugfix for PCF8574 plugin, could not address PCF8574A chip types
 
