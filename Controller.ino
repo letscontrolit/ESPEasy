@@ -63,6 +63,8 @@ void callback(const MQTT::Publish& pub) {
   String topic = pub.topic();
   String payload = pub.payload_string();
 
+  statusLED(true);
+
   topic.toCharArray(tmp, 80);
   sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", tmp);
   addLog(LOG_LEVEL_DEBUG, log);
@@ -210,6 +212,8 @@ void checkUDP()
   int packetSize = portUDP.parsePacket();
   if (packetSize)
   {
+    statusLED(true);
+
     IPAddress remoteIP = portUDP.remoteIP();
     if (portUDP.remotePort() == 123)
     {
@@ -403,6 +407,8 @@ void sendUDP(byte unit, byte* data, byte size)
   log += unit;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
+  statusLED(true);
+
   IPAddress remoteNodeIP(Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
   portUDP.write(data, size);
@@ -455,6 +461,8 @@ void sendSysInfoUDP(byte repeats)
     for (byte x = 0; x < 4; x++)
       data[x + 8] = ip[x];
     data[12] = Settings.Unit;
+
+    statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);
     portUDP.beginPacket(broadcastIP, Settings.UDPPort);

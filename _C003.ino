@@ -30,7 +30,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
         char host[20];
         sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-        sprintf_P(log, PSTR("%s%s"), "TELNT: connecting to ", host);
+        sprintf_P(log, PSTR("%s%s using port %u"), "TELNT: connecting to ", host,Settings.ControllerPort);
         addLog(LOG_LEVEL_DEBUG, log);
         if (printToWeb)
         {
@@ -48,6 +48,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
             printWebString += F("connection failed<BR>");
           return false;
         }
+        statusLED(true);
         if (connectionFailures)
           connectionFailures--;
 

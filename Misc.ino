@@ -1,12 +1,38 @@
 /********************************************************************************************\
 * Status LED
 \*********************************************************************************************/
-void statusLED(byte state)
+void statusLED(boolean traffic)
 {
-  if (Settings.Pin_status_led != -1)
+  if (Settings.Pin_status_led == -1)
+    return;
+
+  static unsigned long timer = 0;
+  static byte currentState = 0;
+
+  if (traffic)
   {
-    pinMode(Settings.Pin_status_led, OUTPUT);
-    digitalWrite(Settings.Pin_status_led, state);
+    currentState = HIGH;
+    digitalWrite(Settings.Pin_status_led, currentState); // blink off
+    timer = millis() + 100;
+    //Serial.print("LED Traffic");
+    //Serial.println(1);
+  }
+
+  if (timer == 0 || millis() > timer)
+  {
+    timer = 0;
+    byte state = HIGH;
+    if (WiFi.status() == WL_CONNECTED)
+      state = LOW;
+
+    if (currentState != state)
+    {
+      currentState = state;
+      pinMode(Settings.Pin_status_led, OUTPUT);
+      digitalWrite(Settings.Pin_status_led, state);
+      //Serial.print("LED Wifi ");
+      //Serial.println(state);
+    }
   }
 }
 
@@ -21,7 +47,7 @@ void delayMillis(unsigned long delay)
     backgroundtasks();
 }
 
-        
+
 /********************************************************************************************\
 * Parse a command string to event struct
 \*********************************************************************************************/
@@ -57,6 +83,7 @@ void taskClear(byte taskIndex, boolean save)
   Settings.TaskDevicePort[taskIndex] = 0;
   Settings.TaskDeviceSendData[taskIndex] = true;
   Settings.TaskDeviceGlobalSync[taskIndex] = false;
+  Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
 
   for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
     Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
@@ -675,6 +702,7 @@ void ResetFactory(void)
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
     Settings.TaskDeviceSendData[x] = true;
+    Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
   Settings.Build = BUILD;
   Settings.UseSerial = true;
@@ -1497,7 +1525,7 @@ void rulesProcessing(String& event)
 {
   unsigned long timer = micros();
   String log = "";
-  
+
   log = F("EVENT: ");
   log += event;
   addLog(LOG_LEVEL_INFO, log);
@@ -1515,7 +1543,7 @@ void rulesProcessing(String& event)
   boolean match = false;
   boolean codeBlock = false;
   boolean isCommand = false;
-  
+
   while (data[pos] != 0)
   {
     if (data[pos] != 0 && data[pos] != 10)
@@ -1536,7 +1564,7 @@ void rulesProcessing(String& event)
         String eventTrigger = "";
         String action = "";
         if (!codeBlock)
-        {        
+        {
           line.replace("on ", "");
           int split = line.indexOf(" do ");
           eventTrigger = line.substring(0, split);
@@ -1552,14 +1580,14 @@ void rulesProcessing(String& event)
         if (action.indexOf("{") != -1)
         {
           isCommand = false;
-          codeBlock = true; 
+          codeBlock = true;
         }
         if (action.indexOf("}") != -1)
         {
           isCommand = false;
-          codeBlock = false; 
+          codeBlock = false;
         }
-        
+
         if (match && isCommand)
         {
           log = F("ACT  : ");

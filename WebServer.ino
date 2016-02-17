@@ -170,6 +170,13 @@ void handle_root() {
     reply += wdcounter / 2;
     reply += F(" minutes");
 
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      reply += F("<TR><TD>Wifi RSSI:<TD>");
+      reply += WiFi.RSSI();
+      reply += F(" dB");
+    }
+    
     char str[20];
     sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     reply += F("<TR><TD>IP:<TD>");
@@ -658,7 +665,11 @@ void handle_devices() {
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
       DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
 
-      Settings.TaskDeviceTimer[index - 1] = taskdevicetimer.toInt();
+      if(taskdevicetimer.toInt() > 0)
+        Settings.TaskDeviceTimer[index - 1] = taskdevicetimer.toInt();
+      else
+        Settings.TaskDeviceTimer[index - 1] = Settings.Delay;
+      
       taskdevicename.toCharArray(tmpString, 26);
       strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();

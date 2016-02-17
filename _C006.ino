@@ -68,6 +68,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
+        statusLED(true);
         // MQTT publish structure:
         // /hooks/devices/idx/groupid/value name
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)

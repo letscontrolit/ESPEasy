@@ -1,3 +1,10 @@
+// R80 17-02-2016
+// Added logging controller TCP port
+// Bugfix, set default task timer to main delay if no value entered.
+// Added support for all commands on OpenHAB MQTT, using "<system name>/cmd" topic and the message contains the entire command.
+// Added Wifi signal strength reporting using the System Info device
+// Added network traffic indication to Wifi status led
+
 // R79 16-02-2016
 // Bugfix: I2C Scanner mentions PCA9685 as possible device for address 0x40
 // Added missing pulse feature for PCF8574

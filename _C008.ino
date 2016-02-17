@@ -77,7 +77,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  sprintf_P(log, PSTR("%s%s"), "HTTP : connecting to ", host);
+  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,Settings.ControllerPort);
   addLog(LOG_LEVEL_DEBUG, log);
   if (printToWeb)
   {
@@ -95,6 +95,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
       printWebString += F("connection failed<BR>");
     return false;
   }
+  statusLED(true);
   if (connectionFailures)
     connectionFailures--;
 

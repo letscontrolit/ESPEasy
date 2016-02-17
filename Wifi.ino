@@ -96,7 +96,6 @@ boolean WifiConnect()
         }
         if (WiFi.status() == WL_CONNECTED)
         {
-          statusLED(LOW);
           log = F("WIFI : Connected!");
           addLog(LOG_LEVEL_INFO, log);
           break;
@@ -188,7 +187,6 @@ void WifiCheck()
   
   if (WiFi.status() != WL_CONNECTED)
   {
-    statusLED(HIGH);
     NC_Count++;
     if (NC_Count > 10 && !AP_Mode)
     {
@@ -198,7 +196,6 @@ void WifiCheck()
   }
   else
   {
-    statusLED(LOW);
     C_Count++;
     NC_Count = 0;
     if (C_Count > 60)
