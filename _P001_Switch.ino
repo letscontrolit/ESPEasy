@@ -12,7 +12,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   boolean success = false;
   static byte switchstate[TASKS_MAX];
   static byte outputstate[TASKS_MAX];
-
+  static unsigned long pulseTimer[17];
+  static byte pulseLevel[17];
+  
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -132,6 +134,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
 
+        pulseLevel[Settings.TaskDevicePin1[event->TaskIndex]] = 0xFF;
+
         // if boot state must be send, inverse default state
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
@@ -142,7 +146,21 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        byte state = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
+        byte state;
+        
+        // pulse-output timer        
+        if (pulseLevel[Settings.TaskDevicePin1[event->TaskIndex]] < 2)
+        {
+          unsigned long tNow = millis();
+          if (((tNow >= pulseTimer[Settings.TaskDevicePin1[event->TaskIndex]]) && ((tNow - pulseTimer[Settings.TaskDevicePin1[event->TaskIndex]]) < (1 << 31))) ||
+              ((pulseTimer[Settings.TaskDevicePin1[event->TaskIndex]] >= tNow) && ((pulseTimer[Settings.TaskDevicePin1[event->TaskIndex]] - tNow) > (1 << 31))))
+          {
+            digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], !pulseLevel[Settings.TaskDevicePin1[event->TaskIndex]]);            
+            pulseLevel[Settings.TaskDevicePin1[event->TaskIndex]] = 0xFF;
+          }
+        }
+
+        state = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);        
         if (state != switchstate[event->TaskIndex])
         {
           switchstate[event->TaskIndex] = state;
@@ -183,6 +201,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             sendData(event);
           }
         }
+        
         success = true;
         break;
       }
@@ -198,8 +217,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
+            pulseLevel[event->Par1] = 0xFF;
             pinMode(event->Par1, OUTPUT);
-            digitalWrite(event->Par1, event->Par2);
+            digitalWrite(event->Par1, event->Par2);            
             if (printToWeb)
             {
               printWebString += F("GPIO ");
@@ -216,6 +236,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
+            pulseLevel[event->Par1] = 0xFF;
             pinMode(event->Par1, OUTPUT);
             analogWrite(event->Par1, event->Par2);
             if (printToWeb)
@@ -234,17 +255,23 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
-            pinMode(event->Par1, OUTPUT);
-            digitalWrite(event->Par1, event->Par2);
-            delay(event->Par3);
-            digitalWrite(event->Par1, !event->Par2);
-            if (printToWeb)
+            if ((event->Par3 > 0) && (event->Par3 < (24*3600*1000)))   // pulse duration limited to 24h
             {
-              printWebString += F("GPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Pulsed for ");
-              printWebString += event->Par3;
-              printWebString += F(" mS<BR>");
+              pinMode(event->Par1, OUTPUT);
+              digitalWrite(event->Par1, event->Par2);
+              pulseLevel[event->Par1] = event->Par2;
+              pulseTimer[event->Par1] = millis() + event->Par3;
+              if (printToWeb)
+              {
+                printWebString += F("Pulsing GPIO ");
+                printWebString += event->Par1;
+                printWebString += F(" for ");
+                printWebString += event->Par3;
+                printWebString += F(" ms (100 ms resolution)<BR>");
+              }
+            } else {
+              if (printToWeb)
+                printWebString += F("Pulse duration out of range!<BR>");
             }
           }
         }
@@ -256,10 +283,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             switch (event->Par1)
             {
               case 1:
+                pulseLevel[event->Par2] = 0xFF;
                 myservo1.attach(event->Par2);
                 myservo1.write(event->Par3);
                 break;
               case 2:
+                pulseLevel[event->Par2] = 0xFF;
                 myservo2.attach(event->Par2);
                 myservo2.write(event->Par3);
                 break;
