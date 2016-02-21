@@ -27,6 +27,28 @@ void WebServerInit()
   WebServer.on("/setup", handle_setup);
   WebServer.on("/json", handle_json);
   WebServer.on("/rules", handle_rules);
+#if FEATURE_SSDP
+  WebServer.on("/index.html", HTTP_GET, [](){
+      WebServer.send(200, "text/plain", "Hello World!");
+    });
+  WebServer.on("/description.xml", HTTP_GET, [](){
+      SSDP.schema(WebServer.client());
+    });
+  Serial.printf("Starting SSDP...\n");
+  Serial.println(Settings.Name);
+  SSDP.setSchemaURL("description.xml");
+  SSDP.setHTTPPort(80);
+  SSDP.setName(Settings.Name);
+  SSDP.setSerialNumber(ESP.getChipId());
+  SSDP.setURL("/");
+  SSDP.setModelName("ESP EASY");
+  SSDP.setModelNumber(String(BUILD));
+  SSDP.setModelURL("http://www.esp8266.nu/");
+  SSDP.setManufacturer("http://www.esp8266.nu/");
+  SSDP.setManufacturerURL("http://www.esp8266.nu/");
+  SSDP.setDeviceType("urn:schemas-upnp-org:device:BinaryLight:1");
+  SSDP.begin();
+#endif
 
   if (ESP.getFlashChipRealSize() > 524288)
     httpUpdater.setup(&WebServer);
