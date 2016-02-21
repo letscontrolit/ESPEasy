@@ -92,7 +92,7 @@
 #define UNIT                0
 
 #define FEATURE_TIME                     true
-
+#define FEATURE_SSDP                     true
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -179,6 +179,9 @@
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
 
+#if FEATURE_SSDP
+#include <ESP8266SSDP.h>
+#endif
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
