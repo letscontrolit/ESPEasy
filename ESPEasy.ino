@@ -92,14 +92,14 @@
 #define UNIT                0
 
 #define FEATURE_TIME                     true
-
+#define FEATURE_SSDP                     true
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              80
+#define BUILD                              81
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -179,6 +179,12 @@
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
 
+#define LWIP_OPEN_SRC
+#include "lwip/opt.h"
+#include "lwip/udp.h"
+#include "lwip/igmp.h"
+#include "include/UdpContext.h"
+
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
@@ -195,6 +201,15 @@ ESP8266WebServer WebServer(80);
 
 // syslog stuff
 WiFiUDP portUDP;
+
+#define FLASH_EEPROM_SIZE 4096
+extern "C" {
+#include "spi_flash.h"
+}
+extern "C" uint32_t _SPIFFS_start;
+extern "C" uint32_t _SPIFFS_end;
+extern "C" uint32_t _SPIFFS_page;
+extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
@@ -261,6 +276,7 @@ struct SettingsStruct
   int8_t        Pin_status_led;
   boolean       UseSerial;
   unsigned long TaskDeviceTimer[TASKS_MAX];
+  boolean       UseSSDP;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -566,6 +582,10 @@ void loop()
       sendSysInfoUDP(1);
       refreshNodeList();
       MQTTCheck();
+      #if FEATURE_SSDP
+      if (Settings.UseSSDP)
+        SSDP_update();
+      #endif
     }
 
     // Perform regular checks, 10 times/sec

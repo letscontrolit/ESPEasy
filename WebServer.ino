@@ -31,6 +31,16 @@ void WebServerInit()
   if (ESP.getFlashChipRealSize() > 524288)
     httpUpdater.setup(&WebServer);
 
+#if FEATURE_SSDP
+  if (Settings.UseSSDP)
+  {
+    WebServer.on("/ssdp.xml", HTTP_GET, []() {
+      SSDP_schema(WebServer.client());
+    });
+    SSDP_begin();
+  }
+#endif
+
   WebServer.begin();
 }
 
@@ -176,7 +186,7 @@ void handle_root() {
       reply += WiFi.RSSI();
       reply += F(" dB");
     }
-    
+
     char str[20];
     sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     reply += F("<TR><TD>IP:<TD>");
@@ -665,11 +675,11 @@ void handle_devices() {
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
       DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
 
-      if(taskdevicetimer.toInt() > 0)
+      if (taskdevicetimer.toInt() > 0)
         Settings.TaskDeviceTimer[index - 1] = taskdevicetimer.toInt();
       else
         Settings.TaskDeviceTimer[index - 1] = Settings.Delay;
-      
+
       taskdevicename.toCharArray(tmpString, 26);
       strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
@@ -877,7 +887,7 @@ void handle_devices() {
         reply += Settings.TaskDeviceTimer[index - 1];
         reply += F("'>");
       }
-      
+
       if (!Device[DeviceIndex].Custom)
       {
         reply += F("<TR><TD>IDX / Var:<TD><input type='text' name='taskdeviceid' value='");
@@ -1620,6 +1630,7 @@ void handle_advanced() {
 #endif
   String usentp = WebServer.arg("usentp");
   String wdi2caddress = WebServer.arg("wdi2caddress");
+  String usessdp = WebServer.arg("usessdp");
   String edit = WebServer.arg("edit");
 
   if (edit.length() != 0)
@@ -1647,6 +1658,7 @@ void handle_advanced() {
     Settings.UseNTP = (usentp == "on");
     Settings.DST = (dst == "on");
     Settings.WDI2CAddress = wdi2caddress.toInt();
+    Settings.UseSSDP = (usessdp == "on");
     SaveSettings();
   }
 
@@ -1731,6 +1743,14 @@ void handle_advanced() {
     reply += F("<input type=checkbox name='customcss' checked>");
   else
     reply += F("<input type=checkbox name='customcss'>");
+#endif
+
+#if FEATURE_SSDP
+  reply += F("<TR><TD>Use SSDP:<TD>");
+  if (Settings.UseSSDP)
+    reply += F("<input type=checkbox name='usessdp' checked>");
+  else
+    reply += F("<input type=checkbox name='usessdp'>");
 #endif
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
@@ -2329,7 +2349,7 @@ void handle_rules() {
   if (WebServer.args() == 1)
   {
     String rules = WebServer.arg("rules");
-    rules.toCharArray((char*)data,4096);
+    rules.toCharArray((char*)data, 4096);
     uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     _sector += 10;
     noInterrupts();
@@ -2356,9 +2376,9 @@ void handle_rules() {
   for (int x = 0; x < 4096; x++)
     if (data[x] != 0)
       reply += char(data[x]);
-    else    
+    else
       break;
-    
+
   reply += F("</textarea>");
 
   reply += F("<TR><TD><input class=\"button-link\" type='submit' value='Submit'>");
@@ -2373,21 +2393,21 @@ void handle_rules() {
 //********************************************************************************
 String URLEncode(const char* msg)
 {
-    const char *hex = "0123456789abcdef";
-    String encodedMsg = "";
+  const char *hex = "0123456789abcdef";
+  String encodedMsg = "";
 
-    while (*msg!='\0'){
-        if( ('a' <= *msg && *msg <= 'z')
-                || ('A' <= *msg && *msg <= 'Z')
-                || ('0' <= *msg && *msg <= '9') ) {
-            encodedMsg += *msg;
-        } else {
-            encodedMsg += '%';
-            encodedMsg += hex[*msg >> 4];
-            encodedMsg += hex[*msg & 15];
-        }
-        msg++;
+  while (*msg != '\0') {
+    if ( ('a' <= *msg && *msg <= 'z')
+         || ('A' <= *msg && *msg <= 'Z')
+         || ('0' <= *msg && *msg <= '9') ) {
+      encodedMsg += *msg;
+    } else {
+      encodedMsg += '%';
+      encodedMsg += hex[*msg >> 4];
+      encodedMsg += hex[*msg & 15];
     }
-    return encodedMsg;
+    msg++;
+  }
+  return encodedMsg;
 }
 

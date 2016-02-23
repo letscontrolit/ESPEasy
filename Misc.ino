@@ -448,15 +448,6 @@ void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 /********************************************************************************************\
 * Save data to flash
 \*********************************************************************************************/
-#define FLASH_EEPROM_SIZE 4096
-extern "C" {
-#include "spi_flash.h"
-}
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
-extern "C" uint32_t _SPIFFS_page;
-extern "C" uint32_t _SPIFFS_block;
-
 void SaveToFlash(int index, byte* memAddress, int datasize)
 {
   if (index > 33791) // Limit usable flash area to 32+1k size

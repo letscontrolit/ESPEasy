@@ -1,3 +1,6 @@
+// R81 23-02-2016
+// Added SSDP custom version that uses much less RAM than default library, disabled by default, can be enabled in tools/advanced (contributed by mneuron)
+
 // R80 17-02-2016
 // Added logging controller TCP port
 // Bugfix, set default task timer to main delay if no value entered.
