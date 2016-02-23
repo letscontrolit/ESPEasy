@@ -26,6 +26,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = false;
         break;
       }
 
@@ -94,6 +95,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
+        string += F("<TR><TD>Send Boot state:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
+          string += F("<input type=checkbox name=plugin_001_boot checked>");
+        else
+          string += F("<input type=checkbox name=plugin_001_boot>");
+
         success = true;
         break;
       }
@@ -110,6 +117,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         String plugin3 = WebServer.arg("plugin_001_button");
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
 
+        String plugin4 = WebServer.arg("plugin_001_boot");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
+
         success = true;
         break;
       }
@@ -121,6 +131,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         else
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
+
+        // if boot state must be send, inverse default state
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
+          switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
+
         success = true;
         break;
       }
@@ -199,7 +214,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (tmpString.equalsIgnoreCase("PWM"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 1023)
+          if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
             analogWrite(event->Par1, event->Par2);
@@ -217,7 +232,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (tmpString.equalsIgnoreCase("Pulse"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 1023)
+          if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);

@@ -27,6 +27,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = true;
         break;
       }
 

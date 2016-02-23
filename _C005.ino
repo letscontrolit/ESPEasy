@@ -46,16 +46,27 @@ boolean CPlugin_005(byte function, struct EventStruct *event)
         }
         topicSplit[count] = tmpTopic;
 
-        String cmd = topicSplit[1];
+        String cmd = "";
         struct EventStruct TempEvent;
-        TempEvent.Par1 = topicSplit[2].toInt();
-        TempEvent.Par2 = event->String2.toFloat();
+
+        if (topicSplit[1] == "cmd")
+        {
+          cmd = event->String2;
+          parseCommandString(&TempEvent, cmd);
+        }
+        else
+        {
+          cmd = topicSplit[1];
+          TempEvent.Par1 = topicSplit[2].toInt();
+          TempEvent.Par2 = event->String2.toFloat();
+        }
         PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
         break;
       }
 
     case CPLUGIN_PROTOCOL_SEND:
       {
+        statusLED(true);
         // MQTT publish structure:
         // /<unit name>/<task name>/<value name>
 

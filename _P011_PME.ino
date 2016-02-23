@@ -25,6 +25,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].Ports = 14;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = true;
         break;
       }
 

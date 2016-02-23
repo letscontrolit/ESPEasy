@@ -1,3 +1,21 @@
+// R81 23-02-2016
+// Added SSDP custom version that uses much less RAM than default library, disabled by default, can be enabled in tools/advanced (contributed by mneuron)
+
+// R80 17-02-2016
+// Added logging controller TCP port
+// Bugfix, set default task timer to main delay if no value entered.
+// Added support for all commands on OpenHAB MQTT, using "<system name>/cmd" topic and the message contains the entire command.
+// Added Wifi signal strength reporting using the System Info device
+// Added network traffic indication to Wifi status led
+
+// R79 16-02-2016
+// Bugfix: I2C Scanner mentions PCA9685 as possible device for address 0x40
+// Added missing pulse feature for PCF8574
+// Added Wifi status LED
+// Added option to send boot state on Switch Input device
+// Added option to use GPIO-1 and GPIO-3 for other purposes than Serial (must disable serial in tools/advanced!)
+// Added individual timers per task
+
 // R78 06-02-2016
 // Bugfix for PCF8574 plugin, could not address PCF8574A chip types
 

@@ -20,6 +20,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = true;
         break;
       }
 
@@ -38,14 +39,16 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
+        String options[3];
         options[0] = F("Uptime");
         options[1] = F("Free RAM");
-        int optionValues[2];
+        options[2] = F("Wifi RSSI");
+        int optionValues[3];
         optionValues[0] = 0;
         optionValues[1] = 1;
+        optionValues[2] = 2;
         string += F("<TR><TD>Indicator:<TD><select name='plugin_026'>");
-        for (byte x = 0; x < 2; x++)
+        for (byte x = 0; x < 3; x++)
         {
           string += F("<option value='");
           string += optionValues[x];
@@ -83,6 +86,11 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           case 1:
           {
             value = ESP.getFreeHeap();
+            break;
+          }
+          case 2:
+          {
+            value = WiFi.RSSI();
             break;
           }
         }

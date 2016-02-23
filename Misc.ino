@@ -1,3 +1,76 @@
+/********************************************************************************************\
+* Status LED
+\*********************************************************************************************/
+void statusLED(boolean traffic)
+{
+  if (Settings.Pin_status_led == -1)
+    return;
+
+  static unsigned long timer = 0;
+  static byte currentState = 0;
+
+  if (traffic)
+  {
+    currentState = HIGH;
+    digitalWrite(Settings.Pin_status_led, currentState); // blink off
+    timer = millis() + 100;
+    //Serial.print("LED Traffic");
+    //Serial.println(1);
+  }
+
+  if (timer == 0 || millis() > timer)
+  {
+    timer = 0;
+    byte state = HIGH;
+    if (WiFi.status() == WL_CONNECTED)
+      state = LOW;
+
+    if (currentState != state)
+    {
+      currentState = state;
+      pinMode(Settings.Pin_status_led, OUTPUT);
+      digitalWrite(Settings.Pin_status_led, state);
+      //Serial.print("LED Wifi ");
+      //Serial.println(state);
+    }
+  }
+}
+
+
+/********************************************************************************************\
+* delay in milliseconds with background processing
+\*********************************************************************************************/
+void delayMillis(unsigned long delay)
+{
+  unsigned long timer = millis() + delay;
+  while (millis() < timer)
+    backgroundtasks();
+}
+
+
+/********************************************************************************************\
+* Parse a command string to event struct
+\*********************************************************************************************/
+void parseCommandString(struct EventStruct *event, String& string)
+{
+  char command[80];
+  command[0] = 0;
+  char TmpStr1[80];
+  TmpStr1[0] = 0;
+
+  string.toCharArray(command, 80);
+  event->Par1 = 0;
+  event->Par2 = 0;
+  event->Par3 = 0;
+
+  if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
+}
+
+/********************************************************************************************\
+* Clear task settings for given task
+\*********************************************************************************************/
 void taskClear(byte taskIndex, boolean save)
 {
   Settings.TaskDeviceNumber[taskIndex] = 0;
@@ -10,6 +83,7 @@ void taskClear(byte taskIndex, boolean save)
   Settings.TaskDevicePort[taskIndex] = 0;
   Settings.TaskDeviceSendData[taskIndex] = true;
   Settings.TaskDeviceGlobalSync[taskIndex] = false;
+  Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
 
   for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
     Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
@@ -26,6 +100,10 @@ void taskClear(byte taskIndex, boolean save)
   }
 }
 
+
+/********************************************************************************************\
+* Use DNS to resolve hostname to ip address
+\*********************************************************************************************/
 void getIPfromHostName()
 {
   IPAddress IP;
@@ -37,6 +115,10 @@ void getIPfromHostName()
   }
 }
 
+
+/********************************************************************************************\
+* Fix stuff to clear out differences between releases
+\*********************************************************************************************/
 void BuildFixes()
 {
   Serial.println(F("\nBuild changed!"));
@@ -58,6 +140,15 @@ void BuildFixes()
     {
       Settings.TaskDevicePin3[x] = -1;
     }
+  }
+
+  if (Settings.Build < 79)
+  {
+    Serial.println(F("Fix status LED Pin"));
+    Settings.Pin_status_led = -1;
+    Settings.UseSerial = true;
+    for (byte x = 0; x < TASKS_MAX; x++)
+      Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
 
   Settings.Build = BUILD;
@@ -357,15 +448,6 @@ void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 /********************************************************************************************\
 * Save data to flash
 \*********************************************************************************************/
-#define FLASH_EEPROM_SIZE 4096
-extern "C" {
-#include "spi_flash.h"
-}
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
-extern "C" uint32_t _SPIFFS_page;
-extern "C" uint32_t _SPIFFS_block;
-
 void SaveToFlash(int index, byte* memAddress, int datasize)
 {
   if (index > 33791) // Limit usable flash area to 32+1k size
@@ -523,9 +605,9 @@ void CheckFlash(int start, int end)
     delay(10);
     noInterrupts();
     //if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-      //if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-        if (spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-          success = true;
+    //if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+    if (spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
+      success = true;
     interrupts();
     if (success)
       Serial.println(F("OK"));
@@ -611,8 +693,10 @@ void ResetFactory(void)
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
     Settings.TaskDeviceSendData[x] = true;
+    Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
   Settings.Build = BUILD;
+  Settings.UseSerial = true;
   SaveSettings();
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
@@ -688,8 +772,9 @@ void addLog(byte loglevel, String& string)
 
 void addLog(byte loglevel, const char *line)
 {
-  if (loglevel <= Settings.SerialLogLevel)
-    Serial.println(line);
+  if (Settings.UseSerial)
+    if (loglevel <= Settings.SerialLogLevel)
+      Serial.println(line);
 
   if (loglevel <= Settings.SyslogLevel)
     syslog(line);
@@ -1343,6 +1428,21 @@ void checkTime()
   {
     PluginCall(PLUGIN_CLOCK_IN, 0, dummyString);
     PrevMinutes = tm.Minute;
+    if (Settings.UseRules)
+    {
+      String weekDays = F("AllSunMonTueWedThuFriSat");
+      String event = F("Clock#Time=");
+      event += weekDays.substring(weekday() * 3, weekday() * 3 + 3);
+      event += ",";
+      if (hour() < 10)
+        event += "0";
+      event += hour();
+      event += ":";
+      if (minute() < 10)
+        event += "0";
+      event += minute();
+      rulesProcessing(event);
+    }
   }
 }
 
@@ -1407,4 +1507,220 @@ unsigned long getNtpTime()
   return 0;
 }
 #endif
+
+
+/********************************************************************************************\
+* Very Experimental rules processing
+\*********************************************************************************************/
+void rulesProcessing(String& event)
+{
+  unsigned long timer = micros();
+  String log = "";
+
+  log = F("EVENT: ");
+  log += event;
+  addLog(LOG_LEVEL_INFO, log);
+
+  // load rules from flash memory, stored in offset block 10
+  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
+  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  _sector += 10;
+  noInterrupts();
+  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
+  interrupts();
+
+  int pos = 0;
+  String line = "";
+  boolean match = false;
+  boolean codeBlock = false;
+  boolean isCommand = false;
+
+  while (data[pos] != 0)
+  {
+    if (data[pos] != 0 && data[pos] != 10)
+      line += (char)data[pos];
+
+    // if line complete, parse this rule
+    if (data[pos] == 10)
+    {
+      line.replace("\r", "");
+      line.toLowerCase();
+      if (line.substring(0, 2) != "//" && line.length() > 0)
+      {
+        isCommand = true;
+        // split rule into event and action
+
+        line = parseTemplate(line, line.length());
+
+        String eventTrigger = "";
+        String action = "";
+        if (!codeBlock)
+        {
+          line.replace("on ", "");
+          int split = line.indexOf(" do ");
+          eventTrigger = line.substring(0, split);
+          eventTrigger.toLowerCase();
+          action = line.substring(split + 4);
+          match = ruleMatch(event, eventTrigger);
+        }
+        else
+        {
+          action = line;
+        }
+
+        if (action.indexOf("{") != -1)
+        {
+          isCommand = false;
+          codeBlock = true;
+        }
+        if (action.indexOf("}") != -1)
+        {
+          isCommand = false;
+          codeBlock = false;
+        }
+
+        if (match && isCommand)
+        {
+          log = F("ACT  : ");
+          log += action;
+          addLog(LOG_LEVEL_INFO, log);
+
+          struct EventStruct TempEvent;
+          parseCommandString(&TempEvent, action);
+          if (PluginCall(PLUGIN_WRITE, &TempEvent, action))
+          {
+            // TODO
+          }
+          else
+          {
+            ExecuteCommand(action.c_str());
+          }
+        }
+      }
+
+      line = "";
+    }
+    pos++;
+  }
+  delete [] data;
+  timer = micros() - timer;
+  //Serial.println(timer);
+}
+
+
+/********************************************************************************************\
+* Check if an event matches to a given rule
+\*********************************************************************************************/
+boolean ruleMatch(String& event, String& rule)
+{
+  boolean match = false;
+  String tmpEvent = event;
+  String tmpRule = rule;
+
+  // parse event into verb and value
+  float value = 0;
+  int pos = event.indexOf("=");
+  if (pos)
+  {
+    tmpEvent = event.substring(pos + 1);
+    value = tmpEvent.toFloat();
+    tmpEvent = event.substring(0, pos);
+  }
+
+  // parse rule
+  int comparePos = 0;
+  char compare = ' ';
+  comparePos = rule.indexOf(">");
+  if (comparePos > 0)
+  {
+    compare = '>';
+  }
+  else
+  {
+    comparePos = rule.indexOf("<");
+    if (comparePos > 0)
+    {
+      compare = '<';
+    }
+    else
+    {
+      comparePos = rule.indexOf("=");
+      if (comparePos > 0)
+      {
+        compare = '=';
+      }
+    }
+  }
+
+  float ruleValue = 0;
+
+  if (comparePos > 0)
+  {
+    tmpRule = rule.substring(comparePos + 1);
+    ruleValue = tmpRule.toFloat();
+    tmpRule = rule.substring(0, comparePos);
+    //int space = tmpString.indexOf(" ");
+    //tmpString = tmpString.substring(0,space);
+    //Serial.println(tmpString);
+  }
+
+  switch (compare)
+  {
+    case '>':
+      if (tmpRule.equalsIgnoreCase(tmpEvent) && value > ruleValue)
+        match = true;
+      break;
+
+    case '<':
+      if (tmpRule.equalsIgnoreCase(tmpEvent) && value < ruleValue)
+        match = true;
+      break;
+
+    case '=':
+      if (tmpRule.equalsIgnoreCase(tmpEvent) && value == ruleValue)
+        match = true;
+      break;
+
+    case ' ':
+      if (tmpRule.equalsIgnoreCase(tmpEvent))
+        match = true;
+      break;
+  }
+
+  if (Settings.SerialLogLevel > 4)
+  {
+    Serial.print("event:");
+    Serial.print(tmpEvent);
+    Serial.print(" val:");
+    Serial.print(value);
+    Serial.print(" rule:");
+    Serial.print(tmpRule);
+    Serial.print(" val:");
+    Serial.print(ruleValue);
+    Serial.print(" cmp:");
+    Serial.println(compare);
+  }
+  return match;
+}
+
+
+/********************************************************************************************\
+* Check rule timers
+\*********************************************************************************************/
+void rulesTimers()
+{
+  for (byte x = 0; x < RULES_TIMER_MAX; x++)
+  {
+    if (RulesTimer[x] != 0L) // timer active?
+    {
+      if (RulesTimer[x] < millis()) // timer finished?
+      {
+        RulesTimer[x] = 0L; // turn off this timer
+        String event = F("Rules#Timer=");
+        event += x + 1;
+        rulesProcessing(event);
+      }
+    }
+  }
+}
 
