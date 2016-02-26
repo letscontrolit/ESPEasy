@@ -1,4 +1,22 @@
 /********************************************************************************************\
+* Unsigned long Timer timeOut check
+\*********************************************************************************************/
+
+boolean timeOut(unsigned long timer)
+{
+  // This routine solves the 49 day bug without the need for separate start time and duration
+  //   that would need two 32 bit variables if duration is not static
+  // It limits the maximum delay to 24.9 days.
+
+  unsigned long now = millis();
+  if (((now >= timer) && ((now-timer) < 1<<31))  || ((timer >= now) && (timer - now > 1<<31)))
+    return true;
+
+  return false;
+}
+
+
+/********************************************************************************************\
 * Status LED
 \*********************************************************************************************/
 void statusLED(boolean traffic)
@@ -14,8 +32,6 @@ void statusLED(boolean traffic)
     currentState = HIGH;
     digitalWrite(Settings.Pin_status_led, currentState); // blink off
     timer = millis() + 100;
-    //Serial.print("LED Traffic");
-    //Serial.println(1);
   }
 
   if (timer == 0 || millis() > timer)
@@ -30,8 +46,6 @@ void statusLED(boolean traffic)
       currentState = state;
       pinMode(Settings.Pin_status_led, OUTPUT);
       digitalWrite(Settings.Pin_status_led, state);
-      //Serial.print("LED Wifi ");
-      //Serial.println(state);
     }
   }
 }
@@ -1689,15 +1703,15 @@ boolean ruleMatch(String& event, String& rule)
 
   if (Settings.SerialLogLevel > 4)
   {
-    Serial.print("event:");
+    Serial.print(F("event:"));
     Serial.print(tmpEvent);
-    Serial.print(" val:");
+    Serial.print(F(" val:"));
     Serial.print(value);
-    Serial.print(" rule:");
+    Serial.print(F(" rule:"));
     Serial.print(tmpRule);
-    Serial.print(" val:");
+    Serial.print(F(" val:"));
     Serial.print(ruleValue);
-    Serial.print(" cmp:");
+    Serial.print(F(" cmp:"));
     Serial.println(compare);
   }
   return match;

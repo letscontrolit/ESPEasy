@@ -228,7 +228,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase("LCD"))
+        if (tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
@@ -236,16 +236,16 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           lcd->setCursor(event->Par2 - 1, event->Par1 - 1);
           lcd->print(tmpString.c_str());
         }
-        if (tmpString.equalsIgnoreCase("LCDCMD"))
+        if (tmpString.equalsIgnoreCase(F("LCDCMD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase("Off"))
+          if (tmpString.equalsIgnoreCase(F("Off")))
             lcd->noBacklight();
-          else if (tmpString.equalsIgnoreCase("On"))
+          else if (tmpString.equalsIgnoreCase(F("On")))
             lcd->backlight();
-          else if (tmpString.equalsIgnoreCase("Clear"))
+          else if (tmpString.equalsIgnoreCase(F("Clear")))
             lcd->clear();
         }
         break;

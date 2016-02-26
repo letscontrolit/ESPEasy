@@ -6,7 +6,7 @@
 #define CPLUGIN_ID_002         2
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
-boolean CPlugin_002(byte function, struct EventStruct *event)
+boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -15,7 +15,6 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
     case CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_002;
-        strcpy_P(Protocol[protocolCount].Name, PSTR(CPLUGIN_NAME_002));
         Protocol[protocolCount].usesMQTT = true;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
@@ -23,6 +22,12 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
         break;
       }
 
+    case CPLUGIN_GET_DEVICENAME:
+      {
+        string = F(CPLUGIN_NAME_002);
+        break;
+      }
+      
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         strcpy_P(Settings.MQTTsubscribe, PSTR("domoticz/out"));
@@ -35,6 +40,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
         char json[512];
         json[0] = 0;
         event->String2.toCharArray(json, 512);
+        //Serial.println(event->String2);
 
         StaticJsonBuffer<512> jsonBuffer;
         JsonObject& root = jsonBuffer.parseObject(json);
@@ -49,29 +55,64 @@ boolean CPlugin_002(byte function, struct EventStruct *event)
           const char* svalue1 = root["svalue1"];
           const char* svalue2 = root["svalue2"];
           const char* svalue3 = root["svalue3"];
-
+          const char* switchtype = root["switchType"];
           if (nvalue == 0)
             nvalue = nvaluealt;
 
-  // Direct Serial is allowed here, since this is still in development, it does not even work....
-    
-          Serial.print(F("MQTT : idx="));
-          Serial.print(idx);
-          Serial.print(F(" name="));
-          Serial.print(name);
-          Serial.print(F(" nvalue="));
-          Serial.print(nvalue);
-          Serial.print(F(" svalue="));
-          Serial.print(svalue);
-          Serial.print(F(" svalue1="));
-          Serial.print(svalue1);
-          Serial.print(F(" svalue2="));
-          Serial.println(svalue2);
-          Serial.print(F(" svalue3="));
-          Serial.println(svalue3);
+          for (byte x = 0; x < TASKS_MAX; x++)
+          {
+            if (Settings.TaskDeviceID[x] == idx)
+            {
+              if (Settings.TaskDeviceNumber[x] == 1) // temps solution, if input switch, update state
+              {
+                String action = F("inputSwitchState,");
+                action += x;
+                action += ",";
+                action += nvalue;
+                struct EventStruct TempEvent;
+                parseCommandString(&TempEvent, action);
+                PluginCall(PLUGIN_WRITE, &TempEvent, action);
+              }
+              if (Settings.TaskDeviceNumber[x] == 29) // temp solution, if plugin 029, set gpio
+              {
+                String action = "";
+                int baseVar = x * VARS_PER_TASK;
+                struct EventStruct TempEvent;
+                if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
+                {
+                  int pwmValue = UserVar[baseVar];
+                  action = F("pwm,");
+                  action += Settings.TaskDevicePin1[x];
+                  action += ",";
+                  switch ((int)nvalue)
+                  {
+                    case 0:
+                      pwmValue = 0;
+                      break;
+                    case 1:
+                      pwmValue = UserVar[baseVar];
+                      break;
+                    case 2:
+                      pwmValue = 10 * atol(svalue1);
+                      UserVar[baseVar] = pwmValue;
+                      break;
+                  }
+                  action += pwmValue;
+                }
+                else
+                {
+                  UserVar[baseVar] = nvalue;
+                  action = F("gpio,");
+                  action += Settings.TaskDevicePin1[x];
+                  action += ",";
+                  action += nvalue;
+                }
+                parseCommandString(&TempEvent, action);
+                PluginCall(PLUGIN_WRITE, &TempEvent, action);
+              }
+            }
+          }
         }
-        else
-          Serial.println(F("MQTT : json parse error"));
         break;
       }
 

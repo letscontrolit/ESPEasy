@@ -7,6 +7,8 @@
 #define PLUGIN_NAME_011       "ProMini Extender"
 #define PLUGIN_VALUENAME1_011 "Value"
 
+#define PLUGIN_011_I2C_ADDRESS 0x7f
+
 boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -78,7 +80,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        uint8_t address = 0x7f;
+        uint8_t address = PLUGIN_011_I2C_ADDRESS;
         Wire.beginTransmission(address);
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0)
           Wire.write(2); // Digital Read
@@ -93,13 +95,13 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         byte buffer[4];
         if (Wire.available() == 4)
         {
-          for (byte x=0; x < 4; x++)
-            buffer[x]=Wire.read();
+          for (byte x = 0; x < 4; x++)
+            buffer[x] = Wire.read();
           UserVar[event->BaseVarIndex] = buffer[0] + 256 * buffer[1];
         }
         String log = F("PME  : PortValue: ");
         log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO,log);
+        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }
@@ -110,16 +112,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase("EXTGPIO"))
+        if (tmpString.equalsIgnoreCase(F("EXTGPIO")))
         {
           success = true;
-          uint8_t address = 0x7f;
-          Wire.beginTransmission(address);
-          Wire.write(1);
-          Wire.write(event->Par1);
-          Wire.write(event->Par2 & 0xff);
-          Wire.write((event->Par2 >> 8));
-          Wire.endTransmission();
+          Plugin_011_Write(event->Par1, event->Par2);
           if (printToWeb)
           {
             printWebString += F("EXTGPIO ");
@@ -130,10 +126,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (tmpString.equalsIgnoreCase("EXTPWM"))
+        if (tmpString.equalsIgnoreCase(F("EXTPWM")))
         {
           success = true;
-          uint8_t address = 0x7f;
+          uint8_t address = PLUGIN_011_I2C_ADDRESS;
           Wire.beginTransmission(address);
           Wire.write(3);
           Wire.write(event->Par1);
@@ -149,8 +145,67 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
             printWebString += F("<BR>");
           }
         }
+
+        if (tmpString.equalsIgnoreCase(F("EXTPulse")))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 13)
+          {
+            Plugin_011_Write(event->Par1, event->Par2);
+            delay(event->Par3);
+            Plugin_011_Write(event->Par1, !event->Par2);
+            if (printToWeb)
+            {
+              printWebString += F("EXTGPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Pulsed for ");
+              printWebString += event->Par3;
+              printWebString += F(" mS<BR>");
+            }
+          }
+        }
+
+        if (tmpString.equalsIgnoreCase(F("EXTLongPulse")))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 13)
+          {
+            Plugin_011_Write(event->Par1, event->Par2);
+            setSystemTimer(event->Par3 * 1000, PLUGIN_ID_011, event->Par1, !event->Par2, 0);
+            if (printToWeb)
+            {
+              printWebString += F("EXTGPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Pulse set for ");
+              printWebString += event->Par3;
+              printWebString += F(" S<BR>");
+            }
+          }
+        }
+
         break;
       }
+      
+    case PLUGIN_TIMER_IN:
+      {
+        Plugin_011_Write(event->Par1, event->Par2);
+        break;
+      }      
   }
   return success;
 }
+
+//********************************************************************************
+// PME write
+//********************************************************************************
+boolean Plugin_011_Write(byte Par1, byte Par2)
+{
+  uint8_t address = 0x7f;
+  Wire.beginTransmission(address);
+  Wire.write(1);
+  Wire.write(Par1);
+  Wire.write(Par2 & 0xff);
+  Wire.write((Par2 >> 8));
+  Wire.endTransmission();
+}
+

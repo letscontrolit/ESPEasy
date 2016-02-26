@@ -193,7 +193,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase("GPIO"))
+        if (tmpString.equalsIgnoreCase(F("GPIO")))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
@@ -211,7 +211,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (tmpString.equalsIgnoreCase("PWM"))
+        if (tmpString.equalsIgnoreCase(F("PWM")))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
@@ -229,7 +229,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (tmpString.equalsIgnoreCase("Pulse"))
+        if (tmpString.equalsIgnoreCase(F("Pulse")))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
@@ -249,7 +249,26 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (tmpString.equalsIgnoreCase("Servo"))
+        if (tmpString.equalsIgnoreCase(F("LongPulse")))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            pinMode(event->Par1, OUTPUT);
+            digitalWrite(event->Par1, event->Par2);
+            setSystemTimer(event->Par3 * 1000, PLUGIN_ID_001, event->Par1, !event->Par2, 0);
+            if (printToWeb)
+            {
+              printWebString += F("GPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Pulse set for ");
+              printWebString += event->Par3;
+              printWebString += F(" S<BR>");
+            }
+          }
+        }
+
+        if (tmpString.equalsIgnoreCase(F("Servo")))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 2)
@@ -276,6 +295,19 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
+        if (tmpString.equalsIgnoreCase(F("inputSwitchState")))
+        {
+          success = true;
+          UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
+          outputstate[event->Par1] = event->Par2;
+        }
+        
+        break;
+      }
+
+    case PLUGIN_TIMER_IN:
+      {
+        digitalWrite(event->Par1, event->Par2);
         break;
       }
   }

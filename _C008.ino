@@ -6,7 +6,7 @@
 #define CPLUGIN_ID_008         8
 #define CPLUGIN_NAME_008       "Generic HTTP"
 
-boolean CPlugin_008(byte function, struct EventStruct *event)
+boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -15,7 +15,6 @@ boolean CPlugin_008(byte function, struct EventStruct *event)
     case CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_008;
-        strcpy_P(Protocol[protocolCount].Name, PSTR(CPLUGIN_NAME_008));
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = false;
@@ -23,6 +22,12 @@ boolean CPlugin_008(byte function, struct EventStruct *event)
         break;
       }
 
+    case CPLUGIN_GET_DEVICENAME:
+      {
+        string = F(CPLUGIN_NAME_008);
+        break;
+      }
+      
     case CPLUGIN_PROTOCOL_SEND:
       {
         switch (event->sensorType)

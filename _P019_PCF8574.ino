@@ -77,7 +77,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
 
-        if (tmpString.equalsIgnoreCase("PCFGPIO"))
+        if (tmpString.equalsIgnoreCase(F("PCFGPIO")))
         {
           success = true;
           Plugin_019_Write(event->Par1, event->Par2);
@@ -91,7 +91,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (tmpString.equalsIgnoreCase("PCFGPIOPulse"))
+        if (tmpString.equalsIgnoreCase(F("PCFPulse")))
         {
           success = true;
           Plugin_009_Write(event->Par1, event->Par2);
@@ -106,6 +106,28 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             printWebString += F(" mS<BR>");
           }
         }
+
+        if (tmpString.equalsIgnoreCase(F("PCFLongPulse")))
+        {
+          success = true;
+          Plugin_009_Write(event->Par1, event->Par2);
+          setSystemTimer(event->Par3 * 1000, PLUGIN_ID_019, event->Par1, !event->Par2, 0);
+          if (printToWeb)
+          {
+            printWebString += F("PCFGPIO ");
+            printWebString += event->Par1;
+            printWebString += F(" Pulse set for ");
+            printWebString += event->Par3;
+            printWebString += F(" S<BR>");
+          }
+        }
+        
+        break;
+      }
+
+    case PLUGIN_TIMER_IN:
+      {
+        Plugin_019_Write(event->Par1, event->Par2);
         break;
       }
   }

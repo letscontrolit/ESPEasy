@@ -132,7 +132,7 @@ byte CPluginCall(byte Function, struct EventStruct *event)
     case CPLUGIN_PROTOCOL_ADD:
       for (x = 0; x < CPLUGIN_MAX; x++)
         if (CPlugin_id[x] != 0)
-          CPlugin_ptr[x](Function, event);
+          CPlugin_ptr[x](Function, event, dummyString);
       return true;
       break;
   }

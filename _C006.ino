@@ -6,7 +6,7 @@
 #define CPLUGIN_ID_006         6
 #define CPLUGIN_NAME_006       "PiDome MQTT"
 
-boolean CPlugin_006(byte function, struct EventStruct *event)
+boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -15,7 +15,6 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
     case CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_006;
-        strcpy_P(Protocol[protocolCount].Name, PSTR(CPLUGIN_NAME_006));
         Protocol[protocolCount].usesMQTT = true;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = false;
@@ -23,6 +22,12 @@ boolean CPlugin_006(byte function, struct EventStruct *event)
         break;
       }
 
+    case CPLUGIN_GET_DEVICENAME:
+      {
+        string = F(CPLUGIN_NAME_006);
+        break;
+      }
+      
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         strcpy_P(Settings.MQTTsubscribe, PSTR("/Home/#"));

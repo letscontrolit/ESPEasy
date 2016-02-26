@@ -221,7 +221,8 @@ void handle_root() {
     reply += ESP.getFlashChipId();
 
     reply += F("<TR><TD>Flash Size:<TD>");
-    reply += ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+    reply += ESP.getFlashChipRealSize()/1024; //ESP.getFlashChipSize();
+    reply += F(" kB");
 
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
@@ -332,7 +333,7 @@ void handle_config() {
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
       Settings.ControllerPort = Protocol[ProtocolIndex].defaultPort;
       if (Protocol[ProtocolIndex].usesMQTT)
-        CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, 0);
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, 0, dummyString);
     }
     else
     {
@@ -406,7 +407,10 @@ void handle_config() {
     if (choice == Protocol[x].Number)
       reply += F(" selected");
     reply += ">";
-    reply += Protocol[x].Name;
+
+    String ProtocolName = "";
+    CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
+    reply += ProtocolName;
     reply += F("</option>");
   }
   reply += F("</select>");
@@ -715,7 +719,6 @@ void handle_devices() {
       // Send task info if set global
       if (Settings.TaskDeviceGlobalSync[index - 1])
       {
-        Serial.println("Sending UDP Task info");
         SendUDPTaskInfo(0, index - 1, index - 1);
       }
 
@@ -1061,8 +1064,6 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
   {
     check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
 
-    //Serial.print("Check 1 is "); Serial.print(check1);
-
     if (strlen(ptr_2) < i)    // If string 2 is shorter, then switch them
     {
       return 1;
@@ -1070,7 +1071,6 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
     else
     {
       check2 = (char)ptr_2[i];
-      //   Serial.print("Check 2 is "); Serial.println(check2);
 
       if (check2 > check1)
       {
@@ -1287,9 +1287,6 @@ void handle_tools() {
   if (!isLoggedIn()) return;
 
   String webrequest = WebServer.arg("cmd");
-  char command[80];
-  command[0] = 0;
-  webrequest.toCharArray(command, 80);
 
   String reply = "";
   addHeader(true, reply);
@@ -1318,12 +1315,23 @@ void handle_tools() {
 
   reply += F("<TR><TD>Command<TD>");
   reply += F("<input type='text' name='cmd' value='");
-  reply += command;
+  reply += webrequest;
   reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
   printToWeb = true;
   printWebString = "<BR>";
-  ExecuteCommand(command);
+
+  struct EventStruct TempEvent;
+  parseCommandString(&TempEvent, webrequest);
+  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
+  {
+    // TODO
+  }
+  else
+  {
+    ExecuteCommand(webrequest.c_str());
+  }
+
   reply += printWebString;
   reply += F("</table></form>");
   addFooter(reply);
@@ -1494,21 +1502,9 @@ void handle_login() {
 void handle_control() {
 
   String webrequest = WebServer.arg("cmd");
-  char command[80];
-  command[0] = 0;
-  webrequest.toCharArray(command, 80);
-  boolean validCmd = false;
 
   struct EventStruct TempEvent;
-  char TmpStr1[80];
-  TmpStr1[0] = 0;
-  TempEvent.Par1 = 0;
-  TempEvent.Par2 = 0;
-  TempEvent.Par3 = 0;
-
-  if (GetArgv(command, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 3)) TempEvent.Par2 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 4)) TempEvent.Par3 = str2int(TmpStr1);
+  parseCommandString(&TempEvent, webrequest);
 
   printToWeb = true;
   printWebString = "";

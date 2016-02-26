@@ -1,7 +1,4 @@
 /********************************************************************************************\
-* Process data from Serial Interface
-\*********************************************************************************************/
-/********************************************************************************************\
 * Get data from Serial Interface
 \*********************************************************************************************/
 #define INPUT_BUFFER_SIZE          128
@@ -33,7 +30,11 @@ void serial()
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       Serial.write('>');
       Serial.println(InputBuffer_Serial);
-      ExecuteCommand(InputBuffer_Serial);
+      String action = InputBuffer_Serial;
+      struct EventStruct TempEvent;
+      parseCommandString(&TempEvent, action);
+      if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+        ExecuteCommand(InputBuffer_Serial);
       SerialInByteCounter = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
     }

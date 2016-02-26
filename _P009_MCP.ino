@@ -61,7 +61,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           {
             String log = F("MCP  : State ");
             log += state;
-            addLog(LOG_LEVEL_INFO,log);
+            addLog(LOG_LEVEL_INFO, log);
             switchstate[event->TaskIndex] = state;
             UserVar[event->BaseVarIndex] = state;
             event->sensorType = SENSOR_TYPE_SWITCH;
@@ -78,7 +78,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase("MCPGPIO"))
+        if (tmpString.equalsIgnoreCase(F("MCPGPIO")))
         {
           success = true;
           Plugin_009_Write(event->Par1, event->Par2);
@@ -91,10 +91,11 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             printWebString += F("<BR>");
           }
         }
-		if (tmpString.equalsIgnoreCase("MCPGPIOPulse"))
+
+        if (tmpString.equalsIgnoreCase(F("MCPPulse")))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 1023)
+          if (event->Par1 >= 0 && event->Par1 <= 128)
           {
             Plugin_009_Write(event->Par1, event->Par2);
             delay(event->Par3);
@@ -109,6 +110,31 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             }
           }
         }
+
+        if (tmpString.equalsIgnoreCase(F("MCPLongPulse")))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 128)
+          {
+            Plugin_009_Write(event->Par1, event->Par2);
+            setSystemTimer(event->Par3 * 1000, PLUGIN_ID_009, event->Par1, !event->Par2, 0);
+            if (printToWeb)
+            {
+              printWebString += F("MCPGPIO ");
+              printWebString += event->Par1;
+              printWebString += F(" Pulse set for ");
+              printWebString += event->Par3;
+              printWebString += F(" S<BR>");
+            }
+          }
+        }
+        
+        break;
+      }
+
+    case PLUGIN_TIMER_IN:
+      {
+        Plugin_009_Write(event->Par1, event->Par2);
         break;
       }
   }

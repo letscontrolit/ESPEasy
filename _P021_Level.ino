@@ -53,11 +53,6 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Check Value:<TD>");
         addTaskValueSelect(string, "plugin_021_value", Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-        // bug with %f in sprintf, this is a workaround:
-        //sprintf(tmpString, "<TR><TD>Set Value:<TD><input type='text' name='plugin_021_setvalue' value='%f'>", Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]);
-        //string += tmpString;
-        //sprintf(tmpString, "<TR><TD>Hysteresis:<TD><input type='text' name='plugin_021_hyst' value='%f'>", Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]);
-        //string += tmpString;
         string += F("<TR><TD>Set Value:<TD><input type='text' name='plugin_021_setvalue' value='");
         string += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
         string += F("'>");

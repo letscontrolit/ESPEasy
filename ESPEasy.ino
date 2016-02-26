@@ -99,7 +99,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              81
+#define BUILD                              82
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -107,6 +107,7 @@
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
 #define CPLUGIN_PROTOCOL_SEND               3
 #define CPLUGIN_PROTOCOL_RECV               4
+#define CPLUGIN_GET_DEVICENAME              5
 
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
@@ -127,6 +128,8 @@
 #define CPLUGIN_MAX                        16
 #define UNIT_MAX                           32
 #define RULES_TIMER_MAX                     8
+#define SYSTEM_TIMER_MAX                    8
+#define SYSTEM_CMD_TIMER_MAX                2
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
@@ -159,6 +162,7 @@
 #define PLUGIN_SERIAL_IN                   16
 #define PLUGIN_UDP_IN                      17
 #define PLUGIN_CLOCK_IN                    18
+#define PLUGIN_TIMER_IN                    19
 
 #define BOOT_CAUSE_MANUAL_REBOOT            0
 #define BOOT_CAUSE_COLD_BOOT                1
@@ -332,9 +336,23 @@ struct ProtocolStruct
   boolean usesMQTT;
   boolean usesAccount;
   boolean usesPassword;
-  char Name[20];
   int defaultPort;
 } Protocol[CPLUGIN_MAX];
+
+struct systemTimerStruct
+{
+  unsigned long timer;
+  byte plugin;
+  byte Par1;
+  byte Par2;
+  byte Par3;
+} systemTimers[SYSTEM_TIMER_MAX];
+
+struct systemCMDTimerStruct
+{
+  unsigned long timer;
+  String action;
+} systemCMDTimers[SYSTEM_CMD_TIMER_MAX];
 
 int deviceCount = -1;
 int protocolCount = -1;
@@ -364,7 +382,7 @@ int WebLoggedInTimer = 300;
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte Plugin_id[PLUGIN_MAX];
 
-boolean (*CPlugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*);
+boolean (*CPlugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte CPlugin_id[PLUGIN_MAX];
 
 String dummyString = "";
@@ -375,6 +393,10 @@ byte lastBootCause = 0;
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
 
+unsigned long start = 0;
+unsigned long elapsed = 0;
+unsigned long loopCounter = 0;
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -384,7 +406,7 @@ void setup()
 
   if (SpiffsSectors() == 0)
   {
-    Serial.println("\nNo SPIFFS area..\nSystem Halted\nPlease reflash with SPIFFS");
+    Serial.println(F("\nNo SPIFFS area..\nSystem Halted\nPlease reflash with SPIFFS"));
     while (true)
       delay(1);
   }
@@ -410,9 +432,9 @@ void setup()
   else
   {
     // Direct Serial is allowed here, since this is only an emergency task.
-    Serial.print("\nPID:");
+    Serial.print(F("\nPID:"));
     Serial.println(Settings.PID);
-    Serial.print("Version:");
+    Serial.print(F("Version:"));
     Serial.println(Settings.Version);
     Serial.println(F("INIT : Incorrect PID or version!"));
     delay(1000);
@@ -494,7 +516,7 @@ void setup()
     if (bootMode == 0)
     {
       for (byte x = 0; x < TASKS_MAX; x++)
-        timerSensor[x] = millis() + 30000;
+        timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
       timer = millis() + 30000; // startup delay 30 sec
     }
     else
@@ -527,14 +549,13 @@ void setup()
 }
 
 
-unsigned long start = 0;
-unsigned long elapsed = 0;
-
 /*********************************************************************************************\
  * MAIN LOOP
 \*********************************************************************************************/
 void loop()
 {
+  loopCounter++;
+
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
@@ -549,134 +570,168 @@ void loop()
 
   if (systemOK)
   {
-
-    if (cmd_within_mainloop != 0)
-    {
-      switch (cmd_within_mainloop)
-      {
-        case CMD_WIFI_DISCONNECT:
-          {
-            WifiDisconnect();
-            break;
-          }
-        case CMD_REBOOT:
-          {
-            ESP.reset();
-            break;
-          }
-      }
-      cmd_within_mainloop = 0;
-    }
-
-    // Watchdog trigger
-    if (millis() > timerwd)
-    {
-      wdcounter++;
-      timerwd = millis() + 30000;
-      char str[60];
-      str[0] = 0;
-      sprintf_P(str, PSTR("Uptime %u ConnectFailures %u FreeMem %u"), wdcounter / 2, connectionFailures, FreeMem());
-      String log = F("WD   : ");
-      log += str;
-      addLog(LOG_LEVEL_INFO, log);
-      sendSysInfoUDP(1);
-      refreshNodeList();
-      MQTTCheck();
-      #if FEATURE_SSDP
-      if (Settings.UseSSDP)
-        SSDP_update();
-      #endif
-    }
-
-    // Perform regular checks, 10 times/sec
     if (millis() > timer100ms)
-    {
-      start = micros();
-      timer100ms = millis() + 100;
-      PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-      elapsed = micros() - start;
-    }
+      run10TimesPerSecond();
 
-    // Perform regular checks, 1 time/sec
     if (millis() > timer1s)
-    {
-#if FEATURE_TIME
-      // clock events
-      if (Settings.UseNTP)
-        checkTime();
-#endif
-      unsigned long timer = micros();
-      PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+      runOncePerSecond();
 
-      if (Settings.UseRules)
-        rulesTimers();
-
-      timer = micros() - timer;
-
-      timer1s = millis() + 1000;
-      WifiCheck();
-
-      if (SecuritySettings.Password[0] != 0)
-      {
-        if (WebLoggedIn)
-          WebLoggedInTimer++;
-        if (WebLoggedInTimer > 300)
-          WebLoggedIn = false;
-      }
-
-      // I2C Watchdog feed
-      if (Settings.WDI2CAddress != 0)
-      {
-        Wire.beginTransmission(Settings.WDI2CAddress);
-        Wire.write(0xA5);
-        Wire.endTransmission();
-      }
-
-      if (Settings.SerialLogLevel == 5)
-      {
-        Serial.print("10 ps:");
-        Serial.print(elapsed);
-        Serial.print(" uS  1 ps:");
-        Serial.print(timer);
-        Serial.println(" uS");
-      }
-    }
-
-    // Check sensors and send data to controller when sensor timer has elapsed
-    // If deepsleep, use the single timer
-    if (Settings.deepSleep)
-    {
-      if (millis() > timer)
-      {
-        timer = millis() + Settings.Delay * 1000;
-        SensorSend();
-        saveToRTC(1);
-        String log = F("Enter deep sleep...");
-        addLog(LOG_LEVEL_INFO, log);
-        ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
-      }
-    }
-    else // use individual timers for tasks
-    {
-      for (byte x = 0; x < TASKS_MAX; x++)
-      {
-        if(millis() > timerSensor[x])
-          {
-            timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
-            SensorSendTask(x);
-          }
-      }
-    }
-
-    if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
-      delayedReboot(60);
+    if (millis() > timerwd)
+      runEach30Seconds();
 
     backgroundtasks();
+
   }
   else
     delay(1);
 }
 
+
+/*********************************************************************************************\
+ * Tasks that run 10 times per second
+\*********************************************************************************************/
+void run10TimesPerSecond()
+{
+  start = micros();
+  timer100ms = millis() + 100;
+  PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  elapsed = micros() - start;
+}
+
+
+/*********************************************************************************************\
+ * Tasks each second
+\*********************************************************************************************/
+void runOncePerSecond()
+{
+  checkSensors();
+
+  if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
+    delayedReboot(60);
+
+  if (cmd_within_mainloop != 0)
+  {
+    switch (cmd_within_mainloop)
+    {
+      case CMD_WIFI_DISCONNECT:
+        {
+          WifiDisconnect();
+          break;
+        }
+      case CMD_REBOOT:
+        {
+          ESP.reset();
+          break;
+        }
+    }
+    cmd_within_mainloop = 0;
+  }
+
+#if FEATURE_TIME
+  // clock events
+  if (Settings.UseNTP)
+    checkTime();
+#endif
+  unsigned long timer = micros();
+  PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+
+  checkSystemTimers();
+
+  if (Settings.UseRules)
+    rulesTimers();
+
+  timer = micros() - timer;
+
+  timer1s = millis() + 1000;
+  WifiCheck();
+
+  if (SecuritySettings.Password[0] != 0)
+  {
+    if (WebLoggedIn)
+      WebLoggedInTimer++;
+    if (WebLoggedInTimer > 300)
+      WebLoggedIn = false;
+  }
+
+  // I2C Watchdog feed
+  if (Settings.WDI2CAddress != 0)
+  {
+    Wire.beginTransmission(Settings.WDI2CAddress);
+    Wire.write(0xA5);
+    Wire.endTransmission();
+  }
+
+  if (Settings.SerialLogLevel == 5)
+  {
+    Serial.print(F("10 ps:"));
+    Serial.print(elapsed);
+    Serial.print(F(" uS  1 ps:"));
+    Serial.print(timer);
+    Serial.print(F(" uS  LC:"));
+    Serial.println(loopCounter);
+    loopCounter = 0;
+  }
+}
+
+/*********************************************************************************************\
+ * Tasks each 30 seconds
+\*********************************************************************************************/
+void runEach30Seconds()
+{
+  wdcounter++;
+  timerwd = millis() + 30000;
+  char str[60];
+  str[0] = 0;
+  sprintf_P(str, PSTR("Uptime %u ConnectFailures %u FreeMem %u"), wdcounter / 2, connectionFailures, FreeMem());
+  String log = F("WD   : ");
+  log += str;
+  addLog(LOG_LEVEL_INFO, log);
+  sendSysInfoUDP(1);
+  refreshNodeList();
+  MQTTCheck();
+#if FEATURE_SSDP
+  if (Settings.UseSSDP)
+    SSDP_update();
+#endif
+}
+
+
+/*********************************************************************************************\
+ * Check sensor timers
+\*********************************************************************************************/
+void checkSensors()
+{
+  // Check sensors and send data to controller when sensor timer has elapsed
+  // If deepsleep, use the single timer
+  if (Settings.deepSleep)
+  {
+    if (millis() > timer)
+    {
+      timer = millis() + Settings.Delay * 1000;
+      SensorSend();
+      saveToRTC(1);
+      String log = F("Enter deep sleep...");
+      addLog(LOG_LEVEL_INFO, log);
+      ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+    }
+  }
+  else // use individual timers for tasks
+  {
+    for (byte x = 0; x < TASKS_MAX; x++)
+    {
+      if (millis() > timerSensor[x])
+      {
+        timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
+        SensorSendTask(x);
+      }
+    }
+  }
+}
+
+
+/*********************************************************************************************\
+ * send all sensordata
+\*********************************************************************************************/
 void SensorSend()
 {
   for (byte x = 0; x < TASKS_MAX; x++)
@@ -685,6 +740,10 @@ void SensorSend()
   }
 }
 
+
+/*********************************************************************************************\
+ * send specific sensor task data
+\*********************************************************************************************/
 void SensorSendTask(byte TaskIndex)
 {
   if (Settings.TaskDeviceDataFeed[TaskIndex] == 0 && Settings.TaskDeviceID[TaskIndex] != 0)
@@ -730,6 +789,96 @@ void SensorSendTask(byte TaskIndex)
   }
 }
 
+
+/*********************************************************************************************\
+ * set global system timer
+\*********************************************************************************************/
+boolean setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3)
+{
+  // plugin number and par1 form a unique key that can be used to restart a timer
+  // first check if a timer is not already running for this request
+  boolean reUse = false;
+  for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
+    if (systemTimers[x].timer != 0)
+    {
+      if ((systemTimers[x].plugin == plugin) && (systemTimers[x].Par1 == Par1))
+      {
+        systemTimers[x].timer = millis() + timer;
+        reUse = true;
+        break;
+      }
+    }
+
+  if (!reUse)
+  {
+    // find a new free timer slot...
+    for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
+      if (systemTimers[x].timer == 0)
+      {
+        systemTimers[x].timer = millis() + timer;
+        systemTimers[x].plugin = plugin;
+        systemTimers[x].Par1 = Par1;
+        systemTimers[x].Par2 = Par2;
+        systemTimers[x].Par3 = Par3;
+        break;
+      }
+  }
+}
+
+
+/*********************************************************************************************\
+ * set global system command timer
+\*********************************************************************************************/
+boolean setSystemCMDTimer(unsigned long timer, String& action)
+{
+  for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
+    if (systemCMDTimers[x].timer == 0)
+    {
+      systemCMDTimers[x].timer = millis() + timer;
+      systemCMDTimers[x].action = action;
+      break;
+    }
+}
+
+
+/*********************************************************************************************\
+ * check global system timers
+\*********************************************************************************************/
+boolean checkSystemTimers()
+{
+  for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
+    if (systemTimers[x].timer != 0)
+    {
+      if (timeOut(systemTimers[x].timer))
+      {
+        struct EventStruct TempEvent;
+        TempEvent.Par1 = systemTimers[x].Par1;
+        TempEvent.Par2 = systemTimers[x].Par2;
+        TempEvent.Par3 = systemTimers[x].Par3;
+        for (byte y = 0; y < PLUGIN_MAX; y++)
+          if (Plugin_id[y] == systemTimers[x].plugin)
+            Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
+        systemTimers[x].timer = 0;
+      }
+    }
+
+  for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
+    if (systemCMDTimers[x].timer != 0)
+      if (timeOut(systemCMDTimers[x].timer))
+      {
+        struct EventStruct TempEvent;
+        parseCommandString(&TempEvent, systemCMDTimers[x].action);
+        if (!PluginCall(PLUGIN_WRITE, &TempEvent, systemCMDTimers[x].action))
+          ExecuteCommand(systemCMDTimers[x].action.c_str());
+        systemCMDTimers[x].timer = 0;
+        systemCMDTimers[x].action = "";
+      }
+}
+
+
+/*********************************************************************************************\
+ * run background tasks
+\*********************************************************************************************/
 void backgroundtasks()
 {
   // process DNS, only used if the ESP has no valid WiFi config

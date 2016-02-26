@@ -1,3 +1,15 @@
+// R82 26-02-2016
+// Experimental support for Domoticz MQTT protocol using actuator devices
+//   currently limited to On/Off switches and one channel Dimmers and only build-in GPIO's
+// Use parseCommandString in Webserver handle_control
+// Added option to use plugin commands in tools/commands
+// Display flash size in kB.
+// Restructured main loop
+// Changed sensor timer scheduling, adjust with message delay to spread readings, prevent bursts
+// Removed protocol.name from global memory struct to save RAM
+// Added global system timers
+// Added "LongPulse" commands for build-in GPIO, MCP23017, PCF8574 and PME, using non blocking system timers (inspired by chunter1)
+
 // R81 23-02-2016
 // Added SSDP custom version that uses much less RAM than default library, disabled by default, can be enabled in tools/advanced (contributed by mneuron)
 

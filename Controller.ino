@@ -29,12 +29,14 @@ boolean sendData(struct EventStruct *event)
 
   if (Settings.MessageDelay != 0)
   {
-    if ((millis() - lastSend) < Settings.MessageDelay)
+    uint16_t dif = millis() - lastSend;
+    if (dif < Settings.MessageDelay)
     {
+      uint16_t delayms = Settings.MessageDelay - dif;
       char log[30];
-      sprintf_P(log, PSTR("HTTP : Delay %u ms"), Settings.MessageDelay);
+      sprintf_P(log, PSTR("HTTP : Delay %u ms"), delayms);
       addLog(LOG_LEVEL_DEBUG_MORE, log);
-      unsigned long timer = millis() + Settings.MessageDelay;
+      unsigned long timer = millis() + delayms;
       while (millis() < timer)
         backgroundtasks();
     }
@@ -46,7 +48,7 @@ boolean sendData(struct EventStruct *event)
   if (Settings.Protocol)
   {
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-    CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event);
+    CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
   }
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
@@ -76,7 +78,7 @@ void callback(const MQTT::Publish& pub) {
   TempEvent.String1 = topic;
   TempEvent.String2 = payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent);
+  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent, dummyString);
 }
 
 

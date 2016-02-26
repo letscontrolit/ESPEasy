@@ -6,7 +6,7 @@
 #define CPLUGIN_ID_003         3
 #define CPLUGIN_NAME_003       "Nodo Telnet"
 
-boolean CPlugin_003(byte function, struct EventStruct *event)
+boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -15,7 +15,6 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
     case CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_003;
-        strcpy_P(Protocol[protocolCount].Name, PSTR(CPLUGIN_NAME_003));
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
@@ -23,6 +22,12 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
         break;
       }
 
+    case CPLUGIN_GET_DEVICENAME:
+      {
+        string = F(CPLUGIN_NAME_003);
+        break;
+      }
+      
     case CPLUGIN_PROTOCOL_SEND:
       {
         char log[80];
@@ -72,7 +77,6 @@ boolean CPlugin_003(byte function, struct EventStruct *event)
         while (client.available() && millis() < timer && !success)
         {
           String line = client.readStringUntil('\n');
-          //Serial.println(line);
           if (line.substring(0, 20) == "Enter your password:")
           {
             success = true;

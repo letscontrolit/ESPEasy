@@ -63,7 +63,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase("PCAPWM"))
+        if (tmpString.equalsIgnoreCase(F("PCAPWM")))
         {
           success = true;
           Plugin_022_Write(event->Par1, event->Par2);

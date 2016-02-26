@@ -212,23 +212,23 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase("OLED"))
+        if (tmpString.equalsIgnoreCase(F("OLED")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
           Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
-        if (tmpString.equalsIgnoreCase("OLEDCMD"))
+        if (tmpString.equalsIgnoreCase(F("OLEDCMD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase("Off"))
+          if (tmpString.equalsIgnoreCase(F("Off")))
             Plugin_023_displayOff();
-          else if (tmpString.equalsIgnoreCase("On"))
+          else if (tmpString.equalsIgnoreCase(F("On")))
             Plugin_023_displayOn();
-          else if (tmpString.equalsIgnoreCase("Clear"))
+          else if (tmpString.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display();
         }
         break;

@@ -18,11 +18,28 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("timer")) == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 3))
+    {
+      setSystemTimer(Par1 * 1000, Par2, Par3, 0, 0);
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("cmdtimer")) == 0)
+  {
+    if (GetArgv(Line, TmpStr1, 3))
+    {
+      String demo = TmpStr1;
+      setSystemCMDTimer(Par1 * 1000, demo);
+    }
+  }
+
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
-    taskClear(Par1 - 1,true);
+    taskClear(Par1 - 1, true);
   }
- 
+
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
     Wire.beginTransmission(Par1);  // address
@@ -41,11 +58,11 @@ void ExecuteCommand(const char *Line)
     if (Wire.available())
     {
       byte value = Wire.read();
-      if(printToWeb)
+      if (printToWeb)
       {
         printWebString += F("Reg value: ");
         printWebString += value;
-      }      
+      }
       Serial.print(F("Reg value: "));
       Serial.println(value);
     }
@@ -75,7 +92,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
-    RulesTimer[Par1-1] = millis() + (1000 * Par2);
+    RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
   }
 
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
@@ -85,7 +102,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("Rules")) == 0)
   {
-    if(Par1 == 1)
+    if (Par1 == 1)
       Settings.UseRules = true;
     else
       Settings.UseRules = false;
@@ -95,7 +112,7 @@ void ExecuteCommand(const char *Line)
   {
     String event = Line;
     event = event.substring(6);
-    event.replace("$","#");
+    event.replace("$", "#");
     if (Settings.UseRules)
       rulesProcessing(event);
   }
@@ -123,13 +140,13 @@ void ExecuteCommand(const char *Line)
     float value = 0;
     if (Domoticz_getData(Par2, &value))
     {
-      Serial.print("DomoticzGet ");
+      Serial.print(F("DomoticzGet "));
       Serial.println(value);
     }
     else
-      Serial.println("Error getting data");
+      Serial.println(F("Error getting data"));
   }
-  
+
   // ****************************************
   // configure settings commands
   // ****************************************
@@ -168,7 +185,7 @@ void ExecuteCommand(const char *Line)
     WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   }
-  
+
   if (strcasecmp_P(Command, PSTR("Reset")) == 0)
     ResetFactory();
 
