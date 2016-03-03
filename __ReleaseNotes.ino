@@ -1,3 +1,7 @@
+// R83 03-03-2016
+// Bugfix for ExtraTaskSettings.TaskIndex that was not stored in flash
+// Optimized parseTemplate performance.
+
 // R82 26-02-2016
 // Experimental support for Domoticz MQTT protocol using actuator devices
 //   currently limited to On/Off switches and one channel Dimmers and only build-in GPIO's

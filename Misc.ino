@@ -165,6 +165,16 @@ void BuildFixes()
       Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
 
+  if (Settings.Build < 83)
+  {
+    Serial.println(F("Fix taskindex"));
+    for (byte x = 0; x < TASKS_MAX; x++)
+    {
+      LoadTaskSettings(x);
+      SaveTaskSettings(x);
+    }
+  }
+
   Settings.Build = BUILD;
   SaveSettings();
 }
@@ -361,6 +371,7 @@ boolean LoadSettings()
 \*********************************************************************************************/
 void SaveTaskSettings(byte TaskIndex)
 {
+ExtraTaskSettings.TaskIndex = TaskIndex;
 #if FEATURE_SPIFFS
   SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 #else
@@ -374,11 +385,11 @@ void SaveTaskSettings(byte TaskIndex)
 \*********************************************************************************************/
 void LoadTaskSettings(byte TaskIndex)
 {
+if (ExtraTaskSettings.TaskIndex == TaskIndex)
+  return;
+
 #if FEATURE_SPIFFS
-  if (ExtraTaskSettings.TaskIndex == TaskIndex)
-    return;
   LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
-  ExtraTaskSettings.TaskIndex = TaskIndex; // store active index
 #else
   LoadFromFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 #endif
@@ -1004,7 +1015,9 @@ String parseTemplate(String &tmpString, byte lineSize)
                       newString += " ";
                   }
                   newString += String(value);
+                  break;
                 }
+              break;
             }
           }
         }
