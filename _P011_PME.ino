@@ -108,6 +108,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+        String log = "";
         String tmpString  = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
@@ -116,14 +117,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           Plugin_011_Write(event->Par1, event->Par2);
+          log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
-          {
-            printWebString += F("EXTGPIO ");
-            printWebString += event->Par1;
-            printWebString += F(" Set to ");
-            printWebString += event->Par2;
-            printWebString += F("<BR>");
-          }
+            printWebString += log;
         }
 
         if (tmpString.equalsIgnoreCase(F("EXTPWM")))
@@ -136,14 +133,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           Wire.write(event->Par2 & 0xff);
           Wire.write((event->Par2 >> 8));
           Wire.endTransmission();
+          log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
-          {
-            printWebString += F("EXTPWM ");
-            printWebString += event->Par1;
-            printWebString += F(" Set to ");
-            printWebString += event->Par2;
-            printWebString += F("<BR>");
-          }
+            printWebString += log;
         }
 
         if (tmpString.equalsIgnoreCase(F("EXTPulse")))
@@ -154,14 +147,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
             Plugin_011_Write(event->Par1, event->Par2);
             delay(event->Par3);
             Plugin_011_Write(event->Par1, !event->Par2);
+            log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS<BR>"));
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("EXTGPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Pulsed for ");
-              printWebString += event->Par3;
-              printWebString += F(" mS<BR>");
-            }
+              printWebString += log;
           }
         }
 
@@ -172,14 +161,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           {
             Plugin_011_Write(event->Par1, event->Par2);
             setSystemTimer(event->Par3 * 1000, PLUGIN_ID_011, event->Par1, !event->Par2, 0);
+            log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S<BR>"));
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("EXTGPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Pulse set for ");
-              printWebString += event->Par3;
-              printWebString += F(" S<BR>");
-            }
+              printWebString += log;
           }
         }
 

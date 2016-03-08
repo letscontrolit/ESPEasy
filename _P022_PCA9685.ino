@@ -50,6 +50,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+        String log = "";
         if (!Plugin_022_init)
         {
           // default mode is open drain ouput, drive leds connected to VCC
@@ -67,14 +68,10 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           Plugin_022_Write(event->Par1, event->Par2);
+          log = String(F("PCA  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
-          {
-            printWebString += F("PCAPWM ");
-            printWebString += event->Par1;
-            printWebString += F(" Set to ");
-            printWebString += event->Par2;
-            printWebString += F("<BR>");
-          }
+            printWebString += log;
         }
         break;
       }

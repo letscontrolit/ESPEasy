@@ -9,7 +9,7 @@ boolean timeOut(unsigned long timer)
   // It limits the maximum delay to 24.9 days.
 
   unsigned long now = millis();
-  if (((now >= timer) && ((now-timer) < 1<<31))  || ((timer >= now) && (timer - now > 1<<31)))
+  if (((now >= timer) && ((now - timer) < 1 << 31))  || ((timer >= now) && (timer - now > 1 << 31)))
     return true;
 
   return false;
@@ -371,7 +371,7 @@ boolean LoadSettings()
 \*********************************************************************************************/
 void SaveTaskSettings(byte TaskIndex)
 {
-ExtraTaskSettings.TaskIndex = TaskIndex;
+  ExtraTaskSettings.TaskIndex = TaskIndex;
 #if FEATURE_SPIFFS
   SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 #else
@@ -385,8 +385,8 @@ ExtraTaskSettings.TaskIndex = TaskIndex;
 \*********************************************************************************************/
 void LoadTaskSettings(byte TaskIndex)
 {
-if (ExtraTaskSettings.TaskIndex == TaskIndex)
-  return;
+  if (ExtraTaskSettings.TaskIndex == TaskIndex)
+    return;
 
 #if FEATURE_SPIFFS
   LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
@@ -1561,66 +1561,100 @@ void rulesProcessing(String& event)
   boolean match = false;
   boolean codeBlock = false;
   boolean isCommand = false;
+  boolean conditional = false;
+  boolean condition = false;
+  boolean ifBranche = false;
 
   while (data[pos] != 0)
   {
     if (data[pos] != 0 && data[pos] != 10)
       line += (char)data[pos];
 
-    // if line complete, parse this rule
-    if (data[pos] == 10)
+    if (data[pos] == 10)    // if line complete, parse this rule
     {
       line.replace("\r", "");
+      line.trim();
       line.toLowerCase();
       if (line.substring(0, 2) != "//" && line.length() > 0)
       {
         isCommand = true;
-        // split rule into event and action
 
         line = parseTemplate(line, line.length());
 
         String eventTrigger = "";
         String action = "";
-        if (!codeBlock)
+        
+        if (!codeBlock)  // do not check "on" rules if a block of actions is to be processed
         {
-          line.replace("on ", "");
-          int split = line.indexOf(" do ");
-          eventTrigger = line.substring(0, split);
-          eventTrigger.toLowerCase();
-          action = line.substring(split + 4);
-          match = ruleMatch(event, eventTrigger);
+          if (line.startsWith("on "))
+          {
+            line.replace("on ", "");
+            int split = line.indexOf(" do");
+            if (split != -1)
+            {
+              eventTrigger = line.substring(0, split);
+              action = line.substring(split + 4);
+              action.trim();
+            }
+            match = ruleMatch(event, eventTrigger);
+            if (action.length() > 0) // single on/do/action line, no block
+            {
+              isCommand = true;
+              codeBlock = false;
+            }
+            else
+            {
+              isCommand = false;
+              codeBlock = true;
+            }
+          }
         }
         else
         {
           action = line;
         }
 
-        if (action.indexOf("{") != -1)
-        {
-          isCommand = false;
-          codeBlock = true;
-        }
-        if (action.indexOf("}") != -1)
+        if (action == "endon") // Check if action block has ended, then we will wait for a new "on" rule
         {
           isCommand = false;
           codeBlock = false;
         }
 
-        if (match && isCommand)
+        if (match) // rule matched for one action or a block of actions
         {
-          log = F("ACT  : ");
-          log += action;
-          addLog(LOG_LEVEL_INFO, log);
-
-          struct EventStruct TempEvent;
-          parseCommandString(&TempEvent, action);
-          if (PluginCall(PLUGIN_WRITE, &TempEvent, action))
+          int split = action.indexOf("if "); // check for optional "if" condition
+          if (split != -1)
           {
-            // TODO
+            conditional = true;
+            String check = action.substring(split + 3);
+            condition = conditionMatch(check);
+            ifBranche = true;
+            isCommand = false;
           }
-          else
+
+          if (action == "else") // in case of an "else" block of actions, set ifBranche to false
           {
-            ExecuteCommand(action.c_str());
+            ifBranche = false;
+            isCommand = false;
+          }
+
+          if (action == "endif") // conditional block ends here
+          {
+            conditional = false;
+            isCommand = false;
+          }
+
+          // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
+          if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
+          {
+            log = F("ACT  : ");
+            log += action;
+            addLog(LOG_LEVEL_INFO, log);
+
+            struct EventStruct TempEvent;
+            parseCommandString(&TempEvent, action);
+            if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+              ExecuteCommand(action.c_str());
           }
         }
       }
@@ -1686,9 +1720,6 @@ boolean ruleMatch(String& event, String& rule)
     tmpRule = rule.substring(comparePos + 1);
     ruleValue = tmpRule.toFloat();
     tmpRule = rule.substring(0, comparePos);
-    //int space = tmpString.indexOf(" ");
-    //tmpString = tmpString.substring(0,space);
-    //Serial.println(tmpString);
   }
 
   switch (compare)
@@ -1714,18 +1745,70 @@ boolean ruleMatch(String& event, String& rule)
       break;
   }
 
-  if (Settings.SerialLogLevel > 4)
+  return match;
+}
+
+
+/********************************************************************************************\
+* Check expression
+\*********************************************************************************************/
+boolean conditionMatch(String& check)
+{
+  boolean match = false;
+
+  int comparePos = 0;
+  char compare = ' ';
+  comparePos = check.indexOf(">");
+  if (comparePos > 0)
   {
-    Serial.print(F("event:"));
-    Serial.print(tmpEvent);
-    Serial.print(F(" val:"));
-    Serial.print(value);
-    Serial.print(F(" rule:"));
-    Serial.print(tmpRule);
-    Serial.print(F(" val:"));
-    Serial.print(ruleValue);
-    Serial.print(F(" cmp:"));
-    Serial.println(compare);
+    compare = '>';
+  }
+  else
+  {
+    comparePos = check.indexOf("<");
+    if (comparePos > 0)
+    {
+      compare = '<';
+    }
+    else
+    {
+      comparePos = check.indexOf("=");
+      if (comparePos > 0)
+      {
+        compare = '=';
+      }
+    }
+  }
+
+  float Value1 = 0;
+  float Value2 = 0;
+
+  if (comparePos > 0)
+  {
+    String tmpCheck = check.substring(comparePos + 1);
+    Value2 = tmpCheck.toFloat();
+    tmpCheck = check.substring(0, comparePos);
+    Value1 = tmpCheck.toFloat();
+  }
+  else
+    return false;
+
+  switch (compare)
+  {
+    case '>':
+      if (Value1 > Value2)
+        match = true;
+      break;
+
+    case '<':
+      if (Value1 < Value2)
+        match = true;
+      break;
+
+    case '=':
+      if (Value1 == Value2)
+        match = true;
+      break;
   }
   return match;
 }

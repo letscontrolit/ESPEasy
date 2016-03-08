@@ -16,8 +16,13 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_001;
         Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = false;
-        Protocol[protocolCount].usesPassword = false;
+        #if ESP_CORE >= 210
+          Protocol[protocolCount].usesAccount = true;
+          Protocol[protocolCount].usesPassword = true;
+        #else
+          Protocol[protocolCount].usesAccount = false;
+          Protocol[protocolCount].usesPassword = false;
+        #endif
         Protocol[protocolCount].defaultPort = 8080;
         break;
       }
@@ -30,6 +35,19 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
       
     case CPLUGIN_PROTOCOL_SEND:
       {
+        String authHeader = "";
+        #if ESP_CORE >= 210
+        if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
+        {
+          String base64Authorization;
+          String auth = SecuritySettings.ControllerUser;
+          auth += ":";
+          auth += SecuritySettings.ControllerPassword;
+          base64Authorization = base64::encode(auth);
+          authHeader = "Authorization: Basic " + base64Authorization + " \r\n";
+        }
+        #endif
+        
         char log[80];
         boolean success = false;
         char host[20];
@@ -127,7 +145,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
         // This will send the request to the server
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
+                     "Host: " + host + "\r\n" + authHeader + 
                      "Connection: close\r\n\r\n");
 
         unsigned long timer = millis() + 200;

@@ -72,6 +72,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+        String log = "";
         String tmpString  = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
@@ -81,14 +82,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           Plugin_019_Write(event->Par1, event->Par2);
+          log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
-          {
-            printWebString += F("PCFGPIO ");
-            printWebString += event->Par1;
-            printWebString += F(" Set to ");
-            printWebString += event->Par2;
-            printWebString += F("<BR>");
-          }
+            printWebString += log;
         }
 
         if (tmpString.equalsIgnoreCase(F("PCFPulse")))
@@ -97,14 +94,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           Plugin_009_Write(event->Par1, event->Par2);
           delay(event->Par3);
           Plugin_009_Write(event->Par1, !event->Par2);
+          log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS<BR>"));
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
-          {
-            printWebString += F("PCFGPIO ");
-            printWebString += event->Par1;
-            printWebString += F(" Pulsed for ");
-            printWebString += event->Par3;
-            printWebString += F(" mS<BR>");
-          }
+            printWebString += log;
         }
 
         if (tmpString.equalsIgnoreCase(F("PCFLongPulse")))
@@ -112,14 +105,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           success = true;
           Plugin_009_Write(event->Par1, event->Par2);
           setSystemTimer(event->Par3 * 1000, PLUGIN_ID_019, event->Par1, !event->Par2, 0);
+          log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S<BR>"));
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
-          {
-            printWebString += F("PCFGPIO ");
-            printWebString += event->Par1;
-            printWebString += F(" Pulse set for ");
-            printWebString += event->Par3;
-            printWebString += F(" S<BR>");
-          }
+            printWebString += log;
         }
         
         break;

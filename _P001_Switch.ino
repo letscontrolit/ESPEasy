@@ -189,6 +189,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+        String log = "";
         String tmpString  = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
@@ -200,14 +201,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
+            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("GPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Set to ");
-              printWebString += event->Par2;
-              printWebString += F("<BR>");
-            }
+              printWebString += log;
           }
         }
 
@@ -218,14 +215,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             pinMode(event->Par1, OUTPUT);
             analogWrite(event->Par1, event->Par2);
+            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("GPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Set PWM to ");
-              printWebString += event->Par2;
-              printWebString += F("<BR>");
-            }
+              printWebString += log;
           }
         }
 
@@ -238,14 +231,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             digitalWrite(event->Par1, event->Par2);
             delay(event->Par3);
             digitalWrite(event->Par1, !event->Par2);
+            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS<BR>"));
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("GPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Pulsed for ");
-              printWebString += event->Par3;
-              printWebString += F(" mS<BR>");
-            }
+              printWebString += log;
           }
         }
 
@@ -257,14 +246,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
             setSystemTimer(event->Par3 * 1000, PLUGIN_ID_001, event->Par1, !event->Par2, 0);
+            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S<BR>"));
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("GPIO ");
-              printWebString += event->Par1;
-              printWebString += F(" Pulse set for ");
-              printWebString += event->Par3;
-              printWebString += F(" S<BR>");
-            }
+              printWebString += log;
           }
         }
 
@@ -284,14 +269,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 break;
             }
           {
+            log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
+            addLog(LOG_LEVEL_INFO, log);
             if (printToWeb)
-            {
-              printWebString += F("GPIO ");
-              printWebString += event->Par2;
-              printWebString += F(" Servo set to ");
-              printWebString += event->Par3;
-              printWebString += F("<BR>");
-            }
+              printWebString += log;
           }
         }
 

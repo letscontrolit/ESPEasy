@@ -1,3 +1,11 @@
+// R84 08-03-2016
+// Preparations for Arduino Core 2.1.0
+//   base64 encoding for HTTP authentication in C001
+//   ConfigSerial casting in ser2net plugin
+//   Wire.setClockStretchLimit(2000) for better PN532 support
+// Bugfix command handling for openhab MQTT protocol using a non default subscribe
+// Added standard logging mechanisme to plugin writes
+
 // R83 03-03-2016
 // Bugfix for ExtraTaskSettings.TaskIndex that was not stored in flash
 // Optimized parseTemplate performance.

@@ -1,3 +1,4 @@
+#define ESP_CORE 200
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.esp8266.nu
  *
@@ -99,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              83
+#define BUILD                              84
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -182,7 +183,9 @@
 #endif
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
-
+#if ESP_CORE >= 210
+  #include <Base64.h>
+#endif
 #define LWIP_OPEN_SRC
 #include "lwip/opt.h"
 #include "lwip/udp.h"

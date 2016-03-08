@@ -54,15 +54,15 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         String cmd = "";
         struct EventStruct TempEvent;
 
-        if (topicSplit[1] == "cmd")
+        if (topicSplit[count] == "cmd")
         {
           cmd = event->String2;
           parseCommandString(&TempEvent, cmd);
         }
         else
         {
-          cmd = topicSplit[1];
-          TempEvent.Par1 = topicSplit[2].toInt();
+          cmd = topicSplit[count-1];
+          TempEvent.Par1 = topicSplit[count].toInt();
           TempEvent.Par2 = event->String2.toFloat();
         }
         PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
