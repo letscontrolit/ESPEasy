@@ -115,7 +115,10 @@ boolean Plugin_030_Write(byte irPin,byte irt, byte nbits,String string){
   String irs = string.substring(0,string.indexOf(','));
   string  = string.substring(string.indexOf(',')+1);
   int rep = string.substring(0,string.indexOf(',')).toInt();
+  string  = string.substring(string.indexOf(',')+1);
+  int delayms = string.substring(0,string.indexOf(',')).toInt();
   if(rep==0) rep=1;
+  if(delayms==0) delayms=100;
   if (irs.length() != 11 && irs.indexOf("0x") >=0 && rep<=100 && nbits>=1 && nbits<=32)
   {
     success = true;
@@ -150,7 +153,7 @@ boolean Plugin_030_Write(byte irPin,byte irt, byte nbits,String string){
         irSend->sendWhynter(iri,nbits); 
         break;
       }
-      delay(80);
+      delay(delayms);
     }
   }
   return success;
