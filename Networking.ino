@@ -70,6 +70,7 @@ void checkUDP()
     }
     char packetBuffer[128];
     int len = portUDP.read(packetBuffer, 128);
+
     if (packetBuffer[0] != 255)
     {
       packetBuffer[len] = 0;

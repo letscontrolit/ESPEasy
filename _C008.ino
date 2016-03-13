@@ -84,11 +84,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,Settings.ControllerPort);
   addLog(LOG_LEVEL_DEBUG, log);
-  if (printToWeb)
-  {
-    printWebString += log;
-    printWebString += "<BR>";
-  }
+
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
   if (!client.connect(host, Settings.ControllerPort))
@@ -96,8 +92,6 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     connectionFailures++;
     strcpy_P(log, PSTR("HTTP : connection failed"));
     addLog(LOG_LEVEL_ERROR, log);
-    if (printToWeb)
-      printWebString += F("connection failed<BR>");
     return false;
   }
   statusLED(true);
@@ -120,11 +114,6 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   url.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, log);
-  if (printToWeb)
-  {
-    printWebString += log;
-    printWebString += "<BR>";
-  }
 
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
@@ -144,16 +133,12 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     {
       strcpy_P(log, PSTR("HTTP : Succes!"));
       addLog(LOG_LEVEL_DEBUG, log);
-      if (printToWeb)
-        printWebString += F("Success<BR>");
       success = true;
     }
     delay(1);
   }
   strcpy_P(log, PSTR("HTTP : closing connection"));
   addLog(LOG_LEVEL_DEBUG, log);
-  if (printToWeb)
-    printWebString += F("closing connection<BR>");
 
   client.flush();
   client.stop();

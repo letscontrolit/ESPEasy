@@ -130,6 +130,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         else
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
+
+        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, 0);
+
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
 
         // if boot state must be send, inverse default state
@@ -190,39 +193,37 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String log = "";
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("GPIO")))
+        String command = parseString(string, 1);
+
+        if (command == F("gpio"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
             addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
 
-        if (tmpString.equalsIgnoreCase(F("PWM")))
+        if (command == F("pwm"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
             analogWrite(event->Par1, event->Par2);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
             addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
 
-        if (tmpString.equalsIgnoreCase(F("Pulse")))
+        if (command == F("pulse"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
@@ -231,29 +232,29 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             digitalWrite(event->Par1, event->Par2);
             delay(event->Par3);
             digitalWrite(event->Par1, !event->Par2);
-            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS<BR>"));
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
             addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
 
-        if (tmpString.equalsIgnoreCase(F("LongPulse")))
+        if (command == F("longpulse"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             setSystemTimer(event->Par3 * 1000, PLUGIN_ID_001, event->Par1, !event->Par2, 0);
-            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S<BR>"));
+            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
             addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
 
-        if (tmpString.equalsIgnoreCase(F("Servo")))
+        if (command == F("servo"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 2)
@@ -268,27 +269,35 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 myservo2.write(event->Par3);
                 break;
             }
+          setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);
+          log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
+          addLog(LOG_LEVEL_INFO, log);
+          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
+        }
+
+        if (command == F("status"))
+        {
+          if (parseString(string, 2) == F("gpio"))
           {
-            log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
-            addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            success = true;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, dummyString, 0));
           }
         }
 
-        if (tmpString.equalsIgnoreCase(F("inputSwitchState")))
+        if (command == F("inputswitchstate"))
         {
           success = true;
           UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
           outputstate[event->Par1] = event->Par2;
         }
-        
+
         break;
       }
 
     case PLUGIN_TIMER_IN:
       {
         digitalWrite(event->Par1, event->Par2);
+        setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         break;
       }
   }

@@ -101,7 +101,7 @@ void MQTTConnect()
     String log = "";
     boolean MQTTresult = false;
 
-    if ((SecuritySettings.ControllerUser) && (SecuritySettings.ControllerPassword))
+    if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
       MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
     else
       MQTTresult = (MQTTclient.connect(clientid));
@@ -150,11 +150,38 @@ void MQTTCheck()
 }
 
 
-struct NodeStruct
+/*********************************************************************************************\
+ * Send status info to request source
+\*********************************************************************************************/
+
+void SendStatus(byte source, String status)
 {
-  byte ip[4];
-  byte age;
-} Nodes[UNIT_MAX];
+  switch(source)
+  {
+    case VALUE_SOURCE_HTTP:
+      if (printToWeb)
+        printWebString += status;
+      break;
+    case VALUE_SOURCE_MQTT:
+      MQTTStatus(status);
+      break;
+    case VALUE_SOURCE_SERIAL:
+      Serial.println(status);
+      break;
+  }
+}
+
+
+/*********************************************************************************************\
+ * Send status info back to channel where request came from
+\*********************************************************************************************/
+void MQTTStatus(String& status)
+{
+  String pubname = Settings.MQTTsubscribe;
+  pubname.replace("/#", "/status");
+  pubname.replace("%sysname%", Settings.Name);
+  MQTTclient.publish(pubname, status);
+}
 
 
 

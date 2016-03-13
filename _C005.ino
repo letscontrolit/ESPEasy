@@ -58,6 +58,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         {
           cmd = event->String2;
           parseCommandString(&TempEvent, cmd);
+          TempEvent.Source = VALUE_SOURCE_MQTT;
         }
         else
         {

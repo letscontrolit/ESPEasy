@@ -33,6 +33,7 @@ void serial()
       String action = InputBuffer_Serial;
       struct EventStruct TempEvent;
       parseCommandString(&TempEvent, action);
+      TempEvent.Source = VALUE_SOURCE_SERIAL;
       if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
         ExecuteCommand(InputBuffer_Serial);
       SerialInByteCounter = 0;

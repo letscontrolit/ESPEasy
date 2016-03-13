@@ -7,16 +7,22 @@ void hardwareInit()
 
   // set GPIO pins state if not set to default
   for (byte x=0; x < 17; x++)
-    if (Settings.PinStates[x] != 0)
-      switch(Settings.PinStates[x])
+    if (Settings.PinBootStates[x] != 0)
+      switch(Settings.PinBootStates[x])
       {
         case 1:
           pinMode(x,OUTPUT);
           digitalWrite(x,LOW);
+          setPinState(1, x, PIN_MODE_OUTPUT, LOW);
           break;
         case 2:
           pinMode(x,OUTPUT);
           digitalWrite(x,HIGH);
+          setPinState(1, x, PIN_MODE_OUTPUT, HIGH);
+          break;
+        case 3:
+          pinMode(x,INPUT_PULLUP);
+          setPinState(1, x, PIN_MODE_INPUT, 0);
           break;
       }
 
@@ -27,7 +33,13 @@ void hardwareInit()
     addLog(LOG_LEVEL_INFO, log);
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
     #if ESP_CORE >= 210
-      Wire.setClockStretchLimit(2000);
+      if(Settings.WireClockStretchLimit)
+      {
+        String log = F("INIT : I2C custom clockstretchlimit:");
+        log += Settings.WireClockStretchLimit;
+        addLog(LOG_LEVEL_INFO, log);
+        Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+      }
     #endif
   }
 

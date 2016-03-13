@@ -1,4 +1,4 @@
-#define ESP_CORE 200
+#define ESP_CORE 210
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.esp8266.nu
  *
@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              84
+#define BUILD                              85
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -131,6 +131,16 @@
 #define RULES_TIMER_MAX                     8
 #define SYSTEM_TIMER_MAX                    8
 #define SYSTEM_CMD_TIMER_MAX                2
+#define PINSTATE_TABLE_MAX                 32
+
+#define PIN_MODE_UNDEFINED                  0
+#define PIN_MODE_INPUT                      1
+#define PIN_MODE_OUTPUT                     2
+#define PIN_MODE_PWM                        3
+#define PIN_MODE_SERVO                      4
+
+#define SEARCH_PIN_STATE                 true
+#define NO_SEARCH_PIN_STATE             false
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
@@ -164,6 +174,12 @@
 #define PLUGIN_UDP_IN                      17
 #define PLUGIN_CLOCK_IN                    18
 #define PLUGIN_TIMER_IN                    19
+
+#define VALUE_SOURCE_SYSTEM                 1
+#define VALUE_SOURCE_SERIAL                 2
+#define VALUE_SOURCE_HTTP                   3
+#define VALUE_SOURCE_MQTT                   4
+#define VALUE_SOURCE_UDP                    5
 
 #define BOOT_CAUSE_MANUAL_REBOOT            0
 #define BOOT_CAUSE_COLD_BOOT                1
@@ -277,13 +293,14 @@ struct SettingsStruct
   boolean       TaskDeviceGlobalSync[TASKS_MAX];
   int8_t        TaskDevicePin3[TASKS_MAX];
   byte          TaskDeviceDataFeed[TASKS_MAX];
-  int8_t        PinStates[17];
+  int8_t        PinBootStates[17];
   byte          UseDNS;
   boolean       UseRules;
   int8_t        Pin_status_led;
   boolean       UseSerial;
   unsigned long TaskDeviceTimer[TASKS_MAX];
   boolean       UseSSDP;
+  unsigned long WireClockStretchLimit;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -297,6 +314,7 @@ struct ExtraTaskSettingsStruct
 
 struct EventStruct
 {
+  byte Source;
   byte TaskIndex;
   byte BaseVarIndex;
   int idx;
@@ -342,6 +360,12 @@ struct ProtocolStruct
   int defaultPort;
 } Protocol[CPLUGIN_MAX];
 
+struct NodeStruct
+{
+  byte ip[4];
+  byte age;
+} Nodes[UNIT_MAX];
+
 struct systemTimerStruct
 {
   unsigned long timer;
@@ -357,11 +381,20 @@ struct systemCMDTimerStruct
   String action;
 } systemCMDTimers[SYSTEM_CMD_TIMER_MAX];
 
+struct pinStatesStruct
+{
+  byte plugin;
+  byte index;
+  byte mode;
+  uint16_t value;
+} pinStates[PINSTATE_TABLE_MAX];
+
 int deviceCount = -1;
 int protocolCount = -1;
 
 boolean printToWeb = false;
 String printWebString = "";
+boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
 unsigned long RulesTimer[RULES_TIMER_MAX];

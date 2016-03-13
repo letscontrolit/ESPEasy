@@ -522,17 +522,17 @@ void handle_hardware() {
     Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
     Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
     Settings.Pin_status_led  = pin_status_led.toInt();
-    Settings.PinStates[0]  =  WebServer.arg("p0").toInt();
-    Settings.PinStates[2]  =  WebServer.arg("p2").toInt();
-    Settings.PinStates[4]  =  WebServer.arg("p4").toInt();
-    Settings.PinStates[5]  =  WebServer.arg("p5").toInt();
-    Settings.PinStates[9]  =  WebServer.arg("p9").toInt();
-    Settings.PinStates[10] =  WebServer.arg("p10").toInt();
-    Settings.PinStates[12] =  WebServer.arg("p12").toInt();
-    Settings.PinStates[13] =  WebServer.arg("p13").toInt();
-    Settings.PinStates[14] =  WebServer.arg("p14").toInt();
-    Settings.PinStates[15] =  WebServer.arg("p15").toInt();
-    Settings.PinStates[16] =  WebServer.arg("p16").toInt();
+    Settings.PinBootStates[0]  =  WebServer.arg("p0").toInt();
+    Settings.PinBootStates[2]  =  WebServer.arg("p2").toInt();
+    Settings.PinBootStates[4]  =  WebServer.arg("p4").toInt();
+    Settings.PinBootStates[5]  =  WebServer.arg("p5").toInt();
+    Settings.PinBootStates[9]  =  WebServer.arg("p9").toInt();
+    Settings.PinBootStates[10] =  WebServer.arg("p10").toInt();
+    Settings.PinBootStates[12] =  WebServer.arg("p12").toInt();
+    Settings.PinBootStates[13] =  WebServer.arg("p13").toInt();
+    Settings.PinBootStates[14] =  WebServer.arg("p14").toInt();
+    Settings.PinBootStates[15] =  WebServer.arg("p15").toInt();
+    Settings.PinBootStates[16] =  WebServer.arg("p16").toInt();
 
     SaveSettings();
   }
@@ -548,28 +548,29 @@ void handle_hardware() {
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
 
+  reply += F("<TR><TD>GPIO boot states:<TD>");
   reply += F("<TR><TD>Pin mode 0:<TD>");
-  addPinStateSelect(reply, "p0", Settings.PinStates[0]);
+  addPinStateSelect(reply, "p0", Settings.PinBootStates[0]);
   reply += F("<TR><TD>Pin mode 2:<TD>");
-  addPinStateSelect(reply, "p2", Settings.PinStates[2]);
+  addPinStateSelect(reply, "p2", Settings.PinBootStates[2]);
   reply += F("<TR><TD>Pin mode 4:<TD>");
-  addPinStateSelect(reply, "p4", Settings.PinStates[4]);
+  addPinStateSelect(reply, "p4", Settings.PinBootStates[4]);
   reply += F("<TR><TD>Pin mode 5:<TD>");
-  addPinStateSelect(reply, "p5", Settings.PinStates[5]);
+  addPinStateSelect(reply, "p5", Settings.PinBootStates[5]);
   reply += F("<TR><TD>Pin mode 9:<TD>");
-  addPinStateSelect(reply, "p9", Settings.PinStates[9]);
+  addPinStateSelect(reply, "p9", Settings.PinBootStates[9]);
   reply += F("<TR><TD>Pin mode 10:<TD>");
-  addPinStateSelect(reply, "p10", Settings.PinStates[10]);
+  addPinStateSelect(reply, "p10", Settings.PinBootStates[10]);
   reply += F("<TR><TD>Pin mode 12:<TD>");
-  addPinStateSelect(reply, "p12", Settings.PinStates[12]);
+  addPinStateSelect(reply, "p12", Settings.PinBootStates[12]);
   reply += F("<TR><TD>Pin mode 13:<TD>");
-  addPinStateSelect(reply, "p13", Settings.PinStates[13]);
+  addPinStateSelect(reply, "p13", Settings.PinBootStates[13]);
   reply += F("<TR><TD>Pin mode 14:<TD>");
-  addPinStateSelect(reply, "p14", Settings.PinStates[14]);
+  addPinStateSelect(reply, "p14", Settings.PinBootStates[14]);
   reply += F("<TR><TD>Pin mode 15:<TD>");
-  addPinStateSelect(reply, "p15", Settings.PinStates[15]);
+  addPinStateSelect(reply, "p15", Settings.PinBootStates[15]);
   reply += F("<TR><TD>Pin mode 16:<TD>");
-  addPinStateSelect(reply, "p16", Settings.PinStates[16]);
+  addPinStateSelect(reply, "p16", Settings.PinBootStates[16]);
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
@@ -584,19 +585,21 @@ void handle_hardware() {
 //********************************************************************************
 void addPinStateSelect(String& str, String name,  int choice)
 {
-  String options[3];
+  String options[4];
   options[0] = F("Default");
   options[1] = F("Output Low");
   options[2] = F("Output High");
-  int optionValues[3];
+  options[3] = F("Input");
+  int optionValues[4];
   optionValues[0] = 0;
   optionValues[1] = 1;
   optionValues[2] = 2;
+  optionValues[3] = 3;
 
   str += F("<select name='");
   str += name;
   str += "'>";
-  for (byte x = 0; x < 3; x++)
+  for (byte x = 0; x < 4; x++)
   {
     str += F("<option value='");
     str += optionValues[x];
@@ -1323,14 +1326,9 @@ void handle_tools() {
 
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
-  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
-  {
-    // TODO
-  }
-  else
-  {
+  TempEvent.Source = VALUE_SOURCE_HTTP;
+  if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
     ExecuteCommand(webrequest.c_str());
-  }
 
   reply += printWebString;
   reply += F("</table></form>");
@@ -1505,7 +1503,8 @@ void handle_control() {
 
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
-
+  TempEvent.Source = VALUE_SOURCE_HTTP;
+  
   printToWeb = true;
   printWebString = "";
   String reply = "";
@@ -1514,10 +1513,15 @@ void handle_control() {
     reply += F("Unknown or restricted command!");
 
   reply += printWebString;
-  reply += F("</table></form>");
-  WebServer.send(200, "text/html", reply);
+
+  if (printToWebJSON)
+    WebServer.send(200, "application/json", reply);
+  else
+    WebServer.send(200, "text/html", reply);
+
   printWebString = "";
   printToWeb = false;
+  printToWebJSON = false;
 }
 
 
@@ -1628,6 +1632,7 @@ void handle_advanced() {
   String wdi2caddress = WebServer.arg("wdi2caddress");
   String usessdp = WebServer.arg("usessdp");
   String edit = WebServer.arg("edit");
+  String wireclockstretchlimit = WebServer.arg("wireclockstretchlimit");
 
   if (edit.length() != 0)
   {
@@ -1655,6 +1660,9 @@ void handle_advanced() {
     Settings.DST = (dst == "on");
     Settings.WDI2CAddress = wdi2caddress.toInt();
     Settings.UseSSDP = (usessdp == "on");
+#if ESP_CORE >= 210
+    Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
+#endif
     SaveSettings();
   }
 
@@ -1747,6 +1755,12 @@ void handle_advanced() {
     reply += F("<input type=checkbox name='usessdp' checked>");
   else
     reply += F("<input type=checkbox name='usessdp'>");
+#endif
+
+#if ESP_CORE >= 210
+  reply += F("<TR><TD>I2C ClockStretchLimit:<TD><input type='text' name='wireclockstretchlimit' value='");
+  reply += Settings.WireClockStretchLimit;
+  reply += F("'>");
 #endif
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");

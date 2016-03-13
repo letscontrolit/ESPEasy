@@ -18,6 +18,22 @@ void ExecuteCommand(const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("pinstates")) == 0)
+  {
+    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+      if (pinStates[x].plugin != 0)
+      {
+        Serial.print(F("Plugin: "));
+        Serial.print(pinStates[x].plugin);
+        Serial.print(F(" index: "));
+        Serial.print(pinStates[x].index);
+        Serial.print(F(" mode: "));
+        Serial.print(pinStates[x].mode);
+        Serial.print(F(" value: "));
+        Serial.println(pinStates[x].value);
+      }
+  }
+
   if (strcasecmp_P(Command, PSTR("timer")) == 0)
   {
     if (GetArgv(Line, TmpStr1, 3))

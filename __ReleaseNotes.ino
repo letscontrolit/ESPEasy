@@ -1,3 +1,11 @@
+// R85 13-03-2016
+// Preparations for Arduino Core 2.1.0
+//   Fixed and tested HTTP authentication in C001
+//   Servo library seems to have issues in Core 2.1.0. Using the servo library from 2.0.0.
+//   I2C clockstretchlimit can be set using tools/advanced.
+// Preparations for global pinstate maintenance and status requests
+// Redesign on plugin write output reporting as it was still focussed on HTTP only.
+
 // R84 08-03-2016
 // Preparations for Arduino Core 2.1.0
 //   base64 encoding for HTTP authentication in C001

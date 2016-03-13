@@ -37,11 +37,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
 
         sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,Settings.ControllerPort);
         addLog(LOG_LEVEL_DEBUG, log);
-        if (printToWeb)
-        {
-          printWebString += log;
-          printWebString += "<BR>";
-        }
+
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
         if (!client.connect(host, Settings.ControllerPort))
@@ -49,8 +45,6 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));
           addLog(LOG_LEVEL_ERROR, log);
-          if (printToWeb)
-            printWebString += F("connection failed<BR>");
           return false;
         }
         statusLED(true);        
@@ -139,16 +133,12 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           {
             strcpy_P(log, PSTR("HTTP : Succes!"));
             addLog(LOG_LEVEL_DEBUG, log);
-            if (printToWeb)
-              printWebString += F("Success<BR>");
             success = true;
           }
           delay(1);
         }
         strcpy_P(log, PSTR("HTTP : closing connection"));
         addLog(LOG_LEVEL_DEBUG, log);
-        if (printToWeb)
-          printWebString += F("closing connection<BR>");
 
         client.flush();
         client.stop();

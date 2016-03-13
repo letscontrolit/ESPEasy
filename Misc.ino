@@ -1,3 +1,151 @@
+/*********************************************************************************************\
+ * Parse a string and get the xth command or parameter
+\*********************************************************************************************/
+String parseString(String& string, byte indexFind)
+{
+  String tmpString = string;
+  tmpString += ",";
+  tmpString.replace(" ", ",");
+  String locateString = "";
+  byte count = 0;
+  int index = tmpString.indexOf(',');
+  while (index > 0)
+  {
+    count++;
+    locateString = tmpString.substring(0, index);
+    tmpString = tmpString.substring(index + 1);
+    index = tmpString.indexOf(',');
+    if (count == indexFind)
+    {
+      locateString.toLowerCase();
+      return locateString;
+    }
+  }
+  return "";
+}
+
+
+/*********************************************************************************************\
+ * set pin mode & state (info table)
+\*********************************************************************************************/
+boolean setPinState(byte plugin, byte index, byte mode, uint16_t value)
+{
+  // plugin number and index form a unique key
+  // first check if this pin is already known
+  boolean reUse = false;
+  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+    if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
+    {
+      pinStates[x].mode = mode;
+      pinStates[x].value = value;
+      reUse = true;
+      break;
+    }
+
+  if (!reUse)
+  {
+    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+      if (pinStates[x].plugin == 0)
+      {
+        pinStates[x].plugin = plugin;
+        pinStates[x].index = index;
+        pinStates[x].mode = mode;
+        pinStates[x].value = value;
+        break;
+      }
+  }
+}
+
+
+/*********************************************************************************************\
+ * get pin mode & state (info table)
+\*********************************************************************************************/
+boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
+{
+  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+    if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
+    {
+      *mode = pinStates[x].mode;
+      *value = pinStates[x].value;
+      return true;
+    }
+  return false;
+}
+
+
+/*********************************************************************************************\
+ * check if pin mode & state is known (info table)
+\*********************************************************************************************/
+boolean hasPinState(byte plugin, byte index)
+{
+  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+    if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
+    {
+      return true;
+    }
+  return false;
+}
+
+
+/*********************************************************************************************\
+ * report pin mode & state (info table) using json
+\*********************************************************************************************/
+String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
+{
+  printToWebJSON = true;
+  byte mode = PIN_MODE_INPUT;
+  uint16_t value = noSearchValue;
+  String reply = "";
+  boolean found = false;
+
+  if (search)
+  {
+    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+      if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
+      {
+        mode = pinStates[x].mode;
+        value = pinStates[x].value;
+        found = true;
+        break;
+      }
+  }
+
+  if (!search || (search && found))
+  {
+    reply += F("{\n\"log\": \"");
+    reply += log.substring(7,32);  // truncate to 25 chars, max MQTT message size = 128 including header...
+    reply += F("\",\n\"plugin\": ");
+    reply += plugin;
+    reply += F(",\n\"pin\": ");
+    reply += index;
+    reply += F(",\n\"mode\": \"");
+    switch (mode)
+    {
+      case PIN_MODE_UNDEFINED:
+        reply += F("undefined");
+        break;
+      case PIN_MODE_INPUT:
+        reply += F("input");
+        break;
+      case PIN_MODE_OUTPUT:
+        reply += F("output");
+        break;
+      case PIN_MODE_PWM:
+        reply += F("PWM");
+        break;
+      case PIN_MODE_SERVO:
+        reply += F("servo");
+        break;
+    }
+    reply += F("\",\n\"state\": ");
+    reply += value;
+    reply += F("\n}\n");
+    return reply;
+  }
+  return "?";
+}
+
+
 /********************************************************************************************\
 * Unsigned long Timer timeOut check
 \*********************************************************************************************/
@@ -1583,7 +1731,7 @@ void rulesProcessing(String& event)
 
         String eventTrigger = "";
         String action = "";
-        
+
         if (!codeBlock)  // do not check "on" rules if a block of actions is to be processed
         {
           if (line.startsWith("on "))

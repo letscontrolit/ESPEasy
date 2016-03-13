@@ -60,18 +60,26 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           Plugin_022_writeRegister(PCA9685_MODE2, (byte)0x10); // set to output
           Plugin_022_init = true;
         }
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("PCAPWM")))
+
+        String command = parseString(string, 1);
+
+        if (command == F("pcapwm"))
         {
           success = true;
           Plugin_022_Write(event->Par1, event->Par2);
+          setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
           log = String(F("PCA  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
           addLog(LOG_LEVEL_INFO, log);
-          if (printToWeb)
-            printWebString += log;
+          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+        }
+
+        if (command == F("status"))
+        {
+          if (parseString(string, 2) == F("pca"))
+          {
+            success = true;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
+          }
         }
         break;
       }

@@ -48,6 +48,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         switchstate[event->TaskIndex] = Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
         // Turn on Pullup resistor
         Plugin_009_Config(Settings.TaskDevicePort[event->TaskIndex], 1);
+        setPinState(PLUGIN_ID_009, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, 0);
         success = true;
         break;
       }
@@ -75,21 +76,19 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String log = "";
-        String tmpString  = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex)
-          tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("MCPGPIO")))
+        String command = parseString(string, 1);
+
+        if (command == F("mcpgpio"))
         {
           success = true;
           Plugin_009_Write(event->Par1, event->Par2);
+          setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
           addLog(LOG_LEVEL_INFO, log);
-          if (printToWeb)
-            printWebString += log;
+          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
         }
 
-        if (tmpString.equalsIgnoreCase(F("MCPPulse")))
+        if (command == F("mcppulse"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 128)
@@ -97,33 +96,52 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             Plugin_009_Write(event->Par1, event->Par2);
             delay(event->Par3);
             Plugin_009_Write(event->Par1, !event->Par2);
-            log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS<BR>"));
+            setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
             addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
           }
         }
 
-        if (tmpString.equalsIgnoreCase(F("MCPLongPulse")))
+        if (command == F("mcplongpulse"))
         {
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= 128)
           {
             Plugin_009_Write(event->Par1, event->Par2);
+            setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             setSystemTimer(event->Par3 * 1000, PLUGIN_ID_009, event->Par1, !event->Par2, 0);
-            log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S<BR>"));
+            log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
             addLog(LOG_LEVEL_INFO, log);
-            if (printToWeb)
-              printWebString += log;
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
           }
         }
-        
+
+        if (command == F("status"))
+        {
+          if (parseString(string, 2) == F("mcp"))
+          {
+            success = true;
+            String status = "";
+            if (hasPinState(PLUGIN_ID_009, event->Par2))  // has been set as output
+              status = getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par2, dummyString, 0);
+            else
+            {
+              int state = Plugin_009_Read(event->Par2); // report as input
+              if (state != -1)
+                status = getPinStateJSON(NO_SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par2, dummyString, state);
+            }
+            SendStatus(event->Source, status);
+          }
+        }
+
         break;
       }
 
     case PLUGIN_TIMER_IN:
       {
         Plugin_009_Write(event->Par1, event->Par2);
+        setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         break;
       }
   }
