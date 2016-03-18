@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              85
+#define BUILD                              86
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -301,6 +301,7 @@ struct SettingsStruct
   unsigned long TaskDeviceTimer[TASKS_MAX];
   boolean       UseSSDP;
   unsigned long WireClockStretchLimit;
+  boolean       GlobalSync;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -905,7 +906,7 @@ boolean checkSystemTimers()
         struct EventStruct TempEvent;
         parseCommandString(&TempEvent, systemCMDTimers[x].action);
         if (!PluginCall(PLUGIN_WRITE, &TempEvent, systemCMDTimers[x].action))
-          ExecuteCommand(systemCMDTimers[x].action.c_str());
+          ExecuteCommand(VALUE_SOURCE_SYSTEM, systemCMDTimers[x].action.c_str());
         systemCMDTimers[x].timer = 0;
         systemCMDTimers[x].action = "";
       }

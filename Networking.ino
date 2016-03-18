@@ -4,8 +4,8 @@
 // SSDP
 
 /*********************************************************************************************\
- * Syslog client
-\*********************************************************************************************/
+   Syslog client
+  \*********************************************************************************************/
 void syslog(const char *message)
 {
   if (Settings.Syslog_IP[0] != 0)
@@ -22,8 +22,8 @@ void syslog(const char *message)
 
 
 /*********************************************************************************************\
- * Structs for UDP messaging
-\*********************************************************************************************/
+   Structs for UDP messaging
+  \*********************************************************************************************/
 struct infoStruct
 {
   byte header = 255;
@@ -49,8 +49,8 @@ struct dataStruct
 };
 
 /*********************************************************************************************\
- * Check UDP messages
-\*********************************************************************************************/
+   Check UDP messages
+  \*********************************************************************************************/
 void checkUDP()
 {
   if (Settings.UDPPort == 0)
@@ -75,7 +75,7 @@ void checkUDP()
     {
       packetBuffer[len] = 0;
       addLog(LOG_LEVEL_DEBUG, packetBuffer);
-      ExecuteCommand(packetBuffer);
+      ExecuteCommand(VALUE_SOURCE_SYSTEM, packetBuffer);
     }
     else
     {
@@ -128,21 +128,24 @@ void checkUDP()
 
         case 3: // sensor info
           {
-            struct infoStruct infoReply;
-            memcpy((byte*)&infoReply, (byte*)&packetBuffer, sizeof(infoStruct));
-
-            // to prevent flash wear out (bugs in communication?) we can only write to an empty task
-            // so it will write only once and has to be cleared manually through webgui
-            if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
+            if (Settings.GlobalSync)
             {
-              Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
-              Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
-              Settings.TaskDeviceSendData[infoReply.destTaskIndex] = false;
-              strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
-              for (byte x = 0; x < VARS_PER_TASK; x++)
-                strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
-              SaveTaskSettings(infoReply.destTaskIndex);
-              SaveSettings();
+              struct infoStruct infoReply;
+              memcpy((byte*)&infoReply, (byte*)&packetBuffer, sizeof(infoStruct));
+
+              // to prevent flash wear out (bugs in communication?) we can only write to an empty task
+              // so it will write only once and has to be cleared manually through webgui
+              if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
+              {
+                Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
+                Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
+                Settings.TaskDeviceSendData[infoReply.destTaskIndex] = false;
+                strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
+                for (byte x = 0; x < VARS_PER_TASK; x++)
+                  strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
+                SaveTaskSettings(infoReply.destTaskIndex);
+                SaveSettings();
+              }
             }
             break;
           }
@@ -155,15 +158,18 @@ void checkUDP()
 
         case 5: // sensor data
           {
-            struct dataStruct dataReply;
-            memcpy((byte*)&dataReply, (byte*)&packetBuffer, sizeof(dataStruct));
-
-            // only if this task has a remote feed, update values
-            if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
+            if (Settings.GlobalSync)
             {
-              for (byte x = 0; x < VARS_PER_TASK; x++)
+              struct dataStruct dataReply;
+              memcpy((byte*)&dataReply, (byte*)&packetBuffer, sizeof(dataStruct));
+
+              // only if this task has a remote feed, update values
+              if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
               {
-                UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+                for (byte x = 0; x < VARS_PER_TASK; x++)
+                {
+                  UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+                }
               }
             }
             break;
@@ -184,8 +190,8 @@ void checkUDP()
 
 
 /*********************************************************************************************\
- * Send task info using UDP message
-\*********************************************************************************************/
+   Send task info using UDP message
+  \*********************************************************************************************/
 void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
   struct infoStruct infoReply;
@@ -216,8 +222,8 @@ void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 
 
 /*********************************************************************************************\
- * Send task data using UDP message
-\*********************************************************************************************/
+   Send task data using UDP message
+  \*********************************************************************************************/
 void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
   struct dataStruct dataReply;
@@ -245,8 +251,8 @@ void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 
 
 /*********************************************************************************************\
- * Send UDP message
-\*********************************************************************************************/
+   Send UDP message
+  \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
   if (Nodes[unit].ip[0] == 0)
@@ -265,8 +271,8 @@ void sendUDP(byte unit, byte* data, byte size)
 
 
 /*********************************************************************************************\
- * Refresh aging for remote units, drop if too old...
-\*********************************************************************************************/
+   Refresh aging for remote units, drop if too old...
+  \*********************************************************************************************/
 void refreshNodeList()
 {
   for (byte counter = 0; counter < UNIT_MAX; counter++)
@@ -331,8 +337,8 @@ void sendSysInfoUDP(byte repeats)
 
 #if FEATURE_SSDP
 /********************************************************************************************\
-* Respond to HTTP XML requests for SSDP information
-\*********************************************************************************************/
+  Respond to HTTP XML requests for SSDP information
+  \*********************************************************************************************/
 void SSDP_schema(WiFiClient client) {
 
   IPAddress ip = WiFi.localIP();
@@ -387,8 +393,8 @@ void SSDP_schema(WiFiClient client) {
 
 
 /********************************************************************************************\
-* Global SSDP stuff
-\*********************************************************************************************/
+  Global SSDP stuff
+  \*********************************************************************************************/
 typedef enum {
   NONE,
   SEARCH,
@@ -416,8 +422,8 @@ static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
 
 
 /********************************************************************************************\
-* Launch SSDP listener and send initial notify
-\*********************************************************************************************/
+  Launch SSDP listener and send initial notify
+  \*********************************************************************************************/
 bool SSDP_begin() {
   _pending = false;
 
@@ -455,8 +461,8 @@ bool SSDP_begin() {
 
 
 /********************************************************************************************\
-* Send SSDP messages (notify & responses)
-\*********************************************************************************************/
+  Send SSDP messages (notify & responses)
+  \*********************************************************************************************/
 void SSDP_send(byte method) {
   char buffer[1460];
   uint32_t ip = WiFi.localIP();
@@ -513,8 +519,8 @@ void SSDP_send(byte method) {
 
 
 /********************************************************************************************\
-* SSDP message processing
-\*********************************************************************************************/
+  SSDP message processing
+  \*********************************************************************************************/
 void SSDP_update() {
 
   if (!_pending && _server->next()) {

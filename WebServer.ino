@@ -139,7 +139,6 @@ void handle_root() {
   if (wifiSetup)
   {
     WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=http://192.168.4.1/setup'>");
-    //WebServer.send(200, "text/html", "<a class=\"button-menu\" href=\"setup\">Setup</a>");
     return;
   }
 
@@ -155,7 +154,8 @@ void handle_root() {
 
     printToWeb = true;
     printWebString = "";
-    ExecuteCommand(sCommand.c_str());
+    if (sCommand.length() > 0)
+      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
 
     IPAddress ip = WiFi.localIP();
     IPAddress gw = WiFi.gatewayIP();
@@ -716,15 +716,18 @@ void handle_devices() {
       if (Device[DeviceIndex].SendDataOption)
         Settings.TaskDeviceSendData[index - 1] = (taskdevicesenddata == "on");
 
-      if (Device[DeviceIndex].GlobalSyncOption)
-        Settings.TaskDeviceGlobalSync[index - 1] = (taskdeviceglobalsync == "on");
-
-      // Send task info if set global
-      if (Settings.TaskDeviceGlobalSync[index - 1])
+      if (Settings.GlobalSync)
       {
-        SendUDPTaskInfo(0, index - 1, index - 1);
-      }
+        if(Device[DeviceIndex].GlobalSyncOption)
+          Settings.TaskDeviceGlobalSync[index - 1] = (taskdeviceglobalsync == "on");
 
+        // Send task info if set global
+        if (Settings.TaskDeviceGlobalSync[index - 1])
+        {
+          SendUDPTaskInfo(0, index - 1, index - 1);
+        }
+      }
+      
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
         taskdeviceformula[varNr].toCharArray(tmpString, 41);
@@ -951,7 +954,7 @@ void handle_devices() {
           reply += F("<input type=checkbox name=taskdevicesenddata>");
       }
 
-      if (Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[index - 1] == 0 && Settings.UDPPort != 0)
+      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[index - 1] == 0 && Settings.UDPPort != 0)
       {
         reply += F("<TR><TD>Global Sync:<TD>");
         if (Settings.TaskDeviceGlobalSync[index - 1])
@@ -1322,15 +1325,23 @@ void handle_tools() {
   reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
   printToWeb = true;
-  printWebString = "<BR>";
+  printWebString = "";
 
-  struct EventStruct TempEvent;
-  parseCommandString(&TempEvent, webrequest);
-  TempEvent.Source = VALUE_SOURCE_HTTP;
-  if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
-    ExecuteCommand(webrequest.c_str());
-
-  reply += printWebString;
+  if (webrequest.length() > 0)
+   {
+     struct EventStruct TempEvent;
+     parseCommandString(&TempEvent, webrequest);
+     TempEvent.Source = VALUE_SOURCE_HTTP;
+     if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
+       ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+   }
+   
+  if (printWebString.length() > 0)
+    {
+      reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
+      reply += printWebString;
+      reply += F("</textarea>");
+    }
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -1633,6 +1644,8 @@ void handle_advanced() {
   String usessdp = WebServer.arg("usessdp");
   String edit = WebServer.arg("edit");
   String wireclockstretchlimit = WebServer.arg("wireclockstretchlimit");
+  String globalsync = WebServer.arg("globalsync");
+  String userules = WebServer.arg("userules");
 
   if (edit.length() != 0)
   {
@@ -1662,6 +1675,8 @@ void handle_advanced() {
     Settings.UseSSDP = (usessdp == "on");
 #if ESP_CORE >= 210
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
+    Settings.UseRules = (userules == "on");
+    Settings.GlobalSync = (globalsync == "on");
 #endif
     SaveSettings();
   }
@@ -1757,11 +1772,25 @@ void handle_advanced() {
     reply += F("<input type=checkbox name='usessdp'>");
 #endif
 
+  reply += F("<TR><TH>Experimental Settings<TH>Value");
+
 #if ESP_CORE >= 210
   reply += F("<TR><TD>I2C ClockStretchLimit:<TD><input type='text' name='wireclockstretchlimit' value='");
   reply += Settings.WireClockStretchLimit;
   reply += F("'>");
 #endif
+
+  reply += F("<TR><TD>Rules:<TD>");
+  if (Settings.UseRules)
+    reply += F("<input type=checkbox name='userules' checked>");
+  else
+    reply += F("<input type=checkbox name='userules'>");
+
+  reply += F("<TR><TD>Global Sync:<TD>");
+  if (Settings.GlobalSync)
+    reply += F("<input type=checkbox name='globalsync' checked>");
+  else
+    reply += F("<input type=checkbox name='globalsync'>");
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("<input type='hidden' name='edit' value='1'>");

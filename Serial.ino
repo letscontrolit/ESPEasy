@@ -35,7 +35,7 @@ void serial()
       parseCommandString(&TempEvent, action);
       TempEvent.Source = VALUE_SOURCE_SERIAL;
       if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
-        ExecuteCommand(InputBuffer_Serial);
+        ExecuteCommand(VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
     }

@@ -30,7 +30,6 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_025;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-//        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 4;
         Device[deviceCount].PullUpOption = false;
@@ -39,6 +38,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
+        Device[deviceCount].GlobalSyncOption = true;
         break;
       }
 

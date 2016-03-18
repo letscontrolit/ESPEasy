@@ -1,6 +1,8 @@
 #define INPUT_COMMAND_SIZE          80
-void ExecuteCommand(const char *Line)
+void ExecuteCommand(byte source, const char *Line)
 {
+  String status = "";
+  boolean success = false;
   char TmpStr1[80];
   TmpStr1[0] = 0;
   char Command[80];
@@ -20,22 +22,24 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("pinstates")) == 0)
   {
+    success = true;
     for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
       if (pinStates[x].plugin != 0)
       {
-        Serial.print(F("Plugin: "));
-        Serial.print(pinStates[x].plugin);
-        Serial.print(F(" index: "));
-        Serial.print(pinStates[x].index);
-        Serial.print(F(" mode: "));
-        Serial.print(pinStates[x].mode);
-        Serial.print(F(" value: "));
-        Serial.println(pinStates[x].value);
+        status += F("\nPlugin: ");
+        status += pinStates[x].plugin;
+        status += F(" index: ");
+        status += pinStates[x].index;
+        status += F(" mode: ");
+        status += pinStates[x].mode;
+        status += F(" value: ");
+        status += pinStates[x].value;
       }
   }
 
   if (strcasecmp_P(Command, PSTR("timer")) == 0)
   {
+    success = true;
     if (GetArgv(Line, TmpStr1, 3))
     {
       setSystemTimer(Par1 * 1000, Par2, Par3, 0, 0);
@@ -44,6 +48,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("cmdtimer")) == 0)
   {
+    success = true;
     if (GetArgv(Line, TmpStr1, 3))
     {
       String demo = TmpStr1;
@@ -53,11 +58,23 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
+    success = true;
     taskClear(Par1 - 1, true);
   }
 
+  if (strcasecmp_P(Command, PSTR("TaskGlobalSync")) == 0)
+  {
+    success = true;
+    if (Par2 == 1)
+      Settings.TaskDeviceGlobalSync[Par1 -1] = true;
+    else
+      Settings.TaskDeviceGlobalSync[Par1 -1] = false;
+  }
+
+
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
+    success = true;
     Wire.beginTransmission(Par1);  // address
     Wire.write(Par2);              // command
     Wire.write(Par3);              // data
@@ -66,6 +83,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("wdread")) == 0)
   {
+    success = true;
     Wire.beginTransmission(Par1);  // address
     Wire.write(0x83);              // command to set pointer
     Wire.write(Par2);              // pointer value
@@ -74,30 +92,28 @@ void ExecuteCommand(const char *Line)
     if (Wire.available())
     {
       byte value = Wire.read();
-      if (printToWeb)
-      {
-        printWebString += F("Reg value: ");
-        printWebString += value;
-      }
-      Serial.print(F("Reg value: "));
-      Serial.println(value);
+      status = F("Reg value: ");
+      status += value;
     }
   }
 
   if (strcasecmp_P(Command, PSTR("VariableSet")) == 0)
   {
+    success = true;
     if (GetArgv(Line, TmpStr1, 3))
       UserVar[Par1 - 1] = atof(TmpStr1);
   }
 
   if (strcasecmp_P(Command, PSTR("build")) == 0)
   {
+    success = true;
     Settings.Build = Par1;
     SaveSettings();
   }
 
   if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
   {
+    success = true;
     Settings.deepSleep = 0;
   }
 
@@ -108,16 +124,19 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
+    success = true;
     RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
   }
 
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
   {
+    success = true;
     delayMillis(Par1);
   }
 
   if (strcasecmp_P(Command, PSTR("Rules")) == 0)
   {
+    success = true;
     if (Par1 == 1)
       Settings.UseRules = true;
     else
@@ -126,6 +145,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("Event")) == 0)
   {
+    success = true;
     String event = Line;
     event = event.substring(6);
     event.replace("$", "#");
@@ -139,6 +159,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("DomoticzSend")) == 0)
   {
+    success = true;
     if (GetArgv(Line, TmpStr1, 4))
     {
       struct EventStruct TempEvent;
@@ -153,36 +174,53 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp(Command, "DomoticzGet") == 0)
   {
+    success = true;
     float value = 0;
     if (Domoticz_getData(Par2, &value))
     {
-      Serial.print(F("DomoticzGet "));
-      Serial.println(value);
+      status = F("DomoticzGet ");
+      status += value;
     }
     else
-      Serial.println(F("Error getting data"));
+      status = F("Error getting data");
   }
 
   // ****************************************
   // configure settings commands
   // ****************************************
   if (strcasecmp_P(Command, PSTR("WifiSSID")) == 0)
+  {
+    success = true;
     strcpy(SecuritySettings.WifiSSID, Line + 9);
+  }
 
   if (strcasecmp_P(Command, PSTR("WifiKey")) == 0)
+  {
+    success = true;
     strcpy(SecuritySettings.WifiKey, Line + 8);
+  }
 
   if (strcasecmp_P(Command, PSTR("WifiScan")) == 0)
+  {
+    success = true;
     WifiScan();
-
+  }
+  
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
+  {
+    success = true;
     WifiConnect();
-
+  }
+  
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
+  {
+    success = true;
     WifiDisconnect();
-
+  }
+  
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
   {
+    success = true;
     pinMode(0, INPUT);
     pinMode(2, INPUT);
     pinMode(15, INPUT);
@@ -190,10 +228,13 @@ void ExecuteCommand(const char *Line)
   }
 
   if (strcasecmp_P(Command, PSTR("Restart")) == 0)
+  {
+    success = true;
     ESP.restart();
-
+  }
   if (strcasecmp_P(Command, PSTR("Erase")) == 0)
   {
+    success = true;
     EraseFlash();
     ZeroFillFlash();
     saveToRTC(0);
@@ -203,16 +244,26 @@ void ExecuteCommand(const char *Line)
   }
 
   if (strcasecmp_P(Command, PSTR("Reset")) == 0)
+  {
+    success = true;
     ResetFactory();
+  }
 
   if (strcasecmp_P(Command, PSTR("Save")) == 0)
+  {
+    success = true;
     SaveSettings();
+  }
 
   if (strcasecmp_P(Command, PSTR("Load")) == 0)
+  {
+    success = true;
     LoadSettings();
+  }
 
   if (strcasecmp_P(Command, PSTR("FlashDump")) == 0)
   {
+    success = true;
     uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
 
@@ -240,14 +291,19 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("flashcheck")) == 0)
   {
+    success = true;
     CheckFlash(Par1, Par2);
   }
 
   if (strcasecmp_P(Command, PSTR("Debug")) == 0)
+  {
+    success = true;
     Settings.SerialLogLevel = Par1;
+  }
 
   if (strcasecmp_P(Command, PSTR("IP")) == 0)
   {
+    success = true;
     if (GetArgv(Line, TmpStr1, 2))
       if (!str2ip(TmpStr1, Settings.IP))
         Serial.println("?");
@@ -255,6 +311,7 @@ void ExecuteCommand(const char *Line)
 
   if (strcasecmp_P(Command, PSTR("Settings")) == 0)
   {
+    success = true;
     char str[20];
     Serial.println();
 
@@ -268,5 +325,11 @@ void ExecuteCommand(const char *Line)
     Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);
     Serial.print(F("  Free mem      : ")); Serial.println(FreeMem());
   }
+
+  if (success)
+    status += F("\nOk");
+  else  
+    status += F("\nUnknown command!");
+  SendStatus(source,status);
 }
 

@@ -24,6 +24,9 @@ boolean sendData(struct EventStruct *event)
     }
   }
 
+  if (Settings.GlobalSync && Settings.TaskDeviceGlobalSync[event->TaskIndex])
+    SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
+
   if (!Settings.TaskDeviceSendData[event->TaskIndex])
     return false;
 
@@ -41,9 +44,6 @@ boolean sendData(struct EventStruct *event)
         backgroundtasks();
     }
   }
-
-  if (Settings.TaskDeviceGlobalSync[event->TaskIndex])
-    SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
 
   if (Settings.Protocol)
   {

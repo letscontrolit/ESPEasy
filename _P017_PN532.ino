@@ -48,6 +48,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = false;
+        Device[deviceCount].GlobalSyncOption = true;
         break;
       }
 

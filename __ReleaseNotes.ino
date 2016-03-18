@@ -1,3 +1,9 @@
+// R86 18-03-2016
+// Commmand output on tools/command into readonly textarea
+// Print "Ok" or "Unknown command" for commands. Most commands report back to source (serial,http,mqtt)
+// Enabled experimental globalsync feature (could display values from remote sensors on local OLED...)
+// Enabled experimental rules feature (used for testing but may also serve other purposes...)
+
 // R85 13-03-2016
 // Preparations for Arduino Core 2.1.0
 //   Fixed and tested HTTP authentication in C001

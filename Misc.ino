@@ -1802,7 +1802,7 @@ void rulesProcessing(String& event)
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
             if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
-              ExecuteCommand(action.c_str());
+              ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
           }
         }
       }
