@@ -5,24 +5,7 @@ boolean sendData(struct EventStruct *event)
 {
   LoadTaskSettings(event->TaskIndex);
   if (Settings.UseRules)
-  {
-    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
-    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-    {
-      LoadTaskSettings(event->TaskIndex);
-      String eventString = ExtraTaskSettings.TaskDeviceName;
-      eventString += F("#");
-      eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      eventString += F("=");
-      
-      if (event->sensorType == SENSOR_TYPE_LONG)
-        eventString += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-      else
-        eventString += UserVar[event->BaseVarIndex + varNr];
-      
-      rulesProcessing(eventString);
-    }
-  }
+    createRuleEvents(event->TaskIndex);
 
   if (Settings.GlobalSync && Settings.TaskDeviceGlobalSync[event->TaskIndex])
     SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
@@ -44,6 +27,8 @@ boolean sendData(struct EventStruct *event)
         backgroundtasks();
     }
   }
+
+  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
   if (Settings.Protocol)
   {

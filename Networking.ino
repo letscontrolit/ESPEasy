@@ -81,7 +81,7 @@ void checkUDP()
     {
       if (packetBuffer[1] > 1 && packetBuffer[1] < 6)
       {
-        String log = (F("UDP sensor msg: "));
+        String log = (F("UDP  : Sensor msg "));
         for (byte x = 1; x < 6; x++)
         {
           log += " ";
@@ -170,6 +170,8 @@ void checkUDP()
                 {
                   UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
                 }
+                if (Settings.UseRules)
+                  createRuleEvents(dataReply.destTaskIndex);
               }
             }
             break;

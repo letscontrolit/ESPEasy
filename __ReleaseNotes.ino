@@ -1,3 +1,8 @@
+// R87 18-03-2016
+// Remote sensors also create event for rules
+// Fixed IR sensor type, should be SENSOR_TYPE_LONG as it is a unsigned long value.
+//   Note: the resulting value will change because it was rounded to a limited precision float before!
+
 // R86 18-03-2016
 // Commmand output on tools/command into readonly textarea
 // Print "Ok" or "Unknown command" for commands. Most commands report back to source (serial,http,mqtt)

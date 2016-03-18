@@ -21,7 +21,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_016;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_LONG;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = true;
         Device[deviceCount].InverseLogicOption = true;
@@ -71,7 +71,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         {
           unsigned long IRcode = results.value;
           irReceiver->resume();
-          UserVar[event->BaseVarIndex] = IRcode;
+          UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
+          UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
           String log = F("IR   : Code ");
           log += String(IRcode, HEX);
           addLog(LOG_LEVEL_INFO, log);

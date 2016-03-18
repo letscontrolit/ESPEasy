@@ -1,6 +1,6 @@
 /*********************************************************************************************\
- * Parse a string and get the xth command or parameter
-\*********************************************************************************************/
+   Parse a string and get the xth command or parameter
+  \*********************************************************************************************/
 String parseString(String& string, byte indexFind)
 {
   String tmpString = string;
@@ -26,8 +26,8 @@ String parseString(String& string, byte indexFind)
 
 
 /*********************************************************************************************\
- * set pin mode & state (info table)
-\*********************************************************************************************/
+   set pin mode & state (info table)
+  \*********************************************************************************************/
 boolean setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
@@ -58,8 +58,8 @@ boolean setPinState(byte plugin, byte index, byte mode, uint16_t value)
 
 
 /*********************************************************************************************\
- * get pin mode & state (info table)
-\*********************************************************************************************/
+   get pin mode & state (info table)
+  \*********************************************************************************************/
 boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -74,8 +74,8 @@ boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
 
 
 /*********************************************************************************************\
- * check if pin mode & state is known (info table)
-\*********************************************************************************************/
+   check if pin mode & state is known (info table)
+  \*********************************************************************************************/
 boolean hasPinState(byte plugin, byte index)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -88,8 +88,8 @@ boolean hasPinState(byte plugin, byte index)
 
 
 /*********************************************************************************************\
- * report pin mode & state (info table) using json
-\*********************************************************************************************/
+   report pin mode & state (info table) using json
+  \*********************************************************************************************/
 String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
 {
   printToWebJSON = true;
@@ -113,7 +113,7 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
   if (!search || (search && found))
   {
     reply += F("{\n\"log\": \"");
-    reply += log.substring(7,32);  // truncate to 25 chars, max MQTT message size = 128 including header...
+    reply += log.substring(7, 32); // truncate to 25 chars, max MQTT message size = 128 including header...
     reply += F("\",\n\"plugin\": ");
     reply += plugin;
     reply += F(",\n\"pin\": ");
@@ -147,8 +147,8 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
 
 
 /********************************************************************************************\
-* Unsigned long Timer timeOut check
-\*********************************************************************************************/
+  Unsigned long Timer timeOut check
+  \*********************************************************************************************/
 
 boolean timeOut(unsigned long timer)
 {
@@ -165,8 +165,8 @@ boolean timeOut(unsigned long timer)
 
 
 /********************************************************************************************\
-* Status LED
-\*********************************************************************************************/
+  Status LED
+  \*********************************************************************************************/
 void statusLED(boolean traffic)
 {
   if (Settings.Pin_status_led == -1)
@@ -200,8 +200,8 @@ void statusLED(boolean traffic)
 
 
 /********************************************************************************************\
-* delay in milliseconds with background processing
-\*********************************************************************************************/
+  delay in milliseconds with background processing
+  \*********************************************************************************************/
 void delayMillis(unsigned long delay)
 {
   unsigned long timer = millis() + delay;
@@ -211,8 +211,8 @@ void delayMillis(unsigned long delay)
 
 
 /********************************************************************************************\
-* Parse a command string to event struct
-\*********************************************************************************************/
+  Parse a command string to event struct
+  \*********************************************************************************************/
 void parseCommandString(struct EventStruct *event, String& string)
 {
   char command[80];
@@ -231,8 +231,8 @@ void parseCommandString(struct EventStruct *event, String& string)
 }
 
 /********************************************************************************************\
-* Clear task settings for given task
-\*********************************************************************************************/
+  Clear task settings for given task
+  \*********************************************************************************************/
 void taskClear(byte taskIndex, boolean save)
 {
   Settings.TaskDeviceNumber[taskIndex] = 0;
@@ -264,8 +264,8 @@ void taskClear(byte taskIndex, boolean save)
 
 
 /********************************************************************************************\
-* Use DNS to resolve hostname to ip address
-\*********************************************************************************************/
+  Use DNS to resolve hostname to ip address
+  \*********************************************************************************************/
 void getIPfromHostName()
 {
   IPAddress IP;
@@ -279,8 +279,8 @@ void getIPfromHostName()
 
 
 /********************************************************************************************\
-* Fix stuff to clear out differences between releases
-\*********************************************************************************************/
+  Fix stuff to clear out differences between releases
+  \*********************************************************************************************/
 void BuildFixes()
 {
   Serial.println(F("\nBuild changed!"));
@@ -368,8 +368,8 @@ void fileSystemCheck()
 
 
 /********************************************************************************************\
-* Find device index corresponding to task number setting
-\*********************************************************************************************/
+  Find device index corresponding to task number setting
+  \*********************************************************************************************/
 byte getDeviceIndex(byte Number)
 {
   byte DeviceIndex = 0;
@@ -381,8 +381,8 @@ byte getDeviceIndex(byte Number)
 
 
 /********************************************************************************************\
-* Find protocol index corresponding to protocol setting
-\*********************************************************************************************/
+  Find protocol index corresponding to protocol setting
+  \*********************************************************************************************/
 byte getProtocolIndex(byte Number)
 {
   byte ProtocolIndex = 0;
@@ -394,8 +394,8 @@ byte getProtocolIndex(byte Number)
 
 
 /********************************************************************************************\
-* Find positional parameter in a char string
-\*********************************************************************************************/
+  Find positional parameter in a char string
+  \*********************************************************************************************/
 boolean GetArgv(const char *string, char *argv, int argc)
 {
   int string_pos = 0, argv_pos = 0, argc_pos = 0;
@@ -438,8 +438,8 @@ boolean GetArgv(const char *string, char *argv, int argc)
 
 
 /********************************************************************************************\
-* Convert a char string to integer
-\*********************************************************************************************/
+  Convert a char string to integer
+  \*********************************************************************************************/
 unsigned long str2int(char *string)
 {
   unsigned long temp = atof(string);
@@ -448,8 +448,8 @@ unsigned long str2int(char *string)
 
 
 /********************************************************************************************\
-* Convert a char string to IP byte array
-\*********************************************************************************************/
+  Convert a char string to IP byte array
+  \*********************************************************************************************/
 boolean str2ip(char *string, byte* IP)
 {
   byte c;
@@ -485,8 +485,8 @@ boolean str2ip(char *string, byte* IP)
 
 
 /********************************************************************************************\
-* Save settings to SPIFFS
-\*********************************************************************************************/
+  Save settings to SPIFFS
+  \*********************************************************************************************/
 void SaveSettings(void)
 {
 #if FEATURE_SPIFFS
@@ -500,8 +500,8 @@ void SaveSettings(void)
 
 
 /********************************************************************************************\
-* Load settings from SPIFFS
-\*********************************************************************************************/
+  Load settings from SPIFFS
+  \*********************************************************************************************/
 boolean LoadSettings()
 {
 #if FEATURE_SPIFFS
@@ -515,8 +515,8 @@ boolean LoadSettings()
 
 
 /********************************************************************************************\
-* Save Task settings to SPIFFS
-\*********************************************************************************************/
+  Save Task settings to SPIFFS
+  \*********************************************************************************************/
 void SaveTaskSettings(byte TaskIndex)
 {
   ExtraTaskSettings.TaskIndex = TaskIndex;
@@ -529,8 +529,8 @@ void SaveTaskSettings(byte TaskIndex)
 
 
 /********************************************************************************************\
-* Load Task settings from SPIFFS
-\*********************************************************************************************/
+  Load Task settings from SPIFFS
+  \*********************************************************************************************/
 void LoadTaskSettings(byte TaskIndex)
 {
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
@@ -545,8 +545,8 @@ void LoadTaskSettings(byte TaskIndex)
 
 
 /********************************************************************************************\
-* Save Custom Task settings to SPIFFS
-\*********************************************************************************************/
+  Save Custom Task settings to SPIFFS
+  \*********************************************************************************************/
 void SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   if (datasize > 512)
@@ -560,8 +560,8 @@ void SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-* Save Custom Task settings to SPIFFS
-\*********************************************************************************************/
+  Save Custom Task settings to SPIFFS
+  \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   if (datasize > 512)
@@ -576,8 +576,8 @@ void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 #if FEATURE_SPIFFS
 /********************************************************************************************\
-* Save data into config file on SPIFFS
-\*********************************************************************************************/
+  Save data into config file on SPIFFS
+  \*********************************************************************************************/
 void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
   File f = SPIFFS.open(fname, "r+");
@@ -598,8 +598,8 @@ void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-* Load data from config file on SPIFFS
-\*********************************************************************************************/
+  Load data from config file on SPIFFS
+  \*********************************************************************************************/
 void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
   File f = SPIFFS.open(fname, "r+");
@@ -619,8 +619,8 @@ void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-* Save data to flash
-\*********************************************************************************************/
+  Save data to flash
+  \*********************************************************************************************/
 void SaveToFlash(int index, byte* memAddress, int datasize)
 {
   if (index > 33791) // Limit usable flash area to 32+1k size
@@ -657,8 +657,8 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-* Load data from flash
-\*********************************************************************************************/
+  Load data from flash
+  \*********************************************************************************************/
 void LoadFromFlash(int index, byte* memAddress, int datasize)
 {
   uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
@@ -680,8 +680,8 @@ void LoadFromFlash(int index, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-* Erase data on flash
-\*********************************************************************************************/
+  Erase data on flash
+  \*********************************************************************************************/
 void ZeroFillFlash()
 {
   // this will fill the SPIFFS area with a 64k block of all zeroes.
@@ -716,8 +716,8 @@ void ZeroFillFlash()
 
 
 /********************************************************************************************\
-* Erase all content on flash (except sketch)
-\*********************************************************************************************/
+  Erase all content on flash (except sketch)
+  \*********************************************************************************************/
 void EraseFlash()
 {
   uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
@@ -739,8 +739,8 @@ void EraseFlash()
 
 
 /********************************************************************************************\
-* Check SPIFFS area settings
-\*********************************************************************************************/
+  Check SPIFFS area settings
+  \*********************************************************************************************/
 int SpiffsSectors()
 {
   uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
@@ -750,8 +750,8 @@ int SpiffsSectors()
 
 
 /********************************************************************************************\
-* Check flash chip (beyond sketch size)
-\*********************************************************************************************/
+  Check flash chip (beyond sketch size)
+  \*********************************************************************************************/
 void CheckFlash(int start, int end)
 {
   //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
@@ -792,8 +792,8 @@ void CheckFlash(int start, int end)
 
 
 /********************************************************************************************\
-* Reset all settings to factory defaults
-\*********************************************************************************************/
+  Reset all settings to factory defaults
+  \*********************************************************************************************/
 void ResetFactory(void)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
@@ -880,8 +880,8 @@ void ResetFactory(void)
 
 
 /********************************************************************************************\
-* If RX and TX tied together, perform emergency reset to get the system out of boot loops
-\*********************************************************************************************/
+  If RX and TX tied together, perform emergency reset to get the system out of boot loops
+  \*********************************************************************************************/
 
 void emergencyReset()
 {
@@ -901,8 +901,8 @@ void emergencyReset()
 
 
 /********************************************************************************************\
-* Get free system mem
-\*********************************************************************************************/
+  Get free system mem
+  \*********************************************************************************************/
 extern "C" {
 #include "user_interface.h"
 }
@@ -914,8 +914,8 @@ unsigned long FreeMem(void)
 
 
 /********************************************************************************************\
-* In memory convert float to long
-\*********************************************************************************************/
+  In memory convert float to long
+  \*********************************************************************************************/
 unsigned long float2ul(float f)
 {
   unsigned long ul;
@@ -925,8 +925,8 @@ unsigned long float2ul(float f)
 
 
 /********************************************************************************************\
-* In memory convert long to float
-\*********************************************************************************************/
+  In memory convert long to float
+  \*********************************************************************************************/
 float ul2float(unsigned long ul)
 {
   float f;
@@ -936,8 +936,8 @@ float ul2float(unsigned long ul)
 
 
 /********************************************************************************************\
-* Add to log
-\*********************************************************************************************/
+  Add to log
+  \*********************************************************************************************/
 void addLog(byte loglevel, String& string)
 {
   addLog(loglevel, string.c_str());
@@ -964,8 +964,8 @@ void addLog(byte loglevel, const char *line)
 
 
 /********************************************************************************************\
-* Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
-\*********************************************************************************************/
+  Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
+  \*********************************************************************************************/
 void delayedReboot(int rebootDelay)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
@@ -981,8 +981,8 @@ void delayedReboot(int rebootDelay)
 
 
 /********************************************************************************************\
-* Save a byte to RTC memory
-\*********************************************************************************************/
+  Save a byte to RTC memory
+  \*********************************************************************************************/
 #define RTC_BASE 65 // system doc says user area starts at 64, but it does not work (?)
 void saveToRTC(byte Par1)
 {
@@ -993,8 +993,8 @@ void saveToRTC(byte Par1)
 
 
 /********************************************************************************************\
-* Read a byte from RTC memory
-\*********************************************************************************************/
+  Read a byte from RTC memory
+  \*********************************************************************************************/
 boolean readFromRTC(byte* data)
 {
   byte buf[3] = {0, 0, 0};
@@ -1009,8 +1009,8 @@ boolean readFromRTC(byte* data)
 
 
 /********************************************************************************************\
-* Convert a string like "Sun,12:30" into a 32 bit integer
-\*********************************************************************************************/
+  Convert a string like "Sun,12:30" into a 32 bit integer
+  \*********************************************************************************************/
 unsigned long string2TimeLong(String &str)
 {
   // format 0000WWWWAAAABBBBCCCCDDDD
@@ -1061,8 +1061,8 @@ unsigned long string2TimeLong(String &str)
 
 
 /********************************************************************************************\
-* Convert  a 32 bit integer into a string like "Sun,12:30"
-\*********************************************************************************************/
+  Convert  a 32 bit integer into a string like "Sun,12:30"
+  \*********************************************************************************************/
 String timeLong2String(unsigned long lngTime)
 {
   unsigned long x = 0;
@@ -1207,8 +1207,8 @@ String parseTemplate(String &tmpString, byte lineSize)
 
 
 /********************************************************************************************\
-* Calculate function for simple expressions
-\*********************************************************************************************/
+  Calculate function for simple expressions
+  \*********************************************************************************************/
 #define CALCULATE_OK                            0
 #define CALCULATE_ERROR_STACK_OVERFLOW          1
 #define CALCULATE_ERROR_BAD_OPERATOR            2
@@ -1469,8 +1469,8 @@ int Calculate(const char *input, float* result)
 
 
 /********************************************************************************************\
-* Time stuff
-\*********************************************************************************************/
+  Time stuff
+  \*********************************************************************************************/
 #if FEATURE_TIME
 
 #define SECS_PER_MIN  (60UL)
@@ -1685,8 +1685,8 @@ unsigned long getNtpTime()
 
 
 /********************************************************************************************\
-* Very Experimental rules processing
-\*********************************************************************************************/
+  Very Experimental rules processing
+  \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
   unsigned long timer = micros();
@@ -1818,8 +1818,8 @@ void rulesProcessing(String& event)
 
 
 /********************************************************************************************\
-* Check if an event matches to a given rule
-\*********************************************************************************************/
+  Check if an event matches to a given rule
+  \*********************************************************************************************/
 boolean ruleMatch(String& event, String& rule)
 {
   boolean match = false;
@@ -1898,8 +1898,8 @@ boolean ruleMatch(String& event, String& rule)
 
 
 /********************************************************************************************\
-* Check expression
-\*********************************************************************************************/
+  Check expression
+  \*********************************************************************************************/
 boolean conditionMatch(String& check)
 {
   boolean match = false;
@@ -1963,8 +1963,8 @@ boolean conditionMatch(String& check)
 
 
 /********************************************************************************************\
-* Check rule timers
-\*********************************************************************************************/
+  Check rule timers
+  \*********************************************************************************************/
 void rulesTimers()
 {
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
@@ -1982,3 +1982,29 @@ void rulesTimers()
   }
 }
 
+
+/********************************************************************************************\
+  Generate rule events based on task refresh
+  \*********************************************************************************************/
+
+void createRuleEvents(byte TaskIndex)
+{
+  LoadTaskSettings(TaskIndex);
+  byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+  byte sensorType = Device[DeviceIndex].VType;
+  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+  {
+    String eventString = ExtraTaskSettings.TaskDeviceName;
+    eventString += F("#");
+    eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+    eventString += F("=");
+
+    if (sensorType == SENSOR_TYPE_LONG)
+      eventString += (unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+    else
+      eventString += UserVar[BaseVarIndex + varNr];
+
+    rulesProcessing(eventString);
+  }
+}
