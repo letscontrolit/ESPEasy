@@ -110,7 +110,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   if (longValue)
     url.replace("%value%", String(longValue));
   else
-    url.replace("%value%", String(value));
+    url.replace("%value%", String(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
 
   url.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, log);

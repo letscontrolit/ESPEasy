@@ -1,3 +1,9 @@
+// R88 19-03-2016
+// Option to set decimals for sensor values reported to controller and display. (internal precision remains unchanged)
+// Changed DHT plugin timing, 40 -> 20 uSec
+// Increased taskname and valuename fieldsize from 25->40
+//   IMPORTANT NOTE: Stored settings to file will become invalid, need to resave after upgrade to R88!
+
 // R87 18-03-2016
 // Remote sensors also create event for rules
 // Fixed IR sensor type, should be SENSOR_TYPE_LONG as it is a unsigned long value.

@@ -254,6 +254,7 @@ void taskClear(byte taskIndex, boolean save)
   {
     ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
     ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
+    ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = 2;
   }
   if (save)
   {
@@ -320,6 +321,39 @@ void BuildFixes()
     {
       LoadTaskSettings(x);
       SaveTaskSettings(x);
+    }
+  }
+
+  if (Settings.Build < 88)
+  {
+    struct ExtraTaskSettingsStruct_old
+    {
+      byte    TaskIndex;
+      char    TaskDeviceName[26];
+      char    TaskDeviceFormula[VARS_PER_TASK][41];
+      char    TaskDeviceValueNames[VARS_PER_TASK][26];
+      long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
+      byte    TaskDeviceValueDecimals[VARS_PER_TASK];
+    } ExtraTaskSettings_old;
+
+    Serial.println(F("Fix extratasksettings"));
+    for (byte TaskIndex = 0; TaskIndex < TASKS_MAX; TaskIndex++)
+    {
+      LoadFromFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings_old, sizeof(struct ExtraTaskSettingsStruct_old));
+
+      ExtraTaskSettings.TaskIndex = ExtraTaskSettings_old.TaskIndex;
+      strcpy(ExtraTaskSettings.TaskDeviceName, ExtraTaskSettings_old.TaskDeviceName);
+      for (byte x = 0; x < VARS_PER_TASK; x++)
+      {
+        strcpy(ExtraTaskSettings.TaskDeviceFormula[x], ExtraTaskSettings_old.TaskDeviceFormula[x]);
+        strcpy(ExtraTaskSettings.TaskDeviceValueNames[x], ExtraTaskSettings_old.TaskDeviceValueNames[x]);
+        ExtraTaskSettings.TaskDeviceValueDecimals[x] = 2;
+      }
+      for (byte x = 0; x < PLUGIN_EXTRACONFIGVAR_MAX; x++)
+      {
+        ExtraTaskSettings.TaskDevicePluginConfigLong[x] = ExtraTaskSettings_old.TaskDevicePluginConfigLong[x];
+      }
+      SaveToFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
     }
   }
 
@@ -1155,7 +1189,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                 if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
                 {
                   // here we know the task and value, so find the uservar
-                  String value = String(UserVar[y * VARS_PER_TASK + z]);
+                  String value = String(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
                   if (valueFormat == "R")
                   {
                     int filler = lineSize - newString.length() - value.length() - tmpString.length() ;

@@ -51,12 +51,11 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         if (connectionFailures)
           connectionFailures--;
 
-        float value = UserVar[event->BaseVarIndex];
         // We now create a URI for the request
         String url = F("variableset ");
         url += event->idx;
         url += ",";
-        url += value;
+        url += String(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
         url += "\n";
 
         strcpy_P(log, PSTR("TELNT: Sending enter"));

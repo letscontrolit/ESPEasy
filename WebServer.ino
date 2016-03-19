@@ -636,6 +636,7 @@ void handle_devices() {
   String taskdeviceport = WebServer.arg("taskdeviceport");
   String taskdeviceformula[VARS_PER_TASK];
   String taskdevicevaluename[VARS_PER_TASK];
+  String taskdevicevaluedecimals[VARS_PER_TASK];
   String taskdevicesenddata = WebServer.arg("taskdevicesenddata");
   String taskdeviceglobalsync = WebServer.arg("taskdeviceglobalsync");
 
@@ -651,6 +652,11 @@ void handle_devices() {
     arg += varNr + 1;
     arg.toCharArray(argc, 25);
     taskdevicevaluename[varNr] = WebServer.arg(argc);
+
+    arg = "taskdevicevaluedecimals";
+    arg += varNr + 1;
+    arg.toCharArray(argc, 25);
+    taskdevicevaluedecimals[varNr] = WebServer.arg(argc);
   }
 
   String edit = WebServer.arg("edit");
@@ -687,7 +693,7 @@ void handle_devices() {
       else
         Settings.TaskDeviceTimer[index - 1] = Settings.Delay;
 
-      taskdevicename.toCharArray(tmpString, 26);
+      taskdevicename.toCharArray(tmpString, 41);
       strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
       if (Settings.TaskDeviceNumber[index - 1] != 0)
@@ -732,13 +738,14 @@ void handle_devices() {
       {
         taskdeviceformula[varNr].toCharArray(tmpString, 41);
         strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
+        ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = taskdevicevaluedecimals[varNr].toInt();
       }
 
       // task value names handling.
       TempEvent.TaskIndex = index - 1;
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
-        taskdevicevaluename[varNr].toCharArray(tmpString, 26);
+        taskdevicevaluename[varNr].toCharArray(tmpString, 41);
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       }
       TempEvent.TaskIndex = index - 1;
@@ -857,7 +864,7 @@ void handle_devices() {
           reply += F("<div class=\"div_l\">");
           reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
           reply += F(":</div><div class=\"div_r\">");
-          reply += UserVar[x * VARS_PER_TASK + varNr];
+          reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
           reply += "</div>";
         }
       }
@@ -886,7 +893,7 @@ void handle_devices() {
       reply += Settings.TaskDeviceNumber[index - 1];
       reply += F("\" target=\"_blank\">?</a>");
 
-      reply += F("<TR><TD>Name:<TD><input type='text' maxlength='25' name='taskdevicename' value='");
+      reply += F("<TR><TD>Name:<TD><input type='text' maxlength='40' name='taskdevicename' value='");
       reply += ExtraTaskSettings.TaskDeviceName;
       reply += F("'>");
 
@@ -973,11 +980,18 @@ void handle_devices() {
           {
             reply += F("<TR><TD>Formula ");
             reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-            reply += F(":<TD><input type='text' maxlength='25' name='taskdeviceformula");
+            reply += F(":<TD><input type='text' maxlength='40' name='taskdeviceformula");
             reply += varNr + 1;
             reply += F("' value='");
             reply += ExtraTaskSettings.TaskDeviceFormula[varNr];
             reply += F("'>");
+
+            reply += F(" Decimals: <input type='text' name='taskdevicevaluedecimals");
+            reply += varNr + 1;
+            reply += F("' value='");
+            reply += ExtraTaskSettings.TaskDeviceValueDecimals[varNr];
+            reply += F("'>");
+           
             if (varNr == 0)
               reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
           }
@@ -987,7 +1001,7 @@ void handle_devices() {
         {
           reply += F("<TR><TD>Value Name ");
           reply += varNr + 1;
-          reply += F(":<TD><input type='text' maxlength='25' name='taskdevicevaluename");
+          reply += F(":<TD><input type='text' maxlength='40' name='taskdevicevaluename");
           reply += varNr + 1;
           reply += F("' value='");
           reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];

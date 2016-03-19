@@ -96,7 +96,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
         delay(18);
         digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
-        delayMicroseconds(40);
+        delayMicroseconds(20); // was 40
         pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
         delayMicroseconds(10);
 

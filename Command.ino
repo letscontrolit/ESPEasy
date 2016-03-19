@@ -20,6 +20,13 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for debugging
   // ****************************************
 
+    if (strcasecmp_P(Command, PSTR("size")) == 0)
+  {
+    Serial.print("size settings:");
+    Serial.println(sizeof(SettingsStruct));
+    Serial.print("size extrasettings:");
+    Serial.println(sizeof(ExtraTaskSettingsStruct));
+  }
   if (strcasecmp_P(Command, PSTR("pinstates")) == 0)
   {
     success = true;
