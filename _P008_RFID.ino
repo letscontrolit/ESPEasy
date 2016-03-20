@@ -50,17 +50,6 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         break;
       }
       
-    case PLUGIN_WEBFORM_SHOW_VALUES:
-      {
-        string += F("<div class=\"div_l\">");
-        string += ExtraTaskSettings.TaskDeviceValueNames[0];
-        string += F(":</div><div class=\"div_r\">");
-        string += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-        string += F("</div>");
-        success = true;
-        break;
-      }
-      
     case PLUGIN_INIT:
       {
         Plugin_008_init = true;
@@ -94,7 +83,6 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             String log = F("RFID : Tag: ");
             log += Plugin_008_keyBuffer;
             addLog(LOG_LEVEL_INFO, log);
-            event->sensorType = SENSOR_TYPE_LONG;
             sendData(event);
           }
 

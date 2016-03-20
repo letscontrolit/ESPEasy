@@ -1,3 +1,8 @@
+// R89 20-03-2016
+// Added simple load indicator by counting and comparing idle loop counts during initial delay and working mode.
+// Moved custom value display of SENSOR_TYPE_LONG from plugins to webserver.ino
+// Changed <Base64.h> to <base64.h>, case sensitivity issue on Linux
+
 // R88 19-03-2016
 // Option to set decimals for sensor values reported to controller and display. (internal precision remains unchanged)
 // Changed DHT plugin timing, 40 -> 20 uSec

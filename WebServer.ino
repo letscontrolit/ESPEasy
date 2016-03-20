@@ -176,6 +176,15 @@ void handle_root() {
     }
 #endif
 
+    reply += F("<TR><TD>Load:<TD>");
+    if (wdcounter > 0)
+    {
+      reply += 100 - (100 * loopCounterLast / loopCounterMax);
+      reply += F("% (LC=");
+      reply += int(loopCounterLast / 30);
+      reply += F(")");
+    }
+
     reply += F("<TR><TD>Uptime:<TD>");
     reply += wdcounter / 2;
     reply += F(" minutes");
@@ -221,7 +230,7 @@ void handle_root() {
     reply += ESP.getFlashChipId();
 
     reply += F("<TR><TD>Flash Size:<TD>");
-    reply += ESP.getFlashChipRealSize()/1024; //ESP.getFlashChipSize();
+    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
     reply += F(" kB");
 
     reply += F("<TR><TD>Free Mem:<TD>");
@@ -724,7 +733,7 @@ void handle_devices() {
 
       if (Settings.GlobalSync)
       {
-        if(Device[DeviceIndex].GlobalSyncOption)
+        if (Device[DeviceIndex].GlobalSyncOption)
           Settings.TaskDeviceGlobalSync[index - 1] = (taskdeviceglobalsync == "on");
 
         // Send task info if set global
@@ -733,7 +742,7 @@ void handle_devices() {
           SendUDPTaskInfo(0, index - 1, index - 1);
         }
       }
-      
+
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
         taskdeviceformula[varNr].toCharArray(tmpString, 41);
@@ -855,17 +864,28 @@ void handle_devices() {
     customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
     if (!customValues)
     {
-      for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+      if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
       {
-        if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+        reply  += F("<div class=\"div_l\">");
+        reply  += ExtraTaskSettings.TaskDeviceValueNames[0];
+        reply  += F(":</div><div class=\"div_r\">");
+        reply  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
+        reply  += F("</div>");
+      }
+      else
+      {
+        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
-          if (varNr > 0)
-            reply += F("<div class=\"div_br\"></div>");
-          reply += F("<div class=\"div_l\">");
-          reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-          reply += F(":</div><div class=\"div_r\">");
-          reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
-          reply += "</div>";
+          if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+          {
+            if (varNr > 0)
+              reply += F("<div class=\"div_br\"></div>");
+            reply += F("<div class=\"div_l\">");
+            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+            reply += F(":</div><div class=\"div_r\">");
+            reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+            reply += "</div>";
+          }
         }
       }
     }
@@ -991,7 +1011,7 @@ void handle_devices() {
             reply += F("' value='");
             reply += ExtraTaskSettings.TaskDeviceValueDecimals[varNr];
             reply += F("'>");
-           
+
             if (varNr == 0)
               reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
           }
@@ -1342,20 +1362,20 @@ void handle_tools() {
   printWebString = "";
 
   if (webrequest.length() > 0)
-   {
-     struct EventStruct TempEvent;
-     parseCommandString(&TempEvent, webrequest);
-     TempEvent.Source = VALUE_SOURCE_HTTP;
-     if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
-       ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
-   }
-   
+  {
+    struct EventStruct TempEvent;
+    parseCommandString(&TempEvent, webrequest);
+    TempEvent.Source = VALUE_SOURCE_HTTP;
+    if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
+      ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+  }
+
   if (printWebString.length() > 0)
-    {
-      reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
-      reply += printWebString;
-      reply += F("</textarea>");
-    }
+  {
+    reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
+    reply += printWebString;
+    reply += F("</textarea>");
+  }
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -1529,7 +1549,7 @@ void handle_control() {
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
   TempEvent.Source = VALUE_SOURCE_HTTP;
-  
+
   printToWeb = true;
   printWebString = "";
   String reply = "";
@@ -2061,12 +2081,12 @@ void handle_download() {
 
   WiFiClient client = WebServer.client();
   /*client.print("HTTP/1.1 200 OK\r\n");
-  client.print("Content-Disposition: attachment; filename=config.txt\r\n");
-  client.print("Content-Type: application/octet-stream\r\n");
-  client.print("Content-Length: 32768\r\n");
-  client.print("Connection: close\r\n");
-  client.print("Access-Control-Allow-Origin: *\r\n");
-  client.print("\r\n");
+    client.print("Content-Disposition: attachment; filename=config.txt\r\n");
+    client.print("Content-Type: application/octet-stream\r\n");
+    client.print("Content-Length: 32768\r\n");
+    client.print("Connection: close\r\n");
+    client.print("Access-Control-Allow-Origin: *\r\n");
+    client.print("\r\n");
   */
   WebServer.setContentLength(32768);
   WebServer.sendHeader("Content-Disposition", "attachment; filename=config.txt");

@@ -72,17 +72,6 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_SHOW_VALUES:
-      {
-        string += F("<div class=\"div_l\">");
-        string += ExtraTaskSettings.TaskDeviceValueNames[0];
-        string += F(":</div><div class=\"div_r\">");
-        string += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-        string += F("</div>");
-        success = true;
-        break;
-      }
-
     case PLUGIN_INIT:
       {
         for(byte x=0; x < 3; x++)
@@ -144,7 +133,6 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             log += " ";
             log += tempcounter;
             addLog(LOG_LEVEL_INFO, log);
-            event->sensorType = SENSOR_TYPE_LONG;
             sendData(event);
           }
         }

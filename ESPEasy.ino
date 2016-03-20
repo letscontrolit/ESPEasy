@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              88
+#define BUILD                              89
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -200,7 +200,7 @@
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
 #if ESP_CORE >= 210
-  #include <Base64.h>
+  #include <base64.h>
 #endif
 #define LWIP_OPEN_SRC
 #include "lwip/opt.h"
@@ -434,6 +434,8 @@ boolean wifiSetupConnect = false;
 unsigned long start = 0;
 unsigned long elapsed = 0;
 unsigned long loopCounter = 0;
+unsigned long loopCounterLast = 0;
+unsigned long loopCounterMax = 1;
 
 /*********************************************************************************************\
  * SETUP
@@ -642,6 +644,8 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  timer1s = millis() + 1000;
+
   checkSensors();
 
   if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
@@ -680,7 +684,6 @@ void runOncePerSecond()
 
   timer = micros() - timer;
 
-  timer1s = millis() + 1000;
   WifiCheck();
 
   if (SecuritySettings.Password[0] != 0)
@@ -704,10 +707,7 @@ void runOncePerSecond()
     Serial.print(F("10 ps:"));
     Serial.print(elapsed);
     Serial.print(F(" uS  1 ps:"));
-    Serial.print(timer);
-    Serial.print(F(" uS  LC:"));
-    Serial.println(loopCounter);
-    loopCounter = 0;
+    Serial.println(timer);
   }
 }
 
@@ -731,6 +731,10 @@ void runEach30Seconds()
   if (Settings.UseSSDP)
     SSDP_update();
 #endif
+  loopCounterLast = loopCounter;
+  loopCounter = 0;
+  if (loopCounterLast > loopCounterMax)
+    loopCounterMax = loopCounterLast;
 }
 
 
