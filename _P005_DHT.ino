@@ -107,7 +107,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
           dht_in = digitalRead(Plugin_005_DHT_Pin);
           if (dht_in)
           {
-            delayMicroseconds(40);                     // now ready for data reception
+            delayMicroseconds(80);                     // now ready for data reception
             for (i = 0; i < 5; i++)
             {
               byte data = Plugin_005_read_dht_dat();
