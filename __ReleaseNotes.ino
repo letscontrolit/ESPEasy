@@ -1,3 +1,6 @@
+// R91 20-03-2016
+// Added globalsync option to Dallas plugin config
+
 // R90 20-03-2016
 // Changed DHT plugin timing, start pulse delay wait was 80/40, should be 80/80. It could result in reading 'half' values.
 
