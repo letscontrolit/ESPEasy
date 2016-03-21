@@ -35,7 +35,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
-      
+
     case PLUGIN_GET_DEVICENAME:
       {
         string = F(PLUGIN_NAME_003);
@@ -65,7 +65,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+
     case PLUGIN_WEBFORM_SHOW_VALUES:
       {
         string += ExtraTaskSettings.TaskDeviceValueNames[0];
@@ -95,6 +95,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
+        UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
         Plugin_003_pulseCounter[event->TaskIndex] = 0;
         success = true;
         break;
@@ -194,4 +195,3 @@ void Plugin_003_pulseinit(byte Par1, byte Index)
       break;
   }
 }
-
