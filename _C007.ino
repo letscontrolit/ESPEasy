@@ -62,7 +62,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
-            postDataStr += String(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
             postDataStr += "}";
             break;
           case SENSOR_TYPE_TEMP_HUM:                      // dual value
@@ -70,26 +70,26 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
-            postDataStr += String(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
             postDataStr += F(",field");
             postDataStr += event->idx + 1;
             postDataStr += ":";
-            postDataStr += String(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             postDataStr += "}";
             break;
           case SENSOR_TYPE_TEMP_HUM_BARO:
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
-            postDataStr += String(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
             postDataStr += F(",field");
             postDataStr += event->idx + 1;
             postDataStr += ":";
-            postDataStr += String(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             postDataStr += F(",field");
             postDataStr += event->idx + 2;
             postDataStr += ":";
-            postDataStr += String(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+            postDataStr += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
             postDataStr += "}";
             break;
           case SENSOR_TYPE_SWITCH:

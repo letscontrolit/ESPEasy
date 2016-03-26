@@ -1,4 +1,14 @@
 /*********************************************************************************************\
+   Workaround for removing trailing white space when String() converts a float with 0 decimals
+\*********************************************************************************************/
+String toString(float value, byte decimals)
+{
+  String sValue = String(value, decimals);
+  sValue.trim();
+  return sValue;
+}
+
+/*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
 String parseString(String& string, byte indexFind)

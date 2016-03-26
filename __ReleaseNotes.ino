@@ -1,3 +1,6 @@
+// R92 26-03-2016
+// Fixed rounding bug, it seems that String() has a bug with 0 decimals, adding a trailing white space. Fixed with toString wrapper.
+
 // R91 20-03-2016
 // Added globalsync option to Dallas plugin config
 
