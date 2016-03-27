@@ -585,6 +585,7 @@ void LoadTaskSettings(byte TaskIndex)
 #else
   LoadFromFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 #endif
+  ExtraTaskSettings.TaskIndex == TaskIndex; // Needed when an empty task was requested
 }
 
 

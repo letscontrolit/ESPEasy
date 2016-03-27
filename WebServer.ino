@@ -970,7 +970,8 @@ void handle_devices() {
         }
       }
 
-      PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
+      if(Settings.TaskDeviceDataFeed[index -1] == 0) // only show additional config for local connected sensors
+        PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
       if (Device[DeviceIndex].SendDataOption)
       {
@@ -1709,9 +1710,9 @@ void handle_advanced() {
     Settings.UseSSDP = (usessdp == "on");
 #if ESP_CORE >= 210
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
+#endif
     Settings.UseRules = (userules == "on");
     Settings.GlobalSync = (globalsync == "on");
-#endif
     SaveSettings();
   }
 
@@ -2076,20 +2077,30 @@ void handle_download() {
   if (!isLoggedIn()) return;
 
   uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint32_t _sectorEnd = _sectorStart + 32; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+  uint32_t _sectorEnd = _sectorStart + 8; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
   uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
 
   WiFiClient client = WebServer.client();
-  /*client.print("HTTP/1.1 200 OK\r\n");
-    client.print("Content-Disposition: attachment; filename=config.txt\r\n");
-    client.print("Content-Type: application/octet-stream\r\n");
-    client.print("Content-Length: 32768\r\n");
-    client.print("Connection: close\r\n");
-    client.print("Access-Control-Allow-Origin: *\r\n");
-    client.print("\r\n");
-  */
   WebServer.setContentLength(32768);
-  WebServer.sendHeader("Content-Disposition", "attachment; filename=config.txt");
+  String attachment = F("attachment; filename=Config_");
+  attachment += Settings.Name;
+  attachment += F("_U");
+  attachment += Settings.Unit;
+  attachment += F("_R");
+  attachment += Settings.Build;
+  #if FEATURE_TIME
+    if (Settings.UseNTP)
+      {
+        attachment += F("_");
+        attachment += tm.Year+1970;
+        attachment += F("_");
+        attachment += tm.Month;
+        attachment += F("_");
+        attachment += tm.Day;
+      }
+  #endif
+  attachment += F(".txt");
+   WebServer.sendHeader("Content-Disposition", attachment);
   WebServer.send(200, "application/octet-stream", "");
 
   for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
@@ -2099,7 +2110,7 @@ void handle_download() {
     spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
     interrupts();
     client.write((const char*)data, 2048);
-    client.write((const char*)data + 2028, 2048);
+    client.write((const char*)data + 2048, 2048);
   }
   delete [] data;
 }
@@ -2182,8 +2193,11 @@ void handleFileUpload()
 
   if (upload.status == UPLOAD_FILE_START)
   {
+    String filename = upload.filename;
+    filename.toLowerCase();
     filetype = 0;
-    if (strcasecmp(upload.filename.c_str(), "config.txt") == 0)
+    
+    if (filename.startsWith("config"))
       filetype = 1;
     if (strcasecmp(upload.filename.c_str(), "esp.css") == 0)
     {

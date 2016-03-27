@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              92
+#define BUILD                              93
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -788,7 +788,7 @@ void SensorSend()
 \*********************************************************************************************/
 void SensorSendTask(byte TaskIndex)
 {
-  if (Settings.TaskDeviceDataFeed[TaskIndex] == 0 && Settings.TaskDeviceID[TaskIndex] != 0)
+  if (Settings.TaskDeviceID[TaskIndex] != 0)
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
 
@@ -806,7 +806,10 @@ void SensorSendTask(byte TaskIndex)
     for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
       preValue[varNr] = UserVar[varIndex + varNr];
 
-    success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
+    if(Settings.TaskDeviceDataFeed[TaskIndex] == 0)  // only read local connected sensorsfeeds
+      success = PluginCall(PLUGIN_READ, &TempEvent, dummyString);
+    else
+      success = true;
 
     if (success)
     {

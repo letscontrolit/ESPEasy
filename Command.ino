@@ -20,7 +20,16 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for debugging
   // ****************************************
 
-    if (strcasecmp_P(Command, PSTR("size")) == 0)
+  if (strcasecmp_P(Command, PSTR("taskdump")) == 0)
+  {
+    success = true;
+    LoadTaskSettings(Par1-1);
+    Serial.println(ExtraTaskSettings.TaskDeviceName);
+    for (byte x=0; x <4; x++)
+      Serial.println(ExtraTaskSettings.TaskDeviceValueNames[x]);
+  }
+  
+  if (strcasecmp_P(Command, PSTR("size")) == 0)
   {
     Serial.print("size settings:");
     Serial.println(sizeof(SettingsStruct));

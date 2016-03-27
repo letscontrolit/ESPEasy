@@ -1,5 +1,10 @@
+// R93 27-03-2016
+// Enabled senddata for remote feed sensors and suppressed additional config settings on remote feed tasks.
+// Settings save bug, sends 32 sectors instead of only 8 needed. Also the offset 2048 was wrong in the second client.write
+// Added Name, Unit number, Build and datestamp to the config file name, sample: Config_DemoESP_U12_R93_2016_3_27.txt
+
 // R92 26-03-2016
-// Fixed rounding bug, it seems that String() has a bug with 0 decimals, adding a trailing white space. Fixed with toString wrapper.
+// Fixed rounding bug, it seems that String() has a bug with 0 decimals, adding a leading white space. Fixed with toString wrapper.
 
 // R91 20-03-2016
 // Added globalsync option to Dallas plugin config
