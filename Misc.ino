@@ -1065,13 +1065,14 @@ unsigned long string2TimeLong(String &str)
   char TmpStr1[10];
   int w, x, y;
   unsigned long a;
+  str.toLowerCase();
   str.toCharArray(command, 20);
   unsigned long lngTime;
 
   if (GetArgv(command, TmpStr1, 1))
   {
     String day = TmpStr1;
-    String weekDays = F("AllSunMonTueWedThuFriSat");
+    String weekDays = F("allsunmontuewedthufrisat");
     y = weekDays.indexOf(TmpStr1) / 3;
     if (y == 0)
       y = 0xf; // wildcard is 0xf
@@ -1772,6 +1773,10 @@ void rulesProcessing(String& event)
       {
         isCommand = true;
 
+        int comment = line.indexOf("//");
+        if (comment > 0)
+          line = line.substring(0, comment);
+          
         line = parseTemplate(line, line.length());
 
         String eventTrigger = "";
@@ -1870,6 +1875,39 @@ boolean ruleMatch(String& event, String& rule)
   boolean match = false;
   String tmpEvent = event;
   String tmpRule = rule;
+
+  if (event.startsWith("Clock#Time")) // clock events need different handling...
+  {
+    int pos1 = event.indexOf("=");
+    int pos2 = rule.indexOf("=");
+    if (pos1 > 0 && pos2 > 0)
+    {
+      tmpEvent = event.substring(0,pos1);
+      tmpRule  = rule.substring(0,pos2);
+      if (tmpRule.equalsIgnoreCase(tmpEvent)) // if this is a clock rule
+      { 
+        tmpEvent = event.substring(pos1 + 1);
+        tmpRule  = rule.substring(pos2 + 1);
+        unsigned long clockEvent = string2TimeLong(tmpEvent);
+        unsigned long clockSet = string2TimeLong(tmpRule);
+        unsigned long Mask;
+        for (byte y = 0; y < 8; y++)
+          {
+          if (((clockSet >> (y * 4)) & 0xf) == 0xf)  // if nibble y has the wildcard value 0xf
+            {
+              Mask = 0xffffffff  ^ (0xFUL << (y * 4)); // Mask to wipe nibble position y.
+              clockEvent &= Mask;                      // clear nibble
+              clockEvent |= (0xFUL << (y * 4));        // fill with wildcard value 0xf
+            }
+          }
+        if (clockEvent == clockSet)
+          return true;
+        else
+          return false;
+      }
+    }
+  }
+
 
   // parse event into verb and value
   float value = 0;

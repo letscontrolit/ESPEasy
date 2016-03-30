@@ -2460,13 +2460,18 @@ void handle_rules() {
   interrupts();
 
   // check size of css file content
-  for (int x = 0; x < 4096; x++)
+  int x=0;
+  for (x = 0; x < 4096; x++)
     if (data[x] != 0)
       reply += char(data[x]);
     else
       break;
 
   reply += F("</textarea>");
+
+  reply += F("<TR><TD>Current size: ");
+  reply += x;
+  reply += F(" characters (Max 2048)");
 
   reply += F("<TR><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");

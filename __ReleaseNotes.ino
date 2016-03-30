@@ -1,3 +1,6 @@
+// R94 30-03-2016
+// Fix for clock event rules and added size counter for rules interface (currently 2048 byte max)
+
 // R93 27-03-2016
 // Enabled senddata for remote feed sensors and suppressed additional config settings on remote feed tasks.
 // Settings save bug, sends 32 sectors instead of only 8 needed. Also the offset 2048 was wrong in the second client.write
