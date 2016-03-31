@@ -795,48 +795,6 @@ int SpiffsSectors()
 
 
 /********************************************************************************************\
-  Check flash chip (beyond sketch size)
-  \*********************************************************************************************/
-void CheckFlash(int start, int end)
-{
-  //uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
-  //uint32_t _sectorEnd = _sectorStart + (ESP.getFlashChipRealSize() / SPI_FLASH_SEC_SIZE);
-
-  uint32_t _sectorStart = start;
-  uint32_t _sectorEnd = end;
-
-  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
-
-  uint8_t* tmpdata = data;
-  for (int x = 0; x < FLASH_EEPROM_SIZE; x++)
-  {
-    *tmpdata = 0xA5;
-    tmpdata++;
-  }
-
-  for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
-  {
-    boolean success = 0;
-    Serial.print(F("FLASH: Verify Sector: "));
-    Serial.print(_sector);
-    Serial.print(F(" : "));
-    delay(10);
-    noInterrupts();
-    //if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-    //if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-    if (spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-      success = true;
-    interrupts();
-    if (success)
-      Serial.println(F("OK"));
-    else
-      Serial.println(F("Fail"));
-  }
-  delete [] data;
-}
-
-
-/********************************************************************************************\
   Reset all settings to factory defaults
   \*********************************************************************************************/
 void ResetFactory(void)
@@ -895,6 +853,7 @@ void ResetFactory(void)
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
+  Settings.Pin_status_led  = -1;
   Settings.Protocol        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.SerialLogLevel  = 2;
@@ -948,10 +907,6 @@ void emergencyReset()
 /********************************************************************************************\
   Get free system mem
   \*********************************************************************************************/
-extern "C" {
-#include "user_interface.h"
-}
-
 unsigned long FreeMem(void)
 {
   return system_get_free_heap_size();

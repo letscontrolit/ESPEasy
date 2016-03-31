@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              94
+#define BUILD                              95
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -207,6 +207,10 @@ ESP8266HTTPUpdateServer httpUpdater(true);
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
 #include "include/UdpContext.h"
+
+extern "C" {
+#include "user_interface.h"
+}
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -498,7 +502,7 @@ void setup()
 
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
     WifiAPconfig();
-    WifiConnect();
+    WifiConnect(3);
 
     hardwareInit();
     PluginInit();
@@ -599,7 +603,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WifiConnect();
+    WifiConnect(1);
     wifiSetupConnect = false;
   }
 
@@ -684,8 +688,6 @@ void runOncePerSecond()
 
   timer = micros() - timer;
 
-  WifiCheck();
-
   if (SecuritySettings.Password[0] != 0)
   {
     if (WebLoggedIn)
@@ -735,6 +737,9 @@ void runEach30Seconds()
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
     loopCounterMax = loopCounterLast;
+
+  WifiCheck();
+  
 }
 
 

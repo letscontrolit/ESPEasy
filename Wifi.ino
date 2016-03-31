@@ -23,11 +23,6 @@ void WifiAPMode(boolean state)
   if (state)
   {
     AP_Mode = true;
-    char ap_ssid[20];
-    ap_ssid[0] = 0;
-    strcpy(ap_ssid, "ESP_");
-    sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
-    WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
     WiFi.mode(WIFI_AP_STA);
   }
   else
@@ -41,12 +36,9 @@ void WifiAPMode(boolean state)
 //********************************************************************************
 // Connect to Wifi AP
 //********************************************************************************
-boolean WifiConnect()
+boolean WifiConnect(byte connectAttempts)
 {
   String log = "";
-  byte connectAttempts = 3;
-  if (wifiSetup)
-    connectAttempts = 1;
     
   char hostName[sizeof(Settings.Name)];
   strcpy(hostName,Settings.Name);
@@ -182,28 +174,36 @@ void WifiScan()
 //********************************************************************************
 void WifiCheck()
 {
+  
   if(wifiSetup)
     return;
-  
+
+  String log = "";
+
   if (WiFi.status() != WL_CONNECTED)
   {
     NC_Count++;
-    if (NC_Count > 10 && !AP_Mode)
+    if (NC_Count > 2)
     {
-      C_Count = 0;
-      WifiAPMode(true);
+      WifiConnect(2);
+      C_Count=0;
+      if (WiFi.status() != WL_CONNECTED)
+        WifiAPMode(true);
+      NC_Count = 0;
     }
   }
   else
   {
     C_Count++;
     NC_Count = 0;
-    if (C_Count > 60)
+    if (C_Count > 2) // close AP after timeout if a Wifi connection is established...
     {
       byte wifimode = wifi_get_opmode();
       if (wifimode == 2 || wifimode == 3) //apmode is active
       {
         WifiAPMode(false);
+        log = F("WIFI : AP Mode inactive");
+        addLog(LOG_LEVEL_INFO, log);
       }
     }
   }

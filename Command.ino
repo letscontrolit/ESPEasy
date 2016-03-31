@@ -20,73 +20,11 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for debugging
   // ****************************************
 
-  if (strcasecmp_P(Command, PSTR("taskdump")) == 0)
-  {
-    success = true;
-    LoadTaskSettings(Par1-1);
-    Serial.println(ExtraTaskSettings.TaskDeviceName);
-    for (byte x=0; x <4; x++)
-      Serial.println(ExtraTaskSettings.TaskDeviceValueNames[x]);
-  }
-  
-  if (strcasecmp_P(Command, PSTR("size")) == 0)
-  {
-    Serial.print("size settings:");
-    Serial.println(sizeof(SettingsStruct));
-    Serial.print("size extrasettings:");
-    Serial.println(sizeof(ExtraTaskSettingsStruct));
-  }
-  if (strcasecmp_P(Command, PSTR("pinstates")) == 0)
-  {
-    success = true;
-    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-      if (pinStates[x].plugin != 0)
-      {
-        status += F("\nPlugin: ");
-        status += pinStates[x].plugin;
-        status += F(" index: ");
-        status += pinStates[x].index;
-        status += F(" mode: ");
-        status += pinStates[x].mode;
-        status += F(" value: ");
-        status += pinStates[x].value;
-      }
-  }
-
-  if (strcasecmp_P(Command, PSTR("timer")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 3))
-    {
-      setSystemTimer(Par1 * 1000, Par2, Par3, 0, 0);
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("cmdtimer")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 3))
-    {
-      String demo = TmpStr1;
-      setSystemCMDTimer(Par1 * 1000, demo);
-    }
-  }
-
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
     success = true;
     taskClear(Par1 - 1, true);
   }
-
-  if (strcasecmp_P(Command, PSTR("TaskGlobalSync")) == 0)
-  {
-    success = true;
-    if (Par2 == 1)
-      Settings.TaskDeviceGlobalSync[Par1 -1] = true;
-    else
-      Settings.TaskDeviceGlobalSync[Par1 -1] = false;
-  }
-
 
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
@@ -225,7 +163,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
   {
     success = true;
-    WifiConnect();
+    WifiConnect(1);
   }
   
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
@@ -303,12 +241,6 @@ void ExecuteCommand(byte source, const char *Line)
       Serial.print(" : ");
       Serial.println(data);
     }
-  }
-
-  if (strcasecmp_P(Command, PSTR("flashcheck")) == 0)
-  {
-    success = true;
-    CheckFlash(Par1, Par2);
   }
 
   if (strcasecmp_P(Command, PSTR("Debug")) == 0)

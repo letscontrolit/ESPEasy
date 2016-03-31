@@ -1,3 +1,10 @@
+// R95 31-03-2016
+// Removed AP config within WifiApMode function, not needed as it is already set at WifiAPConfig
+// Added logging to AP mode change
+// Added periodic Wifi reconnect check when Wifi connection is lost, AP will be active during this stage
+// Set status led pin to -1 on factory reset
+// Removed some obsolete debug commands
+
 // R94 30-03-2016
 // Fix for clock event rules and added size counter for rules interface (currently 2048 byte max)
 
