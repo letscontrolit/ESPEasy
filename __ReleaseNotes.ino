@@ -1,3 +1,6 @@
+// R96 07-04-2016
+// Bugfix in caching of ExtraTaskSettings
+
 // R95 31-03-2016
 // Removed AP config within WifiApMode function, not needed as it is already set at WifiAPConfig
 // Added logging to AP mode change
