@@ -1,3 +1,6 @@
+// R97 09-04-2016
+// Bugfix, unable to deselect LED pin when I2C is not configured on any pin.
+
 // R96 07-04-2016
 // Bugfix in caching of ExtraTaskSettings
 

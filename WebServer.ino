@@ -1204,10 +1204,13 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
     str += F("<option value='");
     str += optionValues[x];
     str += "'";
-    if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
-      str += F(" disabled");
-    if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3)))
-      str += F(" disabled");
+    if (optionValues[x] != -1) // empty selection can never be disabled...
+    {
+      if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
+        str += F(" disabled");
+      if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3)))
+        str += F(" disabled");
+    }
     if (choice == optionValues[x])
       str += F(" selected");
     str += ">";
