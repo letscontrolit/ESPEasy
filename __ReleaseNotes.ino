@@ -1,3 +1,8 @@
+// R98 10-04-2016
+// Fixed boot state send for GPIO for state=1
+// Added send state at boot stage for MCP and PCF plugins
+// Added option to periodically send input switch states (set timer value to >0)
+
 // R97 09-04-2016
 // Bugfix, unable to deselect LED pin when I2C is not configured on any pin.
 

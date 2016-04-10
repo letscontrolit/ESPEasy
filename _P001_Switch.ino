@@ -26,7 +26,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = false;
+        Device[deviceCount].TimerOption = true;
+        Device[deviceCount].TimerOptional = true;
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
@@ -135,11 +136,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, 0);
 
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
-
+        outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
+        
         // if boot state must be send, inverse default state
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
+        {
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
-
+          outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
+        }
         success = true;
         break;
       }
@@ -187,6 +191,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             sendData(event);
           }
         }
+        success = true;
+        break;
+      }
+
+    case PLUGIN_READ:
+      {
+        // We do not actually read the pin state as this is already done 10x/second
+        // Instead we just send the last known state stored in Uservar
+        String log = F("SW   : State ");
+        log += UserVar[event->BaseVarIndex];
+        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }

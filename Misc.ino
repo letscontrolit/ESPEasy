@@ -255,7 +255,7 @@ void taskClear(byte taskIndex, boolean save)
   Settings.TaskDevicePort[taskIndex] = 0;
   Settings.TaskDeviceSendData[taskIndex] = true;
   Settings.TaskDeviceGlobalSync[taskIndex] = false;
-  Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
+  Settings.TaskDeviceTimer[taskIndex] = 0;
 
   for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
     Settings.TaskDevicePluginConfig[taskIndex][x] = 0;

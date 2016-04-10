@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              97
+#define BUILD                              98
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -355,6 +355,7 @@ struct DeviceStruct
   boolean SendDataOption;
   boolean GlobalSyncOption;
   boolean TimerOption;
+  boolean TimerOptional;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
@@ -560,7 +561,9 @@ void setup()
     if (bootMode == 0)
     {
       for (byte x = 0; x < TASKS_MAX; x++)
-        timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
+        if (Settings.TaskDeviceTimer[x] !=0)
+          timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
+      
       timer = millis() + 30000; // startup delay 30 sec
     }
     else
@@ -766,9 +769,11 @@ void checkSensors()
   {
     for (byte x = 0; x < TASKS_MAX; x++)
     {
-      if (millis() > timerSensor[x])
+      if ((Settings.TaskDeviceTimer[x] != 0) && (millis() > timerSensor[x]))
       {
         timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
+        if (timerSensor[x] == 0) // small fix if result is 0, else timer will be stopped...
+          timerSensor[x] = 1;
         SensorSendTask(x);
       }
     }

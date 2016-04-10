@@ -26,7 +26,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = false;
+        Device[deviceCount].TimerOption = true;
+        Device[deviceCount].TimerOptional = true;
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
@@ -43,10 +44,37 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        string += F("<TR><TD>Send Boot state:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+          string += F("<input type=checkbox name=plugin_019_boot checked>");
+        else
+          string += F("<input type=checkbox name=plugin_019_boot>");
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+
+        String plugin1 = WebServer.arg("plugin_019_boot");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (plugin1 == "on");
+
+        success = true;
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_019_Read(Settings.TaskDevicePort[event->TaskIndex]);
+
+        // if boot state must be send, inverse default state
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+          switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
+          
         success = true;
         break;
       }
@@ -71,6 +99,17 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_READ:
+      {
+        // We do not actually read the pin state as this is already done 10x/second
+        // Instead we just send the last known state stored in Uservar
+        String log = F("PCF  : State ");
+        log += UserVar[event->BaseVarIndex];
+        addLog(LOG_LEVEL_INFO, log);
+        success = true;
+        break;
+      }
+      
     case PLUGIN_WRITE:
       {
         String log = "";

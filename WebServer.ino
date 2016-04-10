@@ -700,8 +700,13 @@ void handle_devices() {
       if (taskdevicetimer.toInt() > 0)
         Settings.TaskDeviceTimer[index - 1] = taskdevicetimer.toInt();
       else
-        Settings.TaskDeviceTimer[index - 1] = Settings.Delay;
-
+      {
+        if (!Device[DeviceIndex].TimerOptional) // Set default delay, unless it's optional...
+          Settings.TaskDeviceTimer[index - 1] = Settings.Delay;
+        else
+          Settings.TaskDeviceTimer[index - 1] = 0;
+      }
+      
       taskdevicename.toCharArray(tmpString, 41);
       strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
@@ -922,6 +927,8 @@ void handle_devices() {
         reply += F("<TR><TD>Delay:<TD><input type='text' name='taskdevicetimer' value='");
         reply += Settings.TaskDeviceTimer[index - 1];
         reply += F("'>");
+        if (Device[DeviceIndex].TimerOptional)
+          reply += F(" (Optional for this device)");
       }
 
       if (!Device[DeviceIndex].Custom)
