@@ -1,3 +1,9 @@
+// R99 11-04-2016
+// Moved PLUGIN_INIT call from webserver form post request after savesettings
+// Device table no longer displayed when task is in edit mode, to reduce page size.
+// Removed obsolete taskload/save from P020
+// Removed obsolete taskload from P004
+
 // R98 10-04-2016
 // Fixed boot state send for GPIO for state=1
 // Added send state at boot stage for MCP and PCF plugins

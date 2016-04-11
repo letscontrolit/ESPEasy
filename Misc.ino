@@ -266,6 +266,10 @@ void taskClear(byte taskIndex, boolean save)
     ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
     ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = 2;
   }
+
+  for (byte varNr = 0; varNr < PLUGIN_EXTRACONFIGVAR_MAX; varNr++)
+    ExtraTaskSettings.TaskDevicePluginConfigLong[varNr] = 0;
+  
   if (save)
   {
     SaveTaskSettings(taskIndex);

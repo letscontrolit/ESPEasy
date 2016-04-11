@@ -706,7 +706,7 @@ void handle_devices() {
         else
           Settings.TaskDeviceTimer[index - 1] = 0;
       }
-      
+
       taskdevicename.toCharArray(tmpString, 41);
       strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
       Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
@@ -764,10 +764,11 @@ void handle_devices() {
       }
       TempEvent.TaskIndex = index - 1;
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
-      PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
     }
     SaveTaskSettings(index - 1);
     SaveSettings();
+    if (taskdevicenumber.toInt() != 0)
+      PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
   }
 
   String reply = "";
@@ -775,130 +776,132 @@ void handle_devices() {
 
 
   // show all tasks as table
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
-  reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page > 1)
-    reply += page - 1;
-  else
-    reply += page;
-  reply += F("\"><</a>");
-  reply += F("<a class=\"button-link\" href=\"devices?setpage=");
-  if (page < (TASKS_MAX / 4))
-    reply += page + 1;
-  else
-    reply += page;
-  reply += F("\">></a>");
-
-  reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
-
-  String deviceName;
-
-  for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
+  if (index == 0)
   {
-    LoadTaskSettings(x);
-    DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-    TempEvent.TaskIndex = x;
+    reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
+    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    if (page > 1)
+      reply += page - 1;
+    else
+      reply += page;
+    reply += F("\"><</a>");
+    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    if (page < (TASKS_MAX / 4))
+      reply += page + 1;
+    else
+      reply += page;
+    reply += F("\">></a>");
 
-    if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-      PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+    reply += F("<TH>Task<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
 
-    deviceName = "";
-    if (Settings.TaskDeviceNumber[x] != 0)
-      Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
+    String deviceName;
 
-    reply += F("<TR><TD>");
-    reply += F("<a class=\"button-link\" href=\"devices?index=");
-    reply += x + 1;
-    reply += F("&page=");
-    reply += page;
-    reply += F("\">Edit</a>");
-    reply += F("<TD>");
-    reply += x + 1;
-    reply += F("<TD>");
-    reply += deviceName;
-    reply += F("<TD>");
-    reply += ExtraTaskSettings.TaskDeviceName;
-    reply += F("<TD>");
-
-    byte customConfig = false;
-    customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
-    if (!customConfig)
-      if (Device[DeviceIndex].Ports != 0)
-        reply += Settings.TaskDevicePort[x];
-
-    reply += F("<TD>");
-
-    if (Settings.TaskDeviceID[x] != 0)
-      reply += Settings.TaskDeviceID[x];
-
-    reply += F("<TD>");
-
-    if (Settings.TaskDeviceDataFeed[x] == 0)
+    for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
     {
-      if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      {
-        reply += F("GPIO-");
-        reply += Settings.Pin_i2c_sda;
-        reply += F("<BR>GPIO-");
-        reply += Settings.Pin_i2c_scl;
-      }
-      if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
-        reply += F("ADC (TOUT)");
+      LoadTaskSettings(x);
+      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+      TempEvent.TaskIndex = x;
 
-      if (Settings.TaskDevicePin1[x] != -1)
-      {
-        reply += F("GPIO-");
-        reply += Settings.TaskDevicePin1[x];
-      }
+      if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
 
-      if (Settings.TaskDevicePin2[x] != -1)
-      {
-        reply += F("<BR>GPIO-");
-        reply += Settings.TaskDevicePin2[x];
-      }
+      deviceName = "";
+      if (Settings.TaskDeviceNumber[x] != 0)
+        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
 
-      if (Settings.TaskDevicePin3[x] != -1)
-      {
-        reply += F("<BR>GPIO-");
-        reply += Settings.TaskDevicePin3[x];
-      }
-    }
+      reply += F("<TR><TD>");
+      reply += F("<a class=\"button-link\" href=\"devices?index=");
+      reply += x + 1;
+      reply += F("&page=");
+      reply += page;
+      reply += F("\">Edit</a>");
+      reply += F("<TD>");
+      reply += x + 1;
+      reply += F("<TD>");
+      reply += deviceName;
+      reply += F("<TD>");
+      reply += ExtraTaskSettings.TaskDeviceName;
+      reply += F("<TD>");
 
-    reply += F("<TD>");
-    byte customValues = false;
-    customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
-    if (!customValues)
-    {
-      if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+      byte customConfig = false;
+      customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
+      if (!customConfig)
+        if (Device[DeviceIndex].Ports != 0)
+          reply += Settings.TaskDevicePort[x];
+
+      reply += F("<TD>");
+
+      if (Settings.TaskDeviceID[x] != 0)
+        reply += Settings.TaskDeviceID[x];
+
+      reply += F("<TD>");
+
+      if (Settings.TaskDeviceDataFeed[x] == 0)
       {
-        reply  += F("<div class=\"div_l\">");
-        reply  += ExtraTaskSettings.TaskDeviceValueNames[0];
-        reply  += F(":</div><div class=\"div_r\">");
-        reply  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
-        reply  += F("</div>");
-      }
-      else
-      {
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
         {
-          if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+          reply += F("GPIO-");
+          reply += Settings.Pin_i2c_sda;
+          reply += F("<BR>GPIO-");
+          reply += Settings.Pin_i2c_scl;
+        }
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
+          reply += F("ADC (TOUT)");
+
+        if (Settings.TaskDevicePin1[x] != -1)
+        {
+          reply += F("GPIO-");
+          reply += Settings.TaskDevicePin1[x];
+        }
+
+        if (Settings.TaskDevicePin2[x] != -1)
+        {
+          reply += F("<BR>GPIO-");
+          reply += Settings.TaskDevicePin2[x];
+        }
+
+        if (Settings.TaskDevicePin3[x] != -1)
+        {
+          reply += F("<BR>GPIO-");
+          reply += Settings.TaskDevicePin3[x];
+        }
+      }
+
+      reply += F("<TD>");
+      byte customValues = false;
+      customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
+      if (!customValues)
+      {
+        if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+        {
+          reply  += F("<div class=\"div_l\">");
+          reply  += ExtraTaskSettings.TaskDeviceValueNames[0];
+          reply  += F(":</div><div class=\"div_r\">");
+          reply  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
+          reply  += F("</div>");
+        }
+        else
+        {
+          for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
           {
-            if (varNr > 0)
-              reply += F("<div class=\"div_br\"></div>");
-            reply += F("<div class=\"div_l\">");
-            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-            reply += F(":</div><div class=\"div_r\">");
-            reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
-            reply += "</div>";
+            if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+            {
+              if (varNr > 0)
+                reply += F("<div class=\"div_br\"></div>");
+              reply += F("<div class=\"div_l\">");
+              reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+              reply += F(":</div><div class=\"div_r\">");
+              reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+              reply += "</div>";
+            }
           }
         }
       }
     }
+    reply += F("</table>");
   }
-  reply += F("</table>");
-
   // Show edit form if a specific entry is chosen with the edit button
-  if (index != 0)
+  else
   {
     LoadTaskSettings(index - 1);
     DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
@@ -977,7 +980,7 @@ void handle_devices() {
         }
       }
 
-      if(Settings.TaskDeviceDataFeed[index -1] == 0) // only show additional config for local connected sensors
+      if (Settings.TaskDeviceDataFeed[index - 1] == 0) // only show additional config for local connected sensors
         PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
       if (Device[DeviceIndex].SendDataOption)
@@ -1038,7 +1041,9 @@ void handle_devices() {
       }
 
     }
-    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices\">Close</a>");
+    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices?setpage=");
+    reply += page;
+    reply += F("\">Close</a>");
     reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
     reply += F("<input type='hidden' name='edit' value='1'>");
     reply += F("<input type='hidden' name='page' value='1'>");
@@ -2098,19 +2103,19 @@ void handle_download() {
   attachment += Settings.Unit;
   attachment += F("_R");
   attachment += Settings.Build;
-  #if FEATURE_TIME
-    if (Settings.UseNTP)
-      {
-        attachment += F("_");
-        attachment += tm.Year+1970;
-        attachment += F("_");
-        attachment += tm.Month;
-        attachment += F("_");
-        attachment += tm.Day;
-      }
-  #endif
+#if FEATURE_TIME
+  if (Settings.UseNTP)
+  {
+    attachment += F("_");
+    attachment += tm.Year + 1970;
+    attachment += F("_");
+    attachment += tm.Month;
+    attachment += F("_");
+    attachment += tm.Day;
+  }
+#endif
   attachment += F(".txt");
-   WebServer.sendHeader("Content-Disposition", attachment);
+  WebServer.sendHeader("Content-Disposition", attachment);
   WebServer.send(200, "application/octet-stream", "");
 
   for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
@@ -2206,7 +2211,7 @@ void handleFileUpload()
     String filename = upload.filename;
     filename.toLowerCase();
     filetype = 0;
-    
+
     if (filename.startsWith("config"))
       filetype = 1;
     if (strcasecmp(upload.filename.c_str(), "esp.css") == 0)
@@ -2470,7 +2475,7 @@ void handle_rules() {
   interrupts();
 
   // check size of css file content
-  int x=0;
+  int x = 0;
   for (x = 0; x < 4096; x++)
     if (data[x] != 0)
       reply += char(data[x]);
