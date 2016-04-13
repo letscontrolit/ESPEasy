@@ -1562,6 +1562,14 @@ void handle_control() {
 
   String webrequest = WebServer.arg("cmd");
 
+  // in case of event, store to buffer and return...
+  String command = parseString(webrequest, 1);
+  if (command == F("event"))
+  {
+    eventBuffer = webrequest.substring(6);
+    WebServer.send(200, "text/html", "OK");
+  }
+  
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
   TempEvent.Source = VALUE_SOURCE_HTTP;

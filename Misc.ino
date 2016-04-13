@@ -1160,7 +1160,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                 if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
                 {
                   // here we know the task and value, so find the uservar
-                  String value = String(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+                  String value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
                   if (valueFormat == "R")
                   {
                     int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
@@ -1727,7 +1727,6 @@ void rulesProcessing(String& event)
     {
       line.replace("\r", "");
       line.trim();
-      line.toLowerCase();
       if (line.substring(0, 2) != "//" && line.length() > 0)
       {
         isCommand = true;
@@ -1737,6 +1736,9 @@ void rulesProcessing(String& event)
           line = line.substring(0, comment);
           
         line = parseTemplate(line, line.length());
+
+        String lineOrg = line; // store original line for future use
+        line.toLowerCase(); // convert all to lower case to make checks easier
 
         String eventTrigger = "";
         String action = "";
@@ -1750,7 +1752,7 @@ void rulesProcessing(String& event)
             if (split != -1)
             {
               eventTrigger = line.substring(0, split);
-              action = line.substring(split + 4);
+              action = lineOrg.substring(split + 7);
               action.trim();
             }
             match = ruleMatch(event, eventTrigger);
@@ -1768,10 +1770,12 @@ void rulesProcessing(String& event)
         }
         else
         {
-          action = line;
+          action = lineOrg;
         }
 
-        if (action == "endon") // Check if action block has ended, then we will wait for a new "on" rule
+        String lcAction = action;
+        lcAction.toLowerCase();
+        if (lcAction == "endon") // Check if action block has ended, then we will wait for a new "on" rule
         {
           isCommand = false;
           codeBlock = false;
@@ -1779,23 +1783,23 @@ void rulesProcessing(String& event)
 
         if (match) // rule matched for one action or a block of actions
         {
-          int split = action.indexOf("if "); // check for optional "if" condition
+          int split = lcAction.indexOf("if "); // check for optional "if" condition
           if (split != -1)
           {
             conditional = true;
-            String check = action.substring(split + 3);
+            String check = lcAction.substring(split + 3);
             condition = conditionMatch(check);
             ifBranche = true;
             isCommand = false;
           }
 
-          if (action == "else") // in case of an "else" block of actions, set ifBranche to false
+          if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
           {
             ifBranche = false;
             isCommand = false;
           }
 
-          if (action == "endif") // conditional block ends here
+          if (lcAction == "endif") // conditional block ends here
           {
             conditional = false;
             isCommand = false;

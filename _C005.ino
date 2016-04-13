@@ -66,7 +66,12 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           TempEvent.Par1 = topicSplit[count].toInt();
           TempEvent.Par2 = event->String2.toFloat();
         }
-        PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
+        // in case of event, store to buffer and return...
+        String command = parseString(cmd, 1);
+        if (command == F("event"))
+          eventBuffer = cmd.substring(6);
+        else
+          PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
         break;
       }
 

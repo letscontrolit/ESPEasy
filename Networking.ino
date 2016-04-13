@@ -75,7 +75,12 @@ void checkUDP()
     {
       packetBuffer[len] = 0;
       addLog(LOG_LEVEL_DEBUG, packetBuffer);
-      ExecuteCommand(VALUE_SOURCE_SYSTEM, packetBuffer);
+      struct EventStruct TempEvent;
+      String request = packetBuffer;
+      parseCommandString(&TempEvent, request);
+      TempEvent.Source = VALUE_SOURCE_SYSTEM;
+      if (!PluginCall(PLUGIN_WRITE, &TempEvent, request))
+        ExecuteCommand(VALUE_SOURCE_SYSTEM, packetBuffer);
     }
     else
     {
@@ -246,6 +251,27 @@ void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   {
     dataReply.destUnit = x;
     sendUDP(x, (byte*) &dataReply, sizeof(dataStruct));
+    delay(10);
+  }
+  delay(50);
+}
+
+
+/*********************************************************************************************\
+   Send event using UDP message
+  \*********************************************************************************************/
+void SendUDPCommand(byte destUnit, char* data, byte dataLength)
+{
+  byte firstUnit = 1;
+  byte lastUnit = UNIT_MAX - 1;
+  if (destUnit != 0)
+  {
+    firstUnit = destUnit;
+    lastUnit = destUnit;
+  }
+  for (byte x = firstUnit; x <= lastUnit; x++)
+  {
+    sendUDP(x, (byte*)data, dataLength);
     delay(10);
   }
   delay(50);

@@ -1,3 +1,11 @@
+// R100 13-04-2016
+// Moved UDP handling from background tasks as it could lead to recursive function call issues on globalsync receive
+// Some more experimental features:
+//  - Added option to send rule events using http control page: /control?cmd=event,<event> (single event buffer limitation applies!)
+//  - Added option to send rule events using openhab MQTT protocol: publish event,<event> to <template>/cmd (single event buffer limitation applies!)
+//  - Added 'SendTo <unit>,<command>' command for remote unit control commands (uses the internal peer to peer UDP messaging)
+//  - Added 'Publish <topic>,<value>' command to send remote commands to other ESP using MQTT broker
+
 // R99 11-04-2016
 // Moved PLUGIN_INIT call from webserver form post request after savesettings
 // Device table no longer displayed when task is in edit mode, to reduce page size.

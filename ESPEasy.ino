@@ -100,7 +100,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                              99
+#define BUILD                             100
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -442,6 +442,8 @@ unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
 
+String eventBuffer = "";
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -642,6 +644,12 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  checkUDP();
+  if (Settings.UseRules && eventBuffer.length() > 0)
+  {
+    rulesProcessing(eventBuffer);
+    eventBuffer = "";
+  }
   elapsed = micros() - start;
 }
 
@@ -940,7 +948,6 @@ void backgroundtasks()
   if (wifiSetup)
     dnsServer.processNextRequest();
 
-  checkUDP();
   WebServer.handleClient();
   MQTTclient.loop();
   statusLED(false);

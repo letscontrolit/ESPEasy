@@ -107,6 +107,43 @@ void ExecuteCommand(byte source, const char *Line)
       rulesProcessing(event);
   }
 
+  if (strcasecmp_P(Command, PSTR("SendTo")) == 0)
+  {
+    success = true;
+    String event = Line;
+    event.replace(" ", ",");
+    int index = event.indexOf(',');
+    if (index > 0)
+    {
+      event = event.substring(index+1);
+      index = event.indexOf(',');
+      if (index > 0)
+      {
+        event = event.substring(index+1);
+        SendUDPCommand(Par1, (char*)event.c_str(), event.length());
+      }      
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("Publish")) == 0)
+  {
+    success = true;
+    String event = Line;
+    event.replace(" ", ",");
+    int index = event.indexOf(',');
+    if (index > 0)
+    {
+      event = event.substring(index+1);
+      index = event.indexOf(',');
+      if (index > 0)
+      {
+        String topic = event.substring(0,index);
+        String value = event.substring(index+1);
+        MQTTclient.publish(topic, value);
+      }      
+    }
+  }
+
   // ****************************************
   // special commands for old nodo plugin
   // ****************************************
