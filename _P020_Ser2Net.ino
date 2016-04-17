@@ -102,9 +102,9 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
         {
-
           byte serialconfig = 0x10;
           serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];
           serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;

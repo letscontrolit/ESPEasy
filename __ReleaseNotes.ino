@@ -1,3 +1,7 @@
+// R101 17-04-2016
+// bugfix P020, the savetasksettings was obsolete, the loadtasksettings was not...
+// Use hostname in C008 protocol if the controller hostname is configured (instead of IP)
+
 // R100 13-04-2016
 // Moved UDP handling from background tasks as it could lead to recursive function call issues on globalsync receive
 // Some more experimental features:
