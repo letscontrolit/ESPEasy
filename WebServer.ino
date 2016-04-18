@@ -1454,7 +1454,7 @@ void handle_i2cscanner() {
           reply += F("DS1307 RTC");
           break;
         case 0x76:
-          reply += F("BME280");
+          reply += F("BME280/BMP280");
           break;
         case 0x77:
           reply += F("BMP085");

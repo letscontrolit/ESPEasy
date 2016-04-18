@@ -118,23 +118,27 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_028_init)
         {
-          Plugin_028_init = true;
-          Plugin_028_begin(0x76);
+          Plugin_028_init = Plugin_028_begin(0x76);
+	  //delay(45); //May be needed here as well to fix first wrong measurement?
         }
-        UserVar[event->BaseVarIndex] = Plugin_028_readTemperature();
-        UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity());
-        UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure()) / 100;
-        String log = F("BME  : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        log = F("BME  : Humidity: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
-        log = F("BME  : Barometric Pressure: ");
-        log += UserVar[event->BaseVarIndex + 2];
-        addLog(LOG_LEVEL_INFO, log);
-        success = true;
-        break;
+
+        if (Plugin_028_init)
+        {
+          UserVar[event->BaseVarIndex] = Plugin_028_readTemperature();
+          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity());
+          UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure()) / 100;
+          String log = F("BME  : Temperature: ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BME  : Humidity: ");
+          log += UserVar[event->BaseVarIndex + 1];
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BME  : Barometric Pressure: ");
+          log += UserVar[event->BaseVarIndex + 2];
+          addLog(LOG_LEVEL_INFO, log);
+          success = true;
+          break;
+        }
       }
 
   }
