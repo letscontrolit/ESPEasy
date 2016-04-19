@@ -845,6 +845,19 @@ void ResetFactory(void)
 
   LoadSettings();
   // now we set all parameters that need to be non-zero as default value
+  
+#if DEFAULT_USE_STATIC_IP
+  str2ip((char*)DEFAULT_IP, Settings.IP);
+  str2ip((char*)DEFAULT_DNS, Settings.DNS);
+  str2ip((char*)DEFAULT_GW, Settings.Gateway);
+  str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
+#endif
+
+#if DEFAULT_MQTT_TEMPLATE
+  strcpy_P(Settings.MQTTsubscribe, PSTR(DEFAULT_MQTT_SUB));
+  strcpy_P(Settings.MQTTpublish, PSTR(DEFAULT_MQTT_PUB));
+#endif
+
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;

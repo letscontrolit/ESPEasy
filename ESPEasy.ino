@@ -82,6 +82,17 @@
 #define DEFAULT_PORT        8080                // Enter your Domoticz Server port value
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
+
+#define DEFAULT_USE_STATIC_IP   false           // true or false enabled or disabled set static IP
+#define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
+#define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
+#define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
+#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
+
+#define DEFAULT_MQTT_TEMPLATE false              // true or false enabled or disabled set mqqt sub and pub
+#define DEFAULT_MQTT_PUB    "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
+#define DEFAULT_MQTT_SUB    "sensors/espeasy/%sysname%/#" // Enter your sub
+
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
 //   1 = Domoticz HTTP
 //   2 = Domoticz MQTT
@@ -100,7 +111,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             102
+#define BUILD                             103
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 

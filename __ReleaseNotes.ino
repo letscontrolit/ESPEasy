@@ -1,3 +1,6 @@
+// R103 19-04-2016
+// Upon request, added option for factory default static IP settings.
+
 // R102 19-04-2016
 // Added support for BMP280  (contributed by PM-CZ)
 
