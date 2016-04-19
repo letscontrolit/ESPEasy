@@ -1,3 +1,6 @@
+// R102 19-04-2016
+// Added support for BMP280  (contributed by PM-CZ)
+
 // R101 17-04-2016
 // bugfix P020, the savetasksettings was obsolete, the loadtasksettings was not...
 // Use hostname in C008 protocol if the controller hostname is configured (instead of IP)
