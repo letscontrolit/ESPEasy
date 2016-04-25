@@ -111,7 +111,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             103
+#define BUILD                             104
 #define REBOOT_ON_MAX_CONNECTION_FAILURES  30
 #define FEATURE_SPIFFS                  false
 
@@ -143,6 +143,8 @@
 #define SYSTEM_TIMER_MAX                    8
 #define SYSTEM_CMD_TIMER_MAX                2
 #define PINSTATE_TABLE_MAX                 32
+#define RULES_MAX_SIZE                   2048
+#define RULES_MAX_NESTING_LEVEL             3
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1

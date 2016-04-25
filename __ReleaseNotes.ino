@@ -1,3 +1,10 @@
+// R104 25-04-2016
+// Added a few lowlevel networking commands, to be used in the rules section:
+//   SendToUDP <ip>,<port>,<message>  sample: SendToUDP 192.168.0.123,65500,Hello
+//   SendToHTTP <ip>,<port>,<path>    sample: SendToHTTP 192.168.0.8,8080,/json.htm
+// Reduced flash load size to 2048 in rules engine and use static pointer to save memory on recursive calls
+// Max nesting level on rules is 3 levels deep
+
 // R103 19-04-2016
 // Upon request, added option for factory default static IP settings.
 

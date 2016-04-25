@@ -36,6 +36,27 @@ String parseString(String& string, byte indexFind)
 
 
 /*********************************************************************************************\
+   Parse a string and get the xth command or parameter
+  \*********************************************************************************************/
+int getParamStartPos(String& string, byte indexFind)
+{
+  String tmpString = string;
+  byte count = 0;
+  tmpString.replace(" ", ",");
+  for (int x=0; x < tmpString.length(); x++)
+  {
+    if(tmpString.charAt(x) == ',')
+      {
+        count++;
+        if (count == (indexFind -1))
+         return x+1;
+      }
+  }
+  return -1;
+}
+
+
+/*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
 boolean setPinState(byte plugin, byte index, byte mode, uint16_t value)
@@ -1707,20 +1728,35 @@ unsigned long getNtpTime()
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
-  unsigned long timer = micros();
+  static uint8_t* data;
+  static byte nestingLevel;
+
   String log = "";
 
+  nestingLevel++;
+  if (nestingLevel > RULES_MAX_NESTING_LEVEL)
+    {
+      log = F("EVENT: Error: Nesting level exceeded!");
+      addLog(LOG_LEVEL_ERROR, log);
+      nestingLevel--;
+      return;
+    }
+  
   log = F("EVENT: ");
   log += event;
   addLog(LOG_LEVEL_INFO, log);
 
   // load rules from flash memory, stored in offset block 10
-  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
-  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  _sector += 10;
-  noInterrupts();
-  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
-  interrupts();
+  if (data == NULL)
+    {
+      data = new uint8_t[RULES_MAX_SIZE];
+      uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+      _sector += 10;
+      noInterrupts();
+      spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), RULES_MAX_SIZE);
+      interrupts();
+      data[RULES_MAX_SIZE-1]=0; // make sure it's terminated!
+    }
 
   int pos = 0;
   String line = "";
@@ -1739,7 +1775,6 @@ void rulesProcessing(String& event)
     if (data[pos] == 10)    // if line complete, parse this rule
     {
       line.replace("\r", "");
-      line.trim();
       if (line.substring(0, 2) != "//" && line.length() > 0)
       {
         isCommand = true;
@@ -1749,6 +1784,7 @@ void rulesProcessing(String& event)
           line = line.substring(0, comment);
           
         line = parseTemplate(line, line.length());
+        line.trim();
 
         String lineOrg = line; // store original line for future use
         line.toLowerCase(); // convert all to lower case to make checks easier
@@ -1827,8 +1863,10 @@ void rulesProcessing(String& event)
 
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
+            yield();
             if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
               ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+            yield();
           }
         }
       }
@@ -1837,9 +1875,13 @@ void rulesProcessing(String& event)
     }
     pos++;
   }
-  delete [] data;
-  timer = micros() - timer;
-  //Serial.println(timer);
+
+  nestingLevel--;
+  if(nestingLevel == 0)
+  {
+    delete [] data;
+    data = NULL;
+  }
 }
 
 
