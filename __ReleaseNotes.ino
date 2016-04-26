@@ -1,3 +1,7 @@
+// R105 26-04-2016
+// Bugfix for event names ending with "on "
+// Added support for SHT1X sensors like the SHT10 Soil Moisture sensor (contributed by MarkBergsma)
+
 // R104 25-04-2016
 // Added a few lowlevel networking commands, to be used in the rules section:
 //   SendToUDP <ip>,<port>,<message>  sample: SendToUDP 192.168.0.123,65500,Hello

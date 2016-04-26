@@ -1796,7 +1796,7 @@ void rulesProcessing(String& event)
         {
           if (line.startsWith("on "))
           {
-            line.replace("on ", "");
+            line = line.substring(3);
             int split = line.indexOf(" do");
             if (split != -1)
             {
