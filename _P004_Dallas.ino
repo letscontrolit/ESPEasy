@@ -47,7 +47,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         uint8_t addr[8];
-       
+
         // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
         Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
 
@@ -62,22 +62,22 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           if (choice == x)
             string += F(" selected");
           string += ">";
-          string += x+1;
+          string += x + 1;
           string += F("</option>");
         }
         string += F("</select> ROM: ");
         if (devCount)
+        {
+          for (byte  i = 0; i < 8; i++)
           {
-            for (byte  i = 0; i < 8; i++)
-              {
-                string += String(addr[i], HEX);
-                if (i < 7) string += "-";
-              }
-          }        
+            string += String(addr[i], HEX);
+            if (i < 7) string += "-";
+          }
+        }
         success = true;
         break;
       }
-        
+
     case PLUGIN_WEBFORM_SAVE:
       {
         uint8_t addr[8];
@@ -87,7 +87,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         // find the address for selected device and store into extra tasksettings
         Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
         byte devCount = Plugin_004_DS_scan(Settings.TaskDevicePluginConfig[event->TaskIndex][0], addr);
-        for (byte x=0; x < 8; x++)
+        for (byte x = 0; x < 8; x++)
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
         success = true;
         break;
@@ -95,47 +95,47 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
       {
-        for (byte x=0; x < 8; x++)
-          {
-            if (x !=0)
-              string += "-";
-            string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x],HEX);
-          }
+        for (byte x = 0; x < 8; x++)
+        {
+          if (x != 0)
+            string += "-";
+          string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+        }
         success = true;
         break;
       }
-      
+
     case PLUGIN_READ:
       {
         uint8_t addr[8];
         // Load ROM address from tasksettings
         LoadTaskSettings(event->TaskIndex);
-        for (byte x=0; x < 8; x++)
+        for (byte x = 0; x < 8; x++)
           addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
 
         Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
         float value = 0;
         String log = F("DS   : Temperature: ");
         if (Plugin_004_DS_readTemp(addr, &value))
-          {
-            UserVar[event->BaseVarIndex] = value;
-            log += UserVar[event->BaseVarIndex];
-            success = true;
-          }
-          else
-          {
-            UserVar[event->BaseVarIndex] = NAN;
-            log += F("Error!");
-          }
+        {
+          UserVar[event->BaseVarIndex] = value;
+          log += UserVar[event->BaseVarIndex];
+          success = true;
+        }
+        else
+        {
+          UserVar[event->BaseVarIndex] = NAN;
+          log += F("Error!");
+        }
         log += (" (");
-        for (byte x=0; x < 8; x++)
-          {
-            if (x !=0)
-              log += "-";
-            log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x],HEX);
-          }
+        for (byte x = 0; x < 8; x++)
+        {
+          if (x != 0)
+            log += "-";
+          log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+        }
         log += ')';
-        addLog(LOG_LEVEL_INFO,log);
+        addLog(LOG_LEVEL_INFO, log);
         break;
       }
 
@@ -145,8 +145,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
 
 /*********************************************************************************************\
- * Dallas Scan bus
-\*********************************************************************************************/
+   Dallas Scan bus
+  \*********************************************************************************************/
 byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM)
 {
   byte tmpaddr[8];
@@ -166,13 +166,13 @@ byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM)
 
 
 /*********************************************************************************************\
- * Dallas Read temperature
-\*********************************************************************************************/
+   Dallas Read temperature
+  \*********************************************************************************************/
 boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value)
 {
   int16_t DSTemp;
   byte ScratchPad[12];
-  
+
   Plugin_004_DS_reset();
   Plugin_004_DS_write(0x55);           // Choose ROM
   for (byte i = 0; i < 8; i++)
@@ -191,20 +191,33 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value)
     ScratchPad[i] = Plugin_004_DS_read();
 
   if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
-    {
-      *value=0;
-      return false;
-    }
+  {
+    *value = 0;
+    return false;
+  }
 
-  DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
-  *value = (float(DSTemp) * 0.0625);
+  if (ROM[0] == 0x28 ) //DS18B20
+  {
+    DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
+    *value = (float(DSTemp) * 0.0625);
+  }
+  else if (ROM[0] == 0x10 ) //DS1820 DS18S20
+  {
+    DSTemp = (ScratchPad[1] << 11) + ScratchPad[0] << 3;
+    DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
+             (
+               ((ScratchPad[7] - ScratchPad[6]) << 7) /
+               ScratchPad[7]
+             );
+    *value = float(DSTemp) * 0.0078125;
+  }
   return true;
 }
 
 
 /*********************************************************************************************\
- * Dallas Reset
-\*********************************************************************************************/
+   Dallas Reset
+  \*********************************************************************************************/
 uint8_t Plugin_004_DS_reset()
 {
   uint8_t r;
@@ -237,8 +250,8 @@ uint8_t LastDeviceFlag;
 
 
 /*********************************************************************************************\
- * Dallas Reset Search
-\*********************************************************************************************/
+   Dallas Reset Search
+  \*********************************************************************************************/
 void Plugin_004_DS_reset_search()
 {
   // reset the search state
@@ -251,8 +264,8 @@ void Plugin_004_DS_reset_search()
 
 
 /*********************************************************************************************\
- * Dallas Search bus
-\*********************************************************************************************/
+   Dallas Search bus
+  \*********************************************************************************************/
 uint8_t Plugin_004_DS_search(uint8_t *newAddr)
 {
   uint8_t id_bit_number;
@@ -371,8 +384,8 @@ uint8_t Plugin_004_DS_search(uint8_t *newAddr)
 }
 
 /*********************************************************************************************\
- * Dallas Read byte
-\*********************************************************************************************/
+   Dallas Read byte
+  \*********************************************************************************************/
 uint8_t Plugin_004_DS_read(void)
 {
   uint8_t bitMask;
@@ -381,25 +394,25 @@ uint8_t Plugin_004_DS_read(void)
   for (bitMask = 0x01; bitMask; bitMask <<= 1)
     if (Plugin_004_DS_read_bit())
       r |= bitMask;
-  
+
   return r;
 }
 
 
 /*********************************************************************************************\
- * Dallas Write byte
-\*********************************************************************************************/
+   Dallas Write byte
+  \*********************************************************************************************/
 void Plugin_004_DS_write(uint8_t ByteToWrite)
 {
   uint8_t bitMask;
   for (bitMask = 0x01; bitMask; bitMask <<= 1)
-    Plugin_004_DS_write_bit( (bitMask & ByteToWrite)?1:0);
+    Plugin_004_DS_write_bit( (bitMask & ByteToWrite) ? 1 : 0);
 }
 
 
 /*********************************************************************************************\
- * Dallas Read bit
-\*********************************************************************************************/
+   Dallas Read bit
+  \*********************************************************************************************/
 uint8_t Plugin_004_DS_read_bit(void)
 {
   uint8_t r;
@@ -418,8 +431,8 @@ uint8_t Plugin_004_DS_read_bit(void)
 
 
 /*********************************************************************************************\
- * Dallas Write bit
-\*********************************************************************************************/
+   Dallas Write bit
+  \*********************************************************************************************/
 void Plugin_004_DS_write_bit(uint8_t v)
 {
   if (v & 1) {
@@ -444,7 +457,7 @@ void Plugin_004_DS_write_bit(uint8_t v)
 uint8_t Plugin_004_DS_crc8( uint8_t *addr, uint8_t len)
 {
   uint8_t crc = 0;
-  
+
   while (len--) {
     uint8_t inbyte = *addr++;
     for (uint8_t i = 8; i; i--) {

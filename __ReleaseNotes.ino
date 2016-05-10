@@ -1,3 +1,7 @@
+// R106 10-05-2016
+// Added support for DS1820/DS18S20 sensor types
+// Option to change connection failure threshold, set to 0 to disable.
+
 // R105 26-04-2016
 // Bugfix for event names ending with "on "
 // Added support for SHT1X sensors like the SHT10 Soil Moisture sensor (contributed by MarkBergsma)

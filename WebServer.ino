@@ -1704,6 +1704,7 @@ void handle_advanced() {
   String wireclockstretchlimit = WebServer.arg("wireclockstretchlimit");
   String globalsync = WebServer.arg("globalsync");
   String userules = WebServer.arg("userules");
+  String cft = WebServer.arg("cft");
 
   if (edit.length() != 0)
   {
@@ -1736,6 +1737,7 @@ void handle_advanced() {
 #endif
     Settings.UseRules = (userules == "on");
     Settings.GlobalSync = (globalsync == "on");
+    Settings.ConnectionFailuresThreshold = cft.toInt();
     SaveSettings();
   }
 
@@ -1829,6 +1831,10 @@ void handle_advanced() {
   else
     reply += F("<input type=checkbox name='usessdp'>");
 #endif
+
+  reply += F("<TR><TD>Connection Failure Threshold:<TD><input type='text' name='cft' value='");
+  reply += Settings.ConnectionFailuresThreshold;
+  reply += F("'>");
 
   reply += F("<TR><TH>Experimental Settings<TH>Value");
 

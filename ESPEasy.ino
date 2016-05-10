@@ -111,8 +111,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             105
-#define REBOOT_ON_MAX_CONNECTION_FAILURES  30
+#define BUILD                             106
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -319,6 +318,7 @@ struct SettingsStruct
   boolean       UseSSDP;
   unsigned long WireClockStretchLimit;
   boolean       GlobalSync;
+  unsigned long ConnectionFailuresThreshold;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -676,8 +676,9 @@ void runOncePerSecond()
 
   checkSensors();
 
-  if (connectionFailures > REBOOT_ON_MAX_CONNECTION_FAILURES)
-    delayedReboot(60);
+  if (Settings.ConnectionFailuresThreshold)
+    if (connectionFailures > Settings.ConnectionFailuresThreshold)
+      delayedReboot(60);
 
   if (cmd_within_mainloop != 0)
   {
