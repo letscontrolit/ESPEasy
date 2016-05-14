@@ -401,7 +401,7 @@ void fileSystemCheck()
 {
   if (SPIFFS.begin())
   {
-    String log = F("SPIFFS Mount succesfull");
+    String log = F("SPIFFS Mount successful");
     addLog(LOG_LEVEL_INFO, log);
     File f = SPIFFS.open("config.txt", "r");
     if (!f)
@@ -1195,6 +1195,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                 {
                   // here we know the task and value, so find the uservar
                   String value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+                  
                   if (valueFormat == "R")
                   {
                     int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
@@ -1231,6 +1232,10 @@ String parseTemplate(String &tmpString, byte lineSize)
 #endif
 
   newString.replace("%uptime%", String(wdcounter / 2));
+
+#if FEATURE_ADC_VCC
+  newString.replace("%vcc%", String(vcc));
+#endif
 
   IPAddress ip = WiFi.localIP();
   char strIP[20];
