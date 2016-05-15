@@ -109,7 +109,7 @@
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "Analog Input" device to read the VCC value
-#define FEATURE_ADC_VCC                  true
+#define FEATURE_ADC_VCC                  false
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
