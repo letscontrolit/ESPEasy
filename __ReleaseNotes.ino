@@ -1,3 +1,6 @@
+// R107 21-05-2016
+// Support to include VCC reading at compile time, defaults to disabled. (contributed by Battika)
+
 // R106 10-05-2016
 // Added support for DS1820/DS18S20 sensor types
 // Option to change connection failure threshold, set to 0 to disable.
