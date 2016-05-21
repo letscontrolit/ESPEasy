@@ -21,6 +21,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
+        Device[deviceCount].FormulaOption = true;
         break;
       }
 
@@ -39,16 +40,18 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[3];
+        String options[4];
         options[0] = F("Uptime");
         options[1] = F("Free RAM");
         options[2] = F("Wifi RSSI");
-        int optionValues[3];
+        options[3] = F("Input VCC");
+        int optionValues[4];
         optionValues[0] = 0;
         optionValues[1] = 1;
         optionValues[2] = 2;
+        optionValues[3] = 3;
         string += F("<TR><TD>Indicator:<TD><select name='plugin_026'>");
-        for (byte x = 0; x < 3; x++)
+        for (byte x = 0; x < 4; x++)
         {
           string += F("<option value='");
           string += optionValues[x];
@@ -91,6 +94,15 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           case 2:
           {
             value = WiFi.RSSI();
+            break;
+          }
+          case 3:
+          {
+#if FEATURE_ADC_VCC
+            value = vcc;
+#else
+            value = -1.0;
+#endif
             break;
           }
         }

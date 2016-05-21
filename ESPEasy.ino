@@ -72,7 +72,7 @@
 // ********************************************************************************
 
 // Set default configuration settings if you want (not mandatory)
-// You can allways change these during runtime and save to eeprom
+// You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
 #define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
@@ -105,6 +105,12 @@
 
 #define FEATURE_TIME                     true
 #define FEATURE_SSDP                     true
+
+// Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
+// Please note that the TOUT pin has to be disconnected in this mode
+// Use the "System Info" device to read the VCC value
+#define FEATURE_ADC_VCC                  false
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -213,6 +219,9 @@
 ESP8266HTTPUpdateServer httpUpdater(true);
 #if ESP_CORE >= 210
   #include <base64.h>
+#endif
+#if FEATURE_ADC_VCC
+ADC_MODE(ADC_VCC);
 #endif
 #define LWIP_OPEN_SRC
 #include "lwip/opt.h"
@@ -432,6 +441,10 @@ byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
 
+#if FEATURE_ADC_VCC
+float vcc = -1.0;
+#endif
+
 boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;
 
@@ -597,6 +610,10 @@ void setup()
       initTime();
 #endif
 
+#if FEATURE_ADC_VCC
+    vcc = ESP.getVcc() / 1000.0;
+#endif
+
     // Start DNS, only used if the ESP has no valid WiFi config
     // It will reply with it's own address on all DNS requests
     // (captive portal concept)
@@ -758,6 +775,9 @@ void runEach30Seconds()
   if (Settings.UseSSDP)
     SSDP_update();
 #endif
+#if FEATURE_ADC_VCC
+  vcc = ESP.getVcc() / 1000.0;
+#endif
   loopCounterLast = loopCounter;
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
@@ -846,7 +866,7 @@ void SensorSendTask(byte TaskIndex)
     if (success)
     {
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      {
+      {  
         if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
         {
           String spreValue = String(preValue[varNr]);
