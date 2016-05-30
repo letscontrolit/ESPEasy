@@ -61,6 +61,7 @@
 //   ADS1115 I2C ADC
 //   INA219 I2C voltage/current sensor
 //   BME280 I2C temp/hum/baro sensor
+//   MSP5611 I2C temp/baro sensor
 
 //   Experimental/Preliminary:
 //   =========================
