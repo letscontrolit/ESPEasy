@@ -26,8 +26,6 @@ enum
 
 
 uint8_t ms5611_i2caddr;
-int32_t ms5611_sensorID;
-int32_t ms5611_t_fine;
 unsigned int ms5611_prom[8];
 double  ms5611_pressure;
 double  ms5611_temperature;
@@ -115,7 +113,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           Plugin_032_readout();
           
           UserVar[event->BaseVarIndex] = ms5611_temperature / 100;
-          UserVar[event->BaseVarIndex + 1] = ms5611_pressure / 100;
+          UserVar[event->BaseVarIndex + 1] = ms5611_pressure;
           String log = F("MS5611  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
@@ -219,6 +217,7 @@ unsigned long Plugin_032_read_adc(unsigned char aCMD)
 // Readout
 //**************************************************************************/
 void Plugin_032_readout() {
+
   unsigned long D1=0, D2=0;
   
   double dT;
@@ -228,10 +227,10 @@ void Plugin_032_readout() {
   D2=Plugin_032_read_adc(MS5xxx_CMD_ADC_D2+MS5xxx_CMD_ADC_4096);
   D1=Plugin_032_read_adc(MS5xxx_CMD_ADC_D1+MS5xxx_CMD_ADC_4096);
 
-  // calculate 1st order pressure and temperature (MS5607 1st order algorithm)
+  // calculate 1st order pressure and temperature (MS5611 1st order algorithm)
   dT=D2-ms5611_prom[5]*pow(2,8);
-  OFF=ms5611_prom[2]*pow(2,17)+dT*ms5611_prom[4]/pow(2,6);
-  SENS=ms5611_prom[1]*pow(2,16)+dT*ms5611_prom[3]/pow(2,7);
+  OFF=ms5611_prom[2]*pow(2,16)+dT*ms5611_prom[4]/pow(2,7);
+  SENS=ms5611_prom[1]*pow(2,15)+dT*ms5611_prom[3]/pow(2,8);
   ms5611_temperature=(2000+(dT*ms5611_prom[6])/pow(2,23));
   ms5611_pressure=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));
    
@@ -239,11 +238,11 @@ void Plugin_032_readout() {
   double T2=0., OFF2=0., SENS2=0.;
   if(ms5611_temperature<2000) {
     T2=dT*dT/pow(2,31);
-    OFF2=61*(ms5611_temperature-2000)*(ms5611_temperature-2000)/pow(2,4);
-    SENS2=2*(ms5611_temperature-2000)*(ms5611_temperature-2000);
+    OFF2=5*(ms5611_temperature-2000)*(ms5611_temperature-2000)/pow(2,1);
+    SENS2=5*(ms5611_temperature-2000)*(ms5611_temperature-2000)/pow(2,2);
     if(ms5611_temperature<-1500) {
-      OFF2+=15*(ms5611_temperature+1500)*(ms5611_temperature+1500);
-      SENS2+=8*(ms5611_temperature+1500)*(ms5611_temperature+1500);
+      OFF2+=7*(ms5611_temperature+1500)*(ms5611_temperature+1500);
+      SENS2+=11*(ms5611_temperature+1500)*(ms5611_temperature+1500)/pow(2,1);
     }
   }
     
