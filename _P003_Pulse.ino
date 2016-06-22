@@ -77,7 +77,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         string += ExtraTaskSettings.TaskDeviceValueNames[1];
         string += F(":");
         string += Plugin_003_pulseTotalCounter[event->TaskIndex];
-        string += F("<BR>Time");
+        string += F("<BR>");
         string += ExtraTaskSettings.TaskDeviceValueNames[2];
         string += F(":");
         string += Plugin_003_pulseTime[event->TaskIndex];
