@@ -105,6 +105,15 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
             url += ";0";
             break;
+          case SENSOR_TYPE_COUNT_TOTAL_TIMER:                      // count + total + timer, used for pulse
+            url += F("&svalue=");
+            url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            url += ";";
+            url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            url += ";0;";
+            url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+            url += ";0";
+            break;
           case SENSOR_TYPE_SWITCH:
             url = F("/json.htm?type=command&param=switchlight&idx=");
             url += event->idx;
