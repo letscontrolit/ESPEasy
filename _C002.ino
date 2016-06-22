@@ -170,6 +170,17 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             values.toCharArray(str, 80);
             root["svalue"] =  str;
             break;
+        case SENSOR_TYPE_COUNT_TOTAL_TIMER:                      // count + total + timer, used for pulse
+            root["nvalue"] = 0;
+            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            values += ";";
+            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            values += ";0;";
+            values += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+            values += ";0";
+            values.toCharArray(str, 80);
+            root["svalue"] =  str;
+            break;
           case SENSOR_TYPE_SWITCH:
             root["command"] = "switchlight";
             if (UserVar[event->BaseVarIndex] == 0)
