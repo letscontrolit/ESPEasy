@@ -50,6 +50,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
               HTTPSend(event, 1, UserVar[event->BaseVarIndex + 1], 0);
               break;
             }
+          case SENSOR_TYPE_COUNT_TOTAL_TIMER:
           case SENSOR_TYPE_TEMP_HUM_BARO:
             {
               HTTPSend(event, 0, UserVar[event->BaseVarIndex], 0);
