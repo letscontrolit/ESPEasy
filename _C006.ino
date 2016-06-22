@@ -114,6 +114,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
               MQTTclient.publish(tmppubname, value);
               break;
             }
+          case SENSOR_TYPE_COUNT_TOTAL_TIMER:
           case SENSOR_TYPE_TEMP_HUM_BARO:
             {
               String tmppubname = pubname;
