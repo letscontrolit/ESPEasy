@@ -7,6 +7,7 @@
 #define PLUGIN_NAME_003       "Pulse Counter"
 #define PLUGIN_VALUENAME1_003 "Count"
 #define PLUGIN_VALUENAME2_003 "Total"
+#define PLUGIN_VALUENAME3_003 "Time"
 
 unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
@@ -29,7 +30,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 2;
+        Device[deviceCount].ValueCount = 3;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
@@ -46,6 +47,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_003));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_003));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_003));
         break;
       }
 
@@ -75,7 +77,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         string += ExtraTaskSettings.TaskDeviceValueNames[1];
         string += F(":");
         string += Plugin_003_pulseTotalCounter[event->TaskIndex];
-        string += F("<BR>Time:");
+        string += F("<BR>");
+        string += ExtraTaskSettings.TaskDeviceValueNames[2];
+        string += F(":");
         string += Plugin_003_pulseTime[event->TaskIndex];
         success = true;
         break;
@@ -96,6 +100,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       {
         UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
         UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
+        UserVar[event->BaseVarIndex+2] = Plugin_003_pulseTime[event->TaskIndex];
         Plugin_003_pulseCounter[event->TaskIndex] = 0;
         success = true;
         break;
