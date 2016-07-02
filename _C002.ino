@@ -141,6 +141,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             values.toCharArray(str, 80);
             root["svalue"] =  str;
             break;
+          case SENSOR_TYPE_DUAL:                      // Current Power (W) + Lifetime total pulses (Wh)
+            root["nvalue"] = 0;
+            values  = toString(UserVar[event->BaseVarIndex ],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            values += ";";
+            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            values.toCharArray(str, 80);
+            root["svalue"] =  str;
+            break;
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             root["nvalue"] = 0;
             values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
