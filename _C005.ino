@@ -106,6 +106,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
             value += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
             MQTTclient.publish(pubname, value);
             break;
+          case SENSOR_TYPE_DUAL:                      	// dual value
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
             {
