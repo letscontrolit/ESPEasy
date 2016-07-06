@@ -1836,6 +1836,12 @@ void handle_advanced() {
   reply += Settings.ConnectionFailuresThreshold;
   reply += F("'>");
 
+  reply += F("<TR><TD>Rules:<TD>");
+  if (Settings.UseRules)
+    reply += F("<input type=checkbox name='userules' checked>");
+  else
+    reply += F("<input type=checkbox name='userules'>");
+
   reply += F("<TR><TH>Experimental Settings<TH>Value");
 
 #if ESP_CORE >= 210
@@ -1843,12 +1849,6 @@ void handle_advanced() {
   reply += Settings.WireClockStretchLimit;
   reply += F("'>");
 #endif
-
-  reply += F("<TR><TD>Rules:<TD>");
-  if (Settings.UseRules)
-    reply += F("<input type=checkbox name='userules' checked>");
-  else
-    reply += F("<input type=checkbox name='userules'>");
 
   reply += F("<TR><TD>Global Sync:<TD>");
   if (Settings.GlobalSync)
