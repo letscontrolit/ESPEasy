@@ -139,7 +139,7 @@ void ExecuteCommand(byte source, const char *Line)
       {
         String topic = event.substring(0,index);
         String value = event.substring(index+1);
-        MQTTclient.publish(topic, value);
+        MQTTclient.publish(topic.c_str(), value.c_str());
       }      
     }
   }

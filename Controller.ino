@@ -44,24 +44,21 @@ boolean sendData(struct EventStruct *event)
  * Handle incoming MQTT messages
 \*********************************************************************************************/
 // handle MQTT messages
-void callback(const MQTT::Publish& pub) {
-  char log[80];
-  char tmp[80];
-  String topic = pub.topic();
-  String payload = pub.payload_string();
-
+void callback(char* c_topic, byte* b_payload, unsigned int length) {
+  char log[128];
+  char c_payload[128];
+  strncpy(c_payload,(char*)b_payload,length);
+  c_payload[length] = 0;
   statusLED(true);
 
-  topic.toCharArray(tmp, 80);
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", tmp);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
   addLog(LOG_LEVEL_DEBUG, log);
-  payload.toCharArray(tmp, 80);
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", tmp);
+  sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
   addLog(LOG_LEVEL_DEBUG, log);
 
   struct EventStruct TempEvent;
-  TempEvent.String1 = topic;
-  TempEvent.String2 = payload;
+  TempEvent.String1 = c_topic;
+  TempEvent.String2 = c_payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
   CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent, dummyString);
 }
@@ -73,23 +70,32 @@ void callback(const MQTT::Publish& pub) {
 void MQTTConnect()
 {
   IPAddress MQTTBrokerIP(Settings.Controller_IP);
-  MQTTclient.set_server(MQTTBrokerIP, Settings.ControllerPort);
-  MQTTclient.set_callback(callback);
+  MQTTclient.setServer(MQTTBrokerIP, Settings.ControllerPort);
+  MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = "ESPClient";
   clientid += Settings.Unit;
   String subscribeTo = "";
 
+  String LWTTopic = Settings.MQTTsubscribe;
+  LWTTopic.replace("/#", "/status");
+  LWTTopic.replace("%sysname%", Settings.Name);
+  
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
     boolean MQTTresult = false;
 
+    //boolean connect(const char* id);
+    //boolean connect(const char* id, const char* user, const char* pass);
+    //boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
+    //boolean connect(const char* id, const char* user, const char* pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
+
     if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
-      MQTTresult = (MQTTclient.connect(MQTT::Connect(clientid).set_auth(SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword)));
+      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword, LWTTopic.c_str(), 0, 0, "Connection Lost");
     else
-      MQTTresult = (MQTTclient.connect(clientid));
+      MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 0, "Connection Lost");
 
     if (MQTTresult)
     {
@@ -97,7 +103,7 @@ void MQTTConnect()
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = Settings.MQTTsubscribe;
       subscribeTo.replace("%sysname%", Settings.Name);
-      MQTTclient.subscribe(subscribeTo);
+      MQTTclient.subscribe(subscribeTo.c_str());
       log = F("Subscribed to: ");
       log += subscribeTo;
       addLog(LOG_LEVEL_INFO, log);
@@ -165,7 +171,7 @@ void MQTTStatus(String& status)
   String pubname = Settings.MQTTsubscribe;
   pubname.replace("/#", "/status");
   pubname.replace("%sysname%", Settings.Name);
-  MQTTclient.publish(pubname, status);
+  MQTTclient.publish(pubname.c_str(), status.c_str());
 }
 
 

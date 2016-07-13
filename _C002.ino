@@ -197,7 +197,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         pubname.replace("%tskname%", ExtraTaskSettings.TaskDeviceName);
         pubname.replace("%id%", String(event->idx));
 
-        if (!MQTTclient.publish(pubname, json))
+        if (!MQTTclient.publish(pubname.c_str(), json))
         {
           log = F("MQTT publish failed");
           addLog(LOG_LEVEL_DEBUG, json);

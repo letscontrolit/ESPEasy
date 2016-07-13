@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             108
+#define BUILD                             109
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -243,7 +243,8 @@ Servo myservo1;
 Servo myservo2;
 
 // MQTT client
-PubSubClient MQTTclient("");
+WiFiClient mqtt;
+PubSubClient MQTTclient(mqtt);
 
 // WebServer
 ESP8266WebServer WebServer(80);

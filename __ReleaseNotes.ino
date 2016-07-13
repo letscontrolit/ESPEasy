@@ -1,3 +1,8 @@
+// R109 12-07-2016
+// Fix HTU21d timing
+// Support internal pullup for SHT1X plugin
+// Moved to pubsubclient 2.6 library (source no longer compatible with 1.9 library, so use the 2.6 version!)
+
 // R108 07-06-2016
 // Support for MS5611 temp/baro sensor (contributed by Battika)
 // Support PWM fade (contributed by qubeck). 
