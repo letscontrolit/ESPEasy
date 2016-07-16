@@ -11,10 +11,10 @@
  *********************************************************************************************
  * Technical description:
  *
- * De PCF8591 is a IO Expander chip that connects through the I2C bus
+ * The PCF8591 is a IO Expander chip that connects through the I2C bus
  * Basic I2C address = 0x48
  * Each chip has 4 analog inputs
- * This commando reads the analog input en stores the result into a variable
+ * This commando reads the analog input and stores the result into a variable
  \*********************************************************************************************/
 #define PLUGIN_007
 #define PLUGIN_ID_007         7
@@ -83,3 +83,4 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
