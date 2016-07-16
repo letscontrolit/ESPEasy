@@ -1,3 +1,7 @@
+// R110 16-07-2016
+// Improved Serial Server plugin, reconnect handling
+// Improved thingspeak and emoncms plugins (contributed by pm-cz)
+
 // R109 12-07-2016
 // Fix HTU21d timing
 // Support internal pullup for SHT1X plugin

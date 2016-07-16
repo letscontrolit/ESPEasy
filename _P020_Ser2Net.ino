@@ -138,11 +138,9 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Plugin_020_init)
         {
           size_t bytes_read;
-          if (!ser2netClient)
+          if (ser2netServer->hasClient())
           {
-            while (Serial.available()) {
-              Serial.read();
-            }
+            if (ser2netClient) ser2netClient.stop();
             ser2netClient = ser2netServer->available();
           }
 
@@ -150,7 +148,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           {
             uint8_t net_buf[BUFFER_SIZE];
             int count = ser2netClient.available();
-            if (count > 0) {
+            if (count > 0)
+            {
               if (count > BUFFER_SIZE)
                 count = BUFFER_SIZE;
               bytes_read = ser2netClient.read(net_buf, count);
@@ -162,6 +161,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
             }
           }
+          else
+          {
+            while (Serial.available())
+              Serial.read();
+          }
+
           success = true;
         }
         break;
