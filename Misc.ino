@@ -1194,8 +1194,13 @@ String parseTemplate(String &tmpString, byte lineSize)
                 if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
                 {
                   // here we know the task and value, so find the uservar
-                  String value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-                  
+                  String value = "";
+                  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                  if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+                    value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
+                  else
+                    value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+                 
                   if (valueFormat == "R")
                   {
                     int filler = lineSize - newString.length() - value.length() - tmpString.length() ;

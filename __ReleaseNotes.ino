@@ -1,3 +1,6 @@
+// R110 18-07-2016
+// Bugfix parsing rfid (SENSOR_TYPE_LONG) values in parseTemplate function
+
 // R110 16-07-2016
 // Improved Serial Server plugin, reconnect handling
 // Improved thingspeak and emoncms plugins (contributed by pm-cz)
