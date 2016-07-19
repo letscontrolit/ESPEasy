@@ -102,6 +102,8 @@
 //   5 = OpenHAB MQTT
 //   6 = PiDome MQTT
 //   7 = EmonCMS
+//   8 = Generic HTTP
+//   9 = FHEM HTTP
 #define UNIT                0
 
 #define FEATURE_TIME                     true
@@ -989,4 +991,5 @@ void backgroundtasks()
   statusLED(false);
   yield();
 }
+
 
