@@ -1739,6 +1739,10 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     SaveSettings();
+#if FEATURE_TIME
+    if (Settings.UseNTP)
+      initTime();
+#endif
   }
 
   String reply = "";
@@ -1772,7 +1776,7 @@ void handle_advanced() {
   reply += F("<TR><TD>NTP Hostname:<TD><input type='text' name='ntphost' size=64 value='");
   reply += Settings.NTPHost;
 
-  reply += F("'><TR><TD>Timezone Offset:<TD><input type='text' name='timezone' size=2 value='");
+  reply += F("'><TR><TD>Timezone Offset: (Minutes)<TD><input type='text' name='timezone' size=2 value='");
   reply += Settings.TimeZone;
   reply += F("'>");
 

@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             111
+#define BUILD                             112
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -312,7 +312,7 @@ struct SettingsStruct
   boolean       TaskDeviceSendData[TASKS_MAX];
   int16_t       Build;
   byte          DNS[4];
-  int8_t        TimeZone;
+  int8_t        TimeZone_OLD;
   char          ControllerHostName[64];
   boolean       UseNTP;
   boolean       DST;
@@ -330,6 +330,7 @@ struct SettingsStruct
   unsigned long WireClockStretchLimit;
   boolean       GlobalSync;
   unsigned long ConnectionFailuresThreshold;
+  int16_t       TimeZone;
 } Settings;
 
 struct ExtraTaskSettingsStruct

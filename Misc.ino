@@ -392,6 +392,12 @@ void BuildFixes()
     }
   }
 
+  if (Settings.Build < 112)
+  {
+    Serial.println(F("Fix timezone"));
+    Settings.TimeZone = Settings.TimeZone_OLD*60;
+  }
+
   Settings.Build = BUILD;
   SaveSettings();
 }
@@ -1642,6 +1648,7 @@ int weekday()
 
 void initTime()
 {
+  nextSyncTime=0;
   now();
 }
 
@@ -1723,7 +1730,7 @@ unsigned long getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[43];
       log = F("NTP  : NTP replied!");
       addLog(LOG_LEVEL_DEBUG_MORE, log);
-      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_HOUR;
+      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_MIN;
     }
   }
   log = F("NTP  : No reply");

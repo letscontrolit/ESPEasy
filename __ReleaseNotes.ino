@@ -1,4 +1,7 @@
-// R110 18-07-2016
+// R112 19-07-2016
+// Bugfix for timezones other than whole hours offset. It is now set in +/- minutes
+
+// R111 18-07-2016
 // Bugfix parsing rfid (SENSOR_TYPE_LONG) values in parseTemplate function
 
 // R110 16-07-2016
