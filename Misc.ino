@@ -1170,6 +1170,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   else
   {
     byte count = 0;
+    byte currentTaskIndex = ExtraTaskSettings.TaskIndex;
     while (leftBracketIndex >= 0 && count < 10 - 1)
     {
       newString += tmpString.substring(0, leftBracketIndex);
@@ -1225,6 +1226,7 @@ String parseTemplate(String &tmpString, byte lineSize)
       count++;
     }
     newString += tmpString;
+    LoadTaskSettings(currentTaskIndex);
   }
 
   // replace other system variables like %sysname%, %systime%, %ip%

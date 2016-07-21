@@ -1,3 +1,6 @@
+// R113 21-07-2016
+// Bugfix in rules processing with multiple value devices, only the first value would work as expected
+
 // R112 19-07-2016
 // Bugfix for timezones other than whole hours offset. It is now set in +/- minutes
 
