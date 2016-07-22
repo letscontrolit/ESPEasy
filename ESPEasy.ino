@@ -112,6 +112,12 @@
 // Use the "System Info" device to read the VCC value
 #define FEATURE_ADC_VCC                  false
 
+// HTTP Request field size for Settings.
+#define HTTP_METHOD_MAX_LEN         10
+#define HTTP_URI_MAX_LEN	          501
+#define HTTP_HEADER_MAX_LEN         501
+#define HTTP_BODY_MAX_LEN           501
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -331,6 +337,13 @@ struct SettingsStruct
   boolean       GlobalSync;
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
+
+  // HTTP Request settings.
+  char          HttpMethod[HTTP_METHOD_MAX_LEN];
+  char          HttpUri[HTTP_URI_MAX_LEN];
+  char          HttpHeader[HTTP_HEADER_MAX_LEN];
+  char          HttpBody[HTTP_BODY_MAX_LEN];
+
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -390,6 +403,13 @@ struct ProtocolStruct
   boolean usesAccount;
   boolean usesPassword;
   int defaultPort;
+
+  // HTTP Request protocol.
+  boolean selectHttpMethod;
+  boolean defineHttpUri;
+  boolean defineHttpHeader;
+  boolean defineHttpBody;
+
 } Protocol[CPLUGIN_MAX];
 
 struct NodeStruct
