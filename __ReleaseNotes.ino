@@ -1,3 +1,7 @@
+// R114 22-07-2016
+// Cleanup code, conditional core 2.0.0/2.1.0 support removed, changed to core 2.3.0
+// The web gui now shows the core version used to build the release.
+
 // R113 21-07-2016
 // Bugfix in rules processing with multiple value devices, only the first value would work as expected
 

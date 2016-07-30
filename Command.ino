@@ -20,6 +20,17 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
+  {
+    success = true;
+    Serial.print(F("SecurityStruct         : "));
+    Serial.println(sizeof(SecuritySettings));
+    Serial.print(F("SettingsStruct         : "));
+    Serial.println(sizeof(Settings));
+    Serial.print(F("ExtraTaskSettingsStruct: "));
+    Serial.println(sizeof(ExtraTaskSettings));
+  }
+
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
     success = true;

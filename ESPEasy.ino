@@ -1,4 +1,3 @@
-#define ESP_CORE 210
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.esp8266.nu
  *
@@ -62,11 +61,12 @@
 //   INA219 I2C voltage/current sensor
 //   BME280 I2C temp/hum/baro sensor
 //   MSP5611 I2C temp/baro sensor
+//   BMP280 I2C Barometric Pressure sensor
+//   SHT1X temperature/humidity sensors
 
 //   Experimental/Preliminary:
 //   =========================
 //   Ser2Net server
-//   Local Level Control to GPIO
 
 // ********************************************************************************
 //   User specific configuration
@@ -102,6 +102,8 @@
 //   5 = OpenHAB MQTT
 //   6 = PiDome MQTT
 //   7 = EmonCMS
+//   8 = Generic HTTP
+
 #define UNIT                0
 
 #define FEATURE_TIME                     true
@@ -118,7 +120,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             113
+#define BUILD                             114
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -218,9 +220,7 @@
 #endif
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
-#if ESP_CORE >= 210
-  #include <base64.h>
-#endif
+#include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
 #endif

@@ -207,7 +207,10 @@ void handle_root() {
 
     reply += F("<TR><TD>Build:<TD>");
     reply += BUILD;
-
+    
+    reply += F("<TR><TD>Core Version:<TD>");
+    reply += ESP.getCoreVersion();
+        
     reply += F("<TR><TD>Unit:<TD>");
     reply += Settings.Unit;
 
@@ -1732,9 +1735,7 @@ void handle_advanced() {
     Settings.DST = (dst == "on");
     Settings.WDI2CAddress = wdi2caddress.toInt();
     Settings.UseSSDP = (usessdp == "on");
-#if ESP_CORE >= 210
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
-#endif
     Settings.UseRules = (userules == "on");
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
@@ -1848,11 +1849,9 @@ void handle_advanced() {
 
   reply += F("<TR><TH>Experimental Settings<TH>Value");
 
-#if ESP_CORE >= 210
   reply += F("<TR><TD>I2C ClockStretchLimit:<TD><input type='text' name='wireclockstretchlimit' value='");
   reply += Settings.WireClockStretchLimit;
   reply += F("'>");
-#endif
 
   reply += F("<TR><TD>Global Sync:<TD>");
   if (Settings.GlobalSync)
