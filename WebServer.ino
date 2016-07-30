@@ -322,6 +322,13 @@ void handle_config() {
   String protocol = WebServer.arg("protocol");
   String controlleruser = WebServer.arg("controlleruser");
   String controllerpassword = WebServer.arg("controllerpassword");
+
+  // HTTP Request : args received when form submitted.
+  String httpmethod = WebServer.arg("httpmethod");
+  String httpuri = WebServer.arg("httpuri");
+  String httpheader = WebServer.arg("httpheader");
+  String httpbody = WebServer.arg("httpbody");
+
   String sensordelay = WebServer.arg("delay");
   String deepsleep = WebServer.arg("deepsleep");
   String espip = WebServer.arg("espip");
@@ -367,6 +374,18 @@ void handle_config() {
         }
 
         Settings.ControllerPort = controllerport.toInt();
+        
+        // HTTP Request : save the form input into the Settings.
+        byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+        if (Protocol[ProtocolIndex].selectHttpMethod)
+          strncpy(Settings.HttpMethod, httpmethod.c_str(), sizeof(Settings.HttpMethod));
+        if (Protocol[ProtocolIndex].defineHttpUri)
+          strncpy(Settings.HttpUri, httpuri.c_str(), sizeof(Settings.HttpUri));
+        if (Protocol[ProtocolIndex].defineHttpHeader)
+          strncpy(Settings.HttpHeader, httpheader.c_str(), sizeof(Settings.HttpHeader));
+        if (Protocol[ProtocolIndex].defineHttpBody)
+          strncpy(Settings.HttpBody, httpbody.c_str(), sizeof(Settings.HttpBody));
+
         strncpy(SecuritySettings.ControllerUser, controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser));
         strncpy(SecuritySettings.ControllerPassword, controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword));
       }
@@ -458,30 +477,74 @@ void handle_config() {
     {
       reply += F("<TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
       reply += Settings.ControllerHostName;
+      reply += F("'>");
     }
     else
     {
       reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
       sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
       reply += str;
+      reply += F("'>");
     }
 
-    reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
+    reply += F("<TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
     reply += Settings.ControllerPort;
+    reply += F("'>");
 
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
     if (Protocol[ProtocolIndex].usesAccount)
     {
-      reply += F("'><TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
+      reply += F("<TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
       reply += SecuritySettings.ControllerUser;
+      reply += F("'>");
     }
 
     if (Protocol[ProtocolIndex].usesPassword)
     {
-      reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
+      reply += F("<TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
       reply += SecuritySettings.ControllerPassword;
+      reply += F("'>");
     }
-    reply += F("'>");
+
+    //
+    // HTTP Request custom configuration form.
+    //
+    if (Protocol[ProtocolIndex].selectHttpMethod)
+    {
+      String methods[] = { F("GET"), F("POST"), F("PUT") };
+      reply += F("<TR><TD>HTTP Method :<TD><select name='httpmethod'>");
+      for (int i=0; i < 3; i++)
+      {
+        reply += F("<option value='");
+        reply += methods[i] + "'";
+        reply += methods[i].equals(Settings.HttpMethod) ? F(" selected='selected'"): F("");
+        reply += F(">");
+        reply += methods[i];
+        reply += F("</option>");
+      }
+      reply += F("</select>");
+    }
+    
+    if (Protocol[ProtocolIndex].defineHttpUri)
+    {
+      reply += F("<TR><TD>HTTP URI:<TD><input type='text' name='httpuri' maxlength='500' value='");
+      reply += Settings.HttpUri;
+      reply += F("'>");
+    }
+
+    if (Protocol[ProtocolIndex].defineHttpHeader)
+    {
+      reply += F("<TR><TD>HTTP Header:<TD><textarea name='httpheader' rows='4' cols='50' maxlength='500'>");
+      reply += Settings.HttpHeader;
+      reply += F("</textarea>");
+    }
+
+    if (Protocol[ProtocolIndex].defineHttpBody)
+    {
+      reply += F("<TR><TD>HTTP Body:<TD><textarea name='httpbody' rows='8' cols='50' maxlength='500'>");
+      reply += Settings.HttpBody;
+      reply += F("</textarea>");
+    }
   }
 
   reply += F("<TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
