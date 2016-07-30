@@ -32,7 +32,7 @@ boolean Plugin_014_init = false;
 #define SI7021_RESOLUTION_11T_11RH 0x81 // 11 bits RH / 11 bits Temp
 #define SI7021_RESOLUTION_MASK 0B01111110
 
-uint8_t  si7021_humidity;    // latest humidity value read
+int16_t  si7021_humidity;    // latest humidity value read - Changed uint8_t to int16_t CoolWombat
 int16_t  si7021_temperature; // latest temperature value read (*100)
 
 boolean Plugin_014(byte function, struct EventStruct *event, String& string)
@@ -125,7 +125,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
         // Read values only if init has been done okay
         if (Plugin_014_init && Plugin_014_si7021_readValues(res) == 0) {
           UserVar[event->BaseVarIndex] = si7021_temperature/100.0;
-          UserVar[event->BaseVarIndex + 1] = si7021_humidity;
+          UserVar[event->BaseVarIndex + 1] = si7021_humidity/100.0; //Added /100.0 CoolWombat
           success = true;
           /*
           String log = F("SI7021 : Temperature: ");
@@ -319,15 +319,15 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
 
   // Humidity 
   if (datatype == SI7021_MEASURE_HUM || datatype == SI7021_MEASURE_HUM_HM) {
-    // Convert value to Himidity percent 
-    data = ((125 * (long)raw) >> 16) - 6;
+    // Convert value to Humidity percent (*100) 
+    data = ((12500 * (long)raw) >> 16) - 600; //Changed 125 to 12500 and 6 to 600 CoolWombat
 
     // Datasheet says doing this check
     if (data>100) data = 100;
     if (data<0)   data = 0;
 
     // save value
-    si7021_humidity = (uint8_t) data;
+    si7021_humidity = (int16_t) data; //Changed uint8_t to int16_t CoolWombat
 
   // Temperature
   } else  if (datatype == SI7021_MEASURE_TEMP ||datatype == SI7021_MEASURE_TEMP_HM || datatype == SI7021_MEASURE_TEMP_HUM) {
