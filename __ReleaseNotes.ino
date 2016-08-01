@@ -1,3 +1,6 @@
+// R115 31-07-2015
+// Provided controller plugin calls CPLUGIN_WEBFORM_SAVE and CPLUGIN_WEBFORM_LOAD to support custom controller configurations stored in flash.
+
 // R114 22-07-2016
 // Cleanup code, conditional core 2.0.0/2.1.0 support removed, changed to core 2.3.0
 // The web gui now shows the core version used to build the release.

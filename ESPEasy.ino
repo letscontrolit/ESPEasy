@@ -120,7 +120,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             114
+#define BUILD                             115
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -128,6 +128,8 @@
 #define CPLUGIN_PROTOCOL_SEND               3
 #define CPLUGIN_PROTOCOL_RECV               4
 #define CPLUGIN_GET_DEVICENAME              5
+#define CPLUGIN_WEBFORM_SAVE                6
+#define CPLUGIN_WEBFORM_LOAD                7
 
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2

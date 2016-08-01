@@ -351,6 +351,8 @@ void handle_config() {
     {
       if (Settings.Protocol != 0)
       {
+        byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_SAVE, 0, dummyString);
         Settings.UseDNS = usedns.toInt();
         if (Settings.UseDNS)
         {
@@ -482,6 +484,9 @@ void handle_config() {
       reply += SecuritySettings.ControllerPassword;
     }
     reply += F("'>");
+
+    CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, 0, reply);
+    
   }
 
   reply += F("<TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");

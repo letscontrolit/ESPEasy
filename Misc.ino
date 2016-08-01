@@ -650,6 +650,36 @@ void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 }
 
 
+/********************************************************************************************\
+  Save Custom Controller settings to SPIFFS
+  \*********************************************************************************************/
+void SaveCustomControllerSettings(byte* memAddress, int datasize)
+{
+  if (datasize > 4096)
+    return;
+#if FEATURE_SPIFFS
+  SaveToFile((char*)"config.txt", 28672, memAddress, datasize);
+#else
+  SaveToFlash(28672, memAddress, datasize);
+#endif
+}
+
+
+/********************************************************************************************\
+  Save Custom Controller settings to SPIFFS
+  \*********************************************************************************************/
+void LoadCustomControllerSettings(byte* memAddress, int datasize)
+{
+  if (datasize > 4096)
+    return;
+#if FEATURE_SPIFFS
+  LoadFromFile((char*)"config.txt", 28672, memAddress, datasize);
+#else
+  LoadFromFlash(28672, memAddress, datasize);
+#endif
+}
+
+
 #if FEATURE_SPIFFS
 /********************************************************************************************\
   Save data into config file on SPIFFS
