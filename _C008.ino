@@ -40,6 +40,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
           case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
             HTTPSend(event, 0, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
             break;
+          case SENSOR_TYPE_DUAL:                      	// dual value
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
             {
