@@ -1,3 +1,6 @@
+// R117 01-08-2016
+// Added support for FHEM using HTTP protocol
+
 // R116 01-08-2016
 // Counter plugin can be set to "Delta" (original and default setting for Domoticz incremental counter) or "Delta/Total/Time" for other controllers that can handle this counter type
 

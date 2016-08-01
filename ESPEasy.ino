@@ -103,6 +103,7 @@
 //   6 = PiDome MQTT
 //   7 = EmonCMS
 //   8 = Generic HTTP
+//   9 = FHEM HTTP
 
 #define UNIT                0
 
@@ -120,7 +121,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             116
+#define BUILD                             117
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
