@@ -115,6 +115,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
               break;
             }
           case SENSOR_TYPE_TEMP_HUM_BARO:
+          case SENSOR_TYPE_TRIPLE:
             {
               String tmppubname = pubname;
               tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);

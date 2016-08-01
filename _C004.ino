@@ -75,6 +75,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
             postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             break;
           case SENSOR_TYPE_TEMP_HUM_BARO:
+          case SENSOR_TYPE_TRIPLE:
             postDataStr += F("&field");
             postDataStr += event->idx;
             postDataStr += "=";

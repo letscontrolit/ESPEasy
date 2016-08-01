@@ -1,4 +1,7 @@
-// R115 31-07-2015
+// R116 01-08-2016
+// Counter plugin can be set to "Delta" (original and default setting for Domoticz incremental counter) or "Delta/Total/Time" for other controllers that can handle this counter type
+
+// R115 31-07-2016
 // Provided controller plugin calls CPLUGIN_WEBFORM_SAVE and CPLUGIN_WEBFORM_LOAD to support custom controller configurations stored in flash.
 
 // R114 22-07-2016

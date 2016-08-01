@@ -120,7 +120,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             115
+#define BUILD                             116
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -174,6 +174,7 @@
 #define SENSOR_TYPE_TEMP_HUM                2
 #define SENSOR_TYPE_TEMP_BARO               3
 #define SENSOR_TYPE_TEMP_HUM_BARO           4
+#define SENSOR_TYPE_TRIPLE                  6
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
