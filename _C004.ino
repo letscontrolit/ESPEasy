@@ -65,6 +65,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
             break;
           case SENSOR_TYPE_TEMP_HUM:                      // dual value
           case SENSOR_TYPE_TEMP_BARO:
+          case SENSOR_TYPE_DUAL:
             postDataStr += F("&field");
             postDataStr += event->idx;
             postDataStr += "=";

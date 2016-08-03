@@ -121,7 +121,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             117
+#define BUILD                             118
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -170,11 +170,13 @@
 #define DEVICE_TYPE_I2C                     2  // connected through I2C
 #define DEVICE_TYPE_ANALOG                  3  // tout pin
 #define DEVICE_TYPE_DUAL                    4  // connected through 2 datapins
+#define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 #define SENSOR_TYPE_SINGLE                  1
 #define SENSOR_TYPE_TEMP_HUM                2
 #define SENSOR_TYPE_TEMP_BARO               3
 #define SENSOR_TYPE_TEMP_HUM_BARO           4
+#define SENSOR_TYPE_DUAL                    5
 #define SENSOR_TYPE_TRIPLE                  6
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11

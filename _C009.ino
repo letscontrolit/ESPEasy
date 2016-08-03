@@ -105,7 +105,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             break;
           case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
-          case SENSOR_TYPE_TRIPLE:
+          case SENSOR_TYPE_DUAL:
             // setreading #1
             url += F("setreading%20");
             url += Settings.Name;
@@ -123,6 +123,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             break;
           case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
+          case SENSOR_TYPE_TRIPLE:
             // setreading #1
             url += F("setreading%20");
             url += Settings.Name;

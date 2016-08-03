@@ -1,3 +1,9 @@
+// R118 03-08-2016
+// Added the Dummy Device to production (used in the testlab in the past, but can also be useful for production purposes)
+//   You can use "TaskValueSet <task nr>,<variable nr>,<value>" in the rules section to set values
+//   Sending and retrieving values works just like any other sensor, using the template [<name>#<valuename>]
+// Prepared framework for SENSOR_TYPE_DUAL
+
 // R117 01-08-2016
 // Added support for FHEM using HTTP protocol
 

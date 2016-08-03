@@ -75,6 +75,12 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += F("&svalue=");
             url += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
             break;
+          case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
+            url += F("&svalue=");
+            url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            url += ";";
+            url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            break;            
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             url += F("&svalue=");
             url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);

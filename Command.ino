@@ -62,17 +62,6 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("TaskValueSet")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 4))
-    {
-      float result = 0;
-      byte error = Calculate(TmpStr1, &result);
-      UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
-    }
-  }
-
   if (strcasecmp_P(Command, PSTR("build")) == 0)
   {
     success = true;
@@ -90,6 +79,17 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
   // commands for rules
   // ****************************************
+
+  if (strcasecmp_P(Command, PSTR("TaskValueSet")) == 0)
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 4))
+    {
+      float result = 0;
+      byte error = Calculate(TmpStr1, &result);
+      UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
+    }
+  }
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
