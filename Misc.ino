@@ -1096,7 +1096,7 @@ unsigned long string2TimeLong(String &str)
   unsigned long a;
   str.toLowerCase();
   str.toCharArray(command, 20);
-  unsigned long lngTime;
+  unsigned long lngTime = 0;
 
   if (GetArgv(command, TmpStr1, 1))
   {
