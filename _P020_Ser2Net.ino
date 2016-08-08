@@ -146,8 +146,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             int count = ser2netClient.available();
             if (count > 0)
             {
-              if (count > BUFFER_SIZE)
-                count = BUFFER_SIZE;
+              if (count >= BUFFER_SIZE)
+                count = BUFFER_SIZE - 1;
               bytes_read = ser2netClient.read(net_buf, count);
               Serial.write(net_buf, bytes_read);
               Serial.flush();
