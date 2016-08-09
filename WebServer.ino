@@ -236,6 +236,12 @@ void handle_root() {
     reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
     reply += F(" kB");
 
+    reply += F("<TR><TD>Sketch Size/Free:<TD>");
+    reply += ESP.getSketchSize() / 1024;
+    reply += F(" kB / ");
+    reply += ESP.getFreeSketchSpace() / 1024;
+    reply += F(" kB");
+
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
 

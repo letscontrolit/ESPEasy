@@ -1,3 +1,9 @@
+// R119 09-08-2016
+// Fixed calculation for DS1820 DS18S20 with extended precision for negative temperatures (contributed by saschaludwig)
+// Bugfixes for uninitialized variable and potential buffer overflow (contributed by bertrik)
+// Bugfix pulse commands for PCF8574 plugin
+// Main webpage shows sketch size / free size
+
 // R118 03-08-2016
 // Added the Dummy Device to production (used in the testlab in the past, but can also be useful for production purposes)
 //   You can use "TaskValueSet <task nr>,<variable nr>,<value>" in the rules section to set values
@@ -5,7 +11,7 @@
 // Prepared framework for SENSOR_TYPE_DUAL
 
 // R117 01-08-2016
-// Added support for FHEM using HTTP protocol
+// Added support for FHEM using HTTP protocol (contributed by ddtlabs)
 
 // R116 01-08-2016
 // Counter plugin can be set to "Delta" (original and default setting for Domoticz incremental counter) or "Delta/Total/Time" for other controllers that can handle this counter type

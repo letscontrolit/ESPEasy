@@ -121,7 +121,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             118
+#define BUILD                             119
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
