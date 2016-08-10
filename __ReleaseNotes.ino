@@ -1,3 +1,6 @@
+// R120 10-08-2016
+// Removed formula fields from the Dummy Device. This will not work anyway. Use a formula in TaskValueSet command instead.
+
 // R119 09-08-2016
 // Fixed calculation for DS1820 DS18S20 with extended precision for negative temperatures (contributed by saschaludwig)
 // Bugfixes for uninitialized variable and potential buffer overflow (contributed by bertrik)

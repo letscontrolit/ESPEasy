@@ -121,7 +121,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             119
+#define BUILD                             120
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -387,6 +387,7 @@ struct DeviceStruct
   boolean GlobalSyncOption;
   boolean TimerOption;
   boolean TimerOptional;
+  boolean DecimalsOnly;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct

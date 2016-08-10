@@ -1041,6 +1041,20 @@ void handle_devices() {
               reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
           }
         }
+        else
+        {
+        if (Device[DeviceIndex].DecimalsOnly)
+          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+          {
+            reply += F("<TR><TD>Decimals ");
+            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+            reply += F(":<TD><input type='text' name='taskdevicevaluedecimals");
+            reply += varNr + 1;
+            reply += F("' value='");
+            reply += ExtraTaskSettings.TaskDeviceValueDecimals[varNr];
+            reply += F("'>");
+          }
+        }
 
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
