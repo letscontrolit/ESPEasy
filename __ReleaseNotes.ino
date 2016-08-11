@@ -1,3 +1,7 @@
+// R121 11-08-2016
+// Added option for MQTT retain flag. Can be configured in /tools/advanced
+// Added internal TaskRun <tasknr> command
+
 // R120 10-08-2016
 // Removed formula fields from the Dummy Device. This will not work anyway. Use a formula in TaskValueSet command instead.
 

@@ -91,6 +91,12 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
+  if (strcasecmp_P(Command, PSTR("TaskRun")) == 0)
+  {
+    success = true;
+    SensorSendTask(Par1 -1);
+  }
+
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
     success = true;
@@ -154,7 +160,7 @@ void ExecuteCommand(byte source, const char *Line)
       {
         String topic = event.substring(0,index);
         String value = event.substring(index+1);
-        MQTTclient.publish(topic.c_str(), value.c_str());
+        MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
       }      
     }
   }

@@ -171,7 +171,7 @@ void MQTTStatus(String& status)
   String pubname = Settings.MQTTsubscribe;
   pubname.replace("/#", "/status");
   pubname.replace("%sysname%", Settings.Name);
-  MQTTclient.publish(pubname.c_str(), status.c_str());
+  MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
 }
 
 

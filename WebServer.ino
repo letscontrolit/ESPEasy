@@ -1733,6 +1733,7 @@ void handle_advanced() {
   String globalsync = WebServer.arg("globalsync");
   String userules = WebServer.arg("userules");
   String cft = WebServer.arg("cft");
+  String MQTTRetainFlag = WebServer.arg("mqttretainflag");
 
   if (edit.length() != 0)
   {
@@ -1764,6 +1765,7 @@ void handle_advanced() {
     Settings.UseRules = (userules == "on");
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
+    Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
     SaveSettings();
 #if FEATURE_TIME
     if (Settings.UseNTP)
@@ -1785,7 +1787,13 @@ void handle_advanced() {
   reply += F("'><TR><TD>Publish Template:<TD><input type='text' name='mqttpublish' size=80 value='");
   reply += Settings.MQTTpublish;
 
-  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
+  reply += F("'><TR><TD>MQTT Retain Msg:<TD>");
+  if (Settings.MQTTRetainFlag)
+    reply += F("<input type=checkbox name='mqttretainflag' checked>");
+  else
+    reply += F("<input type=checkbox name='mqttretainflag'>");
+
+  reply += F("<TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
   reply += Settings.MessageDelay;
 
   reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");

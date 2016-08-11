@@ -121,7 +121,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             120
+#define BUILD                             121
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1
@@ -337,6 +337,7 @@ struct SettingsStruct
   boolean       GlobalSync;
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
+  boolean       MQTTRetainFlag;
 } Settings;
 
 struct ExtraTaskSettingsStruct
