@@ -67,6 +67,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             break;
           case SENSOR_TYPE_TEMP_HUM:                      // dual value
           case SENSOR_TYPE_TEMP_BARO:
+          case SENSOR_TYPE_DUAL:
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
@@ -78,6 +79,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             postDataStr += "}";
             break;
           case SENSOR_TYPE_TEMP_HUM_BARO:
+          case SENSOR_TYPE_TRIPLE:
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
@@ -97,22 +99,19 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         }
         postDataStr += F("&apikey=");
         postDataStr += SecuritySettings.ControllerPassword; // "0UDNN17RW6XAS2E5" // api key
-        
-        postDataStr += F("\r\n\r\n");
 
-        String postStr = F("POST /update HTTP/1.1\n");
-        postStr += F("Host: emoncms.org\n");
-        postStr += F("Connection: close\n");
-        postStr += F("X-EMONCMSAPIKEY: ");
-        postStr += SecuritySettings.ControllerPassword;
-        postStr += "\n";
-        postStr += F("Content-Type: application/x-www-form-urlencoded\n");
-        postStr += F("Content-Length: ");
-        postStr += postDataStr.length();
-        postStr += F("\n\n");
+        String hostName = host;
+        if (Settings.UseDNS)
+          hostName = Settings.ControllerHostName;
+
+        String postStr = F(" HTTP/1.1\r\n");
+        postStr += F("Host: ");
+        postStr += hostName;
+        postStr += F("\r\n");
+        postStr += F("Connection: close\r\n");
+        postStr += F("\r\n");
+
         postDataStr += postStr;
-        
-        //postStr += postDataStr;
 
         if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
           Serial.println(postDataStr);

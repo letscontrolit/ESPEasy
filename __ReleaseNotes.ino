@@ -1,3 +1,58 @@
+// R121 11-08-2016
+// Added option for MQTT retain flag. Can be configured in /tools/advanced
+// Added internal TaskRun <tasknr> command
+
+// R120 10-08-2016
+// Removed formula fields from the Dummy Device. This will not work anyway. Use a formula in TaskValueSet command instead.
+
+// R119 09-08-2016
+// Fixed calculation for DS1820 DS18S20 with extended precision for negative temperatures (contributed by saschaludwig)
+// Bugfixes for uninitialized variable and potential buffer overflow (contributed by bertrik)
+// Bugfix pulse commands for PCF8574 plugin
+// Main webpage shows sketch size / free size
+
+// R118 03-08-2016
+// Added the Dummy Device to production (used in the testlab in the past, but can also be useful for production purposes)
+//   You can use "TaskValueSet <task nr>,<variable nr>,<value>" in the rules section to set values
+//   Sending and retrieving values works just like any other sensor, using the template [<name>#<valuename>]
+// Prepared framework for SENSOR_TYPE_DUAL
+
+// R117 01-08-2016
+// Added support for FHEM using HTTP protocol (contributed by ddtlabs)
+
+// R116 01-08-2016
+// Counter plugin can be set to "Delta" (original and default setting for Domoticz incremental counter) or "Delta/Total/Time" for other controllers that can handle this counter type
+
+// R115 31-07-2016
+// Provided controller plugin calls CPLUGIN_WEBFORM_SAVE and CPLUGIN_WEBFORM_LOAD to support custom controller configurations stored in flash.
+
+// R114 22-07-2016
+// Cleanup code, conditional core 2.0.0/2.1.0 support removed, changed to core 2.3.0
+// The web gui now shows the core version used to build the release.
+
+// R113 21-07-2016
+// Bugfix in rules processing with multiple value devices, only the first value would work as expected
+
+// R112 19-07-2016
+// Bugfix for timezones other than whole hours offset. It is now set in +/- minutes
+
+// R111 18-07-2016
+// Bugfix parsing rfid (SENSOR_TYPE_LONG) values in parseTemplate function
+
+// R110 16-07-2016
+// Improved Serial Server plugin, reconnect handling
+// Improved thingspeak and emoncms plugins (contributed by pm-cz)
+
+// R109 12-07-2016
+// Fix HTU21d timing
+// Support internal pullup for SHT1X plugin
+// Moved to pubsubclient 2.6 library (source no longer compatible with 1.9 library, so use the 2.6 version!)
+
+// R108 07-06-2016
+// Support for MS5611 temp/baro sensor (contributed by Battika)
+// Support PWM fade (contributed by qubeck). 
+//	Use only for small fade times as it's a blocking function!
+
 // R107 21-05-2016
 // Support to include VCC reading at compile time, defaults to disabled. (contributed by Battika)
 

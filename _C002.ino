@@ -141,6 +141,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             values.toCharArray(str, 80);
             root["svalue"] =  str;
             break;
+          case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
+            root["nvalue"] = 0;
+            values  = toString(UserVar[event->BaseVarIndex ],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            values += ";";
+            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            values.toCharArray(str, 80);
+            root["svalue"] =  str;
+            break;            
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             root["nvalue"] = 0;
             values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
@@ -197,7 +205,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         pubname.replace("%tskname%", ExtraTaskSettings.TaskDeviceName);
         pubname.replace("%id%", String(event->idx));
 
-        if (!MQTTclient.publish(pubname, json))
+        if (!MQTTclient.publish(pubname.c_str(), json, Settings.MQTTRetainFlag))
         {
           log = F("MQTT publish failed");
           addLog(LOG_LEVEL_DEBUG, json);

@@ -42,6 +42,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
             break;
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
+          case SENSOR_TYPE_DUAL:
             {
               HTTPSend(event, 0, UserVar[event->BaseVarIndex], 0);
               unsigned long timer = millis() + Settings.MessageDelay;
@@ -51,6 +52,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
               break;
             }
           case SENSOR_TYPE_TEMP_HUM_BARO:
+          case SENSOR_TYPE_TRIPLE:
             {
               HTTPSend(event, 0, UserVar[event->BaseVarIndex], 0);
               unsigned long timer = millis() + Settings.MessageDelay;

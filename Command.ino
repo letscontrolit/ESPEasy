@@ -20,6 +20,17 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
+  {
+    success = true;
+    Serial.print(F("SecurityStruct         : "));
+    Serial.println(sizeof(SecuritySettings));
+    Serial.print(F("SettingsStruct         : "));
+    Serial.println(sizeof(Settings));
+    Serial.print(F("ExtraTaskSettingsStruct: "));
+    Serial.println(sizeof(ExtraTaskSettings));
+  }
+
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
   {
     success = true;
@@ -51,13 +62,6 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("VariableSet")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 3))
-      UserVar[Par1 - 1] = atof(TmpStr1);
-  }
-
   if (strcasecmp_P(Command, PSTR("build")) == 0)
   {
     success = true;
@@ -75,6 +79,23 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
   // commands for rules
   // ****************************************
+
+  if (strcasecmp_P(Command, PSTR("TaskValueSet")) == 0)
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 4))
+    {
+      float result = 0;
+      byte error = Calculate(TmpStr1, &result);
+      UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("TaskRun")) == 0)
+  {
+    success = true;
+    SensorSendTask(Par1 -1);
+  }
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
@@ -139,7 +160,7 @@ void ExecuteCommand(byte source, const char *Line)
       {
         String topic = event.substring(0,index);
         String value = event.substring(index+1);
-        MQTTclient.publish(topic, value);
+        MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
       }      
     }
   }

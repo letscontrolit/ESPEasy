@@ -207,7 +207,10 @@ void handle_root() {
 
     reply += F("<TR><TD>Build:<TD>");
     reply += BUILD;
-
+    
+    reply += F("<TR><TD>Core Version:<TD>");
+    reply += ESP.getCoreVersion();
+        
     reply += F("<TR><TD>Unit:<TD>");
     reply += Settings.Unit;
 
@@ -231,6 +234,12 @@ void handle_root() {
 
     reply += F("<TR><TD>Flash Size:<TD>");
     reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+    reply += F(" kB");
+
+    reply += F("<TR><TD>Sketch Size/Free:<TD>");
+    reply += ESP.getSketchSize() / 1024;
+    reply += F(" kB / ");
+    reply += ESP.getFreeSketchSpace() / 1024;
     reply += F(" kB");
 
     reply += F("<TR><TD>Free Mem:<TD>");
@@ -348,6 +357,8 @@ void handle_config() {
     {
       if (Settings.Protocol != 0)
       {
+        byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_SAVE, 0, dummyString);
         Settings.UseDNS = usedns.toInt();
         if (Settings.UseDNS)
         {
@@ -479,6 +490,9 @@ void handle_config() {
       reply += SecuritySettings.ControllerPassword;
     }
     reply += F("'>");
+
+    CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, 0, reply);
+    
   }
 
   reply += F("<TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
@@ -1027,6 +1041,20 @@ void handle_devices() {
               reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
           }
         }
+        else
+        {
+        if (Device[DeviceIndex].DecimalsOnly)
+          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+          {
+            reply += F("<TR><TD>Decimals ");
+            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+            reply += F(":<TD><input type='text' name='taskdevicevaluedecimals");
+            reply += varNr + 1;
+            reply += F("' value='");
+            reply += ExtraTaskSettings.TaskDeviceValueDecimals[varNr];
+            reply += F("'>");
+          }
+        }
 
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
@@ -1454,10 +1482,10 @@ void handle_i2cscanner() {
           reply += F("DS1307 RTC");
           break;
         case 0x76:
-          reply += F("BME280/BMP280");
+          reply += F("BME280/BMP280/MS5607/MS5611");
           break;
         case 0x77:
-          reply += F("BMP085");
+          reply += F("BMP085/MS5607/MS5611");
           break;
         case 0x7f:
           reply += F("Arduino Pro Mini IO Extender");
@@ -1467,7 +1495,7 @@ void handle_i2cscanner() {
     }
     else if (error == 4)
     {
-      reply += F("<TR><TD>Unknow error at address 0x");
+      reply += F("<TR><TD>Unknown error at address 0x");
       reply += String(address, HEX);
     }
   }
@@ -1705,6 +1733,7 @@ void handle_advanced() {
   String globalsync = WebServer.arg("globalsync");
   String userules = WebServer.arg("userules");
   String cft = WebServer.arg("cft");
+  String MQTTRetainFlag = WebServer.arg("mqttretainflag");
 
   if (edit.length() != 0)
   {
@@ -1732,13 +1761,16 @@ void handle_advanced() {
     Settings.DST = (dst == "on");
     Settings.WDI2CAddress = wdi2caddress.toInt();
     Settings.UseSSDP = (usessdp == "on");
-#if ESP_CORE >= 210
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
-#endif
     Settings.UseRules = (userules == "on");
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
+    Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
     SaveSettings();
+#if FEATURE_TIME
+    if (Settings.UseNTP)
+      initTime();
+#endif
   }
 
   String reply = "";
@@ -1755,7 +1787,13 @@ void handle_advanced() {
   reply += F("'><TR><TD>Publish Template:<TD><input type='text' name='mqttpublish' size=80 value='");
   reply += Settings.MQTTpublish;
 
-  reply += F("'><TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
+  reply += F("'><TR><TD>MQTT Retain Msg:<TD>");
+  if (Settings.MQTTRetainFlag)
+    reply += F("<input type=checkbox name='mqttretainflag' checked>");
+  else
+    reply += F("<input type=checkbox name='mqttretainflag'>");
+
+  reply += F("<TR><TD>Message Delay (ms):<TD><input type='text' name='messagedelay' value='");
   reply += Settings.MessageDelay;
 
   reply += F("'><TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
@@ -1772,7 +1810,7 @@ void handle_advanced() {
   reply += F("<TR><TD>NTP Hostname:<TD><input type='text' name='ntphost' size=64 value='");
   reply += Settings.NTPHost;
 
-  reply += F("'><TR><TD>Timezone Offset:<TD><input type='text' name='timezone' size=2 value='");
+  reply += F("'><TR><TD>Timezone Offset: (Minutes)<TD><input type='text' name='timezone' size=2 value='");
   reply += Settings.TimeZone;
   reply += F("'>");
 
@@ -1836,19 +1874,17 @@ void handle_advanced() {
   reply += Settings.ConnectionFailuresThreshold;
   reply += F("'>");
 
-  reply += F("<TR><TH>Experimental Settings<TH>Value");
-
-#if ESP_CORE >= 210
-  reply += F("<TR><TD>I2C ClockStretchLimit:<TD><input type='text' name='wireclockstretchlimit' value='");
-  reply += Settings.WireClockStretchLimit;
-  reply += F("'>");
-#endif
-
   reply += F("<TR><TD>Rules:<TD>");
   if (Settings.UseRules)
     reply += F("<input type=checkbox name='userules' checked>");
   else
     reply += F("<input type=checkbox name='userules'>");
+
+  reply += F("<TR><TH>Experimental Settings<TH>Value");
+
+  reply += F("<TR><TD>I2C ClockStretchLimit:<TD><input type='text' name='wireclockstretchlimit' value='");
+  reply += Settings.WireClockStretchLimit;
+  reply += F("'>");
 
   reply += F("<TR><TD>Global Sync:<TD>");
   if (Settings.GlobalSync)

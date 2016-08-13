@@ -51,7 +51,8 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         if (connectionFailures)
           connectionFailures--;
 
-        String postDataStr = SecuritySettings.ControllerPassword; // "0UDNN17RW6XAS2E5" // api key
+        String postDataStr = F("api_key=");
+        postDataStr += SecuritySettings.ControllerPassword; // "0UDNN17RW6XAS2E5" // api key
 
         switch (event->sensorType)
         {
@@ -64,6 +65,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
             break;
           case SENSOR_TYPE_TEMP_HUM:                      // dual value
           case SENSOR_TYPE_TEMP_BARO:
+          case SENSOR_TYPE_DUAL:
             postDataStr += F("&field");
             postDataStr += event->idx;
             postDataStr += "=";
@@ -74,6 +76,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
             postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             break;
           case SENSOR_TYPE_TEMP_HUM_BARO:
+          case SENSOR_TYPE_TRIPLE:
             postDataStr += F("&field");
             postDataStr += event->idx;
             postDataStr += "=";
@@ -88,18 +91,27 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
             postDataStr += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
             break;
         }
-        postDataStr += F("\r\n\r\n");
+        //postDataStr += F("\r\n\r\n"); // PM_CZ: Removed - breaks the last value on the line
 
-        String postStr = F("POST /update HTTP/1.1\n");
-        postStr += F("Host: api.thingspeak.com\n");
-        postStr += F("Connection: close\n");
+        String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
+        if (Settings.UseDNS)
+          hostName = Settings.ControllerHostName;
+
+        String postStr = F("POST /update HTTP/1.1\r\n");
+        postStr += F("Host: ");
+        postStr += hostName;
+        postStr += F("\r\n");
+        postStr += F("Connection: close\r\n");
+
+/*      // PM_CZ: Following code is not necessary when sending api_key in POST data the correct way
         postStr += F("X-THINGSPEAKAPIKEY: ");
         postStr += SecuritySettings.ControllerPassword;
-        postStr += "\n";
-        postStr += F("Content-Type: application/x-www-form-urlencoded\n");
+        postStr += "\r\n";
+*/
+        postStr += F("Content-Type: application/x-www-form-urlencoded\r\n");
         postStr += F("Content-Length: ");
         postStr += postDataStr.length();
-        postStr += F("\n\n");
+        postStr += F("\r\n\r\n");
         postStr += postDataStr;
 
         // This will send the request to the server

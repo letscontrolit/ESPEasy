@@ -110,11 +110,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;
           if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
             serialconfig += 0x20;
-          #if ESP_CORE >= 210
-            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
-          #else
-            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
-          #endif
+          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
           ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           ser2netServer->begin();
 
@@ -138,11 +134,9 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Plugin_020_init)
         {
           size_t bytes_read;
-          if (!ser2netClient)
+          if (ser2netServer->hasClient())
           {
-            while (Serial.available()) {
-              Serial.read();
-            }
+            if (ser2netClient) ser2netClient.stop();
             ser2netClient = ser2netServer->available();
           }
 
@@ -150,9 +144,10 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           {
             uint8_t net_buf[BUFFER_SIZE];
             int count = ser2netClient.available();
-            if (count > 0) {
-              if (count > BUFFER_SIZE)
-                count = BUFFER_SIZE;
+            if (count > 0)
+            {
+              if (count >= BUFFER_SIZE)
+                count = BUFFER_SIZE - 1;
               bytes_read = ser2netClient.read(net_buf, count);
               Serial.write(net_buf, bytes_read);
               Serial.flush();
@@ -162,6 +157,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
             }
           }
+          else
+          {
+            while (Serial.available())
+              Serial.read();
+          }
+
           success = true;
         }
         break;

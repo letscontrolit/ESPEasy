@@ -11,6 +11,7 @@
 boolean Plugin_031_init = false;
 byte Plugin_031_DATA_Pin = 0;
 byte Plugin_031_CLOCK_Pin = 0;
+int input_mode;
 
 enum {
   SHT1X_CMD_MEASURE_TEMP  = B00000011,
@@ -31,7 +32,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         Device[deviceCount].VType = SENSOR_TYPE_TEMP_HUM;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
+        Device[deviceCount].PullUpOption = true;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 2;
@@ -59,7 +60,16 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         Plugin_031_init = true;
         Plugin_031_DATA_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         Plugin_031_CLOCK_Pin = Settings.TaskDevicePin2[event->TaskIndex];
-        pinMode(Plugin_031_DATA_Pin, INPUT); /* Keep Hi-Z except when sending data */
+        if (Settings.TaskDevicePin1PullUp[event->TaskIndex]) {
+          input_mode = INPUT_PULLUP;
+          String log = F("SHT1X: Setting PullUp on pin ");
+          log += String(Plugin_031_DATA_Pin);
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        else {
+          input_mode = INPUT;
+        }
+        pinMode(Plugin_031_DATA_Pin, input_mode); /* Keep Hi-Z except when sending data */
         pinMode(Plugin_031_CLOCK_Pin, OUTPUT);
         Plugin_031_reset();
         byte status = Plugin_031_readStatus();
@@ -181,7 +191,7 @@ void Plugin_031_sendCommand(const byte cmd)
   // Wait for ACK
   bool ackerror = false;
   digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
-  pinMode(Plugin_031_DATA_Pin, INPUT);
+  pinMode(Plugin_031_DATA_Pin, input_mode);
   if (digitalRead(Plugin_031_DATA_Pin) != LOW) ackerror = true;
   digitalWrite(Plugin_031_CLOCK_Pin, LOW);
 
@@ -223,7 +233,7 @@ int Plugin_031_readData(const int bits)
     digitalWrite(Plugin_031_DATA_Pin, LOW);
     digitalWrite(Plugin_031_CLOCK_Pin, HIGH);
     digitalWrite(Plugin_031_CLOCK_Pin, LOW);
-    pinMode(Plugin_031_DATA_Pin, INPUT);
+    pinMode(Plugin_031_DATA_Pin, input_mode);
   }
 
   // Read least significant byte

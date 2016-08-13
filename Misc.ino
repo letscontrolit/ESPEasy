@@ -392,6 +392,12 @@ void BuildFixes()
     }
   }
 
+  if (Settings.Build < 112)
+  {
+    Serial.println(F("Fix timezone"));
+    Settings.TimeZone = Settings.TimeZone_OLD*60;
+  }
+
   Settings.Build = BUILD;
   SaveSettings();
 }
@@ -640,6 +646,36 @@ void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
 #else
   LoadFromFlash(4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
+#endif
+}
+
+
+/********************************************************************************************\
+  Save Custom Controller settings to SPIFFS
+  \*********************************************************************************************/
+void SaveCustomControllerSettings(byte* memAddress, int datasize)
+{
+  if (datasize > 4096)
+    return;
+#if FEATURE_SPIFFS
+  SaveToFile((char*)"config.txt", 28672, memAddress, datasize);
+#else
+  SaveToFlash(28672, memAddress, datasize);
+#endif
+}
+
+
+/********************************************************************************************\
+  Save Custom Controller settings to SPIFFS
+  \*********************************************************************************************/
+void LoadCustomControllerSettings(byte* memAddress, int datasize)
+{
+  if (datasize > 4096)
+    return;
+#if FEATURE_SPIFFS
+  LoadFromFile((char*)"config.txt", 28672, memAddress, datasize);
+#else
+  LoadFromFlash(28672, memAddress, datasize);
 #endif
 }
 
@@ -1060,7 +1096,7 @@ unsigned long string2TimeLong(String &str)
   unsigned long a;
   str.toLowerCase();
   str.toCharArray(command, 20);
-  unsigned long lngTime;
+  unsigned long lngTime = 0;
 
   if (GetArgv(command, TmpStr1, 1))
   {
@@ -1164,6 +1200,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   else
   {
     byte count = 0;
+    byte currentTaskIndex = ExtraTaskSettings.TaskIndex;
     while (leftBracketIndex >= 0 && count < 10 - 1)
     {
       newString += tmpString.substring(0, leftBracketIndex);
@@ -1194,8 +1231,13 @@ String parseTemplate(String &tmpString, byte lineSize)
                 if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
                 {
                   // here we know the task and value, so find the uservar
-                  String value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-                  
+                  String value = "";
+                  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                  if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+                    value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
+                  else
+                    value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+                 
                   if (valueFormat == "R")
                   {
                     int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
@@ -1214,6 +1256,7 @@ String parseTemplate(String &tmpString, byte lineSize)
       count++;
     }
     newString += tmpString;
+    LoadTaskSettings(currentTaskIndex);
   }
 
   // replace other system variables like %sysname%, %systime%, %ip%
@@ -1637,6 +1680,7 @@ int weekday()
 
 void initTime()
 {
+  nextSyncTime=0;
   now();
 }
 
@@ -1718,7 +1762,7 @@ unsigned long getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[43];
       log = F("NTP  : NTP replied!");
       addLog(LOG_LEVEL_DEBUG_MORE, log);
-      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_HOUR;
+      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_MIN;
     }
   }
   log = F("NTP  : No reply");
@@ -1729,8 +1773,8 @@ unsigned long getNtpTime()
 
 
 /********************************************************************************************\
-  Very Experimental rules processing
-  \*********************************************************************************************/
+  Rules processing
+\*********************************************************************************************/
 void rulesProcessing(String& event)
 {
   static uint8_t* data;
