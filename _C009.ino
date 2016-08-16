@@ -150,8 +150,10 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
             break;
           case SENSOR_TYPE_SWITCH:
-            url += F("set%20");
+            url += F("setreading%20");
             url += Settings.Name;
+            url += F("%20");
+            url += ExtraTaskSettings.TaskDeviceValueNames[0];
             url += F("%20");
             if (UserVar[event->BaseVarIndex] == 0)
               url += "off";
@@ -159,14 +161,15 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
               url += "on";
             break;
           case SENSOR_TYPE_DIMMER:
-            url += F("set%20");
+            url += F("setreading%20");
             url += Settings.Name;
+            url += F("%20");
+            url += ExtraTaskSettings.TaskDeviceValueNames[0];
             url += F("%20");
             if (UserVar[event->BaseVarIndex] == 0)
               url += "off";
             else
             {
-              url += F("pct%20");
               url += UserVar[event->BaseVarIndex];
             }
             break;
