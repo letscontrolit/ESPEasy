@@ -12,9 +12,9 @@ void syslog(const char *message)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
-    char str[80];
+    char str[256];
     str[0] = 0;
-    sprintf_P(str, PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
+    snprintf_P(str, sizeof(str), PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
     portUDP.write(str);
     portUDP.endPacket();
   }
@@ -355,11 +355,13 @@ void sendSysInfoUDP(byte repeats)
   }
 
   // store my own info also in the list...
-  IPAddress ip = WiFi.localIP();
-  for (byte x = 0; x < 4; x++)
-    Nodes[Settings.Unit].ip[x] = ip[x];
-  Nodes[Settings.Unit].age = 0;
-
+  if (Settings.Unit < UNIT_MAX)
+  {
+    IPAddress ip = WiFi.localIP();
+    for (byte x = 0; x < 4; x++)
+      Nodes[Settings.Unit].ip[x] = ip[x];
+    Nodes[Settings.Unit].age = 0;
+  }
 }
 
 

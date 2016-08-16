@@ -1,3 +1,8 @@
+// R122 16-08-2016
+// Check on unit number < UNIT_MAX before adding self to the nodelist. This would corrupt the nodelist data structure for units > 31
+// Fixed another potential buffer overflow when logging ser2net data. And changed the fix from R119. Extended Ser2Net logging.
+// Increased the syslog buffer size to 256 bytes.
+
 // R121 11-08-2016
 // Added option for MQTT retain flag. Can be configured in /tools/advanced
 // Added internal TaskRun <tasknr> command

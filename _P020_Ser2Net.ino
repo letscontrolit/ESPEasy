@@ -16,6 +16,7 @@ WiFiClient ser2netClient;
 boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
+  static byte connectionState=0;
 
   switch (function)
   {
@@ -138,27 +139,47 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           {
             if (ser2netClient) ser2netClient.stop();
             ser2netClient = ser2netServer->available();
+            char log[40];
+            strcpy_P(log, PSTR("Ser2N: Client connected!"));
+            addLog(LOG_LEVEL_ERROR, log);
           }
 
           if (ser2netClient.connected())
           {
+            connectionState=1;
             uint8_t net_buf[BUFFER_SIZE];
             int count = ser2netClient.available();
             if (count > 0)
             {
-              if (count >= BUFFER_SIZE)
-                count = BUFFER_SIZE - 1;
+              if (count > BUFFER_SIZE)
+                count = BUFFER_SIZE;
               bytes_read = ser2netClient.read(net_buf, count);
               Serial.write(net_buf, bytes_read);
-              Serial.flush();
+              Serial.flush(); // Waits for the transmission of outgoing serial data to complete
 
-              net_buf[count]=0;
-              addLog(LOG_LEVEL_DEBUG,(char*)net_buf);
-
+              if (count == BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+              {
+                count--;
+                char log[40];
+                strcpy_P(log, PSTR("Ser2N: network buffer full!"));   // and log buffer full situation
+                addLog(LOG_LEVEL_ERROR, log);
+              }
+              net_buf[count]=0; // before logging as a char array, zero terminate the last position to be safe.
+              char log[BUFFER_SIZE+40];
+              sprintf_P(log, PSTR("Ser2N: N>: %s"), (char*)net_buf);
+              addLog(LOG_LEVEL_DEBUG,log);
             }
           }
           else
           {
+            if(connectionState == 1) // there was a client connected before...
+            {
+              connectionState=0;
+              char log[40];
+              strcpy_P(log, PSTR("Ser2N: Client disconnected!"));
+              addLog(LOG_LEVEL_ERROR, log);
+            }
+            
             while (Serial.available())
               Serial.read();
           }
@@ -180,14 +201,27 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
               serial_buf[bytes_read] = Serial.read();
               bytes_read++;
             }
-            if (bytes_read > 0) {
-              ser2netClient.write((const uint8_t*)serial_buf, bytes_read);
-              ser2netClient.flush();
+
+            if (bytes_read != BUFFER_SIZE)
+            {
+              if (bytes_read > 0) {
+                ser2netClient.write((const uint8_t*)serial_buf, bytes_read);
+                ser2netClient.flush();
+              }
             }
-
-            serial_buf[bytes_read]=0;
-            addLog(LOG_LEVEL_DEBUG,(char*)serial_buf);
-
+            else // if we have a full buffer, drop the last position to stuff with string end marker
+            {
+              while (Serial.available()) // read possible remaining data to avoid sending rubbish...
+                Serial.read();
+              bytes_read--;
+              char log[40];
+              strcpy_P(log, PSTR("Ser2N: serial buffer full!"));   // and log buffer full situation
+              addLog(LOG_LEVEL_ERROR, log);
+            }  
+            serial_buf[bytes_read]=0; // before logging as a char array, zero terminate the last position to be safe.
+            char log[BUFFER_SIZE+40];
+            sprintf_P(log, PSTR("Ser2N: S>: %s"), (char*)serial_buf);
+            addLog(LOG_LEVEL_DEBUG,log);
           }
           success = true;
         }
