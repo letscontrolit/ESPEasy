@@ -48,14 +48,16 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
+        String options[3];
         options[0] = F("DHT 11");
         options[1] = F("DHT 22");
-        int optionValues[2];
+        options[2] = F("DHT 12");
+        int optionValues[3];
         optionValues[0] = 11;
         optionValues[1] = 22;
+        optionValues[2] = 12;
         string += F("<TR><TD>DHT Type:<TD><select name='plugin_005_dhttype'>");
-        for (byte x = 0; x < 2; x++)
+        for (byte x = 0; x < 3; x++)
         {
           string += F("<option value='");
           string += optionValues[x];
@@ -128,13 +130,19 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
               if (dht_dat[4] == dht_check_sum)
               {
-                float temperature = 0;
-                float humidity = 0;
+                float temperature = NAN;
+                float humidity = NAN;
                 
                 if (Par3 == 11)
                 {
                   temperature = float(dht_dat[2]); // Temperature
                   humidity = float(dht_dat[0]); // Humidity
+                }
+                else if (Par3 == 12)
+                {
+                    temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
+                    if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
+                    humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0; // Humidity
                 }
 
                 if (Par3 == 22)
@@ -145,13 +153,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
                     temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
                   humidity = word(dht_dat[0], dht_dat[1]) * 0.1; // Humidity
                 }
-                if (temperature == 0 && humidity == 0)
-                {
-                  String log = F("DHT  : No reading!");
-                  log += UserVar[event->BaseVarIndex];
-                  addLog(LOG_LEVEL_INFO, log);
-                }
-                else
+                if (temperature != NAN || humidity != NAN) // According to negated original if, maybe use && instead?
                 {
                   UserVar[event->BaseVarIndex] = temperature;
                   UserVar[event->BaseVarIndex + 1] = humidity;
@@ -169,6 +171,8 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         }  // !dht
         if(!success)
         {
+          String log = F("DHT  : No reading!");
+          addLog(LOG_LEVEL_INFO, log);
           UserVar[event->BaseVarIndex] = NAN;
           UserVar[event->BaseVarIndex + 1] = NAN;
         }

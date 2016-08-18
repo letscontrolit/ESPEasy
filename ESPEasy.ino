@@ -39,7 +39,7 @@
 //   Analog input (ESP-7/12 only)
 //   Pulse counters
 //   Dallas OneWire DS18b20 temperature sensors
-//   DHT11/22 humidity sensors
+//   DHT11/22/12 humidity sensors
 //   BMP085 I2C Barometric Pressure sensor
 //   PCF8591 4 port Analog to Digital converter (I2C)
 //   RFID Wiegand-26 reader
