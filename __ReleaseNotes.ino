@@ -1,3 +1,7 @@
+// R123 19-08-2016
+// Added support for the DHT12 sensor, successor of the famous DHT11. (contributed by pm-cz)
+//   It can be used as single wire or I2C.
+
 // R122 16-08-2016
 // Check on unit number < UNIT_MAX before adding self to the nodelist. This would corrupt the nodelist data structure for units > 31
 // Fixed another potential buffer overflow when logging ser2net data. And changed the fix from R119. Extended Ser2Net logging.
