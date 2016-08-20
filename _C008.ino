@@ -16,6 +16,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_008;
         Protocol[protocolCount].usesMQTT = false;
+        Protocol[protocolCount].usesTemplate = true;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = false;
         Protocol[protocolCount].defaultPort = 80;
@@ -27,44 +28,28 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_008);
         break;
       }
+
+    case CPLUGIN_PROTOCOL_TEMPLATE:
+      {
+        strcpy_P(Settings.MQTTpublish, PSTR("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%"));
+        break;
+      }
       
     case CPLUGIN_PROTOCOL_SEND:
       {
-        switch (event->sensorType)
+        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        for (byte x = 0; x < valueCount; x++)
         {
-          case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-          case SENSOR_TYPE_SWITCH:
-          case SENSOR_TYPE_DIMMER:
-            HTTPSend(event, 0, UserVar[event->BaseVarIndex], 0);
-            break;
-          case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
+          if (event->sensorType == SENSOR_TYPE_LONG)
             HTTPSend(event, 0, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
-            break;
-          case SENSOR_TYPE_TEMP_HUM:
-          case SENSOR_TYPE_TEMP_BARO:
-          case SENSOR_TYPE_DUAL:
-            {
-              HTTPSend(event, 0, UserVar[event->BaseVarIndex], 0);
-              unsigned long timer = millis() + Settings.MessageDelay;
-              while (millis() < timer)
-                backgroundtasks();
-              HTTPSend(event, 1, UserVar[event->BaseVarIndex + 1], 0);
-              break;
-            }
-          case SENSOR_TYPE_TEMP_HUM_BARO:
-          case SENSOR_TYPE_TRIPLE:
-            {
-              HTTPSend(event, 0, UserVar[event->BaseVarIndex], 0);
-              unsigned long timer = millis() + Settings.MessageDelay;
-              while (millis() < timer)
-                backgroundtasks();
-              HTTPSend(event, 1, UserVar[event->BaseVarIndex + 1], 0);
-              timer = millis() + Settings.MessageDelay;
-              while (millis() < timer)
-                backgroundtasks();
-              HTTPSend(event, 2, UserVar[event->BaseVarIndex + 2], 0);
-              break;
-            }
+          else
+            HTTPSend(event, x, UserVar[event->BaseVarIndex + x], 0);
+          if (valueCount > 1)
+          {
+            unsigned long timer = millis() + Settings.MessageDelay;
+            while (millis() < timer)
+              backgroundtasks();
+          }
         }
         break;
       }
@@ -84,7 +69,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
-  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,Settings.ControllerPort);
+  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, Settings.ControllerPort);
   addLog(LOG_LEVEL_DEBUG, log);
 
   // Use WiFiClient class to create TCP connections
@@ -120,7 +105,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   String hostName = host;
   if (Settings.UseDNS)
     hostName = Settings.ControllerHostName;
-    
+
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + hostName + "\r\n" +

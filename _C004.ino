@@ -52,47 +52,16 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           connectionFailures--;
 
         String postDataStr = F("api_key=");
-        postDataStr += SecuritySettings.ControllerPassword; // "0UDNN17RW6XAS2E5" // api key
+        postDataStr += SecuritySettings.ControllerPassword; // used for API key
 
-        switch (event->sensorType)
+        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        for (byte x = 0; x < valueCount; x++)
         {
-          case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-          case SENSOR_TYPE_SWITCH:
-            postDataStr += F("&field");
-            postDataStr += event->idx;
-            postDataStr += "=";
-            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            break;
-          case SENSOR_TYPE_TEMP_HUM:                      // dual value
-          case SENSOR_TYPE_TEMP_BARO:
-          case SENSOR_TYPE_DUAL:
-            postDataStr += F("&field");
-            postDataStr += event->idx;
-            postDataStr += "=";
-            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            postDataStr += F("&field");
-            postDataStr += event->idx + 1;
-            postDataStr += "=";
-            postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            break;
-          case SENSOR_TYPE_TEMP_HUM_BARO:
-          case SENSOR_TYPE_TRIPLE:
-            postDataStr += F("&field");
-            postDataStr += event->idx;
-            postDataStr += "=";
-            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            postDataStr += F("&field");
-            postDataStr += event->idx + 1;
-            postDataStr += "=";
-            postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            postDataStr += F("&field");
-            postDataStr += event->idx + 2;
-            postDataStr += "=";
-            postDataStr += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-            break;
+          postDataStr += F("&field");
+          postDataStr += event->idx + x;
+          postDataStr += "=";
+          postDataStr += toString(UserVar[event->BaseVarIndex + x],ExtraTaskSettings.TaskDeviceValueDecimals[x]);
         }
-        //postDataStr += F("\r\n\r\n"); // PM_CZ: Removed - breaks the last value on the line
-
         String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
         if (Settings.UseDNS)
           hostName = Settings.ControllerHostName;
@@ -103,11 +72,6 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         postStr += F("\r\n");
         postStr += F("Connection: close\r\n");
 
-/*      // PM_CZ: Following code is not necessary when sending api_key in POST data the correct way
-        postStr += F("X-THINGSPEAKAPIKEY: ");
-        postStr += SecuritySettings.ControllerPassword;
-        postStr += "\r\n";
-*/
         postStr += F("Content-Type: application/x-www-form-urlencoded\r\n");
         postStr += F("Content-Length: ");
         postStr += postDataStr.length();

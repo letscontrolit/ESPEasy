@@ -109,7 +109,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         optionValues[0] = 0;
         optionValues[1] = 1;
         optionValues[2] = 2;
-        string += F("<TR><TD>Report:<TD><select name='plugin_026_value'>");
+        string += F("<TR><TD>Report:<TD><select name='plugin_027_value'>");
         for (byte x = 0; x < 3; x++)
         {
           string += F("<option value='");
@@ -129,7 +129,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_026_value");
+        String plugin1 = WebServer.arg("plugin_027_value");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         success = true;
         break;

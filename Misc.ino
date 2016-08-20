@@ -1,6 +1,41 @@
 /*********************************************************************************************\
+   Get value count from sensor type
+  \*********************************************************************************************/
+
+byte getValueCountFromSensorType(byte sensorType)
+{
+  byte valueCount = 0;
+
+  switch (sensorType)
+  {
+    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_SWITCH:
+    case SENSOR_TYPE_DIMMER:
+      valueCount = 1;
+      break;
+    case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
+      valueCount = 1;
+      break;
+    case SENSOR_TYPE_TEMP_HUM:
+    case SENSOR_TYPE_TEMP_BARO:
+    case SENSOR_TYPE_DUAL:
+      valueCount = 2;
+      break;
+    case SENSOR_TYPE_TEMP_HUM_BARO:
+    case SENSOR_TYPE_TRIPLE:
+      valueCount = 3;
+      break;
+    case SENSOR_TYPE_QUAD:
+      valueCount = 4;
+      break;
+  }
+  return valueCount;
+}
+
+
+/*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
-\*********************************************************************************************/
+  \*********************************************************************************************/
 String toString(float value, byte decimals)
 {
   String sValue = String(value, decimals);
@@ -43,14 +78,14 @@ int getParamStartPos(String& string, byte indexFind)
   String tmpString = string;
   byte count = 0;
   tmpString.replace(" ", ",");
-  for (int x=0; x < tmpString.length(); x++)
+  for (int x = 0; x < tmpString.length(); x++)
   {
-    if(tmpString.charAt(x) == ',')
-      {
-        count++;
-        if (count == (indexFind -1))
-         return x+1;
-      }
+    if (tmpString.charAt(x) == ',')
+    {
+      count++;
+      if (count == (indexFind - 1))
+        return x + 1;
+    }
   }
   return -1;
 }
@@ -290,7 +325,7 @@ void taskClear(byte taskIndex, boolean save)
 
   for (byte varNr = 0; varNr < PLUGIN_EXTRACONFIGVAR_MAX; varNr++)
     ExtraTaskSettings.TaskDevicePluginConfigLong[varNr] = 0;
-  
+
   if (save)
   {
     SaveTaskSettings(taskIndex);
@@ -395,7 +430,7 @@ void BuildFixes()
   if (Settings.Build < 112)
   {
     Serial.println(F("Fix timezone"));
-    Settings.TimeZone = Settings.TimeZone_OLD*60;
+    Settings.TimeZone = Settings.TimeZone_OLD * 60;
   }
 
   Settings.Build = BUILD;
@@ -902,7 +937,7 @@ void ResetFactory(void)
 
   LoadSettings();
   // now we set all parameters that need to be non-zero as default value
-  
+
 #if DEFAULT_USE_STATIC_IP
   str2ip((char*)DEFAULT_IP, Settings.IP);
   str2ip((char*)DEFAULT_DNS, Settings.DNS);
@@ -1237,7 +1272,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                     value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
                   else
                     value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-                 
+
                   if (valueFormat == "R")
                   {
                     int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
@@ -1680,7 +1715,7 @@ int weekday()
 
 void initTime()
 {
-  nextSyncTime=0;
+  nextSyncTime = 0;
   now();
 }
 
@@ -1774,7 +1809,7 @@ unsigned long getNtpTime()
 
 /********************************************************************************************\
   Rules processing
-\*********************************************************************************************/
+  \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
   static uint8_t* data;
@@ -1784,28 +1819,28 @@ void rulesProcessing(String& event)
 
   nestingLevel++;
   if (nestingLevel > RULES_MAX_NESTING_LEVEL)
-    {
-      log = F("EVENT: Error: Nesting level exceeded!");
-      addLog(LOG_LEVEL_ERROR, log);
-      nestingLevel--;
-      return;
-    }
-  
+  {
+    log = F("EVENT: Error: Nesting level exceeded!");
+    addLog(LOG_LEVEL_ERROR, log);
+    nestingLevel--;
+    return;
+  }
+
   log = F("EVENT: ");
   log += event;
   addLog(LOG_LEVEL_INFO, log);
 
   // load rules from flash memory, stored in offset block 10
   if (data == NULL)
-    {
-      data = new uint8_t[RULES_MAX_SIZE];
-      uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-      _sector += 10;
-      noInterrupts();
-      spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), RULES_MAX_SIZE);
-      interrupts();
-      data[RULES_MAX_SIZE-1]=0; // make sure it's terminated!
-    }
+  {
+    data = new uint8_t[RULES_MAX_SIZE];
+    uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    _sector += 10;
+    noInterrupts();
+    spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), RULES_MAX_SIZE);
+    interrupts();
+    data[RULES_MAX_SIZE - 1] = 0; // make sure it's terminated!
+  }
 
   int pos = 0;
   String line = "";
@@ -1831,7 +1866,7 @@ void rulesProcessing(String& event)
         int comment = line.indexOf("//");
         if (comment > 0)
           line = line.substring(0, comment);
-          
+
         line = parseTemplate(line, line.length());
         line.trim();
 
@@ -1926,7 +1961,7 @@ void rulesProcessing(String& event)
   }
 
   nestingLevel--;
-  if(nestingLevel == 0)
+  if (nestingLevel == 0)
   {
     delete [] data;
     data = NULL;
@@ -1949,24 +1984,24 @@ boolean ruleMatch(String& event, String& rule)
     int pos2 = rule.indexOf("=");
     if (pos1 > 0 && pos2 > 0)
     {
-      tmpEvent = event.substring(0,pos1);
-      tmpRule  = rule.substring(0,pos2);
+      tmpEvent = event.substring(0, pos1);
+      tmpRule  = rule.substring(0, pos2);
       if (tmpRule.equalsIgnoreCase(tmpEvent)) // if this is a clock rule
-      { 
+      {
         tmpEvent = event.substring(pos1 + 1);
         tmpRule  = rule.substring(pos2 + 1);
         unsigned long clockEvent = string2TimeLong(tmpEvent);
         unsigned long clockSet = string2TimeLong(tmpRule);
         unsigned long Mask;
         for (byte y = 0; y < 8; y++)
-          {
+        {
           if (((clockSet >> (y * 4)) & 0xf) == 0xf)  // if nibble y has the wildcard value 0xf
-            {
-              Mask = 0xffffffff  ^ (0xFUL << (y * 4)); // Mask to wipe nibble position y.
-              clockEvent &= Mask;                      // clear nibble
-              clockEvent |= (0xFUL << (y * 4));        // fill with wildcard value 0xf
-            }
+          {
+            Mask = 0xffffffff  ^ (0xFUL << (y * 4)); // Mask to wipe nibble position y.
+            clockEvent &= Mask;                      // clear nibble
+            clockEvent |= (0xFUL << (y * 4));        // fill with wildcard value 0xf
           }
+        }
         if (clockEvent == clockSet)
           return true;
         else

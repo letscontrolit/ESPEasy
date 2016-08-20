@@ -81,6 +81,9 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Reset target after boot:<TD>");
         addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
 
+        sprintf_P(tmpString, PSTR("<TR><TD>RX Receive Timeout (mSec):<TD><input type='text' name='plugin_020_rxwait' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        string += tmpString;
+
         success = true;
         break;
       }
@@ -97,6 +100,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         ExtraTaskSettings.TaskDevicePluginConfigLong[3] = plugin4.toInt();
         String plugin5 = WebServer.arg("plugin_020_stop");
         ExtraTaskSettings.TaskDevicePluginConfigLong[4] = plugin5.toInt();
+        String plugin6 = WebServer.arg("plugin_020_rxwait");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin6.toInt();
         success = true;
         break;
       }
@@ -196,12 +201,27 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           if (ser2netClient.connected())
           {
             uint8_t serial_buf[BUFFER_SIZE];
+            int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+            if (RXWait == 0)
+              RXWait = 1;
+            int timeOut = RXWait;
             size_t bytes_read = 0;
-            while (Serial.available() && bytes_read < BUFFER_SIZE) {
-              serial_buf[bytes_read] = Serial.read();
-              bytes_read++;
+            while (timeOut > 0)
+            {
+              while (Serial.available()) {
+                if (bytes_read < BUFFER_SIZE) {
+                  serial_buf[bytes_read] = Serial.read();
+                  bytes_read++;
+                }
+                else
+                  Serial.read();  // when the buffer is full, just read remaining input, but do not store...
+                  
+                timeOut = RXWait; // if serial received, reset timeout counter
+              }
+              delay(1);
+              timeOut--;
             }
-
+            
             if (bytes_read != BUFFER_SIZE)
             {
               if (bytes_read > 0) {

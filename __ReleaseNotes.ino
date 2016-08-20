@@ -1,3 +1,12 @@
+// R124 20-08-2016
+// Corrected minor issue on plugin_027
+// Adjustable serial RX Receive timeout in Ser2Net plugin. To collect entire message and send it as one TCP packet.
+// Added generic UDP controller, C010
+// Added SENSOR_TYPE_QUAD, mainly for dummy device
+// Code optimization for controllers C004, C005, C006, C008
+// Added default template to C008
+// Added IR TX plugin from the playground as P035, (contributed by cherowley)
+
 // R123 19-08-2016
 // Added support for the DHT12 sensor, successor of the famous DHT11. (contributed by pm-cz)
 //   It can be used as single wire or I2C.

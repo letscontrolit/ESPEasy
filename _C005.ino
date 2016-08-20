@@ -16,6 +16,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_005;
         Protocol[protocolCount].usesMQTT = true;
+        Protocol[protocolCount].usesTemplate = true;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 1883;
@@ -27,7 +28,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_005);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         strcpy_P(Settings.MQTTsubscribe, PSTR("/%sysname%/#"));
@@ -62,7 +63,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         }
         else
         {
-          cmd = topicSplit[count-1];
+          cmd = topicSplit[count - 1];
           TempEvent.Par1 = topicSplit[count].toInt();
           TempEvent.Par2 = event->String2.toFloat();
         }
@@ -78,8 +79,6 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_SEND:
       {
         statusLED(true);
-        // MQTT publish structure:
-        // /<unit name>/<task name>/<value name>
 
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
@@ -91,54 +90,18 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
 
         String value = "";
         byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
-
-        switch (event->sensorType)
+        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        for (byte x = 0; x < valueCount; x++)
         {
-          case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-          case SENSOR_TYPE_SWITCH:
-          case SENSOR_TYPE_DIMMER:
-            pubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
-            value = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            MQTTclient.publish(pubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-            break;
-          case SENSOR_TYPE_LONG:
-            pubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
-            value += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-            MQTTclient.publish(pubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-            break;
-          case SENSOR_TYPE_TEMP_HUM:
-          case SENSOR_TYPE_TEMP_BARO:
-          case SENSOR_TYPE_DUAL:
-            {
-              String tmppubname = pubname;
-              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
-              value = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-              tmppubname = pubname;
-              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[1]);
-              value = toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-              break;
-            }
-          case SENSOR_TYPE_TEMP_HUM_BARO:
-          case SENSOR_TYPE_TRIPLE:
-            {
-              String tmppubname = pubname;
-              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[0]);
-              value = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-              tmppubname = pubname;
-              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[1]);
-              value = toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-              tmppubname = pubname;
-              tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[2]);
-              value = toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-              break;
-            }
+          String tmppubname = pubname;
+          tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[x]);
+          if (event->sensorType == SENSOR_TYPE_LONG)
+            value = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+          else
+            value = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+          MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
         }
-
+        break;
       }
       return success;
   }
