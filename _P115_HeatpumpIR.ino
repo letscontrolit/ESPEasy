@@ -154,7 +154,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
               // so cancel the timer in 2 minutes, after the heatpump has turned on or off
               if (strcmp(heatpumpModel.c_str(), "panasonic_ckp") == 0)
               {
-                panasonicCKPTimer = 10;
+                panasonicCKPTimer = 120;
               }
 
               break;
