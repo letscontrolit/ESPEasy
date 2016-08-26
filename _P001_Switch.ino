@@ -232,7 +232,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             pinMode(event->Par1, OUTPUT);
             
-            if(event->Par3 != NULL)
+            if(event->Par3 != 0)
             {
               byte prev_mode;
               uint16_t prev_value;            
