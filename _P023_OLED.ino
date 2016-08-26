@@ -14,12 +14,19 @@
 #define PLUGIN_VALUENAME1_023 "OLED"
 
 byte Plugin_023_OLED_address = 0x3c;
+byte Plugin_023_OLED_type = 0;
+
+enum
+{
+  OLED_64x48   = 0x01,
+  OLED_rotated = 0x02
+};
 
 boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   static byte displayTimer = 0;
-  
+
   switch (function)
   {
 
@@ -94,6 +101,27 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
+        byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        String options3[2];
+        options3[0] = F("128x64");
+        options3[1] = F("64x48");
+        int optionValues3[2];
+        optionValues3[0] = 1;
+        optionValues3[1] = 2;
+        string += F("<TR><TD>Display Size:<TD><select name='plugin_023_size'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues3[x];
+          string += "'";
+          if (choice3 == optionValues3[x])
+            string += F(" selected");
+          string += ">";
+          string += options3[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
         char deviceTemplate[8][64];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
@@ -127,6 +155,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         String plugin3 = WebServer.arg("plugin_23_timer");
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+        String plugin4 = WebServer.arg("plugin_023_size");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
 
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)
@@ -148,14 +178,21 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        Plugin_023_OLED_type = 0;
         Plugin_023_OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Plugin_023_StartUp_OLED();
         Plugin_023_clear_display();
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
         {
+          Plugin_023_OLED_type |= OLED_rotated;
           Plugin_023_sendcommand(0xA0 | 0x1);      //SEGREMAP   //Rotate screen 180 deg
           Plugin_023_sendcommand(0xC8);            //COMSCANDEC  Rotate screen 180 Deg
         }
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2)
+        {
+          Plugin_023_OLED_type |= OLED_64x48;
+        }
+
         Plugin_023_sendStrXY("ESP Easy ", 0, 0);
         displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
@@ -418,9 +455,20 @@ static void Plugin_023_sendcommand(unsigned char com)
 }
 
 
-// Set the cursor position in a 16 COL * 8 ROW map.
+// Set the cursor position in a 16 COL * 8 ROW map (128x64 pixels)
+// or 8 COL * 5 ROW map (64x48 pixels)
 static void Plugin_023_setXY(unsigned char row, unsigned char col)
 {
+  switch (Plugin_023_OLED_type)
+  {
+    case OLED_64x48:
+      col += 4;
+      break;
+    case OLED_64x48 | OLED_rotated:
+      col += 4;
+      row += 2;
+  }
+
   Plugin_023_sendcommand(0xb0 + row);              //set page address
   Plugin_023_sendcommand(0x00 + (8 * col & 0x0f)); //set low col address
   Plugin_023_sendcommand(0x10 + ((8 * col >> 4) & 0x0f)); //set high col address
