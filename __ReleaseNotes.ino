@@ -1,3 +1,6 @@
+// R125 27-08-2016
+// Update OLED plugin, support for smaller displays (contributed by ToniA)
+
 // R124 20-08-2016
 // Corrected minor issue on plugin_027
 // Adjustable serial RX Receive timeout in Ser2Net plugin. To collect entire message and send it as one TCP packet.
