@@ -232,7 +232,9 @@ ESP8266HTTPUpdateServer httpUpdater(true);
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
 #endif
+#ifndef LWIP_OPEN_SRC
 #define LWIP_OPEN_SRC
+#endif
 #include "lwip/opt.h"
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
