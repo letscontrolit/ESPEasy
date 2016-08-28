@@ -111,8 +111,8 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
           val=((b1<<8)|b2)/1.2;
           UserVar[event->BaseVarIndex] = val;
           String log = F("LUX 0x");
-          String log = String(address,HEX);
-          String log = F(" : Light intensity: ");
+          log += String(address,HEX);
+          log += F(" : Light intensity: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO,log);
           success=true;
