@@ -1462,8 +1462,6 @@ void handle_i2cscanner() {
           reply += F("PCF8574, MCP23017, LCD Modules");
           break;
         case 0x23:
-          reply += F("BH1750 Lux Sensor");
-          break;
         case 0x5c:
           reply += F("BH1750 Lux Sensor");
           break;
