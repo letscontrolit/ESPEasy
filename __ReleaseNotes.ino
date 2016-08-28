@@ -1,3 +1,6 @@
+// R126 28-08-2016
+// Added JSON support on FHEM controller plugin (contributed by ddtlabs)
+
 // R125 27-08-2016
 // Update OLED plugin, support for smaller displays (contributed by ToniA)
 

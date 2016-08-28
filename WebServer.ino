@@ -1481,7 +1481,7 @@ void handle_i2cscanner() {
           reply += F("PCF8591 ADC");
           break;
         case 0x5C:
-          reply += F("DHT 12");
+          reply += F("DHT12/BH1750 Lux Sensor");
           break;
         case 0x68:
           reply += F("DS1307 RTC");
