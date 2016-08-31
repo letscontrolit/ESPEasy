@@ -593,6 +593,25 @@ boolean str2ip(char *string, byte* IP)
   return false;
 }
 
+/********************************************************************************************\
+  Convert a String representing a MAC address to byte array
+  \*********************************************************************************************/
+void str2mac(String string, byte* MAC)
+{
+  String tmpString = string;
+  tmpString += ":";
+  String locateString = "";
+  byte count = 0;
+  int index = tmpString.indexOf(':');
+  while (count < 6)
+  {
+    locateString = tmpString.substring(0, index);
+    tmpString = tmpString.substring(index + 1);
+    MAC[count] = (byte)strtol(locateString.c_str(), NULL, 16);
+    index = tmpString.indexOf(':');
+    count++;
+  }
+}
 
 /********************************************************************************************\
   Save settings to SPIFFS

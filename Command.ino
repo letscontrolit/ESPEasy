@@ -181,6 +181,91 @@ void ExecuteCommand(byte source, const char *Line)
     portUDP.endPacket();
   }
 
+#if FEATURE_LIFX
+#define LIFX_UDP_PORT     56700
+
+  if (strcasecmp_P(Command, PSTR("SendToLIFX")) == 0)
+  {
+    uint8_t data[50];
+    uint8_t msglength;
+    uint32_t duration=0;
+    
+    success = true;
+    String strLine = Line;
+    String cmd = parseString(strLine,2);
+    String value1 = parseString(strLine,3);
+    String value2 = parseString(strLine,4);
+    String value3 = parseString(strLine,5);
+    String value4 = parseString(strLine,6);
+    String value5 = parseString(strLine,7);
+
+    if (cmd == "power") {
+      Serial.print(F("SendToLIFX, Set Power, value= ")); Serial.println(value1);
+      int state = atoi(value1.c_str());
+      if (value2.length() > 0) {
+        duration = atoi(value2.c_str());
+      }
+      msglength = getPktSetBulbPower(data, state, duration);
+    }
+    else { // color
+      Serial.println("SendToLIFX, Set color " + value1 + " " + value2 + " " + value3 + " " + value4);
+
+      if (value2.length() > 0) {
+        duration = atoi(value2.c_str());
+      }
+      
+      if (strcasecmp_P(value1.c_str(),PSTR("RED")) == 0) {
+        msglength = getPktSetBulbColor(data,62978,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("CYAN")) == 0) {
+        msglength = getPktSetBulbColor(data,29814,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("ORANGE")) == 0) {
+        msglength = getPktSetBulbColor(data,5525,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("YELLOW")) == 0) {
+        msglength = getPktSetBulbColor(data,7615,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("GREEN")) == 0) {
+        msglength = getPktSetBulbColor(data,16173,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("BLUE")) == 0) {
+        msglength = getPktSetBulbColor(data,43634,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("PURPLE")) == 0) {
+        msglength = getPktSetBulbColor(data,50486,65535,65535,3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("PINK")) == 0) {
+        msglength = getPktSetBulbColor(data,50486, 65535, 65535, 3500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("WHITE")) == 0) {
+        msglength = getPktSetBulbColor(data,58275, 0, 65535, 5500, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("COLD_WHTE")) == 0) {
+        msglength = getPktSetBulbColor(data,58275, 0, 65535, 9000, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("WARM_WHITE")) == 0) {
+        msglength = getPktSetBulbColor(data,58275, 0, 65535, 3200, duration);
+      }
+      else if (strcasecmp_P(value1.c_str(),PSTR("GOLD")) == 0) {
+        msglength = getPktSetBulbColor(data,58275, 0, 65535, 2500, duration);
+      }
+      else {
+        duration = 0;
+        if (value5.length() > 0) {
+          duration = atoi(value5.c_str());
+        }
+        msglength = getPktSetBulbColor(data, atoi(value1.c_str()), atoi(value2.c_str()), atoi(value3.c_str()), atoi(value4.c_str()), duration);
+      }
+    }
+
+    IPAddress UDP_IP(Settings.LifxIP[0], Settings.LifxIP[1], Settings.LifxIP[2], Settings.LifxIP[3]);
+    
+    portUDP.beginPacket(UDP_IP, LIFX_UDP_PORT);
+    portUDP.write(data, msglength);
+    portUDP.endPacket();
+  }
+#endif
   if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0)
   {
     success = true;

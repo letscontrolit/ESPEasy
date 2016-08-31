@@ -1739,6 +1739,10 @@ void handle_advanced() {
   String userules = WebServer.arg("userules");
   String cft = WebServer.arg("cft");
   String MQTTRetainFlag = WebServer.arg("mqttretainflag");
+#if FEATURE_LIFX
+  String lifxip = WebServer.arg("lifxip");
+  String lifxmac = WebServer.arg("lifxmac");
+#endif
 
   if (edit.length() != 0)
   {
@@ -1771,6 +1775,11 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
+#if FEATURE_LIFX
+    lifxip.toCharArray(tmpString, 26);
+    str2ip(tmpString, Settings.LifxIP);
+    str2mac(lifxmac, Settings.LifxMAC);
+#endif
     SaveSettings();
 #if FEATURE_TIME
     if (Settings.UseNTP)
@@ -1897,6 +1906,21 @@ void handle_advanced() {
   else
     reply += F("<input type=checkbox name='globalsync'>");
 
+#if FEATURE_LIFX
+  reply += F("<TR><TH>LIFX Settings<TH>Value");
+
+  reply += F("<TR><TD>IP address:<TD><input type='text' name='lifxip' value='");
+  str[0] = 0;
+  sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.LifxIP[0], Settings.LifxIP[1], Settings.LifxIP[2], Settings.LifxIP[3]);
+  reply += str;
+  reply += F("'>");
+
+  reply += F("<TR><TD>MAC address:<TD><input type='text' name='lifxmac' value='");
+  str[0] = 0;
+  sprintf_P(str, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), Settings.LifxMAC[0], Settings.LifxMAC[1], Settings.LifxMAC[2], Settings.LifxMAC[3], Settings.LifxMAC[4], Settings.LifxMAC[5]);
+  reply += str;
+  reply += F("'>");
+#endif
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("<input type='hidden' name='edit' value='1'>");
   reply += F("</table></form>");
