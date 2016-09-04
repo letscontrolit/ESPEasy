@@ -260,7 +260,7 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   // I fade up, I'm waiting maximum conversion time + 1ms, this works !!
   // I increased these value to add HTU21D compatibility
   // Max for SI7021 is 3/5/7/12 ms
-  // max for HTU21D is 3/5/8/16 ms
+  // max for HTU21D is 7/13/25/50 ms
 
   // Martinus modification 2016-01-07:
   // My test sample was still not working with 11 bit
@@ -271,13 +271,13 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   // hum+temp delay because it also measure temp
   
   if (resolution == SI7021_RESOLUTION_11T_11RH)
-    tmp = 4;
+    tmp = 7;
   else if (resolution == SI7021_RESOLUTION_12T_08RH)
-    tmp = 6;
+    tmp = 13;
   else if (resolution == SI7021_RESOLUTION_13T_10RH)
-    tmp = 9;
+    tmp = 25;
   else 
-    tmp = 17;
+    tmp = 50;
 
   // Humidity fire also temp measurment so delay 
   // need to be increased by 2 if no Hold Master

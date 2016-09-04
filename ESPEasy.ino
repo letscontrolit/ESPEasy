@@ -61,6 +61,7 @@
 //   ADS1115 I2C ADC
 //   INA219 I2C voltage/current sensor
 //   BME280 I2C temp/hum/baro sensor
+//   MSP5611 I2C temp/baro sensor
 
 //   Experimental/Preliminary:
 //   =========================
@@ -117,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             107
+#define BUILD                             108
 #define FEATURE_SPIFFS                  false
 
 #define CPLUGIN_PROTOCOL_ADD                1

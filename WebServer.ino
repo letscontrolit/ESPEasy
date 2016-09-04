@@ -1454,10 +1454,10 @@ void handle_i2cscanner() {
           reply += F("DS1307 RTC");
           break;
         case 0x76:
-          reply += F("BME280/BMP280");
+          reply += F("BME280/BMP280/MS5607/MS5611");
           break;
         case 0x77:
-          reply += F("BMP085");
+          reply += F("BMP085/MS5607/MS5611");
           break;
         case 0x7f:
           reply += F("Arduino Pro Mini IO Extender");
@@ -1467,7 +1467,7 @@ void handle_i2cscanner() {
     }
     else if (error == 4)
     {
-      reply += F("<TR><TD>Unknow error at address 0x");
+      reply += F("<TR><TD>Unknown error at address 0x");
       reply += String(address, HEX);
     }
   }
@@ -1836,6 +1836,12 @@ void handle_advanced() {
   reply += Settings.ConnectionFailuresThreshold;
   reply += F("'>");
 
+  reply += F("<TR><TD>Rules:<TD>");
+  if (Settings.UseRules)
+    reply += F("<input type=checkbox name='userules' checked>");
+  else
+    reply += F("<input type=checkbox name='userules'>");
+
   reply += F("<TR><TH>Experimental Settings<TH>Value");
 
 #if ESP_CORE >= 210
@@ -1843,12 +1849,6 @@ void handle_advanced() {
   reply += Settings.WireClockStretchLimit;
   reply += F("'>");
 #endif
-
-  reply += F("<TR><TD>Rules:<TD>");
-  if (Settings.UseRules)
-    reply += F("<input type=checkbox name='userules' checked>");
-  else
-    reply += F("<input type=checkbox name='userules'>");
 
   reply += F("<TR><TD>Global Sync:<TD>");
   if (Settings.GlobalSync)

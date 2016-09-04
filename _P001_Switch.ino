@@ -231,6 +231,27 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
+            
+            if(event->Par3 != NULL)
+            {
+              byte prev_mode;
+              uint16_t prev_value;            
+              getPinState(PLUGIN_ID_001, event->Par1, &prev_mode, &prev_value);
+              if(prev_mode != PIN_MODE_PWM)
+                prev_value = 0;
+
+              int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
+              int32_t curr_value = prev_value << 12;
+              int16_t new_value;
+              int i = event->Par3;
+              while(i--){
+                curr_value += step_value;
+                new_value = (uint16_t)(curr_value >> 12);
+                analogWrite(event->Par1, new_value);
+                delay(1);
+              }
+            }
+            
             analogWrite(event->Par1, event->Par2);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
