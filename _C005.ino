@@ -66,6 +66,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           cmd = topicSplit[count - 1];
           TempEvent.Par1 = topicSplit[count].toInt();
           TempEvent.Par2 = event->String2.toFloat();
+          TempEvent.Par3 = 0;          
         }
         // in case of event, store to buffer and return...
         String command = parseString(cmd, 1);

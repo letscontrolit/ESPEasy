@@ -1,3 +1,7 @@
+// R127 04-09-2016
+// Fixed the situation where using the old style MQTT gpio/pwm commands left event-Par3 uninitialized.
+//   causing an 'endless' delay using pwm command
+
 // R126 28-08-2016
 // Added JSON support on FHEM controller plugin (contributed by ddtlabs)
 

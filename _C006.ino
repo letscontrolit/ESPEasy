@@ -58,6 +58,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
         struct EventStruct TempEvent;
         TempEvent.Par1 = topicSplit[6].toInt();
         TempEvent.Par2 = 0;
+        TempEvent.Par3 = 0;
         if (event->String2 == "false" || event->String2 == "true")
         {
           if (event->String2 == "true")
