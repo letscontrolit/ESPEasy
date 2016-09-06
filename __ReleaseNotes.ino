@@ -1,3 +1,7 @@
+// R128 06-09-2016
+// Update FHEM plugin (contributed by ddtlabs)
+// Change for decimals on SI7021 humidity (contributed by pm-cz)
+
 // R127 04-09-2016
 // Fixed the situation where using the old style MQTT gpio/pwm commands left event-Par3 uninitialized.
 //   causing an 'endless' delay using pwm command
