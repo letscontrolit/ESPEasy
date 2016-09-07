@@ -80,7 +80,7 @@ int32_t t_fine;
 
 uint8_t Plugin_028_read8(byte reg, bool * is_ok = NULL); // Declaration
 
-boolean Plugin_028_init = false;
+boolean Plugin_028_init[2] = {false, false};
 
 boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 {
@@ -118,15 +118,54 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options[2];
+        options[0] = F("0x76 - default settings (SDO Low)");
+        options[1] = F("0x77 - alternate settings (SDO HIGH)");
+        int optionValues[2];
+        optionValues[0] = 0x76;
+        optionValues[1] = 0x77;
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_028_bme280_i2c'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues[x];
+          string += "'";
+          if (choice == optionValues[x])
+            string += F(" selected");
+          string += ">";
+          string += options[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        String plugin1 = WebServer.arg("plugin_028_bme280_i2c");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
-        if (!Plugin_028_init)
+        uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
+        Plugin_028_init[idx] &= Plugin_028_check(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // Check id device is present
+        Plugin_028_init[idx] &=  (Plugin_028_read8(BME280_REGISTER_CONTROL) == BME280_CONTROL_SETTING); // Check if the coefficients are still valid
+
+        if (!Plugin_028_init[idx])
         {
-          Plugin_028_init = Plugin_028_begin(0x76);
-	  //delay(45); //May be needed here as well to fix first wrong measurement?
+          Plugin_028_init[idx] = Plugin_028_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+         //delay(45); //May be needed here as well to fix first wrong measurement?
         }
 
-        if (Plugin_028_init)
+        if (Plugin_028_init[idx])
         {
           UserVar[event->BaseVarIndex] = Plugin_028_readTemperature();
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity());
@@ -141,8 +180,8 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           log += UserVar[event->BaseVarIndex + 2];
           addLog(LOG_LEVEL_INFO, log);
           success = true;
-          break;
         }
+        break;
       }
 
   }
@@ -206,23 +245,6 @@ uint8_t Plugin_028_read8(byte reg, bool * is_ok)
 }
 
 //**************************************************************************/
-// Reads a 24 bit value over I2C
-//**************************************************************************/
-int32_t Plugin_028_read24(byte reg)
-{
-  int32_t value;
-
-  Wire.beginTransmission((uint8_t)_i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddr, (byte)3);
-  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
-  Wire.endTransmission();
-
-  return value;
-}
-
-//**************************************************************************/
 // Reads a 16 bit value over I2C
 //**************************************************************************/
 uint16_t Plugin_028_read16(byte reg)
@@ -234,6 +256,23 @@ uint16_t Plugin_028_read16(byte reg)
   Wire.endTransmission();
   Wire.requestFrom((uint8_t)_i2caddr, (byte)2);
   value = (Wire.read() << 8) | Wire.read();
+  Wire.endTransmission();
+
+  return value;
+}
+
+//**************************************************************************/
+// Reads a 24 bit value over I2C
+//**************************************************************************/
+int32_t Plugin_028_read24(byte reg)
+{
+  int32_t value;
+
+  Wire.beginTransmission((uint8_t)_i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.endTransmission();
+  Wire.requestFrom((uint8_t)_i2caddr, (byte)3);
+  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
   Wire.endTransmission();
 
   return value;

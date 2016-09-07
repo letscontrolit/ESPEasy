@@ -34,6 +34,7 @@ enum
   BMP280_REGISTER_CONFIG             = 0xF5,
   BMP280_REGISTER_PRESSUREDATA       = 0xF7,
   BMP280_REGISTER_TEMPDATA           = 0xFA,
+
   BMP280_CONTROL_SETTING             = 0x57, // Oversampling: 16x P, 2x T, normal mode
 };
 
@@ -137,7 +138,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
       {
         uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
         Plugin_030_init[idx] &= Plugin_030_check(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // Check id device is present
-        Plugin_030_init[idx] &=  (Plugin_030_read8(BMP280_REGISTER_CONTROL) == BMP280_CONTROL_SETTING); // Check if the coefficients are OK
+        Plugin_030_init[idx] &=  (Plugin_030_read8(BMP280_REGISTER_CONTROL) == BMP280_CONTROL_SETTING); // Check if the coefficients are still valid
 
         if (!Plugin_030_init[idx])
         {
@@ -145,7 +146,8 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           delay(65); // Ultra high resolution for BMP280 is 43.2 ms, add some extra time
         }
 
-        if (Plugin_030_init[idx]) {
+        if (Plugin_030_init[idx]) 
+        {
           UserVar[event->BaseVarIndex] = Plugin_030_readTemperature();
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure()) / 100;
           String log = F("BMP280  : Temperature: ");
@@ -164,19 +166,6 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 }
 
 //**************************************************************************/
-// Initialize BMP280
-//**************************************************************************/
-bool Plugin_030_begin(uint8_t a) {
-  if (! Plugin_030_check(a)) {
-      return false;
-  }
-
-  Plugin_030_readCoefficients();
-  Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING); 
-  return true;
-}
-
-//**************************************************************************/
 // Check BMP280 presence
 //**************************************************************************/
 bool Plugin_030_check(uint8_t a) {
@@ -187,6 +176,18 @@ bool Plugin_030_check(uint8_t a) {
   } else {
       return wire_status;
   }
+}
+
+//**************************************************************************/
+// Initialize BMP280
+//**************************************************************************/
+bool Plugin_030_begin(uint8_t a) {
+  if (! Plugin_030_check(a)) 
+    return false;
+
+  Plugin_030_readCoefficients();
+  Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING); 
+  return true;
 }
 
 //**************************************************************************/
