@@ -162,7 +162,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         if (!Plugin_028_init[idx])
         {
           Plugin_028_init[idx] = Plugin_028_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-         //delay(45); //May be needed here as well to fix first wrong measurement?
+          delay(65); //May be needed here as well to fix first wrong measurement?
         }
 
         if (Plugin_028_init[idx])
