@@ -170,7 +170,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = Plugin_028_readTemperature();
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity());
           UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure()) / 100;
-          String log = F("BME  : Temperature: ");
+          String log = F("BME  : Address: 0x");
+          log += String(_i2caddr,HEX);
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BME  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
           log = F("BME  : Humidity: ");

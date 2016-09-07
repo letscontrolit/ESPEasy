@@ -146,11 +146,14 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           delay(65); // Ultra high resolution for BMP280 is 43.2 ms, add some extra time
         }
 
-        if (Plugin_030_init[idx]) 
+        if (Plugin_030_init[idx])
         {
           UserVar[event->BaseVarIndex] = Plugin_030_readTemperature();
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure()) / 100;
-          String log = F("BMP280  : Temperature: ");
+          String log = F("BMP280  : Address: 0x");
+          log += String(bmp280_i2caddr,HEX);
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BMP280  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
           log = F("BMP280  : Barometric Pressure: ");
@@ -182,11 +185,11 @@ bool Plugin_030_check(uint8_t a) {
 // Initialize BMP280
 //**************************************************************************/
 bool Plugin_030_begin(uint8_t a) {
-  if (! Plugin_030_check(a)) 
+  if (! Plugin_030_check(a))
     return false;
 
   Plugin_030_readCoefficients();
-  Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING); 
+  Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING);
   return true;
 }
 
