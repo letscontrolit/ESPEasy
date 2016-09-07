@@ -44,6 +44,8 @@ enum
   BME280_REGISTER_PRESSUREDATA       = 0xF7,
   BME280_REGISTER_TEMPDATA           = 0xFA,
   BME280_REGISTER_HUMIDDATA          = 0xFD,
+
+  BME280_CONTROL_SETTING             = 0x57, // Oversampling: 16x P, 2x T, normal mode
 };
 
 typedef struct
@@ -75,6 +77,8 @@ bme280_calib_data _bme280_calib;
 uint8_t _i2caddr;
 int32_t _sensorID;
 int32_t t_fine;
+
+uint8_t Plugin_028_read8(byte reg, bool * is_ok = NULL); // Declaration
 
 boolean Plugin_028_init = false;
 
@@ -146,17 +150,30 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 }
 
 //**************************************************************************/
+// Check BME280 presence
+//**************************************************************************/
+bool Plugin_028_check(uint8_t a) {
+  _i2caddr = a;
+  bool wire_status = false;
+  if (Plugin_028_read8(BME280_REGISTER_CHIPID, &wire_status) != 0x60) {
+      return false;
+  } else {
+      return wire_status;
+  }
+}
+
+//**************************************************************************/
 // Initialize BME280
 //**************************************************************************/
 bool Plugin_028_begin(uint8_t a) {
   _i2caddr = a;
 
-  if (Plugin_028_read8(BME280_REGISTER_CHIPID) != 0x60)
+  if (! Plugin_028_check(a))
     return false;
 
   Plugin_028_readCoefficients();
   Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, 0x03);
-  Plugin_028_write8(BME280_REGISTER_CONTROL, 0x3F);
+  Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
   return true;
 }
 
@@ -174,16 +191,34 @@ void Plugin_028_write8(byte reg, byte value)
 //**************************************************************************/
 // Reads an 8 bit value over I2C
 //**************************************************************************/
-uint8_t Plugin_028_read8(byte reg)
+uint8_t Plugin_028_read8(byte reg, bool * is_ok)
 {
   uint8_t value;
 
   Wire.beginTransmission((uint8_t)_i2caddr);
   Wire.write((uint8_t)reg);
   Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
+  byte count = Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
+  if (is_ok != NULL) { *is_ok = (count == 1); }
   value = Wire.read();
   Wire.endTransmission();
+  return value;
+}
+
+//**************************************************************************/
+// Reads a 24 bit value over I2C
+//**************************************************************************/
+int32_t Plugin_028_read24(byte reg)
+{
+  int32_t value;
+
+  Wire.beginTransmission((uint8_t)_i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.endTransmission();
+  Wire.requestFrom((uint8_t)_i2caddr, (byte)3);
+  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
+  Wire.endTransmission();
+
   return value;
 }
 
@@ -262,9 +297,7 @@ float Plugin_028_readTemperature(void)
 {
   int32_t var1, var2;
 
-  int32_t adc_T = Plugin_028_read16(BME280_REGISTER_TEMPDATA);
-  adc_T <<= 8;
-  adc_T |= Plugin_028_read8(BME280_REGISTER_TEMPDATA + 2);
+  int32_t adc_T = Plugin_028_read24(BME280_REGISTER_TEMPDATA);
   adc_T >>= 4;
 
   var1  = ((((adc_T >> 3) - ((int32_t)_bme280_calib.dig_T1 << 1))) *
@@ -286,9 +319,7 @@ float Plugin_028_readTemperature(void)
 float Plugin_028_readPressure(void) {
   int64_t var1, var2, p;
 
-  int32_t adc_P = Plugin_028_read16(BME280_REGISTER_PRESSUREDATA);
-  adc_P <<= 8;
-  adc_P |= Plugin_028_read8(BME280_REGISTER_PRESSUREDATA + 2);
+  int32_t adc_P = Plugin_028_read24(BME280_REGISTER_PRESSUREDATA);
   adc_P >>= 4;
 
   var1 = ((int64_t)t_fine) - 128000;
