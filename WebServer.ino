@@ -1467,7 +1467,9 @@ void handle_i2cscanner() {
         case 0x24:
           reply += F("PN532 RFID Reader");
           break;
+        case 0x29:
         case 0x39:
+        case 0x49:
           reply += F("TLS2561 Lux Sensor");
           break;
         case 0x3C:
@@ -1490,7 +1492,8 @@ void handle_i2cscanner() {
           reply += F("BME280/BMP280/MS5607/MS5611");
           break;
         case 0x77:
-          reply += F("BMP085/MS5607/MS5611");
+          reply += F("BMP085/");
+          reply += F("BME280/BMP280/MS5607/MS5611"); //pm-cz Optimization should recycle this string from above
           break;
         case 0x7f:
           reply += F("Arduino Pro Mini IO Extender");
