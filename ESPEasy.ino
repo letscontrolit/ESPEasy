@@ -63,6 +63,7 @@
 //   MSP5611 I2C temp/baro sensor
 //   BMP280 I2C Barometric Pressure sensor
 //   SHT1X temperature/humidity sensors
+//	 LIFX smart buld (tested on Color 1000)
 
 //   Experimental/Preliminary:
 //   =========================
@@ -114,6 +115,8 @@
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
 #define FEATURE_ADC_VCC                  false
+// Support for LIFX light bulb (experimental) : LAN protocol, SendToLIFX command in rules
+#define FEATURE_LIFX                     false
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
@@ -342,6 +345,8 @@ struct SettingsStruct
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
+  byte          LifxIP[4];
+  byte          LifxMAC[6];
 } Settings;
 
 struct ExtraTaskSettingsStruct
