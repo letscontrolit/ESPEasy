@@ -196,7 +196,7 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value)
     return false;
   }
 
-  if (ROM[0] == 0x28 ) //DS18B20
+  if ((ROM[0] == 0x28 ) || (ROM[0] == 0x3b)) //DS18B20 or DS1825
   {
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
     *value = (float(DSTemp) * 0.0625);
