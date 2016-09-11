@@ -77,6 +77,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
+        
+        sprintf_P(tmpString, PSTR("<TR><TD>Total Value<TD><input type='text' name='plugin_003_total' value='%u'>"), Plugin_003_pulseTotalCounter[event->TaskIndex]);
+        string += tmpString;
  
         success = true;
         break;
@@ -88,6 +91,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         String plugin2 = WebServer.arg("plugin_003_countertype");
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        String plugin3 = WebServer.arg("plugin_003_total");
+        Plugin_003_pulseTotalCounter[event->TaskIndex] = plugin2.toInt();
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&Plugin_003_pulseTotalCounter[event->TaskIndex], sizeof(Plugin_003_pulseTotalCounter[event->TaskIndex]));
         success = true;
         break;
       }
@@ -116,6 +122,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex);
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&Plugin_003_pulseTotalCounter[event->TaskIndex], sizeof(Plugin_003_pulseTotalCounter[event->TaskIndex]));
         success = true;
         break;
       }
@@ -158,6 +165,7 @@ void Plugin_003_pulsecheck(byte Index)
     {
       Plugin_003_pulseCounter[Index]++;
       Plugin_003_pulseTotalCounter[Index]++;
+      SaveCustomTaskSettings(Index, (byte*)&Plugin_003_pulseTotalCounter[Index], sizeof(Plugin_003_pulseTotalCounter[Index]));
       Plugin_003_pulseTime[Index] = PulseTime;
       Plugin_003_pulseTimePrevious[Index]=millis();
     }
