@@ -1,3 +1,7 @@
+// R131 11-09-2016
+// Added flash write counter (count since boot), displayed in webgui
+// Update plugin BME280 for calibration data on multiple sensors (contributed by maxx333)
+
 // R130 10-09-2016
 // Fixed some code when using SPIFFS (not recommended!)
 // Support DS1825 (contributed by maxx333)

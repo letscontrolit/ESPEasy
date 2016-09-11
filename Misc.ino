@@ -796,6 +796,7 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
   delete [] data;
   String log = F("FLASH: Settings saved");
   addLog(LOG_LEVEL_INFO, log);
+  flashWrites++;
 }
 
 

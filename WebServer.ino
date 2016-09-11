@@ -238,6 +238,9 @@ void handle_root() {
     reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
     reply += F(" kB");
 
+    reply += F("<TR><TD>Flash Writes (since boot):<TD>");
+    reply += flashWrites;
+
     reply += F("<TR><TD>Sketch Size/Free:<TD>");
     reply += ESP.getSketchSize() / 1024;
     reply += F(" kB / ");
@@ -2330,6 +2333,7 @@ void handleFileUpload()
         }
       interrupts();
       delay(10);
+      flashWrites++;
     }
     page++;
   }
@@ -2545,6 +2549,7 @@ void handle_rules() {
         //Serial.println("flash save ok");
       }
     interrupts();
+    flashWrites++;
 #endif
   }
 
