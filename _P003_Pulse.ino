@@ -60,8 +60,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options[3];
         options[0] = F("Delta");
-        options[1] = F("Total");        
-        options[2] = F("Delta/Total/Time");
+        options[1] = F("Delta/Total/Time");
+        options[2] = F("Total");        
         int optionValues[3];
         optionValues[0] = 0;
         optionValues[1] = 1;
@@ -138,16 +138,16 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           }
           case 1:
           {
-            event->sensorType = SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-            break;
-          }
-          case 2:
-          {
             event->sensorType = SENSOR_TYPE_TRIPLE;
             UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
             UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             UserVar[event->BaseVarIndex+2] = Plugin_003_pulseTime[event->TaskIndex];
+            break;
+          }
+          case 2:
+          {
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             break;
           }
         }
