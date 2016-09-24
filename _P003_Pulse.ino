@@ -9,6 +9,15 @@
 #define PLUGIN_VALUENAME2_003 "Total"
 #define PLUGIN_VALUENAME3_003 "Time"
 
+void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
+void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
+
 unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTime[TASKS_MAX];
