@@ -1,3 +1,32 @@
+// R132 24-09-2016
+// Moved ISR handlers for Pulse, RFID and HCSR04 plugins to iram cache
+
+// R131 11-09-2016
+// Added flash write counter (count since boot), displayed in webgui
+// Update plugin BME280 for calibration data on multiple sensors (contributed by maxx333)
+
+// R130 10-09-2016
+// Fixed some code when using SPIFFS (not recommended!)
+// Support DS1825 (contributed by maxx333)
+
+// R129 08-09-2016
+// Update plugin BH1750, support multiple sensors (contributed by guslinux & pm-cz)
+// Update plugin BME/BMP280, (contributed by pm-cz)
+
+// R128 06-09-2016
+// Update FHEM plugin (contributed by ddtlabs)
+// Change for decimals on SI7021 humidity (contributed by pm-cz)
+
+// R127 04-09-2016
+// Fixed the situation where using the old style MQTT gpio/pwm commands left event-Par3 uninitialized.
+//   causing an 'endless' delay using pwm command
+
+// R126 28-08-2016
+// Added JSON support on FHEM controller plugin (contributed by ddtlabs)
+
+// R125 27-08-2016
+// Update OLED plugin, support for smaller displays (contributed by ToniA)
+
 // R124 20-08-2016
 // Corrected minor issue on plugin_027
 // Adjustable serial RX Receive timeout in Ser2Net plugin. To collect entire message and send it as one TCP packet.

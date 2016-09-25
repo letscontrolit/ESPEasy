@@ -121,7 +121,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             124
+#define BUILD                             132
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
@@ -483,6 +483,8 @@ unsigned long elapsed = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
+
+unsigned long flashWrites = 0;
 
 String eventBuffer = "";
 

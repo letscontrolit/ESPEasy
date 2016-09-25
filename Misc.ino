@@ -466,6 +466,8 @@ void fileSystemCheck()
           f.write(0);
         f.close();
       }
+      f = SPIFFS.open("rules.txt", "w");
+      f.close();
     }
   }
   else
@@ -794,6 +796,7 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
   delete [] data;
   String log = F("FLASH: Settings saved");
   addLog(LOG_LEVEL_INFO, log);
+  flashWrites++;
 }
 
 
@@ -930,6 +933,8 @@ void ResetFactory(void)
       f.write(0);
     f.close();
   }
+  f = SPIFFS.open("rules.txt", "w");
+  f.close();
 #else
   EraseFlash();
   ZeroFillFlash();
@@ -1834,11 +1839,26 @@ void rulesProcessing(String& event)
   if (data == NULL)
   {
     data = new uint8_t[RULES_MAX_SIZE];
+#if FEATURE_SPIFFS
+    File f = SPIFFS.open("rules.txt", "r+");
+    if (f)
+    {
+      byte *pointerToByteToRead = data;
+      for (int x = 0; x < f.size(); x++)
+      {
+        *pointerToByteToRead = f.read();
+        pointerToByteToRead++;// next byte
+      }
+      data[f.size()] = 0;
+      f.close();
+    }
+#else
     uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     _sector += 10;
     noInterrupts();
     spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), RULES_MAX_SIZE);
     interrupts();
+#endif
     data[RULES_MAX_SIZE - 1] = 0; // make sure it's terminated!
   }
 

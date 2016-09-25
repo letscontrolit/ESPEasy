@@ -44,6 +44,8 @@ enum
   BME280_REGISTER_PRESSUREDATA       = 0xF7,
   BME280_REGISTER_TEMPDATA           = 0xFA,
   BME280_REGISTER_HUMIDDATA          = 0xFD,
+
+  BME280_CONTROL_SETTING             = 0x57, // Oversampling: 16x P, 2x T, normal mode
 };
 
 typedef struct
@@ -70,13 +72,15 @@ typedef struct
   int8_t   dig_H6;
 } bme280_calib_data;
 
-bme280_calib_data _bme280_calib;
+bme280_calib_data _bme280_calib[2];
 
 uint8_t _i2caddr;
 int32_t _sensorID;
 int32_t t_fine;
 
-boolean Plugin_028_init = false;
+uint8_t Plugin_028_read8(byte reg, bool * is_ok = NULL); // Declaration
+
+boolean Plugin_028_init[2] = {false, false};
 
 boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 {
@@ -114,20 +118,62 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options[2];
+        options[0] = F("0x76 - default settings (SDO Low)");
+        options[1] = F("0x77 - alternate settings (SDO HIGH)");
+        int optionValues[2];
+        optionValues[0] = 0x76;
+        optionValues[1] = 0x77;
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_028_bme280_i2c'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues[x];
+          string += "'";
+          if (choice == optionValues[x])
+            string += F(" selected");
+          string += ">";
+          string += options[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        String plugin1 = WebServer.arg("plugin_028_bme280_i2c");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
-        if (!Plugin_028_init)
+        uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
+        Plugin_028_init[idx] &= Plugin_028_check(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // Check id device is present
+        Plugin_028_init[idx] &=  (Plugin_028_read8(BME280_REGISTER_CONTROL) == BME280_CONTROL_SETTING); // Check if the coefficients are still valid
+
+        if (!Plugin_028_init[idx])
         {
-          Plugin_028_init = Plugin_028_begin(0x76);
-	  //delay(45); //May be needed here as well to fix first wrong measurement?
+          Plugin_028_init[idx] = Plugin_028_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+          delay(65); //May be needed here as well to fix first wrong measurement?
         }
 
-        if (Plugin_028_init)
+        if (Plugin_028_init[idx])
         {
-          UserVar[event->BaseVarIndex] = Plugin_028_readTemperature();
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity());
-          UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure()) / 100;
-          String log = F("BME  : Temperature: ");
+          UserVar[event->BaseVarIndex] = Plugin_028_readTemperature(idx);
+          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity(idx));
+          UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure(idx)) / 100;
+          String log = F("BME  : Address: 0x");
+          log += String(_i2caddr,HEX);
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BME  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
           log = F("BME  : Humidity: ");
@@ -137,12 +183,25 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           log += UserVar[event->BaseVarIndex + 2];
           addLog(LOG_LEVEL_INFO, log);
           success = true;
-          break;
         }
+        break;
       }
 
   }
   return success;
+}
+
+//**************************************************************************/
+// Check BME280 presence
+//**************************************************************************/
+bool Plugin_028_check(uint8_t a) {
+  _i2caddr = a;
+  bool wire_status = false;
+  if (Plugin_028_read8(BME280_REGISTER_CHIPID, &wire_status) != 0x60) {
+      return false;
+  } else {
+      return wire_status;
+  }
 }
 
 //**************************************************************************/
@@ -151,12 +210,12 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 bool Plugin_028_begin(uint8_t a) {
   _i2caddr = a;
 
-  if (Plugin_028_read8(BME280_REGISTER_CHIPID) != 0x60)
+  if (! Plugin_028_check(a))
     return false;
 
-  Plugin_028_readCoefficients();
+  Plugin_028_readCoefficients(_i2caddr & 0x01);
   Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, 0x03);
-  Plugin_028_write8(BME280_REGISTER_CONTROL, 0x3F);
+  Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
   return true;
 }
 
@@ -174,14 +233,15 @@ void Plugin_028_write8(byte reg, byte value)
 //**************************************************************************/
 // Reads an 8 bit value over I2C
 //**************************************************************************/
-uint8_t Plugin_028_read8(byte reg)
+uint8_t Plugin_028_read8(byte reg, bool * is_ok)
 {
   uint8_t value;
 
   Wire.beginTransmission((uint8_t)_i2caddr);
   Wire.write((uint8_t)reg);
   Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
+  byte count = Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
+  if (is_ok != NULL) { *is_ok = (count == 1); }
   value = Wire.read();
   Wire.endTransmission();
   return value;
@@ -199,6 +259,23 @@ uint16_t Plugin_028_read16(byte reg)
   Wire.endTransmission();
   Wire.requestFrom((uint8_t)_i2caddr, (byte)2);
   value = (Wire.read() << 8) | Wire.read();
+  Wire.endTransmission();
+
+  return value;
+}
+
+//**************************************************************************/
+// Reads a 24 bit value over I2C
+//**************************************************************************/
+int32_t Plugin_028_read24(byte reg)
+{
+  int32_t value;
+
+  Wire.beginTransmission((uint8_t)_i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.endTransmission();
+  Wire.requestFrom((uint8_t)_i2caddr, (byte)3);
+  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
   Wire.endTransmission();
 
   return value;
@@ -231,48 +308,46 @@ int16_t Plugin_028_readS16_LE(byte reg)
 //**************************************************************************/
 // Reads the factory-set coefficients
 //**************************************************************************/
-void Plugin_028_readCoefficients(void)
+void Plugin_028_readCoefficients(uint8_t idx)
 {
-  _bme280_calib.dig_T1 = Plugin_028_read16_LE(BME280_REGISTER_DIG_T1);
-  _bme280_calib.dig_T2 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_T2);
-  _bme280_calib.dig_T3 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_T3);
+  _bme280_calib[idx].dig_T1 = Plugin_028_read16_LE(BME280_REGISTER_DIG_T1);
+  _bme280_calib[idx].dig_T2 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_T2);
+  _bme280_calib[idx].dig_T3 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_T3);
 
-  _bme280_calib.dig_P1 = Plugin_028_read16_LE(BME280_REGISTER_DIG_P1);
-  _bme280_calib.dig_P2 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P2);
-  _bme280_calib.dig_P3 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P3);
-  _bme280_calib.dig_P4 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P4);
-  _bme280_calib.dig_P5 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P5);
-  _bme280_calib.dig_P6 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P6);
-  _bme280_calib.dig_P7 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P7);
-  _bme280_calib.dig_P8 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P8);
-  _bme280_calib.dig_P9 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P9);
+  _bme280_calib[idx].dig_P1 = Plugin_028_read16_LE(BME280_REGISTER_DIG_P1);
+  _bme280_calib[idx].dig_P2 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P2);
+  _bme280_calib[idx].dig_P3 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P3);
+  _bme280_calib[idx].dig_P4 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P4);
+  _bme280_calib[idx].dig_P5 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P5);
+  _bme280_calib[idx].dig_P6 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P6);
+  _bme280_calib[idx].dig_P7 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P7);
+  _bme280_calib[idx].dig_P8 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P8);
+  _bme280_calib[idx].dig_P9 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_P9);
 
-  _bme280_calib.dig_H1 = Plugin_028_read8(BME280_REGISTER_DIG_H1);
-  _bme280_calib.dig_H2 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_H2);
-  _bme280_calib.dig_H3 = Plugin_028_read8(BME280_REGISTER_DIG_H3);
-  _bme280_calib.dig_H4 = (Plugin_028_read8(BME280_REGISTER_DIG_H4) << 4) | (Plugin_028_read8(BME280_REGISTER_DIG_H4 + 1) & 0xF);
-  _bme280_calib.dig_H5 = (Plugin_028_read8(BME280_REGISTER_DIG_H5 + 1) << 4) | (Plugin_028_read8(BME280_REGISTER_DIG_H5) >> 4);
-  _bme280_calib.dig_H6 = (int8_t)Plugin_028_read8(BME280_REGISTER_DIG_H6);
+  _bme280_calib[idx].dig_H1 = Plugin_028_read8(BME280_REGISTER_DIG_H1);
+  _bme280_calib[idx].dig_H2 = Plugin_028_readS16_LE(BME280_REGISTER_DIG_H2);
+  _bme280_calib[idx].dig_H3 = Plugin_028_read8(BME280_REGISTER_DIG_H3);
+  _bme280_calib[idx].dig_H4 = (Plugin_028_read8(BME280_REGISTER_DIG_H4) << 4) | (Plugin_028_read8(BME280_REGISTER_DIG_H4 + 1) & 0xF);
+  _bme280_calib[idx].dig_H5 = (Plugin_028_read8(BME280_REGISTER_DIG_H5 + 1) << 4) | (Plugin_028_read8(BME280_REGISTER_DIG_H5) >> 4);
+  _bme280_calib[idx].dig_H6 = (int8_t)Plugin_028_read8(BME280_REGISTER_DIG_H6);
 }
 
 //**************************************************************************/
 // Read temperature
 //**************************************************************************/
-float Plugin_028_readTemperature(void)
+float Plugin_028_readTemperature(uint8_t idx)
 {
   int32_t var1, var2;
 
-  int32_t adc_T = Plugin_028_read16(BME280_REGISTER_TEMPDATA);
-  adc_T <<= 8;
-  adc_T |= Plugin_028_read8(BME280_REGISTER_TEMPDATA + 2);
+  int32_t adc_T = Plugin_028_read24(BME280_REGISTER_TEMPDATA);
   adc_T >>= 4;
 
-  var1  = ((((adc_T >> 3) - ((int32_t)_bme280_calib.dig_T1 << 1))) *
-           ((int32_t)_bme280_calib.dig_T2)) >> 11;
+  var1  = ((((adc_T >> 3) - ((int32_t)_bme280_calib[idx].dig_T1 << 1))) *
+           ((int32_t)_bme280_calib[idx].dig_T2)) >> 11;
 
-  var2  = (((((adc_T >> 4) - ((int32_t)_bme280_calib.dig_T1)) *
-             ((adc_T >> 4) - ((int32_t)_bme280_calib.dig_T1))) >> 12) *
-           ((int32_t)_bme280_calib.dig_T3)) >> 14;
+  var2  = (((((adc_T >> 4) - ((int32_t)_bme280_calib[idx].dig_T1)) *
+             ((adc_T >> 4) - ((int32_t)_bme280_calib[idx].dig_T1))) >> 12) *
+           ((int32_t)_bme280_calib[idx].dig_T3)) >> 14;
 
   t_fine = var1 + var2;
 
@@ -283,38 +358,36 @@ float Plugin_028_readTemperature(void)
 //**************************************************************************/
 // Read pressure
 //**************************************************************************/
-float Plugin_028_readPressure(void) {
+float Plugin_028_readPressure(uint8_t idx) {
   int64_t var1, var2, p;
 
-  int32_t adc_P = Plugin_028_read16(BME280_REGISTER_PRESSUREDATA);
-  adc_P <<= 8;
-  adc_P |= Plugin_028_read8(BME280_REGISTER_PRESSUREDATA + 2);
+  int32_t adc_P = Plugin_028_read24(BME280_REGISTER_PRESSUREDATA);
   adc_P >>= 4;
 
   var1 = ((int64_t)t_fine) - 128000;
-  var2 = var1 * var1 * (int64_t)_bme280_calib.dig_P6;
-  var2 = var2 + ((var1 * (int64_t)_bme280_calib.dig_P5) << 17);
-  var2 = var2 + (((int64_t)_bme280_calib.dig_P4) << 35);
-  var1 = ((var1 * var1 * (int64_t)_bme280_calib.dig_P3) >> 8) +
-         ((var1 * (int64_t)_bme280_calib.dig_P2) << 12);
-  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)_bme280_calib.dig_P1) >> 33;
+  var2 = var1 * var1 * (int64_t)_bme280_calib[idx].dig_P6;
+  var2 = var2 + ((var1 * (int64_t)_bme280_calib[idx].dig_P5) << 17);
+  var2 = var2 + (((int64_t)_bme280_calib[idx].dig_P4) << 35);
+  var1 = ((var1 * var1 * (int64_t)_bme280_calib[idx].dig_P3) >> 8) +
+         ((var1 * (int64_t)_bme280_calib[idx].dig_P2) << 12);
+  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)_bme280_calib[idx].dig_P1) >> 33;
 
   if (var1 == 0) {
     return 0;  // avoid exception caused by division by zero
   }
   p = 1048576 - adc_P;
   p = (((p << 31) - var2) * 3125) / var1;
-  var1 = (((int64_t)_bme280_calib.dig_P9) * (p >> 13) * (p >> 13)) >> 25;
-  var2 = (((int64_t)_bme280_calib.dig_P8) * p) >> 19;
+  var1 = (((int64_t)_bme280_calib[idx].dig_P9) * (p >> 13) * (p >> 13)) >> 25;
+  var2 = (((int64_t)_bme280_calib[idx].dig_P8) * p) >> 19;
 
-  p = ((p + var1 + var2) >> 8) + (((int64_t)_bme280_calib.dig_P7) << 4);
+  p = ((p + var1 + var2) >> 8) + (((int64_t)_bme280_calib[idx].dig_P7) << 4);
   return (float)p / 256;
 }
 
 //**************************************************************************/
 // Read humidity
 //**************************************************************************/
-float Plugin_028_readHumidity(void) {
+float Plugin_028_readHumidity(uint8_t idx) {
 
   int32_t adc_H = Plugin_028_read16(BME280_REGISTER_HUMIDDATA);
 
@@ -322,14 +395,14 @@ float Plugin_028_readHumidity(void) {
 
   v_x1_u32r = (t_fine - ((int32_t)76800));
 
-  v_x1_u32r = (((((adc_H << 14) - (((int32_t)_bme280_calib.dig_H4) << 20) -
-                  (((int32_t)_bme280_calib.dig_H5) * v_x1_u32r)) + ((int32_t)16384)) >> 15) *
-               (((((((v_x1_u32r * ((int32_t)_bme280_calib.dig_H6)) >> 10) *
-                    (((v_x1_u32r * ((int32_t)_bme280_calib.dig_H3)) >> 11) + ((int32_t)32768))) >> 10) +
-                  ((int32_t)2097152)) * ((int32_t)_bme280_calib.dig_H2) + 8192) >> 14));
+  v_x1_u32r = (((((adc_H << 14) - (((int32_t)_bme280_calib[idx].dig_H4) << 20) -
+                  (((int32_t)_bme280_calib[idx].dig_H5) * v_x1_u32r)) + ((int32_t)16384)) >> 15) *
+               (((((((v_x1_u32r * ((int32_t)_bme280_calib[idx].dig_H6)) >> 10) *
+                    (((v_x1_u32r * ((int32_t)_bme280_calib[idx].dig_H3)) >> 11) + ((int32_t)32768))) >> 10) +
+                  ((int32_t)2097152)) * ((int32_t)_bme280_calib[idx].dig_H2) + 8192) >> 14));
 
   v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) *
-                             ((int32_t)_bme280_calib.dig_H1)) >> 4));
+                             ((int32_t)_bme280_calib[idx].dig_H1)) >> 4));
 
   v_x1_u32r = (v_x1_u32r < 0) ? 0 : v_x1_u32r;
   v_x1_u32r = (v_x1_u32r > 419430400) ? 419430400 : v_x1_u32r;
@@ -352,7 +425,7 @@ float Plugin_028_readAltitude(float seaLevel)
   // at high altitude.  See this thread for more information:
   //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
 
-  float atmospheric = Plugin_028_readPressure() / 100.0F;
+  float atmospheric = Plugin_028_readPressure(_i2caddr & 0x01) / 100.0F;
   return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
 }
 
