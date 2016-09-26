@@ -2555,7 +2555,7 @@ void handle_rules() {
 
   // load form data from flash
   reply += F("<form method='post'>");
-  reply += F("<textarea name='rules' rows='15' cols='80' wrap='on'>");
+  reply += F("<textarea name='rules' rows='15' cols='80' wrap='off'>");
 
 #if FEATURE_SPIFFS
   File f = SPIFFS.open("rules.txt", "r+");

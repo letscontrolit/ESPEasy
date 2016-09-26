@@ -1998,6 +1998,15 @@ boolean ruleMatch(String& event, String& rule)
   String tmpEvent = event;
   String tmpRule = rule;
 
+  // Special handling of literal string events, they should start with '!'
+  if (event.charAt(0) == '!')
+  {
+    if (event.equalsIgnoreCase(rule))
+        return true;
+    else
+        return false;
+  }
+
   if (event.startsWith("Clock#Time")) // clock events need different handling...
   {
     int pos1 = event.indexOf("=");

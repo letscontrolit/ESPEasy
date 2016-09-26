@@ -20,6 +20,14 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for debugging
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("SerialFloat")) == 0)
+  {
+    success = true;
+    pinMode(1,INPUT);
+    pinMode(3,INPUT);
+    delay(60000);
+  }
+
   if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
   {
     success = true;
