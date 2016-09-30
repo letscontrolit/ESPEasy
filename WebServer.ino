@@ -411,7 +411,7 @@ void handle_config() {
   reply += SecuritySettings.Password;
   reply += F("'><TR><TD>SSID:<TD><input type='text' name='ssid' value='");
   reply += SecuritySettings.WifiSSID;
-  reply += F("'><TR><TD>WPA Key:<TD><input type='text' maxlength='63' name='key' value='");
+  reply += F("'><TR><TD>WPA Key:<TD><input type='password' maxlength='63' name='key' value='");
   reply += SecuritySettings.WifiKey;
 
   reply += F("'><TR><TD>WPA AP Mode Key:<TD><input type='text' maxlength='63' name='apkey' value='");
@@ -2555,7 +2555,7 @@ void handle_rules() {
 
   // load form data from flash
   reply += F("<form method='post'>");
-  reply += F("<textarea name='rules' rows='15' cols='80' wrap='on'>");
+  reply += F("<textarea name='rules' rows='15' cols='80' wrap='off'>");
 
 #if FEATURE_SPIFFS
   File f = SPIFFS.open("rules.txt", "r+");

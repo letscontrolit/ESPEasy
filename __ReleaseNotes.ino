@@ -1,3 +1,7 @@
+// R133 26-09-2016
+// Added rule events to SerialServer and SerialSend command
+// Changed 'wrap on' to 'wrap off' in rules editor
+
 // R132 24-09-2016
 // Moved ISR handlers for Pulse, RFID and HCSR04 plugins to iram cache
 

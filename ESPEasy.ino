@@ -63,9 +63,6 @@
 //   MSP5611 I2C temp/baro sensor
 //   BMP280 I2C Barometric Pressure sensor
 //   SHT1X temperature/humidity sensors
-
-//   Experimental/Preliminary:
-//   =========================
 //   Ser2Net server
 
 // ********************************************************************************
@@ -121,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             132
+#define BUILD                             133
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
