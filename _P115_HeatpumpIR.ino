@@ -45,6 +45,7 @@
 #include <HisenseHeatpumpIR.h>
 #include <GreeHeatpumpIR.h>
 #include <FuegoHeatpumpIR.h>
+#include <ToshibaHeatpumpIR.h>
 
 // Array with all supported heatpumps
 HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpumpIR(), new PanasonicJKEHeatpumpIR(),
@@ -54,7 +55,7 @@ HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpu
                             new SamsungHeatpumpIR(), new SharpHeatpumpIR(), new DaikinHeatpumpIR(),
                             new MitsubishiHeavyZJHeatpumpIR(), new MitsubishiHeavyZMHeatpumpIR(),
                             new HyundaiHeatpumpIR(), new HisenseHeatpumpIR(), new GreeHeatpumpIR(),
-                            new FuegoHeatpumpIR(),
+                            new FuegoHeatpumpIR(), new ToshibaHeatpumpIR(),
                             NULL};
 
 IRSender *Plugin_115_irSender;
