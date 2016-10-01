@@ -45,6 +45,35 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+      LoadTaskSettings(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // we need to load the values from another task for selection!
+
+        string += F("<TR><TD>Mean sea level pressure:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+          string += F("<input type=checkbox name='_p006_bmp085_sea' checked>");
+        else
+          string += F("<input type=checkbox name='_p006_bmp085_sea'>");
+
+        string += F("<TR><TD>Elevation (meter):<TD><input type='text' name='_p006_bmp085_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        string += F("'>");
+
+        LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {  
+      String plugin0 = WebServer.arg("_p006_bmp085_sea");
+      Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (plugin0 == "on");
+      String plugin1 = WebServer.arg("_p006_bmp085_elev");
+      Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin1.toInt();
+      success = true;
+        break;
+      }
+      
     case PLUGIN_READ:
       {
         if (!Plugin_006_init)
@@ -56,13 +85,14 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         if (Plugin_006_init)
         {
           UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
+          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure(Settings.TaskDevicePluginConfig[event->TaskIndex][0],Settings.TaskDevicePluginConfig[event->TaskIndex][1])) / 100;
           String log = F("BMP  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
           log = F("BMP  : Barometric Pressure: ");
           log += UserVar[event->BaseVarIndex + 1];
           addLog(LOG_LEVEL_INFO, log);
+
           success = true;
         }
         break;
@@ -145,11 +175,12 @@ uint32_t Plugin_006_bmp085_readRawPressure(void)
 }
 
 /*********************************************************************/
-int32_t Plugin_006_bmp085_readPressure(void)
+int32_t Plugin_006_bmp085_readPressure(int seaEnable, int seaElevation)
 /*********************************************************************/
 {
   int32_t UT, UP, B3, B5, B6, X1, X2, X3, p;
   uint32_t B4, B7;
+  float t;
 
   UT = Plugin_006_bmp085_readRawTemperature();
   UP = Plugin_006_bmp085_readRawPressure();
@@ -185,6 +216,14 @@ int32_t Plugin_006_bmp085_readPressure(void)
   X2 = (-7357 * p) >> 16;
 
   p = p + ((X1 + X2 + (int32_t)3791) >> 4);
+
+  if (seaEnable && seaElevation)
+    {
+      t = (B5 + 8) / pow(2, 4);
+      t /= 10;
+      p = p * pow ( (1 - (0.0065 * seaElevation) / (t + (0.0065 * seaElevation) + 273.15)), -5.257);   
+    }  
+  
   return p;
 }
 
