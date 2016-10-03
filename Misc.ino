@@ -976,6 +976,7 @@ void ResetFactory(void)
   Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
   Settings.CustomCSS = false;
+  Settings.InitSPI = false;
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
