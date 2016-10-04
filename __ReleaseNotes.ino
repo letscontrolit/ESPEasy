@@ -1,3 +1,11 @@
+// R134 04-10-2016
+// Corrected Typo and password field type change
+// Added %eventvalue% that can substitute the event value in actions
+// Added total to the pulse counter as single value (not persistent counter!) (contributed by fvdpol)
+// Added authentication to http controller (contributed by marcfon)
+// Added SPI support in hardware tab (contributed by moelski)
+// Added NodeMCU/Wemos pin numbering to GPIO list (contributed by moelski)
+
 // R133 26-09-2016
 // Added rule events to SerialServer and SerialSend command
 // Changed 'wrap on' to 'wrap off' in rules editor

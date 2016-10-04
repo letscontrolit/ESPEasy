@@ -88,7 +88,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
- 
+
+        if (choice !=0)
+          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
+          
         success = true;
         break;
       }
