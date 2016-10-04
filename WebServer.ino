@@ -561,6 +561,8 @@ void handle_hardware() {
     Settings.PinBootStates[14] =  WebServer.arg("p14").toInt();
     Settings.PinBootStates[15] =  WebServer.arg("p15").toInt();
     Settings.PinBootStates[16] =  WebServer.arg("p16").toInt();
+    
+    Settings.InitSPI = WebServer.arg("initspi") == "on";      // SPI Init
 
     SaveSettings();
   }
@@ -575,6 +577,14 @@ void handle_hardware() {
   addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
+  
+  // SPI Init
+  reply += F("<TR><TD>Init SPI:<TD>");
+  if (Settings.InitSPI)
+    reply += F("<input type=checkbox id='initspi'  name='initspi' checked>&nbsp;");
+  else
+    reply += F("<input type=checkbox id='initspi' name='initspi'>&nbsp;");
+  reply += F("(Note : Chip Select (CS) config must be done in the plugin)");
 
   reply += F("<TR><TD>GPIO boot states:<TD>");
   reply += F("<TR><TD>Pin mode 0:<TD>");
@@ -1213,19 +1223,19 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
   String options[14];
   options[0] = F(" ");
-  options[1] = F("GPIO-0");
-  options[2] = F("GPIO-1");
-  options[3] = F("GPIO-2");
-  options[4] = F("GPIO-3");
-  options[5] = F("GPIO-4");
-  options[6] = F("GPIO-5");
-  options[7] = F("GPIO-9");
-  options[8] = F("GPIO-10");
-  options[9] = F("GPIO-12");
-  options[10] = F("GPIO-13");
-  options[11] = F("GPIO-14");
-  options[12] = F("GPIO-15");
-  options[13] = F("GPIO-16");
+  options[1] = F("GPIO-0 (D3 - Pullup)");
+  options[2] = F("GPIO-1 (D10)");
+  options[3] = F("GPIO-2 (D4 - Pullup)");
+  options[4] = F("GPIO-3 (D9)");
+  options[5] = F("GPIO-4 (D2 - I2C SDA)");
+  options[6] = F("GPIO-5 (D1 - I2C SCL)");
+  options[7] = F("GPIO-9 (D11 - Flash HOLD)");
+  options[8] = F("GPIO-10 (D12 - Flash WP)");
+  options[9] = F("GPIO-12 (D6 - SPI MISO)");
+  options[10] = F("GPIO-13 (D7 - SPI MOSI)");
+  options[11] = F("GPIO-14 (D5 - SPI SCK)");
+  options[12] = F("GPIO-15 (D8 - SPI CS)");
+  options[13] = F("GPIO-16 (D0)");
   int optionValues[14];
   optionValues[0] = -1;
   optionValues[1] = 0;

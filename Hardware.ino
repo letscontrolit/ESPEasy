@@ -62,5 +62,17 @@ void hardwareInit()
       }
     }
   }
+  
+  // SPI Init
+  if (Settings.InitSPI)
+  {
+    SPI.setHwCs(false);
+    SPI.begin();
+    addLog(LOG_LEVEL_INFO, (char*)"INIT : SPI Init (without CS)");
+  }
+  else
+  {
+    addLog(LOG_LEVEL_INFO, (char*)"INIT : SPI not enabled");
+  }
 }
 

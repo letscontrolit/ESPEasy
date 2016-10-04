@@ -216,6 +216,7 @@
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
 #include <Wire.h>
+#include <SPI.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
@@ -339,6 +340,7 @@ struct SettingsStruct
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
+  boolean       InitSPI; 
 } Settings;
 
 struct ExtraTaskSettingsStruct
