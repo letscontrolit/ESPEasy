@@ -1961,6 +1961,12 @@ void rulesProcessing(String& event)
           // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
           if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
           {
+            int equalsPos = event.indexOf("=");
+            if (equalsPos > 0)
+            {
+              String tmpString = event.substring(equalsPos+1);
+              action.replace("%eventvalue%",tmpString); // substitute %eventvalue% in actions with the actual value from the event
+            }
             log = F("ACT  : ");
             log += action;
             addLog(LOG_LEVEL_INFO, log);
