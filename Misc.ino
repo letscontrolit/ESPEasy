@@ -1349,7 +1349,7 @@ float globalstack[STACK_SIZE];
 float *sp = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' )
+#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '@')
 
 int push(float value)
 {
@@ -1380,6 +1380,9 @@ float apply_operator(char op, float first, float second)
       return first * second;
     case '/':
       return first / second;
+    case '@':
+      return pressureElevation(first, second);
+    default:
       return 0;
   }
 }
@@ -1595,6 +1598,9 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
+float pressureElevation(float atmospheric, float altitude) {
+  return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
+}
 
 /********************************************************************************************\
   Time stuff
