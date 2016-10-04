@@ -1423,6 +1423,8 @@ int op_preced(const char c)
 {
   switch (c)
   {
+    case '@':
+      return 3;
     case '*':
     case '/':
       return 2;
@@ -1437,6 +1439,7 @@ bool op_left_assoc(const char c)
 {
   switch (c)
   {
+    case '@':
     case '*':
     case '/':
     case '+':
@@ -1451,6 +1454,7 @@ unsigned int op_arg_count(const char c)
 {
   switch (c)
   {
+    case '@':
     case '*':
     case '/':
     case '+':
