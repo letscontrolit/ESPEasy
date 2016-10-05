@@ -1,3 +1,6 @@
+// R135 05-10-2016
+// Added build and unit name to the node list
+
 // R134 04-10-2016
 // Corrected Typo and password field type change
 // Added %eventvalue% that can substitute the event value in actions

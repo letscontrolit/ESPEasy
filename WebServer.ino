@@ -264,23 +264,27 @@ void handle_root() {
         break;
     }
 
-    reply += F("<TR><TH>Node List:<TH>IP<TH>Age<TR><TD><TD>");
+    reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < UNIT_MAX; x++)
     {
       if (Nodes[x].ip[0] != 0)
       {
-        if (x == Settings.Unit)
-          reply += F("<font color='blue'>");
         char url[80];
         sprintf_P(url, PSTR("<a href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
         reply += F("<TR><TD>Unit ");
         reply += x;
-        reply += F(":<TD>");
+        reply += F("<TD>");
+        if (x != Settings.Unit)
+          reply += Nodes[x].nodeName;
+        else
+          reply += Settings.Name;
+        reply += F("<TD>");
+        if (Nodes[x].build)
+          reply += Nodes[x].build;
+        reply += F("<TD>");
         reply += url;
         reply += F("<TD>");
         reply += Nodes[x].age;
-        if (x == Settings.Unit)
-          reply += F("</font color>");
       }
     }
 

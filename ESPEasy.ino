@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             134
+#define BUILD                             135
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
@@ -408,6 +408,8 @@ struct NodeStruct
 {
   byte ip[4];
   byte age;
+  uint16_t build;
+  char* nodeName;
 } Nodes[UNIT_MAX];
 
 struct systemTimerStruct
