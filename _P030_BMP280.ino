@@ -122,6 +122,20 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
+        LoadTaskSettings(Settings.TaskDevicePluginConfig[event->TaskIndex][1]); // we need to load the values from another task for selection!
+
+        string += F("<TR><TD>Mean sea level pressure:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+          string += F("<input type=checkbox name='_p030_bmp085_sea' checked>");
+        else
+          string += F("<input type=checkbox name='_p030_bmp085_sea'>");
+
+        string += F("<TR><TD>Elevation (meter):<TD><input type='text' name='_p030_bmp085_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        string += F("'>");
+
+        LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
+
         success = true;
         break;
       }
@@ -130,6 +144,10 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
       {
         String plugin1 = WebServer.arg("plugin_030_bmp280_i2c");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        String plugin2 = WebServer.arg("_p030_bmp085_sea");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = (plugin2 == "on");
+        String plugin3 = WebServer.arg("_p030_bmp085_elev");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
         success = true;
         break;
       }
@@ -149,7 +167,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
         if (Plugin_030_init[idx])
         {
           UserVar[event->BaseVarIndex] = Plugin_030_readTemperature();
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure()) / 100;
+          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(Settings.TaskDevicePluginConfig[event->TaskIndex][1],Settings.TaskDevicePluginConfig[event->TaskIndex][2])) / 100;
           String log = F("BMP280  : Address: 0x");
           log += String(bmp280_i2caddr,HEX);
           addLog(LOG_LEVEL_INFO, log);
@@ -325,7 +343,7 @@ float Plugin_030_readTemperature(void)
 //**************************************************************************/
 // Read pressure
 //**************************************************************************/
-float Plugin_030_readPressure(void) {
+float Plugin_030_readPressure(int seaEnable, int seaElevation) {
   int64_t var1, var2, p;
 
   int32_t adc_P = Plugin_030_read24(BMP280_REGISTER_PRESSUREDATA);
@@ -348,18 +366,13 @@ float Plugin_030_readPressure(void) {
   var2 = (((int64_t)_bmp280_calib.dig_P8) * p) >> 19;
 
   p = ((p + var1 + var2) >> 8) + (((int64_t)_bmp280_calib.dig_P7) << 4);
+
+  if (seaEnable && seaElevation)
+    {
+      int32_t temp;
+      temp = Plugin_030_readTemperature();
+      p = p * pow ( (1 - (0.0065 * seaElevation) / (temp + (0.0065 * seaElevation) + 273.15)), -5.257);   
+    }
+
   return (float)p / 256;
 }
-
-//**************************************************************************/
-// Calculates the altitude (in meters) from the specified atmospheric
-//    pressure (in hPa), and sea-level pressure (in hPa).
-//    @param  seaLevel      Sea-level pressure in hPa
-//    @param  atmospheric   Atmospheric pressure in hPa
-//**************************************************************************/
-float Plugin_030_readAltitude(float seaLevel)
-{
-  float atmospheric = Plugin_030_readPressure() / 100.0F;
-  return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
-}
-
