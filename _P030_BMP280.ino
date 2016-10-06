@@ -407,7 +407,7 @@ float Plugin_030_readAltitude(float seaLevel)
 //**************************************************************************/
 // MSL pressure formula
 //**************************************************************************/
-float Plugin_030_pressureElevation(float atmospheric, float altitude) {
+float Plugin_030_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
 

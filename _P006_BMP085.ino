@@ -283,7 +283,7 @@ boolean Plugin_006_bmp085_write8(uint8_t a, uint8_t d)
 }
 
 /*********************************************************************/
-float Plugin_006_pressureElevation(float atmospheric, float altitude) {
+float Plugin_006_pressureElevation(float atmospheric, int altitude) {
 /*********************************************************************/
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
