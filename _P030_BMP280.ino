@@ -121,6 +121,10 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
+        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
+        string += F("plugin_030_bmp280_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        string += F("'>");
 
         success = true;
         break;
@@ -130,6 +134,8 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
       {
         String plugin1 = WebServer.arg("plugin_030_bmp280_i2c");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        String elev = WebServer.arg("plugin_030_bmp280_elev");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
         success = true;
         break;
       }
@@ -149,7 +155,14 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
         if (Plugin_030_init[idx])
         {
           UserVar[event->BaseVarIndex] = Plugin_030_readTemperature(idx);
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
+          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          if (elev)
+          {
+             UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation((float)Plugin_030_readPressure(idx) / 100, elev);
+          } else {
+             UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
+          }
+
           String log = F("BMP280  : Address: 0x");
           log += String(bmp280_i2caddr,HEX);
           addLog(LOG_LEVEL_INFO, log);
@@ -200,7 +213,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 // Check BMP280 presence
 //**************************************************************************/
 bool Plugin_030_check(uint8_t a) {
-  bmp280_i2caddr = a;
+  bmp280_i2caddr = a?a:0x76;
   bool wire_status = false;
   if (Plugin_030_read8(BMP280_REGISTER_CHIPID, &wire_status) != 0x58) {
       return false;
@@ -389,5 +402,12 @@ float Plugin_030_readAltitude(float seaLevel)
 {
   float atmospheric = Plugin_030_readPressure(bmp280_i2caddr & 0x01) / 100.0F;
   return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+}
+
+//**************************************************************************/
+// MSL pressure formula
+//**************************************************************************/
+float Plugin_030_pressureElevation(float atmospheric, float altitude) {
+  return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
 
