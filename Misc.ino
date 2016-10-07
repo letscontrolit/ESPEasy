@@ -1349,7 +1349,7 @@ float globalstack[STACK_SIZE];
 float *sp = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' )
+#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
 
 int push(float value)
 {
@@ -1380,6 +1380,9 @@ float apply_operator(char op, float first, float second)
       return first * second;
     case '/':
       return first / second;
+    case '^':
+      return pow(first, second);
+    default:
       return 0;
   }
 }
@@ -1420,6 +1423,8 @@ int op_preced(const char c)
 {
   switch (c)
   {
+    case '^':
+      return 3;
     case '*':
     case '/':
       return 2;
@@ -1434,6 +1439,7 @@ bool op_left_assoc(const char c)
 {
   switch (c)
   {
+    case '^':
     case '*':
     case '/':
     case '+':
@@ -1448,6 +1454,7 @@ unsigned int op_arg_count(const char c)
 {
   switch (c)
   {
+    case '^':
     case '*':
     case '/':
     case '+':
