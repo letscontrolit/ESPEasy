@@ -45,6 +45,24 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
+        string += F("_p006_bmp085_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        string += F("'>");
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        String elev = WebServer.arg("_p006_bmp085_elev");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
         if (!Plugin_006_init)
@@ -56,7 +74,13 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         if (Plugin_006_init)
         {
           UserVar[event->BaseVarIndex] = Plugin_006_bmp085_readTemperature();
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
+          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          if (elev)
+          {
+             UserVar[event->BaseVarIndex + 1] = Plugin_006_pressureElevation((float)Plugin_006_bmp085_readPressure() / 100, elev);
+          } else {
+             UserVar[event->BaseVarIndex + 1] = ((float)Plugin_006_bmp085_readPressure()) / 100;
+          }
           String log = F("BMP  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
@@ -256,4 +280,10 @@ boolean Plugin_006_bmp085_write8(uint8_t a, uint8_t d)
     return false;
 
   return true;
+}
+
+/*********************************************************************/
+float Plugin_006_pressureElevation(float atmospheric, int altitude) {
+/*********************************************************************/
+  return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
