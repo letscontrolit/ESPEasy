@@ -1,3 +1,7 @@
+// R136 07-10-2016
+// Added NodeMCU/Wemos pin numbers (contributed by nonflammable)
+// Added Pressure altitude adjustment to pressure sensors (contributed by adrianmihalko/pm-cz)
+
 // R135 05-10-2016
 // Added build and unit name to the node list
 
