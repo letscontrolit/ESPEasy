@@ -591,27 +591,27 @@ void handle_hardware() {
   reply += F("(Note : Chip Select (CS) config must be done in the plugin)");
 
   reply += F("<TR><TD>GPIO boot states:<TD>");
-  reply += F("<TR><TD>Pin mode 0:<TD>");
+  reply += F("<TR><TD>Pin mode 0 (D3):<TD>");
   addPinStateSelect(reply, "p0", Settings.PinBootStates[0]);
-  reply += F("<TR><TD>Pin mode 2:<TD>");
+  reply += F("<TR><TD>Pin mode 2 (D4):<TD>");
   addPinStateSelect(reply, "p2", Settings.PinBootStates[2]);
-  reply += F("<TR><TD>Pin mode 4:<TD>");
+  reply += F("<TR><TD>Pin mode 4 (D2):<TD>");
   addPinStateSelect(reply, "p4", Settings.PinBootStates[4]);
-  reply += F("<TR><TD>Pin mode 5:<TD>");
+  reply += F("<TR><TD>Pin mode 5 (D1):<TD>");
   addPinStateSelect(reply, "p5", Settings.PinBootStates[5]);
-  reply += F("<TR><TD>Pin mode 9:<TD>");
+  reply += F("<TR><TD>Pin mode 9 (D11):<TD>");
   addPinStateSelect(reply, "p9", Settings.PinBootStates[9]);
-  reply += F("<TR><TD>Pin mode 10:<TD>");
+  reply += F("<TR><TD>Pin mode 10 (D12):<TD>");
   addPinStateSelect(reply, "p10", Settings.PinBootStates[10]);
-  reply += F("<TR><TD>Pin mode 12:<TD>");
+  reply += F("<TR><TD>Pin mode 12 (D6):<TD>");
   addPinStateSelect(reply, "p12", Settings.PinBootStates[12]);
-  reply += F("<TR><TD>Pin mode 13:<TD>");
+  reply += F("<TR><TD>Pin mode 13 (D7):<TD>");
   addPinStateSelect(reply, "p13", Settings.PinBootStates[13]);
-  reply += F("<TR><TD>Pin mode 14:<TD>");
+  reply += F("<TR><TD>Pin mode 14 (D5):<TD>");
   addPinStateSelect(reply, "p14", Settings.PinBootStates[14]);
-  reply += F("<TR><TD>Pin mode 15:<TD>");
+  reply += F("<TR><TD>Pin mode 15 (D8):<TD>");
   addPinStateSelect(reply, "p15", Settings.PinBootStates[15]);
-  reply += F("<TR><TD>Pin mode 16:<TD>");
+  reply += F("<TR><TD>Pin mode 16 (D0):<TD>");
   addPinStateSelect(reply, "p16", Settings.PinBootStates[16]);
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
