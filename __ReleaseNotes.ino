@@ -1,3 +1,6 @@
+// R137 09-10-2016
+// Added formula option for pow calculations like 2^3 in (contributed by pm-cz)
+
 // R136 07-10-2016
 // Added NodeMCU/Wemos pin numbers (contributed by nonflammable)
 // Added Pressure altitude adjustment to pressure sensors (contributed by adrianmihalko/pm-cz)
