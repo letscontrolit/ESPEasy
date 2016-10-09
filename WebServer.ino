@@ -450,58 +450,61 @@ void handle_config() {
 
   if (Settings.Protocol)
   {
-    byte choice = Settings.UseDNS;
-    String options[2];
-    options[0] = F("Use IP address");
-    options[1] = F("Use Hostname");
-    int optionValues[2];
-    optionValues[0] = 0;
-    optionValues[1] = 1;
-    reply += F("<TR><TD>Locate Controller:<TD><select name='usedns' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\" >");
-    for (byte x = 0; x < 2; x++)
-    {
-      reply += F("<option value='");
-      reply += optionValues[x];
-      reply += "'";
-      if (choice == optionValues[x])
-        reply += F(" selected");
-      reply += ">";
-      reply += options[x];
-      reply += F("</option>");
-    }
-    reply += F("</select>");
-
-    if (Settings.UseDNS)
-    {
-      reply += F("<TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
-      reply += Settings.ControllerHostName;
-    }
-    else
-    {
-      reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
-      sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
-      reply += str;
-    }
-
-    reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
-    reply += Settings.ControllerPort;
-
     byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-    if (Protocol[ProtocolIndex].usesAccount)
-    {
-      reply += F("'><TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
-      reply += SecuritySettings.ControllerUser;
-    }
+    // Don´t show the Protocol settings for SD Card Controller
+    if (ProtocolIndex != 10) {
+      byte choice = Settings.UseDNS;
+      String options[2];
+      options[0] = F("Use IP address");
+      options[1] = F("Use Hostname");
+      int optionValues[2];
+      optionValues[0] = 0;
+      optionValues[1] = 1;
+      reply += F("<TR><TD>Locate Controller:<TD><select name='usedns' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\" >");
+      for (byte x = 0; x < 2; x++)
+      {
+        reply += F("<option value='");
+        reply += optionValues[x];
+        reply += "'";
+        if (choice == optionValues[x])
+          reply += F(" selected");
+        reply += ">";
+        reply += options[x];
+        reply += F("</option>");
+      }
+      reply += F("</select>");
 
-    if (Protocol[ProtocolIndex].usesPassword)
-    {
-      reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
-      reply += SecuritySettings.ControllerPassword;
-    }
-    reply += F("'>");
+      if (Settings.UseDNS)
+      {
+        reply += F("<TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
+        reply += Settings.ControllerHostName;
+      }
+      else
+      {
+        reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
+        sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+        reply += str;
+      }
 
+      reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
+      reply += Settings.ControllerPort;
+
+      if (Protocol[ProtocolIndex].usesAccount)
+      {
+        reply += F("'><TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
+        reply += SecuritySettings.ControllerUser;
+      }
+
+      if (Protocol[ProtocolIndex].usesPassword)
+      {
+        reply += F("'><TR><TD>Controller Password:<TD><input type='text' name='controllerpassword' value='");
+        reply += SecuritySettings.ControllerPassword;
+      }
+      
+      reply += F("'>");
+    }
+    
     CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, 0, reply);
-
   }
 
   reply += F("<TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
@@ -565,7 +568,7 @@ void handle_hardware() {
     Settings.PinBootStates[14] =  WebServer.arg("p14").toInt();
     Settings.PinBootStates[15] =  WebServer.arg("p15").toInt();
     Settings.PinBootStates[16] =  WebServer.arg("p16").toInt();
-    
+
     Settings.InitSPI = WebServer.arg("initspi") == "on";      // SPI Init
 
     SaveSettings();
@@ -581,7 +584,7 @@ void handle_hardware() {
   addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
-  
+
   // SPI Init
   reply += F("<TR><TD>Init SPI:<TD>");
   if (Settings.InitSPI)
@@ -2581,7 +2584,7 @@ void handle_rules() {
       *pointerToByteToRead = f.read();
       pointerToByteToRead++;// next byte
     }
-    data[f.size()]=0;
+    data[f.size()] = 0;
     f.close();
   }
 #else
@@ -2636,4 +2639,3 @@ String URLEncode(const char* msg)
   }
   return encodedMsg;
 }
-
