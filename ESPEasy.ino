@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             137
+#define BUILD                             138
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
@@ -598,12 +598,6 @@ void setup()
 
     saveToRTC(0);
 
-    if (Settings.UseRules)
-    {
-      String event = F("System#Boot");
-      rulesProcessing(event);
-    }
-
     // Setup timers
     if (bootMode == 0)
     {
@@ -638,6 +632,12 @@ void setup()
     // (captive portal concept)
     if (wifiSetup)
       dnsServer.start(DNS_PORT, "*", apIP);
+
+    if (Settings.UseRules)
+    {
+      String event = F("System#Boot");
+      rulesProcessing(event);
+    }
 
   }
   else

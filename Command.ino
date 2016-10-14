@@ -140,17 +140,12 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     String event = Line;
-    event.replace(" ", ",");
+    event = event.substring(7);
     int index = event.indexOf(',');
     if (index > 0)
     {
       event = event.substring(index+1);
-      index = event.indexOf(',');
-      if (index > 0)
-      {
-        event = event.substring(index+1);
-        SendUDPCommand(Par1, (char*)event.c_str(), event.length());
-      }      
+      SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
 
@@ -158,18 +153,13 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     String event = Line;
-    event.replace(" ", ",");
+    event = event.substring(8);
     int index = event.indexOf(',');
     if (index > 0)
     {
-      event = event.substring(index+1);
-      index = event.indexOf(',');
-      if (index > 0)
-      {
-        String topic = event.substring(0,index);
-        String value = event.substring(index+1);
-        MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
-      }      
+      String topic = event.substring(0,index);
+      String value = event.substring(index+1);
+      MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
     }
   }
   

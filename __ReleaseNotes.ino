@@ -1,3 +1,7 @@
+// R138 10-10-2016
+// Fixed publish command
+// Fixed boot event, triggered after getting the system time
+
 // R137 09-10-2016
 // Added formula option for pow calculations like 2^3 in (contributed by pm-cz)
 
