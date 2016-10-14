@@ -1,3 +1,8 @@
+// R139 14-10-2016
+// Fixed a bug with Domoticz MQTT protocol. Broken as of R109, due to the new pubsub library
+//   It also needs a patched pubsub library!
+//   Also fixed a specific crash situation on invalid data
+
 // R138 10-10-2016
 // Fixed publish command
 // Fixed boot event, triggered after getting the system time
