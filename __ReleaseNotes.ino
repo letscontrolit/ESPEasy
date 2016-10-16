@@ -1,3 +1,6 @@
+// R140 16-10-2016
+// Added PCF8574A at default address as known device
+
 // R139 14-10-2016
 // Fixed a bug with Domoticz MQTT protocol. Broken as of R109, due to the new pubsub library
 //   It also needs a patched pubsub library!
