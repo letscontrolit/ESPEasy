@@ -140,6 +140,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
+        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
+        string += F("plugin_028_bme280_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        string += F("'>");
 
         success = true;
         break;
@@ -149,6 +153,8 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         String plugin1 = WebServer.arg("plugin_028_bme280_i2c");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        String elev = WebServer.arg("plugin_028_bme280_elev");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
         success = true;
         break;
       }
@@ -169,7 +175,13 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex] = Plugin_028_readTemperature(idx);
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity(idx));
-          UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure(idx)) / 100;
+          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          if (elev)
+          {
+             UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation((float)Plugin_028_readPressure(idx) / 100, elev);
+          } else {
+             UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure(idx)) / 100;
+          }
           String log = F("BME  : Address: 0x");
           log += String(_i2caddr,HEX);
           addLog(LOG_LEVEL_INFO, log);
@@ -191,11 +203,12 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+
 //**************************************************************************/
 // Check BME280 presence
 //**************************************************************************/
 bool Plugin_028_check(uint8_t a) {
-  _i2caddr = a;
+  _i2caddr = a?a:0x76;
   bool wire_status = false;
   if (Plugin_028_read8(BME280_REGISTER_CHIPID, &wire_status) != 0x60) {
       return false;
@@ -208,8 +221,6 @@ bool Plugin_028_check(uint8_t a) {
 // Initialize BME280
 //**************************************************************************/
 bool Plugin_028_begin(uint8_t a) {
-  _i2caddr = a;
-
   if (! Plugin_028_check(a))
     return false;
 
@@ -427,5 +438,12 @@ float Plugin_028_readAltitude(float seaLevel)
 
   float atmospheric = Plugin_028_readPressure(_i2caddr & 0x01) / 100.0F;
   return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+}
+
+//**************************************************************************/
+// MSL pressure formula
+//**************************************************************************/
+float Plugin_028_pressureElevation(float atmospheric, int altitude) {
+  return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
 

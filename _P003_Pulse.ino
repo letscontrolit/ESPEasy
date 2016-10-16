@@ -67,14 +67,16 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         string += tmpString;
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        String options[2];
+        String options[3];
         options[0] = F("Delta");
         options[1] = F("Delta/Total/Time");
-        int optionValues[2];
+        options[2] = F("Total");        
+        int optionValues[3];
         optionValues[0] = 0;
         optionValues[1] = 1;
+        optionValues[2] = 2;
         string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_countertype'>");
-        for (byte x = 0; x < 2; x++)
+        for (byte x = 0; x < 3; x++)
         {
           string += F("<option value='");
           string += optionValues[x];
@@ -86,7 +88,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
- 
+
+        if (choice !=0)
+          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
+          
         success = true;
         break;
       }
@@ -140,11 +145,21 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           case 0:
           {
             event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
             break;
           }
           case 1:
           {
             event->sensorType = SENSOR_TYPE_TRIPLE;
+            UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
+            UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
+            UserVar[event->BaseVarIndex+2] = Plugin_003_pulseTime[event->TaskIndex];
+            break;
+          }
+          case 2:
+          {
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             break;
           }
         }

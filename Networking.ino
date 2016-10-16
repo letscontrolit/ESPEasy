@@ -113,6 +113,14 @@ void checkUDP()
               for (byte x = 0; x < 4; x++)
                 Nodes[unit].ip[x] = packetBuffer[x + 8];
               Nodes[unit].age = 0; // reset 'age counter'
+              if (len >20) // extended packet size
+              {
+                Nodes[unit].build = packetBuffer[13] + 256*packetBuffer[14];
+                if (Nodes[unit].nodeName==0)
+                    Nodes[unit].nodeName =  (char *)malloc(26);
+                memcpy(Nodes[unit].nodeName,(byte*)packetBuffer+15,25);
+                Nodes[unit].nodeName[25]=0;
+              }
             }
 
             char macaddress[20];
@@ -322,11 +330,13 @@ void sendSysInfoUDP(byte repeats)
     return;
 
   // 1 byte 'binary token 255'
-  // 1 byte id
+  // 1 byte id '1'
   // 6 byte mac
   // 4 byte ip
   // 1 byte unit
-
+  // 2 byte build
+  // 25 char name
+  
   // send my info to the world...
   strcpy_P(log, PSTR("UDP  : Send Sysinfo message"));
   addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -334,7 +344,7 @@ void sendSysInfoUDP(byte repeats)
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};
     uint8_t* macread = WiFi.macAddress(mac);
-    byte data[20];
+    byte data[80];
     data[0] = 255;
     data[1] = 1;
     for (byte x = 0; x < 6; x++)
@@ -343,12 +353,14 @@ void sendSysInfoUDP(byte repeats)
     for (byte x = 0; x < 4; x++)
       data[x + 8] = ip[x];
     data[12] = Settings.Unit;
-
+    data[13] = Settings.Build & 0xff;
+    data[14] = Settings.Build >> 8;
+    memcpy((byte*)data+15,Settings.Name,25);
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);
     portUDP.beginPacket(broadcastIP, Settings.UDPPort);
-    portUDP.write(data, 20);
+    portUDP.write(data, 80);
     portUDP.endPacket();
     if (counter < (repeats - 1))
       delay(500);
@@ -361,6 +373,7 @@ void sendSysInfoUDP(byte repeats)
     for (byte x = 0; x < 4; x++)
       Nodes[Settings.Unit].ip[x] = ip[x];
     Nodes[Settings.Unit].age = 0;
+    Nodes[Settings.Unit].build = Settings.Build;
   }
 }
 

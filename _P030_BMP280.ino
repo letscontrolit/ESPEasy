@@ -55,7 +55,7 @@ typedef struct
   int16_t  dig_P9;
 } bmp280_calib_data;
 
-bmp280_calib_data _bmp280_calib;
+bmp280_calib_data _bmp280_calib[2];
 
 uint8_t bmp280_i2caddr;
 int32_t bmp280_sensorID;
@@ -121,6 +121,10 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
+        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
+        string += F("plugin_030_bmp280_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        string += F("'>");
 
         success = true;
         break;
@@ -130,6 +134,8 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
       {
         String plugin1 = WebServer.arg("plugin_030_bmp280_i2c");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        String elev = WebServer.arg("plugin_030_bmp280_elev");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
         success = true;
         break;
       }
@@ -148,8 +154,15 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_030_init[idx])
         {
-          UserVar[event->BaseVarIndex] = Plugin_030_readTemperature();
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure()) / 100;
+          UserVar[event->BaseVarIndex] = Plugin_030_readTemperature(idx);
+          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          if (elev)
+          {
+             UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation((float)Plugin_030_readPressure(idx) / 100, elev);
+          } else {
+             UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
+          }
+
           String log = F("BMP280  : Address: 0x");
           log += String(bmp280_i2caddr,HEX);
           addLog(LOG_LEVEL_INFO, log);
@@ -159,6 +172,34 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           log = F("BMP280  : Barometric Pressure: ");
           log += UserVar[event->BaseVarIndex + 1];
           addLog(LOG_LEVEL_INFO, log);
+/*
+          log = F("BMP280  : Coefficients [T]: ");
+          log += _bmp280_calib[idx].dig_T1;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_T2;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_T3;
+          addLog(LOG_LEVEL_INFO, log);
+          log = F("BMP280  : Coefficients [P]: ");
+          log += _bmp280_calib[idx].dig_P1;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P2;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P3;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P4;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P5;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P6;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P7;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P8;
+          log += ", ";
+          log += _bmp280_calib[idx].dig_P9;
+          addLog(LOG_LEVEL_INFO, log);
+*/
           success = true;
         }
         break;
@@ -172,7 +213,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 // Check BMP280 presence
 //**************************************************************************/
 bool Plugin_030_check(uint8_t a) {
-  bmp280_i2caddr = a;
+  bmp280_i2caddr = a?a:0x76;
   bool wire_status = false;
   if (Plugin_030_read8(BMP280_REGISTER_CHIPID, &wire_status) != 0x58) {
       return false;
@@ -188,7 +229,7 @@ bool Plugin_030_begin(uint8_t a) {
   if (! Plugin_030_check(a))
     return false;
 
-  Plugin_030_readCoefficients();
+  Plugin_030_readCoefficients(a & 0x1);
   Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING);
   return true;
 }
@@ -282,39 +323,39 @@ int16_t Plugin_030_readS16_LE(byte reg)
 //**************************************************************************/
 // Reads the factory-set coefficients
 //**************************************************************************/
-void Plugin_030_readCoefficients(void)
+void Plugin_030_readCoefficients(uint8_t idx)
 {
-  _bmp280_calib.dig_T1 = Plugin_030_read16_LE(BMP280_REGISTER_DIG_T1);
-  _bmp280_calib.dig_T2 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_T2);
-  _bmp280_calib.dig_T3 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_T3);
+  _bmp280_calib[idx].dig_T1 = Plugin_030_read16_LE(BMP280_REGISTER_DIG_T1);
+  _bmp280_calib[idx].dig_T2 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_T2);
+  _bmp280_calib[idx].dig_T3 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_T3);
 
-  _bmp280_calib.dig_P1 = Plugin_030_read16_LE(BMP280_REGISTER_DIG_P1);
-  _bmp280_calib.dig_P2 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P2);
-  _bmp280_calib.dig_P3 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P3);
-  _bmp280_calib.dig_P4 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P4);
-  _bmp280_calib.dig_P5 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P5);
-  _bmp280_calib.dig_P6 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P6);
-  _bmp280_calib.dig_P7 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P7);
-  _bmp280_calib.dig_P8 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P8);
-  _bmp280_calib.dig_P9 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P9);
+  _bmp280_calib[idx].dig_P1 = Plugin_030_read16_LE(BMP280_REGISTER_DIG_P1);
+  _bmp280_calib[idx].dig_P2 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P2);
+  _bmp280_calib[idx].dig_P3 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P3);
+  _bmp280_calib[idx].dig_P4 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P4);
+  _bmp280_calib[idx].dig_P5 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P5);
+  _bmp280_calib[idx].dig_P6 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P6);
+  _bmp280_calib[idx].dig_P7 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P7);
+  _bmp280_calib[idx].dig_P8 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P8);
+  _bmp280_calib[idx].dig_P9 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P9);
 }
 
 //**************************************************************************/
 // Read temperature
 //**************************************************************************/
-float Plugin_030_readTemperature(void)
+float Plugin_030_readTemperature(uint8_t idx)
 {
   int32_t var1, var2;
 
   int32_t adc_T = Plugin_030_read24(BMP280_REGISTER_TEMPDATA);
   adc_T >>= 4;
 
-  var1  = ((((adc_T >> 3) - ((int32_t)_bmp280_calib.dig_T1 << 1))) *
-           ((int32_t)_bmp280_calib.dig_T2)) >> 11;
+  var1  = ((((adc_T >> 3) - ((int32_t)_bmp280_calib[idx].dig_T1 << 1))) *
+           ((int32_t)_bmp280_calib[idx].dig_T2)) >> 11;
 
-  var2  = (((((adc_T >> 4) - ((int32_t)_bmp280_calib.dig_T1)) *
-             ((adc_T >> 4) - ((int32_t)_bmp280_calib.dig_T1))) >> 12) *
-           ((int32_t)_bmp280_calib.dig_T3)) >> 14;
+  var2  = (((((adc_T >> 4) - ((int32_t)_bmp280_calib[idx].dig_T1)) *
+             ((adc_T >> 4) - ((int32_t)_bmp280_calib[idx].dig_T1))) >> 12) *
+           ((int32_t)_bmp280_calib[idx].dig_T3)) >> 14;
 
   bmp280_t_fine = var1 + var2;
 
@@ -325,29 +366,29 @@ float Plugin_030_readTemperature(void)
 //**************************************************************************/
 // Read pressure
 //**************************************************************************/
-float Plugin_030_readPressure(void) {
+float Plugin_030_readPressure(uint8_t idx) {
   int64_t var1, var2, p;
 
   int32_t adc_P = Plugin_030_read24(BMP280_REGISTER_PRESSUREDATA);
   adc_P >>= 4;
 
   var1 = ((int64_t)bmp280_t_fine) - 128000;
-  var2 = var1 * var1 * (int64_t)_bmp280_calib.dig_P6;
-  var2 = var2 + ((var1 * (int64_t)_bmp280_calib.dig_P5) << 17);
-  var2 = var2 + (((int64_t)_bmp280_calib.dig_P4) << 35);
-  var1 = ((var1 * var1 * (int64_t)_bmp280_calib.dig_P3) >> 8) +
-         ((var1 * (int64_t)_bmp280_calib.dig_P2) << 12);
-  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)_bmp280_calib.dig_P1) >> 33;
+  var2 = var1 * var1 * (int64_t)_bmp280_calib[idx].dig_P6;
+  var2 = var2 + ((var1 * (int64_t)_bmp280_calib[idx].dig_P5) << 17);
+  var2 = var2 + (((int64_t)_bmp280_calib[idx].dig_P4) << 35);
+  var1 = ((var1 * var1 * (int64_t)_bmp280_calib[idx].dig_P3) >> 8) +
+         ((var1 * (int64_t)_bmp280_calib[idx].dig_P2) << 12);
+  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)_bmp280_calib[idx].dig_P1) >> 33;
 
   if (var1 == 0) {
     return 0;  // avoid exception caused by division by zero
   }
   p = 1048576 - adc_P;
   p = (((p << 31) - var2) * 3125) / var1;
-  var1 = (((int64_t)_bmp280_calib.dig_P9) * (p >> 13) * (p >> 13)) >> 25;
-  var2 = (((int64_t)_bmp280_calib.dig_P8) * p) >> 19;
+  var1 = (((int64_t)_bmp280_calib[idx].dig_P9) * (p >> 13) * (p >> 13)) >> 25;
+  var2 = (((int64_t)_bmp280_calib[idx].dig_P8) * p) >> 19;
 
-  p = ((p + var1 + var2) >> 8) + (((int64_t)_bmp280_calib.dig_P7) << 4);
+  p = ((p + var1 + var2) >> 8) + (((int64_t)_bmp280_calib[idx].dig_P7) << 4);
   return (float)p / 256;
 }
 
@@ -359,7 +400,14 @@ float Plugin_030_readPressure(void) {
 //**************************************************************************/
 float Plugin_030_readAltitude(float seaLevel)
 {
-  float atmospheric = Plugin_030_readPressure() / 100.0F;
+  float atmospheric = Plugin_030_readPressure(bmp280_i2caddr & 0x01) / 100.0F;
   return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+}
+
+//**************************************************************************/
+// MSL pressure formula
+//**************************************************************************/
+float Plugin_030_pressureElevation(float atmospheric, int altitude) {
+  return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
 
