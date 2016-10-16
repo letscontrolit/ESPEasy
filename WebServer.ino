@@ -1479,44 +1479,44 @@ void handle_i2cscanner() {
         case 0x20:
         case 0x27:
         case 0x3F:
-          reply += F("PCF8574, MCP23017, LCD Modules");
+          reply += F("PCF8574, MCP23017, LCD i2c Boards");
           break;
         case 0x23:
-          reply += F("BH1750 Lux Sensor");
+          reply += F("BH1750");
           break;
         case 0x24:
           reply += F("PN532 RFID Reader");
           break;
         case 0x38:
-          reply += F("PCF8574A");
+          reply += F("PCF8574A/AT");
           break;
         case 0x29:
         case 0x39:
         case 0x49:
-          reply += F("TLS2561 Lux Sensor");
+          reply += F("TLS2561");
           break;
         case 0x3C:
         case 0x3D:
           reply += F("OLED SSD1306 Display");
           break;
         case 0x40:
-          reply += F("SI7021 Temp/Hum Sensor, INA219, PCA9685");
+          reply += F("SI7021, HTU21D, INA219, PCA9685");
           break;
         case 0x48:
-          reply += F("PCF8591 ADC");
+          reply += F("PCF8591");
           break;
         case 0x5C:
-          reply += F("DHT12/BH1750 Lux Sensor");
+          reply += F("DHT12, BH1750");
           break;
         case 0x68:
-          reply += F("DS1307 RTC");
+          reply += F("DS1307, DS3231");
           break;
         case 0x76:
-          reply += F("BME280/BMP280/MS5607/MS5611");
+          reply += F("BME280, BMP280, MS5607, MS5611");
           break;
         case 0x77:
-          reply += F("BMP085/");
-          reply += F("BME280/BMP280/MS5607/MS5611"); //pm-cz Optimization should recycle this string from above
+          reply += F("BMP085, ");
+          reply += F("BME280, BMP280, MS5607, MS5611"); //pm-cz Optimization should recycle this string from above
           break;
         case 0x7f:
           reply += F("Arduino Pro Mini IO Extender");
@@ -1532,7 +1532,7 @@ void handle_i2cscanner() {
   }
 
   if (nDevices == 0)
-    reply += F("<TR>No I2C devices found");
+    reply += F("<TR>No I2C devices found!");
 
   reply += F("</table>");
   addFooter(reply);
