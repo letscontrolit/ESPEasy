@@ -252,6 +252,9 @@ void handle_root() {
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
 
+    reply += F("<TR><TD>Devices:<TD>");
+    reply += deviceCount+1;
+
     reply += F("<TR><TD>Boot cause:<TD>");
     switch (lastBootCause)
     {
@@ -1485,6 +1488,9 @@ void handle_i2cscanner() {
           break;
         case 0x24:
           reply += F("PN532 RFID Reader");
+          break;
+        case 0x38:
+          reply += F("PCF8574A");
           break;
         case 0x29:
         case 0x39:

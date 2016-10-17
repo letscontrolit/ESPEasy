@@ -21,7 +21,15 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
   // commands for debugging
   // ****************************************
-
+  if (strcasecmp_P(Command, PSTR("sysload")) == 0)
+  {
+    success = true;
+    Serial.print(100 - (100 * loopCounterLast / loopCounterMax));
+    Serial.print(F("% (LC="));
+    Serial.print(int(loopCounterLast / 30));
+    Serial.println(F(")"));
+  }
+  
   if (strcasecmp_P(Command, PSTR("SerialFloat")) == 0)
   {
     success = true;
