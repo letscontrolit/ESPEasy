@@ -108,17 +108,19 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_VALUES:
       {
+        string += F("<div class=\"div_l\">");
         string += ExtraTaskSettings.TaskDeviceValueNames[0];
-        string += F(":");
+        string += F(":</div><div class=\"div_r\">");
         string += Plugin_003_pulseCounter[event->TaskIndex];
-        string += F("<BR>");
+        string += F("</div><div class=\"div_br\"></div><div class=\"div_l\">");
         string += ExtraTaskSettings.TaskDeviceValueNames[1];
-        string += F(":");
+        string += F(":</div><div class=\"div_r\">");
         string += Plugin_003_pulseTotalCounter[event->TaskIndex];
-        string += F("<BR>");
+        string += F("</div><div class=\"div_br\"></div><div class=\"div_l\">");
         string += ExtraTaskSettings.TaskDeviceValueNames[2];
-        string += F(":");
+        string += F(":</div><div class=\"div_r\">");
         string += Plugin_003_pulseTime[event->TaskIndex];
+        string += F("</div>");
         success = true;
         break;
       }

@@ -1,3 +1,7 @@
+// R141 21-10-2016
+// Fixed pulsecounter value display style elements
+// Fixed some missing I2C scanner 'known devices'
+
 // R140 16-10-2016
 // Added PCF8574A at default address as known device
 

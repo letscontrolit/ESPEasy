@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             140
+#define BUILD                             141
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
@@ -823,6 +823,8 @@ void checkSensors()
       saveToRTC(1);
       String log = F("Enter deep sleep...");
       addLog(LOG_LEVEL_INFO, log);
+      String event = F("System#Sleep");
+      rulesProcessing(event);
       ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
     }
   }

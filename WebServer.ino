@@ -1460,8 +1460,8 @@ void handle_i2cscanner() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table><TH>I2C Addresses in use<TH>Known devices");
-
+  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>I2C Addresses in use<TH>Known devices");
+    
   byte error, address;
   int nDevices;
   nDevices = 0;
@@ -1477,49 +1477,69 @@ void handle_i2cscanner() {
       switch (address)
       {
         case 0x20:
+        case 0x21:
+        case 0x22:
+        case 0x25:
+        case 0x26:
         case 0x27:
-        case 0x3F:
-          reply += F("PCF8574, MCP23017, LCD Modules");
+          reply += F("PCF8574<BR>MCP23017<BR>LCD");
           break;
         case 0x23:
-          reply += F("BH1750 Lux Sensor");
+          reply += F("PCF8574<BR>MCP23017<BR>LCD<BR>BH1750");
           break;
         case 0x24:
-          reply += F("PN532 RFID Reader");
-          break;
-        case 0x38:
-          reply += F("PCF8574A");
+          reply += F("PCF8574<BR>MCP23017<BR>LCD<BR>PN532");
           break;
         case 0x29:
+          reply += F("TLS2561");
+          break;
+        case 0x38:
+        case 0x3A:
+        case 0x3B:
+        case 0x3E:
+        case 0x3F:
+          reply += F("PCF8574A");
+          break;
         case 0x39:
-        case 0x49:
-          reply += F("TLS2561 Lux Sensor");
+          reply += F("PCF8574A<BR>TLS2561");
           break;
         case 0x3C:
         case 0x3D:
-          reply += F("OLED SSD1306 Display");
+          reply += F("PCF8574A<BR>OLED");
           break;
         case 0x40:
-          reply += F("SI7021 Temp/Hum Sensor, INA219, PCA9685");
+          reply += F("SI7021<BR>INA219<BR>PCA9685");
+          break;
+        case 0x41:
+        case 0x42:
+        case 0x43:
+          reply += F("INA219");
           break;
         case 0x48:
-          reply += F("PCF8591 ADC");
+        case 0x4A:
+        case 0x4B:
+          reply += F("PCF8591<BR>ADS1115");
+          break;
+        case 0x49:
+          reply += F("PCF8591<BR>ADS1115<BR>TLS2561");
+          break;
+        case 0x4C:
+        case 0x4D:
+        case 0x4E:
+        case 0x4F:
+          reply += F("PCF8591");
           break;
         case 0x5C:
-          reply += F("DHT12/BH1750 Lux Sensor");
-          break;
-        case 0x68:
-          reply += F("DS1307 RTC");
+          reply += F("DHT12<BR>BH1750");
           break;
         case 0x76:
-          reply += F("BME280/BMP280/MS5607/MS5611");
+          reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
         case 0x77:
-          reply += F("BMP085/");
-          reply += F("BME280/BMP280/MS5607/MS5611"); //pm-cz Optimization should recycle this string from above
+          reply += F("BMP085<BR>BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
         case 0x7f:
-          reply += F("Arduino Pro Mini IO Extender");
+          reply += F("Arduino PME");
           break;
       }
       nDevices++;
