@@ -112,6 +112,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                 parseCommandString(&TempEvent, action);
                 PluginCall(PLUGIN_WRITE, &TempEvent, action);
               }
+              if (Settings.TaskDeviceNumber[x] == 115) // Send heatpump IR (P115) if IDX matches
+              {
+                struct EventStruct TempEvent;
+                String action = F("heatpumpir,");
+                action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
+                parseCommandString(&TempEvent, action);
+                PluginCall(PLUGIN_WRITE, &TempEvent, action);               
+              }
             }
           }
         }
