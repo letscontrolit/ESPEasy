@@ -126,7 +126,7 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 void addFooter(String& str)
 {
-  str += F("<h6>Powered by www.esp8266.nu</h6></body>");
+  str += F("<h6>Powered by www.letscontrolit.com</h6></body>");
 }
 
 
@@ -446,7 +446,7 @@ void handle_config() {
     reply += F("</option>");
   }
   reply += F("</select>");
-  reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyProtocols\" target=\"_blank\">?</a>");
+  reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyProtocols\" target=\"_blank\">?</a>");
 
 
   char str[20];
@@ -515,7 +515,7 @@ void handle_config() {
   else
     reply += F("<input type=checkbox name='deepsleep'>");
 
-  reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/SleepMode\" target=\"_blank\">?</a>");
+  reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/SleepMode\" target=\"_blank\">?</a>");
 
   reply += F("<TR><TH>Optional Settings<TH>");
 
@@ -953,7 +953,7 @@ void handle_devices() {
 
     if (Settings.TaskDeviceNumber[index - 1] != 0 )
     {
-      reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/plugin");
+      reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/Plugin");
       reply += Settings.TaskDeviceNumber[index - 1];
       reply += F("\" target=\"_blank\">?</a>");
 
@@ -1060,7 +1060,7 @@ void handle_devices() {
             reply += F("'>");
 
             if (varNr == 0)
-              reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
+              reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyFormula\" target=\"_blank\">?</a>");
           }
         }
         else
@@ -1411,7 +1411,7 @@ void handle_tools() {
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
-    reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyOTA\" target=\"_blank\">?</a>");
+    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyOTA\" target=\"_blank\">?</a>");
   }
 #if FEATURE_SPIFFS
   reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
@@ -1460,7 +1460,7 @@ void handle_i2cscanner() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>I2C Addresses in use<TH>Known devices");
+  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
     
   byte error, address;
   int nDevices;
@@ -1529,6 +1529,9 @@ void handle_i2cscanner() {
         case 0x4F:
           reply += F("PCF8591");
           break;
+        case 0x5A:
+          reply += F("MLX90614");
+          break;
         case 0x5C:
           reply += F("DHT12<BR>BH1750");
           break;
@@ -1536,7 +1539,7 @@ void handle_i2cscanner() {
           reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
         case 0x77:
-          reply += F("BMP085<BR>BME280<BR>BMP280<BR>MS5607<BR>MS5611");
+          reply += F("BMP085<BR>BMP180<BR>BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
         case 0x7f:
           reply += F("Arduino PME");

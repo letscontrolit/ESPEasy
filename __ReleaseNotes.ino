@@ -1,3 +1,8 @@
+// R142 26-10-2016
+// Fixed some more missing I2C scanner devices. Changed 'known' into 'supported'
+// Changed help items to www.letscontrolit.com/wiki
+// Added a retry mechanisme on NTP response failures, to minimize booting with time set to zero...
+
 // R141 21-10-2016
 // Fixed pulsecounter value display style elements
 // Fixed some missing I2C scanner 'known devices'

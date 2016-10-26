@@ -422,9 +422,9 @@ void SSDP_schema(WiFiClient client) {
                    "<modelNumber>");
   ssdp_schema += Settings.Build;
   ssdp_schema += F("</modelNumber>"
-                   "<modelURL>http://www.esp8266.nu</modelURL>"
-                   "<manufacturer>http://www.esp8266.nu</manufacturer>"
-                   "<manufacturerURL>http://www.esp8266.nu</manufacturerURL>"
+                   "<modelURL>http://www.letscontrolit.com</modelURL>"
+                   "<manufacturer>http://www.letscontrolit.com</manufacturer>"
+                   "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
                    "<UDN>uuid:");
   ssdp_schema += uuid;
   ssdp_schema += F("</UDN></device>"

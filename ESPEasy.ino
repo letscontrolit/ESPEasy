@@ -1,5 +1,5 @@
 /****************************************************************************************************************************\
- * Arduino project "ESP Easy" © Copyright www.esp8266.nu
+ * Arduino project "ESP Easy" © Copyright www.letscontrolit.com
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -10,9 +10,9 @@
  * IDE download    : https://www.arduino.cc/en/Main/Software
  * ESP8266 Package : https://github.com/esp8266/Arduino
  *
- * Source Code     : https://sourceforge.net/projects/espeasy/
- * Support         : http://www.esp8266.nu
- * Discussion      : http://www.esp8266.nu/forum/
+ * Source Code     : https://github.com/ESP8266nu/ESPEasy
+ * Support         : http://www.letscontrolit.com
+ * Discussion      : http://www.letscontrolit.com/forum/
  *
  * Additional information about licensing can be found at : http://www.gnu.org/licenses
 \*************************************************************************************************************************/
@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             141
+#define BUILD                             142
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
