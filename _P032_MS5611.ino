@@ -76,7 +76,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         int optionValues[2];
         optionValues[0] = 0x77;
         optionValues[1] = 0x76;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_032_bmp280_i2c'>");
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_032_ms5611_i2c'>");
         for (byte x = 0; x < 2; x++)
         {
           string += F("<option value='");
@@ -89,6 +89,10 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
+        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
+        string += F("plugin_032_ms5611_elev' value='");
+        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        string += F("'>");
 
         success = true;
         break;
@@ -96,8 +100,10 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_032_bmp280_i2c");
+        String plugin1 = WebServer.arg("plugin_032_ms5611_i2c");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        String elev = WebServer.arg("plugin_032_ms5611_elev");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
         success = true;
         break;
       }
@@ -114,7 +120,14 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           Plugin_032_readout();
           
           UserVar[event->BaseVarIndex] = ms5611_temperature / 100;
-          UserVar[event->BaseVarIndex + 1] = ms5611_pressure;
+          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          if (elev)
+          {
+             UserVar[event->BaseVarIndex + 1] = Plugin_032_pressureElevation(ms5611_pressure, elev);
+          } else {
+             UserVar[event->BaseVarIndex + 1] = ms5611_pressure;
+          }
+
           String log = F("MS5611  : Temperature: ");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
@@ -251,5 +264,12 @@ void Plugin_032_readout() {
   OFF-=OFF2;
   SENS-=SENS2;
   ms5611_pressure=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));  
+}
+
+//**************************************************************************/
+// MSL pressure formula
+//**************************************************************************/
+double Plugin_032_pressureElevation(double atmospheric, int altitude) {
+  return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
 

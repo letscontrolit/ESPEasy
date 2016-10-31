@@ -126,7 +126,7 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 void addFooter(String& str)
 {
-  str += F("<h6>Powered by www.esp8266.nu</h6></body>");
+  str += F("<h6>Powered by www.letscontrolit.com</h6></body>");
 }
 
 
@@ -209,10 +209,10 @@ void handle_root() {
     reply += BUILD;
     reply += F(" ");
     reply += F(BUILD_NOTES);
-    
+
     reply += F("<TR><TD>Core Version:<TD>");
     reply += ESP.getCoreVersion();
-        
+
     reply += F("<TR><TD>Unit:<TD>");
     reply += Settings.Unit;
 
@@ -238,6 +238,9 @@ void handle_root() {
     reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
     reply += F(" kB");
 
+    reply += F("<TR><TD>Flash Writes (since boot):<TD>");
+    reply += flashWrites;
+
     reply += F("<TR><TD>Sketch Size/Free:<TD>");
     reply += ESP.getSketchSize() / 1024;
     reply += F(" kB / ");
@@ -246,6 +249,9 @@ void handle_root() {
 
     reply += F("<TR><TD>Free Mem:<TD>");
     reply += freeMem;
+
+    reply += F("<TR><TD>Devices:<TD>");
+    reply += deviceCount+1;
 
     reply += F("<TR><TD>Boot cause:<TD>");
     switch (lastBootCause)
@@ -261,23 +267,27 @@ void handle_root() {
         break;
     }
 
-    reply += F("<TR><TH>Node List:<TH>IP<TH>Age<TR><TD><TD>");
+    reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < UNIT_MAX; x++)
     {
       if (Nodes[x].ip[0] != 0)
       {
-        if (x == Settings.Unit)
-          reply += F("<font color='blue'>");
         char url[80];
         sprintf_P(url, PSTR("<a href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
         reply += F("<TR><TD>Unit ");
         reply += x;
-        reply += F(":<TD>");
+        reply += F("<TD>");
+        if (x != Settings.Unit)
+          reply += Nodes[x].nodeName;
+        else
+          reply += Settings.Name;
+        reply += F("<TD>");
+        if (Nodes[x].build)
+          reply += Nodes[x].build;
+        reply += F("<TD>");
         reply += url;
         reply += F("<TD>");
         reply += Nodes[x].age;
-        if (x == Settings.Unit)
-          reply += F("</font color>");
       }
     }
 
@@ -408,7 +418,7 @@ void handle_config() {
   reply += SecuritySettings.Password;
   reply += F("'><TR><TD>SSID:<TD><input type='text' name='ssid' value='");
   reply += SecuritySettings.WifiSSID;
-  reply += F("'><TR><TD>WPA Key:<TD><input type='text' maxlength='63' name='key' value='");
+  reply += F("'><TR><TD>WPA Key:<TD><input type='password' maxlength='63' name='key' value='");
   reply += SecuritySettings.WifiKey;
 
   reply += F("'><TR><TD>WPA AP Mode Key:<TD><input type='text' maxlength='63' name='apkey' value='");
@@ -436,7 +446,7 @@ void handle_config() {
     reply += F("</option>");
   }
   reply += F("</select>");
-  reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyProtocols\" target=\"_blank\">?</a>");
+  reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyProtocols\" target=\"_blank\">?</a>");
 
 
   char str[20];
@@ -494,7 +504,7 @@ void handle_config() {
     reply += F("'>");
 
     CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, 0, reply);
-    
+
   }
 
   reply += F("<TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
@@ -505,7 +515,7 @@ void handle_config() {
   else
     reply += F("<input type=checkbox name='deepsleep'>");
 
-  reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/SleepMode\" target=\"_blank\">?</a>");
+  reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/SleepMode\" target=\"_blank\">?</a>");
 
   reply += F("<TR><TH>Optional Settings<TH>");
 
@@ -558,6 +568,8 @@ void handle_hardware() {
     Settings.PinBootStates[14] =  WebServer.arg("p14").toInt();
     Settings.PinBootStates[15] =  WebServer.arg("p15").toInt();
     Settings.PinBootStates[16] =  WebServer.arg("p16").toInt();
+    
+    Settings.InitSPI = WebServer.arg("initspi") == "on";      // SPI Init
 
     SaveSettings();
   }
@@ -572,29 +584,37 @@ void handle_hardware() {
   addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
+  
+  // SPI Init
+  reply += F("<TR><TD>Init SPI:<TD>");
+  if (Settings.InitSPI)
+    reply += F("<input type=checkbox id='initspi'  name='initspi' checked>&nbsp;");
+  else
+    reply += F("<input type=checkbox id='initspi' name='initspi'>&nbsp;");
+  reply += F("(Note : Chip Select (CS) config must be done in the plugin)");
 
   reply += F("<TR><TD>GPIO boot states:<TD>");
-  reply += F("<TR><TD>Pin mode 0:<TD>");
+  reply += F("<TR><TD>Pin mode 0 (D3):<TD>");
   addPinStateSelect(reply, "p0", Settings.PinBootStates[0]);
-  reply += F("<TR><TD>Pin mode 2:<TD>");
+  reply += F("<TR><TD>Pin mode 2 (D4):<TD>");
   addPinStateSelect(reply, "p2", Settings.PinBootStates[2]);
-  reply += F("<TR><TD>Pin mode 4:<TD>");
+  reply += F("<TR><TD>Pin mode 4 (D2):<TD>");
   addPinStateSelect(reply, "p4", Settings.PinBootStates[4]);
-  reply += F("<TR><TD>Pin mode 5:<TD>");
+  reply += F("<TR><TD>Pin mode 5 (D1):<TD>");
   addPinStateSelect(reply, "p5", Settings.PinBootStates[5]);
-  reply += F("<TR><TD>Pin mode 9:<TD>");
+  reply += F("<TR><TD>Pin mode 9 (D11):<TD>");
   addPinStateSelect(reply, "p9", Settings.PinBootStates[9]);
-  reply += F("<TR><TD>Pin mode 10:<TD>");
+  reply += F("<TR><TD>Pin mode 10 (D12):<TD>");
   addPinStateSelect(reply, "p10", Settings.PinBootStates[10]);
-  reply += F("<TR><TD>Pin mode 12:<TD>");
+  reply += F("<TR><TD>Pin mode 12 (D6):<TD>");
   addPinStateSelect(reply, "p12", Settings.PinBootStates[12]);
-  reply += F("<TR><TD>Pin mode 13:<TD>");
+  reply += F("<TR><TD>Pin mode 13 (D7):<TD>");
   addPinStateSelect(reply, "p13", Settings.PinBootStates[13]);
-  reply += F("<TR><TD>Pin mode 14:<TD>");
+  reply += F("<TR><TD>Pin mode 14 (D5):<TD>");
   addPinStateSelect(reply, "p14", Settings.PinBootStates[14]);
-  reply += F("<TR><TD>Pin mode 15:<TD>");
+  reply += F("<TR><TD>Pin mode 15 (D8):<TD>");
   addPinStateSelect(reply, "p15", Settings.PinBootStates[15]);
-  reply += F("<TR><TD>Pin mode 16:<TD>");
+  reply += F("<TR><TD>Pin mode 16 (D0):<TD>");
   addPinStateSelect(reply, "p16", Settings.PinBootStates[16]);
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
@@ -933,7 +953,7 @@ void handle_devices() {
 
     if (Settings.TaskDeviceNumber[index - 1] != 0 )
     {
-      reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/plugin");
+      reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/Plugin");
       reply += Settings.TaskDeviceNumber[index - 1];
       reply += F("\" target=\"_blank\">?</a>");
 
@@ -1040,22 +1060,22 @@ void handle_devices() {
             reply += F("'>");
 
             if (varNr == 0)
-              reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyFormula\" target=\"_blank\">?</a>");
+              reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyFormula\" target=\"_blank\">?</a>");
           }
         }
         else
         {
-        if (Device[DeviceIndex].DecimalsOnly)
-          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-          {
-            reply += F("<TR><TD>Decimals ");
-            reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-            reply += F(":<TD><input type='text' name='taskdevicevaluedecimals");
-            reply += varNr + 1;
-            reply += F("' value='");
-            reply += ExtraTaskSettings.TaskDeviceValueDecimals[varNr];
-            reply += F("'>");
-          }
+          if (Device[DeviceIndex].DecimalsOnly)
+            for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+            {
+              reply += F("<TR><TD>Decimals ");
+              reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+              reply += F(":<TD><input type='text' name='taskdevicevaluedecimals");
+              reply += varNr + 1;
+              reply += F("' value='");
+              reply += ExtraTaskSettings.TaskDeviceValueDecimals[varNr];
+              reply += F("'>");
+            }
         }
 
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
@@ -1210,19 +1230,19 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
   String options[14];
   options[0] = F(" ");
-  options[1] = F("GPIO-0");
-  options[2] = F("GPIO-1");
-  options[3] = F("GPIO-2");
-  options[4] = F("GPIO-3");
-  options[5] = F("GPIO-4");
-  options[6] = F("GPIO-5");
-  options[7] = F("GPIO-9");
-  options[8] = F("GPIO-10");
-  options[9] = F("GPIO-12");
-  options[10] = F("GPIO-13");
-  options[11] = F("GPIO-14");
-  options[12] = F("GPIO-15");
-  options[13] = F("GPIO-16");
+  options[1] = F("GPIO-0 (D3)");
+  options[2] = F("GPIO-1 (D10)");
+  options[3] = F("GPIO-2 (D4)");
+  options[4] = F("GPIO-3 (D9)");
+  options[5] = F("GPIO-4 (D2)");
+  options[6] = F("GPIO-5 (D1)");
+  options[7] = F("GPIO-9 (D11)");
+  options[8] = F("GPIO-10 (D12)");
+  options[9] = F("GPIO-12 (D6)");
+  options[10] = F("GPIO-13 (D7)");
+  options[11] = F("GPIO-14 (D5)");
+  options[12] = F("GPIO-15 (D8)");
+  options[13] = F("GPIO-16 (D0)");
   int optionValues[14];
   optionValues[0] = -1;
   optionValues[1] = 0;
@@ -1391,7 +1411,7 @@ void handle_tools() {
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
-    reply += F("<a class=\"button-link\" href=\"http://www.esp8266.nu/index.php/EasyOTA\" target=\"_blank\">?</a>");
+    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyOTA\" target=\"_blank\">?</a>");
   }
 #if FEATURE_SPIFFS
   reply += F("<a class=\"button-link\" href=\"/filelist\">List</a><BR><BR>");
@@ -1440,8 +1460,8 @@ void handle_i2cscanner() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table><TH>I2C Addresses in use<TH>Known devices");
-
+  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
+    
   byte error, address;
   int nDevices;
   nDevices = 0;
@@ -1457,43 +1477,72 @@ void handle_i2cscanner() {
       switch (address)
       {
         case 0x20:
+        case 0x21:
+        case 0x22:
+        case 0x25:
+        case 0x26:
         case 0x27:
-        case 0x3F:
-          reply += F("PCF8574, MCP23017, LCD Modules");
+          reply += F("PCF8574<BR>MCP23017<BR>LCD");
           break;
         case 0x23:
-          reply += F("BH1750 Lux Sensor");
+          reply += F("PCF8574<BR>MCP23017<BR>LCD<BR>BH1750");
           break;
         case 0x24:
-          reply += F("PN532 RFID Reader");
+          reply += F("PCF8574<BR>MCP23017<BR>LCD<BR>PN532");
+          break;
+        case 0x29:
+          reply += F("TLS2561");
+          break;
+        case 0x38:
+        case 0x3A:
+        case 0x3B:
+        case 0x3E:
+        case 0x3F:
+          reply += F("PCF8574A");
           break;
         case 0x39:
-          reply += F("TLS2561 Lux Sensor");
+          reply += F("PCF8574A<BR>TLS2561");
           break;
         case 0x3C:
         case 0x3D:
-          reply += F("OLED SSD1306 Display");
+          reply += F("PCF8574A<BR>OLED");
           break;
         case 0x40:
-          reply += F("SI7021 Temp/Hum Sensor, INA219, PCA9685");
+          reply += F("SI7021<BR>INA219<BR>PCA9685");
+          break;
+        case 0x41:
+        case 0x42:
+        case 0x43:
+          reply += F("INA219");
           break;
         case 0x48:
-          reply += F("PCF8591 ADC");
+        case 0x4A:
+        case 0x4B:
+          reply += F("PCF8591<BR>ADS1115");
+          break;
+        case 0x49:
+          reply += F("PCF8591<BR>ADS1115<BR>TLS2561");
+          break;
+        case 0x4C:
+        case 0x4D:
+        case 0x4E:
+        case 0x4F:
+          reply += F("PCF8591");
+          break;
+        case 0x5A:
+          reply += F("MLX90614");
           break;
         case 0x5C:
-          reply += F("DHT12/BH1750 Lux Sensor");
-          break;
-        case 0x68:
-          reply += F("DS1307 RTC");
+          reply += F("DHT12<BR>BH1750");
           break;
         case 0x76:
-          reply += F("BME280/BMP280/MS5607/MS5611");
+          reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
         case 0x77:
-          reply += F("BMP085/MS5607/MS5611");
+          reply += F("BMP085<BR>BMP180<BR>BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
         case 0x7f:
-          reply += F("Arduino Pro Mini IO Extender");
+          reply += F("Arduino PME");
           break;
       }
       nDevices++;
@@ -1602,7 +1651,7 @@ void handle_control() {
     eventBuffer = webrequest.substring(6);
     WebServer.send(200, "text/html", "OK");
   }
-  
+
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
   TempEvent.Source = VALUE_SOURCE_HTTP;
@@ -1950,25 +1999,8 @@ byte uploadResult = 0;
 void handle_upload() {
   if (!isLoggedIn()) return;
 
-  String edit = WebServer.arg("edit");
-
   String reply = "";
   addHeader(true, reply);
-
-  if (edit.length() != 0)
-  {
-    if (uploadResult == 1)
-    {
-      reply += F("Upload OK!<BR>You may need to reboot to apply all settings...");
-      LoadSettings();
-    }
-
-    if (uploadResult == 2)
-      reply += F("<font color=\"red\">Upload file invalid!</font>");
-
-    if (uploadResult == 3)
-      reply += F("<font color=\"red\">No filename!</font>");
-  }
 
   reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   addFooter(reply);
@@ -1976,6 +2008,36 @@ void handle_upload() {
   printWebString = "";
   printToWeb = false;
 }
+
+
+//********************************************************************************
+// Web Interface upload page
+//********************************************************************************
+void handle_upload_post() {
+  if (!isLoggedIn()) return;
+
+  String reply = "";
+
+  if (uploadResult == 1)
+  {
+    reply += F("Upload OK!<BR>You may need to reboot to apply all settings...");
+    LoadSettings();
+  }
+
+  if (uploadResult == 2)
+    reply += F("<font color=\"red\">Upload file invalid!</font>");
+
+  if (uploadResult == 3)
+    reply += F("<font color=\"red\">No filename!</font>");
+
+  addHeader(true, reply);
+  reply += F("Upload finished");
+  addFooter(reply);
+  WebServer.send(200, "text/html", reply);
+  printWebString = "";
+  printToWeb = false;
+}
+
 
 //********************************************************************************
 // Web Interface upload handler
@@ -2105,7 +2167,7 @@ void handle_filelist() {
   addHeader(true, reply);
   reply += F("<table border='1'><TH><TH>Filename:<TH>Size");
 
-  Dir dir = SPIFFS.openDir("/");
+  Dir dir = SPIFFS.openDir("");
   while (dir.next())
   {
     reply += F("<TR><TD>");
@@ -2314,6 +2376,7 @@ void handleFileUpload()
         }
       interrupts();
       delay(10);
+      flashWrites++;
     }
     page++;
   }
@@ -2507,6 +2570,19 @@ void handle_rules() {
   {
     String rules = WebServer.arg("rules");
     rules.toCharArray((char*)data, 4096);
+#if FEATURE_SPIFFS
+    File f = SPIFFS.open("rules.txt", "w");
+    if (f)
+    {
+      byte *pointerToByteToSave = data;
+      for (int x = 0; x < rules.length(); x++)
+      {
+        f.write(*pointerToByteToSave);
+        pointerToByteToSave++;
+      }
+      f.close();
+    }
+#else
     uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     _sector += 10;
     noInterrupts();
@@ -2516,18 +2592,35 @@ void handle_rules() {
         //Serial.println("flash save ok");
       }
     interrupts();
+    flashWrites++;
+#endif
   }
 
   // load form data from flash
   reply += F("<form method='post'>");
-  reply += F("<textarea name='rules' rows='15' cols='80' wrap='on'>");
+  reply += F("<textarea name='rules' rows='15' cols='80' wrap='off'>");
+
+#if FEATURE_SPIFFS
+  File f = SPIFFS.open("rules.txt", "r+");
+  if (f)
+  {
+    byte *pointerToByteToRead = data;
+    for (int x = 0; x < f.size(); x++)
+    {
+      *pointerToByteToRead = f.read();
+      pointerToByteToRead++;// next byte
+    }
+    data[f.size()]=0;
+    f.close();
+  }
+#else
   uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
   _sector += 10;
-
   // load entire sector from flash into memory
   noInterrupts();
   spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
   interrupts();
+#endif
 
   // check size of css file content
   int x = 0;

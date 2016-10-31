@@ -1,5 +1,5 @@
 /****************************************************************************************************************************\
- * Arduino project "ESP Easy" © Copyright www.esp8266.nu
+ * Arduino project "ESP Easy" © Copyright www.letscontrolit.com
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -10,9 +10,9 @@
  * IDE download    : https://www.arduino.cc/en/Main/Software
  * ESP8266 Package : https://github.com/esp8266/Arduino
  *
- * Source Code     : https://sourceforge.net/projects/espeasy/
- * Support         : http://www.esp8266.nu
- * Discussion      : http://www.esp8266.nu/forum/
+ * Source Code     : https://github.com/ESP8266nu/ESPEasy
+ * Support         : http://www.letscontrolit.com
+ * Discussion      : http://www.letscontrolit.com/forum/
  *
  * Additional information about licensing can be found at : http://www.gnu.org/licenses
 \*************************************************************************************************************************/
@@ -63,9 +63,6 @@
 //   MSP5611 I2C temp/baro sensor
 //   BMP280 I2C Barometric Pressure sensor
 //   SHT1X temperature/humidity sensors
-
-//   Experimental/Preliminary:
-//   =========================
 //   Ser2Net server
 
 // ********************************************************************************
@@ -121,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             128
+#define BUILD                             142
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
@@ -219,6 +216,7 @@
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
 #include <Wire.h>
+#include <SPI.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
@@ -342,6 +340,7 @@ struct SettingsStruct
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
+  boolean       InitSPI; 
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -409,6 +408,8 @@ struct NodeStruct
 {
   byte ip[4];
   byte age;
+  uint16_t build;
+  char* nodeName;
 } Nodes[UNIT_MAX];
 
 struct systemTimerStruct
@@ -483,6 +484,8 @@ unsigned long elapsed = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
+
+unsigned long flashWrites = 0;
 
 String eventBuffer = "";
 
@@ -595,12 +598,6 @@ void setup()
 
     saveToRTC(0);
 
-    if (Settings.UseRules)
-    {
-      String event = F("System#Boot");
-      rulesProcessing(event);
-    }
-
     // Setup timers
     if (bootMode == 0)
     {
@@ -635,6 +632,12 @@ void setup()
     // (captive portal concept)
     if (wifiSetup)
       dnsServer.start(DNS_PORT, "*", apIP);
+
+    if (Settings.UseRules)
+    {
+      String event = F("System#Boot");
+      rulesProcessing(event);
+    }
 
   }
   else
@@ -820,6 +823,8 @@ void checkSensors()
       saveToRTC(1);
       String log = F("Enter deep sleep...");
       addLog(LOG_LEVEL_INFO, log);
+      String event = F("System#Sleep");
+      rulesProcessing(event);
       ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
     }
   }

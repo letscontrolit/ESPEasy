@@ -72,7 +72,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         optionValues[4] = (0x08);
         options[4] = F("8x gain 0.512V 0.015625mV");
         optionValues[5] = (0x0A);
-        options[5] = F("16x gain 0.256V 0.0078125V");
+        options[5] = F("16x gain 0.256V 0.0078125mV");
 
         string += F("<TR><TD>Gain:<TD><select name='plugin_025_gain'>");
         for (byte x = 0; x < ADS1115_GAIN_OPTION; x++)

@@ -466,6 +466,8 @@ void fileSystemCheck()
           f.write(0);
         f.close();
       }
+      f = SPIFFS.open("rules.txt", "w");
+      f.close();
     }
   }
   else
@@ -794,6 +796,7 @@ void SaveToFlash(int index, byte* memAddress, int datasize)
   delete [] data;
   String log = F("FLASH: Settings saved");
   addLog(LOG_LEVEL_INFO, log);
+  flashWrites++;
 }
 
 
@@ -930,6 +933,8 @@ void ResetFactory(void)
       f.write(0);
     f.close();
   }
+  f = SPIFFS.open("rules.txt", "w");
+  f.close();
 #else
   EraseFlash();
   ZeroFillFlash();
@@ -971,6 +976,7 @@ void ResetFactory(void)
   Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
   Settings.CustomCSS = false;
+  Settings.InitSPI = false;
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -1343,7 +1349,7 @@ float globalstack[STACK_SIZE];
 float *sp = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' )
+#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
 
 int push(float value)
 {
@@ -1374,6 +1380,9 @@ float apply_operator(char op, float first, float second)
       return first * second;
     case '/':
       return first / second;
+    case '^':
+      return pow(first, second);
+    default:
       return 0;
   }
 }
@@ -1414,6 +1423,8 @@ int op_preced(const char c)
 {
   switch (c)
   {
+    case '^':
+      return 3;
     case '*':
     case '/':
       return 2;
@@ -1428,6 +1439,7 @@ bool op_left_assoc(const char c)
 {
   switch (c)
   {
+    case '^':
     case '*':
     case '/':
     case '+':
@@ -1442,6 +1454,7 @@ unsigned int op_arg_count(const char c)
 {
   switch (c)
   {
+    case '^':
     case '*':
     case '/':
     case '+':
@@ -1749,59 +1762,65 @@ unsigned long getNtpTime()
 {
   WiFiUDP udp;
   udp.begin(123);
-  String log = F("NTP  : NTP sync requested");
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  for (byte x = 1; x < 4; x++)
+  {
+    String log = F("NTP  : NTP sync request:");
+    log += x;
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
 
-  const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
-  byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
+    const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+    byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-  IPAddress timeServerIP;
-  const char* ntpServerName = "pool.ntp.org";
+    IPAddress timeServerIP;
+    const char* ntpServerName = "pool.ntp.org";
 
-  if (Settings.NTPHost[0] != 0)
-    WiFi.hostByName(Settings.NTPHost, timeServerIP);
-  else
-    WiFi.hostByName(ntpServerName, timeServerIP);
+    if (Settings.NTPHost[0] != 0)
+      WiFi.hostByName(Settings.NTPHost, timeServerIP);
+    else
+      WiFi.hostByName(ntpServerName, timeServerIP);
 
-  char host[20];
-  sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
-  log = F("NTP  : NTP send to ");
-  log += host;
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+    char host[20];
+    sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
+    log = F("NTP  : NTP send to ");
+    log += host;
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
 
-  while (udp.parsePacket() > 0) ; // discard any previously received packets
+    while (udp.parsePacket() > 0) ; // discard any previously received packets
 
-  memset(packetBuffer, 0, NTP_PACKET_SIZE);
-  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
-  packetBuffer[1] = 0;     // Stratum, or type of clock
-  packetBuffer[2] = 6;     // Polling Interval
-  packetBuffer[3] = 0xEC;  // Peer Clock Precision
-  packetBuffer[12]  = 49;
-  packetBuffer[13]  = 0x4E;
-  packetBuffer[14]  = 49;
-  packetBuffer[15]  = 52;
-  udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
-  udp.write(packetBuffer, NTP_PACKET_SIZE);
-  udp.endPacket();
+    memset(packetBuffer, 0, NTP_PACKET_SIZE);
+    packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+    packetBuffer[1] = 0;     // Stratum, or type of clock
+    packetBuffer[2] = 6;     // Polling Interval
+    packetBuffer[3] = 0xEC;  // Peer Clock Precision
+    packetBuffer[12]  = 49;
+    packetBuffer[13]  = 0x4E;
+    packetBuffer[14]  = 49;
+    packetBuffer[15]  = 52;
+    udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
+    udp.write(packetBuffer, NTP_PACKET_SIZE);
+    udp.endPacket();
 
-  uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500) {
-    int size = udp.parsePacket();
-    if (size >= NTP_PACKET_SIZE) {
-      udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
-      unsigned long secsSince1900;
-      // convert four bytes starting at location 40 to a long integer
-      secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
-      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-      secsSince1900 |= (unsigned long)packetBuffer[43];
-      log = F("NTP  : NTP replied!");
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
-      return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_MIN;
+    uint32_t beginWait = millis();
+    while (millis() - beginWait < 1000) {
+      int size = udp.parsePacket();
+      if (size >= NTP_PACKET_SIZE) {
+        udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+        unsigned long secsSince1900;
+        // convert four bytes starting at location 40 to a long integer
+        secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
+        secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+        secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+        secsSince1900 |= (unsigned long)packetBuffer[43];
+        log = F("NTP  : NTP replied: ");
+        log += millis() - beginWait;
+        log += F(" mSec");
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_MIN;
+      }
     }
+    log = F("NTP  : No reply");
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
-  log = F("NTP  : No reply");
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
   return 0;
 }
 #endif
@@ -1834,11 +1853,26 @@ void rulesProcessing(String& event)
   if (data == NULL)
   {
     data = new uint8_t[RULES_MAX_SIZE];
+#if FEATURE_SPIFFS
+    File f = SPIFFS.open("rules.txt", "r+");
+    if (f)
+    {
+      byte *pointerToByteToRead = data;
+      for (int x = 0; x < f.size(); x++)
+      {
+        *pointerToByteToRead = f.read();
+        pointerToByteToRead++;// next byte
+      }
+      data[f.size()] = 0;
+      f.close();
+    }
+#else
     uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     _sector += 10;
     noInterrupts();
     spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), RULES_MAX_SIZE);
     interrupts();
+#endif
     data[RULES_MAX_SIZE - 1] = 0; // make sure it's terminated!
   }
 
@@ -1941,6 +1975,12 @@ void rulesProcessing(String& event)
           // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
           if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
           {
+            int equalsPos = event.indexOf("=");
+            if (equalsPos > 0)
+            {
+              String tmpString = event.substring(equalsPos + 1);
+              action.replace("%eventvalue%", tmpString); // substitute %eventvalue% in actions with the actual value from the event
+            }
             log = F("ACT  : ");
             log += action;
             addLog(LOG_LEVEL_INFO, log);
@@ -1977,6 +2017,15 @@ boolean ruleMatch(String& event, String& rule)
   boolean match = false;
   String tmpEvent = event;
   String tmpRule = rule;
+
+  // Special handling of literal string events, they should start with '!'
+  if (event.charAt(0) == '!')
+  {
+    if (event.equalsIgnoreCase(rule))
+      return true;
+    else
+      return false;
+  }
 
   if (event.startsWith("Clock#Time")) // clock events need different handling...
   {

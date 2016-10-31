@@ -19,6 +19,22 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
   // commands for debugging
   // ****************************************
+  if (strcasecmp_P(Command, PSTR("sysload")) == 0)
+  {
+    success = true;
+    Serial.print(100 - (100 * loopCounterLast / loopCounterMax));
+    Serial.print(F("% (LC="));
+    Serial.print(int(loopCounterLast / 30));
+    Serial.println(F(")"));
+  }
+  
+  if (strcasecmp_P(Command, PSTR("SerialFloat")) == 0)
+  {
+    success = true;
+    pinMode(1,INPUT);
+    pinMode(3,INPUT);
+    delay(60000);
+  }
 
   if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
   {
@@ -132,17 +148,12 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     String event = Line;
-    event.replace(" ", ",");
+    event = event.substring(7);
     int index = event.indexOf(',');
     if (index > 0)
     {
       event = event.substring(index+1);
-      index = event.indexOf(',');
-      if (index > 0)
-      {
-        event = event.substring(index+1);
-        SendUDPCommand(Par1, (char*)event.c_str(), event.length());
-      }      
+      SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
 
@@ -150,18 +161,13 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     String event = Line;
-    event.replace(" ", ",");
+    event = event.substring(8);
     int index = event.indexOf(',');
     if (index > 0)
     {
-      event = event.substring(index+1);
-      index = event.indexOf(',');
-      if (index > 0)
-      {
-        String topic = event.substring(0,index);
-        String value = event.substring(index+1);
-        MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
-      }      
+      String topic = event.substring(0,index);
+      String value = event.substring(index+1);
+      MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
     }
   }
   

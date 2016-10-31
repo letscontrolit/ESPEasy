@@ -41,7 +41,6 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         char json[512];
         json[0] = 0;
         event->String2.toCharArray(json, 512);
-        //Serial.println(event->String2);
 
         StaticJsonBuffer<512> jsonBuffer;
         JsonObject& root = jsonBuffer.parseObject(json);
@@ -51,20 +50,22 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           long idx = root["idx"];
           float nvalue = root["nvalue"];
           long nvaluealt = root["nvalue"];
-          const char* name = root["name"];
-          const char* svalue = root["svalue"];
+          //const char* name = root["name"]; // Not used
+          //const char* svalue = root["svalue"]; // Not used
           const char* svalue1 = root["svalue1"];
-          const char* svalue2 = root["svalue2"];
-          const char* svalue3 = root["svalue3"];
-          const char* switchtype = root["switchType"];
+          //const char* svalue2 = root["svalue2"]; // Not used
+          //const char* svalue3 = root["svalue3"]; // Not used
+          const char* switchtype = root["switchType"]; // Expect "On/Off" or "dimmer"
           if (nvalue == 0)
             nvalue = nvaluealt;
-
+          if ((int)switchtype == 0)
+            switchtype = "?";
+  
           for (byte x = 0; x < TASKS_MAX; x++)
           {
             if (Settings.TaskDeviceID[x] == idx)
             {
-              if (Settings.TaskDeviceNumber[x] == 1) // temps solution, if input switch, update state
+              if (Settings.TaskDeviceNumber[x] == 1) // temp solution, if input switch, update state
               {
                 String action = F("inputSwitchState,");
                 action += x;

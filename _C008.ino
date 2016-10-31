@@ -17,8 +17,8 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         Protocol[++protocolCount].Number = CPLUGIN_ID_008;
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesTemplate = true;
-        Protocol[protocolCount].usesAccount = false;
-        Protocol[protocolCount].usesPassword = false;
+        Protocol[protocolCount].usesAccount = true;
+        Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
         break;
       }
@@ -64,6 +64,16 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
 {
+  String authHeader = "";
+  if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
+  {
+    base64 encoder;
+    String auth = SecuritySettings.ControllerUser;
+    auth += ":";
+    auth += SecuritySettings.ControllerPassword;
+    authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
+  }
+
   char log[80];
   boolean success = false;
   char host[20];
@@ -108,7 +118,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + hostName + "\r\n" +
+               "Host: " + hostName + "\r\n" + authHeader + 
                "Connection: close\r\n\r\n");
 
   unsigned long timer = millis() + 200;
@@ -134,4 +144,3 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   client.flush();
   client.stop();
 }
-

@@ -7,6 +7,8 @@
 #define PLUGIN_NAME_013       "Ultrasonic Sensor - HC-SR04"
 #define PLUGIN_VALUENAME1_013 "Distance"
 
+void Plugin_013_interrupt() ICACHE_RAM_ATTR;
+
 boolean Plugin_013_init = false;
 volatile unsigned long Plugin_013_timer = 0;
 volatile unsigned long Plugin_013_state = 0;

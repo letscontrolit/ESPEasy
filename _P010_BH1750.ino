@@ -7,8 +7,10 @@
 #define PLUGIN_NAME_010       "Luminosity - BH1750"
 #define PLUGIN_VALUENAME1_010 "Lux"
 
-#define BH1750_ADDRESS    0x23
-boolean Plugin_010_init = false;
+#define BH1750_ADDRESS_1    0x23
+#define BH1750_ADDRESS_2    0x5c
+boolean Plugin_010_init_1 = false;
+boolean Plugin_010_init_2 = false;
 
 boolean Plugin_010(byte function, struct EventStruct *event, String& string)
   {
@@ -44,28 +46,88 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_010));
         break;
       }
-    
+
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options[2];
+        options[0] = F("0x23 - default settings (ADDR Low)");
+        options[1] = F("0x5c - alternate settings (ADDR High)");
+        int optionValues[2];
+        optionValues[0] = 0;
+        optionValues[1] = 1;
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_010'>");
+        for (byte x = 0; x < 2; x++)
+        {
+          string += F("<option value='");
+          string += optionValues[x];
+          string += "'";
+          if (choice == optionValues[x])
+            string += F(" selected");
+          string += ">";
+          string += options[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        String plugin1 = WebServer.arg("plugin_010");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        success = true;
+        break;
+      }
+
   case PLUGIN_READ:
     {
-      if (!Plugin_010_init)
+      uint8_t address = -1;
+      boolean *Plugin_010_init;
+
+      if(Settings.TaskDevicePluginConfig[event->TaskIndex][0]==0)
         {
-          Plugin_010_init=true;
-          Wire.beginTransmission(BH1750_ADDRESS);
-          Wire.write(0x10);                             // 1 lx resolution
-          Wire.endTransmission();
+            address = BH1750_ADDRESS_1;
+            Plugin_010_init = &Plugin_010_init_1;
         }
-      Wire.requestFrom(BH1750_ADDRESS, 2);
-      byte b1 = Wire.read();
-      byte b2 = Wire.read();
-      float val=0;     
-      val=((b1<<8)|b2)/1.2;
-      UserVar[event->BaseVarIndex] = val;
-      String log = F("LUX  : Light intensity: ");
-      log += UserVar[event->BaseVarIndex];
-      addLog(LOG_LEVEL_INFO,log);
-      success=true;
+      else
+        {
+            address = BH1750_ADDRESS_2;
+            Plugin_010_init = &Plugin_010_init_2;
+        }
+
+      if (!*Plugin_010_init)
+        {
+          *Plugin_010_init = Plugin_010_setResolution(address);
+        }
+
+      if (Wire.requestFrom(address, (uint8_t)2) == 2)
+        {
+          byte b1 = Wire.read();
+          byte b2 = Wire.read();
+          float val = 0xffff; //pm-cz: Maximum obtainable value
+          if (b1 != 0xff || b2 != 0xff) { //pm-cz: Add maximum range check
+            val=((b1<<8)|b2)/1.2;
+          }
+          UserVar[event->BaseVarIndex] = val;
+          String log = F("LUX 0x");
+          log += String(address,HEX);
+          log += F(" : Light intensity: ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO,log);
+          success=true;
+        }
       break;
     }
-  }      
+  }
   return success;
+}
+
+boolean Plugin_010_setResolution(uint8_t address){
+          Wire.beginTransmission(address);
+          Wire.write(0x10);                             // 1 lx resolution
+          Wire.endTransmission();
+          return true;
 }

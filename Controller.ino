@@ -45,8 +45,8 @@ boolean sendData(struct EventStruct *event)
 \*********************************************************************************************/
 // handle MQTT messages
 void callback(char* c_topic, byte* b_payload, unsigned int length) {
-  char log[128];
-  char c_payload[128];
+  char log[256];
+  char c_payload[256];
   strncpy(c_payload,(char*)b_payload,length);
   c_payload[length] = 0;
   statusLED(true);
