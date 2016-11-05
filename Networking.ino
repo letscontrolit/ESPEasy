@@ -120,6 +120,7 @@ void checkUDP()
                     Nodes[unit].nodeName =  (char *)malloc(26);
                 memcpy(Nodes[unit].nodeName,(byte*)packetBuffer+15,25);
                 Nodes[unit].nodeName[25]=0;
+                Nodes[unit].nodeType = packetBuffer[40];
               }
             }
 
@@ -336,6 +337,7 @@ void sendSysInfoUDP(byte repeats)
   // 1 byte unit
   // 2 byte build
   // 25 char name
+  // 1 byte node type id
   
   // send my info to the world...
   strcpy_P(log, PSTR("UDP  : Send Sysinfo message"));
@@ -356,6 +358,7 @@ void sendSysInfoUDP(byte repeats)
     data[13] = Settings.Build & 0xff;
     data[14] = Settings.Build >> 8;
     memcpy((byte*)data+15,Settings.Name,25);
+    data[40] = NODE_TYPE_ID;
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);
@@ -374,6 +377,7 @@ void sendSysInfoUDP(byte repeats)
       Nodes[Settings.Unit].ip[x] = ip[x];
     Nodes[Settings.Unit].age = 0;
     Nodes[Settings.Unit].build = Settings.Build;
+    Nodes[Settings.Unit].nodeType = NODE_TYPE_ID;
   }
 }
 

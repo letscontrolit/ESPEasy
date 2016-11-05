@@ -1,3 +1,6 @@
+// R143 02-11-2016
+// Added nodeType for future use
+
 // R142 26-10-2016
 // Fixed some more missing I2C scanner devices. Changed 'known' into 'supported'
 // Changed help items to www.letscontrolit.com/wiki
