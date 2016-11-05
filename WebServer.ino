@@ -267,7 +267,7 @@ void handle_root() {
         break;
     }
 
-    reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>IP<TH>Age<TR><TD><TD>");
+    reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < UNIT_MAX; x++)
     {
       if (Nodes[x].ip[0] != 0)
@@ -284,6 +284,23 @@ void handle_root() {
         reply += F("<TD>");
         if (Nodes[x].build)
           reply += Nodes[x].build;
+        reply += F("<TD>");
+        if (Nodes[x].nodeType)
+          switch(Nodes[x].nodeType)
+            {
+              case NODE_TYPE_ID_ESP_EASY_STD:
+                 reply += F("ESP Easy");
+                 break;
+              case NODE_TYPE_ID_ESP_EASY4M_STD:
+                 reply += F("ESP Easy 4M");
+                 break;
+              case NODE_TYPE_ID_ESP_EASY32_STD:
+                 reply += F("ESP Easy 32");
+                 break;
+              case NODE_TYPE_ID_ARDUINO_EASY_STD:
+                 reply += F("Arduino Easy");
+                 break;
+            }
         reply += F("<TD>");
         reply += url;
         reply += F("<TD>");
