@@ -497,6 +497,9 @@ unsigned long flashWrites = 0;
 
 String eventBuffer = "";
 
+// Blynk_get prototype
+boolean Blynk_get(String command,float *data = NULL );
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
