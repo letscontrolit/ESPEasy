@@ -27,12 +27,12 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.print(int(loopCounterLast / 30));
     Serial.println(F(")"));
   }
-  
+
   if (strcasecmp_P(Command, PSTR("SerialFloat")) == 0)
   {
     success = true;
-    pinMode(1,INPUT);
-    pinMode(3,INPUT);
+    pinMode(1, INPUT);
+    pinMode(3, INPUT);
     delay(60000);
   }
 
@@ -110,7 +110,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("TaskRun")) == 0)
   {
     success = true;
-    SensorSendTask(Par1 -1);
+    SensorSendTask(Par1 - 1);
   }
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
@@ -152,7 +152,7 @@ void ExecuteCommand(byte source, const char *Line)
     int index = event.indexOf(',');
     if (index > 0)
     {
-      event = event.substring(index+1);
+      event = event.substring(index + 1);
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
@@ -165,19 +165,19 @@ void ExecuteCommand(byte source, const char *Line)
     int index = event.indexOf(',');
     if (index > 0)
     {
-      String topic = event.substring(0,index);
-      String value = event.substring(index+1);
-      MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
+      String topic = event.substring(0, index);
+      String value = event.substring(index + 1);
+      MQTTclient.publish(topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
     }
   }
-  
+
   if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
   {
     success = true;
     String strLine = Line;
-    String ip = parseString(strLine,2);
-    String port = parseString(strLine,3);
-    int msgpos = getParamStartPos(strLine,4);
+    String ip = parseString(strLine, 2);
+    String port = parseString(strLine, 3);
+    int msgpos = getParamStartPos(strLine, 4);
     String message = strLine.substring(msgpos);
     byte ipaddress[4];
     str2ip((char*)ip.c_str(), ipaddress);
@@ -191,16 +191,16 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     String strLine = Line;
-    String host = parseString(strLine,2);
-    String port = parseString(strLine,3);
-    int pathpos = getParamStartPos(strLine,4);
+    String host = parseString(strLine, 2);
+    String port = parseString(strLine, 3);
+    int pathpos = getParamStartPos(strLine, 4);
     String path = strLine.substring(pathpos);
     WiFiClient client;
     if (client.connect(host.c_str(), port.toInt()))
     {
       client.print(String("GET ") + path + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
+                   "Host: " + host + "\r\n" +
+                   "Connection: close\r\n\r\n");
 
       unsigned long timer = millis() + 200;
       while (!client.available() && millis() < timer)
@@ -250,6 +250,38 @@ void ExecuteCommand(byte source, const char *Line)
   }
 
   // ****************************************
+  // special commands for Blynk
+  // ****************************************
+
+  if (strcasecmp(Command, "BlynkGet") == 0)
+  {
+    String event = Line;
+    event = event.substring(9);
+    int index = event.indexOf(',');
+    if (index > 0)
+    { 
+      int index = event.lastIndexOf(',');
+      String blynkcommand = event.substring(index+1);
+      float value = 0;
+      if (Blynk_get(blynkcommand, &value))
+      {
+        UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = value;
+      }
+      else
+        status = F("Error getting data");
+    }
+    else
+    {
+      if (!Blynk_get(event))
+      {
+        status = F("Error getting data");
+      }
+    }
+
+  }
+
+
+  // ****************************************
   // configure settings commands
   // ****************************************
   if (strcasecmp_P(Command, PSTR("WifiSSID")) == 0)
@@ -269,19 +301,19 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     WifiScan();
   }
-  
+
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
   {
     success = true;
     WifiConnect(1);
   }
-  
+
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
   {
     success = true;
     WifiDisconnect();
   }
-  
+
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
   {
     success = true;
@@ -385,12 +417,12 @@ void ExecuteCommand(byte source, const char *Line)
   }
 
   yield();
-  
+
   if (success)
     status += F("\nOk");
-  else  
+  else
     status += F("\nUnknown command!");
-  SendStatus(source,status);
+  SendStatus(source, status);
   yield();
 }
 
