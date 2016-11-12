@@ -51,20 +51,11 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String log = "";
-        if (!Plugin_022_init)
-        {
-          // default mode is open drain ouput, drive leds connected to VCC
-          Plugin_022_writeRegister(PCA9685_MODE1, (byte)0x01); // reset the device
-          delay(1);
-          Plugin_022_writeRegister(PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
-          Plugin_022_writeRegister(PCA9685_MODE2, (byte)0x10); // set to output
-          Plugin_022_init = true;
-        }
-
         String command = parseString(string, 1);
 
         if (command == F("pcapwm"))
         {
+          if (!Plugin_022_init) Plugin_022_initialize();
           success = true;
           Plugin_022_Write(event->Par1, event->Par2);
           setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
@@ -77,6 +68,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           if (parseString(string, 2) == F("pca"))
           {
+            if (!Plugin_022_init) Plugin_022_initialize();
             success = true;
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
           }
@@ -114,5 +106,15 @@ boolean Plugin_022_Write(byte Par1, int Par2)
   Wire.write(lowByte(LED_OFF));
   Wire.write(highByte(LED_OFF));
   Wire.endTransmission();
+}
+
+void Plugin_022_initialize()
+{
+          // default mode is open drain ouput, drive leds connected to VCC
+          Plugin_022_writeRegister(PCA9685_MODE1, (byte)0x01); // reset the device
+          delay(1);
+          Plugin_022_writeRegister(PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
+          Plugin_022_writeRegister(PCA9685_MODE2, (byte)0x10); // set to output
+          Plugin_022_init = true;
 }
 
