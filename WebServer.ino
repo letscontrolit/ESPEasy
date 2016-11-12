@@ -291,8 +291,8 @@ void handle_root() {
               case NODE_TYPE_ID_ESP_EASY_STD:
                  reply += F("ESP Easy");
                  break;
-              case NODE_TYPE_ID_ESP_EASY4M_STD:
-                 reply += F("ESP Easy 4M");
+              case NODE_TYPE_ID_ESP_EASYM_STD:
+                 reply += F("ESP Easy Mega");
                  break;
               case NODE_TYPE_ID_ESP_EASY32_STD:
                  reply += F("ESP Easy 32");

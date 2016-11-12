@@ -118,12 +118,12 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             143
+#define BUILD                             144
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
-#define NODE_TYPE_ID_ESP_EASY4M_STD        17
+#define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY_STD

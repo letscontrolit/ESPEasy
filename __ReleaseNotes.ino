@@ -1,3 +1,6 @@
+// R144 12-11-2016
+// Fixed PCA Plugin init (contributed by thexperiments)
+
 // R143 02-11-2016
 // Added nodeType for future use
 
