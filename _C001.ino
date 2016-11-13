@@ -86,7 +86,8 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
             url += ";";
             url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            url += ";0";
+            url += ";";
+            url += humStat(UserVar[event->BaseVarIndex + 1]);
             break;
           case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
             url += F("&svalue=");
@@ -100,7 +101,9 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
             url += ";";
             url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            url += ";0;";
+            url += ";";
+            url += humStat(UserVar[event->BaseVarIndex + 1]);
+            url += ";";
             url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
             url += ";0";
             break;
@@ -212,4 +215,17 @@ boolean Domoticz_getData(int idx, float *data)
   return success;
 }
 
-
+int humStat(int hum){
+  int lHumStat;
+  if(hum<30){
+     lHumStat = 2;
+  }else if(hum<40){
+    lHumStat = 0;
+  }else if(hum<59){
+    lHumStat = 1;
+  }else{
+    lHumStat = 3;
+  
+  }
+  return lHumStat;  
+}
