@@ -46,7 +46,7 @@ boolean sendData(struct EventStruct *event)
 // handle MQTT messages
 void callback(char* c_topic, byte* b_payload, unsigned int length) {
   char log[256];
-  char c_payload[256];
+  char c_payload[MQTT_MAX_PACKET_SIZE];
   strncpy(c_payload,(char*)b_payload,length);
   c_payload[length] = 0;
   statusLED(true);
@@ -81,7 +81,7 @@ void MQTTConnect()
   String LWTTopic = Settings.MQTTsubscribe;
   LWTTopic.replace("/#", "/status");
   LWTTopic.replace("%sysname%", Settings.Name);
-  
+
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
@@ -173,6 +173,3 @@ void MQTTStatus(String& status)
   pubname.replace("%sysname%", Settings.Name);
   MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
 }
-
-
-
