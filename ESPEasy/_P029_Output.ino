@@ -20,7 +20,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = false;

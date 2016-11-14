@@ -107,7 +107,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                   action = F("gpio,");
                   action += Settings.TaskDevicePin1[x];
                   action += ",";
-                  action += nvalue;
+                  action += Settings.TaskDevicePin1Inversed[x] ? !nvalue : nvalue;
                 }
                 parseCommandString(&TempEvent, action);
                 PluginCall(PLUGIN_WRITE, &TempEvent, action);
