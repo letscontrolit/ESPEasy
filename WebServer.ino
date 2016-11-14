@@ -251,7 +251,7 @@ void handle_root() {
     reply += freeMem;
 
     reply += F("<TR><TD>Devices:<TD>");
-    reply += deviceCount+1;
+    reply += deviceCount + 1;
 
     reply += F("<TR><TD>Boot cause:<TD>");
     switch (lastBootCause)
@@ -286,21 +286,21 @@ void handle_root() {
           reply += Nodes[x].build;
         reply += F("<TD>");
         if (Nodes[x].nodeType)
-          switch(Nodes[x].nodeType)
-            {
-              case NODE_TYPE_ID_ESP_EASY_STD:
-                 reply += F("ESP Easy");
-                 break;
-              case NODE_TYPE_ID_ESP_EASYM_STD:
-                 reply += F("ESP Easy Mega");
-                 break;
-              case NODE_TYPE_ID_ESP_EASY32_STD:
-                 reply += F("ESP Easy 32");
-                 break;
-              case NODE_TYPE_ID_ARDUINO_EASY_STD:
-                 reply += F("Arduino Easy");
-                 break;
-            }
+          switch (Nodes[x].nodeType)
+          {
+            case NODE_TYPE_ID_ESP_EASY_STD:
+              reply += F("ESP Easy");
+              break;
+            case NODE_TYPE_ID_ESP_EASYM_STD:
+              reply += F("ESP Easy Mega");
+              break;
+            case NODE_TYPE_ID_ESP_EASY32_STD:
+              reply += F("ESP Easy 32");
+              break;
+            case NODE_TYPE_ID_ARDUINO_EASY_STD:
+              reply += F("Arduino Easy");
+              break;
+          }
         reply += F("<TD>");
         reply += url;
         reply += F("<TD>");
@@ -585,7 +585,7 @@ void handle_hardware() {
     Settings.PinBootStates[14] =  WebServer.arg("p14").toInt();
     Settings.PinBootStates[15] =  WebServer.arg("p15").toInt();
     Settings.PinBootStates[16] =  WebServer.arg("p16").toInt();
-    
+
     Settings.InitSPI = WebServer.arg("initspi") == "on";      // SPI Init
 
     SaveSettings();
@@ -601,7 +601,7 @@ void handle_hardware() {
   addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
-  
+
   // SPI Init
   reply += F("<TR><TD>Init SPI:<TD>");
   if (Settings.InitSPI)
@@ -744,6 +744,12 @@ void handle_devices() {
     {
       taskClear(index - 1, false); // clear settings, but do not save
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
+      if (taskdevicenumber.toInt() != 0) // preload valuenames
+      {
+        TempEvent.TaskIndex = index - 1;
+        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+      }
     }
     else if (taskdevicenumber.toInt() != 0)
     {
@@ -809,13 +815,16 @@ void handle_devices() {
       }
 
       // task value names handling.
-      TempEvent.TaskIndex = index - 1;
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
         taskdevicevaluename[varNr].toCharArray(tmpString, 41);
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       }
+      
       TempEvent.TaskIndex = index - 1;
+      if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+      
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
     SaveTaskSettings(index - 1);
@@ -826,7 +835,6 @@ void handle_devices() {
 
   String reply = "";
   addHeader(true, reply);
-
 
   // show all tasks as table
   if (index == 0)
@@ -851,17 +859,6 @@ void handle_devices() {
 
     for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
     {
-      LoadTaskSettings(x);
-      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
-      TempEvent.TaskIndex = x;
-
-      if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
-
-      deviceName = "";
-      if (Settings.TaskDeviceNumber[x] != 0)
-        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
-
       reply += F("<TR><TD>");
       reply += F("<a class=\"button-link\" href=\"devices?index=");
       reply += x + 1;
@@ -871,86 +868,100 @@ void handle_devices() {
       reply += F("<TD>");
       reply += x + 1;
       reply += F("<TD>");
-      reply += deviceName;
-      reply += F("<TD>");
-      reply += ExtraTaskSettings.TaskDeviceName;
-      reply += F("<TD>");
 
-      byte customConfig = false;
-      customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
-      if (!customConfig)
-        if (Device[DeviceIndex].Ports != 0)
-          reply += Settings.TaskDevicePort[x];
-
-      reply += F("<TD>");
-
-      if (Settings.TaskDeviceID[x] != 0)
-        reply += Settings.TaskDeviceID[x];
-
-      reply += F("<TD>");
-
-      if (Settings.TaskDeviceDataFeed[x] == 0)
+      if (Settings.TaskDeviceNumber[x] != 0)
       {
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-        {
-          reply += F("GPIO-");
-          reply += Settings.Pin_i2c_sda;
-          reply += F("<BR>GPIO-");
-          reply += Settings.Pin_i2c_scl;
-        }
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
-          reply += F("ADC (TOUT)");
+        LoadTaskSettings(x);
+        DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+        TempEvent.TaskIndex = x;
 
-        if (Settings.TaskDevicePin1[x] != -1)
-        {
-          reply += F("GPIO-");
-          reply += Settings.TaskDevicePin1[x];
-        }
+        deviceName = "";
+        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
 
-        if (Settings.TaskDevicePin2[x] != -1)
-        {
-          reply += F("<BR>GPIO-");
-          reply += Settings.TaskDevicePin2[x];
-        }
+        reply += deviceName;
+        reply += F("<TD>");
+        reply += ExtraTaskSettings.TaskDeviceName;
+        reply += F("<TD>");
 
-        if (Settings.TaskDevicePin3[x] != -1)
-        {
-          reply += F("<BR>GPIO-");
-          reply += Settings.TaskDevicePin3[x];
-        }
-      }
+        byte customConfig = false;
+        customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent, reply);
+        if (!customConfig)
+          if (Device[DeviceIndex].Ports != 0)
+            reply += Settings.TaskDevicePort[x];
 
-      reply += F("<TD>");
-      byte customValues = false;
-      customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
-      if (!customValues)
-      {
-        if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+        reply += F("<TD>");
+
+        if (Settings.TaskDeviceID[x] != 0)
+          reply += Settings.TaskDeviceID[x];
+
+        reply += F("<TD>");
+
+        if (Settings.TaskDeviceDataFeed[x] == 0)
         {
-          reply  += F("<div class=\"div_l\">");
-          reply  += ExtraTaskSettings.TaskDeviceValueNames[0];
-          reply  += F(":</div><div class=\"div_r\">");
-          reply  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
-          reply  += F("</div>");
-        }
-        else
-        {
-          for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+          if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
           {
-            if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+            reply += F("GPIO-");
+            reply += Settings.Pin_i2c_sda;
+            reply += F("<BR>GPIO-");
+            reply += Settings.Pin_i2c_scl;
+          }
+          if (Device[DeviceIndex].Type == DEVICE_TYPE_ANALOG)
+            reply += F("ADC (TOUT)");
+
+          if (Settings.TaskDevicePin1[x] != -1)
+          {
+            reply += F("GPIO-");
+            reply += Settings.TaskDevicePin1[x];
+          }
+
+          if (Settings.TaskDevicePin2[x] != -1)
+          {
+            reply += F("<BR>GPIO-");
+            reply += Settings.TaskDevicePin2[x];
+          }
+
+          if (Settings.TaskDevicePin3[x] != -1)
+          {
+            reply += F("<BR>GPIO-");
+            reply += Settings.TaskDevicePin3[x];
+          }
+        }
+
+        reply += F("<TD>");
+        byte customValues = false;
+        customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, reply);
+        if (!customValues)
+        {
+          if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+          {
+            reply  += F("<div class=\"div_l\">");
+            reply  += ExtraTaskSettings.TaskDeviceValueNames[0];
+            reply  += F(":</div><div class=\"div_r\">");
+            reply  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
+            reply  += F("</div>");
+          }
+          else
+          {
+            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
-              if (varNr > 0)
-                reply += F("<div class=\"div_br\"></div>");
-              reply += F("<div class=\"div_l\">");
-              reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-              reply += F(":</div><div class=\"div_r\">");
-              reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
-              reply += "</div>";
+              if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
+              {
+                if (varNr > 0)
+                  reply += F("<div class=\"div_br\"></div>");
+                reply += F("<div class=\"div_l\">");
+                reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+                reply += F(":</div><div class=\"div_r\">");
+                reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+                reply += "</div>";
+              }
             }
           }
         }
       }
-    }
+      else
+        reply += F("<TD><TD><TD><TD><TD>");
+
+    }  // next
     reply += F("</table>");
   }
   // Show edit form if a specific entry is chosen with the edit button
@@ -959,9 +970,6 @@ void handle_devices() {
     LoadTaskSettings(index - 1);
     DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
     TempEvent.TaskIndex = index - 1;
-
-    if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-      PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
 
     reply += F("<BR><BR><form name='frmselect' method='post'><table><TH>Task Settings<TH>Value");
 
@@ -1478,7 +1486,7 @@ void handle_i2cscanner() {
   String reply = "";
   addHeader(true, reply);
   reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
-    
+
   byte error, address;
   int nDevices;
   nDevices = 0;
@@ -2627,7 +2635,7 @@ void handle_rules() {
       *pointerToByteToRead = f.read();
       pointerToByteToRead++;// next byte
     }
-    data[f.size()]=0;
+    data[f.size()] = 0;
     f.close();
   }
 #else

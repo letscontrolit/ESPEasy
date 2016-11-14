@@ -1,3 +1,7 @@
+// R145 13-11-2016
+// Removed controller specific code from the framework (Domoticz test routines)
+// Fixed device table display
+
 // R144 12-11-2016
 // Fixed PCA Plugin init (contributed by thexperiments)
 

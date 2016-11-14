@@ -217,37 +217,6 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  // ****************************************
-  // special commands for old nodo plugin
-  // ****************************************
-
-  if (strcasecmp_P(Command, PSTR("DomoticzSend")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 4))
-    {
-      struct EventStruct TempEvent;
-      TempEvent.TaskIndex = 0;
-      TempEvent.BaseVarIndex = (VARS_PER_TASK * TASKS_MAX) - 1;
-      TempEvent.idx = Par2;
-      TempEvent.sensorType = Par1;
-      UserVar[(VARS_PER_TASK * TASKS_MAX) - 1] = atof(TmpStr1);
-      sendData(&TempEvent);
-    }
-  }
-
-  if (strcasecmp(Command, "DomoticzGet") == 0)
-  {
-    success = true;
-    float value = 0;
-    if (Domoticz_getData(Par2, &value))
-    {
-      status = F("DomoticzGet ");
-      status += value;
-    }
-    else
-      status = F("Error getting data");
-  }
 
   // ****************************************
   // configure settings commands
