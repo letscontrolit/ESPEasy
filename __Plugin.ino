@@ -1117,6 +1117,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               {
                 if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
                 {
+                  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                  TempEvent.TaskIndex = y;
+                  TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+                  TempEvent.idx = Settings.TaskDeviceID[y];
+                  TempEvent.sensorType = Device[DeviceIndex].VType;                  
                   Plugin_ptr[x](Function, &TempEvent, str);
                 }
               }

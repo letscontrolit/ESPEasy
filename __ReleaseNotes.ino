@@ -1,3 +1,7 @@
+// R146 20-11-2016
+// Fixed a bug in PLUGIN_SERIAL/UDP calls where eventstruct data was not prepared
+//   Ser2Net plugin RXWait would only work as expected on task 1
+
 // R145 13-11-2016
 // Removed controller specific code from the framework (Domoticz test routines)
 // Fixed device table display
