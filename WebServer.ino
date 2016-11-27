@@ -1380,11 +1380,11 @@ void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
 void handle_log() {
   if (!isLoggedIn()) return;
 
-  char *TempString = (char*)malloc(80);
-
   String reply = "";
   addHeader(true, reply);
-  reply += F("<script language='JavaScript'>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
+  reply += F("<script language='JavaScript'>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', ");
+  reply += String(WEBPAGE_REFRESH_TIME);
+  reply += F(");</script>");
   reply += F("<table><TH>Log<TR><TD>");
 
   if (logcount != -1)
@@ -1393,7 +1393,7 @@ void handle_log() {
     do
     {
       counter++;
-      if (counter > 9)
+      if (counter >= Settings.WebLogBufferSize)
         counter = 0;
       if (Logging[counter].timeStamp > 0)
       {
@@ -1407,7 +1407,6 @@ void handle_log() {
   reply += F("</table>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
-  free(TempString);
 }
 
 
@@ -1800,6 +1799,7 @@ void handle_advanced() {
   String useserial = WebServer.arg("useserial");
   String serialloglevel = WebServer.arg("serialloglevel");
   String webloglevel = WebServer.arg("webloglevel");
+  String weblogbuffersize = WebServer.arg("weblogbuffersize");
   String baudrate = WebServer.arg("baudrate");
 #if !FEATURE_SPIFFS
   String customcss = WebServer.arg("customcss");
@@ -1832,6 +1832,10 @@ void handle_advanced() {
     Settings.UseSerial = (useserial == "on");
     Settings.SerialLogLevel = serialloglevel.toInt();
     Settings.WebLogLevel = webloglevel.toInt();
+    if (0 < weblogbuffersize.toInt() <= LOGGING_TABLE_SIZE)
+    	Settings.WebLogBufferSize = weblogbuffersize.toInt();
+    else
+    	Settings.WebLogBufferSize = LOGGING_TABLE_DEFAULT_SIZE;
     Settings.BaudRate = baudrate.toInt();
 #if !FEATURE_SPIFFS
     Settings.CustomCSS = (customcss == "on");
@@ -1925,6 +1929,9 @@ void handle_advanced() {
   reply += F("'><TR><TD>Web log Level:<TD><input type='text' name='webloglevel' value='");
   reply += Settings.WebLogLevel;
 
+  reply += F("'><TR><TD>Web log Buffer Size (maximum is 100):<TD><input type='text' name='weblogbuffersize' value='");
+  reply += Settings.WebLogBufferSize;
+  
   reply += F("'><TR><TD>Baud Rate:<TD><input type='text' name='baudrate' value='");
   reply += Settings.BaudRate;
   reply += F("'>");

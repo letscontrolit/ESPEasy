@@ -217,6 +217,11 @@
 #define BOOT_CAUSE_COLD_BOOT                1
 #define BOOT_CAUSE_EXT_WD                  10
 
+#define LOGGING_TABLE_SIZE                100
+#define LOGGING_TABLE_DEFAULT_SIZE         10
+#define WEBPAGE_REFRESH_TIME            30000
+
+
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <WiFiUdp.h>
@@ -307,6 +312,7 @@ struct SettingsStruct
   byte          SyslogLevel;
   byte          SerialLogLevel;
   byte          WebLogLevel;
+  byte          WebLogBufferSize;
   unsigned long BaudRate;
   unsigned long MessageDelay;
   byte          TaskDeviceNumber[TASKS_MAX];
@@ -379,7 +385,7 @@ struct LogStruct
 {
   unsigned long timeStamp;
   String Message;
-} Logging[10];
+} Logging[LOGGING_TABLE_SIZE];
 int logcount = -1;
 
 struct DeviceStruct
