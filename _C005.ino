@@ -55,6 +55,16 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         String cmd = "";
         struct EventStruct TempEvent;
 
+        // Add feature to control Dummy devices
+        // "set" is used in ioBroker's mqtt broker
+    		if (topicSplit[count] == "set")
+		    {
+    			count--;
+		    	cmd = F("TaskValueSet");
+    			TempEvent.Par1 = getTaskIndex(topicSplit[count-2]);
+		    	TempEvent.Par2 = getValueNameIndex(TempEvent.Par1, topicSplit[count - 1]);
+    			TempEvent.Par3 = event->String2.toFloat();
+    		}
         if (topicSplit[count] == "cmd")
         {
           cmd = event->String2;
