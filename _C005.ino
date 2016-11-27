@@ -61,8 +61,8 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
 	{
     	  count--;
 	  cmd = F("TaskValueSet");
-    	  TempEvent.Par1 = getTaskIndex(topicSplit[count-2]);
-	  TempEvent.Par2 = getValueNameIndex(TempEvent.Par1, topicSplit[count - 1]);
+    	  TempEvent.Par1 = getTaskIndex(topicSplit[count-1]); // I should use "...[--count]"
+	  TempEvent.Par2 = getValueNameIndex(TempEvent.Par1, topicSplit[count]);
     	  TempEvent.Par3 = event->String2.toFloat();
     	}
         if (topicSplit[count] == "cmd")
