@@ -40,18 +40,20 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[4];
+        String options[5];
         options[0] = F("Uptime");
         options[1] = F("Free RAM");
         options[2] = F("Wifi RSSI");
         options[3] = F("Input VCC");
-        int optionValues[4];
+        options[4] = F("System load");
+        int optionValues[5];
         optionValues[0] = 0;
         optionValues[1] = 1;
         optionValues[2] = 2;
         optionValues[3] = 3;
+        optionValues[4] = 4;
         string += F("<TR><TD>Indicator:<TD><select name='plugin_026'>");
-        for (byte x = 0; x < 4; x++)
+        for (byte x = 0; x < 5; x++)
         {
           string += F("<option value='");
           string += optionValues[x];
@@ -103,6 +105,11 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 #else
             value = -1.0;
 #endif
+            break;
+          }
+          case 4:
+          {
+            value = (100 - (100 * loopCounterLast / loopCounterMax));
             break;
           }
         }

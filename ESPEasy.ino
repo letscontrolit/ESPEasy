@@ -118,7 +118,7 @@
 #define ESP_PROJECT_PID           2015050101L
 #define ESP_EASY
 #define VERSION                             9
-#define BUILD                             146
+#define BUILD                             147
 #define BUILD_NOTES                        ""
 #define FEATURE_SPIFFS                  false
 
@@ -1013,6 +1013,7 @@ void backgroundtasks()
   WebServer.handleClient();
   MQTTclient.loop();
   statusLED(false);
+  checkUDP();
   yield();
 }
 

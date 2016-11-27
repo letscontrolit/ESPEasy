@@ -1,3 +1,6 @@
+// R147 27-11-2016
+// Fixed a situation where a large message delay uses background processing without UPD handling, causing network issues.
+
 // R146 20-11-2016
 // Fixed a bug in PLUGIN_SERIAL/UDP calls where eventstruct data was not prepared
 //   Ser2Net plugin RXWait would only work as expected on task 1
