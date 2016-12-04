@@ -44,7 +44,7 @@ float           Ro           =  10;                 //Ro is initialized to 10 ki
 
 
 
-boolean Plugin_034(byte function, struct EventStruct *event, String& string)
+boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
