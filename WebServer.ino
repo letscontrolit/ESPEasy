@@ -126,7 +126,9 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 void addFooter(String& str)
 {
-  str += F("<h6>Powered by www.letscontrolit.com</h6></body>");
+  str += F("<h6>Powered by <a href=\"http://www.letscontrolit.com\">www.letscontrolit.com</a></h6></body>");
+  str += F("<h6>GitHub Source <a href=\"https://github.com/ESP8266nu/ESPEasy\">github.com/ESP8266nu/ESPEasy</a></h6></body>");
+  str += F("<h6>Last firmware <a href=\"https://sourceforge.net/projects/espeasy\">sourceforge.net/projects/espeasy</a></h6></body>");
 }
 
 
@@ -167,6 +169,16 @@ void handle_root() {
 #if FEATURE_TIME
     if (Settings.UseNTP)
     {
+      reply += F("<TR><TD>System Date:<TD>");
+      reply += year();
+      reply += "/";
+      if (month() < 10)
+        reply += "0";
+      reply += month();
+      reply += "/";
+      if (day() < 10)
+        reply += "0";
+      reply += day();
       reply += F("<TR><TD>System Time:<TD>");
       reply += hour();
       reply += ":";
