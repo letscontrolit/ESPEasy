@@ -1713,6 +1713,21 @@ unsigned long now() {
   return (unsigned long)sysTime;
 }
 
+int year()
+{
+  return tm.Year+1970;
+}
+
+int month()
+{
+  return tm.Month;
+}
+
+int day()
+{
+  return tm.Day;
+}
+
 int hour()
 {
   return tm.Hour;
