@@ -217,6 +217,9 @@
 #define BOOT_CAUSE_COLD_BOOT                1
 #define BOOT_CAUSE_EXT_WD                  10
 
+#define TMR_CREATE                          0
+#define TMR_KILL                            1
+
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <WiFiUdp.h>
@@ -921,14 +924,22 @@ void SensorSendTask(byte TaskIndex)
 boolean setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
-  // first check if a timer is not already running for this request
+  // first check if a timer is not already running for this request. If Par3 is set to
+  // TMR_KILL (1) the timer will be deleted
   boolean reUse = false;
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
     if (systemTimers[x].timer != 0)
     {
       if ((systemTimers[x].plugin == plugin) && (systemTimers[x].Par1 == Par1))
       {
-        systemTimers[x].timer = millis() + timer;
+        if (Par3 == TMR_KILL) 
+        {
+          systemTimers[x].timer = 0;
+        }
+        else
+        {
+          systemTimers[x].timer = millis() + timer;
+        }
         reUse = true;
         break;
       }
