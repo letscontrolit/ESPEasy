@@ -945,7 +945,7 @@ boolean setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, b
       }
     }
 
-  if (!reUse)
+  if (!reUse && Par3 != TMR_KILL)
   {
     // find a new free timer slot...
     for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
