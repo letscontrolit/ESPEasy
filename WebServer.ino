@@ -2511,28 +2511,35 @@ void handle_setup() {
       reply += F("No Access Points found");
     else
     {
+      reply += F("<table><tr><th>Select</th><th>SSID</th><th>RSSI</th><th>BSSID</th></tr>");
       for (int i = 0; i < n; ++i)
       {
-        reply += F("<input type='radio' name='ssid' value='");
+        reply += F("<tr><td><input type='radio' name='ssid' value='");
         reply += WiFi.SSID(i);
         reply += F("'");
         if (WiFi.SSID(i) == ssid)
           reply += F(" checked ");
-        reply += F(">");
+        reply += F("></input></td><td>");
         reply += WiFi.SSID(i);
-        reply += F("</input><br>");
+        reply += F("</td><td>");
+        reply += WiFi.RSSI(i);
+        reply += F("</td><td>");
+        char bssid[17];
+        sprintf_P(bssid, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), WiFi.BSSID(i)[5], WiFi.BSSID(i)[4], WiFi.BSSID(i)[3], WiFi.BSSID(i)[2], WiFi.BSSID(i)[1], WiFi.BSSID(i)[0]);
+        reply += bssid;
+        reply += F("</td></tr>");
       }
     }
 
-    reply += F("<input type='radio' name='ssid' id='other_ssid' value='other' >other SSID:</input>");
+    reply += F("<tr><td><input type='radio' name='ssid' id='other_ssid' value='other' ></input></td><td>other SSID:<br>");
     reply += F("<input type ='text' name='other' value='");
     reply += other;
-    reply += F("'><br><br>");
-    reply += F("Password: <input type ='text' name='pass' value='");
+    reply += F("'></td><td></td><td></td></tr>");
+    reply += F("<tr><td>Password:</td><td><input type ='text' name='pass' value='");
     reply += password;
-    reply += F("'><br>");
+    reply += F("'></td><td></td>");
 
-    reply += F("<input type='submit' value='Connect'>");
+    reply += F("<td><input type='submit' value='Connect'></td></tr></table>");
   }
 
   if (status == 1)  // connecting stage...
