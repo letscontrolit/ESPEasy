@@ -1614,7 +1614,7 @@ void handle_wifiscanner() {
       reply += WiFi.RSSI(i);
       reply += "</TD><TD>";
       char bssid[17];
-      sprintf_P(bssid, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), WiFi.BSSID(i)[5], WiFi.BSSID(i)[4], WiFi.BSSID(i)[3], WiFi.BSSID(i)[2], WiFi.BSSID(i)[1], WiFi.BSSID(i)[0]);
+      sprintf_P(bssid, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), WiFi.BSSID(i)[0], WiFi.BSSID(i)[1], WiFi.BSSID(i)[2], WiFi.BSSID(i)[3], WiFi.BSSID(i)[4], WiFi.BSSID(i)[5]);
       reply += bssid;
       reply += "</TD></TR>";
     }
@@ -2530,7 +2530,7 @@ void handle_setup() {
         reply += WiFi.RSSI(i);
         reply += F("</td><td>");
         char bssid[17];
-        sprintf_P(bssid, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), WiFi.BSSID(i)[5], WiFi.BSSID(i)[4], WiFi.BSSID(i)[3], WiFi.BSSID(i)[2], WiFi.BSSID(i)[1], WiFi.BSSID(i)[0]);
+        sprintf_P(bssid, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), WiFi.BSSID(i)[0], WiFi.BSSID(i)[1], WiFi.BSSID(i)[2], WiFi.BSSID(i)[3], WiFi.BSSID(i)[4], WiFi.BSSID(i)[5]);
         reply += bssid;
         reply += F("</td></tr>");
       }
