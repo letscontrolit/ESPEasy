@@ -1599,7 +1599,7 @@ void handle_wifiscanner() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table><TH>Access Points:<TH>RSSI");
+  reply += F("<table><TH>Access Points:</TH><TH>RSSI</TH><TH>BSSID</TH>");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -1610,8 +1610,13 @@ void handle_wifiscanner() {
     {
       reply += F("<TR><TD>");
       reply += WiFi.SSID(i);
-      reply += "<TD>";
+      reply += "</TD><TD>";
       reply += WiFi.RSSI(i);
+      reply += "</TD><TD>";
+      char bssid[17];
+      sprintf_P(bssid, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), WiFi.BSSID(i)[5], WiFi.BSSID(i)[4], WiFi.BSSID(i)[3], WiFi.BSSID(i)[2], WiFi.BSSID(i)[1], WiFi.BSSID(i)[0]);
+      reply += bssid;
+      reply += "</TD></TR>";
     }
   }
 
