@@ -226,6 +226,31 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
+        if (command == F("toggle"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            // identify Pinmode
+            uint32_t bit = digitalPinToBitMask(event->Par1);
+            uint8_t port = digitalPinToPort(event->Par1);
+            volatile uint32_t *reg = portModeRegister(port);
+            
+            if (*reg & bit) {
+              // Pin is OUTPUT - Toggle
+              digitalWrite(event->Par1, !digitalRead(event->Par1));
+            } else {
+              // Pin is !OUTPUT -  set to OUTPUT and enable
+              pinMode(event->Par1, OUTPUT);
+              digitalWrite(event->Par1, 1);
+            }
+          }
+          setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, digitalRead(event->Par1));
+          log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" toggle to ")) + String(digitalRead(event->Par1));
+          addLog(LOG_LEVEL_INFO, log);
+          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+        }
+        
         if (command == F("pwm"))
         {
           success = true;
