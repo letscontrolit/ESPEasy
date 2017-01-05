@@ -300,6 +300,9 @@ void handle_root() {
             case NODE_TYPE_ID_ARDUINO_EASY_STD:
               reply += F("Arduino Easy");
               break;
+            case NODE_TYPE_ID_NANO_EASY_STD:
+              reply += F("Nano Easy");
+              break;
           }
         reply += F("<TD>");
         reply += url;
