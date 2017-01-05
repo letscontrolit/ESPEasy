@@ -1070,7 +1070,7 @@ void addLog(byte loglevel, const char *line)
   if (loglevel <= Settings.WebLogLevel)
   {
     logcount++;
-    if (logcount > 9)
+    if (logcount >= Settings.WebLogBufferSize)
       logcount = 0;
     Logging[logcount].timeStamp = millis();
     Logging[logcount].Message = line;
