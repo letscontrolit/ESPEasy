@@ -1,3 +1,7 @@
+// R148 02-12-2016
+// Fixed a bug in ADS1115 plugin (contributed by Shardan)
+// Fixed a bug on R146 Ser2Net
+
 // R147 27-11-2016
 // Fixed a situation where a large message delay uses background processing without UPD handling, causing network issues.
 

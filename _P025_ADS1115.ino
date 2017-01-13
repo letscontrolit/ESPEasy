@@ -2,15 +2,12 @@
 //#################################### Plugin 025: ADS1115 I2C 0x48)  ###############################################
 //#######################################################################################################
 
-// MyMessage *msgAnalog025; // Mysensors
-
 #define PLUGIN_025
 #define PLUGIN_ID_025 25
 #define PLUGIN_NAME_025 "Analog input - ADS1115"
 #define PLUGIN_VALUENAME1_025 "Analog"
 
 boolean Plugin_025_init = false;
-// byte Plugin_Switch_Pin = 0;
 
 static uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
   Wire.beginTransmission(i2cAddress);
@@ -104,17 +101,6 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_025_init = true;
-//        Plugin_Switch_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-//        if (!msgAnalog025)  //Mysensors
-//          msgDust025 = new MyMessage(event->BaseVarIndex, V_LEVEL); //Mysensors
-//        present(event->BaseVarIndex, S_DUST); //Mysensors
-//        Serial.print("Present ADS1115: "); // Mysensors
-//        Serial.println(event->BaseVarIndex); // Mysensors
-//        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
-//        {
-//            pinMode(Plugin_Switch_Pin, OUTPUT);
-//            digitalWrite(Plugin_Switch_Pin, HIGH);
-//        }
         success = true;
         break;
       }
@@ -122,15 +108,8 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         uint8_t m_gain = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-//        noInterrupts();
         int value;
         value = 0;
-//        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
-//        {
-//          Plugin_Switch_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-//          digitalWrite(Plugin_Switch_Pin, LOW);
-//          delayMicroseconds(280);
-//        }
         byte unit = (Settings.TaskDevicePort[event->TaskIndex] - 1) / 4;
         byte port = Settings.TaskDevicePort[event->TaskIndex] - (unit * 4);
         uint8_t address = 0x48 + unit;
@@ -174,16 +153,16 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         }
         switch (port)
         {
-        case (0):
+        case (1):
           config |= (0x4000);
           break;
-        case (1):
+        case (2):
           config |= (0x5000);
           break;
-        case (2):
+        case (3):
           config |= (0x6000);
           break;
-        case (3):
+        case (4):
           config |= (0x7000);
           break;
         }
@@ -197,15 +176,8 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex] = (float) readRegister025((address), (0x00)) ;  
         String log = F("ADS1115  : Analog value: ");
         log += UserVar[event->BaseVarIndex];
-//        send(msgDust025->set(UserVar[event->BaseVarIndex], 1));  // Mysensors
         addLog(LOG_LEVEL_INFO,log);
         success = true;
-//        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
-//        {
-//          delayMicroseconds(40);
-//          digitalWrite(Plugin_Switch_Pin, HIGH);
-//        }
-//        interrupts();
         break;
       }
   }
