@@ -5,7 +5,7 @@
 
 #define PLUGIN_015
 #define PLUGIN_ID_015        15
-#define PLUGIN_NAME_015       "Luminosity - TLS2561"
+#define PLUGIN_NAME_015       "Luminosity - TSL2561"
 #define PLUGIN_VALUENAME1_015 "Lux"
 
 boolean Plugin_015_init = false;
@@ -111,11 +111,11 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        #define TLS2561_INTEGRATION_OPTION 3
+        #define TSL2561_INTEGRATION_OPTION 3
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[TLS2561_INTEGRATION_OPTION];
-        int optionValues[TLS2561_INTEGRATION_OPTION];
+        String options[TSL2561_INTEGRATION_OPTION];
+        int optionValues[TSL2561_INTEGRATION_OPTION];
         optionValues[0] = TSL2561_TIMING_13MS;
         options[0] = F("13 ms");
         optionValues[1] = TSL2561_TIMING_101MS;
@@ -124,7 +124,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         options[2] = F("402 ms");
 
         string += F("<TR><TD>Integration time:<TD><select name='plugin_015_integration'>");
-        for (byte x = 0; x < TLS2561_INTEGRATION_OPTION; x++)
+        for (byte x = 0; x < TSL2561_INTEGRATION_OPTION; x++)
         {
           string += F("<option value='");
           string += optionValues[x];
@@ -157,7 +157,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         uint8_t ret;
 
         if (!Plugin_015_init) {
-          Plugin_015_init = Plugin_015_tls2561_begin(integration);
+          Plugin_015_init = Plugin_015_tsl2561_begin(integration);
         }
 
         // Read values if init ok
@@ -166,11 +166,11 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
           if (ret == 0) {
             UserVar[event->BaseVarIndex] = tsl2561_lux;
             success = true;
-            String log = F("TLS2561 : Lux: ");
+            String log = F("TSL2561 : Lux: ");
             log += UserVar[event->BaseVarIndex];
             addLog(LOG_LEVEL_INFO,log);
           } else {
-            String log = F("TLS2561 : Read Error #");
+            String log = F("TSL2561 : Read Error #");
             log += String(ret,DEC);
             addLog(LOG_LEVEL_INFO,log);
           }
@@ -183,13 +183,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 }
 
 /* ======================================================================
-Function: Plugin_015_tls2561_begin
+Function: Plugin_015_tsl2561_begin
 Purpose : read the user register from the sensor
 Input   : integration time
 Output  : true if okay
 Comments: -
 ====================================================================== */
-boolean Plugin_015_tls2561_begin(uint8_t integration)
+boolean Plugin_015_tsl2561_begin(uint8_t integration)
 {
   uint8_t ret;
 
@@ -203,7 +203,7 @@ boolean Plugin_015_tls2561_begin(uint8_t integration)
     delay(15);  
     ret = true;
   } else {
-    String log = F("TLS2561 : integration=0x");
+    String log = F("TSL2561 : integration=0x");
     log += String(integration,HEX);
     log += F(" => Error 0x");
     log += String(ret,HEX);
