@@ -46,6 +46,7 @@ boolean WifiConnect(byte connectAttempts)
     if (hostName[x] == ' ')
       hostName[x] = '-';
   wifi_station_set_hostname(hostName);
+  WiFi.setOutputPower(Settings.TxPower);
   
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
   {

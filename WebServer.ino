@@ -353,6 +353,7 @@ void handle_config() {
   String password = WebServer.arg("password");
   String ssid = WebServer.arg("ssid");
   String key = WebServer.arg("key");
+  String TxPower = WebServer.arg("txpower");
   String usedns = WebServer.arg("usedns");
   String controllerip = WebServer.arg("controllerip");
   String controllerhostname = WebServer.arg("controllerhostname");
@@ -423,6 +424,7 @@ void handle_config() {
     espdns.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.DNS);
     Settings.Unit = unit.toInt();
+    Settings.TxPower=TxPower.toFloat();
     SaveSettings();
   }
 
@@ -443,6 +445,9 @@ void handle_config() {
 
   reply += F("'><TR><TD>WPA AP Mode Key:<TD><input type='text' maxlength='63' name='apkey' value='");
   reply += SecuritySettings.WifiAPKey;
+
+  reply += F("'><TR><TD>WiFi Transmit Power:<TD><input type='text' maxlength='4' name='txpower' value='");
+  reply += Settings.TxPower;
 
   reply += F("'><TR><TD>Unit nr:<TD><input type='text' name='unit' value='");
   reply += Settings.Unit;

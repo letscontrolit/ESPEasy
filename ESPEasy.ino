@@ -86,6 +86,7 @@
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
 #define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
+#define DEFAULT_TXPOWER     19.5                // default Tx Power
 
 #define DEFAULT_MQTT_TEMPLATE false              // true or false enabled or disabled set mqqt sub and pub
 #define DEFAULT_MQTT_PUB    "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
@@ -348,6 +349,7 @@ struct SettingsStruct
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
   boolean       InitSPI; 
+  float         TxPower;
 } Settings;
 
 struct ExtraTaskSettingsStruct
