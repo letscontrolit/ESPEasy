@@ -210,6 +210,9 @@ void handle_root() {
     reply += F(" ");
     reply += F(BUILD_NOTES);
 
+    reply += F("<TR><TD>GIT version:<TD>");
+    reply += F(BUILD_GIT);
+
     reply += F("<TR><TD>Core Version:<TD>");
     reply += ESP.getCoreVersion();
 
@@ -823,11 +826,11 @@ void handle_devices() {
         taskdevicevaluename[varNr].toCharArray(tmpString, 41);
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       }
-      
+
       TempEvent.TaskIndex = index - 1;
       if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
         PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
-      
+
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
     SaveTaskSettings(index - 1);
@@ -2693,4 +2696,3 @@ String URLEncode(const char* msg)
   }
   return encodedMsg;
 }
-
