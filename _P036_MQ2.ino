@@ -1,10 +1,12 @@
+#ifdef PLUGIN_BUILD_DEV
+
 //#######################################################################################################
 //#################################### Plugin 036: MQ2 sensors ###############################################
 //#######################################################################################################
 
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
-#define PLUGIN_NAME_036       "MQ2 smoke sensor"
+#define PLUGIN_NAME_036       "MQ2 smoke sensor [DEVELOPMENT]"
 #define PLUGIN_VALUENAME1_036 "LPG"
 #define PLUGIN_VALUENAME2_036 "CO"
 #define PLUGIN_VALUENAME3_036 "SMOKE"
@@ -215,3 +217,6 @@ int  MQGetPercentage(float rs_ro_ratio, float *pcurve)
 {
   return (pow(10,( ((log(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
 }
+
+
+#endif
