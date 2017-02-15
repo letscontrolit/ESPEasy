@@ -217,7 +217,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-
+#ifdef PLUGIN_BUILD_TESTING
   // ****************************************
   // special commands for Blynk
   // ****************************************
@@ -228,7 +228,7 @@ void ExecuteCommand(byte source, const char *Line)
     event = event.substring(9);
     int index = event.indexOf(',');
     if (index > 0)
-    { 
+    {
       int index = event.lastIndexOf(',');
       String blynkcommand = event.substring(index+1);
       float value = 0;
@@ -248,7 +248,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
 
   }
-
+#endif
 
   // ****************************************
   // configure settings commands
@@ -394,4 +394,3 @@ void ExecuteCommand(byte source, const char *Line)
   SendStatus(source, status);
   yield();
 }
-
