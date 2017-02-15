@@ -218,6 +218,7 @@
 #define BOOT_CAUSE_COLD_BOOT                1
 #define BOOT_CAUSE_EXT_WD                  10
 
+#include "Version.h"
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <WiFiUdp.h>
@@ -347,7 +348,7 @@ struct SettingsStruct
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
-  boolean       InitSPI; 
+  boolean       InitSPI;
 } Settings;
 
 struct ExtraTaskSettingsStruct
@@ -615,7 +616,7 @@ void setup()
       for (byte x = 0; x < TASKS_MAX; x++)
         if (Settings.TaskDeviceTimer[x] !=0)
           timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
-      
+
       timer = millis() + 30000; // startup delay 30 sec
     }
     else
@@ -814,7 +815,7 @@ void runEach30Seconds()
     loopCounterMax = loopCounterLast;
 
   WifiCheck();
-  
+
 }
 
 
@@ -898,7 +899,7 @@ void SensorSendTask(byte TaskIndex)
     if (success)
     {
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      {  
+      {
         if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
         {
           String spreValue = String(preValue[varNr]);
@@ -1020,4 +1021,3 @@ void backgroundtasks()
   checkUDP();
   yield();
 }
-
