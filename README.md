@@ -9,3 +9,33 @@ http://sourceforge.net/projects/espeasy/
 
 Wiki: http://www.esp8266.nu
 Forum: http://www.esp8266.nu/forum
+
+
+## Temporary fork / new release release management
+
+Hi, i'm trying to continue maintenance on ESPeasy and i've created a temporary fork. (until I get access to the main repository after which i'll move everything back over there)
+
+I've already tried to make some improvements to speed up developement:
+
+ * I've created a simple wrapper repository to allow building via platformio, its here: https://github.com/psy0rz/ESPEasy-platformio
+ * The git-tag and version are stored in the firmware.bin file and viewable via the webgui.
+ * There are now multiple plugin sets to speed up testing and releasing of new plugins:
+   * Minimal: Only contains base plugins until this point, to keep firmware size below 512k for smaller ESP8266's.
+   * Normal: All stable plugins
+   * Testing: New plugins that need testing before they will be marked stable. (marked with [TESTING] in the webgui)
+   * Development: Plugins that are not finished yet or are broken. (marked with [DEVELOPMENT] in the webgui)
+
+   Every release will have 4 firmware files, so everyone can choose which plugin set they want without a need to compile them yourself. This way its possible to use a stable release of ESPeasy and still have some testing plugins that you absolutely need. 
+   
+ * All commits will be compiled automaticly via Travis: https://travis-ci.org/psy0rz/ESPEasy-platformio
+ * When a version in git is tagged, Travis will automaticly create a new release of the binaries on github.
+ * Ideally we can now gradually move most play-ground plugins over to the main tree and add them to the approriate plugin set.
+ * I would love to use different versioning numbering from now on, perhaps sematic versioning (http://semver.org), starting with 1.x.x since our internal plugin API is already stable.
+ 
+ 
+Edwin
+ 
+ 
+
+Edwin
+
