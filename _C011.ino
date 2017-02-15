@@ -1,10 +1,12 @@
+#ifdef PLUGIN_BUILD_TESTING
+
 //#######################################################################################################
 //########################### Controller Plugin 011: Blynk  #############################################
 //#######################################################################################################
 
 #define CPLUGIN_011
 #define CPLUGIN_ID_011         1
-#define CPLUGIN_NAME_011       "Blynk HTTP"
+#define CPLUGIN_NAME_011       "Blynk HTTP [TESTING]"
 
 
 
@@ -12,8 +14,8 @@
 boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  
- 
+
+
 
   switch (function)
   {
@@ -32,12 +34,12 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_011);
         break;
       }
-      
+
      case CPLUGIN_PROTOCOL_SEND:
       {
 
         String postDataStr = "";
-        
+
         switch (event->sensorType)
         {
           case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
@@ -122,11 +124,11 @@ boolean Blynk_get(String command,float *data )
   sprintf_P(requete, PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),SecuritySettings.ControllerPassword,command_char , host   );
   addLog(LOG_LEVEL_DEBUG, requete);
   client.print(requete);
-  
+
   unsigned long timer = millis() + 200;
   while (!client.available() && millis() < timer)
     delay(1);
-    
+
   // Read all the lines of the reply from server and print them to Serial
 
   while (client.available()) {
@@ -163,7 +165,7 @@ boolean Blynk_get(String command,float *data )
       addLog(LOG_LEVEL_DEBUG, log);
     }
 
-    
+
   }
   strcpy_P(log, PSTR("HTTP : closing connection"));
   addLog(LOG_LEVEL_DEBUG, log);
@@ -175,10 +177,9 @@ boolean Blynk_get(String command,float *data )
   timer = millis() + Settings.MessageDelay;
   while (millis() < timer)
               backgroundtasks();
-  
+
   return success;
 }
 
 
-
-
+#endif
