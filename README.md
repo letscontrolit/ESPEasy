@@ -32,10 +32,6 @@ I've already tried to make some improvements to speed up developement:
  * Ideally we can now gradually move most play-ground plugins over to the main tree and add them to the approriate plugin set.
  * I would love to use different versioning numbering from now on, perhaps sematic versioning (http://semver.org), starting with 1.x.x since our internal plugin API is already stable.
  
+Currently i'm merging the open pull requests and try to give some feedback on them if neccesary.
  
 Edwin
- 
- 
-
-Edwin
-
