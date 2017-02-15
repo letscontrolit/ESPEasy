@@ -11,7 +11,7 @@ Wiki: http://www.esp8266.nu
 Forum: http://www.esp8266.nu/forum
 
 
-## Temporary fork / new release release management
+## Temporary fork / new release management
 
 Hi, i'm trying to continue maintenance on ESPeasy and i've created a temporary fork. (until I get access to the main repository after which i'll move everything back over there)
 
