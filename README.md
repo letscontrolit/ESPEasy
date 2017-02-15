@@ -34,4 +34,6 @@ I've already tried to make some improvements to speed up developement:
  
 Currently i'm merging the open pull requests and try to give some feedback on them if neccesary.
  
+Releases are here: https://github.com/psy0rz/ESPEasy-platformio/releases
+ 
 Edwin
