@@ -5,7 +5,7 @@
 //#######################################################################################################
 
 #define CPLUGIN_011
-#define CPLUGIN_ID_011         1
+#define CPLUGIN_ID_011         11
 #define CPLUGIN_NAME_011       "Blynk HTTP [TESTING]"
 
 
