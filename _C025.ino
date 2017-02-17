@@ -178,8 +178,8 @@ boolean HTTPSend025(struct EventStruct *event, byte varIndex, float value, unsig
   String payload = String(customConfig.HttpMethod) + " /";
   payload += customConfig.HttpUri;
   payload += String(" HTTP/1.1\r\n") +
-             "Host: " + hostName + "\r\n" +
-             "Connection: close\r\n\r\n";
+             "Host: " + hostName + ":" +  Settings.ControllerPort + "\r\n" +
+             "Connection: close\r\n";
 
   if (strlen(customConfig.HttpHeader) > 0)
     payload += customConfig.HttpHeader;
@@ -205,7 +205,7 @@ boolean HTTPSend025(struct EventStruct *event, byte varIndex, float value, unsig
     String line = client.readStringUntil('\n');
     line.toCharArray(log, 80);
     addLog(LOG_LEVEL_DEBUG_MORE, log);
-    if (line.substring(0, 15) == "HTTP/1.1 200 OK")
+    if (line.substring(0, 10) == "HTTP/1.1 2")
     {
       strcpy_P(log, PSTR("HTTP : Succes!"));
       addLog(LOG_LEVEL_DEBUG, log);
