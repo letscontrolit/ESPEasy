@@ -59,40 +59,6 @@
 // lllh=strikecount-low/high (#) > A 16 bit integer holding the number of detected lightning strikes, low byte first
 // crc > poly 0x31, init 0xff, revin&revout, xorout 0x00. Like Maxim 1-wire but with a 0xff initvalue. Crc is calculated over bytes 1-22
 //
-// Add to ESPEasy around line 190:
-// ---------
-// #define SENSOR_TYPE_WIND                   21
-// ---------
-//
-// Add to _C001 and _C002 right before the end of the switch (event->sensorType) closing bracket }:
-// That is  around line 128 for _C001 and line 200 for _C002.
-// For _C001
-// ---------
-//          case (SENSOR_TYPE_WIND):
-//            url += F("&svalue=");
-//            url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-//            char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
-//            url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
-//            url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-//            url += ";";
-//            url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-//            url += ";0";
-//            break;
-// ---------
-// And for _C002
-// ---------
-//          case SENSOR_TYPE_WIND:
-//            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-//            char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
-//            values += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
-//            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-//            values += ";";
-//            values += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-//            values += ";0;0";
-//            values.toCharArray(str, 80);
-//            root["svalue"] =  str;
-//            break;
-// ---------
 
 // Events:
 //   None
@@ -101,8 +67,7 @@
 //   None
 
 // Current state / limitations:
-//    1.0 Initial release. The plugin needs additional lines in ESPEasy, _C001 and _C002 due to the
-//        restrictions in the current framework (148). All values are always visible although sometimes
+//    1.0 Initial release. All values are always visible although sometimes
 //        only one is really used with domoticz.
 //        Needs work on a sliding window for the lightning detection.
 //        Exploits the fact that event->sensorType is not reset after PLUGIN_READ.

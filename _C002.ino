@@ -28,7 +28,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_002);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         strcpy_P(Settings.MQTTsubscribe, PSTR("domoticz/out"));
@@ -60,7 +60,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             nvalue = nvaluealt;
           if ((int)switchtype == 0)
             switchtype = "?";
-  
+
           for (byte x = 0; x < TASKS_MAX; x++)
           {
             if (Settings.TaskDeviceID[x] == idx)
@@ -150,7 +150,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             values.toCharArray(str, 80);
             root["svalue"] =  str;
-            break;            
+            break;
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             root["nvalue"] = 0;
             values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
@@ -194,6 +194,21 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             else
               root["Set%20Level"] = UserVar[event->BaseVarIndex];
             break;
+
+#ifdef PLUGIN_186
+          case SENSOR_TYPE_WIND:
+            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
+            values += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
+            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            values += ";";
+            values += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+            values += ";0;0";
+            values.toCharArray(str, 80);
+            root["svalue"] =  str;
+            break;
+#endif
+
         }
 
         char json[256];
@@ -222,4 +237,3 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
