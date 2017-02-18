@@ -27,7 +27,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_001);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         String authHeader = "";
@@ -39,7 +39,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           auth += SecuritySettings.ControllerPassword;
           authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
         }
-        
+
         char log[80];
         boolean success = false;
         char host[20];
@@ -80,7 +80,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
             url += ";";
             url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            break;            
+            break;
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             url += F("&svalue=");
             url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
@@ -128,6 +128,19 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += UserVar[event->BaseVarIndex];
             }
             break;
+
+#ifdef PLUGIN_186
+            case (SENSOR_TYPE_WIND):
+              url += F("&svalue=");
+              url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
+              url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
+              url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              url += ";0";
+              break;
+#endif
         }
 
         url.toCharArray(log, 80);
@@ -135,7 +148,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
         // This will send the request to the server
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" + authHeader + 
+                     "Host: " + host + "\r\n" + authHeader +
                      "Connection: close\r\n\r\n");
 
         unsigned long timer = millis() + 200;
@@ -178,7 +191,7 @@ int humStat(int hum){
     lHumStat = 1;
   }else{
     lHumStat = 3;
-  
+
   }
-  return lHumStat;  
+  return lHumStat;
 }

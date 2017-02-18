@@ -187,6 +187,7 @@
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
+#define SENSOR_TYPE_WIND                   21
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
