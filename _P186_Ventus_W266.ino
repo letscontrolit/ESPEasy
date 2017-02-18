@@ -23,7 +23,7 @@
 
 // The Ventus W266 remote has the following sensor outputs:
 // Humidity, Temperature, Wind direction, Wind avarage, Wind gust, Rainfall, UV and Lightning. That is
-// more than te maximum of 4 values per device for espeasy. The plugins functionality is therefore 
+// more than te maximum of 4 values per device for espeasy. The plugins functionality is therefore
 // devided per sensorgroup. To read all the sensor data you need to run 6 instances of the plugin.
 
 // The plugin can (and should) be used more then one time, however only one plugin instance can be
@@ -51,7 +51,7 @@
 // hh=humidity (bcd) > Humidity is bcd encoded
 // tlth=temperature-low/temphigh (*10) > Temperature is stored as a 16bit integer holding the temperature in Celcius * 10 but low byte first.
 // b=battery (1=low) > This byte is 00 but 01 when the battery of the transmitter runs low
-// wb=bearing (cw0-15) > The windbearing in 16 clockwise steps (0 = north, 4 = east, 8 = south and C = west) 
+// wb=bearing (cw0-15) > The windbearing in 16 clockwise steps (0 = north, 4 = east, 8 = south and C = west)
 // alah=windaverage-low/high (m/s/2) > A 16 bit int holding the wind avarage in m/s * 2, low byte first
 // rlrh=rainfall-low/high (1/4mm) > A 16 bit int holding the wind gust in m/s * 2, low byte first
 // uv=uvindex (*10) > The UV value * 10
@@ -72,7 +72,7 @@
 //            url += F("&svalue=");
 //            url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
 //            char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
-//            url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];  
+//            url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
 //            url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
 //            url += ";";
 //            url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
@@ -84,7 +84,7 @@
 //          case SENSOR_TYPE_WIND:
 //            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
 //            char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
-//            values += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];  
+//            values += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
 //            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
 //            values += ";";
 //            values += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
@@ -107,17 +107,17 @@
 //        Needs work on a sliding window for the lightning detection.
 //        Exploits the fact that event->sensorType is not reset after PLUGIN_READ.
 
-// This plugin is based on the work of the Plugin 199: RF KaKu receiver/sender and Plugin 026: Analog. 
-// CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special 
+// This plugin is based on the work of the Plugin 199: RF KaKu receiver/sender and Plugin 026: Analog.
+// CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
 #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_186_DEBUG            true                        // Shows recieved frames and crc in log@INFO
- 
+
 #define PLUGIN_186                                              // Mandatory framework constants
 #define PLUGIN_ID_186               186
-#define PLUGIN_NAME_186             "Ventus W266 [Testing]"
+#define PLUGIN_NAME_186             "Ventus W266 [TESTING]"
 #define PLUGIN_VALUENAME1_186       ""
 #define PLUGIN_VALUENAME2_186       ""
 #define PLUGIN_VALUENAME3_186       ""
@@ -155,7 +155,7 @@ void Plugin_186_ISR_SCLK() ICACHE_RAM_ATTR;
 boolean Plugin_186(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  
+
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -168,7 +168,7 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].ValueCount = 3;                     
+        Device[deviceCount].ValueCount = 3;
         break;
       }
 
@@ -183,11 +183,11 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
         options[3] = F("UV");
         options[4] = F("Lightning strikes");
         options[5] = F("Lightning distance");
-        
+
         options[6] = F("Unknown 1, byte 6");
         options[7] = F("Unknown 2, byte 16");
         options[8] = F("Unknown 3, byte 19");
-        
+
         int optionValues[nrchoices];
         for (byte x = 0; x < nrchoices; x++) {
           optionValues[x] = x;
@@ -221,62 +221,62 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
           {
             string += F("<TR><TD><B>Be sure you only have 1 main plugin!</B></TD>");
             string += F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals");
-            string += F("<BR>Value 3: not used</TD>");         
+            string += F("<BR>Value 3: not used</TD>");
             break;
           }
           case (1):
           {
             string += F("<TR><TD>Value 1: Direction, 0 decimals<BR>");
-            string += F("Value 2: Average, 1 decimal<Br>Value 3: Gust, 1 decimal</TD>");                     
+            string += F("Value 2: Average, 1 decimal<Br>Value 3: Gust, 1 decimal</TD>");
             break;
           }
           case (2):
           {
-            string += F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm");                     
-            string += F("<BR>Value 3: not used</TD>");         
+            string += F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm");
+            string += F("<BR>Value 3: not used</TD>");
             break;
           }
           case (3):
           {
-            string += F("<TR><TD>Value 1: UV, 1 decimal");                     
-            string += F("<BR>Values 2, 3</TD>");         
+            string += F("<TR><TD>Value 1: UV, 1 decimal");
+            string += F("<BR>Values 2, 3</TD>");
             break;
           }
           case (4):
           {
             string += F("<TR><TD>Value 1: Strikes this hour, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");                     
+            string += F("<BR>Values 2, 3: not used</TD>");
             break;
           }
           case (5):
           {
             string += F("<TR><TD>Value 1: Distance in km, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");                     
+            string += F("<BR>Values 2, 3: not used</TD>");
             break;
           }
           case (6):
           {
             string += F("<TR><TD>Value 1: Batterybyte, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>"); 
+            string += F("<BR>Values 2, 3: not used</TD>");
             break;
           }
           case (7):
           {
             string += F("<TR><TD>Value 1: Last rainbyte, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");                     
+            string += F("<BR>Values 2, 3: not used</TD>");
             break;
           }
           case (8):
           {
             string += F("<TR><TD>Value 1: Last lightningbyte, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>"); 
+            string += F("<BR>Values 2, 3: not used</TD>");
             break;
           }
         }
 
         success = true;
         break;
-      }    
+      }
 
     case PLUGIN_WEBFORM_SAVE:
       {
@@ -295,7 +295,7 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+
     case PLUGIN_GET_DEVICENAME:
       {
         string = F(PLUGIN_NAME_186);
@@ -344,7 +344,7 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
       {
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0) {
-          if (Plugin_186_newData) {                                           
+          if (Plugin_186_newData) {
             uint8_t crc = 0xff;                                             // init = 0xff
             char data; // CRC = MAXIM with modified init: poly 0x31, init 0xff, refin 1; refout 1, xorout 0x00
             // Copy recieved data to buffer and check CRC
@@ -400,8 +400,8 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
         }
         success = true;
         break;
-      }    
-        
+      }
+
     case PLUGIN_READ:
       {
         if (Plugin_186_databuffer[0] == Plugin_186_MagicByte) // buffer[0] should be the MagicByte if valid
@@ -411,7 +411,7 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
           switch (choice)
           {
             case (0):
-            { 
+            {
               int myTemp = int((Plugin_186_databuffer[5] * 256) + Plugin_186_databuffer[4]);
               if (myTemp > 0x8000) { myTemp |= 0xffff0000; }                    // int @ esp8266 = 32 bits!
               float temperature = float(myTemp) / 10.0; // Temperature
@@ -478,7 +478,7 @@ boolean Plugin_186(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = float(Plugin_186_strikesph);
               break;
             }
-            case (5): 
+            case (5):
             {
               float distance = float(-1);
               if (Plugin_186_databuffer[18] != 0x3F )
