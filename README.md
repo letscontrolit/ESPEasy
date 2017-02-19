@@ -9,13 +9,13 @@ Wiki: http://www.esp8266.nu
 Forum: http://www.esp8266.nu/forum
 
 
-## Temporary fork / new release management
+## New release management
 
 Hi, i'm trying to continue maintenance on ESPeasy.
 
 I've already tried to make some improvements to speed up developement: https://github.com/letscontrolit/ESPEasy-platformio
 
- * I've created a simple wrapper repository to allow building via platformio, its here: 
+ * I've created a simple wrapper repository to allow building via platformio.
  * The git-tag and version are stored in the firmware.bin file and viewable via the webgui.
  * There are now multiple plugin sets to speed up testing and releasing of new plugins:
    * Minimal: Only contains base plugins until this point, to keep firmware size below 512k for smaller ESP8266's.
@@ -32,6 +32,4 @@ I've already tried to make some improvements to speed up developement: https://g
  
 Currently i'm merging the open pull requests and try to give some feedback on them if neccesary.
  
-
- 
-Edwin
+Edwin (psy0rz)
