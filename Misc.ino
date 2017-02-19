@@ -23,6 +23,9 @@ byte getValueCountFromSensorType(byte sensorType)
       break;
     case SENSOR_TYPE_TEMP_HUM_BARO:
     case SENSOR_TYPE_TRIPLE:
+#ifdef PLUGIN_186
+    case SENSOR_TYPE_WIND:
+#endif
       valueCount = 3;
       break;
     case SENSOR_TYPE_QUAD:
