@@ -344,7 +344,7 @@ void sendSysInfoUDP(byte repeats)
   // 2 byte build
   // 25 char name
   // 1 byte node type id
-  
+
   // send my info to the world...
   strcpy_P(log, PSTR("UDP  : Send Sysinfo message"));
   addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -429,7 +429,7 @@ void SSDP_schema(WiFiClient client) {
   ssdp_schema += F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
                    "<modelNumber>");
-  ssdp_schema += Settings.Build;
+  ssdp_schema += BUILD_GIT;
   ssdp_schema += F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"
@@ -704,4 +704,3 @@ void SSDP_update() {
   }
 
 }
-

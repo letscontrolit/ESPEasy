@@ -160,10 +160,8 @@ void handle_root() {
     reply += F("<TR><TD>Unit:<TD>");
     reply += Settings.Unit;
 
-    reply += F("<TD><TD>Build:<TD>");
-    reply += BUILD;
-    reply += F(" ");
-    reply += F(BUILD_NOTES);
+    reply += F("<TD><TD>GIT version:<TD>");
+    reply += BUILD_GIT;
 
     reply += F("<TR><TD>System Time:<TD>");
     if (Settings.UseNTP)
@@ -2932,13 +2930,13 @@ void handle_sysinfo() {
     {
       case 1:
         reply += F("802.11B");
-        break;        
+        break;
       case 2:
         reply += F("802.11G");
-        break;        
+        break;
       case 3:
         reply += F("802.11N");
-        break;        
+        break;
     }
   }
 
@@ -2955,6 +2953,10 @@ void handle_sysinfo() {
   reply += BUILD;
   reply += F(" ");
   reply += F(BUILD_NOTES);
+
+  reply += F("<TR><TD>GIT version:<TD>");
+  reply += BUILD_GIT;
+
 
   reply += F("<TR><TD>Core Version:<TD>");
   reply += ESP.getCoreVersion();
@@ -3037,4 +3039,3 @@ String URLEncode(const char* msg)
   }
   return encodedMsg;
 }
-

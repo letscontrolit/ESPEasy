@@ -114,7 +114,7 @@
 // ********************************************************************************
 #define ESP_PROJECT_PID           2016110801L
 #define VERSION                             2
-#define BUILD                             148
+#define BUILD                           20000 // git version 2.0.0
 #define BUILD_NOTES                 " - Mega"
 
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
@@ -346,7 +346,7 @@ struct SettingsStruct
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
-  boolean       InitSPI; 
+  boolean       InitSPI;
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX];
   byte          TaskDeviceNumber[TASKS_MAX];
@@ -636,8 +636,8 @@ void setup()
     if (Settings.Build != BUILD)
       BuildFixes();
 
-    String log = F("\nINIT : Booting Build nr:");
-    log += BUILD;
+    String log = F("\nINIT : Booting version: ");
+    log += BUILD_GIT;
     addLog(LOG_LEVEL_INFO, log);
     log = F("INIT : Free RAM:");
     log += FreeMem();
@@ -650,7 +650,7 @@ void setup()
     WifiAPconfig();
     if (!WifiConnect(true,3))
       WifiConnect(false,3);
-    
+
     hardwareInit();
     PluginInit();
     CPluginInit();
@@ -696,7 +696,7 @@ void setup()
       RTC.flashDayCounter=0;
       RTC.flashCounter=0;
       saveToRTC();
- 
+
       // cold boot situation
       if (lastBootCause == 0) // only set this if not set earlier during boot stage.
         lastBootCause = BOOT_CAUSE_COLD_BOOT;
@@ -711,7 +711,7 @@ void setup()
       for (byte x = 0; x < TASKS_MAX; x++)
         if (Settings.TaskDeviceTimer[x] !=0)
           timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
-      
+
       timer = millis() + 30000; // startup delay 30 sec
     }
     else
@@ -836,7 +836,7 @@ void runOncePerSecond()
     String log = F("SYS  : Reset 24h counters");
     addLog(LOG_LEVEL_INFO, log);
   }
-  
+
   timer1s = millis() + 1000;
 
   checkSensors();
@@ -929,7 +929,7 @@ void runEach30Seconds()
     loopCounterMax = loopCounterLast;
 
   WifiCheck();
-  
+
 }
 
 
@@ -1009,7 +1009,7 @@ void SensorSendTask(byte TaskIndex)
     if (success)
     {
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      {  
+      {
         if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
         {
           String spreValue = String(preValue[varNr]);
@@ -1131,4 +1131,3 @@ void backgroundtasks()
   checkUDP();
   yield();
 }
-
