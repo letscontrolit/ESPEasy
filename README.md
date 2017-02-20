@@ -1,11 +1,7 @@
-# ESPEasy
-Easy MultiSensor device based on ESP8266
+# ESPEasy (mega branch)
 
-This is where development takes place. Beware that latest versions may be unstable.
+This is the development branch for the next upcoming release (2.0.0). This is also known as ESPEasyMega.
 
-Stable versions including libraries are currently on SoureForge:
+Binary development releases are here: https://github.com/letscontrolit/ESPEasy-platformio/releases
 
-http://sourceforge.net/projects/espeasy/
-
-Wiki: http://www.esp8266.nu
-Forum: http://www.esp8266.nu/forum
+More details on the forum: http://www.letscontrolit.com/forum/viewtopic.php?f=18&t=2257&p=13600#p13600
