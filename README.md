@@ -1,6 +1,6 @@
 # ESPEasy (mega branch)
 
-This is the development branch for the next upcoming release (2.0.0). This was formally known as ESPEasyMega.
+This is the development branch for the next upcoming release (2.0.0). This is also known as ESPEasyMega.
 
 Binary development releases are here: https://github.com/letscontrolit/ESPEasy-platformio/releases
 
