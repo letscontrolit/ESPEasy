@@ -23,7 +23,7 @@
 
 // Instantiate display here - does not work to do this within the INIT call
 
-SSD1306 *display;
+SSD1306 *display=NULL;
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
