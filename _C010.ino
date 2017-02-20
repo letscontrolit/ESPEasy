@@ -20,6 +20,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = false;
         Protocol[protocolCount].defaultPort = 514;
+        Protocol[protocolCount].usesID = false;
         break;
       }
 
@@ -31,7 +32,8 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
-        strcpy_P(Settings.MQTTpublish, PSTR("%sysname%_%tskname%_%valname%=%value%"));
+        event->String1 = "";
+        event->String2 = F("%sysname%_%tskname%_%valname%=%value%");
         break;
       }
 
@@ -64,12 +66,15 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
 {
+  ControllerSettingsStruct ControllerSettings;
+  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
   char log[80];
   boolean success = false;
   char host[20];
-  sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-  sprintf_P(log, PSTR("%s%s using port %u"), "UDP  : sending to ", host, Settings.ControllerPort);
+  sprintf_P(log, PSTR("%s%s using port %u"), "UDP  : sending to ", host, ControllerSettings.Port);
   addLog(LOG_LEVEL_DEBUG, log);
 
   statusLED(true);
@@ -78,18 +83,18 @@ boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigne
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
   String msg = "";
-  msg += Settings.MQTTpublish;
-  msg.replace("%sysname%", Settings.Name);
-  msg.replace("%tskname%", ExtraTaskSettings.TaskDeviceName);
-  msg.replace("%id%", String(event->idx));
-  msg.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[varIndex]);
+  msg += ControllerSettings.Publish;
+  msg.replace(F("%sysname%"), Settings.Name);
+  msg.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
+  msg.replace(F("%id%"), String(event->idx));
+  msg.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[varIndex]);
   if (longValue)
-    msg.replace("%value%", String(longValue));
+    msg.replace(F("%value%"), String(longValue));
   else
-    msg.replace("%value%", toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
+    msg.replace(F("%value%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
 
-  IPAddress IP(Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
-  portUDP.beginPacket(IP, Settings.ControllerPort);
+  IPAddress IP(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
+  portUDP.beginPacket(IP, ControllerSettings.Port);
   portUDP.write(msg.c_str());
   portUDP.endPacket();
 

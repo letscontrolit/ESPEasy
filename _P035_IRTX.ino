@@ -39,13 +39,15 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (Plugin_035_irSender == 0 && irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, "INIT: IR TX");
+          String log = F("INIT: IR TX");
+          addLog(LOG_LEVEL_INFO, log);
           Plugin_035_irSender = new IRsend(irPin);
           Plugin_035_irSender->begin(); // Start the sender
         }
         if (Plugin_035_irSender != 0 && irPin == -1)
         {
-          addLog(LOG_LEVEL_INFO, "INIT: IR TX Removed");
+          String log = F("INIT: IR TX Removed");
+          addLog(LOG_LEVEL_INFO, log);
           delete Plugin_035_irSender;
           Plugin_035_irSender = 0;
         }
@@ -72,20 +74,21 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         if (GetArgv(command, TmpStr1, 3)) IrCode = strtoul(TmpStr1, NULL, 16); //(long) TmpStr1
         if (GetArgv(command, TmpStr1, 4)) IrBits = str2int(TmpStr1);
 
-        if (tmpString.equalsIgnoreCase("IRSEND") && Plugin_035_irSender != 0)
+        if (tmpString.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
         {
           success = true;
           if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
 
-          if (IrType.equalsIgnoreCase("NEC")) Plugin_035_irSender->sendNEC(IrCode, IrBits);
-          if (IrType.equalsIgnoreCase("JVC")) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
-          if (IrType.equalsIgnoreCase("RC5")) Plugin_035_irSender->sendRC5(IrCode, IrBits);
-          if (IrType.equalsIgnoreCase("RC6")) Plugin_035_irSender->sendRC6(IrCode, IrBits);
-          if (IrType.equalsIgnoreCase("SAMSUNG")) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
-          if (IrType.equalsIgnoreCase("SONY")) Plugin_035_irSender->sendSony(IrCode, IrBits);
-          if (IrType.equalsIgnoreCase("PANASONIC")) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
+          if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode, IrBits);
+          if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
+          if (IrType.equalsIgnoreCase(F("RC5"))) Plugin_035_irSender->sendRC5(IrCode, IrBits);
+          if (IrType.equalsIgnoreCase(F("RC6"))) Plugin_035_irSender->sendRC6(IrCode, IrBits);
+          if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
+          if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode, IrBits);
+          if (IrType.equalsIgnoreCase(F("PANASONIC"))) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
 
-          addLog(LOG_LEVEL_INFO, "IR Code Sent");
+          String log = F("IRTX :IR Code Sent");
+          addLog(LOG_LEVEL_INFO, log);
           if (printToWeb)
           {
             printWebString += F("IR Code Sent ");

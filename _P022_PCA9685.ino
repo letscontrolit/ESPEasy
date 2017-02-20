@@ -110,11 +110,11 @@ boolean Plugin_022_Write(byte Par1, int Par2)
 
 void Plugin_022_initialize()
 {
-          // default mode is open drain ouput, drive leds connected to VCC
-          Plugin_022_writeRegister(PCA9685_MODE1, (byte)0x01); // reset the device
-          delay(1);
-          Plugin_022_writeRegister(PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
-          Plugin_022_writeRegister(PCA9685_MODE2, (byte)0x10); // set to output
-          Plugin_022_init = true;
+  // default mode is open drain ouput, drive leds connected to VCC
+  Plugin_022_writeRegister(PCA9685_MODE1, (byte)0x01); // reset the device
+  delay(1);
+  Plugin_022_writeRegister(PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
+  Plugin_022_writeRegister(PCA9685_MODE2, (byte)0x10); // set to output
+  Plugin_022_init = true;
 }
 

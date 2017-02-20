@@ -68,11 +68,28 @@ void hardwareInit()
   {
     SPI.setHwCs(false);
     SPI.begin();
-    addLog(LOG_LEVEL_INFO, (char*)"INIT : SPI Init (without CS)");
+    String log = F("INIT : SPI Init (without CS)");
+    addLog(LOG_LEVEL_INFO, log);
   }
   else
   {
-    addLog(LOG_LEVEL_INFO, (char*)"INIT : SPI not enabled");
+    String log = F("INIT : SPI not enabled");
+    addLog(LOG_LEVEL_INFO, log);
   }
+
+  if (Settings.Pin_sd_cs > 0)
+  {
+    if (SD.begin(Settings.Pin_sd_cs))
+    {
+      String log = F("SD   : Init OK");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    else
+    {
+      String log = F("SD   : Init failed");
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+  }
+
 }
 

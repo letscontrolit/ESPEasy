@@ -67,15 +67,31 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_021_task");
-        String plugin2 = WebServer.arg("plugin_021_value");
-        String plugin3 = WebServer.arg("plugin_021_setvalue");
-        String plugin4 = WebServer.arg("plugin_021_hyst");
+        String plugin1 = WebServer.arg(F("plugin_021_task"));
+        String plugin2 = WebServer.arg(F("plugin_021_value"));
+        String plugin3 = WebServer.arg(F("plugin_021_setvalue"));
+        String plugin4 = WebServer.arg(F("plugin_021_hyst"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = plugin3.toFloat();
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = plugin4.toFloat();
         success = true;
+        break;
+      }
+
+    case PLUGIN_REMOTE_CONFIG:
+      {
+        Serial.print("levelplugin: ");
+        Serial.println(string);
+        String command = parseString(string, 1);
+        if (command == F("setlevel"))
+        {
+          String value = parseString(string, 2);
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = value.toFloat();
+          Serial.println(value);
+          SaveSettings();
+          success = true;
+        }
         break;
       }
 

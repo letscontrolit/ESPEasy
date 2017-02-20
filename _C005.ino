@@ -20,6 +20,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 1883;
+        Protocol[protocolCount].usesID = false;
         break;
       }
 
@@ -31,8 +32,8 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
-        strcpy_P(Settings.MQTTsubscribe, PSTR("/%sysname%/#"));
-        strcpy_P(Settings.MQTTpublish, PSTR("/%sysname%/%tskname%/%valname%"));
+        event->String1 = F("/%sysname%/#");
+        event->String2 = F("/%sysname%/%tskname%/%valname%");
         break;
       }
 
@@ -72,22 +73,28 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         String command = parseString(cmd, 1);
         if (command == F("event"))
           eventBuffer = cmd.substring(6);
+        else if
+          (PluginCall(PLUGIN_WRITE, &TempEvent, cmd));
         else
-          PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
+          remoteConfig(&TempEvent, cmd);
+
         break;
       }
 
     case CPLUGIN_PROTOCOL_SEND:
       {
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
         statusLED(true);
 
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        String pubname = Settings.MQTTpublish;
-        pubname.replace("%sysname%", Settings.Name);
-        pubname.replace("%tskname%", ExtraTaskSettings.TaskDeviceName);
-        pubname.replace("%id%", String(event->idx));
+        String pubname = ControllerSettings.Publish;
+        pubname.replace(F("%sysname%"), Settings.Name);
+        pubname.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
+        pubname.replace(F("%id%"), String(event->idx));
 
         String value = "";
         byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
@@ -95,12 +102,17 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
-          tmppubname.replace("%valname%", ExtraTaskSettings.TaskDeviceValueNames[x]);
+          tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           if (event->sensorType == SENSOR_TYPE_LONG)
             value = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           else
             value = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
           MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+          String log = F("MQTT : ");
+          log += tmppubname;
+          log += " ";
+          log += value;
+          addLog(LOG_LEVEL_DEBUG, log);
         }
         break;
       }

@@ -104,9 +104,6 @@
 
 #define UNIT                0
 
-#define FEATURE_TIME                     true
-#define FEATURE_SSDP                     true
-
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
@@ -115,19 +112,41 @@
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
-#define ESP_PROJECT_PID           2015050101L
-#define ESP_EASY
-#define VERSION                             9
+#define ESP_PROJECT_PID           2016110801L
+#define VERSION                             2
 #define BUILD                             148
-#define BUILD_NOTES                        ""
-#define FEATURE_SPIFFS                  false
+#define BUILD_NOTES                 " - Mega"
+
+#define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
-#define NODE_TYPE_ID                       NODE_TYPE_ID_ESP_EASY_STD
+#define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
+
+#define PLUGIN_INIT_ALL                     1
+#define PLUGIN_INIT                         2
+#define PLUGIN_READ                         3
+#define PLUGIN_ONCE_A_SECOND                4
+#define PLUGIN_TEN_PER_SECOND               5
+#define PLUGIN_DEVICE_ADD                   6
+#define PLUGIN_EVENTLIST_ADD                7
+#define PLUGIN_WEBFORM_SAVE                 8
+#define PLUGIN_WEBFORM_LOAD                 9
+#define PLUGIN_WEBFORM_SHOW_VALUES         10
+#define PLUGIN_GET_DEVICENAME              11
+#define PLUGIN_GET_DEVICEVALUENAMES        12
+#define PLUGIN_WRITE                       13
+#define PLUGIN_EVENT_OUT                   14
+#define PLUGIN_WEBFORM_SHOW_CONFIG         15
+#define PLUGIN_SERIAL_IN                   16
+#define PLUGIN_UDP_IN                      17
+#define PLUGIN_CLOCK_IN                    18
+#define PLUGIN_TIMER_IN                    19
+#define PLUGIN_FIFTY_PER_SECOND            20
+#define PLUGIN_REMOTE_CONFIG               21
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -136,6 +155,13 @@
 #define CPLUGIN_GET_DEVICENAME              5
 #define CPLUGIN_WEBFORM_SAVE                6
 #define CPLUGIN_WEBFORM_LOAD                7
+
+#define NPLUGIN_PROTOCOL_ADD                1
+#define NPLUGIN_GET_DEVICENAME              2
+#define NPLUGIN_WEBFORM_SAVE                3
+#define NPLUGIN_WEBFORM_LOAD                4
+#define NPLUGIN_WRITE                       5
+#define NPLUGIN_NOTIFY                      6
 
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
@@ -146,7 +172,9 @@
 #define CMD_WIFI_DISCONNECT               135
 
 #define DEVICES_MAX                        64
-#define TASKS_MAX                          12
+#define TASKS_MAX                          12 // max 12!
+#define CONTROLLER_MAX                      3 // max 4!
+#define NOTIFICATION_MAX                    3 // max 4!
 #define VARS_PER_TASK                       4
 #define PLUGIN_MAX                         64
 #define PLUGIN_CONFIGVAR_MAX                8
@@ -154,6 +182,7 @@
 #define PLUGIN_CONFIGLONGVAR_MAX            4
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
 #define CPLUGIN_MAX                        16
+#define NPLUGIN_MAX                         4
 #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
 #define RULES_TIMER_MAX                     8
 #define SYSTEM_TIMER_MAX                    8
@@ -161,6 +190,7 @@
 #define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
+#define RULESETS_MAX                        4
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
@@ -188,26 +218,6 @@
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
 
-#define PLUGIN_INIT_ALL                     1
-#define PLUGIN_INIT                         2
-#define PLUGIN_READ                         3
-#define PLUGIN_ONCE_A_SECOND                4
-#define PLUGIN_TEN_PER_SECOND               5
-#define PLUGIN_DEVICE_ADD                   6
-#define PLUGIN_EVENTLIST_ADD                7
-#define PLUGIN_WEBFORM_SAVE                 8
-#define PLUGIN_WEBFORM_LOAD                 9
-#define PLUGIN_WEBFORM_SHOW_VALUES         10
-#define PLUGIN_GET_DEVICENAME              11
-#define PLUGIN_GET_DEVICEVALUENAMES        12
-#define PLUGIN_WRITE                       13
-#define PLUGIN_EVENT_OUT                   14
-#define PLUGIN_WEBFORM_SHOW_CONFIG         15
-#define PLUGIN_SERIAL_IN                   16
-#define PLUGIN_UDP_IN                      17
-#define PLUGIN_CLOCK_IN                    18
-#define PLUGIN_TIMER_IN                    19
-
 #define VALUE_SOURCE_SYSTEM                 1
 #define VALUE_SOURCE_SERIAL                 2
 #define VALUE_SOURCE_HTTP                   3
@@ -217,6 +227,15 @@
 #define BOOT_CAUSE_MANUAL_REBOOT            0
 #define BOOT_CAUSE_COLD_BOOT                1
 #define BOOT_CAUSE_EXT_WD                  10
+
+#define DAT_TASKS_SIZE                   2048
+#define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_CONTROLLER_SIZE              1024
+#define DAT_NOTIFICATION_SIZE            1024
+
+#define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
+#define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
+#define DAT_OFFSET_CUSTOMCONTROLLER     32768  // custom controller config = 4k, currently only one can use it.
 
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
@@ -228,9 +247,9 @@
 #include <ArduinoJson.h>
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
-#if FEATURE_SPIFFS
+#define FS_NO_GLOBALS
 #include <FS.h>
-#endif
+#include <SD.h>
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
 #include <base64.h>
@@ -267,7 +286,6 @@ ESP8266WebServer WebServer(80);
 // syslog stuff
 WiFiUDP portUDP;
 
-#define FLASH_EEPROM_SIZE 4096
 extern "C" {
 #include "spi_flash.h"
 }
@@ -280,9 +298,11 @@ struct SecurityStruct
 {
   char          WifiSSID[32];
   char          WifiKey[64];
+  char          WifiSSID2[32];
+  char          WifiKey2[64];
   char          WifiAPKey[64];
-  char          ControllerUser[26];
-  char          ControllerPassword[64];
+  char          ControllerUser[CONTROLLER_MAX][26];
+  char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
 } SecuritySettings;
 
@@ -290,65 +310,89 @@ struct SettingsStruct
 {
   unsigned long PID;
   int           Version;
-  byte          Unit;
-  byte          Controller_IP[4];
-  unsigned int  ControllerPort;
+  int16_t       Build;
+  byte          IP[4];
+  byte          Gateway[4];
+  byte          Subnet[4];
+  byte          DNS[4];
   byte          IP_Octet;
+  byte          Unit;
+  char          Name[26];
   char          NTPHost[64];
   unsigned long Delay;
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
+  int8_t        Pin_status_led;
+  int8_t        Pin_sd_cs;
+  int8_t        PinBootStates[17];
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
-  byte          Protocol;
-  byte          IP[4];
-  byte          Gateway[4];
-  byte          Subnet[4];
-  char          Name[26];
   byte          SyslogLevel;
   byte          SerialLogLevel;
   byte          WebLogLevel;
+  byte          SDLogLevel;
   unsigned long BaudRate;
   unsigned long MessageDelay;
-  byte          TaskDeviceNumber[TASKS_MAX];
-  unsigned int  TaskDeviceID[TASKS_MAX];
-  int8_t        TaskDevicePin1[TASKS_MAX];
-  int8_t        TaskDevicePin2[TASKS_MAX];
-  byte          TaskDevicePort[TASKS_MAX];
-  boolean       TaskDevicePin1PullUp[TASKS_MAX];
-  int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
-  boolean       TaskDevicePin1Inversed[TASKS_MAX];
   byte          deepSleep;
-  char          MQTTpublish[81];
-  char          MQTTsubscribe[81];
   boolean       CustomCSS;
-  float         TaskDevicePluginConfigFloat[TASKS_MAX][PLUGIN_CONFIGFLOATVAR_MAX];
-  long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
-  boolean       TaskDeviceSendData[TASKS_MAX];
-  int16_t       Build;
-  byte          DNS[4];
-  int8_t        TimeZone_OLD;
-  char          ControllerHostName[64];
-  boolean       UseNTP;
   boolean       DST;
   byte          WDI2CAddress;
-  boolean       TaskDeviceGlobalSync[TASKS_MAX];
-  int8_t        TaskDevicePin3[TASKS_MAX];
-  byte          TaskDeviceDataFeed[TASKS_MAX];
-  int8_t        PinBootStates[17];
-  byte          UseDNS;
   boolean       UseRules;
-  int8_t        Pin_status_led;
   boolean       UseSerial;
-  unsigned long TaskDeviceTimer[TASKS_MAX];
   boolean       UseSSDP;
+  boolean       UseNTP;
   unsigned long WireClockStretchLimit;
   boolean       GlobalSync;
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
   boolean       InitSPI; 
+  byte          Protocol[CONTROLLER_MAX];
+  byte          Notification[NOTIFICATION_MAX];
+  byte          TaskDeviceNumber[TASKS_MAX];
+  unsigned int  OLD_TaskDeviceID[TASKS_MAX];
+  int8_t        TaskDevicePin1[TASKS_MAX];
+  int8_t        TaskDevicePin2[TASKS_MAX];
+  int8_t        TaskDevicePin3[TASKS_MAX];
+  byte          TaskDevicePort[TASKS_MAX];
+  boolean       TaskDevicePin1PullUp[TASKS_MAX];
+  int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
+  boolean       TaskDevicePin1Inversed[TASKS_MAX];
+  float         TaskDevicePluginConfigFloat[TASKS_MAX][PLUGIN_CONFIGFLOATVAR_MAX];
+  long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
+  boolean       OLD_TaskDeviceSendData[TASKS_MAX];
+  boolean       TaskDeviceGlobalSync[TASKS_MAX];
+  byte          TaskDeviceDataFeed[TASKS_MAX];
+  unsigned long TaskDeviceTimer[TASKS_MAX];
+  boolean       TaskDeviceEnabled[TASKS_MAX];
+  boolean       ControllerEnabled[CONTROLLER_MAX];
+  boolean       NotificationEnabled[NOTIFICATION_MAX];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
+  boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
 } Settings;
+
+struct ControllerSettingsStruct
+{
+  boolean       UseDNS;
+  byte          IP[4];
+  unsigned int  Port;
+  char          HostName[65];
+  char          Publish[129];
+  char          Subscribe[129];
+};
+
+struct NotificationSettingsStruct
+{
+  char          Server[65];
+  unsigned int  Port;
+  char          Domain[65];
+  char          Sender[65];
+  char          Receiver[65];
+  char          Subject[129];
+  char          Body[513];
+  byte          Pin1;
+  byte          Pin2;
+};
 
 struct ExtraTaskSettingsStruct
 {
@@ -358,12 +402,17 @@ struct ExtraTaskSettingsStruct
   char    TaskDeviceValueNames[VARS_PER_TASK][41];
   long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
   byte    TaskDeviceValueDecimals[VARS_PER_TASK];
+  int16_t TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
 } ExtraTaskSettings;
 
 struct EventStruct
 {
   byte Source;
-  byte TaskIndex;
+  byte TaskIndex; // index position in TaskSettings array, 0-11
+  byte ControllerIndex; // index position in Settings.Controller, 0-3
+  byte ProtocolIndex; // index position in protocol array, depending on which controller plugins are loaded.
+  byte NotificationIndex; // index position in Settings.Notification, 0-3
+  byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
   byte BaseVarIndex;
   int idx;
   byte sensorType;
@@ -379,7 +428,7 @@ struct EventStruct
 struct LogStruct
 {
   unsigned long timeStamp;
-  String Message;
+  char* Message;
 } Logging[10];
 int logcount = -1;
 
@@ -409,7 +458,15 @@ struct ProtocolStruct
   boolean usesPassword;
   int defaultPort;
   boolean usesTemplate;
+  boolean usesID;
 } Protocol[CPLUGIN_MAX];
+
+struct NotificationStruct
+{
+  byte Number;
+  boolean usesMessaging;
+  byte usesGPIO;
+} Notification[NPLUGIN_MAX];
 
 struct NodeStruct
 {
@@ -443,8 +500,21 @@ struct pinStatesStruct
   uint16_t value;
 } pinStates[PINSTATE_TABLE_MAX];
 
+struct RTCStruct
+{
+  byte ID1;
+  byte ID2;
+  boolean valid;
+  byte factoryResetCounter;
+  byte deepSleepState;
+  byte rebootCounter;
+  byte flashDayCounter;
+  unsigned long flashCounter;
+} RTC;
+
 int deviceCount = -1;
 int protocolCount = -1;
+int notificationCount = -1;
 
 boolean printToWeb = false;
 String printWebString = "";
@@ -456,6 +526,7 @@ unsigned long RulesTimer[RULES_TIMER_MAX];
 unsigned long timerSensor[TASKS_MAX];
 unsigned long timer;
 unsigned long timer100ms;
+unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
 unsigned long lastSend;
@@ -476,8 +547,11 @@ int WebLoggedInTimer = 300;
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte Plugin_id[PLUGIN_MAX];
 
-boolean (*CPlugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte CPlugin_id[PLUGIN_MAX];
+boolean (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
+byte CPlugin_id[CPLUGIN_MAX];
+
+boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
+byte NPlugin_id[NPLUGIN_MAX];
 
 String dummyString = "";
 
@@ -493,31 +567,44 @@ unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
 
-unsigned long flashWrites = 0;
+unsigned long dailyResetCounter = 0;
 
 String eventBuffer = "";
+
+uint16_t lowestRAM = 0;
+byte lowestRAMid=0;
+/*
+1 savetoflash - obsolete
+2 loadfrom flash - obsolete
+3 zerofillflash - obsolete
+4 rulesprocessing
+5 handle_download
+6 handle_css
+7 handlefileupload
+8 handle_rules
+9 handle_devices
+*/
 
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
 {
+  lowestRAM = FreeMem();
+
   Serial.begin(115200);
 
-  if (SpiffsSectors() == 0)
+  if (SpiffsSectors() < 32)
   {
-    Serial.println(F("\nNo SPIFFS area..\nSystem Halted\nPlease reflash with SPIFFS"));
+    Serial.println(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
     while (true)
       delay(1);
   }
 
-#if FEATURE_SPIFFS
   fileSystemCheck();
-#endif
-
   emergencyReset();
-
   LoadSettings();
+
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 
@@ -552,17 +639,22 @@ void setup()
     String log = F("\nINIT : Booting Build nr:");
     log += BUILD;
     addLog(LOG_LEVEL_INFO, log);
+    log = F("INIT : Free RAM:");
+    log += FreeMem();
+    addLog(LOG_LEVEL_INFO, log);
 
     if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
       Serial.setDebugOutput(true);
 
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
     WifiAPconfig();
-    WifiConnect(3);
-
+    if (!WifiConnect(true,3))
+      WifiConnect(false,3);
+    
     hardwareInit();
     PluginInit();
     CPluginInit();
+    NPluginInit();
 
     WebServerInit();
 
@@ -571,7 +663,7 @@ void setup()
       portUDP.begin(Settings.UDPPort);
 
     // Setup MQTT Client
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
     if (Protocol[ProtocolIndex].usesMQTT)
       MQTTConnect();
 
@@ -587,8 +679,10 @@ void setup()
     }
 
     byte bootMode = 0;
-    if (readFromRTC(&bootMode))
+    if (readFromRTC())
     {
+      readUserVarFromRTC();
+      bootMode = RTC.deepSleepState;
       if (bootMode == 1)
         log = F("INIT : Reboot from deepsleep");
       else
@@ -596,6 +690,13 @@ void setup()
     }
     else
     {
+      RTC.factoryResetCounter=0;
+      RTC.deepSleepState=0;
+      RTC.rebootCounter=0;
+      RTC.flashDayCounter=0;
+      RTC.flashCounter=0;
+      saveToRTC();
+ 
       // cold boot situation
       if (lastBootCause == 0) // only set this if not set earlier during boot stage.
         lastBootCause = BOOT_CAUSE_COLD_BOOT;
@@ -603,8 +704,6 @@ void setup()
     }
 
     addLog(LOG_LEVEL_INFO, log);
-
-    saveToRTC(0);
 
     // Setup timers
     if (bootMode == 0)
@@ -626,10 +725,8 @@ void setup()
     timer1s = millis() + 1000; // timer for periodic actions once per/sec
     timerwd = millis() + 30000; // timer for watchdog once per 30 sec
 
-#if FEATURE_TIME
     if (Settings.UseNTP)
       initTime();
-#endif
 
 #if FEATURE_ADC_VCC
     vcc = ESP.getVcc() / 1000.0;
@@ -646,7 +743,8 @@ void setup()
       String event = F("System#Boot");
       rulesProcessing(event);
     }
-
+    RTC.deepSleepState=0;
+    saveToRTC();
   }
   else
   {
@@ -665,7 +763,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WifiConnect(1);
+    WifiConnect(true,1);
     wifiSetupConnect = false;
   }
 
@@ -676,6 +774,9 @@ void loop()
 
   if (systemOK)
   {
+    if (millis() > timer20ms)
+      run50TimesPerSecond();
+
     if (millis() > timer100ms)
       run10TimesPerSecond();
 
@@ -692,6 +793,16 @@ void loop()
     delay(1);
 }
 
+
+/*********************************************************************************************\
+ * Tasks that run 50 times per second
+\*********************************************************************************************/
+
+void run50TimesPerSecond()
+{
+  timer20ms = millis() + 20;
+  PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
+}
 
 /*********************************************************************************************\
  * Tasks that run 10 times per second
@@ -716,6 +827,16 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  dailyResetCounter++;
+  if (dailyResetCounter > 86400) // 1 day elapsed... //86400
+  {
+    RTC.flashDayCounter=0;
+    saveToRTC();
+    dailyResetCounter=0;
+    String log = F("SYS  : Reset 24h counters");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  
   timer1s = millis() + 1000;
 
   checkSensors();
@@ -742,11 +863,10 @@ void runOncePerSecond()
     cmd_within_mainloop = 0;
   }
 
-#if FEATURE_TIME
   // clock events
   if (Settings.UseNTP)
     checkTime();
-#endif
+
   unsigned long timer = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
 
@@ -798,10 +918,8 @@ void runEach30Seconds()
   sendSysInfoUDP(1);
   refreshNodeList();
   MQTTCheck();
-#if FEATURE_SSDP
   if (Settings.UseSSDP)
     SSDP_update();
-#endif
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
@@ -826,14 +944,9 @@ void checkSensors()
   {
     if (millis() > timer)
     {
-      timer = millis() + Settings.Delay * 1000;
+      timer = millis() + Settings.Delay * 1000;  // todo, does this make sense, we will cold boot later...
       SensorSend();
-      saveToRTC(1);
-      String log = F("Enter deep sleep...");
-      addLog(LOG_LEVEL_INFO, log);
-      String event = F("System#Sleep");
-      rulesProcessing(event);
-      ESP.deepSleep(Settings.Delay * 1000000, WAKE_RF_DEFAULT); // Sleep for set delay
+      deepSleep(Settings.Delay);
     }
   }
   else // use individual timers for tasks
@@ -849,6 +962,7 @@ void checkSensors()
       }
     }
   }
+  saveUserVarToRTC();
 }
 
 
@@ -869,7 +983,7 @@ void SensorSend()
 \*********************************************************************************************/
 void SensorSendTask(byte TaskIndex)
 {
-  if (Settings.TaskDeviceID[TaskIndex] != 0)
+  if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
 
@@ -880,7 +994,7 @@ void SensorSendTask(byte TaskIndex)
     struct EventStruct TempEvent;
     TempEvent.TaskIndex = TaskIndex;
     TempEvent.BaseVarIndex = varIndex;
-    TempEvent.idx = Settings.TaskDeviceID[TaskIndex];
+    // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
     TempEvent.sensorType = Device[DeviceIndex].VType;
 
     float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
@@ -903,8 +1017,8 @@ void SensorSendTask(byte TaskIndex)
           float value = UserVar[varIndex + varNr];
           float result = 0;
           String svalue = String(value);
-          formula.replace("%pvalue%", spreValue);
-          formula.replace("%value%", svalue);
+          formula.replace(F("%pvalue%"), spreValue);
+          formula.replace(F("%value%"), svalue);
           byte error = Calculate(formula.c_str(), &result);
           if (error == 0)
             UserVar[varIndex + varNr] = result;

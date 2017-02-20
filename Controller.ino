@@ -10,8 +10,8 @@ boolean sendData(struct EventStruct *event)
   if (Settings.GlobalSync && Settings.TaskDeviceGlobalSync[event->TaskIndex])
     SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
 
-  if (!Settings.TaskDeviceSendData[event->TaskIndex])
-    return false;
+//  if (!Settings.TaskDeviceSendData[event->TaskIndex])
+//    return false;
 
   if (Settings.MessageDelay != 0)
   {
@@ -30,11 +30,18 @@ boolean sendData(struct EventStruct *event)
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
-  if (Settings.Protocol)
+  for (byte x=0; x < CONTROLLER_MAX; x++)
   {
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
-    CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
+    event->ControllerIndex = x;
+    event->idx = Settings.TaskDeviceID[x][event->TaskIndex];
+
+    if (Settings.TaskDeviceSendData[event->ControllerIndex][event->TaskIndex] && Settings.ControllerEnabled[event->ControllerIndex] && Settings.Protocol[event->ControllerIndex])
+    {
+      event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
+      CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
+    }
   }
+  
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
 }
@@ -59,7 +66,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   struct EventStruct TempEvent;
   TempEvent.String1 = c_topic;
   TempEvent.String2 = c_payload;
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
   CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent, dummyString);
 }
 
@@ -69,8 +76,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 void MQTTConnect()
 {
-  IPAddress MQTTBrokerIP(Settings.Controller_IP);
-  MQTTclient.setServer(MQTTBrokerIP, Settings.ControllerPort);
+  ControllerSettingsStruct ControllerSettings;
+  LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
+
+  IPAddress MQTTBrokerIP(ControllerSettings.IP);
+  MQTTclient.setServer(MQTTBrokerIP, ControllerSettings.Port);
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
@@ -78,22 +88,17 @@ void MQTTConnect()
   clientid += Settings.Unit;
   String subscribeTo = "";
 
-  String LWTTopic = Settings.MQTTsubscribe;
-  LWTTopic.replace("/#", "/status");
-  LWTTopic.replace("%sysname%", Settings.Name);
+  String LWTTopic = ControllerSettings.Subscribe;
+  LWTTopic.replace(F("/#"), F("/status"));
+  LWTTopic.replace(F("%sysname%"), Settings.Name);
   
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
     boolean MQTTresult = false;
 
-    //boolean connect(const char* id);
-    //boolean connect(const char* id, const char* user, const char* pass);
-    //boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
-    //boolean connect(const char* id, const char* user, const char* pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
-
     if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
-      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser, SecuritySettings.ControllerPassword, LWTTopic.c_str(), 0, 0, "Connection Lost");
+      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[0], SecuritySettings.ControllerPassword[0], LWTTopic.c_str(), 0, 0, "Connection Lost");
     else
       MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 0, "Connection Lost");
 
@@ -101,8 +106,8 @@ void MQTTConnect()
     {
       log = F("MQTT : Connected to broker");
       addLog(LOG_LEVEL_INFO, log);
-      subscribeTo = Settings.MQTTsubscribe;
-      subscribeTo.replace("%sysname%", Settings.Name);
+      subscribeTo = ControllerSettings.Subscribe;
+      subscribeTo.replace(F("%sysname%"), Settings.Name);
       MQTTclient.subscribe(subscribeTo.c_str());
       log = F("Subscribed to: ");
       log += subscribeTo;
@@ -125,7 +130,7 @@ void MQTTConnect()
 \*********************************************************************************************/
 void MQTTCheck()
 {
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol);
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
   if (Protocol[ProtocolIndex].usesMQTT)
     if (!MQTTclient.connected())
     {
@@ -168,9 +173,12 @@ void SendStatus(byte source, String status)
 \*********************************************************************************************/
 void MQTTStatus(String& status)
 {
-  String pubname = Settings.MQTTsubscribe;
-  pubname.replace("/#", "/status");
-  pubname.replace("%sysname%", Settings.Name);
+  ControllerSettingsStruct ControllerSettings;
+  LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
+
+  String pubname = ControllerSettings.Subscribe;
+  pubname.replace(F("/#"), F("/status"));
+  pubname.replace(F("%sysname%"), Settings.Name);
   MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
 }
 

@@ -109,17 +109,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_001_type");
+        String plugin1 = WebServer.arg(F("plugin_001_type"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          String plugin2 = WebServer.arg("plugin_001_dimvalue");
+          String plugin2 = WebServer.arg(F("plugin_001_dimvalue"));
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         }
-        String plugin3 = WebServer.arg("plugin_001_button");
+        String plugin3 = WebServer.arg(F("plugin_001_button"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
 
-        String plugin4 = WebServer.arg("plugin_001_boot");
+        String plugin4 = WebServer.arg(F("plugin_001_boot"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
 
         success = true;

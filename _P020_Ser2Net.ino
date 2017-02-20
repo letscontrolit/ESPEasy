@@ -114,19 +114,19 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_020_port");
+        String plugin1 = WebServer.arg(F("plugin_020_port"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[0] = plugin1.toInt();
-        String plugin2 = WebServer.arg("plugin_020_baud");
+        String plugin2 = WebServer.arg(F("plugin_020_baud"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[1] = plugin2.toInt();
-        String plugin3 = WebServer.arg("plugin_020_data");
+        String plugin3 = WebServer.arg(F("plugin_020_data"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[2] = plugin3.toInt();
-        String plugin4 = WebServer.arg("plugin_020_parity");
+        String plugin4 = WebServer.arg(F("plugin_020_parity"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[3] = plugin4.toInt();
-        String plugin5 = WebServer.arg("plugin_020_stop");
+        String plugin5 = WebServer.arg(F("plugin_020_stop"));
         ExtraTaskSettings.TaskDevicePluginConfigLong[4] = plugin5.toInt();
-        String plugin6 = WebServer.arg("plugin_020_rxwait");
+        String plugin6 = WebServer.arg(F("plugin_020_rxwait"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin6.toInt();
-        String plugin7 = WebServer.arg("plugin_020_events");
+        String plugin7 = WebServer.arg(F("plugin_020_events"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin7.toInt();
         success = true;
         break;
@@ -295,7 +295,6 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             case 2: // RFLink
               {
                 message = message.substring(6); // RFLink, strip 20;xx; from incoming message
-                //message.replace("\r\n", "");
                 if (message.startsWith("ESPEASY")) // Special treatment for gpio values, strip unneeded parts...
                 {
                   message = message.substring(8); // Strip "ESPEASY;"

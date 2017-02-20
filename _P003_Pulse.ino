@@ -98,9 +98,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_003");
+        String plugin1 = WebServer.arg(F("plugin_003"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg("plugin_003_countertype");
+        String plugin2 = WebServer.arg(F("plugin_003_countertype"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         success = true;
         break;

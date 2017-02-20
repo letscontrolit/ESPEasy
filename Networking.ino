@@ -153,7 +153,8 @@ void checkUDP()
               {
                 Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
                 Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
-                Settings.TaskDeviceSendData[infoReply.destTaskIndex] = false;
+                for (byte x=0; x < CONTROLLER_MAX; x++)
+                  Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
                 strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
                 for (byte x = 0; x < VARS_PER_TASK; x++)
                   strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
@@ -278,7 +279,7 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
     firstUnit = destUnit;
     lastUnit = destUnit;
   }
-  for (byte x = firstUnit; x <= lastUnit; x++)
+  for (int x = firstUnit; x <= lastUnit; x++)
   {
     sendUDP(x, (byte*)data, dataLength);
     delay(10);
@@ -292,15 +293,20 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
-  if (Nodes[unit].ip[0] == 0)
-    return;
+  if (unit != 255)
+    if (Nodes[unit].ip[0] == 0)
+      return;
   String log = "UDP  : Send UDP message to ";
   log += unit;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   statusLED(true);
 
-  IPAddress remoteNodeIP(Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
+  IPAddress remoteNodeIP;
+  if (unit == 255)
+    remoteNodeIP = {255,255,255,255};
+  else
+    remoteNodeIP = Nodes[unit].ip;
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
   portUDP.write(data, size);
   portUDP.endPacket();
@@ -382,7 +388,6 @@ void sendSysInfoUDP(byte repeats)
 }
 
 
-#if FEATURE_SSDP
 /********************************************************************************************\
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
@@ -699,5 +704,4 @@ void SSDP_update() {
   }
 
 }
-#endif
 

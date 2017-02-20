@@ -72,7 +72,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         // embed IP, important if there is NAT/PAT
         char ipStr[20];
         IPAddress ip = WiFi.localIP();
-        sprintf(ipStr, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+        sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
         ESP["ip"] = ipStr;
 
         // Create nested SENSOR json object
@@ -115,7 +115,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         char buffer[root.measureLength() +1];
         root.printTo(buffer, sizeof(buffer));
         // Push data to server
-        FHEMHTTPsend(url, buffer);
+        FHEMHTTPsend(url, buffer, event->ControllerIndex);
         break;
       }
   }
@@ -126,16 +126,19 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // FHEM HTTP request
 //********************************************************************************
-boolean FHEMHTTPsend(String url, char* buffer)
+boolean FHEMHTTPsend(String url, char* buffer, byte index)
 {
+  ControllerSettingsStruct ControllerSettings;
+  LoadControllerSettings(index, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
   boolean success = false;
 
   String authHeader = "";
-  if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0)) {
+  if ((SecuritySettings.ControllerUser[index][0] != 0) && (SecuritySettings.ControllerPassword[index][0] != 0)) {
     base64 encoder;
-    String auth = SecuritySettings.ControllerUser;
+    String auth = SecuritySettings.ControllerUser[index];
     auth += ":";
-    auth += SecuritySettings.ControllerPassword;
+    auth += SecuritySettings.ControllerPassword[index];
     authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
   }
 
@@ -144,14 +147,14 @@ boolean FHEMHTTPsend(String url, char* buffer)
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   char host[20];
-  sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+  sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,Settings.ControllerPort);
+  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
   addLog(LOG_LEVEL_DEBUG, log);
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, Settings.ControllerPort)) {
+  if (!client.connect(host, ControllerSettings.Port)) {
     connectionFailures++;
     strcpy_P(log, PSTR("HTTP : connection failed"));
     addLog(LOG_LEVEL_ERROR, log);
@@ -180,14 +183,14 @@ boolean FHEMHTTPsend(String url, char* buffer)
     String helper = line;
     line.toCharArray(log, 80);
     addLog(LOG_LEVEL_DEBUG_MORE, log);
-    if (line.substring(0, 15) == "HTTP/1.1 200 OK") {
+    if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
       strcpy_P(log, PSTR("HTTP : Success"));
       success = true;
     }
-    else if (line.substring(0, 24) == "HTTP/1.1 400 Bad Request") {
+    else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
       strcpy_P(log, PSTR("HTTP : Unauthorized"));
     }
-    else if (line.substring(0, 25) == "HTTP/1.1 401 Unauthorized") {
+    else if (line.substring(0, 25) == F("HTTP/1.1 401 Unauthorized")) {
       strcpy_P(log, PSTR("HTTP : Unauthorized"));
     }
     addLog(LOG_LEVEL_DEBUG, log);

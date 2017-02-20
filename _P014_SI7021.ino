@@ -106,7 +106,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_014_res");
+        String plugin1 = WebServer.arg(F("plugin_014_res"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         Plugin_014_init = false; // Force device setup next time
         success = true;

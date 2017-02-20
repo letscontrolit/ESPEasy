@@ -72,7 +72,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_026");
+        String plugin1 = WebServer.arg(F("plugin_026"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         success = true;
         break;
@@ -111,7 +111,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           {
             value = (100 - (100 * loopCounterLast / loopCounterMax));
             break;
-          }
+          }          
         }
         UserVar[event->BaseVarIndex] = value;
         String log = F("SYS  : ");

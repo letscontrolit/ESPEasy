@@ -1076,7 +1076,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       {
         for (byte y = 0; y < TASKS_MAX; y++)
         {
-          if (Settings.TaskDeviceNumber[y] != 0)
+          if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
           {
             for (x = 0; x < PLUGIN_MAX; x++)
             {
@@ -1085,8 +1085,8 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
                 TempEvent.TaskIndex = y;
                 TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-                TempEvent.idx = Settings.TaskDeviceID[y];
-                TempEvent.sensorType = Device[DeviceIndex].VType;  
+                //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
+                TempEvent.sensorType = Device[DeviceIndex].VType;                
                 if (Plugin_ptr[x](Function, event, str))
                   return true;
               }
@@ -1100,6 +1100,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     // Call to all plugins that are used in a task
     case PLUGIN_ONCE_A_SECOND:
     case PLUGIN_TEN_PER_SECOND:
+    case PLUGIN_FIFTY_PER_SECOND:
     case PLUGIN_INIT_ALL:
     case PLUGIN_CLOCK_IN:
     case PLUGIN_EVENT_OUT:
@@ -1108,14 +1109,14 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           Function = PLUGIN_INIT;
         for (byte y = 0; y < TASKS_MAX; y++)
         {
-          if (Settings.TaskDeviceNumber[y] != 0)
+          if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
           {
             if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
             {
               byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
               TempEvent.TaskIndex = y;
               TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-              TempEvent.idx = Settings.TaskDeviceID[y];
+              //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
               TempEvent.sensorType = Device[DeviceIndex].VType;
               TempEvent.OriginTaskIndex = event->TaskIndex;
               for (x = 0; x < PLUGIN_MAX; x++)
@@ -1140,6 +1141,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_READ:
+    case PLUGIN_REMOTE_CONFIG:
       for (x = 0; x < PLUGIN_MAX; x++)
       {
         if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))

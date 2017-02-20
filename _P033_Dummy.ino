@@ -85,7 +85,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_033_sensortype");
+        String plugin1 = WebServer.arg(F("plugin_033_sensortype"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         success = true;
         break;

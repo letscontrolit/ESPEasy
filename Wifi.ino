@@ -36,7 +36,7 @@ void WifiAPMode(boolean state)
 //********************************************************************************
 // Connect to Wifi AP
 //********************************************************************************
-boolean WifiConnect(byte connectAttempts)
+boolean WifiConnect(boolean primary, byte connectAttempts)
 {
   String log = "";
     
@@ -73,7 +73,12 @@ boolean WifiConnect(byte connectAttempts)
         addLog(LOG_LEVEL_INFO, log);
         
         if (tryConnect == 1)
-          WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
+          {
+            if (primary)
+              WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
+            else
+              WiFi.begin(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2);
+          }
         else
           WiFi.begin();
           
@@ -124,6 +129,11 @@ boolean WifiConnect(byte connectAttempts)
       WifiAPMode(true);
     }
   }
+
+  if (WiFi.status() == WL_CONNECTED)
+    return true;
+  
+  return false;
 }
 
 
@@ -185,7 +195,9 @@ void WifiCheck()
     NC_Count++;
     if (NC_Count > 2)
     {
-      WifiConnect(2);
+      if (!WifiConnect(true,2))
+        WifiConnect(false,2);
+      
       C_Count=0;
       if (WiFi.status() != WL_CONNECTED)
         WifiAPMode(true);

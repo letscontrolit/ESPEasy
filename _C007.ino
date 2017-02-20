@@ -19,6 +19,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -30,17 +31,20 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
       
     case CPLUGIN_PROTOCOL_SEND:
       {
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
         char log[80];
         boolean success = false;
         char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,Settings.ControllerPort);
+        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
         addLog(LOG_LEVEL_DEBUG, log);
 
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, Settings.ControllerPort))
+        if (!client.connect(host, ControllerSettings.Port))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));
@@ -98,11 +102,11 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             break;
         }
         postDataStr += F("&apikey=");
-        postDataStr += SecuritySettings.ControllerPassword; // "0UDNN17RW6XAS2E5" // api key
+        postDataStr += SecuritySettings.ControllerPassword[event->ControllerIndex]; // "0UDNN17RW6XAS2E5" // api key
 
         String hostName = host;
-        if (Settings.UseDNS)
-          hostName = Settings.ControllerHostName;
+        if (ControllerSettings.UseDNS)
+          hostName = ControllerSettings.HostName;
 
         String postStr = F(" HTTP/1.1\r\n");
         postStr += F("Host: ");
@@ -128,7 +132,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           String line = client.readStringUntil('\n');
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
-          if (line.substring(0, 15) == "HTTP/1.1 200 OK")
+          if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           {
             strcpy_P(log, PSTR("HTTP : Succes!"));
             addLog(LOG_LEVEL_DEBUG, log);

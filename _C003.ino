@@ -19,6 +19,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 23;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -30,17 +31,20 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
       
     case CPLUGIN_PROTOCOL_SEND:
       {
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
         char log[80];
         boolean success = false;
         char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-        sprintf_P(log, PSTR("%s%s using port %u"), "TELNT: connecting to ", host,Settings.ControllerPort);
+        sprintf_P(log, PSTR("%s%s using port %u"), "TELNT: connecting to ", host,ControllerSettings.Port);
         addLog(LOG_LEVEL_DEBUG, log);
 
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, Settings.ControllerPort))
+        if (!client.connect(host, ControllerSettings.Port))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("TELNT: connection failed"));
@@ -81,7 +85,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
 
         strcpy_P(log, PSTR("TELNT: Sending pw"));
         addLog(LOG_LEVEL_ERROR, log);
-        client.println(SecuritySettings.ControllerPassword);
+        client.println(SecuritySettings.ControllerPassword[event->ControllerIndex]);
         delay(100);
         while (client.available())
           client.read();

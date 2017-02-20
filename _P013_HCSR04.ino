@@ -86,11 +86,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_013_mode");
+        String plugin1 = WebServer.arg(F("plugin_013_mode"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          String plugin2 = WebServer.arg("plugin_013_threshold");
+          String plugin2 = WebServer.arg(F("plugin_013_threshold"));
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         }
         success = true;

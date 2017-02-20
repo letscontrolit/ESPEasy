@@ -76,7 +76,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_005_dhttype");
+        String plugin1 = WebServer.arg(F("plugin_005_dhttype"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
         success = true;
         break;
@@ -117,7 +117,8 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
                 dht_dat[i] = data;
               else
               {
-                addLog(LOG_LEVEL_ERROR, (char*)"DHT  : protocol timeout!");
+                String log = F("DHT  : protocol timeout!");
+                addLog(LOG_LEVEL_ERROR, log);
                 error = true;
               }
             }

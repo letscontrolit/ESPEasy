@@ -149,13 +149,13 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_023_adr");
+        String plugin1 = WebServer.arg(F("plugin_023_adr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg("plugin_023_rotate");
+        String plugin2 = WebServer.arg(F("plugin_023_rotate"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg("plugin_23_timer");
+        String plugin3 = WebServer.arg(F("plugin_23_timer"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-        String plugin4 = WebServer.arg("plugin_023_size");
+        String plugin4 = WebServer.arg(F("plugin_023_size"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
 
         char deviceTemplate[8][64];
@@ -168,8 +168,6 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           String tmpString = WebServer.arg(argc);
           strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
         }
-
-        Settings.TaskDeviceID[event->TaskIndex] = 1; // temp fix, needs a dummy value
 
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         success = true;

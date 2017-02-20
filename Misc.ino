@@ -1,3 +1,70 @@
+void deepSleep(int delay)
+{
+  RTC.deepSleepState = 1;
+  saveToRTC();
+  String log = F("Enter deep sleep...");
+  addLog(LOG_LEVEL_INFO, log);
+  String event = F("System#Sleep");
+  rulesProcessing(event);
+  ESP.deepSleep(delay * 1000000, WAKE_RF_DEFAULT);
+}
+
+boolean remoteConfig(struct EventStruct *event, String& string)
+{
+  boolean success = false;
+  String command = parseString(string, 1);
+
+  Serial.print("config call:");
+  Serial.println(string);
+  if (command == F("config"))
+  {
+    success = true;
+    if (parseString(string, 2) == F("task"))
+    {
+      int configCommandPos1 = getParamStartPos(string, 3);
+      int configCommandPos2 = getParamStartPos(string, 4);
+
+      String configTaskName = string.substring(configCommandPos1, configCommandPos2 - 1);
+      String configCommand = string.substring(configCommandPos2);
+      Serial.println(configTaskName);
+      Serial.println(configCommand);
+
+      int8_t index = getTaskIndexByName(configTaskName);
+      Serial.println(index);
+      if (index != -1)
+      {
+        event->TaskIndex = index;
+        success = PluginCall(PLUGIN_REMOTE_CONFIG, event, configCommand);
+      }
+    }
+  }
+  return success;
+}
+
+int8_t getTaskIndexByName(String TaskNameSearch)
+{
+
+  for (byte x = 0; x < TASKS_MAX; x++)
+  {
+    LoadTaskSettings(x);
+    String TaskName = ExtraTaskSettings.TaskDeviceName;
+    if ((ExtraTaskSettings.TaskDeviceName[0] != 0 ) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
+    {
+      return x;
+    }
+  }
+  return -1;
+}
+
+
+void flashCount()
+{
+  if (RTC.flashDayCounter <= MAX_FLASHWRITES_PER_DAY)
+    RTC.flashDayCounter++;
+  RTC.flashCounter++;
+  saveToRTC();
+}
+
 /*********************************************************************************************\
    Get value count from sensor type
   \*********************************************************************************************/
@@ -303,15 +370,20 @@ void taskClear(byte taskIndex, boolean save)
 {
   Settings.TaskDeviceNumber[taskIndex] = 0;
   ExtraTaskSettings.TaskDeviceName[0] = 0;
-  Settings.TaskDeviceID[taskIndex] = 0;
   Settings.TaskDeviceDataFeed[taskIndex] = 0;
   Settings.TaskDevicePin1[taskIndex] = -1;
   Settings.TaskDevicePin2[taskIndex] = -1;
   Settings.TaskDevicePin3[taskIndex] = -1;
   Settings.TaskDevicePort[taskIndex] = 0;
-  Settings.TaskDeviceSendData[taskIndex] = true;
   Settings.TaskDeviceGlobalSync[taskIndex] = false;
   Settings.TaskDeviceTimer[taskIndex] = 0;
+  Settings.TaskDeviceEnabled[taskIndex] = false;
+
+  for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+  {
+    Settings.TaskDeviceID[controllerNr][taskIndex] = 0;
+    Settings.TaskDeviceSendData[controllerNr][taskIndex] = true;
+  }
 
   for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
     Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
@@ -324,27 +396,15 @@ void taskClear(byte taskIndex, boolean save)
   }
 
   for (byte varNr = 0; varNr < PLUGIN_EXTRACONFIGVAR_MAX; varNr++)
+  {
     ExtraTaskSettings.TaskDevicePluginConfigLong[varNr] = 0;
+    ExtraTaskSettings.TaskDevicePluginConfig[varNr] = 0;
+  }
 
   if (save)
   {
     SaveTaskSettings(taskIndex);
     SaveSettings();
-  }
-}
-
-
-/********************************************************************************************\
-  Use DNS to resolve hostname to ip address
-  \*********************************************************************************************/
-void getIPfromHostName()
-{
-  IPAddress IP;
-  if (Settings.ControllerHostName[0] != 0)
-  {
-    WiFi.hostByName(Settings.ControllerHostName, IP);
-    for (byte x = 0; x < 4; x++)
-      Settings.Controller_IP[x] = IP[x];
   }
 }
 
@@ -356,127 +416,50 @@ void BuildFixes()
 {
   Serial.println(F("\nBuild changed!"));
 
-  // fix default send data on active tasks, new to R52
-  if (Settings.Build < 52)
+  if (Settings.Build < 145)
   {
-    Serial.println(F("Fix SendData"));
-    for (byte x = 0; x < TASKS_MAX; x++)
+    fs::File f = SPIFFS.open("notification.dat", "w");
+    if (f)
     {
-      Settings.TaskDeviceSendData[x] = true;
+      for (int x = 0; x < 4096; x++)
+        f.write(0);
+      f.close();
     }
   }
-
-  if (Settings.Build < 64)
-  {
-    Serial.println(F("Fix Pin3"));
-    for (byte x = 0; x < TASKS_MAX; x++)
-    {
-      Settings.TaskDevicePin3[x] = -1;
-    }
-  }
-
-  if (Settings.Build < 79)
-  {
-    Serial.println(F("Fix status LED Pin"));
-    Settings.Pin_status_led = -1;
-    Settings.UseSerial = true;
-    for (byte x = 0; x < TASKS_MAX; x++)
-      Settings.TaskDeviceTimer[x] = Settings.Delay;
-  }
-
-  if (Settings.Build < 83)
-  {
-    Serial.println(F("Fix taskindex"));
-    for (byte x = 0; x < TASKS_MAX; x++)
-    {
-      LoadTaskSettings(x);
-      SaveTaskSettings(x);
-    }
-  }
-
-  if (Settings.Build < 88)
-  {
-    struct ExtraTaskSettingsStruct_old
-    {
-      byte    TaskIndex;
-      char    TaskDeviceName[26];
-      char    TaskDeviceFormula[VARS_PER_TASK][41];
-      char    TaskDeviceValueNames[VARS_PER_TASK][26];
-      long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
-      byte    TaskDeviceValueDecimals[VARS_PER_TASK];
-    } ExtraTaskSettings_old;
-
-    Serial.println(F("Fix extratasksettings"));
-    for (byte TaskIndex = 0; TaskIndex < TASKS_MAX; TaskIndex++)
-    {
-      LoadFromFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings_old, sizeof(struct ExtraTaskSettingsStruct_old));
-
-      ExtraTaskSettings.TaskIndex = ExtraTaskSettings_old.TaskIndex;
-      strcpy(ExtraTaskSettings.TaskDeviceName, ExtraTaskSettings_old.TaskDeviceName);
-      for (byte x = 0; x < VARS_PER_TASK; x++)
-      {
-        strcpy(ExtraTaskSettings.TaskDeviceFormula[x], ExtraTaskSettings_old.TaskDeviceFormula[x]);
-        strcpy(ExtraTaskSettings.TaskDeviceValueNames[x], ExtraTaskSettings_old.TaskDeviceValueNames[x]);
-        ExtraTaskSettings.TaskDeviceValueDecimals[x] = 2;
-      }
-      for (byte x = 0; x < PLUGIN_EXTRACONFIGVAR_MAX; x++)
-      {
-        ExtraTaskSettings.TaskDevicePluginConfigLong[x] = ExtraTaskSettings_old.TaskDevicePluginConfigLong[x];
-      }
-      SaveToFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
-    }
-  }
-
-  if (Settings.Build < 112)
-  {
-    Serial.println(F("Fix timezone"));
-    Settings.TimeZone = Settings.TimeZone_OLD * 60;
-  }
-
   Settings.Build = BUILD;
   SaveSettings();
 }
 
-#if FEATURE_SPIFFS
+
+/********************************************************************************************\
+  Mount FS and check config.dat
+  \*********************************************************************************************/
 void fileSystemCheck()
 {
   if (SPIFFS.begin())
   {
     String log = F("SPIFFS Mount successful");
     addLog(LOG_LEVEL_INFO, log);
-    File f = SPIFFS.open("config.txt", "r");
+    fs::File f = SPIFFS.open("config.dat", "r");
     if (!f)
     {
       log = F("formatting...");
+      Serial.println(log);
       addLog(LOG_LEVEL_INFO, log);
       SPIFFS.format();
       log = F("format done!");
+      Serial.println(log);
       addLog(LOG_LEVEL_INFO, log);
-      File f = SPIFFS.open("config.txt", "w");
-      if (f)
-      {
-        for (int x = 0; x < 32768; x++)
-          f.write(0);
-        f.close();
-      }
-      f = SPIFFS.open("security.txt", "w");
-      if (f)
-      {
-        for (int x = 0; x < 512; x++)
-          f.write(0);
-        f.close();
-      }
-      f = SPIFFS.open("rules.txt", "w");
-      f.close();
+      ResetFactory();
     }
   }
   else
   {
     String log = F("SPIFFS Mount failed");
+    Serial.println(log);
     addLog(LOG_LEVEL_INFO, log);
   }
 }
-#endif
 
 
 /********************************************************************************************\
@@ -504,6 +487,17 @@ byte getProtocolIndex(byte Number)
   return ProtocolIndex;
 }
 
+/********************************************************************************************\
+  Find notification index corresponding to protocol setting
+  \*********************************************************************************************/
+byte getNotificationIndex(byte Number)
+{
+  byte NotificationIndex = 0;
+  for (byte x = 0; x <= notificationCount ; x++)
+    if (Notification[x].Number == Number)
+      NotificationIndex = x;
+  return NotificationIndex;
+}
 
 /********************************************************************************************\
   Find positional parameter in a char string
@@ -512,24 +506,30 @@ boolean GetArgv(const char *string, char *argv, int argc)
 {
   int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
+  boolean parenthesis = false;
 
   while (string_pos < strlen(string))
   {
     c = string[string_pos];
     d = string[string_pos + 1];
 
-    if       (c == ' ' && d == ' ') {}
-    else if  (c == ' ' && d == ',') {}
-    else if  (c == ',' && d == ' ') {}
-    else if  (c == ' ' && d >= 33 && d <= 126) {}
-    else if  (c == ',' && d >= 33 && d <= 126) {}
+    if       (!parenthesis && c == ' ' && d == ' ') {}
+    else if  (!parenthesis && c == ' ' && d == ',') {}
+    else if  (!parenthesis && c == ',' && d == ' ') {}
+    else if  (!parenthesis && c == ' ' && d >= 33 && d <= 126) {}
+    else if  (!parenthesis && c == ',' && d >= 33 && d <= 126) {}
+    else if  (c == '"') {
+      parenthesis = true;
+    }
     else
     {
       argv[argv_pos++] = c;
       argv[argv_pos] = 0;
 
-      if (d == ' ' || d == ',' || d == 0)
+      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && d == '"')) // end of word
       {
+        if (d == '"')
+          parenthesis = false;
         argv[argv_pos] = 0;
         argc_pos++;
 
@@ -599,15 +599,10 @@ boolean str2ip(char *string, byte* IP)
 /********************************************************************************************\
   Save settings to SPIFFS
   \*********************************************************************************************/
-void SaveSettings(void)
+boolean SaveSettings(void)
 {
-#if FEATURE_SPIFFS
-  SaveToFile((char*)"config.txt", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
-  SaveToFile((char*)"security.txt", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-#else
-  SaveToFlash(0, (byte*)&Settings, sizeof(struct SettingsStruct));
-  SaveToFlash(32768, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-#endif
+  SaveToFile((char*)"config.dat", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  return SaveToFile((char*)"security.dat", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
 }
 
 
@@ -616,27 +611,18 @@ void SaveSettings(void)
   \*********************************************************************************************/
 boolean LoadSettings()
 {
-#if FEATURE_SPIFFS
-  LoadFromFile((char*)"config.txt", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
-  LoadFromFile((char*)"security.txt", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-#else
-  LoadFromFlash(0, (byte*)&Settings, sizeof(struct SettingsStruct));
-  LoadFromFlash(32768, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-#endif
+  LoadFromFile((char*)"config.dat", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  LoadFromFile((char*)"security.dat", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
 }
 
 
 /********************************************************************************************\
   Save Task settings to SPIFFS
   \*********************************************************************************************/
-void SaveTaskSettings(byte TaskIndex)
+boolean SaveTaskSettings(byte TaskIndex)
 {
   ExtraTaskSettings.TaskIndex = TaskIndex;
-#if FEATURE_SPIFFS
-  SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
-#else
-  SaveToFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
-#endif
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 }
 
 
@@ -648,11 +634,7 @@ void LoadTaskSettings(byte TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return;
 
-#if FEATURE_SPIFFS
-  LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
-#else
-  LoadFromFlash(4096 + (TaskIndex * 1024), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
-#endif
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
 }
 
@@ -660,15 +642,11 @@ void LoadTaskSettings(byte TaskIndex)
 /********************************************************************************************\
   Save Custom Task settings to SPIFFS
   \*********************************************************************************************/
-void SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
+boolean SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
-  if (datasize > 512)
-    return;
-#if FEATURE_SPIFFS
-  SaveToFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
-#else
-  SaveToFlash(4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
-#endif
+  if (datasize > DAT_TASKS_SIZE)
+    return false;
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize);
 }
 
 
@@ -677,28 +655,40 @@ void SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
-  if (datasize > 512)
+  if (datasize > DAT_TASKS_SIZE)
     return;
-#if FEATURE_SPIFFS
-  LoadFromFile((char*)"config.txt", 4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
-#else
-  LoadFromFlash(4096 + (TaskIndex * 1024) + 512, memAddress, datasize);
-#endif
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize);
+}
+
+/********************************************************************************************\
+  Save Controller settings to SPIFFS
+  \*********************************************************************************************/
+boolean SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
+{
+  if (datasize > DAT_CONTROLLER_SIZE)
+    return false;
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
 /********************************************************************************************\
+  Save Controller settings to SPIFFS
+  \*********************************************************************************************/
+void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
+{
+  if (datasize > DAT_CONTROLLER_SIZE)
+    return;
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
+}
+
+/********************************************************************************************\
   Save Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-void SaveCustomControllerSettings(byte* memAddress, int datasize)
+boolean SaveCustomControllerSettings(byte* memAddress, int datasize)
 {
   if (datasize > 4096)
-    return;
-#if FEATURE_SPIFFS
-  SaveToFile((char*)"config.txt", 28672, memAddress, datasize);
-#else
-  SaveToFlash(28672, memAddress, datasize);
-#endif
+    return false;
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
 }
 
 
@@ -709,24 +699,48 @@ void LoadCustomControllerSettings(byte* memAddress, int datasize)
 {
   if (datasize > 4096)
     return;
-#if FEATURE_SPIFFS
-  LoadFromFile((char*)"config.txt", 28672, memAddress, datasize);
-#else
-  LoadFromFlash(28672, memAddress, datasize);
-#endif
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+}
+
+/********************************************************************************************\
+  Save Controller settings to SPIFFS
+  \*********************************************************************************************/
+boolean SaveNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
+{
+  if (datasize > DAT_NOTIFICATION_SIZE)
+    return false;
+  return SaveToFile((char*)"notification.dat", NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
 }
 
 
-#if FEATURE_SPIFFS
+/********************************************************************************************\
+  Save Controller settings to SPIFFS
+  \*********************************************************************************************/
+void LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
+{
+  if (datasize > DAT_NOTIFICATION_SIZE)
+    return;
+  LoadFromFile((char*)"notification.dat", NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
+}
+
 /********************************************************************************************\
   Save data into config file on SPIFFS
   \*********************************************************************************************/
-void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
+boolean SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
-  File f = SPIFFS.open(fname, "r+");
+  boolean success = false;
+
+  if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
+  {
+    String log = F("FS   : Daily flash write rate exceeded!");
+    addLog(LOG_LEVEL_ERROR, log);
+    return false;
+  }
+
+  fs::File f = SPIFFS.open(fname, "r+");
   if (f)
   {
-    f.seek(index, SeekSet);
+    f.seek(index, fs::SeekSet);
     byte *pointerToByteToSave = memAddress;
     for (int x = 0; x < datasize ; x++)
     {
@@ -736,7 +750,10 @@ void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     f.close();
     String log = F("FILE : File saved");
     addLog(LOG_LEVEL_INFO, log);
+    success = true;
+    flashCount();
   }
+  return success;
 }
 
 
@@ -745,10 +762,10 @@ void SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
-  File f = SPIFFS.open(fname, "r+");
+  fs::File f = SPIFFS.open(fname, "r+");
   if (f)
   {
-    f.seek(index, SeekSet);
+    f.seek(index, fs::SeekSet);
     byte *pointerToByteToRead = memAddress;
     for (int x = 0; x < datasize; x++)
     {
@@ -756,128 +773,6 @@ void LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
       pointerToByteToRead++;// next byte
     }
     f.close();
-  }
-}
-#endif
-
-
-/********************************************************************************************\
-  Save data to flash
-  \*********************************************************************************************/
-void SaveToFlash(int index, byte* memAddress, int datasize)
-{
-  if (index > 33791) // Limit usable flash area to 32+1k size
-  {
-    return;
-  }
-  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
-  int sectorOffset = index / SPI_FLASH_SEC_SIZE;
-  int sectorIndex = index % SPI_FLASH_SEC_SIZE;
-  uint8_t* dataIndex = data + sectorIndex;
-  _sector += sectorOffset;
-
-  // load entire sector from flash into memory
-  noInterrupts();
-  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
-  interrupts();
-
-  // store struct into this block
-  memcpy(dataIndex, memAddress, datasize);
-
-  noInterrupts();
-  // write sector back to flash
-  if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-    if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-    {
-      //Serial.println("flash save ok");
-    }
-  interrupts();
-  delete [] data;
-  String log = F("FLASH: Settings saved");
-  addLog(LOG_LEVEL_INFO, log);
-  flashWrites++;
-}
-
-
-/********************************************************************************************\
-  Load data from flash
-  \*********************************************************************************************/
-void LoadFromFlash(int index, byte* memAddress, int datasize)
-{
-  uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
-  int sectorOffset = index / SPI_FLASH_SEC_SIZE;
-  int sectorIndex = index % SPI_FLASH_SEC_SIZE;
-  uint8_t* dataIndex = data + sectorIndex;
-  _sector += sectorOffset;
-
-  // load entire sector from flash into memory
-  noInterrupts();
-  spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE);
-  interrupts();
-
-  // load struct from this block
-  memcpy(memAddress, dataIndex, datasize);
-  delete [] data;
-}
-
-
-/********************************************************************************************\
-  Erase data on flash
-  \*********************************************************************************************/
-void ZeroFillFlash()
-{
-  // this will fill the SPIFFS area with a 64k block of all zeroes.
-  uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint32_t _sectorEnd = _sectorStart + 16 ; //((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint8_t* data = new uint8_t[FLASH_EEPROM_SIZE];
-
-  uint8_t* tmpdata = data;
-  for (int x = 0; x < FLASH_EEPROM_SIZE; x++)
-  {
-    *tmpdata = 0;
-    tmpdata++;
-  }
-
-
-  for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
-  {
-    // write sector to flash
-    noInterrupts();
-    if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-      if (spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), FLASH_EEPROM_SIZE) == SPI_FLASH_RESULT_OK)
-      {
-        interrupts();
-        Serial.print(F("FLASH: Zero Fill Sector: "));
-        Serial.println(_sector);
-        delay(10);
-      }
-  }
-  interrupts();
-  delete [] data;
-}
-
-
-/********************************************************************************************\
-  Erase all content on flash (except sketch)
-  \*********************************************************************************************/
-void EraseFlash()
-{
-  uint32_t _sectorStart = (ESP.getSketchSize() / SPI_FLASH_SEC_SIZE) + 1;
-  uint32_t _sectorEnd = _sectorStart + (ESP.getFlashChipRealSize() / SPI_FLASH_SEC_SIZE);
-
-  for (uint32_t _sector = _sectorStart; _sector < _sectorEnd; _sector++)
-  {
-    noInterrupts();
-    if (spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK)
-    {
-      interrupts();
-      Serial.print(F("FLASH: Erase Sector: "));
-      Serial.println(_sector);
-      delay(10);
-    }
-    interrupts();
   }
 }
 
@@ -900,12 +795,11 @@ void ResetFactory(void)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
 
-  byte bootCount = 0;
-  if (readFromRTC(&bootCount))
+  if (readFromRTC())
   {
     Serial.print(F("RESET: Reboot count: "));
-    Serial.println(bootCount);
-    if (bootCount > 3)
+    Serial.println(RTC.factoryResetCounter);
+    if (RTC.factoryResetCounter > 3)
     {
       Serial.println(F("RESET: To many reset attempts"));
       return;
@@ -914,31 +808,34 @@ void ResetFactory(void)
   else
     Serial.println(F("RESET: Cold boot"));
 
-  bootCount++;
-  saveToRTC(bootCount);
+  RTC.factoryResetCounter++;
+  RTC.flashDayCounter = 0;
+  saveToRTC();
 
-#if FEATURE_SPIFFS
-  File f = SPIFFS.open("config.txt", "w");
+  fs::File f = SPIFFS.open("config.dat", "w");
   if (f)
   {
-    for (int x = 0; x < 32768; x++)
+    for (int x = 0; x < 65536; x++)
       f.write(0);
     f.close();
 
   }
-  f = SPIFFS.open("security.txt", "w");
+  f = SPIFFS.open("security.dat", "w");
   if (f)
   {
     for (int x = 0; x < 512; x++)
       f.write(0);
     f.close();
   }
-  f = SPIFFS.open("rules.txt", "w");
+  f = SPIFFS.open("notification.dat", "w");
+  if (f)
+  {
+    for (int x = 0; x < 4096; x++)
+      f.write(0);
+    f.close();
+  }
+  f = SPIFFS.open("rules1.txt", "w");
   f.close();
-#else
-  EraseFlash();
-  ZeroFillFlash();
-#endif
 
   LoadSettings();
   // now we set all parameters that need to be non-zero as default value
@@ -962,16 +859,17 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
-  str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP);
-  Settings.ControllerPort      = DEFAULT_PORT;
+  //str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP[0]);
+  //Settings.ControllerPort[0]      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
   Settings.Pin_status_led  = -1;
-  Settings.Protocol        = DEFAULT_PROTOCOL;
+  Settings.Pin_sd_cs       = -1;
+  Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.SerialLogLevel  = 2;
-  Settings.WebLogLevel     = 2;
+  Settings.WebLogLevel     = 0;
   Settings.BaudRate        = 115200;
   Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
@@ -984,7 +882,8 @@ void ResetFactory(void)
     Settings.TaskDevicePin3[x] = -1;
     Settings.TaskDevicePin1PullUp[x] = true;
     Settings.TaskDevicePin1Inversed[x] = false;
-    Settings.TaskDeviceSendData[x] = true;
+    for (byte y = 0; y < CONTROLLER_MAX; y++)
+      Settings.TaskDeviceSendData[y][x] = true;
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
   Settings.Build = BUILD;
@@ -1073,7 +972,17 @@ void addLog(byte loglevel, const char *line)
     if (logcount > 9)
       logcount = 0;
     Logging[logcount].timeStamp = millis();
-    Logging[logcount].Message = line;
+    if (Logging[logcount].Message == 0)
+      Logging[logcount].Message =  (char *)malloc(128);
+    strncpy(Logging[logcount].Message, line, 128);
+  }
+
+  if (loglevel <= Settings.SDLogLevel)
+  {
+    File logFile = SD.open("log.dat", FILE_WRITE);
+    if (logFile)
+      logFile.println(line);
+    logFile.close();
   }
 }
 
@@ -1096,30 +1005,49 @@ void delayedReboot(int rebootDelay)
 
 
 /********************************************************************************************\
-  Save a byte to RTC memory
+  Save RTC struct to RTC memory
   \*********************************************************************************************/
-#define RTC_BASE 65 // system doc says user area starts at 64, but it does not work (?)
-void saveToRTC(byte Par1)
+#define RTC_BASE_STRUCT 64
+void saveToRTC()
 {
-  byte buf[3] = {0xAA, 0x55, 0};
-  buf[2] = Par1;
-  system_rtc_mem_write(RTC_BASE, buf, 3);
+  RTC.ID1 = 0xAA;
+  RTC.ID2 = 0x55;
+  RTC.valid = true;
+  system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
 }
 
 
 /********************************************************************************************\
-  Read a byte from RTC memory
+  Read RTC struct from RTC memory
   \*********************************************************************************************/
-boolean readFromRTC(byte* data)
+boolean readFromRTC()
 {
-  byte buf[3] = {0, 0, 0};
-  system_rtc_mem_read(RTC_BASE, buf, 3);
-  if (buf[0] == 0xAA && buf[1] == 0x55)
+  system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
   {
-    *data = buf[2];
+    RTC.valid = false;
     return true;
   }
   return false;
+}
+
+
+/********************************************************************************************\
+  Save values to RTC memory
+  \*********************************************************************************************/
+#define RTC_BASE_USERVAR 74
+void saveUserVarToRTC()
+{
+  system_rtc_mem_write(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+}
+
+
+/********************************************************************************************\
+  Read RTC struct from RTC memory
+  \*********************************************************************************************/
+boolean readUserVarFromRTC()
+{
+  system_rtc_mem_read(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
 }
 
 
@@ -1142,7 +1070,7 @@ unsigned long string2TimeLong(String &str)
   if (GetArgv(command, TmpStr1, 1))
   {
     String day = TmpStr1;
-    String weekDays = F("allsunmontuewedthufrisat");
+    String weekDays = F("allsunmontuewedthufrisatwrkwkd");
     y = weekDays.indexOf(TmpStr1) / 3;
     if (y == 0)
       y = 0xf; // wildcard is 0xf
@@ -1187,7 +1115,7 @@ String timeLong2String(unsigned long lngTime)
   x = (lngTime >> 16) & 0xf;
   if (x == 0x0f)
     x = 0;
-  String weekDays = F("AllSunMonTueWedThuFriSat");
+  String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
   time = weekDays.substring(x * 3, x * 3 + 3);
   time += ",";
 
@@ -1228,6 +1156,48 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
+
+/********************************************************************************************\
+  Match clock event
+  \*********************************************************************************************/
+boolean matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
+{
+  unsigned long Mask;
+  for (byte y = 0; y < 8; y++)
+  {
+    if (((clockSet >> (y * 4)) & 0xf) == 0xf)  // if nibble y has the wildcard value 0xf
+    {
+      Mask = 0xffffffff  ^ (0xFUL << (y * 4)); // Mask to wipe nibble position y.
+      clockEvent &= Mask;                      // clear nibble
+      clockEvent |= (0xFUL << (y * 4));        // fill with wildcard value 0xf
+    }
+  }
+
+  if (((clockSet >> (16)) & 0xf) == 0x8)     // if weekday nibble has the wildcard value 0x8 (workdays)
+    if (weekday() >= 2 and weekday() <= 6)   // and we have a working day today...
+    {
+      Mask = 0xffffffff  ^ (0xFUL << (16));  // Mask to wipe nibble position.
+      clockEvent &= Mask;                    // clear nibble
+      clockEvent |= (0x8UL << (16));         // fill with wildcard value 0x8
+    }
+
+  if (((clockSet >> (16)) & 0xf) == 0x9)     // if weekday nibble has the wildcard value 0x9 (weekends)
+    if (weekday() == 1 or weekday() == 7)    // and we have a weekend day today...
+    {
+      Mask = 0xffffffff  ^ (0xFUL << (16));  // Mask to wipe nibble position.
+      clockEvent &= Mask;                    // clear nibble
+      clockEvent |= (0x9UL << (16));         // fill with wildcard value 0x9
+    }
+
+  if (clockEvent == clockSet)
+    return true;
+  return false;
+}
+
+
+/********************************************************************************************\
+  Parse string template
+  \*********************************************************************************************/
 
 String parseTemplate(String &tmpString, byte lineSize)
 {
@@ -1301,9 +1271,8 @@ String parseTemplate(String &tmpString, byte lineSize)
   }
 
   // replace other system variables like %sysname%, %systime%, %ip%
-  newString.replace("%sysname%", Settings.Name);
+  newString.replace(F("%sysname%"), Settings.Name);
 
-#if FEATURE_TIME
   String strTime = "";
   if (hour() < 10)
     strTime += " ";
@@ -1312,22 +1281,21 @@ String parseTemplate(String &tmpString, byte lineSize)
   if (minute() < 10)
     strTime += "0";
   strTime += minute();
-  newString.replace("%systime%", strTime);
-#endif
+  newString.replace(F("%systime%"), strTime);
 
-  newString.replace("%uptime%", String(wdcounter / 2));
+  newString.replace(F("%uptime%"), String(wdcounter / 2));
 
 #if FEATURE_ADC_VCC
-  newString.replace("%vcc%", String(vcc));
+  newString.replace(F("%vcc%"), String(vcc));
 #endif
 
   IPAddress ip = WiFi.localIP();
   char strIP[20];
   sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  newString.replace("%ip%", strIP);
+  newString.replace(F("%ip%"), strIP);
 
   newString.replace("%sysload%", String(100 - (100 * loopCounterLast / loopCounterMax)));
-  
+
   // padding spaces
   while (newString.length() < lineSize)
     newString += " ";
@@ -1608,8 +1576,6 @@ int Calculate(const char *input, float* result)
 /********************************************************************************************\
   Time stuff
   \*********************************************************************************************/
-#if FEATURE_TIME
-
 #define SECS_PER_MIN  (60UL)
 #define SECS_PER_HOUR (3600UL)
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
@@ -1825,7 +1791,6 @@ unsigned long getNtpTime()
   }
   return 0;
 }
-#endif
 
 
 /********************************************************************************************\
@@ -1833,9 +1798,28 @@ unsigned long getNtpTime()
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
-  static uint8_t* data;
-  static byte nestingLevel;
+  for (byte x = 1; x < RULESETS_MAX + 1; x++)
+  {
+    String fileName = F("rules");
+    fileName += x;
+    fileName += F(".txt");
+    if (SPIFFS.exists(fileName))
+      rulesProcessingFile(fileName, event);
+  }
+}
 
+/********************************************************************************************\
+  Rules processing
+  \*********************************************************************************************/
+void rulesProcessingFile(String fileName, String& event)
+{
+  unsigned long timer = millis();
+  fs::File f = SPIFFS.open(fileName, "r+");
+  if (!f)
+    return;
+
+  static byte nestingLevel;
+  char data = 0;
   String log = "";
 
   nestingLevel++;
@@ -1851,33 +1835,6 @@ void rulesProcessing(String& event)
   log += event;
   addLog(LOG_LEVEL_INFO, log);
 
-  // load rules from flash memory, stored in offset block 10
-  if (data == NULL)
-  {
-    data = new uint8_t[RULES_MAX_SIZE];
-#if FEATURE_SPIFFS
-    File f = SPIFFS.open("rules.txt", "r+");
-    if (f)
-    {
-      byte *pointerToByteToRead = data;
-      for (int x = 0; x < f.size(); x++)
-      {
-        *pointerToByteToRead = f.read();
-        pointerToByteToRead++;// next byte
-      }
-      data[f.size()] = 0;
-      f.close();
-    }
-#else
-    uint32_t _sector = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-    _sector += 10;
-    noInterrupts();
-    spi_flash_read(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(data), RULES_MAX_SIZE);
-    interrupts();
-#endif
-    data[RULES_MAX_SIZE - 1] = 0; // make sure it's terminated!
-  }
-
   int pos = 0;
   String line = "";
   boolean match = false;
@@ -1887,12 +1844,13 @@ void rulesProcessing(String& event)
   boolean condition = false;
   boolean ifBranche = false;
 
-  while (data[pos] != 0)
+  while (f.available())
   {
-    if (data[pos] != 0 && data[pos] != 10)
-      line += (char)data[pos];
+    data = f.read();
+    if (data != 10)
+      line += data;
 
-    if (data[pos] == 10)    // if line complete, parse this rule
+    if (data == 10)    // if line complete, parse this rule
     {
       line.replace("\r", "");
       if (line.substring(0, 2) != "//" && line.length() > 0)
@@ -1924,7 +1882,10 @@ void rulesProcessing(String& event)
               action = lineOrg.substring(split + 7);
               action.trim();
             }
-            match = ruleMatch(event, eventTrigger);
+            if (eventTrigger == "*") // wildcard, always process
+              match = true;
+            else
+              match = ruleMatch(event, eventTrigger);
             if (action.length() > 0) // single on/do/action line, no block
             {
               isCommand = true;
@@ -1981,7 +1942,7 @@ void rulesProcessing(String& event)
             if (equalsPos > 0)
             {
               String tmpString = event.substring(equalsPos + 1);
-              action.replace("%eventvalue%", tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
             }
             log = F("ACT  : ");
             log += action;
@@ -1999,14 +1960,16 @@ void rulesProcessing(String& event)
 
       line = "";
     }
-    pos++;
+    //pos++;
   }
 
   nestingLevel--;
   if (nestingLevel == 0)
   {
-    delete [] data;
-    data = NULL;
+    log = F("EVENT: Processing time:");
+    log += millis() - timer;
+    log += F(" milliSeconds");
+    addLog(LOG_LEVEL_INFO, log);
   }
 }
 
@@ -2023,7 +1986,11 @@ boolean ruleMatch(String& event, String& rule)
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
   {
-    if (event.equalsIgnoreCase(rule))
+    int pos = rule.indexOf('#');
+    if (pos == -1) // no # sign in rule, use 'wildcard' match...
+      tmpEvent = event.substring(0,rule.length());
+
+    if (tmpEvent.equalsIgnoreCase(rule))
       return true;
     else
       return false;
@@ -2043,17 +2010,7 @@ boolean ruleMatch(String& event, String& rule)
         tmpRule  = rule.substring(pos2 + 1);
         unsigned long clockEvent = string2TimeLong(tmpEvent);
         unsigned long clockSet = string2TimeLong(tmpRule);
-        unsigned long Mask;
-        for (byte y = 0; y < 8; y++)
-        {
-          if (((clockSet >> (y * 4)) & 0xf) == 0xf)  // if nibble y has the wildcard value 0xf
-          {
-            Mask = 0xffffffff  ^ (0xFUL << (y * 4)); // Mask to wipe nibble position y.
-            clockEvent &= Mask;                      // clear nibble
-            clockEvent |= (0xFUL << (y * 4));        // fill with wildcard value 0xf
-          }
-        }
-        if (clockEvent == clockSet)
+        if (matchClockEvent(clockEvent, clockSet))
           return true;
         else
           return false;
@@ -2244,3 +2201,15 @@ void createRuleEvents(byte TaskIndex)
     rulesProcessing(eventString);
   }
 }
+
+void checkRAM(byte id)
+{
+  uint16_t freeRAM = FreeMem();
+
+  if (freeRAM < lowestRAM)
+  {
+    lowestRAM = freeRAM;
+    lowestRAMid = id;
+  }
+}
+

@@ -2,20 +2,6 @@
 //#################################### Plugin 007: ExtWiredAnalog #######################################
 //#######################################################################################################
 
-/*********************************************************************************************\
- * This plugin provides support for 4 extra analog inputs, using the PCF8591 (NXP/Philips)
- * Support            : www.esp8266.nu
- * Date               : Apr 2015
- * Compatibility      : R004
- * Syntax             : "ExtWiredAnalog <Par1:Port>, <Par2:Variable>"
- *********************************************************************************************
- * Technical description:
- *
- * The PCF8591 is a IO Expander chip that connects through the I2C bus
- * Basic I2C address = 0x48
- * Each chip has 4 analog inputs
- * This commando reads the analog input and stores the result into a variable
- \*********************************************************************************************/
 #define PLUGIN_007
 #define PLUGIN_ID_007         7
 #define PLUGIN_NAME_007       "Analog input - PCF8591"

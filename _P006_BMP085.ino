@@ -57,7 +57,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String elev = WebServer.arg("_p006_bmp085_elev");
+        String elev = WebServer.arg(F("_p006_bmp085_elev"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
         success = true;
         break;

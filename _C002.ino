@@ -20,6 +20,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 1883;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -28,11 +29,11 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_002);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
-        strcpy_P(Settings.MQTTsubscribe, PSTR("domoticz/out"));
-        strcpy_P(Settings.MQTTpublish, PSTR("domoticz/in"));
+        event->String1 = F("domoticz/out");
+        event->String2 = F("domoticz/in");
         break;
       }
 
@@ -60,10 +61,10 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             nvalue = nvaluealt;
           if ((int)switchtype == 0)
             switchtype = "?";
-  
+
           for (byte x = 0; x < TASKS_MAX; x++)
           {
-            if (Settings.TaskDeviceID[x] == idx)
+            if (Settings.TaskDeviceID[event->ProtocolIndex][x] == idx) // todo check, this could not work as expected?
             {
               if (Settings.TaskDeviceNumber[x] == 1) // temp solution, if input switch, update state
               {
@@ -120,102 +121,115 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        StaticJsonBuffer<200> jsonBuffer;
-
-        JsonObject& root = jsonBuffer.createObject();
-
-        root["idx"] = event->idx;
-
-        String values;
-        char str[80];
-
-        switch (event->sensorType)
+        if (event->idx != 0)
         {
-          case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-            root["nvalue"] = 0;
-            values = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            values.toCharArray(str, 80);
-            root["svalue"] =  str;
-            break;
-          case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-            root["nvalue"] = 0;
-            values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-            values.toCharArray(str, 80);
-            root["svalue"] =  str;
-            break;
-          case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
-            root["nvalue"] = 0;
-            values  = toString(UserVar[event->BaseVarIndex ],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            values += ";";
-            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            values.toCharArray(str, 80);
-            root["svalue"] =  str;
-            break;            
-          case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
-            root["nvalue"] = 0;
-            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            values += ";";
-            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            values += ";0";
-            values.toCharArray(str, 80);
-            root["svalue"] =  str;
-            break;
-          case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
-            root["nvalue"] = 0;
-            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            values += ";0;0;";
-            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            values += ";0";
-            values.toCharArray(str, 80);
-            root["svalue"] =  str;
-            break;
-          case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
-            root["nvalue"] = 0;
-            values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-            values += ";";
-            values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-            values += ";0;";
-            values += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-            values += ";0";
-            values.toCharArray(str, 80);
-            root["svalue"] =  str;
-            break;
-          case SENSOR_TYPE_SWITCH:
-            root["command"] = "switchlight";
-            if (UserVar[event->BaseVarIndex] == 0)
-              root["switchcmd"] = "Off";
-            else
-              root["switchcmd"] = "On";
-            break;
-          case SENSOR_TYPE_DIMMER:
-            root["command"] = "switchlight";
-            if (UserVar[event->BaseVarIndex] == 0)
-              root["switchcmd"] = "Off";
-            else
-              root["Set%20Level"] = UserVar[event->BaseVarIndex];
-            break;
-        }
 
-        char json[256];
-        root.printTo(json, sizeof(json));
-        String log = F("MQTT : ");
-        log += json;
-        addLog(LOG_LEVEL_DEBUG, json);
+          ControllerSettingsStruct ControllerSettings;
+          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-        String pubname = Settings.MQTTpublish;
-        pubname.replace("%sysname%", Settings.Name);
-        pubname.replace("%tskname%", ExtraTaskSettings.TaskDeviceName);
-        pubname.replace("%id%", String(event->idx));
+          StaticJsonBuffer<200> jsonBuffer;
 
-        if (!MQTTclient.publish(pubname.c_str(), json, Settings.MQTTRetainFlag))
-        {
-          log = F("MQTT publish failed");
+          JsonObject& root = jsonBuffer.createObject();
+
+          root["idx"] = event->idx;
+
+          String values;
+          char str[80];
+
+          switch (event->sensorType)
+          {
+            case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
+              root["nvalue"] = 0;
+              values = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              values.toCharArray(str, 80);
+              root["svalue"] =  str;
+              break;
+            case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
+              root["nvalue"] = 0;
+              values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+              values.toCharArray(str, 80);
+              root["svalue"] =  str;
+              break;
+            case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
+              root["nvalue"] = 0;
+              values  = toString(UserVar[event->BaseVarIndex ], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              values += ";";
+              values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              values.toCharArray(str, 80);
+              root["svalue"] =  str;
+              break;
+            case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
+              root["nvalue"] = 0;
+              values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              values += ";";
+              values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              values += ";0";
+              values.toCharArray(str, 80);
+              root["svalue"] =  str;
+              break;
+            case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+              root["nvalue"] = 0;
+              values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              values += ";0;0;";
+              values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              values += ";0";
+              values.toCharArray(str, 80);
+              root["svalue"] =  str;
+              break;
+            case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
+              root["nvalue"] = 0;
+              values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              values += ";";
+              values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              values += ";0;";
+              values += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              values += ";0";
+              values.toCharArray(str, 80);
+              root["svalue"] =  str;
+              break;
+            case SENSOR_TYPE_SWITCH:
+              root["command"] = "switchlight";
+              if (UserVar[event->BaseVarIndex] == 0)
+                root["switchcmd"] = "Off";
+              else
+                root["switchcmd"] = "On";
+              break;
+            case SENSOR_TYPE_DIMMER:
+              root["command"] = "switchlight";
+              if (UserVar[event->BaseVarIndex] == 0)
+                root["switchcmd"] = "Off";
+              else
+                root["Set%20Level"] = UserVar[event->BaseVarIndex];
+              break;
+          }
+
+          char json[256];
+          root.printTo(json, sizeof(json));
+          String log = F("MQTT : ");
+          log += json;
           addLog(LOG_LEVEL_DEBUG, json);
-          MQTTConnect();
-          connectionFailures++;
+
+          String pubname = ControllerSettings.Publish;
+          pubname.replace(F("%sysname%"), Settings.Name);
+          pubname.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
+          pubname.replace(F("%id%"), String(event->idx));
+
+          if (!MQTTclient.publish(pubname.c_str(), json, Settings.MQTTRetainFlag))
+          {
+            log = F("MQTT : publish failed");
+            addLog(LOG_LEVEL_DEBUG, json);
+            MQTTConnect();
+            connectionFailures++;
+          }
+          else if (connectionFailures)
+            connectionFailures--;
+
+        } // if ixd !=0
+        else
+        {
+          String log = F("MQTT : IDX cannot be zero!");
+          addLog(LOG_LEVEL_ERROR, log);
         }
-        else if (connectionFailures)
-          connectionFailures--;
         break;
       }
 

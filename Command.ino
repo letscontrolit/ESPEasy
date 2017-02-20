@@ -1,3 +1,5 @@
+char* ramtest;
+
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(byte source, const char *Line)
 {
@@ -19,6 +21,109 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
   // commands for debugging
   // ****************************************
+
+  if (strcasecmp_P(Command, PSTR("background")) == 0)
+  {
+    success = true;
+    unsigned long timer = millis() + Par1;
+    Serial.println("start");
+    while (millis() < timer)
+      backgroundtasks();
+    Serial.println("end");
+  }
+          
+  if (strcasecmp_P(Command, PSTR("executeRules")) == 0)
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2))
+    {
+      String fileName = TmpStr1;
+      String event = "";
+      rulesProcessingFile(fileName, event);
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("clearRTCRAM")) == 0)
+  {
+    success = true;
+    RTC.factoryResetCounter = 0;
+    RTC.deepSleepState = 0;
+    RTC.rebootCounter = 0;
+    RTC.flashDayCounter = 0;
+    RTC.flashCounter = 0;
+    saveToRTC();
+  }
+
+  if (strcasecmp_P(Command, PSTR("notify")) == 0)
+  {
+    success = true;
+    String message = "";
+    if (GetArgv(Line, TmpStr1, 3))
+      message = TmpStr1;
+
+    if (Par1 > 0)
+    {
+      if (Settings.NotificationEnabled[Par1 - 1] && Settings.Notification[Par1 - 1] != 0)
+      {
+        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[Par1 - 1]);
+        struct EventStruct TempEvent;
+        TempEvent.NotificationProtocolIndex = Par1 - 1;
+        if (NPlugin_id[NotificationProtocolIndex] != 0)
+          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, message);
+      }
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("resetFlashWriteCounter")) == 0)
+  {
+    success = true;
+    RTC.flashDayCounter = 0;
+  }
+
+  if (strcasecmp_P(Command, PSTR("udptest")) == 0)
+  {
+    success = true;
+    for (byte x = 0; x < Par2; x++)
+    {
+      String event = "Test ";
+      event += x;
+      SendUDPCommand(Par1, (char*)event.c_str(), event.length());
+    }
+  }
+
+  if (strcasecmp_P(Command, PSTR("sdcard")) == 0)
+  {
+    success = true;
+    File root = SD.open("/");
+    root.rewindDirectory();
+    printDirectory(root, 0);
+    root.close();
+  }
+
+  if (strcasecmp_P(Command, PSTR("sdremove")) == 0)
+  {
+    success = true;
+    String fname = Line;
+    fname = fname.substring(9);
+    Serial.print(F("Removing:"));
+    Serial.println(fname.c_str());
+    SD.remove((char*)fname.c_str());
+  }
+
+  if (strcasecmp_P(Command, PSTR("lowmem")) == 0)
+  {
+    Serial.print(lowestRAM);
+    Serial.print(F(" : "));
+    Serial.println(lowestRAMid);
+    success = true;
+  }
+
+  if (strcasecmp_P(Command, PSTR("malloc")) == 0)
+  {
+    ramtest = (char *)malloc(Par1);
+    success = true;
+  }
+
   if (strcasecmp_P(Command, PSTR("sysload")) == 0)
   {
     success = true;
@@ -27,12 +132,12 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.print(int(loopCounterLast / 30));
     Serial.println(F(")"));
   }
-  
+
   if (strcasecmp_P(Command, PSTR("SerialFloat")) == 0)
   {
     success = true;
-    pinMode(1,INPUT);
-    pinMode(3,INPUT);
+    pinMode(1, INPUT);
+    pinMode(3, INPUT);
     delay(60000);
   }
 
@@ -45,6 +150,8 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.println(sizeof(Settings));
     Serial.print(F("ExtraTaskSettingsStruct: "));
     Serial.println(sizeof(ExtraTaskSettings));
+    Serial.print(F("DeviceStruct: "));
+    Serial.println(sizeof(Device));
   }
 
   if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
@@ -96,6 +203,13 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for rules
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("deepSleep")) == 0)
+  {
+    success = true;
+    if (Par1 > 0)
+      deepSleep(Par1);
+  }
+
   if (strcasecmp_P(Command, PSTR("TaskValueSet")) == 0)
   {
     success = true;
@@ -110,7 +224,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("TaskRun")) == 0)
   {
     success = true;
-    SensorSendTask(Par1 -1);
+    SensorSendTask(Par1 - 1);
   }
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
@@ -152,7 +266,7 @@ void ExecuteCommand(byte source, const char *Line)
     int index = event.indexOf(',');
     if (index > 0)
     {
-      event = event.substring(index+1);
+      event = event.substring(index + 1);
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
@@ -165,19 +279,19 @@ void ExecuteCommand(byte source, const char *Line)
     int index = event.indexOf(',');
     if (index > 0)
     {
-      String topic = event.substring(0,index);
-      String value = event.substring(index+1);
-      MQTTclient.publish(topic.c_str(), value.c_str(),Settings.MQTTRetainFlag);
+      String topic = event.substring(0, index);
+      String value = event.substring(index + 1);
+      MQTTclient.publish(topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
     }
   }
-  
+
   if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
   {
     success = true;
     String strLine = Line;
-    String ip = parseString(strLine,2);
-    String port = parseString(strLine,3);
-    int msgpos = getParamStartPos(strLine,4);
+    String ip = parseString(strLine, 2);
+    String port = parseString(strLine, 3);
+    int msgpos = getParamStartPos(strLine, 4);
     String message = strLine.substring(msgpos);
     byte ipaddress[4];
     str2ip((char*)ip.c_str(), ipaddress);
@@ -191,16 +305,16 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     String strLine = Line;
-    String host = parseString(strLine,2);
-    String port = parseString(strLine,3);
-    int pathpos = getParamStartPos(strLine,4);
+    String host = parseString(strLine, 2);
+    String port = parseString(strLine, 3);
+    int pathpos = getParamStartPos(strLine, 4);
     String path = strLine.substring(pathpos);
     WiFiClient client;
     if (client.connect(host.c_str(), port.toInt()))
     {
       client.print(String("GET ") + path + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
+                   "Host: " + host + "\r\n" +
+                   "Connection: close\r\n\r\n");
 
       unsigned long timer = millis() + 200;
       while (!client.available() && millis() < timer)
@@ -208,7 +322,7 @@ void ExecuteCommand(byte source, const char *Line)
 
       while (client.available()) {
         String line = client.readStringUntil('\n');
-        if (line.substring(0, 15) == "HTTP/1.1 200 OK")
+        if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           addLog(LOG_LEVEL_DEBUG, line);
         delay(1);
       }
@@ -238,19 +352,19 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     WifiScan();
   }
-  
+
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
   {
     success = true;
-    WifiConnect(1);
+    WifiConnect(true, 1);
   }
-  
+
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
   {
     success = true;
     WifiDisconnect();
   }
-  
+
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
   {
     success = true;
@@ -268,9 +382,6 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("Erase")) == 0)
   {
     success = true;
-    EraseFlash();
-    ZeroFillFlash();
-    saveToRTC(0);
     WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
     WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
@@ -292,34 +403,6 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     LoadSettings();
-  }
-
-  if (strcasecmp_P(Command, PSTR("FlashDump")) == 0)
-  {
-    success = true;
-    uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-    uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
-
-    Serial.print(F("Sketch size        : "));
-    Serial.println(ESP.getSketchSize());
-    Serial.print(F("Sketch free space  : "));
-    Serial.println(ESP.getFreeSketchSpace());
-    Serial.print(F("Flash size         : "));
-    Serial.println(ESP.getFlashChipRealSize());
-    Serial.print(F("SPIFFS start sector: "));
-    Serial.println(_sectorStart);
-    Serial.print(F("SPIFFS end sector  : "));
-    Serial.println(_sectorEnd);
-    char data[80];
-    if (Par2 == 0) Par2 = Par1;
-    for (int x = Par1; x <= Par2; x++)
-    {
-      LoadFromFlash(x * 1024, (byte*)&data, sizeof(data));
-      Serial.print(F("Offset: "));
-      Serial.print(x);
-      Serial.print(" : ");
-      Serial.println(data);
-    }
   }
 
   if (strcasecmp_P(Command, PSTR("Debug")) == 0)
@@ -354,12 +437,35 @@ void ExecuteCommand(byte source, const char *Line)
   }
 
   yield();
-  
+
   if (success)
     status += F("\nOk");
-  else  
+  else
     status += F("\nUnknown command!");
-  SendStatus(source,status);
+  SendStatus(source, status);
   yield();
 }
 
+void printDirectory(File dir, int numTabs) {
+  while (true) {
+
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    for (uint8_t i = 0; i < numTabs; i++) {
+      Serial.print('\t');
+    }
+    Serial.print(entry.name());
+    if (entry.isDirectory()) {
+      Serial.println("/");
+      printDirectory(entry, numTabs + 1);
+    } else {
+      // files have sizes, directories do not
+      Serial.print("\t\t");
+      Serial.println(entry.size(), DEC);
+    }
+    entry.close();
+  }
+}
