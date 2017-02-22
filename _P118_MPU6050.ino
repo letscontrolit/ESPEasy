@@ -1,5 +1,5 @@
 //#######################################################################################################
-//#################################### Plugin 118: MPU6050 [Development] ################################
+//#################################### Plugin 118: MPU6050 [Testing] ####################################
 //#######################################################################################################
 
 // Based on the works of Nolan Gilley @ https://home-assistant.io/blog/2016/08/03/laundry-automation-update/
@@ -53,7 +53,7 @@
 //              Settings.TaskDevicePluginConfigLong[x][0] - Minimal detection threshold counter
 //              Settings.TaskDevicePluginConfigLong[x][1] - Detection threshold window counter
 
-#ifdef PLUGIN_BUILD_DEV
+#ifdef PLUGIN_BUILD_TESTING
 
 #define MPU6050_RA_GYRO_CONFIG              0x1B
 #define MPU6050_RA_ACCEL_CONFIG             0x1C
@@ -72,7 +72,7 @@
 
 #define PLUGIN_118
 #define PLUGIN_ID_118                       118
-#define PLUGIN_NAME_118                     "MPU 6050 [DEVELOPMENT]" 
+#define PLUGIN_NAME_118                     "MPU 6050 [TESTING]" 
 #define PLUGIN_VALUENAME1_118               ""
 
 int16_t _P118_axis[3][5][2];                // [xyz], [min/max/range,a,g], [0x68/0x69]
@@ -177,6 +177,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           string += F("Each period, defined by the [detection window], the counter is checked against<br>");
           string += F("the [min. detection count] and if found equal or larger, movement is detected.<br>");
           string += F("If in the next window the [min. detection count] value is not met, movement has stopped.");
+          string += F("The [detection window] cannot be smaller than the [min. detection count].");
           string += F("<TR><TD>Min. detection count:<TD><input type='text' size='6' maxlength='6' name='plugin_118_threshold_counter' value='");
           string += Settings.TaskDevicePluginConfig[event->TaskIndex][5];
           string += F("'>");
@@ -205,6 +206,9 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][5] = plugin1.toInt();
         plugin1 = WebServer.arg("plugin_118_threshold_window");
         Settings.TaskDevicePluginConfig[event->TaskIndex][6] = plugin1.toInt();
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][6] < Settings.TaskDevicePluginConfig[event->TaskIndex][5]) {
+          Settings.TaskDevicePluginConfig[event->TaskIndex][6] = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        }
         success = true;
         break;
       }
