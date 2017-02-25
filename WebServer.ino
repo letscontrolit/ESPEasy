@@ -2957,6 +2957,17 @@ void handle_sysinfo() {
   reply += F("<TR><TD>GIT version:<TD>");
   reply += BUILD_GIT;
 
+  reply += F("<TR><TD>Plugin sets:<TD>");
+  #ifdef PLUGIN_BUILD_DEV
+    reply += F("Normal, Testing, Development");
+  #elif PLUGIN_BUILD_TESTING
+    reply += F("Normal, Testing");
+  #elif PLUGIN_BUILD_NORMAL
+    reply += F("Normal");
+  #else
+    reply += F("Minimal");
+  #endif
+
 
   reply += F("<TR><TD>Core Version:<TD>");
   reply += ESP.getCoreVersion();

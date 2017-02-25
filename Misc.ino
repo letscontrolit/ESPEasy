@@ -444,11 +444,9 @@ void fileSystemCheck()
     if (!f)
     {
       log = F("formatting...");
-      Serial.println(log);
       addLog(LOG_LEVEL_INFO, log);
       SPIFFS.format();
       log = F("format done!");
-      Serial.println(log);
       addLog(LOG_LEVEL_INFO, log);
       ResetFactory();
     }
@@ -794,7 +792,8 @@ int SpiffsSectors()
 void ResetFactory(void)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
-
+  Serial.println(F("Resetting factory defaults..."));
+  delay(1000);
   if (readFromRTC())
   {
     Serial.print(F("RESET: Reboot count: "));
@@ -948,9 +947,25 @@ float ul2float(unsigned long ul)
   return f;
 }
 
+/********************************************************************************************\
+  Init critical variables for logging (important during initial factory reset stuff )
+  \*********************************************************************************************/
+void initLog()
+{
+  //make sure addLog doesnt do any stuff before initalisation of Settings is complete.
+  Settings.UseSerial=true;
+  Settings.SyslogLevel=0;
+  Settings.SerialLogLevel=2; //logging during initialisation
+  Settings.WebLogLevel=0;
+  Settings.SDLogLevel=0;
+  for (int l; l<9; l++)
+  {
+    Logging[l].Message=0;
+  }
+}
 
 /********************************************************************************************\
-  Add to log
+  Logging
   \*********************************************************************************************/
 void addLog(byte loglevel, String& string)
 {
@@ -2212,4 +2227,3 @@ void checkRAM(byte id)
     lowestRAMid = id;
   }
 }
-

@@ -594,6 +594,9 @@ void setup()
 
   Serial.begin(115200);
 
+  initLog();
+
+
   if (SpiffsSectors() < 32)
   {
     Serial.println(F("\nNo (or too small) SPIFFS area..\nSystem Halted\nPlease reflash with 128k SPIFFS minimum!"));
@@ -639,6 +642,7 @@ void setup()
     String log = F("\nINIT : Booting version: ");
     log += BUILD_GIT;
     addLog(LOG_LEVEL_INFO, log);
+
     log = F("INIT : Free RAM:");
     log += FreeMem();
     addLog(LOG_LEVEL_INFO, log);
