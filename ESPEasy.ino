@@ -113,7 +113,7 @@
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 #define ESP_PROJECT_PID           2016110801L
-#define VERSION                             3
+#define VERSION                             2
 #define BUILD                           20000 // git version 2.0.0
 #define BUILD_NOTES                 " - Mega"
 
