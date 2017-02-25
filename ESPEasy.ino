@@ -604,8 +604,13 @@ void setup()
       delay(1);
   }
 
-  fileSystemCheck();
   emergencyReset();
+
+  String log = F("\n\n\rINIT : Booting version: ");
+  log += BUILD_GIT;
+  addLog(LOG_LEVEL_INFO, log);
+
+  fileSystemCheck();
   LoadSettings();
 
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
@@ -639,9 +644,6 @@ void setup()
     if (Settings.Build != BUILD)
       BuildFixes();
 
-    String log = F("\nINIT : Booting version: ");
-    log += BUILD_GIT;
-    addLog(LOG_LEVEL_INFO, log);
 
     log = F("INIT : Free RAM:");
     log += FreeMem();

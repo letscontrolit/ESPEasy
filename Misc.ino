@@ -443,11 +443,6 @@ void fileSystemCheck()
     fs::File f = SPIFFS.open("config.dat", "r");
     if (!f)
     {
-      log = F("formatting...");
-      addLog(LOG_LEVEL_INFO, log);
-      SPIFFS.format();
-      log = F("format done!");
-      addLog(LOG_LEVEL_INFO, log);
       ResetFactory();
     }
   }
@@ -811,6 +806,15 @@ void ResetFactory(void)
   RTC.flashDayCounter = 0;
   saveToRTC();
 
+  //always format on factory reset, in case of corrupt SPIFFS
+  String log;
+  log = F("formatting...");
+  addLog(LOG_LEVEL_INFO, log);
+  SPIFFS.format();
+  log = F("format done!");
+  addLog(LOG_LEVEL_INFO, log);
+
+
   fs::File f = SPIFFS.open("config.dat", "w");
   if (f)
   {
@@ -910,7 +914,7 @@ void emergencyReset()
   if (Serial.available() == 2)
     if (Serial.read() == 0xAA && Serial.read() == 0x55)
     {
-      Serial.println(F("System will reset in 10 seconds..."));
+      Serial.println(F("\n\n\eSystem will reset to factory defaults in 10 seconds..."));
       delay(10000);
       ResetFactory();
     }
