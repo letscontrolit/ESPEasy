@@ -877,7 +877,7 @@ void ResetFactory(void)
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.SerialLogLevel  = 2;
-  Settings.WebLogLevel     = 0;
+  Settings.WebLogLevel     = 2;
   Settings.BaudRate        = 115200;
   Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
@@ -966,7 +966,7 @@ void initLog()
   Settings.UseSerial=true;
   Settings.SyslogLevel=0;
   Settings.SerialLogLevel=2; //logging during initialisation
-  Settings.WebLogLevel=0;
+  Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
   for (int l; l<9; l++)
   {
