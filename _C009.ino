@@ -35,6 +35,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesTemplate = false;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesID = false;
         Protocol[protocolCount].defaultPort = 8383;
         break;
       }
@@ -44,7 +45,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_009);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_SEND:
       {
 
