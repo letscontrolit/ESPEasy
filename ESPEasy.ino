@@ -555,7 +555,6 @@ byte NPlugin_id[NPLUGIN_MAX];
 
 String dummyString = "";
 
-boolean systemOK = false;
 byte lastBootCause = 0;
 
 boolean wifiSetup = false;
@@ -620,11 +619,7 @@ void setup()
 
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
-  if (Settings.Version == VERSION && Settings.PID == ESP_PROJECT_PID)
-  {
-    systemOK = true;
-  }
-  else
+  if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
   {
     // Direct Serial is allowed here, since this is only an emergency task.
     Serial.print(F("\nPID:"));
@@ -636,126 +631,119 @@ void setup()
     ResetFactory();
   }
 
-  if (systemOK)
+  if (Settings.UseSerial)
+    Serial.begin(Settings.BaudRate);
+
+  if (Settings.Build != BUILD)
+    BuildFixes();
+
+
+  log = F("INIT : Free RAM:");
+  log += FreeMem();
+  addLog(LOG_LEVEL_INFO, log);
+
+  if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+    Serial.setDebugOutput(true);
+
+  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  WifiAPconfig();
+  if (!WifiConnect(true,3))
+    WifiConnect(false,3);
+
+  hardwareInit();
+  PluginInit();
+  CPluginInit();
+  NPluginInit();
+
+  WebServerInit();
+
+  // setup UDP
+  if (Settings.UDPPort != 0)
+    portUDP.begin(Settings.UDPPort);
+
+  // Setup MQTT Client
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
+  if (Protocol[ProtocolIndex].usesMQTT)
+    MQTTConnect();
+
+  sendSysInfoUDP(3);
+
+  log = F("INIT : Boot OK");
+  addLog(LOG_LEVEL_INFO, log);
+
+  if (Settings.deepSleep)
   {
-    if (Settings.UseSerial)
-      Serial.begin(Settings.BaudRate);
-
-    if (Settings.Build != BUILD)
-      BuildFixes();
-
-
-    log = F("INIT : Free RAM:");
-    log += FreeMem();
+    log = F("INIT : Deep sleep enabled");
     addLog(LOG_LEVEL_INFO, log);
+  }
 
-    if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-      Serial.setDebugOutput(true);
-
-    WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-    WifiAPconfig();
-    if (!WifiConnect(true,3))
-      WifiConnect(false,3);
-
-    hardwareInit();
-    PluginInit();
-    CPluginInit();
-    NPluginInit();
-
-    WebServerInit();
-
-    // setup UDP
-    if (Settings.UDPPort != 0)
-      portUDP.begin(Settings.UDPPort);
-
-    // Setup MQTT Client
-    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
-    if (Protocol[ProtocolIndex].usesMQTT)
-      MQTTConnect();
-
-    sendSysInfoUDP(3);
-
-    log = F("INIT : Boot OK");
-    addLog(LOG_LEVEL_INFO, log);
-
-    if (Settings.deepSleep)
-    {
-      log = F("INIT : Deep sleep enabled");
-      addLog(LOG_LEVEL_INFO, log);
-    }
-
-    byte bootMode = 0;
-    if (readFromRTC())
-    {
-      readUserVarFromRTC();
-      bootMode = RTC.deepSleepState;
-      if (bootMode == 1)
-        log = F("INIT : Reboot from deepsleep");
-      else
-        log = F("INIT : Normal boot");
-    }
+  byte bootMode = 0;
+  if (readFromRTC())
+  {
+    readUserVarFromRTC();
+    bootMode = RTC.deepSleepState;
+    if (bootMode == 1)
+      log = F("INIT : Reboot from deepsleep");
     else
-    {
-      RTC.factoryResetCounter=0;
-      RTC.deepSleepState=0;
-      RTC.rebootCounter=0;
-      RTC.flashDayCounter=0;
-      RTC.flashCounter=0;
-      saveToRTC();
-
-      // cold boot situation
-      if (lastBootCause == 0) // only set this if not set earlier during boot stage.
-        lastBootCause = BOOT_CAUSE_COLD_BOOT;
-      log = F("INIT : Cold Boot");
-    }
-
-    addLog(LOG_LEVEL_INFO, log);
-
-    // Setup timers
-    if (bootMode == 0)
-    {
-      for (byte x = 0; x < TASKS_MAX; x++)
-        if (Settings.TaskDeviceTimer[x] !=0)
-          timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
-
-      timer = millis() + 30000; // startup delay 30 sec
-    }
-    else
-    {
-      for (byte x = 0; x < TASKS_MAX; x++)
-        timerSensor[x] = millis() + 0;
-      timer = millis() + 0; // no startup from deepsleep wake up
-    }
-
-    timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
-    timer1s = millis() + 1000; // timer for periodic actions once per/sec
-    timerwd = millis() + 30000; // timer for watchdog once per 30 sec
-
-    if (Settings.UseNTP)
-      initTime();
-
-#if FEATURE_ADC_VCC
-    vcc = ESP.getVcc() / 1000.0;
-#endif
-
-    // Start DNS, only used if the ESP has no valid WiFi config
-    // It will reply with it's own address on all DNS requests
-    // (captive portal concept)
-    if (wifiSetup)
-      dnsServer.start(DNS_PORT, "*", apIP);
-
-    if (Settings.UseRules)
-    {
-      String event = F("System#Boot");
-      rulesProcessing(event);
-    }
-    RTC.deepSleepState=0;
-    saveToRTC();
+      log = F("INIT : Normal boot");
   }
   else
   {
-    Serial.println(F("Entered Rescue mode!"));
+    RTC.factoryResetCounter=0;
+    RTC.deepSleepState=0;
+    RTC.rebootCounter=0;
+    RTC.flashDayCounter=0;
+    RTC.flashCounter=0;
+    saveToRTC();
+
+    // cold boot situation
+    if (lastBootCause == 0) // only set this if not set earlier during boot stage.
+      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    log = F("INIT : Cold Boot");
   }
+
+  addLog(LOG_LEVEL_INFO, log);
+
+  // Setup timers
+  if (bootMode == 0)
+  {
+    for (byte x = 0; x < TASKS_MAX; x++)
+      if (Settings.TaskDeviceTimer[x] !=0)
+        timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
+
+    timer = millis() + 30000; // startup delay 30 sec
+  }
+  else
+  {
+    for (byte x = 0; x < TASKS_MAX; x++)
+      timerSensor[x] = millis() + 0;
+    timer = millis() + 0; // no startup from deepsleep wake up
+  }
+
+  timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
+  timer1s = millis() + 1000; // timer for periodic actions once per/sec
+  timerwd = millis() + 30000; // timer for watchdog once per 30 sec
+
+  if (Settings.UseNTP)
+    initTime();
+
+#if FEATURE_ADC_VCC
+  vcc = ESP.getVcc() / 1000.0;
+#endif
+
+  // Start DNS, only used if the ESP has no valid WiFi config
+  // It will reply with it's own address on all DNS requests
+  // (captive portal concept)
+  if (wifiSetup)
+    dnsServer.start(DNS_PORT, "*", apIP);
+
+  if (Settings.UseRules)
+  {
+    String event = F("System#Boot");
+    rulesProcessing(event);
+  }
+  RTC.deepSleepState=0;
+  saveToRTC();
 }
 
 
@@ -778,25 +766,21 @@ void loop()
       if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
         serial();
 
-  if (systemOK)
-  {
-    if (millis() > timer20ms)
-      run50TimesPerSecond();
 
-    if (millis() > timer100ms)
-      run10TimesPerSecond();
+  if (millis() > timer20ms)
+    run50TimesPerSecond();
 
-    if (millis() > timer1s)
-      runOncePerSecond();
+  if (millis() > timer100ms)
+    run10TimesPerSecond();
 
-    if (millis() > timerwd)
-      runEach30Seconds();
+  if (millis() > timer1s)
+    runOncePerSecond();
 
-    backgroundtasks();
+  if (millis() > timerwd)
+    runEach30Seconds();
 
-  }
-  else
-    delay(1);
+  backgroundtasks();
+
 }
 
 
