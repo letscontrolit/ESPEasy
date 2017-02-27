@@ -75,6 +75,7 @@ void MQTTConnect()
 
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = "ESPClient";
+  clientid += Settings.Name;
   clientid += Settings.Unit;
   String subscribeTo = "";
 
