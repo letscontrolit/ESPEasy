@@ -138,7 +138,7 @@ void handle_root() {
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
-    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=http://192.168.4.1/setup'>");
+    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>");
     return;
   }
 
