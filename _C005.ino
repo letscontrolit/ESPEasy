@@ -55,6 +55,15 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         String cmd = "";
         struct EventStruct TempEvent;
 
+        // Add feature to control Task values via OpenHAB mqtt
+        // "set" is used in ioBroker's mqtt broker
+        if (topicSplit[count] == "set")
+        {
+          count--;
+          int TaskIndex = getTaskIndex(topicSplit[count-1]);
+          int ValueNameIndex = getValueNameIndex(TaskIndex, topicSplit[count]);
+          UserVar[(VARS_PER_TASK * TaskIndex) + ValueNameIndex] = event->String2.toFloat();
+        }
         if (topicSplit[count] == "cmd")
         {
           cmd = event->String2;
