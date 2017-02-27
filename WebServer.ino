@@ -186,9 +186,18 @@ void handle_root() {
     }
 
     reply += F("<TR><TD>Uptime:<TD>");
-    reply += wdcounter / 2;
-    reply += F(" minutes");
-
+    /* reply += wdcounter / 2;
+    reply += F(" minutes"); */
+    char strUpTime[10]; /* enough for "9999:23:59" */
+    int minutes = wdcounter / 2;
+    int days = minutes / 1440;
+    minutes = minutes%1440; /* minutes now less than a day */
+    int hrs = minutes / 60;
+    minutes = minutes%60; /*minutes less than an hour*/
+    sprintf_P(strUpTime, PSTR("%d:%02d:%02d"),days, hrs, minutes);
+    reply += strUpTime;
+    reply += F(" days:hours:minutes");
+    
     if (WiFi.status() == WL_CONNECTED)
     {
       reply += F("<TR><TD>Wifi RSSI:<TD>");
