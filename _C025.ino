@@ -117,6 +117,7 @@ boolean CPlugin_025(byte function, struct EventStruct *event, String& string)
               HTTPSend025(event, 1, UserVar[event->BaseVarIndex + 1], 0);
               break;
             }
+          case SENSOR_TYPE_TRIPLE:
           case SENSOR_TYPE_TEMP_HUM_BARO:
             {
               HTTPSend025(event, 0, UserVar[event->BaseVarIndex], 0);
