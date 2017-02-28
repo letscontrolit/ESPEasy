@@ -117,6 +117,10 @@
 #define BUILD                           20000 // git version 2.0.0
 #define BUILD_NOTES                 " - Mega"
 
+#ifndef BUILD_GIT
+#define BUILD_GIT "(custom)"
+#endif
+
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
