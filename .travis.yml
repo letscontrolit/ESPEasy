@@ -1,0 +1,33 @@
+language: python
+python:
+- '2.7'
+sudo: false
+cache:
+  directories:
+  - "~/.platformio"
+  - "./.pioenvs"
+install:
+- pip install -U platformio
+script:
+- platformio run
+
+before_deploy:
+  - ./before_deploy
+  - export RELEASE_FILE=$(ls ESPEasy*.zip)
+
+deploy:
+  provider: releases
+  prerelease: true
+  api_key:
+    secure: QLNThyMYiB091gvec9zKOnzs2CNdiXzmSVdmlSwrLgx/PFC1Xw9h6r43yczcI+e3WoUrenmdngRyDDSW44lvNPgDxfBwDObktACtrb8yYSGRGQiR7RQjcrqfku1zgV2XfQAP3cXrbdRZbjVsmFp/do3ahF2s/MjV5Y/UGrneuprnL3BbVKssKbC2kx5AUgUWRnButdMvPQDR3kdK+TC2CoK5FKYtNL7NKATkb2xyvuBNyvSiwGbX3OfOnue6NLag0lDhp3QMgqJc1RNsLjf+z8+NPaDg8DSwgEDuxRUGEhlrttEz/n71KN2b3cwGNzIPzcr3R/HpaDMY8PS+9sq2/PiZrYfAjCagsdBFMxb4CeIJQ8r/b9/tJHiF08+4CeSyEbcgHPecilq3W3kjjYnCNygLb3E7pKZasSfg8uZzEYcIjJz78ZWAd0Bmwomf9iq5snhpY4UGu+awx8aY9X6IA0hFnlYpUZRrG435gsgkjHy9gpzA/5Hfgjd8bk0kRDCVwARQyMiEwYh1Ny0LWsquYJWbB0XkUUu6Rac7Zi7qPETeYS5oZqiytWglLipaqs/jzn4RL055RkAkls8ANPfHi+kgqIa6Km1TdYhZ4+2Nv8X2yrRcShOKvKcL/Z6tY35XSQiYVO/Xrj4xUly15QblhNHUtcJFWAiXYcgf+aoXLkI=
+
+  file_glob: true
+  file: "${RELEASE_FILE}"
+
+  skip_cleanup: true
+  on:
+      tags: true
+    # repo: psy0rz/ESPEasy-platformio
+
+notifications:
+  email: false

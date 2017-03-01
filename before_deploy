@@ -1,0 +1,25 @@
+#!/bin/bash
+
+VERSION=$(git describe)
+echo "Creating release archives for $VERSION ..."
+#binaries
+# cp .pioenvs/mini_512/firmware.bin dist/"ESPEasy_$VERSION""_mini_512.bin"
+
+cp .pioenvs/normal_1024/firmware.bin dist/"ESPEasy_$VERSION""_normal_1024.bin"
+cp .pioenvs/normal_4096/firmware.bin dist/"ESPEasy_$VERSION""_normal_4096.bin"
+
+cp .pioenvs/test_1024/firmware.bin dist/"ESPEasy_$VERSION""_test_1024.bin"
+cp .pioenvs/test_4096/firmware.bin dist/"ESPEasy_$VERSION""_test_4096.bin"
+
+cp .pioenvs/dev_1024/firmware.bin dist/"ESPEasy_$VERSION""_dev_1024.bin"
+cp .pioenvs/dev_4096/firmware.bin dist/"ESPEasy_$VERSION""_dev_4096.bin"
+
+#create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
+rm -rf dist/Source 2>/dev/null
+mkdir dist/Source
+cp -r lib dist/Source/Libraries
+cp -r src dist/Source/ESPEasy
+rm dist/Source/Libraries/readme.txt
+
+cd dist
+zip ../ESPEasy_$VERSION.zip -r .
