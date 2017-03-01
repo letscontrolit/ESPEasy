@@ -90,6 +90,7 @@ byte getValueCountFromSensorType(byte sensorType)
       break;
     case SENSOR_TYPE_TEMP_HUM_BARO:
     case SENSOR_TYPE_TRIPLE:
+    case SENSOR_TYPE_WIND:
       valueCount = 3;
       break;
     case SENSOR_TYPE_QUAD:
