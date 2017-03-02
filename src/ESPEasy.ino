@@ -129,7 +129,7 @@
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
-
+this is an plugin exampleee
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
 #define PLUGIN_READ                         3
