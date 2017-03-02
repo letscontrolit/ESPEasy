@@ -6,6 +6,8 @@
 // like this one: https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/
 // based on this library: https://github.com/Apollon77/I2CSoilMoistureSensor
 //
+#ifdef PLUGIN_BUILD_TESTING
+
 #define PLUGIN_047
 #define PLUGIN_ID_047        47
 #define PLUGIN_NAME_047       "Moisture & Temperature & Light I2C Soil moisture sensor [TEST]"
@@ -213,3 +215,4 @@ float Plugin_047_readLight(uint8_t idx) {
 unsigned int Plugin_047_readMoisture(uint8_t idx) {
   return Plugin_047_read16(SOILMOISTURESENSOR_GET_CAPACITANCE);
 }
+#endif
