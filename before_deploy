@@ -17,9 +17,9 @@ cp .pioenvs/dev_4096/firmware.bin dist/"ESPEasy_$VERSION""_dev_4096.bin"
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 rm -rf dist/Source 2>/dev/null
 mkdir dist/Source
-cp -r lib dist/Source/Libraries
-cp -r src dist/Source/ESPEasy
-rm dist/Source/Libraries/readme.txt
+cp -r lib dist/Source/
+cp -r src dist/Source/
+cp platformio.ini dist/Source/
 
 cd dist
 zip ../ESPEasy_$VERSION.zip -r .
