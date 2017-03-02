@@ -136,6 +136,16 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
                 url += UserVar[event->BaseVarIndex];
               }
               break;
+            case (SENSOR_TYPE_WIND):
+              url += F("&svalue=");                   // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
+              url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
+              url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
+              url += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              url += ";0";
+              break;
           }
 
           url.toCharArray(log, 80);
