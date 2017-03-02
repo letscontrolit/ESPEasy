@@ -116,6 +116,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
               HTTPSend011(event, 1, UserVar[event->BaseVarIndex + 1], 0);
               break;
             }
+          case SENSOR_TYPE_TRIPLE:
           case SENSOR_TYPE_TEMP_HUM_BARO:
             {
               HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
@@ -181,7 +182,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
   payload += customConfig.HttpUri;
   payload += F(" HTTP/1.1\r\n");
   payload += F("Host: ");
-  payload += hostName;
+  payload += hostName + ":" + ControllerSettings.Port;
   payload += F("\r\nConnection: close\r\n\r\n");
 
   if (strlen(customConfig.HttpHeader) > 0)
@@ -210,7 +211,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
     String line = client.readStringUntil('\n');
     line.toCharArray(log, 80);
     addLog(LOG_LEVEL_DEBUG_MORE, log);
-    if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
+    if (line.substring(0, 10) == F("HTTP/1.1 2"))
     {
       strcpy_P(log, PSTR("HTTP : Succes!"));
       addLog(LOG_LEVEL_DEBUG, log);
