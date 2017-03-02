@@ -120,7 +120,7 @@
 #ifndef BUILD_GIT
 #define BUILD_GIT "(custom)"
 #endif
-pulltest1
+pulltest2
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
