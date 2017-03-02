@@ -183,7 +183,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
   payload += F(" HTTP/1.1\r\n");
   payload += F("Host: ");
   payload += hostName + ":" + ControllerSettings.Port;
-  payload += F("\r\nConnection: close\r\n\r\n");
+  payload += F("\r\nConnection: close\r\n");
 
   if (strlen(customConfig.HttpHeader) > 0)
     payload += customConfig.HttpHeader;
