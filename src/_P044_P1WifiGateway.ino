@@ -14,7 +14,7 @@
 #define PLUGIN_VALUENAME1_044 "P1WifiGateway"
 
 #define STATUS_LED 12
-#define BUFFER_SIZE 1024
+#define P044_BUFFER_SIZE 1024
 #define NETBUF_SIZE 600
 #define DISABLED 0
 #define WAITING 1
@@ -145,7 +145,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           P1GatewayServer->begin();
 
           if (!Plugin_044_serial_buf)
-            Plugin_044_serial_buf = (char *)malloc(BUFFER_SIZE);
+            Plugin_044_serial_buf = (char *)malloc(P044_BUFFER_SIZE);
 
           if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
           {
@@ -194,17 +194,17 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           if (P1GatewayClient.connected())
           {
             connectionState = 1;
-            uint8_t net_buf[BUFFER_SIZE];
+            uint8_t net_buf[P044_BUFFER_SIZE];
             int count = P1GatewayClient.available();
             if (count > 0)
             {
-              if (count > BUFFER_SIZE)
-                count = BUFFER_SIZE;
+              if (count > P044_BUFFER_SIZE)
+                count = P044_BUFFER_SIZE;
               bytes_read = P1GatewayClient.read(net_buf, count);
               Serial.write(net_buf, bytes_read);
               Serial.flush(); // Waits for the transmission of outgoing serial data to complete
 
-              if (count == BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+              if (count == P044_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
                 char log[40];
@@ -212,7 +212,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 addLog(LOG_LEVEL_ERROR, log);
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[BUFFER_SIZE + 40];
+              char log[P044_BUFFER_SIZE + 40];
               sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
               addLog(LOG_LEVEL_DEBUG, log);
             }
@@ -249,7 +249,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             while (timeOut > 0)
             {
               while (Serial.available() && state != DONE) {
-                if (bytes_read < BUFFER_SIZE - 5) {
+                if (bytes_read < P044_BUFFER_SIZE - 5) {
                   char  ch = Serial.read();
                   digitalWrite(STATUS_LED, 1);
                   switch (state) {
@@ -424,7 +424,7 @@ bool checkDatagram(int len) {
   if (serialdebug) {
     Serial.print(F("input length: "));
     Serial.println(len);
-    Serial.print("Start char \ : ");
+    Serial.print("Start char \\ : ");
     Serial.println(startChar);
     Serial.print(F("End char ! : "));
     Serial.println(endChar);
@@ -451,4 +451,3 @@ bool checkDatagram(int len) {
   }
   return validCRCFound;
 }
-
