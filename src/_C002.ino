@@ -62,9 +62,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           if ((int)switchtype == 0)
             switchtype = "?";
 
-          for (byte x = 0; x < TASKS_MAX; x++)
-          {
-            if (Settings.TaskDeviceID[event->ProtocolIndex][x] == idx) // todo check, this could not work as expected?
+          for (byte x = 0; x < TASKS_MAX; x++) {
+            // We need the index of the controller we are: 0-CONTROLLER_MAX
+            byte ControllerID = 0;
+            for (byte i=0; i < CONTROLLER_MAX; i++)
+            {
+              if (Settings.Protocol[i] == CPLUGIN_ID_002) { ControllerID = i; }
+            }
+            if (Settings.TaskDeviceID[ControllerID][x] == idx) // get idx for our controller index
             {
               if (Settings.TaskDeviceNumber[x] == 1) // temp solution, if input switch, update state
               {
