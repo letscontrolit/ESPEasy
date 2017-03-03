@@ -7,7 +7,7 @@
 #define PLUGIN_NAME_020       "Serial Server"
 #define PLUGIN_VALUENAME1_020 "Ser2Net"
 
-#define BUFFER_SIZE 128
+#define P020_BUFFER_SIZE 128
 boolean Plugin_020_init = false;
 byte Plugin_020_SerialProcessing = 0;
 
@@ -179,17 +179,17 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           if (ser2netClient.connected())
           {
             connectionState = 1;
-            uint8_t net_buf[BUFFER_SIZE];
+            uint8_t net_buf[P020_BUFFER_SIZE];
             int count = ser2netClient.available();
             if (count > 0)
             {
-              if (count > BUFFER_SIZE)
-                count = BUFFER_SIZE;
+              if (count > P020_BUFFER_SIZE)
+                count = P020_BUFFER_SIZE;
               bytes_read = ser2netClient.read(net_buf, count);
               Serial.write(net_buf, bytes_read);
               Serial.flush(); // Waits for the transmission of outgoing serial data to complete
 
-              if (count == BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+              if (count == P020_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
                 char log[40];
@@ -197,7 +197,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
                 addLog(LOG_LEVEL_ERROR, log);
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[BUFFER_SIZE + 40];
+              char log[P020_BUFFER_SIZE + 40];
               sprintf_P(log, PSTR("Ser2N: N>: %s"), (char*)net_buf);
               addLog(LOG_LEVEL_DEBUG, log);
             }
@@ -223,7 +223,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SERIAL_IN:
       {
-        uint8_t serial_buf[BUFFER_SIZE];
+        uint8_t serial_buf[P020_BUFFER_SIZE];
         int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         if (RXWait == 0)
           RXWait = 1;
@@ -232,7 +232,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         while (timeOut > 0)
         {
           while (Serial.available()) {
-            if (bytes_read < BUFFER_SIZE) {
+            if (bytes_read < P020_BUFFER_SIZE) {
               serial_buf[bytes_read] = Serial.read();
               bytes_read++;
             }
@@ -245,7 +245,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           timeOut--;
         }
 
-        if (bytes_read != BUFFER_SIZE)
+        if (bytes_read != P020_BUFFER_SIZE)
         {
           if (bytes_read > 0) {
             if (Plugin_020_init && ser2netClient.connected())
@@ -265,7 +265,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, log);
         }
         serial_buf[bytes_read] = 0; // before logging as a char array, zero terminate the last position to be safe.
-        char log[BUFFER_SIZE + 40];
+        char log[P020_BUFFER_SIZE + 40];
         sprintf_P(log, PSTR("Ser2N: S>: %s"), (char*)serial_buf);
         addLog(LOG_LEVEL_DEBUG, log);
 
@@ -330,4 +330,3 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
