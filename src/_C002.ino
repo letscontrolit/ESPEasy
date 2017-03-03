@@ -203,11 +203,12 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               break;
             case SENSOR_TYPE_WIND:                            // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust
               values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
+              const char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
               values += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
-              values += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              // Domoticz expects the wind speed in (m/s * 10)
+              values += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               values += ";";
-              values += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              values += toString((UserVar[event->BaseVarIndex + 2] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[2]);
               values += ";0;0";
               values.toCharArray(str, 80);
               root["svalue"] =  str;
@@ -247,4 +248,3 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
