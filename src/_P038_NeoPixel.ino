@@ -2,7 +2,16 @@
 //#################################### Plugin 038: NeoPixel Basic #######################################
 //#######################################################################################################
 
-// Command: NeoPixel <led nr>,<red>,<green>,<blue>
+// List of commands:
+// (1) NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>
+// (2) NeoPixelAll,<red 0-255>,<green 0-255>,<blue 0-255>
+// (3) NeoPixelLine,<start led nr>,<stop led nr>,<red 0-255>,<green 0-255>,<blue 0-255>
+
+// Usage:
+// (1): Set RGB Color to specified LED number (eg. NeoPixel,5,255,255,255)
+// (2): Set all LED to specified color (eg. NeoPixelAll,255,255,255)
+//		If you use 'NeoPixelAll' this will off all LED (like NeoPixelAll,0,0,0)
+// (3): Set color LED between <start led nr> and <stop led nr> to specified color (eg. NeoPixelLine,1,6,255,255,255)
 
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel *Plugin_038_pixels;
@@ -91,6 +100,37 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, Par4));
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
             success = true;
+          }
+          
+          if (tmpString.equalsIgnoreCase(F("NeoPixelAll")))
+				  {
+					  char Line[80];
+					  char TmpStr1[80];
+					  TmpStr1[0] = 0;
+					  string.toCharArray(Line, 80);
+					  for (int i = 0; i < (Settings.TaskDevicePluginConfig[event->TaskIndex][0]); i++){
+						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
+					  }
+					  Plugin_038_pixels->show();
+					  success = true;  
+          }
+          
+          if (tmpString.equalsIgnoreCase(F("NeoPixelLine")))
+				  {
+					  char Line[80];
+					  char TmpStr1[80];
+					  TmpStr1[0] = 0;
+					  string.toCharArray(Line, 80);
+  					int Par4 = 0;
+	  				int Par5 = 0;
+		  			if (GetArgv(Line, TmpStr1, 5)) Par4 = str2int(TmpStr1);
+			  		if (GetArgv(Line, TmpStr1, 6)) Par5 = str2int(TmpStr1);
+  					for (int i = event->Par1 - 1; i < event->Par2; i++)
+	  				{
+		  				Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, Par4, Par5));
+			  		}
+				  	Plugin_038_pixels->show();
+					  success = true;
           }
         }
         break;
