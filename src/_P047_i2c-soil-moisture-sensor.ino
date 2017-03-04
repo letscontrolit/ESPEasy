@@ -75,9 +75,9 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        string += F("<TR><TD>I2C Address: (decimal, no HEX!)<TD><input type='text' title='Set i2c Address of sensor' name='");
-        string += F("plugin_047_i2cSoilMoisture_i2cAddress' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        string += F("<TR><TD>I2C Address (Hex): <TD><input type='text' title='Set i2c Address of sensor' name='");
+        string += F("plugin_047_i2cSoilMoisture_i2cAddress' value='0x");
+        string += String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX);
         string += F("'>");
         success = true;
         break;
@@ -86,30 +86,41 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         String plugin1 = WebServer.arg("plugin_047_i2cSoilMoisture_i2cAddress");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);;
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
-        uint8_t a = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         _i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+
+        // get sensor version to check if sensor is present
+        uint8_t sensorVersion = Plugin_047_getVersion();
+        if (sensorVersion==0x22 || sensorVersion==0x23) {
+          //valid sensor
+        }
+        else {
+          addLog(LOG_LEVEL_INFO, "SoilMoisture: Bad Version, no Sensor?");
+          Plugin_047_write8(SOILMOISTURESENSOR_RESET, SOILMOISTURESENSOR_RESET);
+          break;
+        }
 
         // start light measurement
         Plugin_047_write8(SOILMOISTURESENSOR_MEASURE_LIGHT,SOILMOISTURESENSOR_MEASURE_LIGHT);
 
-        UserVar[event->BaseVarIndex] = ((float)Plugin_047_readTemperature(idx)) / 10;
-        UserVar[event->BaseVarIndex + 1] = ((float)Plugin_047_readMoisture(idx));
+        UserVar[event->BaseVarIndex] = ((float)Plugin_047_readTemperature()) / 10;
+        UserVar[event->BaseVarIndex + 1] = ((float)Plugin_047_readMoisture());
 
         delay(1000);  //we need this delay, otherwise we get only the last reading...
-        UserVar[event->BaseVarIndex + 2] = ((float)Plugin_047_readLight(idx));
+        UserVar[event->BaseVarIndex + 2] = ((float)Plugin_047_readLight());
         // send sensor to sleep
         Plugin_047_write8(SOILMOISTURESENSOR_SLEEP, SOILMOISTURESENSOR_SLEEP);
 
         String log = F("SoilMoisture  : Address: 0x");
         log += String(_i2caddr,HEX);
+        log += F(" Version: 0x");
+        log += String(sensorVersion,HEX);
         addLog(LOG_LEVEL_INFO, log);
         log = F("SoilMoisture: Temperature: ");
         log += UserVar[event->BaseVarIndex];
@@ -128,9 +139,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
             Plugin_047_write8(SOILMOISTURESENSOR_RESET, SOILMOISTURESENSOR_RESET);
             break;
           }
-
         success = true;
-
         break;
       }
 
@@ -153,18 +162,14 @@ void Plugin_047_write8(byte reg, byte value)
 //**************************************************************************/
 // Reads an 8 bit value over I2C
 //**************************************************************************/
-uint8_t Plugin_047_read8(byte reg, bool * is_ok)
+uint8_t Plugin_047_read8(byte reg)
 {
   uint8_t value;
-
   Wire.beginTransmission((uint8_t)_i2caddr);
   Wire.write((uint8_t)reg);
   Wire.endTransmission();
-  byte count = Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
-  if (is_ok != NULL) { *is_ok = (count == 1); }
-  value = Wire.read();
-  Wire.endTransmission();
-  return value;
+  Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
+  return Wire.read();
 }
 
 //**************************************************************************/
@@ -197,7 +202,7 @@ int16_t Plugin_047_readS16(byte reg)
 //**************************************************************************/
 // Read temperature
 //**************************************************************************/
-float Plugin_047_readTemperature(uint8_t idx)
+float Plugin_047_readTemperature()
 {
   return Plugin_047_readS16(SOILMOISTURESENSOR_GET_TEMPERATURE);
 }
@@ -205,14 +210,21 @@ float Plugin_047_readTemperature(uint8_t idx)
 //**************************************************************************/
 // Read light
 //**************************************************************************/
-float Plugin_047_readLight(uint8_t idx) {
+float Plugin_047_readLight() {
   return Plugin_047_read16(SOILMOISTURESENSOR_GET_LIGHT);
 }
 
 //**************************************************************************/
 // Read moisture
 //**************************************************************************/
-unsigned int Plugin_047_readMoisture(uint8_t idx) {
+unsigned int Plugin_047_readMoisture() {
   return Plugin_047_read16(SOILMOISTURESENSOR_GET_CAPACITANCE);
 }
+
+// Read Sensor Version
+uint8_t Plugin_047_getVersion() {
+  return Plugin_047_read8(SOILMOISTURESENSOR_GET_VERSION);
+}
+
+
 #endif
