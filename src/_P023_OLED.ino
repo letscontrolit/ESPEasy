@@ -161,12 +161,11 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-          char argc[25];
           String arg = F("Plugin_023_template");
           arg += varNr + 1;
-          arg.toCharArray(argc, 25);
-          String tmpString = WebServer.arg(argc);
-          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
+          String tmpString = WebServer.arg(arg);
+          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr])-1);
+          deviceTemplate[varNr][63]=0;
         }
 
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
@@ -539,4 +538,3 @@ static void Plugin_023_init_OLED(void)
   Plugin_023_sendcommand(0x20);            //Set Memory Addressing Mode
   Plugin_023_sendcommand(0x00);            //Set Memory Addressing Mode ab Horizontal addressing mode
 }
-
