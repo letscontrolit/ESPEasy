@@ -4,7 +4,7 @@ Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?b
 
 This is the development branch for the next upcoming release (2.0.0). This is also known as ESPEasyMega.
 
-Check here to learn how to use branch and help us improving ESPEasy: http://www.letscontrolit.com/wiki/index.php/ESPEasy#Source_code_development
+Check here to learn how to use this branch and help us improving ESPEasy: http://www.letscontrolit.com/wiki/index.php/ESPEasy#Source_code_development
 
 Binary development releases are here: https://github.com/letscontrolit/ESPEasy/releases
 
