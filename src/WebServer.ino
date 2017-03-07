@@ -528,17 +528,18 @@ void handle_controllers() {
     reply += F("<option value='0'>- Standalone -</option>");
     for (byte x = 0; x <= protocolCount; x++)
     {
-      reply += F("<option value='");
-      reply += Protocol[x].Number;
-      reply += "'";
-      if (choice == Protocol[x].Number)
-        reply += F(" selected");
-      reply += ">";
-
-      String ProtocolName = "";
-      CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
-      reply += ProtocolName;
-      reply += F("</option>");
+      if ((index == 1) || !Protocol[x].usesMQTT) {  // Only show MQTT capable controllers for slot "0"
+        reply += F("<option value='");
+        reply += Protocol[x].Number;
+        reply += "'";
+        if (choice == Protocol[x].Number)
+          reply += F(" selected");
+        reply += ">";
+        String ProtocolName = "";
+        CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
+        reply += ProtocolName;
+        reply += F("</option>");
+      }
     }
     reply += F("</select>");
     reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyProtocols\" target=\"_blank\">?</a>");
