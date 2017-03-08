@@ -75,6 +75,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
           String log = F("IR   : Code ");
           log += String(IRcode, HEX);
+          log += F(" - Type: ");
+          log += results.decode_type;
+          log += F(" - Bits: ");
+          log += results.bits;
           addLog(LOG_LEVEL_INFO, log);
           sendData(event);
         }
