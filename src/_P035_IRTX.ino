@@ -66,13 +66,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         TmpStr1[0] = 0;
         string.toCharArray(command, 80);
 
-        String tmpString = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex) tmpString = tmpString.substring(0, argIndex);
 
         if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
         if (GetArgv(command, TmpStr1, 3)) IrCode = strtoul(TmpStr1, NULL, 16); //(long) TmpStr1
         if (GetArgv(command, TmpStr1, 4)) IrBits = str2int(TmpStr1);
+        String cmdCode = string;
+        int argIndex = cmdCode.indexOf(',');
+        if (argIndex) cmdCode = cmdCode.substring(0, argIndex);
 
         if (tmpString.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
         {
