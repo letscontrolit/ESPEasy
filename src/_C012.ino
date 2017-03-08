@@ -6,6 +6,16 @@
 #define CPLUGIN_ID_012         12
 #define CPLUGIN_NAME_012       "Nettemp HTTP"
 
+#define C012_KEY_MAX_LEN 16
+
+struct C012_ConfigStruct
+{
+  char Key[C012_KEY_MAX_LEN];
+};
+
+C012_ConfigStruct customConfig;
+boolean C012_config_loaded = false;
+
 boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -28,8 +38,48 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_WEBFORM_LOAD:
+      {
+        if (!C012_config_loaded) {
+          LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+          C012_config_loaded = true;
+        }
+
+        string += F("<TR><TD>Server key:<TD><input type='text' name='C012Key' size=80 maxlength='");
+        string += C012_KEY_MAX_LEN - 1;
+        string += F("' value='");
+        string += customConfig.Key;
+        string += F("'>");
+
+        break;
+      }
+
+    case CPLUGIN_WEBFORM_SAVE:
+      {
+        String serverkey = WebServer.arg("C012Key");
+        strncpy(customConfig.Key, serverkey.c_str(), sizeof(customConfig.Key));
+        SaveCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_SEND:
       {
+        success = false;
+        char log[80];
+
+        if (!C012_config_loaded) {
+          LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+          C012_config_loaded = true;
+        }
+
+        if (!strlen(customConfig.Key))
+        {
+          connectionFailures++;
+          strcpy_P(log, PSTR("Nettemp: no server key"));
+          addLog(LOG_LEVEL_ERROR, log);
+          return false;
+        }
+
         String authHeader = "";
         if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
         {
@@ -40,8 +90,6 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
           authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
         }
 
-        char log[80];
-        boolean success = false;
         char host[20];
         sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
 
@@ -61,27 +109,38 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         if (connectionFailures)
           connectionFailures--;
 
+        IPAddress ip = WiFi.localIP();
+        char strip[20];
+        sprintf_P(strip, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+
         // We now create a URI for the request
         String url = F("/receiver.php?");
-
         url += F("device=ip");
         url += F("&name=");
         url += ExtraTaskSettings.TaskDeviceName;
 
         url += F("&key=");
-        url += SecuritySettings.ControllerPassword;
+        url += customConfig.Key;
         url += F("&id=");
         url += event->idx;
         url += F("&type=");
 
-        url += ExtraTaskSettings.TaskDeviceValueNames[0];
-        url += ";";
-        url += ExtraTaskSettings.TaskDeviceValueNames[1];
-        url += ";";
-        url += ExtraTaskSettings.TaskDeviceValueNames[2];
-        url += ";";
-        url += ExtraTaskSettings.TaskDeviceValueNames[3];
-
+        int nr = getValueCountFromSensorType(event->sensorType);
+        if (nr >= 1) {
+          url += ExtraTaskSettings.TaskDeviceValueNames[0];
+        }
+        if (nr >= 2) {
+          url += ";";
+          url += ExtraTaskSettings.TaskDeviceValueNames[1];
+        }
+        if (nr >= 3) {
+          url += ";";
+          url += ExtraTaskSettings.TaskDeviceValueNames[2];
+        }
+        if (nr >= 4) {
+          url += ";";
+          url += ExtraTaskSettings.TaskDeviceValueNames[3];
+        }
 
         switch (event->sensorType)
         {
@@ -106,6 +165,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
             url += ";";
             url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+            break;
           case SENSOR_TYPE_QUAD:                       // any sensor that uses four simple values
             url += F("&value=");
             url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
@@ -115,6 +175,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
             url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
             url += ";";
             url += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);
+            break;
           case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
             url += F("&value=");
             url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
@@ -158,7 +219,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 
         }
 
-        url.toCharArray(log, 80);
+        url.toCharArray(log, sizeof(log));
         addLog(LOG_LEVEL_DEBUG_MORE, log);
 
         // This will send the request to the server
@@ -173,7 +234,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         // Read all the lines of the reply from server and print them to Serial
         while (client.available()) {
           String line = client.readStringUntil('\n');
-          line.toCharArray(log, 80);
+          line.toCharArray(log, sizeof(log));
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == "HTTP/1.1 200 OK")
           {
@@ -195,6 +256,4 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-
 
