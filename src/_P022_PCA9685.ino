@@ -7,9 +7,9 @@
 #define PLUGIN_NAME_022       "PWM - PCA9685"
 #define PLUGIN_VALUENAME1_022 "PWM"
 
-#define PCA9685_MODE1   0x00  // location for Mode1 register address 
-#define PCA9685_MODE2   0x01  // location for Mode2 reigster address 
-#define PCA9685_LED0    0x06  // location for start of LED0 registers 
+#define PLUGIN_022_PCA9685_MODE1   0x00  // location for Mode1 register address
+#define PCA9685_MODE2   0x01  // location for Mode2 reigster address
+#define PCA9685_LED0    0x06  // location for start of LED0 registers
 #define PCA9685_ADDRESS 0x40  // I2C address
 
 boolean Plugin_022_init = false;
@@ -111,10 +111,9 @@ boolean Plugin_022_Write(byte Par1, int Par2)
 void Plugin_022_initialize()
 {
   // default mode is open drain ouput, drive leds connected to VCC
-  Plugin_022_writeRegister(PCA9685_MODE1, (byte)0x01); // reset the device
+  Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)0x01); // reset the device
   delay(1);
-  Plugin_022_writeRegister(PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
+  Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
   Plugin_022_writeRegister(PCA9685_MODE2, (byte)0x10); // set to output
   Plugin_022_init = true;
 }
-
