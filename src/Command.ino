@@ -522,6 +522,8 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.print(F("  Unit          : ")); Serial.println((int)Settings.Unit);
     Serial.print(F("  WifiSSID      : ")); Serial.println(SecuritySettings.WifiSSID);
     Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);
+    Serial.print(F("  WifiSSID2     : ")); Serial.println(SecuritySettings.WifiSSID2);
+    Serial.print(F("  WifiKey2      : ")); Serial.println(SecuritySettings.WifiKey2);
     Serial.print(F("  Free mem      : ")); Serial.println(FreeMem());
   }
 
