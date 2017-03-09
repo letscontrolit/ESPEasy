@@ -37,7 +37,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof (ControllerSettings));
 
           String authHeader = "";
-          if ((SecuritySettings.ControllerUser[event->ProtocolIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ProtocolIndex][0] != 0))
+          if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
           {
             base64 encoder;
             String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
