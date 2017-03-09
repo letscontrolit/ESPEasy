@@ -36,6 +36,7 @@
 
 
 boolean Plugin_047_init[2] = {false, false};
+uint8_t _i2caddrP47;
 
 boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 {
@@ -86,14 +87,14 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         String plugin1 = WebServer.arg("plugin_047_i2cSoilMoisture_i2cAddress");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);;
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        _i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        _i2caddrP47 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
         // get sensor version to check if sensor is present
         uint8_t sensorVersion = Plugin_047_getVersion();
@@ -117,8 +118,8 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         // send sensor to sleep
         Plugin_047_write8(SOILMOISTURESENSOR_SLEEP, SOILMOISTURESENSOR_SLEEP);
 
-        String log = F("SoilMoisture  : Address: 0x");
-        log += String(_i2caddr,HEX);
+        String log = F("SoilMoisture: Address: 0x");
+        log += String(_i2caddrP47,HEX);
         log += F(" Version: 0x");
         log += String(sensorVersion,HEX);
         addLog(LOG_LEVEL_INFO, log);
@@ -153,7 +154,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 //**************************************************************************/
 void Plugin_047_write8(byte reg, byte value)
 {
-  Wire.beginTransmission((uint8_t)_i2caddr);
+  Wire.beginTransmission((uint8_t)_i2caddrP47);
   Wire.write((uint8_t)reg);
   Wire.write((uint8_t)value);
   Wire.endTransmission();
@@ -165,10 +166,10 @@ void Plugin_047_write8(byte reg, byte value)
 uint8_t Plugin_047_read8(byte reg)
 {
   uint8_t value;
-  Wire.beginTransmission((uint8_t)_i2caddr);
+  Wire.beginTransmission((uint8_t)_i2caddrP47);
   Wire.write((uint8_t)reg);
   Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddr, (byte)1);
+  Wire.requestFrom((uint8_t)_i2caddrP47, (byte)1);
   return Wire.read();
 }
 
@@ -179,10 +180,10 @@ uint16_t Plugin_047_read16(byte reg)
 {
   uint16_t value;
 
-  Wire.beginTransmission((uint8_t)_i2caddr);
+  Wire.beginTransmission((uint8_t)_i2caddrP47);
   Wire.write((uint8_t)reg);
   Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddr, (byte)2);
+  Wire.requestFrom((uint8_t)_i2caddrP47, (byte)2);
   value = (Wire.read() << 8) | Wire.read();
   Wire.endTransmission();
 
