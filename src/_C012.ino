@@ -196,8 +196,6 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
             url = F("/receiver.php?device=ip");
             url += F("&name=");
             url += ExtraTaskSettings.TaskDeviceName;
-            url += F("&key=");
-            url += SecuritySettings.ControllerPassword;
             url += F("&id=");
             url += event->idx;
             url += F("&type=");
