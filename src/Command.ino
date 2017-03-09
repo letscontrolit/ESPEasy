@@ -347,6 +347,18 @@ void ExecuteCommand(byte source, const char *Line)
     strcpy(SecuritySettings.WifiKey, Line + 8);
   }
 
+  if (strcasecmp_P(Command, PSTR("WifiSSID2")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.WifiSSID2, Line + 10);
+  }
+
+  if (strcasecmp_P(Command, PSTR("WifiKey2")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.WifiKey2, Line + 9);
+  }
+
   if (strcasecmp_P(Command, PSTR("WifiScan")) == 0)
   {
     success = true;
