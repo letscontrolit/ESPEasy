@@ -45,7 +45,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_WEBFORM_LOAD:
       {
         P011_ConfigStruct customConfig;
-        LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+        LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         String methods[] = { F("GET"), F("POST"), F("PUT") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
         for (int i = 0; i < 3; i++)
@@ -90,7 +90,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         strncpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
         strncpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
         strncpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
-        SaveCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+        SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         break;
       }
 
@@ -148,7 +148,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
   P011_ConfigStruct customConfig;
-  LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+  LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
   char log[80];
   boolean success = false;
