@@ -729,7 +729,7 @@ boolean SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-  Save Custom Task settings to SPIFFS
+  Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
@@ -750,7 +750,7 @@ boolean SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasi
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
@@ -771,7 +771,7 @@ boolean SaveCustomControllerSettings(byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-  Save Custom Controller settings to SPIFFS
+  Load Custom Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadCustomControllerSettings(byte* memAddress, int datasize)
 {
@@ -792,7 +792,7 @@ boolean SaveNotificationSettings(int NotificationIndex, byte* memAddress, int da
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
