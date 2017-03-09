@@ -13,9 +13,6 @@ struct C012_ConfigStruct
   char Key[C012_KEY_MAX_LEN];
 };
 
-C012_ConfigStruct customConfig;
-boolean C012_config_loaded = false;
-
 boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -29,6 +26,8 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
+        Protocol[protocolCount].usesTemplate = false;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -40,25 +39,22 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_LOAD:
       {
-        if (!C012_config_loaded) {
-          LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
-          C012_config_loaded = true;
-        }
-
+        C012_ConfigStruct customConfig;
+        LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         string += F("<TR><TD>Server key:<TD><input type='text' name='C012Key' size=80 maxlength='");
         string += C012_KEY_MAX_LEN - 1;
         string += F("' value='");
         string += customConfig.Key;
         string += F("'>");
-
         break;
       }
 
     case CPLUGIN_WEBFORM_SAVE:
       {
+        C012_ConfigStruct customConfig;
         String serverkey = WebServer.arg("C012Key");
         strncpy(customConfig.Key, serverkey.c_str(), sizeof(customConfig.Key));
-        SaveCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+        SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         break;
       }
 
@@ -66,11 +62,8 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
       {
         success = false;
         char log[80];
-
-        if (!C012_config_loaded) {
-          LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
-          C012_config_loaded = true;
-        }
+        C012_ConfigStruct customConfig;
+        LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
         if (!strlen(customConfig.Key))
         {
@@ -80,25 +73,28 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
           return false;
         }
 
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
         String authHeader = "";
-        if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
+        if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
         {
           base64 encoder;
-          String auth = SecuritySettings.ControllerUser;
+          String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
           auth += ":";
-          auth += SecuritySettings.ControllerPassword;
+          auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
           authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
         }
 
         char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), Settings.Controller_IP[0], Settings.Controller_IP[1], Settings.Controller_IP[2], Settings.Controller_IP[3]);
+        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, Settings.ControllerPort);
+        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, ControllerSettings.Port);
         addLog(LOG_LEVEL_DEBUG, log);
 
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, Settings.ControllerPort))
+        if (!client.connect(host, ControllerSettings.Port))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));
