@@ -444,7 +444,9 @@ void handle_controllers() {
       if (Settings.Protocol != 0)
       {
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
-        CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_SAVE, 0, dummyString);
+        TempEvent.ControllerIndex = index - 1;
+        TempEvent.ProtocolIndex = ProtocolIndex;
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
@@ -622,7 +624,8 @@ void handle_controllers() {
       else
         reply += F("<input type=checkbox name=controllerenabled>");
 
-      TempEvent.ProtocolIndex = index - 1;
+      TempEvent.ControllerIndex = index - 1;
+      TempEvent.ProtocolIndex = ProtocolIndex;
       CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
     }
