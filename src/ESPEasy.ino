@@ -235,12 +235,13 @@
 
 #define DAT_TASKS_SIZE                   2048
 #define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_CUSTOM_CONTROLLER_SIZE       1024
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
 #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-#define DAT_OFFSET_CUSTOMCONTROLLER     32768  // custom controller config = 4k, currently only one can use it.
+#define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>

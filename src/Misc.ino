@@ -645,7 +645,7 @@ boolean SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-  Save Custom Task settings to SPIFFS
+  Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
@@ -666,7 +666,7 @@ boolean SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasi
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
@@ -678,22 +678,22 @@ void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-boolean SaveCustomControllerSettings(byte* memAddress, int datasize)
+boolean SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return false;
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
 /********************************************************************************************\
-  Save Custom Controller settings to SPIFFS
+  Load Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-void LoadCustomControllerSettings(byte* memAddress, int datasize)
+void LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return;
-  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -708,7 +708,7 @@ boolean SaveNotificationSettings(int NotificationIndex, byte* memAddress, int da
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
