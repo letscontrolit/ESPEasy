@@ -80,6 +80,18 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         string += F("plugin_047_i2cSoilMoisture_i2cAddress' value='0x");
         string += String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX);
         string += F("'>");
+
+        string += F("<TR><TD>Send sensor to sleep:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+          string += F("<input type=checkbox name=plugin_047_sleep checked>");
+        else
+          string += F("<input type=checkbox name=plugin_047_sleep>");
+
+        string += F("<TR><TD>Check sensor version:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+          string += F("<input type=checkbox name=plugin_047_version checked>");
+        else
+          string += F("<input type=checkbox name=plugin_047_version>");
         success = true;
         break;
       }
@@ -88,6 +100,12 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
       {
         String plugin1 = WebServer.arg("plugin_047_i2cSoilMoisture_i2cAddress");
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
+
+        String plugin4 = WebServer.arg(F("plugin_047_sleep"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = (plugin4 == "on");
+
+        String plugin5 = WebServer.arg(F("plugin_047_version"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin5 == "on");
         success = true;
         break;
       }
@@ -96,32 +114,36 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
       {
         _i2caddrP47 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
-        // get sensor version to check if sensor is present
-        uint8_t sensorVersion = Plugin_047_getVersion();
-        if (sensorVersion==0x22 || sensorVersion==0x23) {
-          //valid sensor
-        }
-        else {
-          addLog(LOG_LEVEL_INFO, "SoilMoisture: Bad Version, no Sensor?");
-          Plugin_047_write8(SOILMOISTURESENSOR_RESET, SOILMOISTURESENSOR_RESET);
-          break;
+        uint8_t sensorVersion = 0;
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+          // get sensor version to check if sensor is present
+          sensorVersion = Plugin_047_getVersion();
+          if (sensorVersion==0x22 || sensorVersion==0x23) {
+            //valid sensor
+          }
+          else {
+            addLog(LOG_LEVEL_INFO, "SoilMoisture: Bad Version, no Sensor?");
+            Plugin_047_write8(SOILMOISTURESENSOR_RESET, SOILMOISTURESENSOR_RESET);
+            break;
+          }
         }
 
         // start light measurement
         Plugin_047_write8(SOILMOISTURESENSOR_MEASURE_LIGHT,SOILMOISTURESENSOR_MEASURE_LIGHT);
 
+        // 2 s delay ...we need this delay, otherwise we get only the last reading...
+        delayMillis(2000);
+
         UserVar[event->BaseVarIndex] = ((float)Plugin_047_readTemperature()) / 10;
         UserVar[event->BaseVarIndex + 1] = ((float)Plugin_047_readMoisture());
-
-        delay(1000);  //we need this delay, otherwise we get only the last reading...
         UserVar[event->BaseVarIndex + 2] = ((float)Plugin_047_readLight());
-        // send sensor to sleep
-        Plugin_047_write8(SOILMOISTURESENSOR_SLEEP, SOILMOISTURESENSOR_SLEEP);
 
         String log = F("SoilMoisture: Address: 0x");
         log += String(_i2caddrP47,HEX);
-        log += F(" Version: 0x");
-        log += String(sensorVersion,HEX);
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+          log += F(" Version: 0x");
+          log += String(sensorVersion,HEX);
+        }
         addLog(LOG_LEVEL_INFO, log);
         log = F("SoilMoisture: Temperature: ");
         log += UserVar[event->BaseVarIndex];
@@ -132,6 +154,13 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         log = F("SoilMoisture: Light: ");
         log += UserVar[event->BaseVarIndex + 2];
         addLog(LOG_LEVEL_INFO, log);
+
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+          // send sensor to sleep
+          Plugin_047_write8(SOILMOISTURESENSOR_SLEEP, SOILMOISTURESENSOR_SLEEP);
+          addLog(LOG_LEVEL_DEBUG, "SoilMoisture->sleep");
+        }
+
 
         if (UserVar[event->BaseVarIndex]>100 || UserVar[event->BaseVarIndex] < -40 ||
           UserVar[event->BaseVarIndex + 1] > 800 || UserVar[event->BaseVarIndex + 1] < 1 ||
