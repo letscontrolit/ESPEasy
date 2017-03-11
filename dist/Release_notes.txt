@@ -1,3 +1,53 @@
+-----------------------------
+Changes in test1:
+-----------------------------
+
+Release date: Sat Mar 11 14:42:58 CET 2017
+
+DatuX (5):
+      Update README.md
+      Update README.md
+      Update README.md
+      Update README.md
+      Update README.md
+
+Edwin Eefting (3):
+      deploy in platformio format
+      simplified string handling and fixed buffer overflow
+      created release notes from R148 to v2.0.0-dev4
+
+Gerald (3):
+      Update _P047_i2c-soil-moisture-sensor.ino
+      one newline to much
+      add missing features from "Generic HTTP" Plugin to "Generic HTTP Advanced" Plugin (#151)
+
+Gustavo Spadari (3):
+      Adding IR received code extra info
+      Rename tmpString to cmdCode for clarity
+      IR RAW Code implementation
+
+JustMe-NL (4):
+      Fix double define
+      Fix Windspeed values
+      Fix broken Domoticz MQTT helper
+      Update WebServer.ino
+
+Nonflammable (1):
+      Extend functionality of P038
+
+krikk (7):
+      new Plugin for SoilMoisturesensor from Tindie (https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/)     minor fixes in http advanced to allow sensor type triple and http response 2xx not 200 only
+      version check to detect if sensor is present, optimized address handling
+      added measurement mode selection
+      minor fix, shared variable name with bme280, not good :)
+      variable name collision with adafruit motorshield v2 library, no functional change
+      new plugin for adafruit motorshield v2, still needs a library and only support DC Motors up till now... still room for improvement
+      added function to enable/disable sleep mode and version check
+
+psy0rztest (1):
+      Removed !echo, because its not supported in Windows.
+
+
 ---------------------------------
 Changes in v2.0.0-dev4 since R148
 ---------------------------------
