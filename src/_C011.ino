@@ -10,7 +10,7 @@
 #define P011_HTTP_URI_MAX_LEN             240
 #define P011_HTTP_HEADER_MAX_LEN          256
 #define P011_HTTP_BODY_MAX_LEN            512
- 
+
 struct P011_ConfigStruct
 {
   char          HttpMethod[P011_HTTP_METHOD_MAX_LEN];
@@ -29,8 +29,8 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_011;
         Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = false;
-        Protocol[protocolCount].usesPassword = false;
+        Protocol[protocolCount].usesAccount = true;
+        Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
         break;
@@ -46,9 +46,9 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
       {
         P011_ConfigStruct customConfig;
         LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
-        String methods[] = { F("GET"), F("POST"), F("PUT") };
+        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
           string += F("<option value='");
           string += methods[i] + "'";
@@ -101,11 +101,13 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
           case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
           case SENSOR_TYPE_SWITCH:
           case SENSOR_TYPE_DIMMER:
+          case SENSOR_TYPE_WIND:
             HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
             break;
           case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
             HTTPSend011(event, 0, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
             break;
+          case SENSOR_TYPE_DUAL:
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
             {
@@ -130,6 +132,23 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
               HTTPSend011(event, 2, UserVar[event->BaseVarIndex + 2], 0);
               break;
             }
+          case SENSOR_TYPE_QUAD:
+          {
+            HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
+            unsigned long timer = millis() + Settings.MessageDelay;
+            while (millis() < timer)
+              backgroundtasks();
+            HTTPSend011(event, 1, UserVar[event->BaseVarIndex + 1], 0);
+            timer = millis() + Settings.MessageDelay;
+            while (millis() < timer)
+              backgroundtasks();
+            HTTPSend011(event, 2, UserVar[event->BaseVarIndex + 2], 0);
+            timer = millis() + Settings.MessageDelay;
+            while (millis() < timer)
+              backgroundtasks();
+            HTTPSend011(event, 3, UserVar[event->BaseVarIndex + 3], 0);
+            break;
+          }
         }
         break;
       }
@@ -146,6 +165,18 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
+  String authHeader = "";
+  if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
+  {
+    base64 encoder;
+    String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
+    auth += ":";
+    auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
+    authHeader = F("Authorization: Basic ");
+    authHeader += encoder.encode(auth);
+    authHeader += F(" \r\n");
+  }
 
   P011_ConfigStruct customConfig;
   LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
@@ -177,13 +208,15 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
   String hostName = host;
   if (ControllerSettings.UseDNS)
     hostName = ControllerSettings.HostName[event->ProtocolIndex];
-    
+
   String payload = String(customConfig.HttpMethod) + " /";
   payload += customConfig.HttpUri;
   payload += F(" HTTP/1.1\r\n");
   payload += F("Host: ");
   payload += hostName + ":" + ControllerSettings.Port;
-  payload += F("\r\nConnection: close\r\n");
+  payload += F("\r\n");
+  payload += authHeader;
+  payload += F("Connection: close\r\n");
 
   if (strlen(customConfig.HttpHeader) > 0)
     payload += customConfig.HttpHeader;
@@ -201,7 +234,8 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
 
   // This will send the request to the server
   client.print(payload);
-               
+  addLog(LOG_LEVEL_DEBUG_MORE, payload);
+
   unsigned long timer = millis() + 200;
   while (!client.available() && millis() < timer)
     delay(1);
@@ -213,7 +247,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
     addLog(LOG_LEVEL_DEBUG_MORE, log);
     if (line.substring(0, 10) == F("HTTP/1.1 2"))
     {
-      strcpy_P(log, PSTR("HTTP : Succes!"));
+      strcpy_P(log, PSTR("HTTP : Success!"));
       addLog(LOG_LEVEL_DEBUG, log);
       success = true;
     }
@@ -232,13 +266,22 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
 //********************************************************************************
 void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
 {
+  s.replace(F("%CR%"), "\r");
+  s.replace(F("%LF%"), "\n");
   s.replace(F("%sysname%"), URLEncode(Settings.Name));
   s.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
   s.replace(F("%id%"), String(event->idx));
   s.replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
+
+  // s.replace(F("%valname2%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex+1]));
+  // s.replace(F("%valname3%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex+2]));
+  // s.replace(F("%valname4%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex+3]));
   if (longValue)
     s.replace(F("%value%"), String(longValue));
-  else
+  else {
     s.replace(F("%value%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
+    // s.replace(F("%value2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+1]));
+    // s.replace(F("%value3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+2]));
+    // s.replace(F("%value4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+3]));
+  }
 }
-
