@@ -1,0 +1,86 @@
+-----------------------------
+Changes in release v2.0.0-dev5
+-----------------------------
+
+Release date: Sat Mar 11 18:15:59 CET 2017
+
+DatuX (5):
+      Update README.md
+      Update README.md
+      Update README.md
+      Update README.md
+      Update README.md
+
+Edwin Eefting (7):
+      deploy in platformio format
+      simplified string handling and fixed buffer overflow
+      created release notes from R148 to v2.0.0-dev4
+      updated release notes for test1
+      BUILD_GIT is now defined via environement variables
+      use TRAVIS_TAG when building releases
+      automaticly updated release notes for v2.0.0-dev5
+
+Gerald (3):
+      Update _P047_i2c-soil-moisture-sensor.ino
+      one newline to much
+      add missing features from "Generic HTTP" Plugin to "Generic HTTP Advanced" Plugin (#151)
+
+Gustavo Spadari (3):
+      Adding IR received code extra info
+      Rename tmpString to cmdCode for clarity
+      IR RAW Code implementation
+
+JustMe-NL (4):
+      Fix double define
+      Fix Windspeed values
+      Fix broken Domoticz MQTT helper
+      Update WebServer.ino
+
+Nonflammable (1):
+      Extend functionality of P038
+
+krikk (7):
+      new Plugin for SoilMoisturesensor from Tindie (https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/)     minor fixes in http advanced to allow sensor type triple and http response 2xx not 200 only
+      version check to detect if sensor is present, optimized address handling
+      added measurement mode selection
+      minor fix, shared variable name with bme280, not good :)
+      variable name collision with adafruit motorshield v2 library, no functional change
+      new plugin for adafruit motorshield v2, still needs a library and only support DC Motors up till now... still room for improvement
+      added function to enable/disable sleep mode and version check
+
+psy0rztest (1):
+      Removed !echo, because its not supported in Windows.
+
+
+---------------------------------
+Changes in v2.0.0-dev4 since R148
+---------------------------------
+
+Edwin Eefting (18):
+      copy from ESPEasyMega commit 33f31e1fc3a9736266e9ee4781947d01808f88d6 but without the file renames
+      bugfix in p036: pointer was not initialized to NULL
+      added git version numbers output
+      _C001 Sent humstat to domoticz
+      fixed logging during first time initialisation
+      factory reset will now always format SPIFFS. earlier boot logging
+      fix factory reset by tx/rx pin double reset issue
+      this was only a temporary test, forgot to remove
+      turn on weblog by default
+      uninitialised var
+      removed systemOK: its not used anymore since SPIFFS support. (when system is not ok, it already did a resetfactory and reboots instead of continuing in emergency mode
+      fixed building on systems other that platformio+linux (by making sure BUILD_GIT is defined)
+      rename to .ino
+      moving source files to src, in preperation of platformio directory structure
+      platformio settings, travis settings, flashtools for windows, deploy script to create release .zip file
+      add libraries as submodules
+      add libraries we slightly modified or that i cant find the repositorys for
+      new deploy key
+
+JustMe-NL (6):
+      Update ESPEasy.ino
+      Update Misc.ino
+      Update _C001.ino
+      Update _C002.ino
+      Create _P045_MPU6050
+      Create _P046_VentusW266
+
