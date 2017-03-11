@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+NEW="$1"
+
+[ "$NEW" != "" ] || exit 1
+
+PREV=`git tag|head -1`
+
+############## update Release_notes.txt
+NOTES="dist/Release_notes.txt"
+echo "-----------------------------" > "$NOTES.new"
+echo "Changes in release $NEW" >> "$NOTES.new"
+echo "-----------------------------" >> "$NOTES.new"
+echo -e "\nRelease date: `date`\n" >> "$NOTES.new"
+
+git shortlog --no-merges $PREV..HEAD >> "$NOTES.new"
+
+echo >> "$NOTES.new"
+cat "$NOTES" >> "$NOTES.new"
+mv "$NOTES.new" "$NOTES"
+
+git add "$NOTES"
+git commit -m "automaticly updated release notes for $NEW"
+
+
+################ tag and add tag message
+echo > /tmp/tagmessage
+echo "Release $NEW" >> /tmp/tagmessage
+echo >> /tmp/tagmessage
+echo "Changes in $NEW (since $PREV):" >> /tmp/tagmessage
+echo >> /tmp/tagmessage
+git shortlog --no-merges $PREV..HEAD >> /tmp/tagmessage
+git tag -a "$NEW" -m "`cat /tmp/tagmessage`"
+
+
+################ push everything
+git push
+git push --tags
