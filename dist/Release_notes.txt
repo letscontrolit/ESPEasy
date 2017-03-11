@@ -2,7 +2,7 @@
 Changes in release v2.0.0-dev5
 -----------------------------
 
-Release date: Sat Mar 11 18:08:49 CET 2017
+Release date: Sat Mar 11 18:15:59 CET 2017
 
 DatuX (5):
       Update README.md
@@ -11,13 +11,14 @@ DatuX (5):
       Update README.md
       Update README.md
 
-Edwin Eefting (6):
+Edwin Eefting (7):
       deploy in platformio format
       simplified string handling and fixed buffer overflow
       created release notes from R148 to v2.0.0-dev4
       updated release notes for test1
       BUILD_GIT is now defined via environement variables
       use TRAVIS_TAG when building releases
+      automaticly updated release notes for v2.0.0-dev5
 
 Gerald (3):
       Update _P047_i2c-soil-moisture-sensor.ino
