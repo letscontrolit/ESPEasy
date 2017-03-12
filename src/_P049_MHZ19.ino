@@ -67,6 +67,15 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         String log = F("MHZ19: Init OK ");
         addLog(LOG_LEVEL_INFO, log);
 
+        if (!RTC.deepSleepState)
+        {
+          //hardware needs to initialize on cold boot, otherwise we get a weird value or read error
+          String log = F("MHZ19: Delaying first measurement.");
+          addLog(LOG_LEVEL_INFO, log);
+          timerSensor[event->TaskIndex] = millis() + 15000;
+        }
+
+
         Plugin_049_init = true;
         success = true;
         break;
