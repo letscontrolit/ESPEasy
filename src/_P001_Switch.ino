@@ -137,7 +137,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
         outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
-        
+
         // if boot state must be send, inverse default state
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
         {
@@ -231,11 +231,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
-            
+
             if(event->Par3 != 0)
             {
               byte prev_mode;
-              uint16_t prev_value;            
+              uint16_t prev_value;
               getPinState(PLUGIN_ID_001, event->Par1, &prev_mode, &prev_value);
               if(prev_mode != PIN_MODE_PWM)
                 prev_value = 0;
@@ -251,7 +251,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 delay(1);
               }
             }
-            
+
             analogWrite(event->Par1, event->Par2);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
@@ -327,6 +327,41 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
           outputstate[event->Par1] = event->Par2;
         }
+
+        #ifdef PLUGIN_BUILD_TESTING
+        //play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more info.
+        if (command == F("rtttl"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            pinMode(event->Par1, OUTPUT);
+            char sng[1024] ="";
+            string.replace("-","#");
+            string.toCharArray(sng, 1024);
+            play_rtttl(event->Par1, sng);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            log = String(F("SW   : ")) + string;
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+          }
+        }
+
+        //play a tone on pin par1, with frequency par2 and duration par3.
+        if (command == F("tone"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            pinMode(event->Par1, OUTPUT);
+            tone(event->Par1, event->Par2, event->Par3);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            log = String(F("SW   : ")) + string;
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+          }
+        }
+        #endif
 
         break;
       }
