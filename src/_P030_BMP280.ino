@@ -36,6 +36,7 @@ enum
   BMP280_REGISTER_TEMPDATA           = 0xFA,
 
   BMP280_CONTROL_SETTING             = 0x57, // Oversampling: 16x P, 2x T, normal mode
+  BMP280_CONFIG_SETTING              = 0xE0, // Tstandby 1000ms, filter 16, 3-wire SPI Disable
 };
 
 typedef struct
@@ -231,6 +232,7 @@ bool Plugin_030_begin(uint8_t a) {
 
   Plugin_030_readCoefficients(a & 0x1);
   Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING);
+  Plugin_030_write8(BMP280_REGISTER_CONFIG, BMP280_CONFIG_SETTING);
   return true;
 }
 
