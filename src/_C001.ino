@@ -131,7 +131,8 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += ";";
               url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
               url += ";";
-              url += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);              break;
+              url += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);
+              break;
             case SENSOR_TYPE_SWITCH:
               url = F("/json.htm?type=command&param=switchlight&idx=");
               url += event->idx;
