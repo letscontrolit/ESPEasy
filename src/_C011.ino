@@ -217,7 +217,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
     delay(1);
 
   // Read all the lines of the reply from server and print them to Serial
-//  while (client.available()) {
+  while (client.available()) {
     String line = client.readStringUntil('\n');
     line.toCharArray(log, 80);
     addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -228,7 +228,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
       success = true;
     }
     delay(1);
-//  }
+  }
   strcpy_P(log, PSTR("HTTP : closing connection"));
   addLog(LOG_LEVEL_DEBUG, log);
 
