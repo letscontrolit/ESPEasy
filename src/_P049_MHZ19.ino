@@ -67,6 +67,10 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         String log = F("MHZ19: Init OK ");
         addLog(LOG_LEVEL_INFO, log);
 
+        //delay first read, because hardware needs to initialize on cold boot
+        //otherwise we get a weird value or read error
+        timerSensor[event->TaskIndex] = millis() + 15000;
+
         Plugin_049_init = true;
         success = true;
         break;
