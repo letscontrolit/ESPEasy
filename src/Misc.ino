@@ -1,10 +1,29 @@
 
 void deepSleep(int delay)
 {
+  String log;
+
+  //first time deep sleep? offer a way to escape
+  if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
+  {
+    log = F("Entering deep sleep in 30 seconds.");
+    addLog(LOG_LEVEL_INFO, log);
+    delayMillis(30000);
+    //disabled?
+    if (!Settings.deepSleep)
+    {
+      log = F("Deep sleep disabled.");
+      addLog(LOG_LEVEL_INFO, log);
+      return;
+    }
+  }
+
+  log = F("Entering deep sleep...");
+  addLog(LOG_LEVEL_INFO, log);
+
   RTC.deepSleepState = 1;
   saveToRTC();
-  String log = F("Enter deep sleep...");
-  addLog(LOG_LEVEL_INFO, log);
+
   String event = F("System#Sleep");
   rulesProcessing(event);
   ESP.deepSleep(delay * 1000000, WAKE_RF_DEFAULT);

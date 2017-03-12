@@ -363,9 +363,9 @@ void handle_config() {
 
   char str[20];
 
-  reply += F("<TR><TD>Sensor Delay:<TD><input type='text' name='delay' value='");
+  reply += F("<TR><TD>Sleep Delay:<TD><input type='text' name='delay' value='");
   reply += Settings.Delay;
-  reply += F("'><TR><TD>Sleep Mode:<TD>");
+  reply += F("'><TR><TD>Sleep enabled:<TD>");
   if (Settings.deepSleep)
     reply += F("<input type=checkbox name='deepsleep' checked>");
   else
@@ -2996,6 +2996,9 @@ void handle_sysinfo() {
   {
     case BOOT_CAUSE_MANUAL_REBOOT:
       reply += F("Manual reboot");
+      break;
+    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
+      reply += F("Deep sleep"); 
       break;
     case BOOT_CAUSE_COLD_BOOT:
       reply += F("Cold boot");
