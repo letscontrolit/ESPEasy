@@ -86,7 +86,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           }
 
           // get response
-          memset(mhzResp, 0, 9);
+          memset(mhzResp, 0, sizeof(mhzResp));
 
           long start = millis();
           int counter = 0;
