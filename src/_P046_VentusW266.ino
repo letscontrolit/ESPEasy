@@ -80,7 +80,7 @@
 #define PLUGIN_046_DEBUG            true                        // Shows recieved frames and crc in log@INFO
 
 #define PLUGIN_046                                              // Mandatory framework constants
-#define PLUGIN_ID_046               046
+#define PLUGIN_ID_046               46
 #define PLUGIN_NAME_046             "Ventus W266 [TESTING]"
 #define PLUGIN_VALUENAME1_046       ""
 #define PLUGIN_VALUENAME2_046       ""

@@ -10,10 +10,10 @@
 // MPU6050: https://github.com/jrowberg/i2cdevlib/tree/master/Arduino/MPU6050
 // Which contain the following license information:
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-// associated documentation files (the "Software"), to deal in the Software without restriction, 
+// associated documentation files (the "Software"), to deal in the Software without restriction,
 // including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions: The above copyright notice and this permission notice shall be 
+// subject to the following conditions: The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
 
 
@@ -28,7 +28,7 @@
 // You can also use the plugin to read raw sensorvalues. You can use more then one instance of the plugin and
 // you can set multiple movement alarms by giving each instance other threshold values if needed.
 
-// Best practise: Create three custom sensors in your homecontroller (like domoticz) and let it plot the x, y and 
+// Best practise: Create three custom sensors in your homecontroller (like domoticz) and let it plot the x, y and
 // z range. Plot the sensorvalues while you use the washingmachine and/or dryer. Also keep monitoring when they
 // are not in use so you can determine the needed thresholds. When you have these you can select the movement
 // detection function to setup the plugin for further use.
@@ -38,9 +38,9 @@
 
 // Plugin var usage:
 // Globals    - int16_t _P045_axis[3][5][2] Array to store sensorvalues of the axis
-//              _P045_axis[0-2][x][x]  = x, y, z axis 
-//              _P045_axis[x][0-4][x]  = min values, max values, range (max-min), a-values, g-values.       
-//              _P045_axis[x][x][0-1]  = device address: 0=0x68, 1=0x69       
+//              _P045_axis[0-2][x][x]  = x, y, z axis
+//              _P045_axis[x][0-4][x]  = min values, max values, range (max-min), a-values, g-values.
+//              _P045_axis[x][x][0-1]  = device address: 0=0x68, 1=0x69
 //            - long _P045_time[2] = Timer to check values each 5 seconds for each used device address.
 
 // Framework  - Settings.TaskDevicePluginConfig[x][0]     - Device address (0x68 | 0x69)
@@ -72,7 +72,7 @@
 #define MPU6050_PWR1_CLKSEL_LENGTH          3
 
 #define PLUGIN_045
-#define PLUGIN_ID_045                       045
+#define PLUGIN_ID_045                       45
 #define PLUGIN_NAME_045                     "MPU 6050 [TESTING]"
 #define PLUGIN_VALUENAME1_045               ""
 
@@ -178,7 +178,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           string += F("Each period, defined by the [detection window], the counter is checked against<br>");
           string += F("the [min. detection count] and if found equal or larger, movement is detected.<br>");
           string += F("If in the next window the [min. detection count] value is not met, movement has stopped.");
-          string += F("The [detection window] cannot be smaller than the [min. detection count].");          
+          string += F("The [detection window] cannot be smaller than the [min. detection count].");
           string += F("<TR><TD>Min. detection count:<TD><input type='text' size='6' maxlength='6' name='plugin_045_threshold_counter' value='");
           string += Settings.TaskDevicePluginConfig[event->TaskIndex][5];
           string += F("'>");
@@ -228,10 +228,10 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         _P045_writeBits(devAddr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, MPU6050_GYRO_FS_250);
         _P045_writeBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, MPU6050_ACCEL_FS_2);
         _P045_writeBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1, 0);
-        
+
         // Read the MPU6050 once to clear out zeros (1st time reading MPU6050 returns all 0s)
-        int16_t ax, ay, az, gx, gy, gz;                      
-        _P045_getMotion6(devAddr, &ax, &ay, &az, &gx, &gy, &gz);        
+        int16_t ax, ay, az, gx, gy, gz;
+        _P045_getMotion6(devAddr, &ax, &ay, &az, &gx, &gy, &gz);
 
         // Reset vars
         Settings.TaskDevicePluginConfig[event->TaskIndex][7] = 0;       // Last known value of "switch" is off
@@ -241,17 +241,17 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+
     case PLUGIN_ONCE_A_SECOND:
       {
         uint8_t devAddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         byte dev = devAddr & 1;
-        
+
         // Read the sensorvalues, we run this bit every 1/10th of a second
         _P045_getMotion6(devAddr, &_P045_axis[0][3][dev], &_P045_axis[1][3][dev], &_P045_axis[2][3][dev], &_P045_axis[0][4][dev], &_P045_axis[1][4][dev], &_P045_axis[2][4][dev]);
         // Set the minimum and maximum value for each axis a-value, overwrite previous values if smaller/larger
-        _P045_trackMinMax(_P045_axis[0][3][dev], &_P045_axis[0][0][dev], &_P045_axis[0][1][dev]); 
-        _P045_trackMinMax(_P045_axis[1][3][dev], &_P045_axis[1][0][dev], &_P045_axis[1][1][dev]); 
+        _P045_trackMinMax(_P045_axis[0][3][dev], &_P045_axis[0][0][dev], &_P045_axis[0][1][dev]);
+        _P045_trackMinMax(_P045_axis[1][3][dev], &_P045_axis[1][0][dev], &_P045_axis[1][1][dev]);
         _P045_trackMinMax(_P045_axis[2][3][dev], &_P045_axis[2][0][dev], &_P045_axis[2][1][dev]);
         //                              ^ current value @ 3     ^ min val @ 0           ^ max val @ 1
 
@@ -285,9 +285,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+
     case PLUGIN_READ:
-      { 
+      {
         int devAddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         byte dev = devAddr & 1;
         int _P045_Function = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -312,14 +312,14 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
             if (thresexceed) { Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]++; }
             // And increase the window counter
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]++;
-            
+
             if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] >= Settings.TaskDevicePluginConfig[event->TaskIndex][6]) {
               // Detection window has passed.
               Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = 0; // reset window counter
-              
+
               // Did we count more times exceeded then the minimum detection value?
               if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] >= Settings.TaskDevicePluginConfig[event->TaskIndex][5]) {
-                UserVar[event->BaseVarIndex] = 1; // x times threshold exceeded within window. 
+                UserVar[event->BaseVarIndex] = 1; // x times threshold exceeded within window.
               } else {
                 UserVar[event->BaseVarIndex] = 0; // reset because x times threshold within window not met.
               }
@@ -346,7 +346,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = float(_P045_axis[reqaxis][reqvar][dev]);
             success = true;
             break;
-          }          
+          }
         }
         break;
       }
