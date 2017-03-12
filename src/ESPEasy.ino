@@ -650,12 +650,13 @@ void setup()
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
+  hardwareInit();
+
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
   if (!WifiConnect(true,3))
     WifiConnect(false,3);
 
-  hardwareInit();
   PluginInit();
   CPluginInit();
   NPluginInit();
@@ -714,20 +715,20 @@ void setup()
   {
     for (byte x = 0; x < TASKS_MAX; x++)
       if (Settings.TaskDeviceTimer[x] !=0)
-        timerSensor[x] = millis() + 30000 + (x * Settings.MessageDelay);
+        timerSensor[x] = millis() + (x * Settings.MessageDelay);
 
-    timer = millis() + 30000; // startup delay 30 sec
+    timer = millis();
   }
   else
   {
     for (byte x = 0; x < TASKS_MAX; x++)
       timerSensor[x] = millis() + 0;
-    timer = millis() + 0; // no startup from deepsleep wake up
+    timer = millis();
   }
 
-  timer100ms = millis() + 100; // timer for periodic actions 10 x per/sec
-  timer1s = millis() + 1000; // timer for periodic actions once per/sec
-  timerwd = millis() + 30000; // timer for watchdog once per 30 sec
+  timer100ms = millis(); // timer for periodic actions 10 x per/sec
+  timer1s = millis(); // timer for periodic actions once per/sec
+  timerwd = millis(); // timer for watchdog once per 30 sec
 
   if (Settings.UseNTP)
     initTime();
