@@ -99,6 +99,7 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
           sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
           log += str;
           addLog(LOG_LEVEL_INFO, log);
+          statusLED(0);
           break;
         }
         else
