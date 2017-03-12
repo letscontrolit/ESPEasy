@@ -650,13 +650,12 @@ void setup()
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
-  hardwareInit();
-
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
   if (!WifiConnect(true,3))
     WifiConnect(false,3);
 
+  hardwareInit();
   PluginInit();
   CPluginInit();
   NPluginInit();
