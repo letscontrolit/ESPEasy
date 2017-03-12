@@ -104,6 +104,14 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               url += ";0";
               break;
+            case SENSOR_TYPE_TRIPLE:
+              url += F("&svalue=");
+              url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              break;
             case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
               url += F("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
@@ -114,6 +122,16 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += ";";
               url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
               url += ";0";
+              break;
+            case SENSOR_TYPE_QUAD:
+              url += F("&svalue=");
+              url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              url += ";";
+              url += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);
               break;
             case SENSOR_TYPE_SWITCH:
               url = F("/json.htm?type=command&param=switchlight&idx=");
