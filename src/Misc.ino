@@ -1,3 +1,4 @@
+
 void deepSleep(int delay)
 {
   RTC.deepSleepState = 1;
@@ -439,7 +440,7 @@ void fileSystemCheck()
 {
   if (SPIFFS.begin())
   {
-    String log = F("SPIFFS Mount successful");
+    String log = F("FS   : Mount successful");
     addLog(LOG_LEVEL_INFO, log);
     fs::File f = SPIFFS.open("config.dat", "r");
     if (!f)
@@ -449,9 +450,9 @@ void fileSystemCheck()
   }
   else
   {
-    String log = F("SPIFFS Mount failed");
+    String log = F("FS   : Mount failed");
     Serial.println(log);
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_ERROR, log);
   }
 }
 
@@ -810,12 +811,12 @@ void ResetFactory(void)
 
   //always format on factory reset, in case of corrupt SPIFFS
   SPIFFS.end();
-  Serial.println(F("formatting..."));
+  Serial.println(F("FS   : formatting..."));
   SPIFFS.format();
-  Serial.println(F("formatting done..."));
+  Serial.println(F("FS   : formatting done..."));
   if (!SPIFFS.begin())
   {
-    Serial.println(F("FORMATTING SPIFFS FAILED!"));
+    Serial.println(F("FS   : FORMATTING SPIFFS FAILED!"));
     return;
   }
 
@@ -2409,5 +2410,58 @@ void play_rtttl(uint8_t _pin, char *p )
     }
   }
 }
+
+#endif
+
+
+#ifdef FEATURE_ARDUINO_OTA
+/********************************************************************************************\
+  Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
+  \*********************************************************************************************/
+
+void ArduinoOTAInit()
+{
+  // Default port is 8266
+  ArduinoOTA.setPort(8266);
+
+  if (SecuritySettings.Password[0]!=0)
+    ArduinoOTA.setPassword(SecuritySettings.Password);
+
+  ArduinoOTA.onStart([]() {
+      Serial.println(F("OTA  : Start upload"));
+      SPIFFS.end(); //important, otherwise it fails
+  });
+
+  ArduinoOTA.onEnd([]() {
+      Serial.println(F("\nOTA  : End"));
+      //"dangerous": if you reset during flash you have to reflash via serial
+      //so dont touch device until restart is complete
+      Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
+      delay(100);
+      ESP.reset();
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+
+      Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+      Serial.print(F("\nOTA  : Error (will reboot): "));
+      if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
+      else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
+      else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
+      else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
+      else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
+
+      delay(100);
+      ESP.reset();
+  });
+  ArduinoOTA.begin();
+
+  String log = F("OTA  : Arduino OTA enabled on port 8266");
+  addLog(LOG_LEVEL_INFO, log);
+
+}
+
 
 #endif
