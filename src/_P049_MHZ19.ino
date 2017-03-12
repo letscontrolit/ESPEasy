@@ -64,7 +64,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
       {
         Plugin_049_S8 = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
         Plugin_049_S8->begin(9600);
-        String log = F("MHZ19:  Init OK ");
+        String log = F("MHZ19: Init OK ");
         addLog(LOG_LEVEL_INFO, log);
 
         Plugin_049_init = true;

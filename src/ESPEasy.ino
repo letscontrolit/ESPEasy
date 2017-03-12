@@ -109,6 +109,12 @@
 // Use the "System Info" device to read the VCC value
 #define FEATURE_ADC_VCC                  false
 
+//enable Arduino OTA updating.
+//Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+//Normally only enabled for dev environment, since its helpfull while developing.
+// #define FEATURE_ARDUINO_OTA
+
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -272,6 +278,13 @@ ADC_MODE(ADC_VCC);
 extern "C" {
 #include "user_interface.h"
 }
+
+
+#ifdef FEATURE_ARDUINO_OTA
+#include <ArduinoOTA.h>
+#include <ESP8266mDNS.h>
+bool ArduinoOTAtriggered=false;
+#endif
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -662,6 +675,10 @@ void setup()
   NPluginInit();
 
   WebServerInit();
+
+  #ifdef FEATURE_ARDUINO_OTA
+  ArduinoOTAInit();
+  #endif
 
   // setup UDP
   if (Settings.UDPPort != 0)
@@ -1125,5 +1142,18 @@ void backgroundtasks()
   MQTTclient.loop();
   statusLED(false);
   checkUDP();
+
+  #ifdef FEATURE_ARDUINO_OTA
+  ArduinoOTA.handle();
+
+  //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
+  while (ArduinoOTAtriggered)
+  {
+    yield();
+    ArduinoOTA.handle();
+  }
+
+  #endif
+
   yield();
 }
