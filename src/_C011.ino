@@ -6,7 +6,7 @@
 
 #define CPLUGIN_011
 #define CPLUGIN_ID_011         11
-#define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTNG]"
+#define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
 
 #define P011_HTTP_METHOD_MAX_LEN          16
 #define P011_HTTP_URI_MAX_LEN             240
