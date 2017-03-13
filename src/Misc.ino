@@ -3,6 +3,18 @@ void deepSleep(int delay)
 {
   String log;
 
+  //cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
+  //recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
+  //                    short 1-2 for normal deep sleep / wakeup loop
+  //                    short 2-3 to cancel sleep loop for modifying settings
+  pinMode(16,INPUT_PULLUP);
+  if (!digitalRead(16))
+  {
+    log = F("Deep sleep canceled by GPIO16(D0)=LOW.");
+    addLog(LOG_LEVEL_INFO, log);
+    return;
+  }
+
   //first time deep sleep? offer a way to escape
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
