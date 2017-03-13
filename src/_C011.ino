@@ -2,9 +2,11 @@
 //########################### Controller Plugin 011: Generic HTTP #######################################
 //#######################################################################################################
 
+#ifdef PLUGIN_BUILD_TESTING
+
 #define CPLUGIN_011
 #define CPLUGIN_ID_011         11
-#define CPLUGIN_NAME_011       "Generic HTTP Advanced"
+#define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTNG]"
 
 #define P011_HTTP_METHOD_MAX_LEN          16
 #define P011_HTTP_URI_MAX_LEN             240
@@ -102,27 +104,27 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
           case SENSOR_TYPE_SWITCH:
           case SENSOR_TYPE_DIMMER:
           case SENSOR_TYPE_WIND:
-            HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
+            HTTPSend011(event, 0, 0);
             break;
           case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-            HTTPSend011(event, 0, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
+            HTTPSend011(event, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
             break;
           case SENSOR_TYPE_DUAL:
           case SENSOR_TYPE_TEMP_HUM:
           case SENSOR_TYPE_TEMP_BARO:
             {
-              HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
+              HTTPSend011(event, 0, 0);
               break;
             }
           case SENSOR_TYPE_TRIPLE:
           case SENSOR_TYPE_TEMP_HUM_BARO:
             {
-              HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
+              HTTPSend011(event, 0, 0);
               break;
             }
           case SENSOR_TYPE_QUAD:
           {
-            HTTPSend011(event, 0, UserVar[event->BaseVarIndex], 0);
+            HTTPSend011(event, 0, 0);
             break;
           }
         }
@@ -137,7 +139,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
-boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
+boolean HTTPSend011(struct EventStruct *event, byte varIndex, unsigned long longValue)
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
@@ -196,12 +198,12 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
 
   if (strlen(customConfig.HttpHeader) > 0)
     payload += customConfig.HttpHeader;
-  ReplaceTokenByValue(payload, event, varIndex, value, longValue);
+  ReplaceTokenByValue(payload, event, varIndex, longValue);
 
   if (strlen(customConfig.HttpBody) > 0)
   {
     String body = String(customConfig.HttpBody);
-    ReplaceTokenByValue(body, event, varIndex, value, longValue);
+    ReplaceTokenByValue(body, event, varIndex, longValue);
     payload += F("\r\nContent-Length: ");
     payload += String(body.length());
     payload += F("\r\n\r\n");
@@ -241,7 +243,7 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, float value, unsig
 //********************************************************************************
 // Replace the token in a string by real value.
 //********************************************************************************
-void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
+void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, unsigned long longValue)
 {
 // example string:
 // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
@@ -353,7 +355,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, fl
   if (longValue)
     s.replace(F("%val1%"), String(longValue));
   else {
-  	s.replace(F("%val1%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
+    s.replace(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+0]));
     s.replace(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+1]));
     s.replace(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+2]));
     s.replace(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+3]));
@@ -361,3 +363,5 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, fl
 	addLog(LOG_LEVEL_DEBUG_MORE, "HTTP after replacements: ");
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 }
+
+#endif
