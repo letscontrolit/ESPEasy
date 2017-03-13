@@ -50,7 +50,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
-        for (int i = 0; i < 4; i++)
+        for (byte i = 0; i < 4; i++)
         {
           string += F("<option value='");
           string += methods[i] + "'";
@@ -98,37 +98,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        switch (event->sensorType)
-        {
-          case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-          case SENSOR_TYPE_SWITCH:
-          case SENSOR_TYPE_DIMMER:
-          case SENSOR_TYPE_WIND:
-            HTTPSend011(event, 0, 0);
-            break;
-          case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-            HTTPSend011(event, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
-            break;
-          case SENSOR_TYPE_DUAL:
-          case SENSOR_TYPE_TEMP_HUM:
-          case SENSOR_TYPE_TEMP_BARO:
-            {
-              HTTPSend011(event, 0, 0);
-              break;
-            }
-          case SENSOR_TYPE_TRIPLE:
-          case SENSOR_TYPE_TEMP_HUM_BARO:
-            {
-              HTTPSend011(event, 0, 0);
-              break;
-            }
-          case SENSOR_TYPE_QUAD:
-          {
-            HTTPSend011(event, 0, 0);
-            break;
-          }
-        }
-        break;
+      	HTTPSend011(event);
       }
 
   }
@@ -139,7 +109,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
-boolean HTTPSend011(struct EventStruct *event, byte varIndex, unsigned long longValue)
+boolean HTTPSend011(struct EventStruct *event)
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
@@ -198,12 +168,12 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, unsigned long long
 
   if (strlen(customConfig.HttpHeader) > 0)
     payload += customConfig.HttpHeader;
-  ReplaceTokenByValue(payload, event, varIndex, longValue);
+  ReplaceTokenByValue(payload, event);
 
   if (strlen(customConfig.HttpBody) > 0)
   {
     String body = String(customConfig.HttpBody);
-    ReplaceTokenByValue(body, event, varIndex, longValue);
+    ReplaceTokenByValue(body, event);
     payload += F("\r\nContent-Length: ");
     payload += String(body.length());
     payload += F("\r\n\r\n");
@@ -238,18 +208,47 @@ boolean HTTPSend011(struct EventStruct *event, byte varIndex, unsigned long long
   client.stop();
 }
 
+// parses the string and returns only the the number of name/values we want
+// according to the parameter numberOfValuesWanted
+void DeleteNotNeededValues(String &s, byte numberOfValuesWanted)
+{
+	numberOfValuesWanted++;
+	for (byte i=1; i < 5; i++)
+	{
+		while(s.indexOf(String(F("%")) + i + F("%")) != -1 && s.indexOf(String(F("%/")) + i + F("%")) != -1 )
+		{
+			if (i<numberOfValuesWanted)
+			{
+				String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
+				s.replace(p, p.substring(3, (p.length() -4)));
+			}
+			else
+			{
+				String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
+				s.replace(p, F(""));
+			}
+		}
+	}
+}
 
 
 //********************************************************************************
 // Replace the token in a string by real value.
+//
+// Example:
+// %1%%vname1%____%tskname%____%val1%%/1%%2%%__%%vname2%____%tskname%____%val2%%/2%
+// will become in case of a sensor with 1 value:
+// SENSORVALUENAME1____TASKNAME1____VALUE1  <- everything not between %1% and %/1% will be discarded
+// in case of a sensor with 2 values:
+// SENSORVALUENAME1____TASKNAME1____VALUE1__SENSORVALUENAME2____TASKNAME2____VALUE2
 //********************************************************************************
-void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, unsigned long longValue)
+void ReplaceTokenByValue(String& s, struct EventStruct *event)
 {
 // example string:
 // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
 //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname% Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
-
-	addLog(LOG_LEVEL_DEBUG_MORE, "HTTP before parsing: ");
+	String log = F("HTTP before parsing: ");
+	addLog(LOG_LEVEL_DEBUG_MORE, log);
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
 	switch (event->sensorType)
@@ -260,85 +259,31 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, un
 		case SENSOR_TYPE_WIND:
 		case SENSOR_TYPE_LONG:
 		{
-			for (int i=1; i < 5; i++)
-			{
-				while(s.indexOf(String(F("%")) + i + F("%")) != -1 && s.indexOf(String(F("%/")) + i + F("%")) != -1 )
-				{
-					if (i<2)
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, p.substring(3, (p.length() -4)));
-					}
-					else
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, F(""));
-					}
-				}
-			}
+			DeleteNotNeededValues(s,1);
 			break;
 		}
 		case SENSOR_TYPE_DUAL:
 		case SENSOR_TYPE_TEMP_HUM:
 		case SENSOR_TYPE_TEMP_BARO:
 		{
-			for (int i=1; i < 5; i++)
-			{
-				while(s.indexOf(String(F("%")) + i + F("%")) != -1 && s.indexOf(String(F("%/")) + i + F("%")) != -1 )
-				{
-					if (i<3)
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, p.substring(3, (p.length() -4)));
-					}
-					else
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, F(""));
-					}
-				}
-			}
+			DeleteNotNeededValues(s,2);
 			break;
 		}
 		case SENSOR_TYPE_TRIPLE:
 		case SENSOR_TYPE_TEMP_HUM_BARO:
 		{
-			for (int i=1; i < 5; i++)
-			{
-				while(s.indexOf(String(F("%")) + i + F("%")) != -1 && s.indexOf(String(F("%/")) + i + F("%")) != -1 )
-				{
-					if (i<4)
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, p.substring(3, (p.length() -4)));
-					}
-					else
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, F(""));
-					}
-				}
-			}
+			DeleteNotNeededValues(s,3);
 			break;
 		}
 		case SENSOR_TYPE_QUAD:
 		{
-			for (int i=1; i < 5; i++)
-			{
-				while(s.indexOf(String(F("%")) + i + F("%")) != -1 && s.indexOf(String(F("%/")) + i + F("%")) != -1 )
-				{
-					if (i<5)
-					{
-						String p = s.substring(s.indexOf(String(F("%")) + i + F("%")),s.indexOf(String(F("%/")) + i + F("%"))+4);
-						s.replace(p, p.substring(3, (p.length() -4)));
-					}
-				}
-			}
+			DeleteNotNeededValues(s,4);
 			break;
 		}
 	}
 
-	addLog(LOG_LEVEL_DEBUG_MORE, "HTTP after parsing: ");
+	log = F("HTTP after parsing: ");
+	addLog(LOG_LEVEL_DEBUG_MORE, log);
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
 
@@ -347,20 +292,21 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, byte varIndex, un
   s.replace(F("%sysname%"), URLEncode(Settings.Name));
   s.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
   s.replace(F("%id%"), String(event->idx));
-  s.replace(F("%vname1%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
+  s.replace(F("%vname1%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[0]));
+  s.replace(F("%vname2%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[1]));
+  s.replace(F("%vname3%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[2]));
+  s.replace(F("%vname4%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[3]));
 
-  s.replace(F("%vname2%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex+1]));
-  s.replace(F("%vname3%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex+2]));
-  s.replace(F("%vname4%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex+3]));
-  if (longValue)
-    s.replace(F("%val1%"), String(longValue));
+  if (event->sensorType == SENSOR_TYPE_LONG)
+    s.replace(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)));
   else {
-    s.replace(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+0]));
-    s.replace(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+1]));
-    s.replace(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+2]));
-    s.replace(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[varIndex+3]));
+    s.replace(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[0]));
+    s.replace(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]));
+    s.replace(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]));
+    s.replace(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]));
   }
-	addLog(LOG_LEVEL_DEBUG_MORE, "HTTP after replacements: ");
+	log = F("HTTP after replacements: ");
+	addLog(LOG_LEVEL_DEBUG_MORE, log);
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 }
 
