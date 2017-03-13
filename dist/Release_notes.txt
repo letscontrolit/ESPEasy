@@ -1,4 +1,81 @@
 -----------------------------
+Changes in release v2.0.0-dev6
+-----------------------------
+
+Release date: Mon Mar 13 11:52:02 CET 2017
+
+DatuX (5):
+      Update README.md
+      Update README.md
+      Update README.md
+      Update README.md
+      Update README.md
+
+Edwin Eefting (22):
+      deploy in platformio format
+      simplified string handling and fixed buffer overflow
+      created release notes from R148 to v2.0.0-dev4
+      updated release notes for test1
+      BUILD_GIT is now defined via environement variables
+      use TRAVIS_TAG when building releases
+      automaticly updated release notes for v2.0.0-dev5
+      automaticly updated release notes for v2.0.0-dev5
+      created script to assist in creating releases
+      bug fix: plugin_id should not start with a 0. (compiler interprets this as octal!)
+      Revert "bug fix: plugin_id should not start with a 0. (compiler interprets this as octal!)"
+      bug fix: plugin_id should not start with a 0. (compiler interprets this as octal!)
+      added NDIR CO2 Sensor MH-Z19 plugin to TESTING plugin set
+      remove artificial sensor startup delays. (now all sensors are send immediatly after booting and wifi-connecting)
+      do hardwareinit() earlier so that outputs are set immeadiatly instead of waiting for connect. fixes https://github.com/letscontrolit/ESPEasy/issues/114
+      enable status light as soon as wifi is connected
+      use sizeof instead of magic numbers
+      Implemented speaker and tone functions from https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10
+      enabled Arduino OTA for dev-firmware only, to ease developing. minor output-tweaks
+      cold boot startup delay
+      major change: changed the timing of the first sensor read after initial boot. cleaned up and improved deep sleeping code.
+      added plugin to testing. remove useless value variable
+
+Gerald (5):
+      Update _P047_i2c-soil-moisture-sensor.ino
+      one newline to much
+      add missing features from "Generic HTTP" Plugin to "Generic HTTP Advanced" Plugin (#151)
+      HTTP Advanced, enhanced, so that only one http request is sent for one sensor (#156)
+      added missing sensor type, to fix problem with i2c soilmoisture sensor... (#157)
+
+Gustavo Spadari (3):
+      Adding IR received code extra info
+      Rename tmpString to cmdCode for clarity
+      IR RAW Code implementation
+
+Jochen Krapf (1):
+      cancel deep sleep loop by pulling the pin GPIO16(D0) to GND (#158)
+
+JustMe-NL (4):
+      Fix double define
+      Fix Windspeed values
+      Fix broken Domoticz MQTT helper
+      Update WebServer.ino
+
+Nonflammable (1):
+      Extend functionality of P038
+
+dzikus (1):
+      Added BMP280_CONFIG_SETTING to reduce the temperature of sensor and use oversampling filter (#155)
+
+krikk (7):
+      new Plugin for SoilMoisturesensor from Tindie (https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/)     minor fixes in http advanced to allow sensor type triple and http response 2xx not 200 only
+      version check to detect if sensor is present, optimized address handling
+      added measurement mode selection
+      minor fix, shared variable name with bme280, not good :)
+      variable name collision with adafruit motorshield v2 library, no functional change
+      new plugin for adafruit motorshield v2, still needs a library and only support DC Motors up till now... still room for improvement
+      added function to enable/disable sleep mode and version check
+
+psy0rztest (1):
+      Removed !echo, because its not supported in Windows.
+
+
+-----------------------------
 Changes in release v2.0.0-dev5
 -----------------------------
 
