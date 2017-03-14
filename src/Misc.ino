@@ -1737,12 +1737,28 @@ unsigned long now() {
   return (unsigned long)sysTime;
 }
 
-int hour()
+int year()
+{
+  return 1970 + tm.Year;
+}
+
+byte month()
+{
+	return tm.Month;
+}
+
+byte day()
+{
+	return tm.Day;
+}
+
+
+byte hour()
 {
   return tm.Hour;
 }
 
-int minute()
+byte minute()
 {
   return tm.Minute;
 }
