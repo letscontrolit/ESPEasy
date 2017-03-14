@@ -31,7 +31,7 @@ void ExecuteCommand(byte source, const char *Line)
       backgroundtasks();
     Serial.println("end");
   }
-          
+
   if (strcasecmp_P(Command, PSTR("executeRules")) == 0)
   {
     success = true;
@@ -229,8 +229,16 @@ void ExecuteCommand(byte source, const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
-    success = true;
-    RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+    if (Par1>=0 && Par1<RULES_TIMER_MAX)
+    {
+      success = true;
+      if (Par2)
+        //start new timer
+        RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+      else
+        //disable existing timer
+        RulesTimer[Par1 - 1] = 0L;
+    }
   }
 
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
