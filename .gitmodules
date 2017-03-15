@@ -7,3 +7,6 @@
 [submodule "lib/IRremoteESP8266"]
 	path = lib/IRremoteESP8266
 	url = https://github.com/sebastienwarin/IRremoteESP8266.git
+[submodule "lib/Adafruit_Motor_Shield_V2"]
+	path = lib/Adafruit_Motor_Shield_V2
+	url = https://github.com/adafruit/Adafruit_Motor_Shield_V2_Library.git
