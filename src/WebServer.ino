@@ -2980,16 +2980,18 @@ void handle_sysinfo() {
   reply += BUILD_GIT;
 
   reply += F("<TR><TD>Plugin sets:<TD>");
-  #ifdef PLUGIN_BUILD_DEV
-    reply += F("Normal, Testing, Development");
-  #elif PLUGIN_BUILD_TESTING
-    reply += F("Normal, Testing");
-  #elif PLUGIN_BUILD_NORMAL
-    reply += F("Normal");
-  #else
-    reply += F("Minimal");
+
+  #ifdef PLUGIN_BUILD_NORMAL
+    reply += F("[Normal] ");
   #endif
 
+  #ifdef PLUGIN_BUILD_TESTING
+    reply += F("[Testing] ");
+  #endif
+
+  #ifdef PLUGIN_BUILD_DEV
+    reply += F("[Development] ");
+  #endif
 
   reply += F("<TR><TD>Core Version:<TD>");
   reply += ESP.getCoreVersion();
@@ -3019,7 +3021,7 @@ void handle_sysinfo() {
       reply += F("Manual reboot");
       break;
     case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-      reply += F("Deep sleep"); 
+      reply += F("Deep sleep");
       break;
     case BOOT_CAUSE_COLD_BOOT:
       reply += F("Cold boot");

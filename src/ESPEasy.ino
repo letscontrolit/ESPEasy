@@ -109,11 +109,27 @@
 // Use the "System Info" device to read the VCC value
 #define FEATURE_ADC_VCC                  false
 
+
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-//Normally only enabled for dev environment, since its helpfull while developing.
+//Normally only enabled for the platformio dev environment, since its helpfull while developing.
 // #define FEATURE_ARDUINO_OTA
 
+
+//Select which plugin sets you want to build.
+//These are normally automaticly set via the Platformio build environment.
+//If you use ArduinoIDE you might need to uncomment some of them, depending on your needs
+//If you dont select any, a version with a minimal number of plugins will be biult for 512k versions.
+//(512k is NOT finsihed or tested yet as of v2.0.0-dev6)
+
+//build all the normal stable plugins
+//#define PLUGIN_BUILD_NORMAL
+
+//build all plugins that are in test stadium
+//#define PLUGIN_BUILD_TESTING
+
+//build all plugins that still are being developed and are broken or incomplete
+//#define PLUGIN_BUILD_DEV
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
