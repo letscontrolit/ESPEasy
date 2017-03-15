@@ -198,6 +198,27 @@ void ExecuteCommand(byte source, const char *Line)
     Settings.deepSleep = 0;
   }
 
+  if (strcasecmp_P(Command, PSTR("i2cscanner")) == 0)
+  {
+    success = true;
+
+    byte error, address;
+    for (address = 1; address <= 127; address++ )
+    {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0)
+      {
+        Serial.print(F("I2C  : Found 0x"));
+        Serial.println(String(address, HEX));
+      }
+      else if (error == 4)
+      {
+        Serial.print(F("I2C  : Error at 0x"));
+        Serial.println(String(address, HEX));
+      }
+    }
+  }
 
   // ****************************************
   // commands for rules
