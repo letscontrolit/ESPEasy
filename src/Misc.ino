@@ -1737,12 +1737,28 @@ unsigned long now() {
   return (unsigned long)sysTime;
 }
 
-int hour()
+int year()
+{
+  return 1970 + tm.Year;
+}
+
+byte month()
+{
+	return tm.Month;
+}
+
+byte day()
+{
+	return tm.Day;
+}
+
+
+byte hour()
 {
   return tm.Hour;
 }
 
-int minute()
+byte minute()
 {
   return tm.Minute;
 }
@@ -1856,6 +1872,13 @@ unsigned long getNtpTime()
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  unsigned long timer = millis();
+  String log = "";
+
+  log = F("EVENT: ");
+  log += event;
+  addLog(LOG_LEVEL_INFO, log);
+
   for (byte x = 1; x < RULESETS_MAX + 1; x++)
   {
     String fileName = F("rules");
@@ -1864,6 +1887,12 @@ void rulesProcessing(String& event)
     if (SPIFFS.exists(fileName))
       rulesProcessingFile(fileName, event);
   }
+
+  log = F("EVENT: Processing time:");
+  log += millis() - timer;
+  log += F(" milliSeconds");
+  addLog(LOG_LEVEL_DEBUG, log);
+
 }
 
 /********************************************************************************************\
@@ -1871,7 +1900,6 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 void rulesProcessingFile(String fileName, String& event)
 {
-  unsigned long timer = millis();
   fs::File f = SPIFFS.open(fileName, "r+");
   if (!f)
     return;
@@ -1889,9 +1917,6 @@ void rulesProcessingFile(String fileName, String& event)
     return;
   }
 
-  log = F("EVENT: ");
-  log += event;
-  addLog(LOG_LEVEL_INFO, log);
 
   int pos = 0;
   String line = "";
@@ -2022,13 +2047,7 @@ void rulesProcessingFile(String fileName, String& event)
   }
 
   nestingLevel--;
-  if (nestingLevel == 0)
-  {
-    log = F("EVENT: Processing time:");
-    log += millis() - timer;
-    log += F(" milliSeconds");
-    addLog(LOG_LEVEL_INFO, log);
-  }
+
 }
 
 
@@ -2222,7 +2241,7 @@ void rulesTimers()
   {
     if (RulesTimer[x] != 0L) // timer active?
     {
-      if (RulesTimer[x] < millis()) // timer finished?
+      if (RulesTimer[x] <= millis()) // timer finished?
       {
         RulesTimer[x] = 0L; // turn off this timer
         String event = F("Rules#Timer=");

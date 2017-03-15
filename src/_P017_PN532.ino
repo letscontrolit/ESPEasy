@@ -33,7 +33,7 @@ uint8_t Plugin_017_command;
 boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  
+
   switch (function)
   {
 
@@ -74,6 +74,11 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        //set clock stretch to 2000, if its not set via advanced settings yet
+        //something that Martinus figured out and added: https://github.com/esp8266/Arduino/issues/1541
+        // if (!Settings.WireClockStretchLimit)
+        //   Wire.setClockStretchLimit(2000);
+
         for(byte x=0; x < 3; x++)
         {
           if(Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]))
@@ -82,13 +87,13 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      
+
     case PLUGIN_TEN_PER_SECOND:
       {
         static unsigned long tempcounter = 0;
         static byte counter;
         static byte errorCount=0;
-        
+
         counter++;
         if (counter == 3)
         {
@@ -97,7 +102,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             String log = F("PN532: BUS error");
             addLog(LOG_LEVEL_ERROR, log);
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
-            delay(1000);
+            // delay(1000);
           }
           counter = 0;
           uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -113,7 +118,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           }
           else
             errorCount=0;
-                    
+
           if (errorCount > 2) // if three consecutive I2C errors, reset PN532
           {
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
@@ -177,7 +182,7 @@ boolean Plugin_017_Init(int8_t resetPin)
   }
   else
     return false;
-    
+
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_SAMCONFIGURATION;
   Plugin_017_pn532_packetbuffer[1] = 0x01; // normal mode;
   Plugin_017_pn532_packetbuffer[2] = 0x2; // timeout 50ms * 2 = 100 mS
@@ -185,7 +190,7 @@ boolean Plugin_017_Init(int8_t resetPin)
 
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 4))
     return false;
- 
+
   // to prevent nack on next read
   Wire.beginTransmission(PN532_I2C_ADDRESS);
   Wire.endTransmission();
@@ -398,5 +403,3 @@ int8_t Plugin_017_readAckFrame()
 
   return 0;
 }
-
-

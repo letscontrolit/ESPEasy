@@ -31,7 +31,7 @@ void ExecuteCommand(byte source, const char *Line)
       backgroundtasks();
     Serial.println("end");
   }
-          
+
   if (strcasecmp_P(Command, PSTR("executeRules")) == 0)
   {
     success = true;
@@ -198,6 +198,27 @@ void ExecuteCommand(byte source, const char *Line)
     Settings.deepSleep = 0;
   }
 
+  if (strcasecmp_P(Command, PSTR("i2cscanner")) == 0)
+  {
+    success = true;
+
+    byte error, address;
+    for (address = 1; address <= 127; address++ )
+    {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0)
+      {
+        Serial.print(F("I2C  : Found 0x"));
+        Serial.println(String(address, HEX));
+      }
+      else if (error == 4)
+      {
+        Serial.print(F("I2C  : Error at 0x"));
+        Serial.println(String(address, HEX));
+      }
+    }
+  }
 
   // ****************************************
   // commands for rules
@@ -229,8 +250,16 @@ void ExecuteCommand(byte source, const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
-    success = true;
-    RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+    if (Par1>=0 && Par1<RULES_TIMER_MAX)
+    {
+      success = true;
+      if (Par2)
+        //start new timer
+        RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+      else
+        //disable existing timer
+        RulesTimer[Par1 - 1] = 0L;
+    }
   }
 
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
