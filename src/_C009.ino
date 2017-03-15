@@ -3,8 +3,10 @@
 //#######################################################################################################
 
 /*******************************************************************************
- * Modified version of "Domoticz HTTP CPLUGIN"
- * Copyright 2016 dev0 (https://forum.fhem.de/index.php?action=profile;u=7465)
+ * Copyright 2016-2017 dev0 
+ * Contact: https://forum.fhem.de/index.php?action=profile;u=7465
+ *          https://github.com/ddtlabs/
+ *
  * Release notes:
  - v1.0
  - changed switch and dimmer setreading cmds
@@ -16,6 +18,11 @@
  - ArduinoJson Library v5.6.4 required (as used by stable R120)
  - parse for HTTP errors 400, 401
  - moved on/off translation for SENSOR_TYPE_SWITCH/DIMMER to FHEM module
+ - v1.03
+ - changed http request from GET to POST (RFC conform)
+ - removed obsolet http get url code
+ - v1.04
+ - added build options and node_type_id to JSON/device
  /******************************************************************************/
 
 #define CPLUGIN_009
@@ -53,13 +60,13 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         // We now create a URI for the request
-        String url = F("/fhem?cmd=");
+        String url = F("/ESPEasy");
 
         // Create json root object
         DynamicJsonBuffer jsonBuffer;
         JsonObject& root = jsonBuffer.createObject();
         root["module"] = "ESPEasy";
-        root["version"] = "1.02";
+        root["version"] = "1.04";
 
         // Create nested objects
         JsonObject& data = root.createNestedObject("data");
@@ -68,6 +75,9 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         ESP["unit"] = Settings.Unit;
         ESP["version"] = Settings.Version;
         ESP["build"] = Settings.Build;
+        ESP["build_notes"] = BUILD_NOTES;
+        ESP["build_git"] = BUILD_GIT;
+        ESP["node_type_id"] = NODE_TYPE_ID;
         ESP["sleep"] = Settings.deepSleep;
 
         // embed IP, important if there is NAT/PAT
@@ -82,13 +92,6 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         char itemNames[valueCount][2];
         for (byte x = 0; x < valueCount; x++)
         {
-          String s;
-          url += F("setreading%20");
-          url += Settings.Name;
-          url += F("%20");
-          url += ExtraTaskSettings.TaskDeviceValueNames[x];
-          url += F("%20");
-
           // Each sensor value get an own object (0..n)
           sprintf(itemNames[x],"%d",x);
           JsonObject& val = SENSOR.createNestedObject(itemNames[x]);
@@ -97,19 +100,11 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           val["type"]       = event->sensorType;
 
           if (event->sensorType == SENSOR_TYPE_LONG) {
-            s = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-            url += s;
-            val["value"] = s;
-
-          } else { // All other sensor types
-            s = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
-            url += s;
-            val["value"] = s;
+            val["value"] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           }
-
-          // Split FHEM commands by ";"
-          if (x < valueCount-1)
-            url += F("%3B");
+          else { // All other sensor types
+            val["value"] = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+          }
         }
 
         // Create json buffer
@@ -168,7 +163,7 @@ boolean FHEMHTTPsend(String url, char* buffer, byte index)
 
   // This will send the request to the server
   int len = strlen(buffer);
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+  client.print(String("POST ") + url + " HTTP/1.1\r\n" +
               "Content-Length: "+ len + "\r\n" +
               "Host: " + host + "\r\n" + authHeader +
               "Connection: close\r\n\r\n"
