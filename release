@@ -4,7 +4,7 @@ NEW="$1"
 
 [ "$NEW" != "" ] || exit 1
 
-PREV=`git tag|head -1`
+PREV=`git tag|tail -1`
 
 ############## update Release_notes.txt
 NOTES="dist/Release_notes.txt"
