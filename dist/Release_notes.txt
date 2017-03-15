@@ -1,4 +1,23 @@
 -----------------------------
+Changes in release v2.0.0-dev7
+-----------------------------
+
+Release date: Wed Mar 15 01:42:15 CET 2017
+
+Edwin Eefting (5):
+      timers can be disabled by setting them to 0 now. cleaned up event output logging. added timer out-of-bounds checks
+      added i2scanner via serial. removed spaces from Adafruit Motor Shield library so it works with arduino IDE
+      fixed Arduino IDE compilebug and added help to enable plugin sets in Arduino IDE
+      automaticly updated release notes for v2.0.0-dev7
+      fix in release-script (forgot to commit it last time)
+
+krikk (2):
+      code cleanup for HTTP advanced controller
+      show date in webinterface,  and changed password fields to type=password (#161)
+
+
+
+-----------------------------
 Changes in release v2.0.0-dev6
 -----------------------------
 
