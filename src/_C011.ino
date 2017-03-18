@@ -286,6 +286,27 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 	addLog(LOG_LEVEL_DEBUG_MORE, log);
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
+  String strTime = "";
+  if (hour() < 10)
+    strTime += " ";
+  strTime += hour();
+  strTime += ":";
+  if (minute() < 10)
+    strTime += "0";
+  strTime += minute();
+  s.replace(F("%systime%"), strTime);
+
+	#if FEATURE_ADC_VCC
+		newString.replace(F("%vcc%"), String(vcc));
+	#endif
+
+  IPAddress ip = WiFi.localIP();
+  char strIP[20];
+  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+  s.replace(F("%ip%"), strIP);
+
+  s.replace("%sysload%", String(100 - (100 * loopCounterLast / loopCounterMax)));
+  s.replace(F("%uptime%"), String(wdcounter / 2));
 
   s.replace(F("%CR%"), F("\r"));
   s.replace(F("%LF%"), F("\n"));
