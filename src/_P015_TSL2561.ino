@@ -5,7 +5,7 @@
 
 #define PLUGIN_015
 #define PLUGIN_ID_015        15
-#define PLUGIN_NAME_015       "Luminosity - TLS2561"
+#define PLUGIN_NAME_015       "Luminosity - TSL2561"
 #define PLUGIN_VALUENAME1_015 "Lux"
 
 boolean Plugin_015_init = false;
@@ -13,7 +13,9 @@ boolean Plugin_015_init = false;
 // ======================================
 // TSL2561 luminosity sensor
 // ======================================
-#define TSL2561_I2C_ADDRESS 0x39 // I2C address for the sensor
+#define TSL2561_I2C_ADDRESS1 0x39 // I2C address for the sensor
+#define TSL2561_I2C_ADDRESS2 0x29 // I2C address for the sensor
+#define TSL2561_I2C_ADDRESS3 0x49 // I2C address for the sensor
 #define TSL2561_CONTROL     0x80
 #define TSL2561_TIMING      0x81
 #define TSL2561_INTERRUPT   0x86
@@ -74,6 +76,7 @@ boolean Plugin_015_init = false;
 
 
 uint16_t  tsl2561_lux; // latest lux value read
+uint8_t tsl2561_i2caddr;
 
 boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 {
@@ -111,28 +114,53 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        #define TLS2561_INTEGRATION_OPTION 3
-
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[TLS2561_INTEGRATION_OPTION];
-        int optionValues[TLS2561_INTEGRATION_OPTION];
-        optionValues[0] = TSL2561_TIMING_13MS;
-        options[0] = F("13 ms");
-        optionValues[1] = TSL2561_TIMING_101MS;
-        options[1] = F("101 ms");
-        optionValues[2] = TSL2561_TIMING_402MS;
-        options[2] = F("402 ms");
-
-        string += F("<TR><TD>Integration time:<TD><select name='plugin_015_integration'>");
-        for (byte x = 0; x < TLS2561_INTEGRATION_OPTION; x++)
+        byte choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options1[3];
+        options1[0] = F("0x39 - (default)");
+        options1[1] = F("0x49");
+        options1[2] = F("0x29");
+        int optionValues1[3];
+        optionValues1[0] = TSL2561_I2C_ADDRESS1;
+        optionValues1[1] = TSL2561_I2C_ADDRESS2;
+        optionValues1[2] = TSL2561_I2C_ADDRESS3;
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_015_tsl2561_i2c'>");
+        for (byte x = 0; x < 3; x++)
         {
           string += F("<option value='");
-          string += optionValues[x];
+          string += optionValues1[x];
           string += "'";
-          if (choice == optionValues[x])
+          if (choice1 == optionValues1[x])
             string += F(" selected");
           string += ">";
-          string += options[x];
+          string += options1[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+
+
+        #define TSL2561_INTEGRATION_OPTION 3
+
+        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        String options2[TSL2561_INTEGRATION_OPTION];
+        int optionValues2[TSL2561_INTEGRATION_OPTION];
+        optionValues2[0] = TSL2561_TIMING_13MS;
+        options2[0] = F("13 ms");
+        optionValues2[1] = TSL2561_TIMING_101MS;
+        options2[1] = F("101 ms");
+        optionValues2[2] = TSL2561_TIMING_402MS;
+        options2[2] = F("402 ms");
+
+        string += F("<TR><TD>Integration time:<TD><select name='plugin_015_integration'>");
+        for (byte x = 0; x < TSL2561_INTEGRATION_OPTION; x++)
+        {
+          string += F("<option value='");
+          string += optionValues2[x];
+          string += "'";
+          if (choice2 == optionValues2[x])
+            string += F(" selected");
+          string += ">";
+          string += options2[x];
           string += F("</option>");
         }
         string += F("</select>");
@@ -143,8 +171,11 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_015_integration"));
+        String plugin1 = WebServer.arg(F("plugin_015_tsl2561_i2c"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+
+        String plugin2 = WebServer.arg(F("plugin_015_integration"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         Plugin_015_init = false; // Force device setup next time
         success = true;
         break;
@@ -152,12 +183,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
+      	tsl2561_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         // Get sensor resolution configuration
-        uint8_t integration = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        uint8_t integration = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         uint8_t ret;
 
         if (!Plugin_015_init) {
-          Plugin_015_init = Plugin_015_tls2561_begin(integration);
+          Plugin_015_init = Plugin_015_tsl2561_begin(integration);
         }
 
         // Read values if init ok
@@ -166,11 +198,15 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
           if (ret == 0) {
             UserVar[event->BaseVarIndex] = tsl2561_lux;
             success = true;
-            String log = F("TLS2561 : Lux: ");
+            String log = F("TSL2561 Address: 0x");
+            log += String(tsl2561_i2caddr,HEX);
+            log += F(": Mode: ");
+            log += String(integration,HEX);
+            log += F(": Lux: ");
             log += UserVar[event->BaseVarIndex];
             addLog(LOG_LEVEL_INFO,log);
           } else {
-            String log = F("TLS2561 : Read Error #");
+            String log = F("TSL2561 : Read Error #");
             log += String(ret,DEC);
             addLog(LOG_LEVEL_INFO,log);
           }
@@ -183,13 +219,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 }
 
 /* ======================================================================
-Function: Plugin_015_tls2561_begin
+Function: Plugin_015_tsl2561_begin
 Purpose : read the user register from the sensor
 Input   : integration time
 Output  : true if okay
 Comments: -
 ====================================================================== */
-boolean Plugin_015_tls2561_begin(uint8_t integration)
+boolean Plugin_015_tsl2561_begin(uint8_t integration)
 {
   uint8_t ret;
 
@@ -203,7 +239,7 @@ boolean Plugin_015_tls2561_begin(uint8_t integration)
     delay(15);  
     ret = true;
   } else {
-    String log = F("TLS2561 : integration=0x");
+    String log = F("TSL2561 : integration=0x");
     log += String(integration,HEX);
     log += F(" => Error 0x");
     log += String(ret,HEX);
@@ -224,12 +260,12 @@ Comments: -
 ====================================================================== */
 uint8_t Plugin_015_tsl2561_readRegister(uint8_t reg, uint8_t * value)
 {
-  Wire.beginTransmission(TSL2561_I2C_ADDRESS);
+  Wire.beginTransmission(tsl2561_i2caddr);
   Wire.write(reg);         
   // all was fine ?
   if ( Wire.endTransmission()==0 ) {
     // request 1 byte and have it ?
-    if (Wire.requestFrom(TSL2561_I2C_ADDRESS, 1)==1) {
+    if (Wire.requestFrom(tsl2561_i2caddr,  (uint8_t)1)==1) {
       // return value
       *value = Wire.read();
       return 0;
@@ -247,7 +283,7 @@ Comments: 0 if okay
 ====================================================================== */
 uint8_t Plugin_015_tsl2561_writeRegister(uint8_t reg, uint8_t value)
 {
-  Wire.beginTransmission(TSL2561_I2C_ADDRESS);
+  Wire.beginTransmission(tsl2561_i2caddr);
   Wire.write(reg);
   Wire.write(value); 
   return (Wire.endTransmission()); 
