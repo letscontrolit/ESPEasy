@@ -39,7 +39,7 @@ enum
   BME280_REGISTER_CAL26              = 0xE1,  // R calibration stored in 0xE1-0xF0
 
   BME280_REGISTER_CONTROLHUMID       = 0xF2,
-  BME280_REGISTER_STATUS             = 0XF3,
+  BME280_REGISTER_STATUS             = 0xF3,
   BME280_REGISTER_CONTROL            = 0xF4,
   BME280_REGISTER_CONFIG             = 0xF5,
   BME280_REGISTER_PRESSUREDATA       = 0xF7,
@@ -228,9 +228,14 @@ bool Plugin_028_begin(uint8_t a) {
     return false;
 
   Plugin_028_readCoefficients(_i2caddr & 0x01);
+  
+  // Set the Sensor in sleep to be make sure that the following configs will be stored
+  Plugin_028_write8(BME280_REGISTER_CONTROL, 0x00);
+
+  Plugin_028_write8(BME280_REGISTER_CONFIG, BME280_CONFIG_SETTING);
   Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, BME280_CONTROL_SETTING_HUMIDITY);
   Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
-  Plugin_028_write8(BME280_REGISTER_CONFIG, BME280_CONFIG_SETTING);
+  
   return true;
 }
 
