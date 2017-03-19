@@ -135,7 +135,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
 			UserVar[event->BaseVarIndex] = sensor.readLightLevel();
 
-			String log = F("BH1750: 0x");
+			String log = F("BH1750 Address: 0x");
 			log += String(address,HEX);
 			log += F(" Mode: 0x");
 			log += String(mode);
