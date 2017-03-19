@@ -1906,6 +1906,12 @@ void handle_i2cscanner() {
         case 0x5C:
           reply += F("DHT12<BR>BH1750");
           break;
+        case 0x60:
+          reply += F("Adafruit Motorshield v2");
+          break;
+        case 0x70:
+          reply += F("Adafruit Motorshield v2 (Catchall)");
+          break;
         case 0x76:
           reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611");
           break;
