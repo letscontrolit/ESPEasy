@@ -2473,6 +2473,7 @@ void ArduinoOTAInit()
 {
   // Default port is 8266
   ArduinoOTA.setPort(8266);
+	ArduinoOTA.setHostname(Settings.Name);
 
   if (SecuritySettings.Password[0]!=0)
     ArduinoOTA.setPassword(SecuritySettings.Password);
