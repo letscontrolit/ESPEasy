@@ -39,13 +39,16 @@ enum
   BME280_REGISTER_CAL26              = 0xE1,  // R calibration stored in 0xE1-0xF0
 
   BME280_REGISTER_CONTROLHUMID       = 0xF2,
+  BME280_REGISTER_STATUS             = 0xF3,
   BME280_REGISTER_CONTROL            = 0xF4,
   BME280_REGISTER_CONFIG             = 0xF5,
   BME280_REGISTER_PRESSUREDATA       = 0xF7,
   BME280_REGISTER_TEMPDATA           = 0xFA,
   BME280_REGISTER_HUMIDDATA          = 0xFD,
 
-  BME280_CONTROL_SETTING             = 0x57, // Oversampling: 16x P, 2x T, normal mode
+  BME280_CONTROL_SETTING             = 0x25, // Oversampling: 1x P, 1x T, forced
+  BME280_CONTROL_SETTING_HUMIDITY    = 0x01, // Oversampling: 1x H
+  BME280_CONFIG_SETTING              = 0xA0, // Tstandby 1000ms, filter off, 3-wire SPI Disable
 };
 
 typedef struct
@@ -225,8 +228,14 @@ bool Plugin_028_begin(uint8_t a) {
     return false;
 
   Plugin_028_readCoefficients(_i2caddr & 0x01);
-  Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, 0x03);
+  
+  // Set the Sensor in sleep to be make sure that the following configs will be stored
+  Plugin_028_write8(BME280_REGISTER_CONTROL, 0x00);
+
+  Plugin_028_write8(BME280_REGISTER_CONFIG, BME280_CONFIG_SETTING);
+  Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, BME280_CONTROL_SETTING_HUMIDITY);
   Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
+  
   return true;
 }
 
@@ -349,6 +358,13 @@ void Plugin_028_readCoefficients(uint8_t idx)
 float Plugin_028_readTemperature(uint8_t idx)
 {
   int32_t var1, var2;
+
+  // set to forced mode, i.e. "take next measurement"
+  Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
+  // wait until measurement has been completed, otherwise we would read
+  // the values from the last measurement
+  while (Plugin_028_read8(BME280_REGISTER_STATUS) & 0x08)
+    delay(1);
 
   int32_t adc_T = Plugin_028_read24(BME280_REGISTER_TEMPDATA);
   adc_T >>= 4;
