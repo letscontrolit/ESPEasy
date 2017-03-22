@@ -117,7 +117,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
           // wake sensor
         	Plugin_047_getVersion();
-          delayMillis(1000);
+          delayMillis(20);
           addLog(LOG_LEVEL_DEBUG, "SoilMoisture->wake");
         }
 
