@@ -5,6 +5,7 @@
 // Capacitive soil moisture sensor
 // like this one: https://www.tindie.com/products/miceuz/i2c-soil-moisture-sensor/
 // based on this library: https://github.com/Apollon77/I2CSoilMoistureSensor
+// this code is based on version 1.1.2 of the above library
 //
 #ifdef PLUGIN_BUILD_TESTING
 
