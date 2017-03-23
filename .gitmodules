@@ -10,3 +10,6 @@
 [submodule "lib/Adafruit_Motor_Shield_V2"]
 	path = lib/Adafruit_Motor_Shield_V2
 	url = https://github.com/adafruit/Adafruit_Motor_Shield_V2_Library.git
+[submodule "lib/AS_BH1750"]
+	path = lib/AS_BH1750
+	url = https://github.com/hexenmeister/AS_BH1750.git
