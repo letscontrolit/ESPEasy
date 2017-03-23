@@ -117,8 +117,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
 
         postDataStr += postStr;
 
-        if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          Serial.println(postDataStr);
+        addLog(LOG_LEVEL_DEBUG_MORE, postDataStr);
 
         // This will send the request to the server
         client.print(postDataStr);
