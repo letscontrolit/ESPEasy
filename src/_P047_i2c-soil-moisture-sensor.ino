@@ -115,8 +115,15 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
       {
         _i2caddrP47 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
-        uint8_t sensorVersion = 0;
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+          // wake sensor
+        	Plugin_047_getVersion();
+          delayMillis(20);
+          addLog(LOG_LEVEL_DEBUG, "SoilMoisture->wake");
+        }
+
+        uint8_t sensorVersion = 0;
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
           // get sensor version to check if sensor is present
           sensorVersion = Plugin_047_getVersion();
           if (sensorVersion==0x22 || sensorVersion==0x23) {
@@ -124,13 +131,13 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
           }
           else {
             addLog(LOG_LEVEL_INFO, "SoilMoisture: Bad Version, no Sensor?");
-            Plugin_047_write8(SOILMOISTURESENSOR_RESET, SOILMOISTURESENSOR_RESET);
+            Plugin_047_write8(SOILMOISTURESENSOR_RESET);
             break;
           }
         }
 
         // start light measurement
-        Plugin_047_write8(SOILMOISTURESENSOR_MEASURE_LIGHT,SOILMOISTURESENSOR_MEASURE_LIGHT);
+        Plugin_047_write8(SOILMOISTURESENSOR_MEASURE_LIGHT);
 
         // 2 s delay ...we need this delay, otherwise we get only the last reading...
         delayMillis(2000);
@@ -141,7 +148,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         String log = F("SoilMoisture: Address: 0x");
         log += String(_i2caddrP47,HEX);
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
           log += F(" Version: 0x");
           log += String(sensorVersion,HEX);
         }
@@ -158,7 +165,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
           // send sensor to sleep
-          Plugin_047_write8(SOILMOISTURESENSOR_SLEEP, SOILMOISTURESENSOR_SLEEP);
+          Plugin_047_write8(SOILMOISTURESENSOR_SLEEP);
           addLog(LOG_LEVEL_DEBUG, "SoilMoisture->sleep");
         }
 
@@ -167,7 +174,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 1] > 800 || UserVar[event->BaseVarIndex + 1] < 1 ||
           UserVar[event->BaseVarIndex + 2] > 65535 || UserVar[event->BaseVarIndex + 2] < 0) {
             addLog(LOG_LEVEL_INFO, "SoilMoisture: Bad Reading, resetting Sensor...");
-            Plugin_047_write8(SOILMOISTURESENSOR_RESET, SOILMOISTURESENSOR_RESET);
+            Plugin_047_write8(SOILMOISTURESENSOR_RESET);
             break;
           }
         success = true;
@@ -178,17 +185,16 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-
-//**************************************************************************/
-// Writes an 8 bit value over I2C/SPI
-//**************************************************************************/
-void Plugin_047_write8(byte reg, byte value)
-{
-  Wire.beginTransmission((uint8_t)_i2caddrP47);
-  Wire.write((uint8_t)reg);
-  Wire.write((uint8_t)value);
-  Wire.endTransmission();
+/*----------------------------------------------------------------------*
+ * Helper method to write an 8 bit value to the sensor via I2C          *
+ *----------------------------------------------------------------------*/
+void Plugin_047_write8(byte value) {
+	Wire.beginTransmission((uint8_t)_i2caddrP47);
+	Wire.write(value);
+	Wire.endTransmission();
 }
+
+
 
 //**************************************************************************/
 // Reads an 8 bit value over I2C
