@@ -120,7 +120,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     	uint8_t address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
 
-      AS_BH1750 sensor;
+      AS_BH1750 sensor = AS_BH1750(address);
       sensors_resolution_t mode;
       if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_LOW)
       	mode = RESOLUTION_LOW;
