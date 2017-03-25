@@ -131,7 +131,7 @@ void handle_root() {
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
-    WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=http://192.168.4.1/setup'>"));
+    WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
 
@@ -1781,7 +1781,7 @@ void handle_tools() {
   reply += F("<a class=\"button-link\" href=\"/wifiscanner\">Scan</a><BR><BR>");
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
   reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
-  reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
+  reply += F("<a class=\"button-link\" href=\"/download\">Save</a> (If you change filename, load will not work!!)");
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
@@ -1905,6 +1905,12 @@ void handle_i2cscanner() {
           break;
         case 0x5C:
           reply += F("DHT12<BR>BH1750");
+          break;
+        case 0x60:
+          reply += F("Adafruit Motorshield v2");
+          break;
+        case 0x70:
+          reply += F("Adafruit Motorshield v2 (Catchall)");
           break;
         case 0x76:
           reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611");
@@ -2609,7 +2615,7 @@ void handleNotFound() {
 
   if (wifiSetup)
   {
-    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=http://192.168.4.1/setup'>");
+    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>");
     return;
   }
 

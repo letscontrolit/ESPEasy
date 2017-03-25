@@ -1,7 +1,11 @@
 //#######################################################################################################
 //######################## Plugin 015 TSL2561 I2C Lux Sensor ############################################
 //#######################################################################################################
-// 13-10-2015 Charles-Henri Hallard, see my projects and blog at https://hallard.me
+// complete rewrite, to support lower lux values better, add ability to change gain and sleep mode
+// by: https://github.com/krikk
+// this plugin is based on the sparkfun library
+// written based on version 1.1.0 from https://github.com/sparkfun/SparkFun_TSL2561_Arduino_Library
+
 
 #define PLUGIN_015
 #define PLUGIN_ID_015        15
@@ -10,73 +14,280 @@
 
 boolean Plugin_015_init = false;
 
-// ======================================
-// TSL2561 luminosity sensor
-// ======================================
-#define TSL2561_I2C_ADDRESS1 0x39 // I2C address for the sensor
-#define TSL2561_I2C_ADDRESS2 0x29 // I2C address for the sensor
-#define TSL2561_I2C_ADDRESS3 0x49 // I2C address for the sensor
-#define TSL2561_CONTROL     0x80
-#define TSL2561_TIMING      0x81
-#define TSL2561_INTERRUPT   0x86
-#define TSL2561_CHANNEL_0L  0x8C
-#define TSL2561_CHANNEL_0H  0x8D
-#define TSL2561_CHANNEL_1L  0x8E
-#define TSL2561_CHANNEL_1H  0x8F
 
-// Control register bits
-#define TSL2561_POWER_UP   0x03
-#define TSL2561_POWER_DOWN 0x00
+#define TSL2561_ADDR_0 0x29 // address with '0' shorted on board
+#define TSL2561_ADDR   0x39 // default address
+#define TSL2561_ADDR_1 0x49 // address with '1' shorted on board
 
-// Timing register bits
-#define TSL2561_TIMING_13MS         0x00
-#define TSL2561_TIMING_101MS        0x01
-#define TSL2561_TIMING_402MS        0x02
-#define TSL2561_TIMING_CUSTOM_STOP  0x03
-#define TSL2561_TIMING_CUSTOM_START 0x0B
-
-#define TSL2561_LUX_SCALE     14     // scale by 2^14
-#define TSL2561_RATIO_SCALE   9      // scale ratio by 2^9
-#define TSL2561_CH_SCALE      10     // scale channel values by 2^10
-#define TSL2561_CHSCALE_TINT_13MS  0x7517 // 322/11 * 2^CH_SCALE (13ms)
-#define TSL2561_CHSCALE_TINT_60MS  0x1800 // 322/48 * 2^CH_SCALE (60ms)
-#define TSL2561_CHSCALE_TINT_101MS 0x0fe7 // 322/81 * 2^CH_SCALE (101ms)
-#define TSL2561_CHSCALE_TINT_120MS 0x0D6B // 322/96 * 2^CH_SCALE (120ms)
-#define TSL2561_CHSCALE_TINT_402MS (1 << TSL2561_CH_SCALE) // default No scaling
-
-// Clipping thresholds
-#define TSL2561_CLIPPING_13MS     (4900)
-#define TSL2561_CLIPPING_101MS    (37000)
-#define TSL2561_CLIPPING_402MS    (65000)
-
-#define TSL2561_K1T 0x0040   // 0.125 * 2^RATIO_SCALE
-#define TSL2561_B1T 0x01f2   // 0.0304 * 2^LUX_SCALE
-#define TSL2561_M1T 0x01be   // 0.0272 * 2^LUX_SCALE
-#define TSL2561_K2T 0x0080   // 0.250 * 2^RATIO_SCA
-#define TSL2561_B2T 0x0214   // 0.0325 * 2^LUX_SCALE
-#define TSL2561_M2T 0x02d1   // 0.0440 * 2^LUX_SCALE
-#define TSL2561_K3T 0x00c0   // 0.375 * 2^RATIO_SCALE
-#define TSL2561_B3T 0x023f   // 0.0351 * 2^LUX_SCALE
-#define TSL2561_M3T 0x037b   // 0.0544 * 2^LUX_SCALE
-#define TSL2561_K4T 0x0100   // 0.50 * 2^RATIO_SCALE
-#define TSL2561_B4T 0x0270   // 0.0381 * 2^LUX_SCALE
-#define TSL2561_M4T 0x03fe   // 0.0624 * 2^LUX_SCALE
-#define TSL2561_K5T 0x0138   // 0.61 * 2^RATIO_SCALE
-#define TSL2561_B5T 0x016f   // 0.0224 * 2^LUX_SCALE
-#define TSL2561_M5T 0x01fc   // 0.0310 * 2^LUX_SCALE
-#define TSL2561_K6T 0x019a   // 0.80 * 2^RATIO_SCALE
-#define TSL2561_B6T 0x00d2   // 0.0128 * 2^LUX_SCALE
-#define TSL2561_M6T 0x00fb   // 0.0153 * 2^LUX_SCALE
-#define TSL2561_K7T 0x029a   // 1.3 * 2^RATIO_SCALE
-#define TSL2561_B7T 0x0018   // 0.00146 * 2^LUX_SCALE
-#define TSL2561_M7T 0x0012   // 0.00112 * 2^LUX_SCALE
-#define TSL2561_K8T 0x029a   // 1.3 * 2^RATIO_SCALE
-#define TSL2561_B8T 0x0000   // 0.000 * 2^LUX_SCALE
-#define TSL2561_M8T 0x0000   // 0.000 * 2^LUX_SCALE
+#define TSL2561_CMD           0x80
+#define	TSL2561_REG_CONTROL   0x00
+#define	TSL2561_REG_TIMING    0x01
+#define	TSL2561_REG_DATA_0    0x0C
+#define	TSL2561_REG_DATA_1    0x0E
 
 
-uint16_t  tsl2561_lux; // latest lux value read
-uint8_t tsl2561_i2caddr;
+byte plugin_015_i2caddr;
+byte _error;
+
+boolean plugin_015_begin()
+{
+	Wire.begin();
+	return(true);
+}
+
+boolean plugin_015_readByte(unsigned char address, unsigned char &value)
+	// Reads a byte from a TSL2561 address
+	// Address: TSL2561 address (0 to 15)
+	// Value will be set to stored byte
+	// Returns true (1) if successful, false (0) if there was an I2C error
+{
+	// Set up command byte for read
+	Wire.beginTransmission(plugin_015_i2caddr);
+	Wire.write((address & 0x0F) | TSL2561_CMD);
+	_error = Wire.endTransmission();
+
+	// Read requested byte
+	if (_error == 0)
+	{
+		Wire.requestFrom(plugin_015_i2caddr,(byte)1);
+		if (Wire.available() == 1)
+		{
+			value = Wire.read();
+			return(true);
+		}
+	}
+	return(false);
+}
+
+boolean plugin_015_writeByte(unsigned char address, unsigned char value)
+	// Write a byte to a TSL2561 address
+	// Address: TSL2561 address (0 to 15)
+	// Value: byte to write to address
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() above)
+{
+	// Set up command byte for write
+	Wire.beginTransmission(plugin_015_i2caddr);
+	Wire.write((address & 0x0F) | TSL2561_CMD);
+	// Write byte
+	Wire.write(value);
+	_error = Wire.endTransmission();
+	if (_error == 0)
+		return(true);
+
+	return(false);
+}
+
+
+boolean plugin_015_readUInt(unsigned char address, unsigned int &value)
+	// Reads an unsigned integer (16 bits) from a TSL2561 address (low byte first)
+	// Address: TSL2561 address (0 to 15), low byte first
+	// Value will be set to stored unsigned integer
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() above)
+{
+	char high, low;
+
+	// Set up command byte for read
+	Wire.beginTransmission(plugin_015_i2caddr);
+	Wire.write((address & 0x0F) | TSL2561_CMD);
+	_error = Wire.endTransmission();
+
+	// Read two bytes (low and high)
+	if (_error == 0)
+	{
+		Wire.requestFrom(plugin_015_i2caddr,(byte)2);
+		if (Wire.available() == 2)
+		{
+			low = Wire.read();
+			high = Wire.read();
+			// Combine bytes into unsigned int
+			value = word(high,low);
+			return(true);
+		}
+	}
+	return(false);
+}
+
+
+boolean plugin_015_writeUInt(unsigned char address, unsigned int value)
+	// Write an unsigned integer (16 bits) to a TSL2561 address (low byte first)
+	// Address: TSL2561 address (0 to 15), low byte first
+	// Value: unsigned int to write to address
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() above)
+{
+	// Split int into lower and upper bytes, write each byte
+	if (plugin_015_writeByte(address,lowByte(value))
+		&& plugin_015_writeByte(address + 1,highByte(value)))
+		return(true);
+
+	return(false);
+}
+
+
+
+boolean plugin_015_setTiming(boolean gain, unsigned char time)
+	// If gain = false (0), device is set to low gain (1X)
+	// If gain = high (1), device is set to high gain (16X)
+	// If time = 0, integration will be 13.7ms
+	// If time = 1, integration will be 101ms
+	// If time = 2, integration will be 402ms
+	// If time = 3, use manual start / stop
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() below)
+{
+	unsigned char timing;
+
+	// Get timing byte
+	if (plugin_015_readByte(TSL2561_REG_TIMING,timing))
+	{
+		// Set gain (0 or 1)
+		if (gain)
+			timing |= 0x10;
+		else
+			timing &= ~0x10;
+
+		// Set integration time (0 to 3)
+		timing &= ~0x03;
+		timing |= (time & 0x03);
+
+		// Write modified timing byte back to device
+		if (plugin_015_writeByte(TSL2561_REG_TIMING,timing))
+			return(true);
+	}
+	return(false);
+}
+
+
+boolean plugin_015_setTiming(boolean gain, unsigned char time, unsigned int &ms)
+	// If gain = false (0), device is set to low gain (1X)
+	// If gain = high (1), device is set to high gain (16X)
+	// If time = 0, integration will be 13.7ms
+	// If time = 1, integration will be 101ms
+	// If time = 2, integration will be 402ms
+	// If time = 3, use manual start / stop (ms = 0)
+	// ms will be set to integration time
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() below)
+{
+	// Calculate ms for user
+	switch (time)
+	{
+		case 0: ms = 14; break;
+		case 1: ms = 101; break;
+		case 2: ms = 402; break;
+		default: ms = 0;
+	}
+	// Set integration using base function
+	return(plugin_015_setTiming(gain,time));
+}
+
+
+boolean plugin_015_setPowerUp(void)
+	// Turn on TSL2561, begin integrations
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() below)
+{
+	// Write 0x03 to command byte (power on)
+	return(plugin_015_writeByte(TSL2561_REG_CONTROL,0x03));
+}
+
+
+boolean plugin_015_setPowerDown(void)
+	// Turn off TSL2561
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() below)
+{
+	// Clear command byte (power off)
+	return(plugin_015_writeByte(TSL2561_REG_CONTROL,0x00));
+}
+
+boolean plugin_015_getData(unsigned int &data0, unsigned int &data1)
+	// Retrieve raw integration results
+	// data0 and data1 will be set to integration results
+	// Returns true (1) if successful, false (0) if there was an I2C error
+	// (Also see getError() below)
+{
+	// Get data0 and data1 out of result registers
+	if (plugin_015_readUInt(TSL2561_REG_DATA_0,data0) && plugin_015_readUInt(TSL2561_REG_DATA_1,data1))
+		return(true);
+
+	return(false);
+}
+
+
+boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0, unsigned int CH1, double &lux)
+	// Convert raw data to lux
+	// gain: 0 (1X) or 1 (16X), see setTiming()
+	// ms: integration time in ms, from setTiming() or from manual integration
+	// CH0, CH1: results from getData()
+	// lux will be set to resulting lux calculation
+	// returns true (1) if calculation was successful
+	// RETURNS false (0) AND lux = 0.0 IF EITHER SENSOR WAS SATURATED (0XFFFF)
+{
+	double ratio, d0, d1;
+
+	// Determine if either sensor saturated (0xFFFF)
+	// If so, abandon ship (calculation will not be accurate)
+	if ((CH0 == 0xFFFF) || (CH1 == 0xFFFF))
+	{
+		lux = 65535.0;
+		return(false);
+	}
+	else
+	{
+
+		// Convert from unsigned integer to floating point
+		d0 = CH0; d1 = CH1;
+
+		// We will need the ratio for subsequent calculations
+		ratio = d1 / d0;
+
+		// Normalize for integration time
+		d0 *= (402.0/ms);
+		d1 *= (402.0/ms);
+
+		// Normalize for gain
+		if (!gain)
+		{
+			d0 *= 16;
+			d1 *= 16;
+		}
+
+		// Determine lux per datasheet equations:
+
+		if (ratio < 0.5)
+		{
+			lux = 0.0304 * d0 - 0.062 * d0 * pow(ratio,1.4);
+			return(true);
+		}
+
+		if (ratio < 0.61)
+		{
+			lux = 0.0224 * d0 - 0.031 * d1;
+			return(true);
+		}
+
+		if (ratio < 0.80)
+		{
+			lux = 0.0128 * d0 - 0.0153 * d1;
+			return(true);
+		}
+
+		if (ratio < 1.30)
+		{
+			lux = 0.00146 * d0 - 0.00112 * d1;
+			return(true);
+		}
+
+		// if (ratio > 1.30)
+		lux = 0.0;
+		return(true);
+	}
+}
+
+
 
 boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 {
@@ -120,9 +331,9 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         options1[1] = F("0x49");
         options1[2] = F("0x29");
         int optionValues1[3];
-        optionValues1[0] = TSL2561_I2C_ADDRESS1;
-        optionValues1[1] = TSL2561_I2C_ADDRESS2;
-        optionValues1[2] = TSL2561_I2C_ADDRESS3;
+        optionValues1[0] = TSL2561_ADDR;
+        optionValues1[1] = TSL2561_ADDR_1;
+        optionValues1[2] = TSL2561_ADDR_0;
         string += F("<TR><TD>I2C Address:<TD><select name='plugin_015_tsl2561_i2c'>");
         for (byte x = 0; x < 3; x++)
         {
@@ -138,17 +349,16 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         string += F("</select>");
 
 
-
         #define TSL2561_INTEGRATION_OPTION 3
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[TSL2561_INTEGRATION_OPTION];
         int optionValues2[TSL2561_INTEGRATION_OPTION];
-        optionValues2[0] = TSL2561_TIMING_13MS;
+        optionValues2[0] = 0x00;
         options2[0] = F("13 ms");
-        optionValues2[1] = TSL2561_TIMING_101MS;
+        optionValues2[1] = 0x01;
         options2[1] = F("101 ms");
-        optionValues2[2] = TSL2561_TIMING_402MS;
+        optionValues2[2] = 0x02;
         options2[2] = F("402 ms");
 
         string += F("<TR><TD>Integration time:<TD><select name='plugin_015_integration'>");
@@ -165,6 +375,18 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
+        string += F("<TR><TD>Send sensor to sleep:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+          string += F("<input type=checkbox name=plugin_015_sleep checked>");
+        else
+          string += F("<input type=checkbox name=plugin_015_sleep>");
+
+        string += F("<TR><TD>Enable 16x Gain:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
+          string += F("<input type=checkbox name=plugin_015_gain checked>");
+        else
+          string += F("<input type=checkbox name=plugin_015_gain>");
+
         success = true;
         break;
       }
@@ -176,41 +398,79 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
         String plugin2 = WebServer.arg(F("plugin_015_integration"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        Plugin_015_init = false; // Force device setup next time
+
+        String plugin3 = WebServer.arg(F("plugin_015_sleep"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == "on");
+
+        String plugin4 = WebServer.arg(F("plugin_015_gain"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
+
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-      	tsl2561_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        // Get sensor resolution configuration
-        uint8_t integration = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        uint8_t ret;
+      	plugin_015_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
-        if (!Plugin_015_init) {
-          Plugin_015_init = Plugin_015_tsl2561_begin(integration);
-        }
+        boolean gain;     // Gain setting, 0 = X1, 1 = X16;
+        unsigned int ms;  // Integration ("shutter") time in milliseconds
 
-        // Read values if init ok
-        if (Plugin_015_init) {
-          ret = Plugin_015_tsl2561_calcLux(integration);
-          if (ret == 0) {
-            UserVar[event->BaseVarIndex] = tsl2561_lux;
-            success = true;
-            String log = F("TSL2561 Address: 0x");
-            log += String(tsl2561_i2caddr,HEX);
-            log += F(": Mode: ");
-            log += String(integration,HEX);
-            log += F(": Lux: ");
-            log += UserVar[event->BaseVarIndex];
-            addLog(LOG_LEVEL_INFO,log);
-          } else {
-            String log = F("TSL2561 : Read Error #");
-            log += String(ret,DEC);
-            addLog(LOG_LEVEL_INFO,log);
-          }
-        }
+        plugin_015_begin();
+
+         // If gain = false (0), device is set to low gain (1X)
+         // If gain = high (1), device is set to high gain (16X)
+         gain = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+
+         // If time = 0, integration will be 13.7ms
+         // If time = 1, integration will be 101ms
+         // If time = 2, integration will be 402ms
+         unsigned char time = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+         plugin_015_setTiming(gain,time,ms);
+         plugin_015_setPowerUp();
+         delayMillis(ms);
+         unsigned int data0, data1;
+
+         if (plugin_015_getData(data0,data1))
+         {
+
+           double lux;    // Resulting lux value
+           boolean good;  // True if neither sensor is saturated
+
+           // Perform lux calculation:
+
+           good = plugin_015_getLux(gain,ms,data0,data1,lux);
+        	 UserVar[event->BaseVarIndex] = lux;
+           if (!good)
+           {
+             String log = F("TSL2561: Sensor saturated! > 65535 Lux");
+             addLog(LOG_LEVEL_INFO,log);
+           }
+
+           success = true;
+           String log = F("TSL2561: Address: 0x");
+           log += String(plugin_015_i2caddr,HEX);
+           log += F(": Mode: ");
+           log += String(time,HEX);
+           log += F(": Gain: ");
+           log += String(gain,HEX);
+           log += F(": Lux: ");
+           log += UserVar[event->BaseVarIndex];
+           addLog(LOG_LEVEL_INFO,log);
+         }
+         else
+         {
+           // getData() returned false because of an I2C error, inform the user.
+           String log = F("TSL2561: i2c error");
+        	 addLog(LOG_LEVEL_ERROR, log);
+
+         }
+         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+           String log = F("TSL2561: sleeping...");
+        	 addLog(LOG_LEVEL_DEBUG_MORE, log);
+        	 plugin_015_setPowerDown();
+         }
+
         break;
       }
 
@@ -218,179 +478,6 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-/* ======================================================================
-Function: Plugin_015_tsl2561_begin
-Purpose : read the user register from the sensor
-Input   : integration time
-Output  : true if okay
-Comments: -
-====================================================================== */
-boolean Plugin_015_tsl2561_begin(uint8_t integration)
-{
-  uint8_t ret;
 
-  // Power UP device
-  ret = Plugin_015_tsl2561_writeRegister(TSL2561_CONTROL, TSL2561_POWER_UP); 
-  if ( ret == 0 )
-  {
-    // I noticed 1st calculation after power up could be hazardous; so
-    // do a 1st dummy reading, with speed integration time, here 13ms
-    Plugin_015_tsl2561_writeRegister(TSL2561_TIMING, TSL2561_TIMING_13MS);  
-    delay(15);  
-    ret = true;
-  } else {
-    String log = F("TSL2561 : integration=0x");
-    log += String(integration,HEX);
-    log += F(" => Error 0x");
-    log += String(ret,HEX);
-    addLog(LOG_LEVEL_INFO,log);
-    ret = false;
-  }
 
-  return ret; 
-}
 
-/* ======================================================================
-Function: Plugin_015_tsl2561_readRegister
-Purpose : read a register from the sensor
-Input   : register address
-          register value filled by function
-Output  : 0 if okay
-Comments: -
-====================================================================== */
-uint8_t Plugin_015_tsl2561_readRegister(uint8_t reg, uint8_t * value)
-{
-  Wire.beginTransmission(tsl2561_i2caddr);
-  Wire.write(reg);         
-  // all was fine ?
-  if ( Wire.endTransmission()==0 ) {
-    // request 1 byte and have it ?
-    if (Wire.requestFrom(tsl2561_i2caddr,  (uint8_t)1)==1) {
-      // return value
-      *value = Wire.read();
-      return 0;
-    }
-  }
-  return 1;
-}
-
-/* ======================================================================
-Function: Plugin_015_tsl2561_writeRegister
-Purpose : read a register from the sensor
-Input   : register address
-Output  : register value
-Comments: 0 if okay
-====================================================================== */
-uint8_t Plugin_015_tsl2561_writeRegister(uint8_t reg, uint8_t value)
-{
-  Wire.beginTransmission(tsl2561_i2caddr);
-  Wire.write(reg);
-  Wire.write(value); 
-  return (Wire.endTransmission()); 
-}
-
-/* ======================================================================
-Function: Plugin_015_tsl2561_calcLux
-Purpose : start a conversion and return calculated lux
-Input   : integration time
-Output  : 0 if calculated value ok and updated 
-Comments: global lux value is updated
-====================================================================== */
-int8_t Plugin_015_tsl2561_calcLux(uint8_t integration)
-{
-  unsigned long chScale;
-  unsigned long channel0, channel1;
-  unsigned long ratio, ratio1;
-  unsigned long lux;
-  unsigned int b, m;
-  uint16_t ch0,ch1;
-  uint16_t clipThreshold;
-  uint8_t msb, lsb;
-  uint8_t err = 0;
-
-  // do start calculation with speed integration time, 
-  Plugin_015_tsl2561_writeRegister(TSL2561_TIMING, integration);  
-  if (integration == TSL2561_TIMING_402MS ) {
-    chScale = TSL2561_CHSCALE_TINT_402MS ;
-    clipThreshold = TSL2561_CLIPPING_402MS ;
-    delay(405);
-  } else if (integration == TSL2561_TIMING_101MS ) {
-    chScale = TSL2561_CHSCALE_TINT_101MS ;
-    clipThreshold = TSL2561_CLIPPING_101MS ;
-    delay(103);
-  } else {
-    chScale = TSL2561_CHSCALE_TINT_13MS ;
-    clipThreshold = TSL2561_CLIPPING_13MS ;
-    delay(15);
-  }
-
-  // don't try to change reading order of LOW/HIGH, it will not work !!!!
-  // you must read LOW then HIGH
-  err |= Plugin_015_tsl2561_readRegister(TSL2561_CHANNEL_0L, &lsb);
-  err |= Plugin_015_tsl2561_readRegister(TSL2561_CHANNEL_0H, &msb);
-  ch0 = word(msb,lsb);
-  err |= Plugin_015_tsl2561_readRegister(TSL2561_CHANNEL_1L, &lsb);
-  err |= Plugin_015_tsl2561_readRegister(TSL2561_CHANNEL_1H, &msb);
-  ch1 = word(msb,lsb);;
-
-  // I2C error ?
-  if( err )
-    return -2; 
-
-  /* Sensor saturated the lux is not valid in this situation */
-  if ((ch0 > clipThreshold) || (ch1 > clipThreshold))
-  {
-    return -1;
-  }
-
-  // gain is 1 so put it to 16X
-  chScale <<= 4;
-  
-  // scale the channel values
-  channel0 = (ch0 * chScale) >> TSL2561_CH_SCALE;
-  channel1 = (ch1 * chScale) >> TSL2561_CH_SCALE;
-
-  ratio1 = 0;
-  if (channel0!= 0) 
-    ratio1 = (channel1 << (TSL2561_RATIO_SCALE+1))/channel0;
-  
-  // round the ratio value
-  ratio = (ratio1 + 1) >> 1;
-
-  // ULPNode have T package
-  // Adjust constant depending on calculated ratio
-  if ((ratio >= 0) && (ratio <= TSL2561_K1T))
-    {b=TSL2561_B1T; m=TSL2561_M1T;}
-  else if (ratio <= TSL2561_K2T)
-    {b=TSL2561_B2T; m=TSL2561_M2T;}
-  else if (ratio <= TSL2561_K3T)
-    {b=TSL2561_B3T; m=TSL2561_M3T;}
-  else if (ratio <= TSL2561_K4T)
-    {b=TSL2561_B4T; m=TSL2561_M4T;}
-  else if (ratio <= TSL2561_K5T)
-    {b=TSL2561_B5T; m=TSL2561_M5T;}
-  else if (ratio <= TSL2561_K6T)
-    {b=TSL2561_B6T; m=TSL2561_M6T;}
-  else if (ratio <= TSL2561_K7T)
-    {b=TSL2561_B7T; m=TSL2561_M7T;}
-  else if (ratio > TSL2561_K8T)
-    {b=TSL2561_B8T; m=TSL2561_M8T;}
-
-  // datasheet formula
-  lux=((channel0*b)-(channel1*m));
-  
-  // do not allow negative lux value
-  if(lux<0) 
-    lux=0;
-  
-  // round lsb (2^(LUX_SCALE−1))
-  lux += (1<<(TSL2561_LUX_SCALE-1));
-  
-  // strip off fractional portion
-  lux >>= TSL2561_LUX_SCALE;
-
-  // strip off fractional portion
-  tsl2561_lux = (uint16_t) (lux);
-
-  return 0;
-}
