@@ -132,7 +132,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         String plugin2 = WebServer.arg("plugin_003_countertype");
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         String plugin3 = WebServer.arg("plugin_003_raisetype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin2.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
         success = true;
         break;
       }
