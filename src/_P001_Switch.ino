@@ -242,10 +242,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
               int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
               int32_t curr_value = prev_value << 12;
-              int16_t new_value;
+
               int i = event->Par3;
               while(i--){
                 curr_value += step_value;
+                int16_t new_value;
                 new_value = (uint16_t)(curr_value >> 12);
                 analogWrite(event->Par1, new_value);
                 delay(1);
