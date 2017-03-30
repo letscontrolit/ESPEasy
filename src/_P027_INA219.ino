@@ -8,6 +8,9 @@
 #define PLUGIN_VALUENAME1_027 "Voltage"
 
 #define INA219_ADDRESS                         (0x40)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS2                         (0x41)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS3                         (0x44)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS4                         (0x45)    // 1000000 (A0+A1=GND)
 #define INA219_READ                            (0x01)
 #define INA219_REG_CONFIG                      (0x00)
 #define INA219_CONFIG_RESET                    (0x8000)  // Reset Bit
@@ -123,6 +126,35 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
+
+
+        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        String options2[4];
+        options2[0] = F("0x40 - (default)");
+        options2[1] = F("0x41");
+        options2[2] = F("0x44");
+        options2[3] = F("0x45");
+        int optionValues2[3];
+        optionValues2[0] = INA219_ADDRESS;
+        optionValues2[1] = INA219_ADDRESS2;
+        optionValues2[2] = INA219_ADDRESS3;
+        optionValues2[3] = INA219_ADDRESS4;
+        string += F("<TR><TD>I2C Address:<TD><select name='plugin_027_i2c'>");
+        for (byte x = 0; x < 4; x++)
+        {
+          string += F("<option value='");
+          string += optionValues2[x];
+          string += "'";
+          if (choice2 == optionValues2[x])
+            string += F(" selected");
+          string += ">";
+          string += options2[x];
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+
+
         success = true;
         break;
       }
@@ -131,12 +163,16 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       {
         String plugin1 = WebServer.arg(F("plugin_027_value"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+
+        String plugin2 = WebServer.arg(F("plugin_027_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
+      	ina219_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         Plugin_027_begin();
         success = true;
         break;
@@ -280,7 +316,6 @@ void Plugin_027_setCalibration_16V_400mA(void) {
 //**************************************************************************/
 
 void Plugin_027_begin(void) {
-  ina219_i2caddr = INA219_ADDRESS;
   ina219_currentDivider_mA = 0;
 
   // Set chip to large range config values to start
