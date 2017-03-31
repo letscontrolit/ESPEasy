@@ -22,8 +22,6 @@
 
 
 
-boolean Plugin_050_init[2] = {false, false};
-uint8_t _i2caddrP50;
 
 boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 {
