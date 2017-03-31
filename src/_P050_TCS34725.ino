@@ -8,13 +8,13 @@
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
 //
-#ifdef PLUGIN_BUILD_TESTING
+#ifdef PLUGIN_BUILD_DEV
 
 #include "Adafruit_TCS34725.h"
 
 #define PLUGIN_050
 #define PLUGIN_ID_050        50
-#define PLUGIN_NAME_050       "Luminosity & Color - TCS34725 [TEST]"
+#define PLUGIN_NAME_050       "Luminosity & Color - TCS34725  [DEVELOPMENT]"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
@@ -92,12 +92,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
-
-//        TCS34725_GAIN_1X                = 0x00,   /**<  No gain  */
-//        TCS34725_GAIN_4X                = 0x01,   /**<  4x gain  */
-//        TCS34725_GAIN_16X               = 0x02,   /**<  16x gain */
-//        TCS34725_GAIN_60X               = 0x03    /**<  60x gain */
-
         byte choiceMode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String optionsMode2[4];
         optionsMode2[0] = F("TCS34725_GAIN_1X");
@@ -123,9 +117,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
-
-
-
         success = true;
         break;
       }
@@ -137,16 +128,12 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         String plugin2 = WebServer.arg(F("plugin_050_gain"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
 
-
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-
-
-
       	tcs34725IntegrationTime_t integrationTime;
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_2_4MS)
         	integrationTime = TCS34725_INTEGRATIONTIME_2_4MS;
@@ -210,8 +197,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-
 
 
 #endif
