@@ -25,8 +25,8 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 	boolean success = false;
 
 	Adafruit_MotorShield AFMS;
-	Adafruit_DCMotor *myMotor;
-	Adafruit_StepperMotor *myStepper;
+
+
 
 	switch (function) {
 
@@ -148,6 +148,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 				if (param1.equalsIgnoreCase(F("DCMotor"))) {
 					if (param2.toInt() > 0 && param2.toInt() < 5)
 					{
+						Adafruit_DCMotor *myMotor;
 						myMotor = AFMS.getMotor(param2.toInt());
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{
@@ -188,6 +189,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 					// If you're using M3 and M4 indicate port 2
 					if (param2.toInt() > 0 && param2.toInt() < 3)
 					{
+						Adafruit_StepperMotor *myStepper;
 						myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, param2.toInt());
 						myStepper->setSpeed(Plugin_048_StepperSpeed);
 						String log = F("MotorShield: StepsPerRevolution: ");
@@ -198,10 +200,9 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{
-							int steps = 0;
 							if (param4.toInt())
 							{
-								steps = param4.toInt();
+								int steps = param4.toInt();
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
@@ -235,10 +236,9 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 						if (param3.equalsIgnoreCase(F("Backward")))
 						{
-							int steps = 0;
 							if (param4.toInt())
 							{
-								steps = param4.toInt();
+								int steps = param4.toInt();
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
