@@ -218,7 +218,6 @@ Comments: -
 ====================================================================== */
 int8_t Plugin_014_si7021_readRegister(uint8_t * value)
 {
-  uint8_t error ;
 
   // Request user register
   Wire.beginTransmission(SI7021_I2C_ADDRESS);
@@ -248,7 +247,6 @@ int8_t Plugin_014_si7021_startConv(uint8_t datatype, uint8_t resolution)
   long data;
   uint16_t raw ;
   uint8_t checksum,tmp;
-  uint8_t error;
 
   //Request a reading 
   Wire.beginTransmission(SI7021_I2C_ADDRESS);
