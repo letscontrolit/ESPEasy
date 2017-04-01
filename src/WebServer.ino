@@ -1597,6 +1597,62 @@ void sortDeviceArray()
 
 
 //********************************************************************************
+// Add a GPIO pin select dropdown list for both 8266 and 8285
+//********************************************************************************
+#ifdef ESP8285
+// Code for the ESP8285
+
+//********************************************************************************
+// Add a GPIO pin select dropdown list
+//********************************************************************************
+void addPinSelect(boolean forI2C, String& str, String name,  int choice)
+{
+  String options[18];
+  options[0] = F(" ");
+  options[1] = F("GPIO-0 (D3)");
+  options[2] = F("GPIO-1 (D10)");
+  options[3] = F("GPIO-2 (D4)");
+  options[4] = F("GPIO-3 (D9)");
+  options[5] = F("GPIO-4 (D2)");
+  options[6] = F("GPIO-5 (D1)");
+  options[7] = F("GPIO-6");
+  options[8] = F("GPIO-7");
+  options[9] = F("GPIO-8");
+  options[10] = F("GPIO-9 (D11)");
+  options[11] = F("GPIO-10 (D12)");
+  options[12] = F("GPIO-11");
+  options[13] = F("GPIO-12 (D6)");
+  options[14] = F("GPIO-13 (D7)");
+  options[15] = F("GPIO-14 (D5)");
+  options[16] = F("GPIO-15 (D8)");
+  options[17] = F("GPIO-16 (D0)");
+  int optionValues[18];
+  optionValues[0] = -1;
+  optionValues[1] = 0;
+  optionValues[2] = 1;
+  optionValues[3] = 2;
+  optionValues[4] = 3;
+  optionValues[5] = 4;
+  optionValues[6] = 5;
+  optionValues[7] = 7;
+  optionValues[8] = 7;
+  optionValues[9] = 8;
+  optionValues[10] = 9;
+  optionValues[11] = 10;
+  optionValues[12] = 11;
+  optionValues[13] = 12;
+  optionValues[14] = 13;
+  optionValues[15] = 14;
+  optionValues[16] = 15;
+  optionValues[17] = 16;
+  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
+}
+
+
+#else
+// Code for the ESP8266
+
+//********************************************************************************
 // Add a GPIO pin select dropdown list
 //********************************************************************************
 void addPinSelect(boolean forI2C, String& str, String name,  int choice)
@@ -1631,30 +1687,39 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   optionValues[11] = 14;
   optionValues[12] = 15;
   optionValues[13] = 16;
-  str += F("<select name='");
-  str += name;
-  str += "'>";
-  for (byte x = 0; x < 14; x++)
-  {
-    str += F("<option value='");
-    str += optionValues[x];
-    str += "'";
-    if (optionValues[x] != -1) // empty selection can never be disabled...
-    {
-      if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
-        str += F(" disabled");
-      if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3)))
-        str += F(" disabled");
-    }
-    if (choice == optionValues[x])
-      str += F(" selected");
-    str += ">";
-    str += options[x];
-    str += F("</option>");
-  }
-  str += F("</select>");
+  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 14);
 }
 
+#endif
+
+//********************************************************************************
+// Helper function actually rendering dropdown list for addPinSelect()
+//********************************************************************************
+void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, String& str, String name,  int choice, int count) {
+    str += F("<select name='");
+    str += name;
+    str += "'>";
+    for (byte x = 0; x < count; x++)
+    {
+      str += F("<option value='");
+      str += optionValues[x];
+      str += "'";
+      if (optionValues[x] != -1) // empty selection can never be disabled...
+      {
+        if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
+          str += F(" disabled");
+        if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3)))
+          str += F(" disabled");
+      }
+      if (choice == optionValues[x])
+        str += F(" selected");
+      str += ">";
+      str += options[x];
+      str += F("</option>");
+    }
+    str += F("</select>");
+
+}
 
 //********************************************************************************
 // Add a task select dropdown list
