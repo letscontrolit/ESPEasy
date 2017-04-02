@@ -99,9 +99,19 @@ if subprocess.check_output("git ls-files -m src", shell=True)!="":
 plugins=glob.glob("src/_[CPN]*.ino")
 plugins.sort()
 
+
 #remove all plugins and get base size
 for plugin in plugins:
     os.remove(plugin)
+
+if len(sys.argv)>2:
+    test_plugins=sys.argv[2:]
+else:
+    test_plugins=plugins
+
+test_plugins.sort()
+
+
 
 output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
 print(output_format.format(
@@ -122,7 +132,7 @@ base=analyse_memory(".pioenvs/dev_4096/firmware.elf")
 
 
 plugin_results={}
-for plugin in plugins:
+for plugin in test_plugins:
     # print("building with {}".format(plugin))
     subprocess.check_call("git checkout {}".format(plugin), shell=True)
     subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
