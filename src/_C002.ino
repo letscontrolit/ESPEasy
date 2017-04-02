@@ -6,6 +6,8 @@
 #define CPLUGIN_ID_002         2
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
+#include <ArduinoJson.h>
+
 boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;

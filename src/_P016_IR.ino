@@ -3,7 +3,7 @@
 //#######################################################################################################
 
 
-#ifdef PLUGIN_BUILD_BROKEN
+#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRrecv *irReceiver;

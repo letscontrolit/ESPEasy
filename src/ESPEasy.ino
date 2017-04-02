@@ -272,8 +272,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
-#include <LiquidCrystal_I2C.h>
+// #include <ArduinoJson.h>
+// #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 #define FS_NO_GLOBALS
 #include <FS.h>

@@ -8,6 +8,8 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 
+#include <LiquidCrystal_I2C.h>
+
 LiquidCrystal_I2C *lcd;
 
 #define PLUGIN_012
