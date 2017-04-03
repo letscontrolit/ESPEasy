@@ -220,7 +220,10 @@ try:
         total['bss']-base['bss'],
         total['irom0_text']-base['irom0_text'],
     ))
-finally:
+except:
     enable_all()
 
     raise
+
+
+enable_all()
