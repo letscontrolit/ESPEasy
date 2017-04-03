@@ -308,8 +308,6 @@ const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 DNSServer dnsServer;
 
-Servo myservo1;
-Servo myservo2;
 
 // MQTT client
 WiFiClient mqtt;

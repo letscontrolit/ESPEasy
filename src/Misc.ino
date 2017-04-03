@@ -2312,7 +2312,7 @@ void checkRAM(byte id)
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   analogWriteFreq(frequency);
   //NOTE: analogwrite reserves IRAM and uninitalized ram.
-  analogWrite(_pin,100,132);
+  analogWrite(_pin,100);
   delay(duration);
   analogWrite(_pin,0);
 }
