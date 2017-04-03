@@ -157,24 +157,9 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             case (SENSOR_TYPE_WIND):
               url += PSTR("&svalue=");                   // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
               url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              const char* bearing[] = {
-                PSTR(";N;"),
-                PSTR(";NNE;"),
-                PSTR(";NE;"),
-                PSTR(";ENE;"),
-                PSTR(";E;"),
-                PSTR(";ESE;"),
-                PSTR(";SE;"),
-                PSTR(";SSE;"),
-                PSTR(";S;"),
-                PSTR(";SSW;"),
-                PSTR(";SW;"),
-                PSTR(";WSW;"),
-                PSTR(";W;"),
-                PSTR(";WNW;"),
-                PSTR(";NW;"),
-                PSTR(";NNW;") };
-              url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
+              url += ";";
+              url += getBearing(UserVar[event->BaseVarIndex]);
+              url += ";";
               // Domoticz expects the wind speed in (m/s * 10)
               url += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               url += ";";
