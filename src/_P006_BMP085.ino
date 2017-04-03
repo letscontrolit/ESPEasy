@@ -4,7 +4,7 @@
 
 #define PLUGIN_006
 #define PLUGIN_ID_006        6
-#define PLUGIN_NAME_006       "Temperature & Pressure - BMP085"
+#define PLUGIN_NAME_006       "Temperature & Pressure - BMP085/180"
 #define PLUGIN_VALUENAME1_006 "Temperature"
 #define PLUGIN_VALUENAME2_006 "Pressure"
 
