@@ -56,7 +56,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         String cmd = "";
         struct EventStruct TempEvent;
 
-        if (topicSplit[count] == "cmd")
+        if (topicSplit[count] == F("cmd"))
         {
           cmd = event->String2;
           parseCommandString(&TempEvent, cmd);
@@ -67,7 +67,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           cmd = topicSplit[count - 1];
           TempEvent.Par1 = topicSplit[count].toInt();
           TempEvent.Par2 = event->String2.toFloat();
-          TempEvent.Par3 = 0;          
+          TempEvent.Par3 = 0;
         }
         // in case of event, store to buffer and return...
         String command = parseString(cmd, 1);
@@ -119,4 +119,3 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
       return success;
   }
 }
-

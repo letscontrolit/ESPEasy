@@ -28,7 +28,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_007);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         ControllerSettingsStruct ControllerSettings;
@@ -39,7 +39,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         char host[20];
         sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
+        sprintf_P(log, PSTR("%s%s using port %u"), PSTR("HTTP : connecting to "), host,ControllerSettings.Port);
         addLog(LOG_LEVEL_DEBUG, log);
 
         // Use WiFiClient class to create TCP connections
@@ -51,15 +51,15 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, log);
           return false;
         }
-        statusLED(true);        
+        statusLED(true);
         if (connectionFailures)
           connectionFailures--;
 
         String postDataStr = F("GET /emoncms/input/post.json?node=");
-        
+
         postDataStr += Settings.Unit;
         postDataStr += F("&json=");
-        
+
         switch (event->sensorType)
         {
           case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
@@ -151,4 +151,3 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
