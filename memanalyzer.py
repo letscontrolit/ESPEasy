@@ -81,69 +81,146 @@ def analyse_memory(elfFile):
     # print("Free IRam : %d" % usedIRAM)
     return(ret)
 
-################### start
-if len(sys.argv) < 1:
-    print("Usage: \n\t%s%s <path_to_objdump>" % sys.argv[0])
-    sys.exit(1)
+# reenable all plugins and libs
+def enable_all():
 
-objectDumpBin = sys.argv[1]
+    for plugin in glob.glob(".src/*"):
+        os.rename(plugin, "src/"+os.path.basename(plugin))
 
-#restore deleted plugins
-subprocess.check_output("git ls-files -d | xargs git checkout --", shell=True)
+    for lib in glob.glob(".lib/*"):
+        os.rename(lib, "lib/"+os.path.basename(lib))
 
-#modified files?
-if subprocess.check_output("git ls-files -m src", shell=True)!="":
-    abort("found modified files in src directory")
+def disable_plugin(plugin):
+    os.rename(plugin, ".src/"+os.path.basename(plugin))
 
-#get list of all plugins
-plugins=glob.glob("src/_[CPN]*.ino")
-plugins.sort()
+def enable_plugin(plugin):
+    os.rename(".src/"+os.path.basename(plugin), plugin)
 
+def disable_lib(lib):
+    os.rename(lib, ".lib/"+os.path.basename(lib))
 
-#remove all plugins and get base size
-for plugin in plugins:
-    os.remove(plugin)
-
-if len(sys.argv)>2:
-    test_plugins=sys.argv[2:]
-else:
-    test_plugins=plugins
-
-test_plugins.sort()
+def enable_lib(lib):
+    os.rename(".lib/"+os.path.basename(lib), lib)
 
 
-
-output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
-print(output_format.format(
-    "plugin",
-    "cache IRAM",
-    "init RAM",
-    "r.o. RAM",
-    "uninit RAM",
-    "Flash ROM",
-))
+try:
 
 
-#build without plugins to get base memory usage
-subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-#two times, sometimes it changes a few bytes somehow
-subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-base=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    if not os.path.exists(".src"):
+        os.mkdir(".src")
+
+    if not os.path.exists(".lib"):
+        os.mkdir(".lib")
 
 
-plugin_results={}
-for plugin in test_plugins:
-    # print("building with {}".format(plugin))
-    subprocess.check_call("git checkout {}".format(plugin), shell=True)
+    ################### start
+    if len(sys.argv) < 1:
+        print("Usage: \n\t%s%s <path_to_objdump>" % sys.argv[0])
+        sys.exit(1)
+
+    objectDumpBin = sys.argv[1]
+
+    output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
+    print(output_format.format(
+        "plugin",
+        "cache IRAM",
+        "init RAM",
+        "r.o. RAM",
+        "uninit RAM",
+        "Flash ROM",
+    ))
+
+
+    enable_all()
+
+
+    #get list of all plugins
+    plugins=glob.glob("src/_[CPN]*.ino")
+    plugins.sort()
+
+    #get list of all libs
+    libs=glob.glob("lib/*")
+    libs.remove("lib/pubsubclient")
+    libs.sort()
+
+
+    #### disable all plugins and to get base size
+    for plugin in plugins:
+        disable_plugin(plugin)
+
+    # for lib in libs:
+    #     disable_lib(lib)
+
+    #build without plugins to get base memory usage
     subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    plugin_results[plugin]=analyse_memory(".pioenvs/dev_4096/firmware.elf")
-    os.remove(plugin)
+    #two times, sometimes it changes a few bytes somehow
+    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+    base=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+
+
+    # note: unused libs never use any memory, so dont have to test this
+    # ##### test per lib
+    # results={}
+    # for lib in libs:
+    #     enable_lib(lib)
+    #     subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+    #     results[lib]=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    #     disable_lib(lib)
+    #
+    #     print(output_format.format(
+    #         lib,
+    #         results[lib]['text']-base['text'],
+    #         results[lib]['data']-base['data'],
+    #         results[lib]['rodata']-base['rodata'],
+    #         results[lib]['bss']-base['bss'],
+    #         results[lib]['irom0_text']-base['irom0_text'],
+    #     ))
+
+
+    #which plugins to test?
+    if len(sys.argv)>2:
+        test_plugins=sys.argv[2:]
+    else:
+        test_plugins=plugins
+    test_plugins.sort()
+
+
+
+    ##### test per plugin
+    results={}
+    for plugin in test_plugins:
+        enable_plugin(plugin)
+        subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+        results[plugin]=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+        disable_plugin(plugin)
+
+        print(output_format.format(
+            plugin,
+            results[plugin]['text']-base['text'],
+            results[plugin]['data']-base['data'],
+            results[plugin]['rodata']-base['rodata'],
+            results[plugin]['bss']-base['bss'],
+            results[plugin]['irom0_text']-base['irom0_text'],
+        ))
+
+
+
+    ##### test with all test_plugins at once
+    for plugin in test_plugins:
+        enable_plugin(plugin)
+
+    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+    total=analyse_memory(".pioenvs/dev_4096/firmware.elf")
 
     print(output_format.format(
-        plugin,
-        plugin_results[plugin]['text']-base['text'],
-        plugin_results[plugin]['data']-base['data'],
-        plugin_results[plugin]['rodata']-base['rodata'],
-        plugin_results[plugin]['bss']-base['bss'],
-        plugin_results[plugin]['irom0_text']-base['irom0_text'],
+        "ALL",
+        total['text']-base['text'],
+        total['data']-base['data'],
+        total['rodata']-base['rodata'],
+        total['bss']-base['bss'],
+        total['irom0_text']-base['irom0_text'],
     ))
+except:
+    enable_all()
+
+    raise
