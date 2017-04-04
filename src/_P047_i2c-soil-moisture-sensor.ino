@@ -36,7 +36,6 @@
 
 
 
-boolean Plugin_047_init[2] = {false, false};
 uint8_t _i2caddrP47;
 
 boolean Plugin_047(byte function, struct EventStruct *event, String& string)
