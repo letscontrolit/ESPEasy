@@ -9,3 +9,9 @@ Check here to learn how to use this branch and help us improving ESPEasy: http:/
 Binary development releases are here: https://github.com/letscontrolit/ESPEasy/releases
 
 Details and discussion are on the Experimental forum: http://www.letscontrolit.com/forum/viewtopic.php?f=18&t=2257&p=13600#p13600
+
+## Cloning 
+
+Dont forget to use the --recursive option, so you get all the submodules:
+
+ git clone --recursive https://github.com/letscontrolit/ESPEasy.git
