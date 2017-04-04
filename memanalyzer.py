@@ -224,3 +224,6 @@ except:
     enable_all()
 
     raise
+
+
+enable_all()

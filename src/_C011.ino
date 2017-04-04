@@ -134,7 +134,7 @@ boolean HTTPSend011(struct EventStruct *event)
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, ControllerSettings.Port);
+  sprintf_P(log, PSTR("%s%s using port %u"), PSTR("HTTP : connecting to "), host, ControllerSettings.Port);
   addLog(LOG_LEVEL_DEBUG, log);
 
   // Use WiFiClient class to create TCP connections
@@ -288,11 +288,11 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 
   String strTime = "";
   if (hour() < 10)
-    strTime += " ";
+    strTime += F(" ");
   strTime += hour();
-  strTime += ":";
+  strTime += F(":");
   if (minute() < 10)
-    strTime += "0";
+    strTime += F("0");
   strTime += minute();
   s.replace(F("%systime%"), strTime);
 
@@ -305,7 +305,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
   sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
   s.replace(F("%ip%"), strIP);
 
-  s.replace("%sysload%", String(100 - (100 * loopCounterLast / loopCounterMax)));
+  s.replace(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)));
   s.replace(F("%uptime%"), String(wdcounter / 2));
 
   s.replace(F("%CR%"), F("\r"));
