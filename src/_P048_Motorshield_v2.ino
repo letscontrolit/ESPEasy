@@ -117,21 +117,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 			String param3 = parseString(tmpString, 4);
 			String param4 = parseString(tmpString, 5);
 			String param5 = parseString(tmpString, 6);
-//			String log = "Debug parsesting: ";
-//			log += tmpString;
-//			log += " cmd: ";
-//			log += cmd;
-//			log += " param1: ";
-//			log += param1;
-//			log += " param2: ";
-//			log += param2;
-//			log += " param3: ";
-//			log += param3;
-//			log += " param4: ";
-//			log += param4;
-//			log += " param5: ";
-//			log += param5;
-//			addLog(LOG_LEVEL_DEBUG_MORE, log);
+
 
 			// Commands:
 			// MotorShieldCMD,<DCMotor>,<Motornumber>,<Forward/Backward/Release>,<Speed>
@@ -156,7 +142,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 							if (param4.toInt() >= 0 && param4.toInt() <= 255)
 								speed = param4.toInt();
 							AFMS.begin();
-							addLog(LOG_LEVEL_INFO, "DCMotor" + param2 + "->Forward Speed: " + String(speed));
+							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Forward Speed: ")) + String(speed));
 							myMotor->setSpeed(speed);
 							myMotor->run(FORWARD);
 							success = true;
@@ -167,7 +153,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 							if (param4.toInt() >= 0 && param4.toInt() <= 255)
 								speed = param4.toInt();
 							AFMS.begin();
-							addLog(LOG_LEVEL_INFO, "DCMotor" + param2 + "->Backward Speed: " + String(speed));
+							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Backward Speed: ")) + String(speed));
 							myMotor->setSpeed(speed);
 							myMotor->run(BACKWARD);
 							success = true;
@@ -175,7 +161,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 						if (param3.equalsIgnoreCase(F("Release")))
 						{
 							AFMS.begin();
-							addLog(LOG_LEVEL_INFO, "DCMotor" + param2 + "->Release");
+							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Release")));
 							myMotor->run(RELEASE);
 							success = true;
 						}
@@ -206,28 +192,32 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Forward Steps: " + steps + " SINGLE");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Forward Steps: ")) +
+											steps + String(F(" SINGLE")));
 									myStepper->step(steps, FORWARD, SINGLE);
 									success = true;
 								}
 								if (param5.equalsIgnoreCase(F("DOUBLE")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Forward Steps: " + steps + " DOUBLE");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Forward Steps: ")) +
+											steps + String(F(" DOUBLE")));
 									myStepper->step(steps, FORWARD, DOUBLE);
 									success = true;
 								}
 								if (param5.equalsIgnoreCase(F("INTERLEAVE")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Forward Steps: " + steps + " INTERLEAVE");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Forward Steps: ")) +
+											steps + String(F(" INTERLEAVE")));
 									myStepper->step(steps, FORWARD, INTERLEAVE);
 									success = true;
 								}
 								if (param5.equalsIgnoreCase(F("MICROSTEP")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Forward Steps: " + steps + " MICROSTEP");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Forward Steps: ")) +
+											steps + String(F(" MICROSTEP")));
 									myStepper->step(steps, FORWARD, MICROSTEP);
 									success = true;
 								}
@@ -242,28 +232,32 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Backward Steps: " + steps + " SINGLE");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Backward Steps: ")) +
+											steps + String(F(" SINGLE")));
 									myStepper->step(steps, BACKWARD, SINGLE);
 									success = true;
 								}
 								if (param5.equalsIgnoreCase(F("DOUBLE")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Backward Steps: " + steps + " DOUBLE");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Backward Steps: ")) +
+											steps + String(F(" DOUBLE")));
 									myStepper->step(steps, BACKWARD, DOUBLE);
 									success = true;
 								}
 								if (param5.equalsIgnoreCase(F("INTERLEAVE")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Backward Steps: " + steps + " INTERLEAVE");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Backward Steps: ")) +
+											steps + String(F(" INTERLEAVE")));
 									myStepper->step(steps, BACKWARD, INTERLEAVE);
 									success = true;
 								}
 								if (param5.equalsIgnoreCase(F("MICROSTEP")))
 								{
 									AFMS.begin();
-									addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Backward Steps: " + steps + " MICROSTEP");
+									addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Backward Steps: ")) +
+											steps + String(F(" MICROSTEP")));
 									myStepper->step(steps, BACKWARD, MICROSTEP);
 									success = true;
 								}
@@ -274,7 +268,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 						if (param3.equalsIgnoreCase(F("Release")))
 						{
 							AFMS.begin();
-							addLog(LOG_LEVEL_INFO, "Stepper" + param2 + "->Release.");
+							addLog(LOG_LEVEL_INFO, String(F("Stepper")) + param2 + String(F("->Release.")));
 							myStepper->release();
 							success = true;
 						}
