@@ -2336,6 +2336,7 @@ void checkRAM(byte id)
   \*********************************************************************************************/
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   analogWriteFreq(frequency);
+  //NOTE: analogwrite reserves IRAM and uninitalized ram.
   analogWrite(_pin,100);
   delay(duration);
   analogWrite(_pin,0);
@@ -2551,5 +2552,29 @@ void ArduinoOTAInit()
 
 }
 
+String getBearing(int degrees)
+{
+  const char* bearing[] = {
+    PSTR("N"),
+    PSTR("NNE"),
+    PSTR("NE"),
+    PSTR("ENE"),
+    PSTR("E"),
+    PSTR("ESE"),
+    PSTR("SE"),
+    PSTR("SSE"),
+    PSTR("S"),
+    PSTR("SSW"),
+    PSTR("SW"),
+    PSTR("WSW"),
+    PSTR("W"),
+    PSTR("WNW"),
+    PSTR("NW"),
+    PSTR("NNW")
+  };
+
+    return(bearing[int(degrees/22.5)]);
+
+}
 
 #endif

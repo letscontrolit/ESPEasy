@@ -78,12 +78,12 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
     // The MTA Exchange
     while (true) {
 
-      if (NPlugin_001_MTA(client, "",                                                   "220 ") == false) break;
-      if (NPlugin_001_MTA(client, "EHLO " + aDomain,                                    "250 ") == false) break;
-      if (NPlugin_001_MTA(client, "MAIL FROM:" + aFrom + "",                            "250 ") == false) break;
-      if (NPlugin_001_MTA(client, "RCPT TO:" + aTo + "",                                "250 ") == false) break;
-      if (NPlugin_001_MTA(client, "DATA",                                               "354 ") == false) break;
-      if (NPlugin_001_MTA(client, "Subject:" + aSub + "\r\n\r\n" + aMesg + "\r\n.\r\n", "250 ") == false) break;
+      if (NPlugin_001_MTA(client, "",                                                         PSTR("220 ")) == false) break;
+      if (NPlugin_001_MTA(client, PSTR("EHLO ") + aDomain,                                    PSTR("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, PSTR("MAIL FROM:") + aFrom + "",                            PSTR("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, PSTR("RCPT TO:") + aTo + "",                                PSTR("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, PSTR("DATA"),                                               PSTR("354 ")) == false) break;
+      if (NPlugin_001_MTA(client, PSTR("Subject:") + aSub + PSTR("\r\n\r\n") + aMesg + PSTR("\r\n.\r\n"), PSTR("250 ")) == false) break;
 
       myStatus = true;
       break;
@@ -142,4 +142,3 @@ boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
 
   return myStatus;
 }
-

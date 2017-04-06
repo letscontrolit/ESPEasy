@@ -6,6 +6,8 @@
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input"
 #define PLUGIN_VALUENAME1_001 "Switch"
+Servo servo1;
+Servo servo2;
 
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
@@ -242,10 +244,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
               int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
               int32_t curr_value = prev_value << 12;
-              int16_t new_value;
+
               int i = event->Par3;
               while(i--){
                 curr_value += step_value;
+                int16_t new_value;
                 new_value = (uint16_t)(curr_value >> 12);
                 analogWrite(event->Par1, new_value);
                 delay(1);
@@ -298,12 +301,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             switch (event->Par1)
             {
               case 1:
-                myservo1.attach(event->Par2);
-                myservo1.write(event->Par3);
+
+                //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
+                servo1.attach(event->Par2);
+                servo1.write(event->Par3);
                 break;
               case 2:
-                myservo2.attach(event->Par2);
-                myservo2.write(event->Par3);
+                servo2.attach(event->Par2);
+                servo2.write(event->Par3);
                 break;
             }
           setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);

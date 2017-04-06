@@ -86,7 +86,7 @@ boolean plugin_015_readUInt(unsigned char address, unsigned int &value)
 	// Returns true (1) if successful, false (0) if there was an I2C error
 	// (Also see getError() above)
 {
-	char high, low;
+
 
 	// Set up command byte for read
 	Wire.beginTransmission(plugin_015_i2caddr);
@@ -99,6 +99,7 @@ boolean plugin_015_readUInt(unsigned char address, unsigned int &value)
 		Wire.requestFrom(plugin_015_i2caddr,(byte)2);
 		if (Wire.available() == 2)
 		{
+			char high, low;
 			low = Wire.read();
 			high = Wire.read();
 			// Combine bytes into unsigned int
@@ -226,7 +227,7 @@ boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0,
 	// returns true (1) if calculation was successful
 	// RETURNS false (0) AND lux = 0.0 IF EITHER SENSOR WAS SATURATED (0XFFFF)
 {
-	double ratio, d0, d1;
+
 
 	// Determine if either sensor saturated (0xFFFF)
 	// If so, abandon ship (calculation will not be accurate)
@@ -237,7 +238,7 @@ boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0,
 	}
 	else
 	{
-
+		double ratio, d0, d1;
 		// Convert from unsigned integer to floating point
 		d0 = CH0; d1 = CH1;
 

@@ -3,7 +3,7 @@
 //#######################################################################################################
 
 /*******************************************************************************
- * Copyright 2016-2017 dev0 
+ * Copyright 2016-2017 dev0
  * Contact: https://forum.fhem.de/index.php?action=profile;u=7465
  *          https://github.com/ddtlabs/
  *
@@ -28,6 +28,7 @@
 #define CPLUGIN_009
 #define CPLUGIN_ID_009         9
 #define CPLUGIN_NAME_009       "FHEM HTTP"
+#include <ArduinoJson.h>
 
 boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 {
@@ -65,29 +66,29 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         // Create json root object
         DynamicJsonBuffer jsonBuffer;
         JsonObject& root = jsonBuffer.createObject();
-        root["module"] = "ESPEasy";
-        root["version"] = "1.04";
+        root[F("module")] = "ESPEasy";
+        root[F("version")] = "1.04";
 
         // Create nested objects
         JsonObject& data = root.createNestedObject("data");
         JsonObject& ESP = data.createNestedObject("ESP");
-        ESP["name"] = Settings.Name;
-        ESP["unit"] = Settings.Unit;
-        ESP["version"] = Settings.Version;
-        ESP["build"] = Settings.Build;
-        ESP["build_notes"] = BUILD_NOTES;
-        ESP["build_git"] = BUILD_GIT;
-        ESP["node_type_id"] = NODE_TYPE_ID;
-        ESP["sleep"] = Settings.deepSleep;
+        ESP[F("name")] = Settings.Name;
+        ESP[F("unit")] = Settings.Unit;
+        ESP[F("version")] = Settings.Version;
+        ESP[F("build")] = Settings.Build;
+        ESP[F("build_notes")] = BUILD_NOTES;
+        ESP[F("build_git")] = BUILD_GIT;
+        ESP[F("node_type_id")] = NODE_TYPE_ID;
+        ESP[F("sleep")] = Settings.deepSleep;
 
         // embed IP, important if there is NAT/PAT
         char ipStr[20];
         IPAddress ip = WiFi.localIP();
         sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-        ESP["ip"] = ipStr;
+        ESP[F("ip")] = ipStr;
 
         // Create nested SENSOR json object
-        JsonObject& SENSOR = data.createNestedObject("SENSOR");
+        JsonObject& SENSOR = data.createNestedObject(PSTR("SENSOR"));
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         char itemNames[valueCount][2];
         for (byte x = 0; x < valueCount; x++)
@@ -95,15 +96,15 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           // Each sensor value get an own object (0..n)
           sprintf(itemNames[x],"%d",x);
           JsonObject& val = SENSOR.createNestedObject(itemNames[x]);
-          val["deviceName"] = ExtraTaskSettings.TaskDeviceName;
-          val["valueName"]  = ExtraTaskSettings.TaskDeviceValueNames[x];
-          val["type"]       = event->sensorType;
+          val[F("deviceName")] = ExtraTaskSettings.TaskDeviceName;
+          val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
+          val[F("type")]       = event->sensorType;
 
           if (event->sensorType == SENSOR_TYPE_LONG) {
-            val["value"] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+            val[F("value")] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           }
           else { // All other sensor types
-            val["value"] = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+            val[F("value")] = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
           }
         }
 
@@ -135,7 +136,7 @@ boolean FHEMHTTPsend(String url, char* buffer, byte index)
     String auth = SecuritySettings.ControllerUser[index];
     auth += ":";
     auth += SecuritySettings.ControllerPassword[index];
-    authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
+    authHeader = PSTR("Authorization: Basic ") + encoder.encode(auth) + " \r\n";
   }
 
   char log[80];
@@ -163,10 +164,10 @@ boolean FHEMHTTPsend(String url, char* buffer, byte index)
 
   // This will send the request to the server
   int len = strlen(buffer);
-  client.print(String("POST ") + url + " HTTP/1.1\r\n" +
-              "Content-Length: "+ len + "\r\n" +
-              "Host: " + host + "\r\n" + authHeader +
-              "Connection: close\r\n\r\n"
+  client.print(String("POST ") + url + F(" HTTP/1.1\r\n") +
+              F("Content-Length: ")+ len + F("\r\n") +
+              F("Host: ") + host + F("\r\n") + authHeader +
+              F("Connection: close\r\n\r\n")
               + buffer);
 
   unsigned long timer = millis() + 200;

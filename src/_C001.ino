@@ -25,7 +25,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_GET_DEVICENAME:
       {
-        string = F(CPLUGIN_NAME_001);
+        string = PSTR(CPLUGIN_NAME_001);
         break;
       }
 
@@ -34,7 +34,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
         if (event->idx != 0)
         {
           ControllerSettingsStruct ControllerSettings;
-          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof (ControllerSettings));
 
           String authHeader = "";
           if ((SecuritySettings.ControllerUser[event->ProtocolIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ProtocolIndex][0] != 0))
@@ -43,9 +43,9 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
             auth += ":";
             auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-            authHeader = F("Authorization: Basic ");
+            authHeader = PSTR("Authorization: Basic ");
             authHeader += encoder.encode(auth);
-            authHeader += F(" \r\n");
+            authHeader += PSTR(" \r\n");
           }
 
           char log[80];
@@ -53,7 +53,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           char host[20];
           sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-          sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, ControllerSettings.Port);
+          sprintf_P(log, PSTR("%s%s using port %u"), PSTR("HTTP : connecting to "), host, ControllerSettings.Port);
           addLog(LOG_LEVEL_DEBUG, log);
 
           // Use WiFiClient class to create TCP connections
@@ -70,95 +70,96 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             connectionFailures--;
 
           // We now create a URI for the request
-          String url = F("/json.htm?type=command&param=udevice&idx=");
+          String url = PSTR("/json.htm?type=command&param=udevice&idx=");
           url += event->idx;
 
           switch (event->sensorType)
           {
             case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
               break;
             case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
               break;
             case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              url += ";";
+              url += (";");
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               break;
             case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              url += ";";
+              url += PSTR(";");
               url += humStat(UserVar[event->BaseVarIndex + 1]);
               break;
             case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              url += ";0;0;";
+              url += PSTR(";0;0;");
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              url += ";0";
+              url += PSTR(";0");
               break;
             case SENSOR_TYPE_TRIPLE:
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
               break;
             case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              url += ";";
+              url += PSTR(";");
               url += humStat(UserVar[event->BaseVarIndex + 1]);
-              url += ";";
-              url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              url += ";0";
+              url += PSTR(";");
+               url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+              url += PSTR(";0");
               break;
             case SENSOR_TYPE_QUAD:
-              url += F("&svalue=");
+              url += PSTR("&svalue=");
               url += toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              url += ";";
+              url += PSTR(";");
               url += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);
               break;
             case SENSOR_TYPE_SWITCH:
-              url = F("/json.htm?type=command&param=switchlight&idx=");
+              url = PSTR("/json.htm?type=command&param=switchlight&idx=");
               url += event->idx;
-              url += F("&switchcmd=");
+              url += PSTR("&switchcmd=");
               if (UserVar[event->BaseVarIndex] == 0)
-                url += F("Off");
+                url += PSTR("Off");
               else
-                url += F("On");
+                url += PSTR("On");
               break;
             case SENSOR_TYPE_DIMMER:
-              url = F("/json.htm?type=command&param=switchlight&idx=");
+              url = PSTR("/json.htm?type=command&param=switchlight&idx=");
               url += event->idx;
-              url += F("&switchcmd=");
+              url += PSTR("&switchcmd=");
               if (UserVar[event->BaseVarIndex] == 0)
-                url += F("Off");
+                url += ("Off");
               else
               {
-                url += F("Set%20Level&level=");
+                url += PSTR("Set%20Level&level=");
                 url += UserVar[event->BaseVarIndex];
               }
               break;
             case (SENSOR_TYPE_WIND):
-              url += F("&svalue=");                   // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
+              url += PSTR("&svalue=");                   // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
               url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              const char* bearing[] = {";N;",";NNE;",";NE;",";ENE;",";E;",";ESE;",";SE;",";SSE;",";S;",";SSW;",";SW;",";WSW;",";W;",";WNW;",";NW;",";NNW;" };
-              url += bearing[int(UserVar[event->BaseVarIndex] / 22.5)];
+              url += ";";
+              url += getBearing(UserVar[event->BaseVarIndex]);
+              url += ";";
               // Domoticz expects the wind speed in (m/s * 10)
               url += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               url += ";";
@@ -171,14 +172,14 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG_MORE, log);
 
           // This will send the request to the server
-          String request = F("GET ");
+          String request = PSTR("GET ");
           request += url;
-          request += F(" HTTP/1.1\r\n");
-          request += F("Host: ");
+          request += PSTR(" HTTP/1.1\r\n");
+          request += PSTR("Host: ");
           request += host;
-          request += F("\r\n");
+          request += PSTR("\r\n");
           request += authHeader;
-          request += F("Connection: close\r\n\r\n");
+          request += PSTR("Connection: close\r\n\r\n");
           client.print(request);
 
           unsigned long timer = millis() + 200;
@@ -190,7 +191,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             String line = client.readStringUntil('\n');
             line.toCharArray(log, 80);
             addLog(LOG_LEVEL_DEBUG_MORE, log);
-            if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
+            if (line.substring(0, 15) == PSTR("HTTP/1.1 200 OK"))
             {
               strcpy_P(log, PSTR("HTTP : Success"));
               addLog(LOG_LEVEL_DEBUG, log);
@@ -206,7 +207,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
         } // if ixd !=0
         else
         {
-          String log = F("HTTP : IDX cannot be zero!");
+          String log = PSTR("HTTP : IDX cannot be zero!");
           addLog(LOG_LEVEL_ERROR, log);
         }
         break;
@@ -233,7 +234,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
     connectionFailures--;
 
   // We now create a URI for the request
-  String url = F("/json.htm?type=devices&rid=");
+  String url = PSTR("/json.htm?type=devices&rid=");
   url += idx;
 
   // This will send the request to the server
@@ -252,7 +253,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
     if (line.substring(10, 14) == "Data")
     {
       String strValue = line.substring(19);
-      byte pos = strValue.indexOf(' ');
+      byte pos = strValue.indexOPSTR(' ');
       strValue = strValue.substring(0, pos);
       strValue.trim();
       float value = strValue.toFloat();

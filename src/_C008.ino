@@ -5,6 +5,7 @@
 #define CPLUGIN_008
 #define CPLUGIN_ID_008         8
 #define CPLUGIN_NAME_008       "Generic HTTP"
+#include <ArduinoJson.h>
 
 boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 {
@@ -36,7 +37,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         byte valueCount = getValueCountFromSensorType(event->sensorType);
@@ -76,7 +77,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
     auth += ":";
     auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-    authHeader = "Authorization: Basic " + encoder.encode(auth) + " \r\n";
+    authHeader = PSTR("Authorization: Basic ") + encoder.encode(auth) + " \r\n";
   }
 
   char log[80];
@@ -84,7 +85,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-  sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, ControllerSettings.Port);
+  sprintf_P(log, PSTR("%s%s using port %u"), PSTR("HTTP : connecting to "), host, ControllerSettings.Port);
   addLog(LOG_LEVEL_DEBUG, log);
 
   // Use WiFiClient class to create TCP connections
@@ -122,9 +123,9 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     hostName = ControllerSettings.HostName;
 
   // This will send the request to the server
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + hostName + "\r\n" + authHeader + 
-               "Connection: close\r\n\r\n");
+  client.print(String(PSTR("GET ")) + url + PSTR(" HTTP/1.1\r\n") +
+               PSTR("Host: ") + hostName + "\r\n" + authHeader +
+               PSTR("Connection: close\r\n\r\n"));
 
   unsigned long timer = millis() + 200;
   while (!client.available() && millis() < timer)

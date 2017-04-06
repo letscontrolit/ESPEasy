@@ -201,7 +201,6 @@ void Plugin_047_write8(byte value) {
 //**************************************************************************/
 uint8_t Plugin_047_read8(byte reg)
 {
-  uint8_t value;
   Wire.beginTransmission((uint8_t)_i2caddrP47);
   Wire.write((uint8_t)reg);
   Wire.endTransmission();

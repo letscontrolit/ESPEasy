@@ -1,6 +1,7 @@
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
+#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRsend *Plugin_035_irSender;
@@ -75,7 +76,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         if (cmdCode.equalsIgnoreCase("IRSEND") && Plugin_035_irSender != 0)
         {
           success = true;
+          #ifdef PLUGIN_016
           if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
+          #endif
 
           if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
 
@@ -183,7 +186,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += F("<BR>");
           }
 
+          #ifdef PLUGIN_016
           if (irReceiver != 0) irReceiver->enableIRIn(); // Start the receiver
+          #endif
         }
         break;
       }
@@ -191,3 +196,4 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+#endif
