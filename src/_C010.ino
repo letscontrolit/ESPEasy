@@ -33,7 +33,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = "";
-        event->String2 = F("%sysname%_%tskname%_%valname%=%value%");
+        event->String2 = F("%sysname%_%tskname%_%valname%=%value%<CR>");
         break;
       }
 
@@ -84,6 +84,7 @@ boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigne
 
   String msg = "";
   msg += ControllerSettings.Publish;
+  msg.replace(F("%timestamp%"), String(sysTime));
   msg.replace(F("%sysname%"), Settings.Name);
   msg.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
   msg.replace(F("%id%"), String(event->idx));
@@ -92,6 +93,10 @@ boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigne
     msg.replace(F("%value%"), String(longValue));
   else
     msg.replace(F("%value%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
+  msg.replace(F("<CR>"), F("\r"));
+  msg.replace(F("<LF>"), F("\n"));
+  msg.replace(F("<CRLF>"), F("\r\n"));
+  msg.replace(F("<TAB>"), F("\t"));
 
   IPAddress IP(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
   portUDP.beginPacket(IP, ControllerSettings.Port);
@@ -102,4 +107,3 @@ boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigne
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
 }
-

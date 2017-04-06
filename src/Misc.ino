@@ -345,34 +345,59 @@ boolean timeOut(unsigned long timer)
 /********************************************************************************************\
   Status LED
   \*********************************************************************************************/
+  #define STATUS_PWM_LOWACTIVE
+  #define STATUS_PWM_NORMALVALUE 200
+  #define STATUS_PWM_TRAFFICVALUE PWMRANGE
+
+
 void statusLED(boolean traffic)
 {
+  static int gnStatusValueCurrent = -1;
+
   if (Settings.Pin_status_led == -1)
     return;
 
-  static unsigned long timer = 0;
-  static byte currentState = 0;
+  if (gnStatusValueCurrent<0)
+    pinMode(Settings.Pin_status_led, OUTPUT);
+
+  int nStatusValue = gnStatusValueCurrent;
 
   if (traffic)
   {
-    currentState = HIGH;
-    digitalWrite(Settings.Pin_status_led, currentState); // blink off
-    timer = millis() + 100;
+    nStatusValue += 500; //ramp up fast
+  }
+  else
+  {
+    //byte wifimode = wifi_get_opmode();
+    if (AP_Mode) //apmode is active
+    {
+      nStatusValue = millis() & PWMRANGE; //ramp up for 1 sec
+    }
+    //else if (wifimode == 3) //apmode is active
+    //{
+    //  nStatusValue = (millis()<<2) & PWMRANGE; //ramp up for 1/4 sec
+    //}
+    else if (WiFi.status() != WL_CONNECTED)
+    {
+      nStatusValue = (millis()>>2) & 255; //ramp up for 4 sec
+    }
+    else
+    {
+      nStatusValue -= 20; //ramp down slowly
+      nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+    }
   }
 
-  if (timer == 0 || millis() > timer)
-  {
-    timer = 0;
-    byte state = HIGH;
-    if (WiFi.status() == WL_CONNECTED)
-      state = LOW;
+  nStatusValue = constrain(nStatusValue, 0, PWMRANGE);
 
-    if (currentState != state)
-    {
-      currentState = state;
-      pinMode(Settings.Pin_status_led, OUTPUT);
-      digitalWrite(Settings.Pin_status_led, state);
-    }
+  if (gnStatusValueCurrent != nStatusValue)
+  {
+    gnStatusValueCurrent = nStatusValue;
+#ifdef STATUS_PWM_LOWACTIVE
+    analogWrite(Settings.Pin_status_led, PWMRANGE-nStatusValue);
+#else
+    analogWrite(Settings.Pin_status_led, nStatusValue);
+#endif
   }
 }
 
