@@ -346,8 +346,9 @@ boolean timeOut(unsigned long timer)
   Status LED
   \*********************************************************************************************/
   #define STATUS_PWM_LOWACTIVE
-  #define STATUS_PWM_NORMALVALUE 200
-  #define STATUS_PWM_TRAFFICVALUE PWMRANGE
+  #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+  #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
+  #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
 
 
 void statusLED(boolean traffic)
@@ -364,14 +365,15 @@ void statusLED(boolean traffic)
 
   if (traffic)
   {
-    nStatusValue += 500; //ramp up fast
+    nStatusValue += STATUS_PWM_TRAFFICRISE; //ramp up fast
   }
   else
   {
     //byte wifimode = wifi_get_opmode();
     if (AP_Mode) //apmode is active
     {
-      nStatusValue = millis() & PWMRANGE; //ramp up for 1 sec
+      nStatusValue = ((millis()>>2) & (PWMRANGE>>1)) - (PWMRANGE>>4); //ramp up for 2 sec, half luminosity
+//      nStatusValue = millis() & PWMRANGE; //ramp up for 1 sec
     }
     //else if (wifimode == 3) //apmode is active
     //{
@@ -379,11 +381,12 @@ void statusLED(boolean traffic)
     //}
     else if (WiFi.status() != WL_CONNECTED)
     {
-      nStatusValue = (millis()>>2) & 255; //ramp up for 4 sec
+//      nStatusValue = (millis()>>2) & 255; //ramp up for 4 sec
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }
-    else
+    else //connected
     {
-      nStatusValue -= 20; //ramp down slowly
+      nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
       nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
     }
   }

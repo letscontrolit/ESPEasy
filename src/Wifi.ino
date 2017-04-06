@@ -82,11 +82,12 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
         else
           WiFi.begin();
 
-        for (byte x = 0; x < 20; x++)
+        for (byte x = 0; x < 200; x++)
         {
           if (WiFi.status() != WL_CONNECTED)
           {
-            delay(500);
+            statusLED(false);
+            delay(50);
           }
           else
             break;
