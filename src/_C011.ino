@@ -48,9 +48,9 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
       {
         P011_ConfigStruct customConfig;
         LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
-        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD") };
+        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
-        for (byte i = 0; i < 4; i++)
+        for (byte i = 0; i < 5; i++)
         {
           string += F("<option value='");
           string += methods[i] + "'";
