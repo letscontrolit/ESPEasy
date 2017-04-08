@@ -133,17 +133,18 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
       sensor.begin(mode,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-			UserVar[event->BaseVarIndex] = sensor.readLightLevel();
-
-			String log = F("BH1750 Address: 0x");
-			log += String(address,HEX);
-			log += F(" Mode: 0x");
-			log += String(mode);
-			log += F(" : Light intensity: ");
-			log += UserVar[event->BaseVarIndex];
-			addLog(LOG_LEVEL_INFO,log);
-			success=true;
-
+      float lux = sensor.readLightLevel();
+      if (lux != -1) {
+      	UserVar[event->BaseVarIndex] = lux;
+  			String log = F("BH1750 Address: 0x");
+  			log += String(address,HEX);
+  			log += F(" Mode: 0x");
+  			log += String(mode);
+  			log += F(" : Light intensity: ");
+  			log += UserVar[event->BaseVarIndex];
+  			addLog(LOG_LEVEL_INFO,log);
+      	success=true;
+      }
       break;
     }
   }
