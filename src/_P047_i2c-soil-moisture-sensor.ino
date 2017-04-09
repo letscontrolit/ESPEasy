@@ -167,45 +167,47 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         // 2 s delay ...we need this delay, otherwise we get only the last reading...
         delayMillis(2000);
 
-        UserVar[event->BaseVarIndex] = ((float)Plugin_047_readTemperature()) / 10;
-        UserVar[event->BaseVarIndex + 1] = ((float)Plugin_047_readMoisture());
-        UserVar[event->BaseVarIndex + 2] = ((float)Plugin_047_readLight());
+        float temperature = ((float)Plugin_047_readTemperature()) / 10;
+        float moisture = ((float)Plugin_047_readMoisture());
+        float light = ((float)Plugin_047_readLight());
 
-        String log = F("SoilMoisture: Address: 0x");
-        log += String(_i2caddrP47,HEX);
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
-          log += F(" Version: 0x");
-          log += String(sensorVersion,HEX);
-        }
-        addLog(LOG_LEVEL_INFO, log);
-        log = F("SoilMoisture: Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        log = F("SoilMoisture: Moisture: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
-        log = F("SoilMoisture: Light: ");
-        log += UserVar[event->BaseVarIndex + 2];
-        addLog(LOG_LEVEL_INFO, log);
-
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
-          // send sensor to sleep
-          Plugin_047_write8(SOILMOISTURESENSOR_SLEEP);
-          addLog(LOG_LEVEL_DEBUG, String(F("SoilMoisture->sleep")).c_str());
-        }
-
-
-        if (UserVar[event->BaseVarIndex]>100 || UserVar[event->BaseVarIndex] < -40 ||
-          UserVar[event->BaseVarIndex + 1] > 800 || UserVar[event->BaseVarIndex + 1] < 1 ||
-          UserVar[event->BaseVarIndex + 2] > 65535 || UserVar[event->BaseVarIndex + 2] < 0) {
+        if (temperature>100 || temperature < -40 || moisture > 800 || moisture < 1 || light > 65535 || light < 0) {
             addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Bad Reading, resetting Sensor...")).c_str());
             Plugin_047_write8(SOILMOISTURESENSOR_RESET);
+            success = false;
             break;
-          }
-        success = true;
-        break;
-      }
+        }
+        else {
+        	UserVar[event->BaseVarIndex] = temperature;
+        	UserVar[event->BaseVarIndex + 1] = moisture;
+        	UserVar[event->BaseVarIndex + 2] = light;
 
+        	String log = F("SoilMoisture: Address: 0x");
+        	log += String(_i2caddrP47,HEX);
+        	if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+        		log += F(" Version: 0x");
+        		log += String(sensorVersion,HEX);
+        	}
+        	addLog(LOG_LEVEL_INFO, log);
+        	log = F("SoilMoisture: Temperature: ");
+        	log += temperature;
+        	addLog(LOG_LEVEL_INFO, log);
+        	log = F("SoilMoisture: Moisture: ");
+        	log += moisture;
+        	addLog(LOG_LEVEL_INFO, log);
+        	log = F("SoilMoisture: Light: ");
+        	log += light;
+        	addLog(LOG_LEVEL_INFO, log);
+
+        	if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
+        		// send sensor to sleep
+        		Plugin_047_write8(SOILMOISTURESENSOR_SLEEP);
+        		addLog(LOG_LEVEL_DEBUG, String(F("SoilMoisture->sleep")).c_str());
+        	}
+        	success = true;
+        	break;
+        }
+      }
   }
   return success;
 }
