@@ -2,7 +2,7 @@
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
-## Issues tracker
+## Issue tracker
 
 * The issue tracker is NOT a support forum. For support questions go to our forum: https://www.letscontrolit.com/forum/viewforum.php?f=1
 
