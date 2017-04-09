@@ -13,3 +13,6 @@
 [submodule "lib/AS_BH1750"]
 	path = lib/AS_BH1750
 	url = https://github.com/hexenmeister/AS_BH1750.git
+[submodule "lib/Adafruit_TCS34725"]
+	path = lib/Adafruit_TCS34725
+	url = https://github.com/adafruit/Adafruit_TCS34725.git

@@ -2527,6 +2527,8 @@ void ArduinoOTAInit()
 
 }
 
+#endif
+
 String getBearing(int degrees)
 {
   const char* bearing[] = {
@@ -2551,5 +2553,3 @@ String getBearing(int degrees)
     return(bearing[int(degrees/22.5)]);
 
 }
-
-#endif
