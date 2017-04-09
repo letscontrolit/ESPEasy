@@ -14,10 +14,11 @@ void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
+//this takes 20 bytes of IRAM per handler
+// void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
 
 unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
@@ -72,8 +73,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         String options[4];
         options[0] = F("Delta");
         options[1] = F("Delta/Total/Time");
-        options[2] = F("Total");     
-        options[3] = F("Delta/Total");    
+        options[2] = F("Total");
+        options[3] = F("Delta/Total");
         int optionValues[4];
         optionValues[0] = 0;
         optionValues[1] = 1;
@@ -82,14 +83,14 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         String modeRaise[4];
         modeRaise[0] = F("LOW");
         modeRaise[1] = F("CHANGE");
-        modeRaise[2] = F("RISING");     
-        modeRaise[3] = F("FALLING");    
+        modeRaise[2] = F("RISING");
+        modeRaise[3] = F("FALLING");
         int modeValues[4];
         modeValues[0] = LOW;
         modeValues[1] = CHANGE;
         modeValues[2] = RISING;
         modeValues[3] = FALLING;
-        
+
         string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_countertype'>");
         for (byte x = 0; x < 4; x++)
         {
@@ -120,7 +121,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
-                  
+
         success = true;
         break;
       }
@@ -162,8 +163,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         log += Settings.TaskDevicePin1[event->TaskIndex];
         addLog(LOG_LEVEL_INFO,log);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
-        Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        success = true;
+        success = Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         break;
       }
 
@@ -201,7 +201,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             break;
-          }          
+          }
         }
         Plugin_003_pulseCounter[event->TaskIndex] = 0;
         success = true;
@@ -268,11 +268,8 @@ void Plugin_003_pulse_interrupt8()
 /*********************************************************************************************\
  * Init Pulse Counters
 \*********************************************************************************************/
-void Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
+bool Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
 {
-  // Init IO pins
-  String log = F("PULSE: Init");
-  addLog(LOG_LEVEL_INFO,log);
 
   switch (Index)
   {
@@ -288,17 +285,23 @@ void Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
     case 3:
       attachInterrupt(Par1, Plugin_003_pulse_interrupt4, Mode);
       break;
-    case 4:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt5, Mode);
-      break;
-    case 5:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt6, Mode);
-      break;
-    case 6:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt7, Mode);
-      break;
-    case 7:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt8, Mode);
-      break;
+    // case 4:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt5, Mode);
+    //   break;
+    // case 5:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt6, Mode);
+    //   break;
+    // case 6:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt7, Mode);
+    //   break;
+    // case 7:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt8, Mode);
+    //   break;
+    default:
+      String log = F("PULSE: Error, only the first 4 tasks can be pulse counters.");
+      addLog(LOG_LEVEL_ERROR,log);
+      return(false);
   }
+
+  return(true);
 }
