@@ -4,7 +4,7 @@
 
 #define PLUGIN_034
 #define PLUGIN_ID_034         34
-#define PLUGIN_NAME_034       "Temperature & Humidity - DHT12 (I2C)"
+#define PLUGIN_NAME_034       "Environment - DHT12 (I2C)"
 #define PLUGIN_VALUENAME1_034 "Temperature"
 #define PLUGIN_VALUENAME2_034 "Humidity"
 
