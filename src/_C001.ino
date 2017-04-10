@@ -179,7 +179,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
           unsigned long timer = millis() + 200;
           while (!client.available() && millis() < timer)
-            delay(1);
+            yield();
 
           // Read all the lines of the reply from server and log them
           while (client.available()) {
@@ -190,7 +190,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_DEBUG, F("HTTP : Success"));
               success = true;
             }
-            delay(1);
+            yield();
           }
           addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
 
