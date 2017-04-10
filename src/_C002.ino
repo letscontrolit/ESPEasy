@@ -41,12 +41,12 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_RECV:
       {
-        char json[512];
-        json[0] = 0;
-        event->String2.toCharArray(json, 512);
+        // char json[512];
+        // json[0] = 0;
+        // event->String2.toCharArray(json, 512);
 
         StaticJsonBuffer<512> jsonBuffer;
-        JsonObject& root = jsonBuffer.parseObject(json);
+        JsonObject& root = jsonBuffer.parseObject(event->String2.c_str());
 
         if (root.success())
         {
@@ -141,29 +141,30 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           root[F("idx")] = event->idx;
 
           String values;
-          char str[80];
+          // char str[80];
 
           switch (event->sensorType)
           {
             case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
               root[F("nvalue")] = 0;
               values = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              values.toCharArray(str, 80);
-              root[F("svalue")] =  str;
+              // values.toCharArray(str, 80);
+              root[F("svalue")] =  values.c_str();
               break;
             case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
               root[F("nvalue")] = 0;
               values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-              values.toCharArray(str, 80);
-              root[F("svalue")] =  str;
+              // values.toCharArray(str, 80);
+              root[F("svalue")] =  values.c_str();
               break;
             case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
               root[F("nvalue")] = 0;
               values  = toString(UserVar[event->BaseVarIndex ], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
               values += ";";
               values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              values.toCharArray(str, 80);
-              root[F("svalue")] =  str;
+              // values.toCharArray(str, 80);
+              root[F("svalue")] =  values.c_str();
+              // root[F("svalue")] =  str;
               break;
             case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
               root[F("nvalue")] = 0;
@@ -171,8 +172,9 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               values += ";";
               values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               values += ";0";
-              values.toCharArray(str, 80);
-              root[F("svalue")] =  str;
+              // values.toCharArray(str, 80);
+              root[F("svalue")] =  values.c_str();
+              // root[F("svalue")] =  str;
               break;
             case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
               root[F("nvalue")] = 0;
@@ -180,8 +182,9 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               values += ";0;0;";
               values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               values += ";0";
-              values.toCharArray(str, 80);
-              root[F("svalue")] =  str;
+              // values.toCharArray(str, 80);
+              root[F("svalue")] =  values.c_str();
+              // root[F("svalue")] =  str;
               break;
             case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
               root[F("nvalue")] = 0;
@@ -191,20 +194,21 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               values += ";0;";
               values += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
               values += ";0";
-              values.toCharArray(str, 80);
-              root[F("svalue")] =  str;
+              root[F("svalue")] =  values.c_str();
+              // values.toCharArray(str, 80);
+              // root[F("svalue")] =  str;
               break;
             case SENSOR_TYPE_SWITCH:
-              root[F("command")] = PSTR("switchlight");
+              root[F("command")] = String(F("switchlight"));
               if (UserVar[event->BaseVarIndex] == 0)
-                root[F("switchcmd")] = PSTR("Off");
+                root[F("switchcmd")] = String(F("Off"));
               else
-                root[F("switchcmd")] = PSTR("On");
+                root[F("switchcmd")] = String(F("On"));
               break;
             case SENSOR_TYPE_DIMMER:
-              root[F("command")] = PSTR("switchlight");
+              root[F("command")] = String(F("switchlight"));
               if (UserVar[event->BaseVarIndex] == 0)
-                root[F("switchcmd")] = PSTR("Off");
+                root[F("switchcmd")] = String(F("Off"));
               else
                 root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
               break;
@@ -218,13 +222,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               values += ";";
               values += toString((UserVar[event->BaseVarIndex + 2] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[2]);
               values += ";0;0";
-              values.toCharArray(str, 80);
-              root["svalue"] =  str;
+              root[F("svalue")] =  values.c_str();
+              // values.toCharArray(str, 80);
+              // root["svalue"] =  str;
               break;
           }
 
-          char json[256];
-          root.printTo(json, sizeof(json));
+          String json;
+          root.printTo(json);
           String log = F("MQTT : ");
           log += json;
           addLog(LOG_LEVEL_DEBUG, json);
@@ -234,7 +239,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           pubname.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
           pubname.replace(F("%id%"), String(event->idx));
 
-          if (!MQTTclient.publish(pubname.c_str(), json, Settings.MQTTRetainFlag))
+          if (!MQTTclient.publish(pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
           {
             log = F("MQTT : publish failed");
             addLog(LOG_LEVEL_DEBUG, json);

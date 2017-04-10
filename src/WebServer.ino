@@ -1944,7 +1944,7 @@ void handle_i2cscanner() {
           reply += F("PCF8574A<BR>OLED");
           break;
         case 0x40:
-          reply += F("SI7021<BR>INA219<BR>PCA9685");
+          reply += F("SI7021<BR>HTU21D<BR>INA219<BR>PCA9685");
           break;
         case 0x41:
         case 0x42:

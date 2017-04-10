@@ -82,11 +82,12 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
         else
           WiFi.begin();
 
-        for (byte x = 0; x < 20; x++)
+        for (byte x = 0; x < 200; x++)
         {
           if (WiFi.status() != WL_CONNECTED)
           {
-            delay(500);
+            statusLED(false);
+            delay(50);
           }
           else
             break;
@@ -99,7 +100,7 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
           sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
           log += str;
           addLog(LOG_LEVEL_INFO, log);
-          statusLED(0);
+          statusLED(true);
           break;
         }
         else
@@ -109,7 +110,11 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
           ETS_UART_INTR_DISABLE();
           wifi_station_disconnect();
           ETS_UART_INTR_ENABLE();
-          delay(1000);
+          for (byte x = 0; x < 20; x++)
+          {
+            statusLED(true);
+            delay(50);
+          }
         }
       }
 
