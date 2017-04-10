@@ -831,6 +831,8 @@ void run50TimesPerSecond()
 {
   timer20ms = millis() + 20;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
+
+  statusLED(false);
 }
 
 /*********************************************************************************************\
@@ -1147,7 +1149,6 @@ void backgroundtasks()
 
   WebServer.handleClient();
   MQTTclient.loop();
-  statusLED(false);
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
