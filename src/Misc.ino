@@ -344,12 +344,11 @@ boolean timeOut(unsigned long timer)
 
 /********************************************************************************************\
   Status LED
-  \*********************************************************************************************/
-  #define STATUS_PWM_LOWACTIVE
-  #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
-  #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
-  #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
-
+\*********************************************************************************************/
+#define STATUS_PWM_LOWACTIVE
+#define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+#define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
+#define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
 
 void statusLED(boolean traffic)
 {
@@ -369,19 +368,12 @@ void statusLED(boolean traffic)
   }
   else
   {
-    //byte wifimode = wifi_get_opmode();
     if (AP_Mode) //apmode is active
     {
-      nStatusValue = ((millis()>>2) & (PWMRANGE>>1)) - (PWMRANGE>>4); //ramp up for 2 sec, half luminosity
-//      nStatusValue = millis() & PWMRANGE; //ramp up for 1 sec
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
     }
-    //else if (wifimode == 3) //apmode is active
-    //{
-    //  nStatusValue = (millis()<<2) & PWMRANGE; //ramp up for 1/4 sec
-    //}
     else if (WiFi.status() != WL_CONNECTED)
     {
-//      nStatusValue = (millis()>>2) & 255; //ramp up for 4 sec
       nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }
     else //connected
@@ -396,11 +388,14 @@ void statusLED(boolean traffic)
   if (gnStatusValueCurrent != nStatusValue)
   {
     gnStatusValueCurrent = nStatusValue;
+
+    long pwm = nStatusValue * nStatusValue; //simple gamma correction
+    pwm >>= 10;
 #ifdef STATUS_PWM_LOWACTIVE
-    analogWrite(Settings.Pin_status_led, PWMRANGE-nStatusValue);
-#else
-    analogWrite(Settings.Pin_status_led, nStatusValue);
+    pwm = PWMRANGE-pwm;
 #endif
+
+    analogWrite(Settings.Pin_status_led, pwm);
   }
 }
 
