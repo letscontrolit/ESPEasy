@@ -344,35 +344,58 @@ boolean timeOut(unsigned long timer)
 
 /********************************************************************************************\
   Status LED
-  \*********************************************************************************************/
+\*********************************************************************************************/
+#define STATUS_PWM_LOWACTIVE
+#define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+#define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
+#define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
+
 void statusLED(boolean traffic)
 {
+  static int gnStatusValueCurrent = -1;
+
   if (Settings.Pin_status_led == -1)
     return;
 
-  static unsigned long timer = 0;
-  static byte currentState = 0;
+  if (gnStatusValueCurrent<0)
+    pinMode(Settings.Pin_status_led, OUTPUT);
+
+  int nStatusValue = gnStatusValueCurrent;
 
   if (traffic)
   {
-    currentState = HIGH;
-    digitalWrite(Settings.Pin_status_led, currentState); // blink off
-    timer = millis() + 100;
+    nStatusValue += STATUS_PWM_TRAFFICRISE; //ramp up fast
+  }
+  else
+  {
+    if (AP_Mode) //apmode is active
+    {
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+    }
+    else if (WiFi.status() != WL_CONNECTED)
+    {
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
+    }
+    else //connected
+    {
+      nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
+      nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+    }
   }
 
-  if (timer == 0 || millis() > timer)
-  {
-    timer = 0;
-    byte state = HIGH;
-    if (WiFi.status() == WL_CONNECTED)
-      state = LOW;
+  nStatusValue = constrain(nStatusValue, 0, PWMRANGE);
 
-    if (currentState != state)
-    {
-      currentState = state;
-      pinMode(Settings.Pin_status_led, OUTPUT);
-      digitalWrite(Settings.Pin_status_led, state);
-    }
+  if (gnStatusValueCurrent != nStatusValue)
+  {
+    gnStatusValueCurrent = nStatusValue;
+
+    long pwm = nStatusValue * nStatusValue; //simple gamma correction
+    pwm >>= 10;
+#ifdef STATUS_PWM_LOWACTIVE
+    pwm = PWMRANGE-pwm;
+#endif
+
+    analogWrite(Settings.Pin_status_led, pwm);
   }
 }
 

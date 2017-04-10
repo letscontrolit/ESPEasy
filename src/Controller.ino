@@ -41,7 +41,7 @@ boolean sendData(struct EventStruct *event)
       CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
     }
   }
-  
+
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
 }
@@ -91,7 +91,7 @@ void MQTTConnect()
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
   LWTTopic.replace(F("%sysname%"), Settings.Name);
-  
+
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
@@ -112,6 +112,7 @@ void MQTTConnect()
       log = F("Subscribed to: ");
       log += subscribeTo;
       addLog(LOG_LEVEL_INFO, log);
+      statusLED(true);
       break; // end loop if succesfull
     }
     else
@@ -181,6 +182,3 @@ void MQTTStatus(String& status)
   pubname.replace(F("%sysname%"), Settings.Name);
   MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
 }
-
-
-

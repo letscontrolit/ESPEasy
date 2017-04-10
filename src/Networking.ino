@@ -567,6 +567,7 @@ void SSDP_send(byte method) {
     remotePort = SSDP_PORT;
   }
   _server->send(&remoteAddr, remotePort);
+  statusLED(true);
 }
 
 
