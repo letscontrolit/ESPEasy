@@ -153,8 +153,9 @@ try:
 
     #build without plugins to get base memory usage
     subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    #two times, sometimes it changes a few bytes somehow
-    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+    # #two times, sometimes it changes a few bytes somehow
+    # SEEMS TO BE NOT USEFULL
+    # subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
     base=analyse_memory(".pioenvs/dev_4096/firmware.elf")
 
 

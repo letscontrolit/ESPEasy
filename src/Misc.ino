@@ -1050,6 +1050,12 @@ void addLog(byte loglevel, String& string)
   addLog(loglevel, string.c_str());
 }
 
+void addLog(byte logLevel, const __FlashStringHelper* flashString)
+{
+    String s(flashString);
+    addLog(logLevel, s.c_str());
+}
+
 void addLog(byte loglevel, const char *line)
 {
   if (Settings.UseSerial)
@@ -1067,7 +1073,9 @@ void addLog(byte loglevel, const char *line)
     Logging[logcount].timeStamp = millis();
     if (Logging[logcount].Message == 0)
       Logging[logcount].Message =  (char *)malloc(128);
-    strncpy(Logging[logcount].Message, line, 128);
+    strncpy(Logging[logcount].Message, line, 127);
+    Logging[logcount].Message[127]=0; //make sure its null terminated!
+
   }
 
   if (loglevel <= Settings.SDLogLevel)
