@@ -4,7 +4,7 @@
 
 #define PLUGIN_005
 #define PLUGIN_ID_005         5
-#define PLUGIN_NAME_005       "Temperature & Humidity - DHT"
+#define PLUGIN_NAME_005       "Environment - DHT11/12/22"
 #define PLUGIN_VALUENAME1_005 "Temperature"
 #define PLUGIN_VALUENAME2_005 "Humidity"
 
