@@ -74,7 +74,7 @@ boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigne
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
-  sprintf_P(log, PSTR("%s%s using port %u"), PSTR("UDP  : sending to "), host, ControllerSettings.Port);
+  sprintf_P(log, PSTR("%s%s using port %u"), "UDP  : sending to ", host, ControllerSettings.Port);
   addLog(LOG_LEVEL_DEBUG, log);
 
   statusLED(true);

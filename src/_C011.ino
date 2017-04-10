@@ -48,9 +48,9 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
       {
         P011_ConfigStruct customConfig;
         LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
-        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD") };
+        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
-        for (byte i = 0; i < 4; i++)
+        for (byte i = 0; i < 5; i++)
         {
           string += F("<option value='");
           string += methods[i] + "'";
@@ -133,8 +133,9 @@ boolean HTTPSend011(struct EventStruct *event)
   boolean success = false;
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  sprintf_P(log, PSTR("%s%s using port %u"), PSTR("HTTP : connecting to "), host, ControllerSettings.Port);
+  char tmp[22];
+  strcpy_P(tmp, PSTR("HTTP : connecting to "));
+  sprintf_P(log, PSTR("%s%s using port %u"), tmp, host, ControllerSettings.Port);
   addLog(LOG_LEVEL_DEBUG, log);
 
   // Use WiFiClient class to create TCP connections
