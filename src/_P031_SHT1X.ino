@@ -4,7 +4,7 @@
 
 #define PLUGIN_031
 #define PLUGIN_ID_031         31
-#define PLUGIN_NAME_031       "Temperature & Humidity - SHT1X"
+#define PLUGIN_NAME_031       "Environment - SHT1X"
 #define PLUGIN_VALUENAME1_031 "Temperature"
 #define PLUGIN_VALUENAME2_031 "Humidity"
 
