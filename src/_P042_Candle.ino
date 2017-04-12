@@ -462,8 +462,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           } else {
             Settings.TaskDevicePluginConfig[event->TaskIndex][5] = 0;
             Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];   // ColorType (ColorDefault)
-            String log = F("CAND : CMD - Color : DEFAULT");
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
           }
 
           //SaveTaskSettings(event->TaskIndex);

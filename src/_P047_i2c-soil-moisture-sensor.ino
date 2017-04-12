@@ -134,7 +134,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
           // wake sensor
         	Plugin_047_getVersion();
           delayMillis(20);
-          addLog(LOG_LEVEL_DEBUG, String(F("SoilMoisture->wake")).c_str());
+          addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
         }
 
         uint8_t sensorVersion = 0;
@@ -145,7 +145,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
             //valid sensor
           }
           else {
-            addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Bad Version, no Sensor?")).c_str());
+            addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Version, no Sensor?"));
             Plugin_047_write8(SOILMOISTURESENSOR_RESET);
             break;
           }
@@ -172,7 +172,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         float light = ((float)Plugin_047_readLight());
 
         if (temperature>100 || temperature < -40 || moisture > 800 || moisture < 1 || light > 65535 || light < 0) {
-            addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Bad Reading, resetting Sensor...")).c_str());
+            addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));
             Plugin_047_write8(SOILMOISTURESENSOR_RESET);
             success = false;
             break;
@@ -202,7 +202,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         	if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
         		// send sensor to sleep
         		Plugin_047_write8(SOILMOISTURESENSOR_SLEEP);
-        		addLog(LOG_LEVEL_DEBUG, String(F("SoilMoisture->sleep")).c_str());
+        		addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
         	}
         	success = true;
         	break;

@@ -99,8 +99,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         {
           if (digitalRead(4) == 0 || digitalRead(5) == 0)
           {
-            String log = F("PN532: BUS error");
-            addLog(LOG_LEVEL_ERROR, log);
+            addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
             // delay(1000);
           }

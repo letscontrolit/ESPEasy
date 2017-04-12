@@ -162,12 +162,10 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         blinkLED();
 
         if (ExtraTaskSettings.TaskDevicePluginConfigLong[1] == 115200) {
-          String log = F("P1   : DSMR version 4 meter, CRC on");
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
           CRCcheck = true;
         } else {
-          String log = F("P1   : DSMR version 4 meter, CRC on");
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
           CRCcheck = false;
         }
 
@@ -186,9 +184,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           {
             if (P1GatewayClient) P1GatewayClient.stop();
             P1GatewayClient = P1GatewayServer->available();
-            char log[40];
-            strcpy_P(log, PSTR("P1   : Client connected!"));
-            addLog(LOG_LEVEL_ERROR, log);
+            addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
           }
 
           if (P1GatewayClient.connected())
@@ -207,9 +203,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
               if (count == P044_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
-                char log[40];
-                strcpy_P(log, PSTR("P1   : Error: network buffer full!"));   // and log buffer full situation
-                addLog(LOG_LEVEL_ERROR, log);
+                // and log buffer full situation
+                addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
               char log[P044_BUFFER_SIZE + 40];
@@ -222,9 +217,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             if (connectionState == 1) // there was a client connected before...
             {
               connectionState = 0;
-              char log[40];
-              strcpy_P(log, PSTR("P1   : Client disconnected!"));
-              addLog(LOG_LEVEL_ERROR, log);
+              addLog(LOG_LEVEL_ERROR, F("P1   : Client disconnected!"));
             }
 
             while (Serial.available())
@@ -274,8 +267,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                         Plugin_044_serial_buf[bytes_read] = ch;
                         bytes_read++;
                       } else {              // input is non-ascii
-                        String log = F("P1   : Error: DATA corrupt, discarded input.");
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
                         Serial.flush();
                         bytes_read = 0;
                         state = WAITING;
@@ -321,8 +313,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 Plugin_044_serial_buf[bytes_read] = 0;
                 P1GatewayClient.write((const uint8_t*)Plugin_044_serial_buf, bytes_read);
                 P1GatewayClient.flush();
-                String log = F("P1   : data send!");
-                addLog(LOG_LEVEL_DEBUG, log);
+                addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
                 blinkLED();
 
                 if (Settings.UseRules)
@@ -334,8 +325,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 }
 
               } else {
-                String log = F("P1   : Error: Invalid CRC, dropped data");
-                addLog(LOG_LEVEL_DEBUG, log);
+                addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
               }
 
               bytes_read = 0;
@@ -364,8 +354,7 @@ bool validP1char(char ch) {
   {
     return true;
   } else {
-    String log = F("P1   : Error: invalid char read from P1");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid char read from P1"));
     if (serialdebug) {
       Serial.print(F("faulty char>"));
       Serial.print(ch);
@@ -444,8 +433,7 @@ bool checkDatagram(int len) {
 
     validCRCFound = (strtol(messageCRC, NULL, 16) == currCRC);
     if (!validCRCFound) {
-      String log = F("P1   : Error: invalid CRC found");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid CRC found"));
     }
     currCRC = 0;
   }

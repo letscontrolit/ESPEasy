@@ -232,7 +232,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           root.printTo(json);
           String log = F("MQTT : ");
           log += json;
-          addLog(LOG_LEVEL_DEBUG, json);
+          addLog(LOG_LEVEL_DEBUG, log);
 
           String pubname = ControllerSettings.Publish;
           pubname.replace(F("%sysname%"), Settings.Name);
@@ -242,7 +242,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           if (!MQTTclient.publish(pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
           {
             log = F("MQTT : publish failed");
-            addLog(LOG_LEVEL_DEBUG, json);
+            addLog(LOG_LEVEL_DEBUG, log);
             MQTTConnect();
             connectionFailures++;
           }

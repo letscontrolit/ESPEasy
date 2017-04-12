@@ -162,7 +162,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       	Adafruit_TCS34725 tcs = Adafruit_TCS34725(integrationTime, gain);
         if (tcs.begin()) {
 
-        	addLog(LOG_LEVEL_DEBUG, "Found TCS34725 sensor");
+        	addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
 
           uint16_t r, g, b, c, colorTemp, lux;
 
@@ -187,7 +187,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
           success = true;
 
         } else {
-        	addLog(LOG_LEVEL_DEBUG, "No TCS34725 found");
+        	addLog(LOG_LEVEL_DEBUG, F("No TCS34725 found"));
         	success = false;
         }
 

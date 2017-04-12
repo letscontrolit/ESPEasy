@@ -171,9 +171,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           {
             if (ser2netClient) ser2netClient.stop();
             ser2netClient = ser2netServer->available();
-            char log[40];
-            strcpy_P(log, PSTR("Ser2N: Client connected!"));
-            addLog(LOG_LEVEL_ERROR, log);
+            addLog(LOG_LEVEL_ERROR, F("Ser2N: Client connected!"));
           }
 
           if (ser2netClient.connected())
@@ -192,9 +190,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
               if (count == P020_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
-                char log[40];
-                strcpy_P(log, PSTR("Ser2N: network buffer full!"));   // and log buffer full situation
-                addLog(LOG_LEVEL_ERROR, log);
+                addLog(LOG_LEVEL_ERROR, F("Ser2N: network buffer full!"));
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
               char log[P020_BUFFER_SIZE + 40];
@@ -207,9 +203,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             if (connectionState == 1) // there was a client connected before...
             {
               connectionState = 0;
-              char log[40];
-              strcpy_P(log, PSTR("Ser2N: Client disconnected!"));
-              addLog(LOG_LEVEL_ERROR, log);
+              addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
             }
 
             while (Serial.available())
@@ -260,9 +254,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           while (Serial.available()) // read possible remaining data to avoid sending rubbish...
             Serial.read();
           bytes_read--;
-          char log[40];
-          strcpy_P(log, PSTR("Ser2N: serial buffer full!"));   // and log buffer full situation
-          addLog(LOG_LEVEL_ERROR, log);
+          // and log buffer full situation
+          addLog(LOG_LEVEL_ERROR, F("Ser2N: serial buffer full!"));
         }
         serial_buf[bytes_read] = 0; // before logging as a char array, zero terminate the last position to be safe.
         char log[P020_BUFFER_SIZE + 40];

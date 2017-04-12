@@ -298,8 +298,7 @@ bool Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
     //   attachInterrupt(Par1, Plugin_003_pulse_interrupt8, Mode);
     //   break;
     default:
-      String log = F("PULSE: Error, only the first 4 tasks can be pulse counters.");
-      addLog(LOG_LEVEL_ERROR,log);
+      addLog(LOG_LEVEL_ERROR,F("PULSE: Error, only the first 4 tasks can be pulse counters."));
       return(false);
   }
 

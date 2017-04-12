@@ -137,8 +137,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         if (!MQTTclient_037->connected()) {
 
-          String log = F("IMPT : MQTT 037 Connection lost");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
 
           MQTTclient_037->disconnect();
           delay(1000);
