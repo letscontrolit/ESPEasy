@@ -52,16 +52,33 @@ boolean sendData(struct EventStruct *event)
 \*********************************************************************************************/
 // handle MQTT messages
 void callback(char* c_topic, byte* b_payload, unsigned int length) {
-  char log[256];
+  // char log[256];
   char c_payload[256];
-  strncpy(c_payload,(char*)b_payload,length);
-  c_payload[length] = 0;
+
   statusLED(true);
 
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
+  if (length>sizeof(c_payload)-1)
+  {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
+  }
+
+  //convert payload to string, and 0 terminate
+  strncpy(c_payload,(char*)b_payload,length);
+  c_payload[length] = 0;
+
+  String log;
+  log=F("MQTT : Topic: ");
+  log+=c_topic;
   addLog(LOG_LEVEL_DEBUG, log);
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
+
+  log=F("MQTT : Payload: ");
+  log+=c_payload;
   addLog(LOG_LEVEL_DEBUG, log);
+
+  // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
+  // addLog(LOG_LEVEL_DEBUG, log);
+  // sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
+  // addLog(LOG_LEVEL_DEBUG, log);
 
   struct EventStruct TempEvent;
   TempEvent.String1 = c_topic;
