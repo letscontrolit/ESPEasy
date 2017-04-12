@@ -77,8 +77,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
       {
         Plugin_049_S8 = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
         Plugin_049_S8->begin(9600);
-        String log = F("MHZ19: Init OK ");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
         //delay first read, because hardware needs to initialize on cold boot
         //otherwise we get a weird value or read error
@@ -91,70 +90,61 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String log = "";
         String command = parseString(string, 1);
 
         if (command == F("mhzcalibratezero"))
         {
           Plugin_049_S8->write(mhzCmdCalibrateZero, 9);
-          log = String(F("MHZ19: Calibrated zero point!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Calibrated zero point!"));
           success = true;
         }
 
         if (command == F("mhzreset"))
         {
           Plugin_049_S8->write(mhzCmdReset, 9);
-          log = String(F("MHZ19: Sent sensor reset!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor reset!"));
           success = true;
         }
 
         if (command == F("mhzabcenable"))
         {
           Plugin_049_S8->write(mhzCmdABCEnable, 9);
-          log = String(F("MHZ19: Sent sensor ABC Enable!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
           success = true;
         }
 
         if (command == F("mhzabcdisable"))
         {
           Plugin_049_S8->write(mhzCmdABCDisable, 9);
-          log = String(F("MHZ19: Sent sensor ABC Disable!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange1000"))
         {
           Plugin_049_S8->write(mhzCmdMeasurementRange1000, 9);
-          log = String(F("MHZ19: Sent measurement range 0-1000PPM!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange2000"))
         {
           Plugin_049_S8->write(mhzCmdMeasurementRange2000, 9);
-          log = String(F("MHZ19: Sent measurement range 0-2000PPM!"));
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
           success = true;
-          addLog(LOG_LEVEL_INFO, log);
         }
 
         if (command == F("mhzmeasurementrange3000"))
         {
           Plugin_049_S8->write(mhzCmdMeasurementRange3000, 9);
-          log = String(F("MHZ19: Sent measurement range 0-3000PPM!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange5000"))
         {
           Plugin_049_S8->write(mhzCmdMeasurementRange5000, 9);
-          log = String(F("MHZ19: Sent measurement range 0-5000PPM!"));
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
           success = true;
         }
         break;
@@ -187,8 +177,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
             }
           }
           if (counter < 9){
-              String log = F("MHZ19: Error, timeout while trying to read");
-              addLog(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, F("MHZ19: Error, timeout while trying to read"));
           }
 
           unsigned int ppm = 0;
@@ -289,9 +278,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // Sensor responds with 0x99 whenever we send it a measurement range adjustment
           } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99 && mhzResp[8] == crc)  {
 
-            String log = F("MHZ19: Received measurement range acknowledgment! ");
-            log += F("Expecting sensor reset...");
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, F("MHZ19: Received measurement range acknowledgment! "));
+            addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
             success = false;
             break;
 

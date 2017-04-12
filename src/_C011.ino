@@ -248,8 +248,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 // example string:
 // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
 //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname% Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
-	String log = F("HTTP before parsing: ");
-	addLog(LOG_LEVEL_DEBUG_MORE, log);
+	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
 	switch (event->sensorType)
@@ -283,8 +282,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 		}
 	}
 
-	log = F("HTTP after parsing: ");
-	addLog(LOG_LEVEL_DEBUG_MORE, log);
+	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
   String strTime = "";
@@ -327,8 +325,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
     s.replace(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]));
     s.replace(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]));
   }
-	log = F("HTTP after replacements: ");
-	addLog(LOG_LEVEL_DEBUG_MORE, log);
+	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 }
 

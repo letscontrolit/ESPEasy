@@ -89,8 +89,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         if (!Plugin_031_init) {
-          String log = F("SHT1X : not yet initialized!");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, F("SHT1X : not yet initialized!"));
           break;
         }
         UserVar[event->BaseVarIndex] = Plugin_031_readTemperature();
@@ -201,8 +200,7 @@ void Plugin_031_sendCommand(const byte cmd)
   }
 
   if (ackerror) {
-    String log = F("SHT1X : Sensor did not ACK command");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, F("SHT1X : Sensor did not ACK command"));
   }
 }
 
@@ -214,8 +212,7 @@ void Plugin_031_awaitResult()
     delay(20);
   }
   if (digitalRead(Plugin_031_DATA_Pin) != LOW) {
-    String log = F("SHT1X : Data not ready");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, F("SHT1X : Data not ready"));
   }
 }
 

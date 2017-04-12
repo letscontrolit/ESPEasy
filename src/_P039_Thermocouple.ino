@@ -94,7 +94,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         SPI.setHwCs(false);
         SPI.begin();
 
-        addLog(LOG_LEVEL_INFO, (char*)"P039 : SPI Init");
+        addLog(LOG_LEVEL_INFO, F("P039 : SPI Init"));
 
         success = true;
         break;
@@ -173,8 +173,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex] = NAN;
           UserVar[event->BaseVarIndex + 1] = NAN;
-          String log = F("P039 : No Sensor attached !");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("P039 : No Sensor attached !"));
           success = false;
         }
 

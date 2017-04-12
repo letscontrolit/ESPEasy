@@ -101,8 +101,7 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
         } // error
         if(!success)
         {
-          String log = F("DHT12: No reading!");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("DHT12: No reading!"));
           UserVar[event->BaseVarIndex] = NAN;
           UserVar[event->BaseVarIndex + 1] = NAN;
         }

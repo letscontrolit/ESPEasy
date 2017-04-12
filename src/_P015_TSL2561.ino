@@ -444,8 +444,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         	 UserVar[event->BaseVarIndex] = lux;
            if (!good)
            {
-             String log = F("TSL2561: Sensor saturated! > 65535 Lux");
-             addLog(LOG_LEVEL_INFO,log);
+             addLog(LOG_LEVEL_INFO,F("TSL2561: Sensor saturated! > 65535 Lux"));
            }
 
            success = true;
@@ -462,13 +461,11 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
          else
          {
            // getData() returned false because of an I2C error, inform the user.
-           String log = F("TSL2561: i2c error");
-        	 addLog(LOG_LEVEL_ERROR, log);
+        	 addLog(LOG_LEVEL_ERROR, F("TSL2561: i2c error"));
 
          }
          if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
-           String log = F("TSL2561: sleeping...");
-        	 addLog(LOG_LEVEL_DEBUG_MORE, log);
+        	 addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
         	 plugin_015_setPowerDown();
          }
 
