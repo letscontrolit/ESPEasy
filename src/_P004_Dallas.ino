@@ -77,7 +77,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           resolution = Plugin_004_DS_getResolution( addr);
         }
 
-        string += F("<TR><TD>Device Résolution:<TD><select name='plugin_004_res'>");
+        string += F("<TR><TD>Device Resolution:<TD><select name='plugin_004_res'>");
         for (byte x = 9; x < 13; x++)
         {
           string += F("<option value='");
