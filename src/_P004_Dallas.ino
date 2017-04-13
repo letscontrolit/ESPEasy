@@ -47,6 +47,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         uint8_t addr[8];
+        byte resolution = 0;
 
         // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
         Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
@@ -73,7 +74,23 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             string += String(addr[i], HEX);
             if (i < 7) string += "-";
           }
+          resolution = Plugin_004_DS_getResolution( addr);
         }
+
+        string += F("<TR><TD>Device Résolution:<TD><select name='plugin_004_res'>");
+        for (byte x = 9; x < 13; x++)
+        {
+          string += F("<option value='");
+          string += x;
+          string += "'";
+          if (resolution == x)
+            string += F(" selected");
+          string += ">";
+          string += x;
+          string += F("</option>");
+        }
+        string += F("</select> Bit");
+        
         success = true;
         break;
       }
@@ -89,6 +106,10 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         byte devCount = Plugin_004_DS_scan(Settings.TaskDevicePluginConfig[event->TaskIndex][0], addr);
         for (byte x = 0; x < 8; x++)
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
+          
+          byte res = WebServer.arg("plugin_004_res").toInt();
+          Plugin_004_DS_setResolution(addr, res);
+
         success = true;
         break;
       }
@@ -214,6 +235,118 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value)
   return true;
 }
 
+
+/*********************************************************************************************\
+ * Dallas Get Resolution
+\*********************************************************************************************/
+int Plugin_004_DS_getResolution(uint8_t ROM[8])
+{
+  // DS1820 and DS18S20 have no resolution configuration register
+  if (ROM[0] == 0x10) return 12;
+
+  byte ScratchPad[12];
+
+  Plugin_004_DS_reset();
+  Plugin_004_DS_write(0x55); // Choose ROM
+  for (byte i = 0; i < 8; i++)
+  {
+    Plugin_004_DS_write(ROM[i]);
+  }
+  Plugin_004_DS_write(0xBE); // Read scratchpad
+
+  for (byte i = 0; i < 9; i++) // copy 8 bytes
+    ScratchPad[i] = Plugin_004_DS_read();
+
+  if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
+  {
+    return 0;
+  } else {
+
+    switch (ScratchPad[4])
+    {
+      case 0x7F: // 12 bit
+        return 12;
+
+      case 0x5F: // 11 bit
+        return 11;
+
+      case 0x3F: // 10 bit
+        return 10;
+
+      case 0x1F: //  9 bit
+        return 9;
+    }
+  }
+}
+
+/*********************************************************************************************\
+ * Dallas Get Resolution
+\*********************************************************************************************/
+boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
+{
+  // DS1820 and DS18S20 have no resolution configuration register
+  if (ROM[0] == 0x10) return true;
+
+  byte ScratchPad[12];
+
+  Plugin_004_DS_reset();
+  Plugin_004_DS_write(0x55); // Choose ROM
+  for (byte i = 0; i < 8; i++)
+  {
+    Plugin_004_DS_write(ROM[i]);
+  }
+  Plugin_004_DS_write(0xBE); // Read scratchpad
+
+  for (byte i = 0; i < 9; i++) // copy 8 bytes
+    ScratchPad[i] = Plugin_004_DS_read();
+
+  if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
+  {
+    return 0;
+  } else {
+
+    switch (res)
+    {
+      case 12:
+        ScratchPad[4] = 0x7F; // 12 bit
+        break;
+      case 11:
+        ScratchPad[4] = 0x5F; // 11 bit
+        break;
+      case 10:
+        ScratchPad[4] = 0x3F; // 10 bit
+        break;
+      case 9:
+      default:
+        ScratchPad[4] = 0x1F; //  9 bit
+        break;
+    }
+    
+    Plugin_004_DS_reset();
+    Plugin_004_DS_write(0x55); // Choose ROM
+    for (byte i = 0; i < 8; i++)
+    {
+      Plugin_004_DS_write(ROM[i]);
+    }
+    Plugin_004_DS_write(0x4E); // Write to EEPROM
+    Plugin_004_DS_write(ScratchPad[2]); // high alarm temp
+    Plugin_004_DS_write(ScratchPad[3]); // low alarm temp
+    Plugin_004_DS_write(ScratchPad[4]); // configuration register
+    
+    Plugin_004_DS_write(0x55); // Choose ROM
+    for (byte i = 0; i < 8; i++)
+    {
+      Plugin_004_DS_write(ROM[i]);
+    }
+    // save the newly written values to eeprom
+    Plugin_004_DS_write(0x48);
+    delay(100);  // <--- added 20ms delay to allow 10ms long EEPROM write operation (as specified by datasheet)
+    Plugin_004_DS_reset();
+
+    return true; // new value set
+  }
+
+}
 
 /*********************************************************************************************\
    Dallas Reset
