@@ -73,8 +73,12 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         timer = millis() + 1000;
         while (client.available() && millis() < timer && !success)
         {
-          String line = client.readStringUntil('\n');
-          if (line.substring(0, 20) == PSTR("Enter your password:"))
+
+          //   String line = client.readStringUntil('\n');
+          String line;
+          safeReadStringUntil(client, line, '\n');
+
+          if (line.startsWith(F("Enter your password:")))
           {
             success = true;
             strcpy_P(log, PSTR("TELNT: Password request ok"));

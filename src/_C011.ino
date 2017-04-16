@@ -193,7 +193,11 @@ boolean HTTPSend011(struct EventStruct *event)
 
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
-    String line = client.readStringUntil('\n');
+    // String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
+
+
     // line.toCharArray(log, 80);
     addLog(LOG_LEVEL_DEBUG_MORE, line);
     if (line.startsWith(F("HTTP/1.1 2")))

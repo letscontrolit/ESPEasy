@@ -176,7 +176,10 @@ boolean FHEMHTTPsend(String url, char* buffer, byte index)
 
   // Read all the lines of the reply from server and print them to Serial
   while (client.available()) {
-    String line = client.readStringUntil('\n');
+    // String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
+
     String helper = line;
     line.toCharArray(log, 80);
     addLog(LOG_LEVEL_DEBUG_MORE, log);

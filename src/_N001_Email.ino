@@ -128,7 +128,9 @@ boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
 
     yield();
 
-    String line = client.readStringUntil('\n');
+    // String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
 
     addLog(LOG_LEVEL_DEBUG, line);
 

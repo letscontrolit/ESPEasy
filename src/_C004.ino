@@ -91,7 +91,10 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
 
         // Read all the lines of the reply from server and print them to Serial
         while (client.available()) {
-          String line = client.readStringUntil('\n');
+          //   String line = client.readStringUntil('\n');
+          String line;
+          safeReadStringUntil(client, line, '\n');
+          
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))

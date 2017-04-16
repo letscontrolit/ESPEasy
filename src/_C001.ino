@@ -183,7 +183,9 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
           // Read all the lines of the reply from server and log them
           while (client.available()) {
-            String line = client.readStringUntil('\n');
+            // String line = client.readStringUntil('\n');
+            String line;
+            safeReadStringUntil(client, line, '\n');
             addLog(LOG_LEVEL_DEBUG_MORE, line);
             if (line.startsWith(F("HTTP/1.1 200 OK")) )
             {

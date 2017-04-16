@@ -1,5 +1,45 @@
 char* ramtest;
 
+//Reads a string from a stream until a terminator-character.
+//We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
+bool safeReadStringUntil(Stream &input, String &str, char terminator, int maxSize=1024, int timeout=1000)
+{
+    unsigned long startMillis;
+    int c;
+    startMillis = millis();
+    str="";
+
+    do {
+        //read character
+        c = input.read();
+        if(c >= 0) {
+
+            //found terminator, we're ok
+            if (c==terminator)
+            {
+                return(true);
+            }
+            //found character, add to string
+            else
+            {
+                str+=char(c);
+                //string at max size?
+                if (str.length()>=maxSize)
+                {
+                    addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+                    return(false);
+                }
+            }
+        }
+        yield();
+    } while(millis() - startMillis < timeout);
+
+    addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
+    return(false);
+
+}
+
+
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(byte source, const char *Line)
 {
@@ -350,7 +390,11 @@ void ExecuteCommand(byte source, const char *Line)
         delay(1);
 
       while (client.available()) {
-        String line = client.readStringUntil('\n');
+        // String line = client.readStringUntil('\n');
+        String line;
+        safeReadStringUntil(client, line, '\n');
+
+
         if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           addLog(LOG_LEVEL_DEBUG, line);
         delay(1);

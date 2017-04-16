@@ -319,6 +319,8 @@ ESP8266WebServer WebServer(80);
 // syslog stuff
 WiFiUDP portUDP;
 
+
+
 extern "C" {
 #include "spi_flash.h"
 }
