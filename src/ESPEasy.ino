@@ -142,9 +142,9 @@
 #ifndef BUILD_GIT
 #define BUILD_GIT "(custom)"
 #endif
-
+pulltest2
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
-
+BLABLA this is some new plugin
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
