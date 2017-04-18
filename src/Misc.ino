@@ -398,9 +398,8 @@ void statusLED(boolean traffic)
 
     long pwm = nStatusValue * nStatusValue; //simple gamma correction
     pwm >>= 10;
-#ifdef STATUS_PWM_LOWACTIVE
-    pwm = PWMRANGE-pwm;
-#endif
+    if (Settings.Pin_status_led_Inversed)
+      pwm = PWMRANGE-pwm;
 
     analogWrite(Settings.Pin_status_led, pwm);
   }
@@ -948,6 +947,7 @@ void ResetFactory(void)
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
   Settings.Pin_status_led  = -1;
+  Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));

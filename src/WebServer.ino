@@ -840,6 +840,7 @@ void handle_hardware() {
   String pin_i2c_sda = WebServer.arg(F("psda"));
   String pin_i2c_scl = WebServer.arg(F("pscl"));
   String pin_status_led = WebServer.arg(F("pled"));
+  String pin_status_led_Inversed = WebServer.arg(F("pledi"));
   String pin_sd_cs = WebServer.arg(F("sd"));
 
   String reply = "";
@@ -850,6 +851,7 @@ void handle_hardware() {
     Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
     Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
     Settings.Pin_status_led  = pin_status_led.toInt();
+    Settings.Pin_status_led_Inversed  = pin_status_led_Inversed.toInt();
     Settings.Pin_sd_cs  = pin_sd_cs.toInt();
     Settings.PinBootStates[0]  =  WebServer.arg(F("p0")).toInt();
     Settings.PinBootStates[2]  =  WebServer.arg(F("p2")).toInt();
@@ -873,10 +875,20 @@ void handle_hardware() {
   reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
   reply += F("<TR><TD>Wifi Status Led:<TD>");
   addPinSelect(false, reply, "pled", Settings.Pin_status_led);
+  reply += F("<TR><TD>Wifi Status Led Inversed<TD>");
+  if (Settings.Pin_status_led_Inversed)
+    reply += F("<input type=checkbox id='pledi'  name='pledi' checked>&nbsp;");
+  else
+    reply += F("<input type=checkbox id='pledi' name='pledi'>&nbsp;");
+
+  reply += F("<TR><TD><hr><TD><hr>");
+
   reply += F("<TR><TD>SDA:<TD>");
   addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
+
+  reply += F("<TR><TD><hr><TD><hr>");
 
   // SPI Init
   reply += F("<TR><TD>Init SPI:<TD>");
@@ -885,6 +897,8 @@ void handle_hardware() {
 
   reply += F("<TR><TD>SD Card CS Pin:<TD>");
   addPinSelect(false, reply, "sd", Settings.Pin_sd_cs);
+
+  reply += F("<TR><TD><hr><TD><hr>");
 
   reply += F("<TR><TD>GPIO boot states:<TD>");
   reply += F("<TR><TD>Pin mode 0 (D3):<TD>");
