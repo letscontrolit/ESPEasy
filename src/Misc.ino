@@ -346,7 +346,6 @@ boolean timeOut(unsigned long timer)
 /********************************************************************************************\
   Status LED
 \*********************************************************************************************/
-#define STATUS_PWM_LOWACTIVE
 #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
