@@ -6,21 +6,25 @@
 // like this one: https://www.adafruit.com/products/1334
 // based on this library: https://github.com/adafruit/Adafruit_TCS34725
 // this code is based on 20170331 date version of the above library
-// this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
 //
-#ifdef PLUGIN_BUILD_DEV
+#ifdef PLUGIN_BUILD_TESTING
 
 #include "Adafruit_TCS34725.h"
 
 #define PLUGIN_050
 #define PLUGIN_ID_050        50
-#define PLUGIN_NAME_050       "Luminosity & Color - TCS34725  [DEVELOPMENT]"
+#define PLUGIN_NAME_050       "Luminosity & Color - TCS34725  [TEST]"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
 #define PLUGIN_VALUENAME4_050 "Color Temperature"
 
+/*********************************************************************/
+void Plugin_050_interrupt()
+/*********************************************************************/
+{
 
+}
 
 
 boolean Plugin_050(byte function, struct EventStruct *event, String& string)
@@ -117,6 +121,15 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
+        string += F("<TR><TD>Enable LED:<TD>");
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+          string += F("<input type=checkbox name=plugin_050_led_on checked>");
+        else
+          string += F("<input type=checkbox name=plugin_050_led_on>");
+
+        string += F("<TR><TD>Interrupt Pin:<TD>");
+        addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+
         success = true;
         break;
       }
@@ -128,6 +141,17 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         String plugin2 = WebServer.arg(F("plugin_050_gain"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
 
+        String plugin3 = WebServer.arg(F("plugin_050_led_on"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == F("on"));
+
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
+        pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP); //TCS interrupt output is Active-LOW and Open-Drain
+        attachInterrupt(Settings.TaskDevicePin3[event->TaskIndex], Plugin_050_interrupt, FALLING);
         success = true;
         break;
       }
@@ -135,18 +159,37 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
       	tcs34725IntegrationTime_t integrationTime;
+      	int waitTime;
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_2_4MS)
+        {
         	integrationTime = TCS34725_INTEGRATIONTIME_2_4MS;
+        	waitTime = 3;
+        }
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_24MS)
+        {
         	integrationTime = TCS34725_INTEGRATIONTIME_24MS;
+        	waitTime = 25;
+        }
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_50MS)
+        {
         	integrationTime = TCS34725_INTEGRATIONTIME_50MS;
+        	waitTime = 51;
+        }
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_101MS)
+        {
         	integrationTime = TCS34725_INTEGRATIONTIME_101MS;
+        	waitTime = 102;
+        }
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_154MS)
+        {
         	integrationTime = TCS34725_INTEGRATIONTIME_154MS;
+        	waitTime = 155;
+        }
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_700MS)
+        {
         	integrationTime = TCS34725_INTEGRATIONTIME_700MS;
+        	waitTime = 701;
+        }
 
         tcs34725Gain_t gain;
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==TCS34725_GAIN_1X)
@@ -166,7 +209,14 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
           uint16_t r, g, b, c, colorTemp, lux;
 
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+            tcs.setInterrupt(false);      // turn on LED
+          else
+          	tcs.setInterrupt(true);  // turn off LED
+          delayMillis(waitTime);  // takes xx ms to read
           tcs.getRawData(&r, &g, &b, &c);
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+          	tcs.setInterrupt(true);  // turn off LED
           colorTemp = tcs.calculateColorTemperature(r, g, b);
           lux = tcs.calculateLux(r, g, b);
 

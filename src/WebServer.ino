@@ -1927,7 +1927,7 @@ void handle_i2cscanner() {
           reply += F("PCF8574<BR>MCP23017<BR>LCD<BR>PN532");
           break;
         case 0x29:
-          reply += F("TSL2561");
+          reply += F("TSL2561<BR>TCS34725");
           break;
         case 0x38:
         case 0x3A:
