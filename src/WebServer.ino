@@ -1084,15 +1084,11 @@ void handle_devices() {
         Settings.TaskDeviceSendData[controllerNr][index - 1] = (taskdevicesenddata[controllerNr] == "on");
       }
 
-      if (Device[DeviceIndex].Type == DEVICE_TYPE_SINGLE)
-      {
+      if (taskdevicepin1.length() != 0)
         Settings.TaskDevicePin1[index - 1] = taskdevicepin1.toInt();
-      }
-      if (Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
-      {
-        Settings.TaskDevicePin1[index - 1] = taskdevicepin1.toInt();
+
+      if (taskdevicepin2.length() != 0)
         Settings.TaskDevicePin2[index - 1] = taskdevicepin2.toInt();
-      }
 
       if (taskdevicepin3.length() != 0)
         Settings.TaskDevicePin3[index - 1] = taskdevicepin3.toInt();
@@ -1339,15 +1335,20 @@ void handle_devices() {
           reply += F("'>");
         }
 
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_SINGLE || Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
+        if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
         {
           reply += F("<TR><TD>1st GPIO:<TD>");
           addPinSelect(false, reply, "taskdevicepin1", Settings.TaskDevicePin1[index - 1]);
         }
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_DUAL)
+        if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
         {
           reply += F("<TR><TD>2nd GPIO:<TD>");
           addPinSelect(false, reply, "taskdevicepin2", Settings.TaskDevicePin2[index - 1]);
+        }
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
+        {
+          reply += F("<TR><TD>3rd GPIO:<TD>");
+          addPinSelect(false, reply, "taskdevicepin3", Settings.TaskDevicePin3[index - 1]);
         }
 
         if (Device[DeviceIndex].PullUpOption)
