@@ -233,9 +233,10 @@
 #define NO_SEARCH_PIN_STATE             false
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
-#define DEVICE_TYPE_I2C                     2  // connected through I2C
-#define DEVICE_TYPE_ANALOG                  3  // tout pin
-#define DEVICE_TYPE_DUAL                    4  // connected through 2 datapins
+#define DEVICE_TYPE_DUAL                    2  // connected through 2 datapins
+#define DEVICE_TYPE_TRIPLE                  3  // connected through 3 datapins
+#define DEVICE_TYPE_ANALOG                 10  // AIN/tout pin
+#define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 #define SENSOR_TYPE_SINGLE                  1
