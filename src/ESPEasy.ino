@@ -386,10 +386,15 @@ struct SettingsStruct
   byte          Notification[NOTIFICATION_MAX];
   byte          TaskDeviceNumber[TASKS_MAX];
   unsigned int  OLD_TaskDeviceID[TASKS_MAX];
-  int8_t        TaskDevicePin1[TASKS_MAX];
-  int8_t        TaskDevicePin2[TASKS_MAX];
-  int8_t        TaskDevicePin3[TASKS_MAX];
-  byte          TaskDevicePort[TASKS_MAX];
+  union {
+    struct {
+      int8_t        TaskDevicePin1[TASKS_MAX];
+      int8_t        TaskDevicePin2[TASKS_MAX];
+      int8_t        TaskDevicePin3[TASKS_MAX];
+      byte          TaskDevicePort[TASKS_MAX];
+    };
+    int8_t        TaskDevicePin[4][TASKS_MAX];
+  };
   boolean       TaskDevicePin1PullUp[TASKS_MAX];
   int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
   boolean       TaskDevicePin1Inversed[TASKS_MAX];
