@@ -843,7 +843,7 @@ void run50TimesPerSecond()
   timer20ms = millis() + 20;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
 
-  statusLED(false);
+  // statusLED(false);
 }
 
 /*********************************************************************************************\
@@ -1179,4 +1179,6 @@ void backgroundtasks()
   #endif
 
   yield();
+
+  statusLED(false);
 }
