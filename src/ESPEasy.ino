@@ -112,7 +112,6 @@
 
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-//Normally only enabled for the platformio dev environment, since its helpfull while developing.
 // #define FEATURE_ARDUINO_OTA
 
 
