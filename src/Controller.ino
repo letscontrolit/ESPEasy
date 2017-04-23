@@ -19,9 +19,9 @@ boolean sendData(struct EventStruct *event)
     if (dif < Settings.MessageDelay)
     {
       uint16_t delayms = Settings.MessageDelay - dif;
-      char log[30];
-      sprintf_P(log, PSTR("HTTP : Delay %u ms"), delayms);
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
+      // char log[30];
+      // sprintf_P(log, PSTR("CTRL : Message delay %u ms"), delayms);
+      addLog(LOG_LEVEL_DEBUG_MORE, String(F("CTRL : Message delay (ms): "))+delayms);
       unsigned long timer = millis() + delayms;
       while (millis() < timer)
         backgroundtasks();
