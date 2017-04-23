@@ -116,6 +116,11 @@
 // #define FEATURE_ARDUINO_OTA
 
 
+//enable reporting status to ESPEasy developers.
+//this informs us of crashes and stability issues.
+// not finished yet!
+// #define FEATURE_REPORTING
+
 //Select which plugin sets you want to build.
 //These are normally automaticly set via the Platformio build environment.
 //If you use ArduinoIDE you might need to uncomment some of them, depending on your needs
@@ -302,6 +307,7 @@ extern "C" {
 #include <ESP8266mDNS.h>
 bool ArduinoOTAtriggered=false;
 #endif
+
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -686,6 +692,9 @@ void setup()
   if (!WifiConnect(true,3))
     WifiConnect(false,3);
 
+  #ifdef FEATURE_REPORTING
+  ReportStatus();
+  #endif
 
   //After booting, we want all the tasks to run without delaying more than neccesary.
   //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
@@ -962,6 +971,10 @@ void runEach30Seconds()
     loopCounterMax = loopCounterLast;
 
   WifiCheck();
+
+  #ifdef FEATURE_REPORTING
+  ReportStatus();
+  #endif
 
 }
 

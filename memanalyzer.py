@@ -143,10 +143,18 @@ try:
     libs.remove("lib/pubsubclient")
     libs.sort()
 
+    #which plugins to test?
+    if len(sys.argv)>2:
+        test_plugins=sys.argv[2:]
+    else:
+        test_plugins=plugins
+    test_plugins.sort()
+
 
     #### disable all plugins and to get base size
-    for plugin in plugins:
+    for plugin in test_plugins:
         disable_plugin(plugin)
+
 
     # for lib in libs:
     #     disable_lib(lib)
@@ -178,12 +186,6 @@ try:
     #     ))
 
 
-    #which plugins to test?
-    if len(sys.argv)>2:
-        test_plugins=sys.argv[2:]
-    else:
-        test_plugins=plugins
-    test_plugins.sort()
 
 
 
