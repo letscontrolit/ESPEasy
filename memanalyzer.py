@@ -23,6 +23,8 @@ import os
 TOTAL_IRAM = 32786;
 TOTAL_DRAM = 81920;
 
+env="dev_4096"
+
 sections = OrderedDict([
     ("data", "Initialized Data (RAM)"),
     ("rodata", "ReadOnly Data (RAM)"),
@@ -160,11 +162,11 @@ try:
     #     disable_lib(lib)
 
     #build without plugins to get base memory usage
-    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+    subprocess.check_call("platformio run --silent --environment "+env, shell=True)
     # #two times, sometimes it changes a few bytes somehow
     # SEEMS TO BE NOT USEFULL
     # subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    base=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    base=analyse_memory(".pioenvs/"+env+"/firmware.elf")
 
 
     # note: unused libs never use any memory, so dont have to test this
@@ -193,8 +195,8 @@ try:
     results={}
     for plugin in test_plugins:
         enable_plugin(plugin)
-        subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-        results[plugin]=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+        subprocess.check_call("platformio run --silent --environment "+env, shell=True)
+        results[plugin]=analyse_memory(".pioenvs/"+env+"/firmware.elf")
         disable_plugin(plugin)
 
         print(output_format.format(
@@ -212,8 +214,8 @@ try:
     for plugin in test_plugins:
         enable_plugin(plugin)
 
-    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    total=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    subprocess.check_call("platformio run --silent --environment "+env, shell=True)
+    total=analyse_memory(".pioenvs/"+env+"/firmware.elf")
 
     print(output_format.format(
         "ALL",
