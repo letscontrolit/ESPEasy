@@ -2929,7 +2929,11 @@ void handle_rules() {
     {
       reply += F("<TR><TD><textarea name='rules' rows='15' cols='80' wrap='off'>");
       while (f.available())
-        reply += (char)f.read();
+      {
+        String c((char)f.read());
+        htmlEscape(c);
+        reply += c;
+      }
       reply += F("</textarea>");
     }
   }

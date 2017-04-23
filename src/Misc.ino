@@ -2591,3 +2591,13 @@ String getBearing(int degrees)
     return(bearing[int(degrees/22.5)]);
 
 }
+
+//escapes special characters in strings for use in html-forms
+void htmlEscape(String & html)
+{
+  html.replace("&",  "&amp;");
+  html.replace("\"", "&quot;");
+  html.replace("'",  "&#039;");
+  html.replace("<",  "&lt;");
+  html.replace(">",  "&gt;");
+}
