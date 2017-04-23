@@ -46,6 +46,8 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_LOAD:
       {
+        String escapeBuffer;
+
         P011_ConfigStruct customConfig;
         LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
@@ -65,18 +67,23 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string += P011_HTTP_URI_MAX_LEN-1;
         string += F("' value='");
         string += customConfig.HttpUri;
+
         string += F("'>");
 
         string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
         string += P011_HTTP_HEADER_MAX_LEN-1;
         string += F("'>");
-        string += customConfig.HttpHeader;
+        escapeBuffer=customConfig.HttpHeader;
+        htmlEscape(escapeBuffer);
+        string += escapeBuffer;
         string += F("</textarea>");
 
         string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
         string += P011_HTTP_BODY_MAX_LEN-1;
         string += F("'>");
-        string += customConfig.HttpBody;
+        escapeBuffer=customConfig.HttpBody;
+        htmlEscape(escapeBuffer);
+        string += escapeBuffer;
         string += F("</textarea>");
         break;
       }
