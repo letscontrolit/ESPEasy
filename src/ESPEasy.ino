@@ -637,6 +637,7 @@ void setup()
   lowestRAM = FreeMem();
 
   Serial.begin(115200);
+  // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
 
