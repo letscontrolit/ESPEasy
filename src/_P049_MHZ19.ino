@@ -22,7 +22,7 @@
 boolean Plugin_049_init = false;
 
 #include <SoftwareSerial.h>
-SoftwareSerial *Plugin_049_S8;
+SoftwareSerial *Plugin_049_SoftSerial;
 
 // 9-bytes CMD PPM read command
 byte mhzCmdReadPPM[9] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
@@ -75,8 +75,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Plugin_049_S8 = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
-        Plugin_049_S8->begin(9600);
+        Plugin_049_SoftSerial = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        Plugin_049_SoftSerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
         //delay first read, because hardware needs to initialize on cold boot
@@ -94,56 +94,56 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
         if (command == F("mhzcalibratezero"))
         {
-          Plugin_049_S8->write(mhzCmdCalibrateZero, 9);
+          Plugin_049_SoftSerial->write(mhzCmdCalibrateZero, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Calibrated zero point!"));
           success = true;
         }
 
         if (command == F("mhzreset"))
         {
-          Plugin_049_S8->write(mhzCmdReset, 9);
+          Plugin_049_SoftSerial->write(mhzCmdReset, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor reset!"));
           success = true;
         }
 
         if (command == F("mhzabcenable"))
         {
-          Plugin_049_S8->write(mhzCmdABCEnable, 9);
+          Plugin_049_SoftSerial->write(mhzCmdABCEnable, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
           success = true;
         }
 
         if (command == F("mhzabcdisable"))
         {
-          Plugin_049_S8->write(mhzCmdABCDisable, 9);
+          Plugin_049_SoftSerial->write(mhzCmdABCDisable, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange1000"))
         {
-          Plugin_049_S8->write(mhzCmdMeasurementRange1000, 9);
+          Plugin_049_SoftSerial->write(mhzCmdMeasurementRange1000, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange2000"))
         {
-          Plugin_049_S8->write(mhzCmdMeasurementRange2000, 9);
+          Plugin_049_SoftSerial->write(mhzCmdMeasurementRange2000, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange3000"))
         {
-          Plugin_049_S8->write(mhzCmdMeasurementRange3000, 9);
+          Plugin_049_SoftSerial->write(mhzCmdMeasurementRange3000, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange5000"))
         {
-          Plugin_049_S8->write(mhzCmdMeasurementRange5000, 9);
+          Plugin_049_SoftSerial->write(mhzCmdMeasurementRange5000, 9);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
           success = true;
         }
@@ -157,7 +157,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         if (Plugin_049_init)
         {
           //send read PPM command
-          int nbBytesSent = Plugin_049_S8->write(mhzCmdReadPPM, 9);
+          int nbBytesSent = Plugin_049_SoftSerial->write(mhzCmdReadPPM, 9);
           if (nbBytesSent != 9) {
             String log = F("MHZ19: Error, nb bytes sent != 9 : ");
               log += nbBytesSent;
@@ -170,8 +170,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           long start = millis();
           int counter = 0;
           while (((millis() - start) < PLUGIN_READ_TIMEOUT) && (counter < 9)) {
-            if (Plugin_049_S8->available() > 0) {
-              mhzResp[counter++] = Plugin_049_S8->read();
+            if (Plugin_049_SoftSerial->available() > 0) {
+              mhzResp[counter++] = Plugin_049_SoftSerial->read();
             } else {
               delay(10);
             }
@@ -203,7 +203,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
              // we're trying to shift it so that 0xFF is the next byte
              byte crcshift;
              for (i = 1; i < 8; i++) {
-                crcshift = Plugin_049_S8->peek();
+                crcshift = Plugin_049_SoftSerial->peek();
                 if (crcshift == 0xFF) {
                   String log = F("MHZ19: Shifted ");
                   log += i;
@@ -211,7 +211,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                   addLog(LOG_LEVEL_ERROR, log);
                   break;
                 } else {
-                 crcshift = Plugin_049_S8->read();
+                 crcshift = Plugin_049_SoftSerial->read();
                 }
              }
              success = false;
