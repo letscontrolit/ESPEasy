@@ -19,6 +19,18 @@
 #define PLUGIN_VALUENAME3_050 "Blue"
 #define PLUGIN_VALUENAME4_050 "Color Temperature"
 
+#define TCA9548A_ADDR 0x70
+
+// utility method for the TCA9548A multiplexer
+// select the multiplexer port given as parameter
+void multiplexerSelect(uint8_t i) {
+  if (i > 7) return;
+
+  Wire.beginTransmission(TCA9548A_ADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();
+}
+
 /*********************************************************************/
 void Plugin_050_interrupt()
 /*********************************************************************/
@@ -130,6 +142,24 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Interrupt Pin:<TD>");
         addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
 
+
+        byte multiplexerAddress = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+
+        string += F("<TR><TD>Multiplexer Address:<TD><select name='plugin_050_multiplexer'>");
+        for (byte x = 0; x < 8; x++)
+        {
+          string += F("<option value='");
+          string += x;
+          string += F("'");
+          if (multiplexerAddress == x)
+            string += F(" selected");
+          string += F(">");
+          string += String(x);
+          string += F("</option>");
+        }
+        string += F("</select>");
+
+
         success = true;
         break;
       }
@@ -143,6 +173,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         String plugin3 = WebServer.arg(F("plugin_050_led_on"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == F("on"));
+
+        String plugin4 = WebServer.arg(F("plugin_050_multiplexer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
 
         success = true;
         break;
@@ -158,6 +191,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
+      	//set multiplexer to correct port
+      	multiplexerSelect(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+
       	tcs34725IntegrationTime_t integrationTime;
       	int waitTime;
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_2_4MS)
