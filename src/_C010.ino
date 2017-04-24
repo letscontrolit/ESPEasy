@@ -48,9 +48,10 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
             C010_Send(event, x, UserVar[event->BaseVarIndex + x], 0);
           if (valueCount > 1)
           {
-            unsigned long timer = millis() + Settings.MessageDelay;
-            while (millis() < timer)
-              backgroundtasks();
+            delayBackground(Settings.MessageDelay);
+            // unsigned long timer = millis() + Settings.MessageDelay;
+            // while (millis() < timer)
+            //   backgroundtasks();
           }
         }
         break;

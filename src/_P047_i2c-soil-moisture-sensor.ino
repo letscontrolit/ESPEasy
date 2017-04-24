@@ -133,7 +133,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
           // wake sensor
         	Plugin_047_getVersion();
-          delayMillis(20);
+          delayBackground(20);
           addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
         }
 
@@ -165,7 +165,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         Plugin_047_write8(SOILMOISTURESENSOR_MEASURE_LIGHT);
 
         // 2 s delay ...we need this delay, otherwise we get only the last reading...
-        delayMillis(2000);
+        delayBackground(2000);
 
         float temperature = ((float)Plugin_047_readTemperature()) / 10;
         float moisture = ((float)Plugin_047_readMoisture());
@@ -310,7 +310,7 @@ uint8_t Plugin_047_getVersion() {
 bool Plugin_047_setAddress(int addr) {
 	Plugin_047_write8(SOILMOISTURESENSOR_SET_ADDRESS, addr);
 	Plugin_047_write8(SOILMOISTURESENSOR_RESET);
-	delayMillis(1000);
+	delayBackground(1000);
   _i2caddrP47=addr;
   return (Plugin_047_read8(SOILMOISTURESENSOR_GET_ADDRESS) == addr);
 }

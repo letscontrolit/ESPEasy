@@ -305,7 +305,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
   {
     success = true;
-    delayMillis(Par1);
+    delayBackground(Par1);
   }
 
   if (strcasecmp_P(Command, PSTR("Rules")) == 0)

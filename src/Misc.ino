@@ -31,7 +31,7 @@ void deepSleep(int delay)
   {
     log = F("Entering deep sleep in 30 seconds.");
     addLog(LOG_LEVEL_INFO, log);
-    delayMillis(30000);
+    delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
@@ -410,7 +410,7 @@ void statusLED(boolean traffic)
 /********************************************************************************************\
   delay in milliseconds with background processing
   \*********************************************************************************************/
-void delayMillis(unsigned long delay)
+void delayBackground(unsigned long delay)
 {
   unsigned long timer = millis() + delay;
   while (millis() < timer)
