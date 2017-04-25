@@ -415,6 +415,7 @@ struct SettingsStruct
   boolean       NotificationEnabled[NOTIFICATION_MAX];
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
+  boolean       Pin_status_led_Inversed;
 } Settings;
 
 struct ControllerSettingsStruct
