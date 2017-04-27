@@ -7,7 +7,11 @@
 // based on this library: https://github.com/adafruit/Adafruit_TCS34725
 // this code is based on 20170331 date version of the above library
 //
-#ifdef PLUGIN_BUILD_TESTING
+// because of not changeable sensor address, i implemented support for the TCA9548A i2c multiplexer
+// thanks to adafruit for the great tutorial on in
+// https://learn.adafruit.com/adafruit-tca9548a-1-to-8-i2c-multiplexer-breakout/wiring-and-test
+//
+//#ifdef PLUGIN_BUILD_TESTING
 
 #include "Adafruit_TCS34725.h"
 
@@ -40,6 +44,14 @@ void multiplexerSelect(uint8_t i) {
   Wire.beginTransmission(TCA9548A_ADDR);
   Wire.write(1 << i);
   Wire.endTransmission();
+}
+
+// utility method for the TCA9548A multiplexer
+// disable all channels on a multiplexer
+void multiplexerOff() {
+	Wire.beginTransmission(TCA9548A_ADDR);
+	Wire.write(0);  // no channel selected
+	Wire.endTransmission();
 }
 
 boolean Plugin_050_init = false;
@@ -141,10 +153,13 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         string += F("</select>");
 
         string += F("<TR><TD>Enable LED:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-          string += F("<input type=checkbox name=plugin_050_led_on checked>");
-        else
-          string += F("<input type=checkbox name=plugin_050_led_on>");
+        addCheckBox(string, F("plugin_050_led_on"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+//        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+//          string += F("<input type=checkbox name=plugin_050_led_on checked>");
+//        else
+//          string += F("<input type=checkbox name=plugin_050_led_on>");
+
+
 
         string += F("<TR><TD>Interrupt Pin:<TD>");
         addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
@@ -153,7 +168,8 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         byte multiplexerAddress = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
 
         string += F("<TR><TD>Multiplexer Address:<TD><select name='plugin_050_multiplexer'>");
-        for (byte x = 0; x < 8; x++)
+        byte x = 255;
+        do
         {
           string += F("<option value='");
           string += x;
@@ -163,7 +179,8 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
           string += F(">");
           string += String(x);
           string += F("</option>");
-        }
+          x++;
+        } while (x < 8);
         string += F("</select>");
 
 
@@ -193,8 +210,17 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP); //TCS interrupt output is Active-LOW and Open-Drain
         attachInterrupt(Settings.TaskDevicePin3[event->TaskIndex], Plugin_050_interrupt, FALLING);
 
-      	//set multiplexer to correct port
-      	multiplexerSelect(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        //set multiplexer to correct port if
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3]!=255)
+        {
+        	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.TaskDevicePluginConfig[event->TaskIndex][3]));
+        	multiplexerSelect(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        }
+        else
+        {
+        	addLog(LOG_LEVEL_DEBUG, F("Multiplexer Off"));
+        	multiplexerOff();
+        }
 
       	tcs34725IntegrationTime_t integrationTime;
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]==TCS34725_INTEGRATIONTIME_2_4MS)
@@ -263,13 +289,25 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       {
       	if (Plugin_050_init) {
 
+          //set multiplexer to correct port if
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3]!=255)
+          {
+          	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.TaskDevicePluginConfig[event->TaskIndex][3]));
+          	multiplexerSelect(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+          }
+          else
+          {
+          	addLog(LOG_LEVEL_DEBUG, F("Multiplexer Off"));
+          	multiplexerOff();
+          }
+
 					uint16_t r, g, b, c, colorTemp, lux;
 
 					if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
 						tcs.setInterrupt(false);      // turn on LED
 					else
 						tcs.setInterrupt(true);  // turn off LED
-					delayMillis(waitTime);  // takes xx ms to read
+					delayBackground(waitTime);  // takes xx ms to read
 					tcs.getRawData(&r, &g, &b, &c);
 					if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
 						tcs.setInterrupt(true);  // turn off LED
@@ -300,4 +338,4 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 }
 
 
-#endif
+//#endif
