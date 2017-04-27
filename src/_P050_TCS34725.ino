@@ -154,11 +154,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         string += F("<TR><TD>Enable LED:<TD>");
         addCheckBox(string, F("plugin_050_led_on"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-//        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-//          string += F("<input type=checkbox name=plugin_050_led_on checked>");
-//        else
-//          string += F("<input type=checkbox name=plugin_050_led_on>");
-
 
 
         string += F("<TR><TD>Interrupt Pin:<TD>");
