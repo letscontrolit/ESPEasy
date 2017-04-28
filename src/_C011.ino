@@ -165,7 +165,7 @@ boolean HTTPSend011(struct EventStruct *event)
 
   String hostName = host.toString();
   if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName[event->ProtocolIndex];
+    hostName = ControllerSettings.HostName;
 
   String payload = String(customConfig.HttpMethod) + " /";
   payload += customConfig.HttpUri;
