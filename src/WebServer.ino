@@ -894,8 +894,8 @@ void handle_hardware() {
   reply += F("<TR><TD><hr><TD><hr>");
 
   // SPI Init
-  reply += F("<TR><TD><b>SPI Interface:</b><TD>");
-  reply += F("<TR><TD>Init SPI:<TD>");
+  addSubHeader(reply, F("SPI Interface"));
+  addRowLabel(reply, F("Init SPI"));
   addCheckBox(reply, F("initspi"), Settings.InitSPI);
   reply += F("&nbsp;(Note : Chip Select (CS) config must be done in the plugin)");
 
@@ -1718,9 +1718,48 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 
 
 //********************************************************************************
+// Add a header
+//********************************************************************************
+void addHeader(String& str, const String &header1, const String &header2)
+{//TODO
+  str += F("<input type=checkbox id='");
+  str += header1;
+  str += F("' name='");
+  str += header2;
+  str += F("'");
+  str += F(">");
+}
+
+
+//********************************************************************************
+// Add a sub header
+//********************************************************************************
+void addSubHeader(String& str, const String &header)
+{//TODO
+  str += F("<input type=checkbox id='");
+  str += header;
+  str += F("' name='");
+  str += header;
+  str += F("'");
+  str += F(">");
+}
+
+
+//********************************************************************************
+// Add a label as row start
+//********************************************************************************
+void addLabel(String& str, const String &text)
+{//TODO
+  str += F("<TR><TD>");
+  str += text;
+  str += F("<TD>");
+}
+
+
+//********************************************************************************
 // Add a checkbox
 //********************************************************************************
-void addCheckBox(String& str, String name, boolean checked)
+void addCheckBox(String& str, const String &name, boolean checked)
 {
   str += F("<input type=checkbox id='");
   str += name;
@@ -1736,7 +1775,7 @@ void addCheckBox(String& str, String name, boolean checked)
 //********************************************************************************
 // Add a numeric box
 //********************************************************************************
-void addNumericBox(String& str, String name, int value)
+void addNumericBox(String& str, const String &name, int value)
 {
   str += F("<input type='number' name='");
   str += name;
@@ -2299,7 +2338,7 @@ void handle_advanced() {
   reply += F("<TR><TD>Message Delay (ms):<TD>");
   addNumericBox(reply, F("messagedelay"), Settings.MessageDelay);
 
-  reply += F("<TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
+  reply += F("<TR><TD>Fixed IP Octet:<TD>");
   addNumericBox(reply, F("ip"), Settings.IP_Octet);
 
   reply += F("<TR><TD>Use NTP:<TD>");
