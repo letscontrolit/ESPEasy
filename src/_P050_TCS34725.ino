@@ -26,7 +26,7 @@
 #define TCA9548A_ADDR 0x70
 
 volatile boolean interruptFired = false;
-unsigned long Plugin_050_pulseCounter;
+unsigned long Plugin_050_pulseCounter = 0;
 
 
 /*********************************************************************/
@@ -34,6 +34,7 @@ void Plugin_050_interrupt()
 /*********************************************************************/
 {
 	interruptFired = true;
+	Plugin_050_pulseCounter++;
 }
 
 // utility method for the TCA9548A multiplexer
@@ -155,14 +156,20 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Enable LED:<TD>");
         addCheckBox(string, F("plugin_050_led_on"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
+        string += F("<TR><TD><hr><TD><hr>");
 
         string += F("<TR><TD>Interrupt Pin:<TD>");
         addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+        string += F("<TR><TD>Low Threshold:<TD>");
+        addNumericBox(string, F("plugin_050_intLowTreshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        string += F("<TR><TD>High Threshold:<TD>");
+        addNumericBox(string, F("plugin_050_intHighTreshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
 
+        string += F("<TR><TD><hr><TD><hr>");
 
         byte multiplexerAddress = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
 
-        string += F("<TR><TD>Multiplexer Address:<TD><select name='plugin_050_multiplexer'>");
+        string += F("<TR><TD>Multiplexer Address (TCA9548A):<TD><select name='plugin_050_multiplexer'>");
         byte x = 255;
         do
         {
@@ -178,6 +185,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         } while (x < 8);
         string += F("</select>");
 
+        string += F("<TR><TD><hr><TD><hr>");
 
         success = true;
         break;
@@ -195,6 +203,11 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         String plugin4 = WebServer.arg(F("plugin_050_multiplexer"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
+
+        String plugin5 = WebServer.arg(F("plugin_050_intLowTreshold"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = plugin5.toInt();
+        String plugin6 = WebServer.arg(F("plugin_050_intHighTreshold"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = plugin6.toInt();
 
         success = true;
         break;
@@ -268,8 +281,14 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         			F(" and Gain: ") + String(gain) + F(" completed"));
 
           tcs.write8(TCS34725_PERS, TCS34725_PERS_1_CYCLE);
-//          tcs.setIntLimits(l, h);
-          tcs.setInterrupt(true);  // turn off LED
+          tcs.setIntLimits(Settings.TaskDevicePluginConfig[event->TaskIndex][4],
+          		Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
+        	addLog(LOG_LEVEL_DEBUG, "TCS34725 Interrupt Pin:" +
+        			String(Settings.TaskDevicePin3[event->TaskIndex]) +	" Tresholds LOW: " +
+        			String(Settings.TaskDevicePluginConfig[event->TaskIndex][4]) +
+        			F(" HIGH: ") + String(Settings.TaskDevicePluginConfig[event->TaskIndex][5]));
+
+          tcs.setInterrupt(true);  // turn on LED
         }
         else {
 					addLog(LOG_LEVEL_DEBUG, F("TCS34725 init failed, no sensor?"));
@@ -298,21 +317,21 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
 					uint16_t r, g, b, c, colorTemp, lux;
 
-					if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-						tcs.setInterrupt(false);      // turn on LED
-					else
-						tcs.setInterrupt(true);  // turn off LED
+//					if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+//						tcs.setInterrupt(false);      // turn on LED
+//					else
+//						tcs.setInterrupt(true);  // turn off LED
 					delayBackground(waitTime);  // takes xx ms to read
 					tcs.getRawData(&r, &g, &b, &c);
-					if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-						tcs.setInterrupt(true);  // turn off LED
+//					if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+//						tcs.setInterrupt(true);  // turn off LED
 					colorTemp = tcs.calculateColorTemperature(r, g, b);
 					lux = tcs.calculateLux(r, g, b);
 
 					UserVar[event->BaseVarIndex] = r;
 					UserVar[event->BaseVarIndex + 1] = g;
 					UserVar[event->BaseVarIndex + 2] = b;
-					UserVar[event->BaseVarIndex + 3] = tcs.calculateColorTemperature(r, g, b);
+					UserVar[event->BaseVarIndex + 3] = colorTemp;
 
 					String log = F("TCS34725: Color Temp (K): ");
 					log += String(UserVar[event->BaseVarIndex + 3], DEC);
@@ -322,7 +341,11 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 					log += String(UserVar[event->BaseVarIndex + 1], DEC);
 					log += F(" B: ");
 					log += String(UserVar[event->BaseVarIndex + 2], DEC);
+					log += F(" C: ");
+					log += String(c, DEC);
 					addLog(LOG_LEVEL_INFO, log);
+					addLog(LOG_LEVEL_INFO, "pulseCounter: " + String(Plugin_050_pulseCounter,DEC));
+					tcs.clearInterrupt();
 					success = true;
       	}
         break;
