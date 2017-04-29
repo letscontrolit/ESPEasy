@@ -186,9 +186,10 @@ boolean HTTPSend011(struct EventStruct *event)
     ReplaceTokenByValue(body, event);
     payload += F("\r\nContent-Length: ");
     payload += String(body.length());
-    payload += F("\r\n\r\n");
+    payload += F("\r\n");
     payload += body;
   }
+  payload += F("\r\n");
 
   // This will send the request to the server
   client.print(payload);
