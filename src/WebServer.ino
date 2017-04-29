@@ -69,6 +69,7 @@ void addHeader(boolean showMenu, String& str)
     str += F("<style>");
     str += F("* {font-family:sans-serif; font-size:12pt;}");
     str += F("h1 {font-size:16pt; color:black;}");
+    str += F("h3 {font-size:12pt; color:#888; font-weight: bold;}");
     str += F("h6 {font-size:10pt; color:black; text-align:center;}");
     str += F(".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}");
     str += F(".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}");
@@ -873,7 +874,11 @@ void handle_hardware() {
   }
 
   reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
-  reply += F("<TR><TD><b>Wifi Status LED:</b><TD>");
+
+  addFormSeparator(reply);
+
+  addFormSubHeader(reply, F("Wifi Status LED"));
+
   reply += F("<TR><TD>Pin LED:<TD>");
   addPinSelect(false, reply, "pled", Settings.Pin_status_led);
   reply += F("<TR><TD>Inversed LED:<TD>");
@@ -883,52 +888,65 @@ void handle_hardware() {
     reply += F("<input type=checkbox id='pledi' name='pledi'>&nbsp;");
   reply += F("<TR><TD><TD>(Note: Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED)");
 
-  reply += F("<TR><TD><hr><TD><hr>");
+  addFormSeparator(reply);
 
-  reply += F("<TR><TD><b>I2C Interface:</b><TD>");
-  reply += F("<TR><TD>SDA:<TD>");
-  addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
-  reply += F("<TR><TD>SCL:<TD>");
-  addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
+  addFormSubHeader(reply, F("I2C Interface"));
 
-  reply += F("<TR><TD><hr><TD><hr>");
+  addRowLabel(reply, F("SDA"));
+  addPinSelect(true, reply, F("psda"), Settings.Pin_i2c_sda);
+
+  addRowLabel(reply, F("SCL"));
+  addPinSelect(true, reply, F("pscl"), Settings.Pin_i2c_scl);
+
+  addFormSeparator(reply);
 
   // SPI Init
-  addSubHeader(reply, F("SPI Interface"));
-  addRowLabel(reply, F("Init SPI"));
-  addCheckBox(reply, F("initspi"), Settings.InitSPI);
-  reply += F("&nbsp;(Note : Chip Select (CS) config must be done in the plugin)");
+  addFormSubHeader(reply, F("SPI Interface"));
 
-  reply += F("<TR><TD>SD Card CS Pin:<TD>");
+  addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
+  addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
+
+  addRowLabel(reply, F("SD Card CS Pin"));
   addPinSelect(false, reply, "sd", Settings.Pin_sd_cs);
 
-  reply += F("<TR><TD><hr><TD><hr>");
+  addFormSeparator(reply);
 
-  reply += F("<TR><TD><b>GPIO boot states:</b><TD>");
-  reply += F("<TR><TD>Pin mode 0 (D3):<TD>");
+  addFormSubHeader(reply, F("GPIO boot states"));
+
+  addRowLabel(reply, F("Pin mode 0 (D3)"));
   addPinStateSelect(reply, "p0", Settings.PinBootStates[0]);
-  reply += F("<TR><TD>Pin mode 2 (D4):<TD>");
+
+  addRowLabel(reply, F("Pin mode 2 (D4)"));
   addPinStateSelect(reply, "p2", Settings.PinBootStates[2]);
-  reply += F("<TR><TD>Pin mode 4 (D2):<TD>");
+
+  addRowLabel(reply, F("Pin mode 4 (D2)"));
   addPinStateSelect(reply, "p4", Settings.PinBootStates[4]);
-  reply += F("<TR><TD>Pin mode 5 (D1):<TD>");
+
+  addRowLabel(reply, F("Pin mode 5 (D1)"));
   addPinStateSelect(reply, "p5", Settings.PinBootStates[5]);
-  reply += F("<TR><TD>Pin mode 9 (D11):<TD>");
+
+  addRowLabel(reply, F("Pin mode 9 (D11)"));
   addPinStateSelect(reply, "p9", Settings.PinBootStates[9]);
-  reply += F("<TR><TD>Pin mode 10 (D12):<TD>");
+
+  addRowLabel(reply, F("Pin mode 10 (D12)"));
   addPinStateSelect(reply, "p10", Settings.PinBootStates[10]);
-  reply += F("<TR><TD>Pin mode 12 (D6):<TD>");
+
+  addRowLabel(reply, F("Pin mode 12 (D6)"));
   addPinStateSelect(reply, "p12", Settings.PinBootStates[12]);
-  reply += F("<TR><TD>Pin mode 13 (D7):<TD>");
+
+  addRowLabel(reply, F("Pin mode 13 (D7)"));
   addPinStateSelect(reply, "p13", Settings.PinBootStates[13]);
-  reply += F("<TR><TD>Pin mode 14 (D5):<TD>");
+
+  addRowLabel(reply, F("Pin mode 14 (D5)"));
   addPinStateSelect(reply, "p14", Settings.PinBootStates[14]);
-  reply += F("<TR><TD>Pin mode 15 (D8):<TD>");
+
+  addRowLabel(reply, F("Pin mode 15 (D8)"));
   addPinStateSelect(reply, "p15", Settings.PinBootStates[15]);
-  reply += F("<TR><TD>Pin mode 16 (D0):<TD>");
+
+  addRowLabel(reply, F("Pin mode 16 (D0)"));
   addPinStateSelect(reply, "p16", Settings.PinBootStates[16]);
 
-  reply += F("<TR><TD><hr><TD><hr>");
+  addFormSeparator(reply);
 
   reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
 
@@ -1717,54 +1735,83 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 }
 
 
+
+
+void addRowLabel(String& str, const String &label)
+{//TODO
+  str += F("<TR><TD>");
+  str += label;
+  str += F("<TD>");
+}
+
 //********************************************************************************
 // Add a header
 //********************************************************************************
-void addHeader(String& str, const String &header1, const String &header2)
+void addRowHeader(String& str, const String &header1, const String &header2)
 {//TODO
-  str += F("<input type=checkbox id='");
+  str += F("<TH><TD>");
   str += header1;
-  str += F("' name='");
+  str += F("<TD>");
   str += header2;
-  str += F("'");
-  str += F(">");
+  str += F("");
 }
 
 
 //********************************************************************************
 // Add a sub header
 //********************************************************************************
-void addSubHeader(String& str, const String &header)
+void addFormSubHeader(String& str, const String &header)
 {//TODO
-  str += F("<input type=checkbox id='");
+  str += F("<TR><TD><h3>");
   str += header;
-  str += F("' name='");
-  str += header;
-  str += F("'");
-  str += F(">");
+  str += F("</h3><TD>");
 }
 
 
 //********************************************************************************
-// Add a label as row start
+// Add a note as row start
 //********************************************************************************
-void addLabel(String& str, const String &text)
+void addFormNote(String& str, const String &text)
 {//TODO
-  str += F("<TR><TD>");
+  str += F("<TR><TD><i>Note:</i><TD><i>");
   str += text;
-  str += F("<TD>");
+  str += F("</i>");
+}
+
+
+//********************************************************************************
+// Add a separator as row start
+//********************************************************************************
+void addFormSeparator(String& str)
+{//TODO
+  str += F("<TR><TD><hr><TD><hr>");
 }
 
 
 //********************************************************************************
 // Add a checkbox
 //********************************************************************************
-void addCheckBox(String& str, const String &name, boolean checked)
+void addCheckBox(String& str, const String &id, boolean checked)
 {
   str += F("<input type=checkbox id='");
-  str += name;
+  str += id;
   str += F("' name='");
-  str += name;
+  str += id;
+  str += F("'");
+  if (checked)
+    str += F(" checked");
+  str += F(">");
+}
+
+void addFormCheckBox(String& str, const String &label, const String &id, boolean checked)
+{
+  str += F("<TR><TD>");
+  str += label;
+  str += F(":<TD>");
+  str += F("<input type=checkbox id='");
+  str += id;
+  str += F("' name='");
+  str += id;
   str += F("'");
   if (checked)
     str += F(" checked");
@@ -1775,11 +1822,23 @@ void addCheckBox(String& str, const String &name, boolean checked)
 //********************************************************************************
 // Add a numeric box
 //********************************************************************************
-void addNumericBox(String& str, const String &name, int value)
+void addNumericBox(String& str, const String &id, int value)
 {
   str += F("<input type='number' name='");
-  str += name;
-  str += F("' size='5' value='");
+  str += id;
+  str += F("' size='8' value='");
+  str += value;
+  str += F("'>");
+}
+
+void addFormNumericBox(String& str, const String &label, const String &id, int value)
+{
+  str += F("<TR><TD>");
+  str += label;
+  str += F(":<TD>");
+  str += F("<input type='number' name='");
+  str += id;
+  str += F("' size='8' value='");
   str += value;
   str += F("'>");
 }
