@@ -68,19 +68,21 @@ void addHeader(boolean showMenu, String& str)
   {
     str += F("<style>");
     str += F("* {font-family:sans-serif; font-size:12pt;}");
-    str += F("h1 {font-size:16pt; color:black;}");
-    str += F("h3 {font-size:12pt; color:#888; font-weight: bold;}");
+    str += F("h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}");
+    str += F("h3 {font-size:12pt; margin: 16px -6px 0 -6px; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}");
     str += F("h6 {font-size:10pt; color:black; text-align:center;}");
     str += F(".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}");
     str += F(".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}");
     str += F(".button-menu:hover {background:#ddddff;}");
     str += F(".button-link:hover {background:#369;}");
-    str += F("th {padding:10px; background-color:black; color:#ffffff;}");
-    str += F("td {padding:7px;}");
+    str += F("th {margin: 0 -2px 0 -2px; padding:8px; background-color:black; color:#ffffff; font-weight: bold;}");
+    str += F("td {padding:4px;}");
+    str += F("tr {padding:8px;}");
     str += F("table {color:black;}");
     str += F(".div_l {float: left;}");
     str += F(".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}");
     str += F(".div_br {clear: both;}");
+    str += F(".note {color:#444; font-style: italic}");
     str += F("</style>");
   }
   else
@@ -875,7 +877,7 @@ void handle_hardware() {
 
   reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
 
-  addFormSeparator(reply);
+//  addFormSeparator(reply);
 
   addFormSubHeader(reply, F("Wifi Status LED"));
 
@@ -886,19 +888,20 @@ void handle_hardware() {
     reply += F("<input type=checkbox id='pledi'  name='pledi' checked>&nbsp;");
   else
     reply += F("<input type=checkbox id='pledi' name='pledi'>&nbsp;");
-  reply += F("<TR><TD><TD>(Note: Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED)");
 
-  addFormSeparator(reply);
+  addFormNote(reply, F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
+
+  //addFormSeparator(reply);
 
   addFormSubHeader(reply, F("I2C Interface"));
 
   addRowLabel(reply, F("SDA"));
   addPinSelect(true, reply, F("psda"), Settings.Pin_i2c_sda);
 
-  addRowLabel(reply, F("SCL"));
-  addPinSelect(true, reply, F("pscl"), Settings.Pin_i2c_scl);
+//JKJKJK  addRowLabel(reply, F("SCL"));
+  addFormPinSelect(reply, F("SCL"), F("pscl"), Settings.Pin_i2c_scl, true);
 
-  addFormSeparator(reply);
+  //addFormSeparator(reply);
 
   // SPI Init
   addFormSubHeader(reply, F("SPI Interface"));
@@ -909,7 +912,7 @@ void handle_hardware() {
   addRowLabel(reply, F("SD Card CS Pin"));
   addPinSelect(false, reply, "sd", Settings.Pin_sd_cs);
 
-  addFormSeparator(reply);
+  //addFormSeparator(reply);
 
   addFormSubHeader(reply, F("GPIO boot states"));
 
@@ -1609,6 +1612,16 @@ void sortDeviceArray()
 }
 
 
+void addFormPinSelect(String& str, const String &label, const String &id, int choice, boolean forI2C)
+{
+  str += F("<TR><TD>");
+  str += label;
+  str += F("<TD>");
+
+  addPinSelect(forI2C, str, id, choice);
+}
+
+
 //********************************************************************************
 // Add a GPIO pin select dropdown list for both 8266 and 8285
 //********************************************************************************
@@ -1747,7 +1760,7 @@ void addRowLabel(String& str, const String &label)
 //********************************************************************************
 // Add a header
 //********************************************************************************
-void addRowHeader(String& str, const String &header1, const String &header2)
+void addFormHeader(String& str, const String &header1, const String &header2)
 {//TODO
   str += F("<TH><TD>");
   str += header1;
@@ -1764,7 +1777,7 @@ void addFormSubHeader(String& str, const String &header)
 {//TODO
   str += F("<TR><TD><h3>");
   str += header;
-  str += F("</h3><TD>");
+  str += F("</h3><TD><h3>&nbsp;</h3>");
 }
 
 
@@ -1773,9 +1786,9 @@ void addFormSubHeader(String& str, const String &header)
 //********************************************************************************
 void addFormNote(String& str, const String &text)
 {//TODO
-  str += F("<TR><TD><i>Note:</i><TD><i>");
+  str += F("<TR><TD><TD><div class='note'>Note: ");
   str += text;
-  str += F("</i>");
+  str += F("</div>");
 }
 
 
