@@ -37,23 +37,6 @@ void Plugin_050_interrupt()
 	Plugin_050_pulseCounter++;
 }
 
-// utility method for the TCA9548A multiplexer
-// select the multiplexer port given as parameter
-void multiplexerSelect(uint8_t i) {
-  if (i > 7) return;
-
-  Wire.beginTransmission(TCA9548A_ADDR);
-  Wire.write(1 << i);
-  Wire.endTransmission();
-}
-
-// utility method for the TCA9548A multiplexer
-// disable all channels on a multiplexer
-void multiplexerOff() {
-	Wire.beginTransmission(TCA9548A_ADDR);
-	Wire.write(0);  // no channel selected
-	Wire.endTransmission();
-}
 
 boolean Plugin_050_init = false;
 int waitTime;
@@ -167,26 +150,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         string += F("<TR><TD><hr><TD><hr>");
 
-        byte multiplexerAddress = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-
-        string += F("<TR><TD>Multiplexer Address (TCA9548A):<TD><select name='plugin_050_multiplexer'>");
-        byte x = 255;
-        do
-        {
-          string += F("<option value='");
-          string += x;
-          string += F("'");
-          if (multiplexerAddress == x)
-            string += F(" selected");
-          string += F(">");
-          string += String(x);
-          string += F("</option>");
-          x++;
-        } while (x < 8);
-        string += F("</select>");
-
-        string += F("<TR><TD><hr><TD><hr>");
-
         success = true;
         break;
       }
@@ -200,9 +163,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         String plugin3 = WebServer.arg(F("plugin_050_led_on"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == F("on"));
-
-        String plugin4 = WebServer.arg(F("plugin_050_multiplexer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
 
         String plugin5 = WebServer.arg(F("plugin_050_intLowTreshold"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][4] = plugin5.toInt();
@@ -219,15 +179,15 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         attachInterrupt(Settings.TaskDevicePin3[event->TaskIndex], Plugin_050_interrupt, FALLING);
 
         //set multiplexer to correct port if
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3]!=255)
+        if (ExtraTaskSettings.i2c_multiplex_port != -1)
         {
-        	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.TaskDevicePluginConfig[event->TaskIndex][3]));
-        	multiplexerSelect(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(ExtraTaskSettings.i2c_multiplex_port));
+        	i2cMultiplexerSelect(ExtraTaskSettings.i2c_multiplex_port);
         }
         else
         {
         	addLog(LOG_LEVEL_DEBUG, F("Multiplexer Off"));
-        	multiplexerOff();
+        	i2cMultiplexerOff();
         }
 
       	tcs34725IntegrationTime_t integrationTime;
@@ -310,15 +270,15 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       	if (Plugin_050_init) {
 
           //set multiplexer to correct port if
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3]!=255)
+          if (ExtraTaskSettings.i2c_multiplex_port != -1)
           {
-          	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.TaskDevicePluginConfig[event->TaskIndex][3]));
-          	multiplexerSelect(Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+          	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(ExtraTaskSettings.i2c_multiplex_port));
+          	i2cMultiplexerSelect(ExtraTaskSettings.i2c_multiplex_port);
           }
           else
           {
           	addLog(LOG_LEVEL_DEBUG, F("Multiplexer Off"));
-          	multiplexerOff();
+          	i2cMultiplexerOff();
           }
 
 					uint16_t r, g, b, c, colorTemp, lux;
