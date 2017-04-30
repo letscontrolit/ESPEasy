@@ -299,6 +299,12 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_TEN_PER_SECOND:
+    {
+    	tcs.clearInterrupt();
+    	break;
+    }
+
     case PLUGIN_READ:
       {
       	if (Plugin_050_init) {
@@ -345,7 +351,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 					log += String(c, DEC);
 					addLog(LOG_LEVEL_INFO, log);
 					addLog(LOG_LEVEL_INFO, "pulseCounter: " + String(Plugin_050_pulseCounter,DEC));
-					tcs.clearInterrupt();
+//					tcs.clearInterrupt();
 					success = true;
       	}
         break;
