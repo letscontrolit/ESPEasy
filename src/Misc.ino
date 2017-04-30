@@ -2600,3 +2600,22 @@ void htmlEscape(String & html)
   html.replace("<",  "&lt;");
   html.replace(">",  "&gt;");
 }
+
+
+// utility method for the TCA9548A multiplexer
+// select the multiplexer port given as parameter
+void i2cMultiplexerSelect(uint8_t i) {
+  if (i > 7) return;
+
+  Wire.beginTransmission(Settings.i2c_Multiplexer_adr);
+  Wire.write(1 << i);
+  Wire.endTransmission();
+}
+
+// utility method for the TCA9548A multiplexer
+// disable all channels on a multiplexer
+void i2cMultiplexerOff() {
+	Wire.beginTransmission(Settings.i2c_Multiplexer_adr);
+	Wire.write(0);  // no channel selected
+	Wire.endTransmission();
+}

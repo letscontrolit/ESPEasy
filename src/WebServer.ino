@@ -841,6 +841,7 @@ void handle_hardware() {
   String pin_i2c_scl = WebServer.arg(F("pscl"));
   String pin_status_led = WebServer.arg(F("pled"));
   String pin_sd_cs = WebServer.arg(F("sd"));
+  String str_i2c_multiplexer_adr = WebServer.arg(F("i2c_multiplex_adr"));
 
   String reply = "";
   addHeader(true, reply);
@@ -852,6 +853,8 @@ void handle_hardware() {
 
     Settings.Pin_i2c_sda     = pin_i2c_sda.toInt();
     Settings.Pin_i2c_scl     = pin_i2c_scl.toInt();
+
+    Settings.i2c_Multiplexer_adr = str_i2c_multiplexer_adr.toInt();
 
     Settings.InitSPI = WebServer.arg(F("initspi")) == "on";      // SPI Init
     Settings.Pin_sd_cs  = pin_sd_cs.toInt();
@@ -890,6 +893,34 @@ void handle_hardware() {
   addPinSelect(true, reply, "psda", Settings.Pin_i2c_sda);
   reply += F("<TR><TD>SCL:<TD>");
   addPinSelect(true, reply, "pscl", Settings.Pin_i2c_scl);
+
+  reply += F("<TR><TD>TCA9548A i2c Multiplexer Address:<TD>");
+  byte choice = Settings.i2c_Multiplexer_adr;
+  String i2c_multiplex_options[9];
+  int i2c_multiplex_optionValues[9];
+  i2c_multiplex_options[0] = F(" ");
+  i2c_multiplex_optionValues[0] = -1;
+  for (byte x = 0; x < 8; x++)
+  {
+  	i2c_multiplex_options[x+1] = String(70+x);
+  	i2c_multiplex_optionValues[x+1] = 0x70 + x;
+  }
+
+  reply += F("<select name='i2c_multiplex_adr'>");
+  for (byte x = 0; x < 9; x++)
+  {
+  	reply += F("<option value='");
+  	reply += i2c_multiplex_optionValues[x];
+  	reply += "'";
+    if (choice == i2c_multiplex_optionValues[x])
+    	reply += F(" selected");
+    reply += ">";
+    reply += i2c_multiplex_options[x];
+    reply += F("</option>");
+  }
+  reply += F("</select>");
+
+
 
   reply += F("<TR><TD><hr><TD><hr>");
 
@@ -991,6 +1022,7 @@ void handle_devices() {
   String taskdevicepin1pullup = WebServer.arg(F("taskdevicepin1pullup"));
   String taskdevicepin1inversed = WebServer.arg(F("taskdevicepin1inversed"));
   String taskdevicename = WebServer.arg(F("taskdevicename"));
+  String i2c_multiplex_port = WebServer.arg(F("i2c_multiplex_port"));
   String taskdeviceport = WebServer.arg(F("taskdeviceport"));
   String taskdeviceformula[VARS_PER_TASK];
   String taskdevicevaluename[VARS_PER_TASK];
@@ -1080,6 +1112,8 @@ void handle_devices() {
         else
           Settings.TaskDeviceTimer[index - 1] = 0;
       }
+
+			ExtraTaskSettings.i2c_multiplex_port = i2c_multiplex_port.toInt();
 
       taskdevicename.toCharArray(tmpString, 41);
       Settings.TaskDeviceEnabled[index - 1] = (taskdeviceenabled == "on");
@@ -1306,6 +1340,42 @@ void handle_devices() {
       reply += F("<TR><TD>Name:<TD><input type='text' maxlength='40' name='taskdevicename' value='");
       reply += ExtraTaskSettings.TaskDeviceName;
       reply += F("'>");
+
+      if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
+      {
+      	addLog(LOG_LEVEL_INFO, "multiplex addr: " + String(Settings.i2c_Multiplexer_adr));
+      	if (Settings.i2c_Multiplexer_adr != -1)
+      	{
+
+      	  reply += F("<TR><TD>Multiplexer (TCA9548A) Port:<TD>");
+      	  String i2c_multiplex_port_options[9];
+      	  byte i2c_multiplex_port_optionValues[9];
+      	  i2c_multiplex_port_options[0] = F(" ");
+      	  i2c_multiplex_port_optionValues[0] = 255;
+      	  for (byte x = 0; x < 8; x++)
+      	  {
+      	  	i2c_multiplex_port_options[x+1] = String(x);
+      	  	i2c_multiplex_port_optionValues[x+1] = x;
+      	  }
+
+      	  reply += F("<select name='i2c_multiplex_port'>");
+      	  for (byte x = 0; x < 9; x++)
+      	  {
+      	  	reply += F("<option value='");
+      	  	reply += i2c_multiplex_port_optionValues[x];
+      	  	reply += "'";
+      	    if (ExtraTaskSettings.i2c_multiplex_port == i2c_multiplex_port_optionValues[x])
+      	    	reply += F(" selected");
+      	    reply += ">";
+      	    reply += i2c_multiplex_port_options[x];
+      	    reply += F("</option>");
+      	  }
+      	  reply += F("</select>");
+
+      	}
+
+      }
+
 
       if (Device[DeviceIndex].TimerOption)
       {

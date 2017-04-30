@@ -363,6 +363,7 @@ struct SettingsStruct
   unsigned long Delay;
   int8_t        Pin_i2c_sda;
   int8_t        Pin_i2c_scl;
+  int8_t        i2c_Multiplexer_adr;
   int8_t        Pin_status_led;
   int8_t        Pin_sd_cs;
   int8_t        PinBootStates[17];
@@ -450,6 +451,7 @@ struct ExtraTaskSettingsStruct
   long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
   byte    TaskDeviceValueDecimals[VARS_PER_TASK];
   int16_t TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
+  int8_t    i2c_multiplex_port;
 } ExtraTaskSettings;
 
 struct EventStruct
