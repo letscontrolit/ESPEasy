@@ -239,11 +239,11 @@ try:
 
     print(output_format.format(
         "ESPEasy",
-        base['text'],
-        base['data'],
-        base['rodata'],
-        base['bss'],
-        base['irom0_text'],
+        total['text'],
+        total['data'],
+        total['rodata'],
+        total['bss'],
+        total['irom0_text'],
     ))
 
 except:
