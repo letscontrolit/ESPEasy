@@ -417,6 +417,7 @@ struct SettingsStruct
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
+  int8_t				i2c_multiplex_port[TASKS_MAX];
 } Settings;
 
 struct ControllerSettingsStruct
@@ -451,7 +452,6 @@ struct ExtraTaskSettingsStruct
   long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
   byte    TaskDeviceValueDecimals[VARS_PER_TASK];
   int16_t TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
-  int8_t    i2c_multiplex_port;
 } ExtraTaskSettings;
 
 struct EventStruct

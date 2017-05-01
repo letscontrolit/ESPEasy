@@ -1113,7 +1113,7 @@ void handle_devices() {
           Settings.TaskDeviceTimer[index - 1] = 0;
       }
 
-			ExtraTaskSettings.i2c_multiplex_port = i2c_multiplex_port.toInt();
+      Settings.i2c_multiplex_port[index - 1] = i2c_multiplex_port.toInt();
 
       taskdevicename.toCharArray(tmpString, 41);
       Settings.TaskDeviceEnabled[index - 1] = (taskdeviceenabled == "on");
@@ -1343,7 +1343,7 @@ void handle_devices() {
 
       if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
       {
-      	addLog(LOG_LEVEL_INFO, "multiplex addr: " + String(Settings.i2c_Multiplexer_adr));
+      	addLog(LOG_LEVEL_DEBUG, "multiplex addr: " + String(Settings.i2c_Multiplexer_adr, HEX));
       	if (Settings.i2c_Multiplexer_adr != -1)
       	{
 
@@ -1351,7 +1351,7 @@ void handle_devices() {
       	  String i2c_multiplex_port_options[9];
       	  byte i2c_multiplex_port_optionValues[9];
       	  i2c_multiplex_port_options[0] = F(" ");
-      	  i2c_multiplex_port_optionValues[0] = 255;
+      	  i2c_multiplex_port_optionValues[0] = -1;
       	  for (byte x = 0; x < 8; x++)
       	  {
       	  	i2c_multiplex_port_options[x+1] = String(x);
@@ -1364,7 +1364,7 @@ void handle_devices() {
       	  	reply += F("<option value='");
       	  	reply += i2c_multiplex_port_optionValues[x];
       	  	reply += "'";
-      	    if (ExtraTaskSettings.i2c_multiplex_port == i2c_multiplex_port_optionValues[x])
+      	    if (Settings.i2c_multiplex_port[index - 1] == i2c_multiplex_port_optionValues[x])
       	    	reply += F(" selected");
       	    reply += ">";
       	    reply += i2c_multiplex_port_options[x];

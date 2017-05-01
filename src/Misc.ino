@@ -443,6 +443,7 @@ void taskClear(byte taskIndex, boolean save)
 {
   Settings.TaskDeviceNumber[taskIndex] = 0;
   ExtraTaskSettings.TaskDeviceName[0] = 0;
+  Settings.i2c_multiplex_port[taskIndex] = -1;
   Settings.TaskDeviceDataFeed[taskIndex] = 0;
   Settings.TaskDevicePin1[taskIndex] = -1;
   Settings.TaskDevicePin2[taskIndex] = -1;
@@ -967,6 +968,7 @@ void ResetFactory(void)
     for (byte y = 0; y < CONTROLLER_MAX; y++)
       Settings.TaskDeviceSendData[y][x] = true;
     Settings.TaskDeviceTimer[x] = Settings.Delay;
+    Settings.i2c_multiplex_port[x] = -1;
   }
   Settings.Build = BUILD;
   Settings.UseSerial = true;
