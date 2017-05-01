@@ -68,11 +68,6 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-//    case PLUGIN_INIT:
-//    {
-//    	success = true;
-//    	break;
-//    }
     case PLUGIN_READ:
       {
       	AM2320 sensor;
