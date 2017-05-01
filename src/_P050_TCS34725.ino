@@ -11,7 +11,7 @@
 // thanks to adafruit for the great tutorial on in
 // https://learn.adafruit.com/adafruit-tca9548a-1-to-8-i2c-multiplexer-breakout/wiring-and-test
 //
-//#ifdef PLUGIN_BUILD_TESTING
+#ifdef PLUGIN_BUILD_TESTING
 
 #include "Adafruit_TCS34725.h"
 
@@ -322,4 +322,4 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 }
 
 
-//#endif
+#endif
