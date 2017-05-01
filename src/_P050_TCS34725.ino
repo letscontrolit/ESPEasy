@@ -179,10 +179,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         attachInterrupt(Settings.TaskDevicePin3[event->TaskIndex], Plugin_050_interrupt, FALLING);
 
         //set multiplexer to correct port if
-        if (ExtraTaskSettings.i2c_multiplex_port != -1)
+        if (Settings.i2c_multiplex_port[event->TaskIndex] != -1)
         {
-        	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(ExtraTaskSettings.i2c_multiplex_port));
-        	i2cMultiplexerSelect(ExtraTaskSettings.i2c_multiplex_port);
+        	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.i2c_multiplex_port[event->TaskIndex]));
+        	i2cMultiplexerSelect(Settings.i2c_multiplex_port[event->TaskIndex]);
         }
         else
         {
@@ -270,10 +270,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       	if (Plugin_050_init) {
 
           //set multiplexer to correct port if
-          if (ExtraTaskSettings.i2c_multiplex_port != -1)
+          if (Settings.i2c_multiplex_port[event->TaskIndex] != -1)
           {
-          	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(ExtraTaskSettings.i2c_multiplex_port));
-          	i2cMultiplexerSelect(ExtraTaskSettings.i2c_multiplex_port);
+          	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.i2c_multiplex_port[event->TaskIndex]));
+          	i2cMultiplexerSelect(Settings.i2c_multiplex_port[event->TaskIndex]);
           }
           else
           {
