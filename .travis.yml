@@ -10,8 +10,6 @@ install:
   - pip install -U platformio
 script:
   - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
-  - echo ""
-  - echo "Building..."
   - platformio run -s
 
 before_deploy:
