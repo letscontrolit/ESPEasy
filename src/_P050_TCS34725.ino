@@ -38,7 +38,7 @@ void Plugin_050_interrupt()
 }
 
 
-boolean Plugin_050_init = false;
+boolean Plugin_050_init[TASKS_MAX];
 int waitTime;
 Adafruit_TCS34725 tcs;
 
@@ -235,7 +235,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       	/* Initialise with specific int time and gain values */
       	tcs = Adafruit_TCS34725(integrationTime, gain);
         if (tcs.begin()) {
-          Plugin_050_init = true;
+          Plugin_050_init[event->TaskIndex] = true;
           success = true;
         	addLog(LOG_LEVEL_DEBUG, String(F("TCS34725 init with Integr.Time: ")) + String(waitTime-1) +
         			F(" and Gain: ") + String(gain) + F(" completed"));
@@ -252,7 +252,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         }
         else {
 					addLog(LOG_LEVEL_DEBUG, F("TCS34725 init failed, no sensor?"));
-					Plugin_050_init = false;
+					Plugin_050_init[event->TaskIndex] = false;
 	        success = false;
         }
 
@@ -267,9 +267,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-      	if (Plugin_050_init) {
-
-          //set multiplexer to correct port if
+      	if (Plugin_050_init[event->TaskIndex])
+      	{
+      		//set multiplexer to correct port if
           if (Settings.i2c_multiplex_port[event->TaskIndex] != -1)
           {
           	addLog(LOG_LEVEL_DEBUG, String(F("Multiplexer Port: ")) + String(Settings.i2c_multiplex_port[event->TaskIndex]));
