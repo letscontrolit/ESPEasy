@@ -3,7 +3,7 @@
 //#######################################################################################################
 //
 // Temperature and Humidity Sensor AM2320
-//
+// written by https://github.com/krikk
 // based on this library: https://github.com/hibikiledo/AM2320
 // this code is based on version 1.0 of the above library
 //
@@ -99,9 +99,6 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
           success = false;
           break;
         }
-
-
-
       }
   }
   return success;
