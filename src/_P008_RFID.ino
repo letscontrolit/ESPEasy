@@ -7,17 +7,13 @@
 #define PLUGIN_NAME_008       "RFID Reader - Wiegand"
 #define PLUGIN_VALUENAME1_008 "Tag"
 
-#define PLUGIN_008_MAXWAIT 50  // time to wait after the last bit [ms]
-
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
 
 volatile byte Plugin_008_bitCount = 0;     // Count the number of bits received.
-volatile uint64_t Plugin_008_keyBuffer;    // A 64-bit-long keyBuffer into which the number is stored.
-unsigned long Plugin_008_lastBitTime = 0;  // millis() since the last bit was received
+uint64_t Plugin_008_keyBuffer = 0;    // A 64-bit-long keyBuffer into which the number is stored.
 byte Plugin_008_timeoutCount = 0;
 byte Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
-byte Plugin_008_Unit = 0;
 
 boolean Plugin_008_init = false;
 
@@ -71,7 +67,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_008_init)
         {
-          if (Plugin_008_bitCount > 0 && (millis() - Plugin_008_lastBitTime > PLUGIN_008_MAXWAIT))
+          if (Plugin_008_bitCount > 0)
           {
             if (Plugin_008_bitCount % 4 == 0 && ((Plugin_008_keyBuffer & 0xF) == 11))
             {
@@ -169,7 +165,6 @@ void Plugin_008_interrupt1()
   // We've received a 1 bit. (bit 0 = high, bit 1 = low)
   Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1;     // Left shift the number (effectively multiplying by 2)
   Plugin_008_keyBuffer += 1;         // Add the 1 (not necessary for the zeroes)
-  Plugin_008_lastBitTime = millis();
   Plugin_008_bitCount++;         // Increment the bit count
 }
 
@@ -179,6 +174,5 @@ void Plugin_008_interrupt2()
 {
   // We've received a 0 bit. (bit 0 = low, bit 1 = high)
   Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1;     // Left shift the number (effectively multiplying by 2)
-  Plugin_008_lastBitTime = millis();
   Plugin_008_bitCount++;           // Increment the bit count
 }
