@@ -270,6 +270,7 @@
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOMCONTROLLER     32768  // custom controller config = 4k, currently only one can use it.
 
+#include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <WiFiUdp.h>
@@ -1161,6 +1162,8 @@ boolean checkSystemTimers()
 \*********************************************************************************************/
 void backgroundtasks()
 {
+  tcpCleanup();
+
   if (Settings.UseSerial)
     if (Serial.available())
       if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
