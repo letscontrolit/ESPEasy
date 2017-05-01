@@ -75,7 +75,7 @@ void addHeader(boolean showMenu, String& str)
     str += F(".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}");
     str += F(".button-menu:hover {background:#ddddff;}");
     str += F(".button-link:hover {background:#369;}");
-    str += F("th {margin: 0 -2px 0 -2px; padding:8px; background-color:black; color:#ffffff; font-weight: bold;}");
+    str += F("th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}");
     str += F("td {padding:4px;}");
     str += F("tr {padding:8px;}");
     str += F("table {color:black;}");
@@ -881,25 +881,17 @@ void handle_hardware() {
 
   addFormSubHeader(reply, F("Wifi Status LED"));
 
-  reply += F("<TR><TD>Pin LED:<TD>");
-  addPinSelect(false, reply, "pled", Settings.Pin_status_led);
-  reply += F("<TR><TD>Inversed LED:<TD>");
-  if (Settings.Pin_status_led_Inversed)
-    reply += F("<input type=checkbox id='pledi'  name='pledi' checked>&nbsp;");
-  else
-    reply += F("<input type=checkbox id='pledi' name='pledi'>&nbsp;");
-
+  addFormPinSelect(reply, F("Pin LED"), "pled", Settings.Pin_status_led);
+  addFormCheckBox(reply, F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(reply, F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   //addFormSeparator(reply);
 
   addFormSubHeader(reply, F("I2C Interface"));
 
-  addRowLabel(reply, F("SDA"));
-  addPinSelect(true, reply, F("psda"), Settings.Pin_i2c_sda);
 
-//JKJKJK  addRowLabel(reply, F("SCL"));
-  addFormPinSelect(reply, F("SCL"), F("pscl"), Settings.Pin_i2c_scl, true);
+  addFormPinSelectI2C(reply, F("SDA"), F("psda"), Settings.Pin_i2c_sda);
+  addFormPinSelectI2C(reply, F("SCL"), F("pscl"), Settings.Pin_i2c_scl);
 
   //addFormSeparator(reply);
 
@@ -909,45 +901,23 @@ void handle_hardware() {
   addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
   addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
 
-  addRowLabel(reply, F("SD Card CS Pin"));
-  addPinSelect(false, reply, "sd", Settings.Pin_sd_cs);
+  addFormPinSelect(reply, F("SD Card CS Pin"), "sd", Settings.Pin_sd_cs);
 
   //addFormSeparator(reply);
 
   addFormSubHeader(reply, F("GPIO boot states"));
 
-  addRowLabel(reply, F("Pin mode 0 (D3)"));
-  addPinStateSelect(reply, "p0", Settings.PinBootStates[0]);
-
-  addRowLabel(reply, F("Pin mode 2 (D4)"));
-  addPinStateSelect(reply, "p2", Settings.PinBootStates[2]);
-
-  addRowLabel(reply, F("Pin mode 4 (D2)"));
-  addPinStateSelect(reply, "p4", Settings.PinBootStates[4]);
-
-  addRowLabel(reply, F("Pin mode 5 (D1)"));
-  addPinStateSelect(reply, "p5", Settings.PinBootStates[5]);
-
-  addRowLabel(reply, F("Pin mode 9 (D11)"));
-  addPinStateSelect(reply, "p9", Settings.PinBootStates[9]);
-
-  addRowLabel(reply, F("Pin mode 10 (D12)"));
-  addPinStateSelect(reply, "p10", Settings.PinBootStates[10]);
-
-  addRowLabel(reply, F("Pin mode 12 (D6)"));
-  addPinStateSelect(reply, "p12", Settings.PinBootStates[12]);
-
-  addRowLabel(reply, F("Pin mode 13 (D7)"));
-  addPinStateSelect(reply, "p13", Settings.PinBootStates[13]);
-
-  addRowLabel(reply, F("Pin mode 14 (D5)"));
-  addPinStateSelect(reply, "p14", Settings.PinBootStates[14]);
-
-  addRowLabel(reply, F("Pin mode 15 (D8)"));
-  addPinStateSelect(reply, "p15", Settings.PinBootStates[15]);
-
-  addRowLabel(reply, F("Pin mode 16 (D0)"));
-  addPinStateSelect(reply, "p16", Settings.PinBootStates[16]);
+  addFormPinStateSelect(reply, F("Pin mode 0 (D3)"), F("p0"), Settings.PinBootStates[0]);
+  addFormPinStateSelect(reply, F("Pin mode 2 (D4)"), F("p2"), Settings.PinBootStates[2]);
+  addFormPinStateSelect(reply, F("Pin mode 4 (D2)"), F("p4"), Settings.PinBootStates[4]);
+  addFormPinStateSelect(reply, F("Pin mode 5 (D1)"), F("p5"), Settings.PinBootStates[5]);
+  addFormPinStateSelect(reply, F("Pin mode 9 (D11)"), F("p9"), Settings.PinBootStates[9]);
+  addFormPinStateSelect(reply, F("Pin mode 10 (D12)"), F("p10"), Settings.PinBootStates[10]);
+  addFormPinStateSelect(reply, F("Pin mode 12 (D6)"), F("p12"), Settings.PinBootStates[12]);
+  addFormPinStateSelect(reply, F("Pin mode 13 (D7)"), F("p13"), Settings.PinBootStates[13]);
+  addFormPinStateSelect(reply, F("Pin mode 14 (D5)"), F("p14"), Settings.PinBootStates[14]);
+  addFormPinStateSelect(reply, F("Pin mode 15 (D8)"), F("p15"), Settings.PinBootStates[15]);
+  addFormPinStateSelect(reply, F("Pin mode 16 (D0)"), F("p16"), Settings.PinBootStates[16]);
 
   addFormSeparator(reply);
 
@@ -962,6 +932,12 @@ void handle_hardware() {
 //********************************************************************************
 // Add a GPIO pin select dropdown list
 //********************************************************************************
+void addFormPinStateSelect(String& str, const String& label, const String& id, int choice)
+{
+  addRowLabel(str, label);
+  addPinStateSelect(str, id, choice);
+}
+
 void addPinStateSelect(String& str, String name,  int choice)
 {
   String options[4];
@@ -1612,13 +1588,17 @@ void sortDeviceArray()
 }
 
 
-void addFormPinSelect(String& str, const String &label, const String &id, int choice, boolean forI2C)
+void addFormPinSelect(String& str, const String &label, const String &id, int choice)
 {
-  str += F("<TR><TD>");
-  str += label;
-  str += F("<TD>");
+  addRowLabel(str, label);
+  addPinSelect(false, str, id, choice);
+}
 
-  addPinSelect(forI2C, str, id, choice);
+
+void addFormPinSelectI2C(String& str, const String &label, const String &id, int choice)
+{
+  addRowLabel(str, label);
+  addPinSelect(true, str, id, choice);
 }
 
 
@@ -1895,6 +1875,18 @@ void addTaskSelect(String& str, String name,  int choice)
     str += ExtraTaskSettings.TaskDeviceName;
     str += "</option>";
   }
+}
+
+
+bool isFormItemChecked(const String& id)
+{
+  return WebServer.arg(id) == "on";
+}
+
+bool getFormItemInt(const String& id)
+{
+  String val = WebServer.arg(id);
+  return val.toInt();
 }
 
 
