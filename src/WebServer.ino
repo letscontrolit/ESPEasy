@@ -366,6 +366,7 @@ void handle_config() {
   addFormPasswordBox(reply, F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(reply, F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(reply, F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+  addFormSeparator(reply);
   addFormPasswordBox(reply, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
 
@@ -383,10 +384,11 @@ void handle_config() {
   addFormCheckBox(reply, F("Sleep enabled"), F("deepsleep"), Settings.deepSleep);
   reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/SleepMode\" target=\"_blank\">?</a>");
   addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay);
+  reply += F(" (sec)");
 
   addFormSeparator(reply);
 
-  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -1345,7 +1347,8 @@ void handle_devices() {
       if (!Device[DeviceIndex].Custom)
       {
         //reply += F("<TR><TH>Optional Settings<TH>Value");
-        addFormSubHeader(reply,F("Value Settings"));
+        if (Device[DeviceIndex].ValueCount > 0)
+          addFormSubHeader(reply,F("Value Settings"));
 
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
@@ -1745,7 +1748,7 @@ void addNumericBox(String& str, const String &id, int value)
 {
   str += F("<input type='number' name='");
   str += id;
-  str += F("' size='16' value='");
+  str += F("' style='width: 80px;' value='");
   str += value;
   str += F("'>");
 }
@@ -2378,7 +2381,7 @@ void handle_advanced() {
   addFormCheckBox(reply, F("Use NTP"), F("usentp"), Settings.UseNTP);
   addFormTextBox(reply, F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
   addFormNumericBox(reply, F("Timezone Offset"), F("timezone"), Settings.TimeZone);
-  reply += F(" (Minutes)");
+  reply += F(" (minutes)");
   addFormCheckBox(reply, F("DST"), F("dst"), Settings.DST);
 
   addFormSubHeader(reply, F("Log Settings"));
