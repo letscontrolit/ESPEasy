@@ -2299,7 +2299,7 @@ void handle_advanced() {
   reply += F("<TR><TD>Message Delay (ms):<TD>");
   addNumericBox(reply, F("messagedelay"), Settings.MessageDelay);
 
-  reply += F("<TR><TD>Fixed IP Octet:<TD><input type='text' name='ip' value='");
+  reply += F("<TR><TD>Fixed IP Octet:<TD>");
   addNumericBox(reply, F("ip"), Settings.IP_Octet);
 
   reply += F("<TR><TD>Use NTP:<TD>");
