@@ -1,4 +1,16 @@
 
+// clean up tcp connections that are in TIME_WAIT status, to conserve memory
+// In future versions of WiFiClient it should be possible to call abort(), but
+// this feature is not in all upstream versions yet.
+// See https://github.com/esp8266/Arduino/issues/1923
+// and https://github.com/letscontrolit/ESPEasy/issues/253
+void tcpCleanup()
+{
+  while(tcp_tw_pcbs!=NULL)
+  {
+    tcp_abort(tcp_tw_pcbs);
+  }
+}
 
 bool isDeepSleepEnabled()
 {

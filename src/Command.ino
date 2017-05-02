@@ -290,7 +290,7 @@ void ExecuteCommand(byte source, const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
-    if (Par1>=0 && Par1<RULES_TIMER_MAX)
+    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
     {
       success = true;
       if (Par2)
@@ -299,6 +299,10 @@ void ExecuteCommand(byte source, const char *Line)
       else
         //disable existing timer
         RulesTimer[Par1 - 1] = 0L;
+    }
+    else
+    {
+      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
     }
   }
 
