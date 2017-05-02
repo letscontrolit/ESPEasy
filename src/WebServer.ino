@@ -1276,6 +1276,7 @@ void handle_devices() {
       if (Device[DeviceIndex].TimerOption)
       {
         addFormNumericBox(reply, F("Delay"), F("taskdevicetimer"), Settings.TaskDeviceTimer[index - 1]);
+        reply += F(" (sec)");
         if (Device[DeviceIndex].TimerOptional)
           reply += F(" (Optional for this device)");
       }
