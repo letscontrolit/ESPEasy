@@ -19,12 +19,13 @@ boolean sendData(struct EventStruct *event)
     if (dif < Settings.MessageDelay)
     {
       uint16_t delayms = Settings.MessageDelay - dif;
-      char log[30];
-      sprintf_P(log, PSTR("HTTP : Delay %u ms"), delayms);
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
-      unsigned long timer = millis() + delayms;
-      while (millis() < timer)
-        backgroundtasks();
+      //this is logged nowhere else, so might as well disable it here also:
+      // addLog(LOG_LEVEL_DEBUG_MORE, String(F("CTRL : Message delay (ms): "))+delayms);
+      delayBackground(delayms);
+
+      // unsigned long timer = millis() + delayms;
+      // while (millis() < timer)
+      //   backgroundtasks();
     }
   }
 
@@ -129,6 +130,9 @@ void MQTTConnect()
       log = F("Subscribed to: ");
       log += subscribeTo;
       addLog(LOG_LEVEL_INFO, log);
+
+      MQTTclient.publish(LWTTopic.c_str(), "Connected");
+
       statusLED(true);
       break; // end loop if succesfull
     }

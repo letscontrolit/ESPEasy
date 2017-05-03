@@ -429,7 +429,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
          unsigned char time = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
          plugin_015_setTiming(gain,time,ms);
          plugin_015_setPowerUp();
-         delayMillis(ms);
+         delayBackground(ms);
          unsigned int data0, data1;
 
          if (plugin_015_getData(data0,data1))
@@ -475,7 +475,3 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-
-
-

@@ -7,9 +7,10 @@ cache:
   - "~/.platformio"
   - "./.pioenvs"
 install:
-- pip install -U platformio
+  - pip install -U platformio
 script:
-- platformio run
+  - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
+  - platformio run -s
 
 before_deploy:
   - ./before_deploy

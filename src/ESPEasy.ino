@@ -112,9 +112,13 @@
 
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-//Normally only enabled for the platformio dev environment, since its helpfull while developing.
 // #define FEATURE_ARDUINO_OTA
 
+
+//enable reporting status to ESPEasy developers.
+//this informs us of crashes and stability issues.
+// not finished yet!
+// #define FEATURE_REPORTING
 
 //Select which plugin sets you want to build.
 //These are normally automaticly set via the Platformio build environment.
@@ -228,9 +232,10 @@
 #define NO_SEARCH_PIN_STATE             false
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
-#define DEVICE_TYPE_I2C                     2  // connected through I2C
-#define DEVICE_TYPE_ANALOG                  3  // tout pin
-#define DEVICE_TYPE_DUAL                    4  // connected through 2 datapins
+#define DEVICE_TYPE_DUAL                    2  // connected through 2 datapins
+#define DEVICE_TYPE_TRIPLE                  3  // connected through 3 datapins
+#define DEVICE_TYPE_ANALOG                 10  // AIN/tout pin
+#define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 #define SENSOR_TYPE_SINGLE                  1
@@ -265,6 +270,7 @@
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOMCONTROLLER     32768  // custom controller config = 4k, currently only one can use it.
 
+#include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <WiFiUdp.h>
@@ -302,6 +308,7 @@ extern "C" {
 #include <ESP8266mDNS.h>
 bool ArduinoOTAtriggered=false;
 #endif
+
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -386,10 +393,15 @@ struct SettingsStruct
   byte          Notification[NOTIFICATION_MAX];
   byte          TaskDeviceNumber[TASKS_MAX];
   unsigned int  OLD_TaskDeviceID[TASKS_MAX];
-  int8_t        TaskDevicePin1[TASKS_MAX];
-  int8_t        TaskDevicePin2[TASKS_MAX];
-  int8_t        TaskDevicePin3[TASKS_MAX];
-  byte          TaskDevicePort[TASKS_MAX];
+  union {
+    struct {
+      int8_t        TaskDevicePin1[TASKS_MAX];
+      int8_t        TaskDevicePin2[TASKS_MAX];
+      int8_t        TaskDevicePin3[TASKS_MAX];
+      byte          TaskDevicePort[TASKS_MAX];
+    };
+    int8_t        TaskDevicePin[4][TASKS_MAX];
+  };
   boolean       TaskDevicePin1PullUp[TASKS_MAX];
   int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
   boolean       TaskDevicePin1Inversed[TASKS_MAX];
@@ -404,6 +416,7 @@ struct SettingsStruct
   boolean       NotificationEnabled[NOTIFICATION_MAX];
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
+  boolean       Pin_status_led_Inversed;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -626,6 +639,7 @@ void setup()
   lowestRAM = FreeMem();
 
   Serial.begin(115200);
+  // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
 
@@ -686,6 +700,9 @@ void setup()
   if (!WifiConnect(true,3))
     WifiConnect(false,3);
 
+  #ifdef FEATURE_REPORTING
+  ReportStatus();
+  #endif
 
   //After booting, we want all the tasks to run without delaying more than neccesary.
   //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
@@ -789,10 +806,6 @@ void loop()
     wifiSetupConnect = false;
   }
 
-  if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
 
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
   if (isDeepSleepEnabled())
@@ -834,7 +847,7 @@ void run50TimesPerSecond()
   timer20ms = millis() + 20;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
 
-  statusLED(false);
+  // statusLED(false);
 }
 
 /*********************************************************************************************\
@@ -962,6 +975,10 @@ void runEach30Seconds()
     loopCounterMax = loopCounterLast;
 
   WifiCheck();
+
+  #ifdef FEATURE_REPORTING
+  ReportStatus();
+  #endif
 
 }
 
@@ -1145,6 +1162,13 @@ boolean checkSystemTimers()
 \*********************************************************************************************/
 void backgroundtasks()
 {
+  tcpCleanup();
+
+  if (Settings.UseSerial)
+    if (Serial.available())
+      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+        serial();
+
   // process DNS, only used if the ESP has no valid WiFi config
   if (wifiSetup)
     dnsServer.processNextRequest();
@@ -1166,4 +1190,6 @@ void backgroundtasks()
   #endif
 
   yield();
+
+  statusLED(false);
 }

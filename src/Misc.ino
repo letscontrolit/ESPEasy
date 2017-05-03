@@ -1,4 +1,16 @@
 
+// clean up tcp connections that are in TIME_WAIT status, to conserve memory
+// In future versions of WiFiClient it should be possible to call abort(), but
+// this feature is not in all upstream versions yet.
+// See https://github.com/esp8266/Arduino/issues/1923
+// and https://github.com/letscontrolit/ESPEasy/issues/253
+void tcpCleanup()
+{
+  while(tcp_tw_pcbs!=NULL)
+  {
+    tcp_abort(tcp_tw_pcbs);
+  }
+}
 
 bool isDeepSleepEnabled()
 {
@@ -31,7 +43,7 @@ void deepSleep(int delay)
   {
     log = F("Entering deep sleep in 30 seconds.");
     addLog(LOG_LEVEL_INFO, log);
-    delayMillis(30000);
+    delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
@@ -346,7 +358,6 @@ boolean timeOut(unsigned long timer)
 /********************************************************************************************\
   Status LED
 \*********************************************************************************************/
-#define STATUS_PWM_LOWACTIVE
 #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
@@ -354,6 +365,7 @@ boolean timeOut(unsigned long timer)
 void statusLED(boolean traffic)
 {
   static int gnStatusValueCurrent = -1;
+  static long int gnLastUpdate = millis();
 
   if (Settings.Pin_status_led == -1)
     return;
@@ -379,8 +391,13 @@ void statusLED(boolean traffic)
     }
     else //connected
     {
-      nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
-      nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+      long int delta=millis()-gnLastUpdate;
+      if (delta>0 || delta<0 )
+      {
+        nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
+        nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+        gnLastUpdate=millis();
+      }
     }
   }
 
@@ -392,9 +409,8 @@ void statusLED(boolean traffic)
 
     long pwm = nStatusValue * nStatusValue; //simple gamma correction
     pwm >>= 10;
-#ifdef STATUS_PWM_LOWACTIVE
-    pwm = PWMRANGE-pwm;
-#endif
+    if (Settings.Pin_status_led_Inversed)
+      pwm = PWMRANGE-pwm;
 
     analogWrite(Settings.Pin_status_led, pwm);
   }
@@ -404,7 +420,7 @@ void statusLED(boolean traffic)
 /********************************************************************************************\
   delay in milliseconds with background processing
   \*********************************************************************************************/
-void delayMillis(unsigned long delay)
+void delayBackground(unsigned long delay)
 {
   unsigned long timer = millis() + delay;
   while (millis() < timer)
@@ -942,6 +958,7 @@ void ResetFactory(void)
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
   Settings.Pin_status_led  = -1;
+  Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
@@ -2584,4 +2601,14 @@ String getBearing(int degrees)
 
     return(bearing[int(degrees/22.5)]);
 
+}
+
+//escapes special characters in strings for use in html-forms
+void htmlEscape(String & html)
+{
+  html.replace("&",  "&amp;");
+  html.replace("\"", "&quot;");
+  html.replace("'",  "&#039;");
+  html.replace("<",  "&lt;");
+  html.replace(">",  "&gt;");
 }
