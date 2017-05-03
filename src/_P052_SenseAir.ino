@@ -264,3 +264,4 @@ unsigned int Plugin_052_ModRTU_CRC(byte buf[], int len, byte checkSum[2])
   checkSum[0] = (byte)(crc & 0xFF);
   return crc;
 }
+#endif
