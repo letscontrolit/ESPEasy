@@ -1059,7 +1059,7 @@ void handle_devices() {
         Settings.TaskDeviceID[controllerNr][index - 1] = taskdeviceid[controllerNr].toInt();
         Settings.TaskDeviceSendData[controllerNr][index - 1] = (taskdevicesenddata[controllerNr] == "on");
       }
-
+      
       if (taskdevicepin1.length() != 0)
         Settings.TaskDevicePin1[index - 1] = taskdevicepin1.toInt();
 
@@ -1131,7 +1131,7 @@ void handle_devices() {
       reply += page;
     reply += F("\">></a>");
 
-    reply += F("<TH>Task<TH>Enabled<TH>Device<TH>Name<TH>Port<TH>IDX/Variable<TH>GPIO<TH>Values");
+    reply += F("<TH>Task<TH>Enabled<TH>Device<TH>Name<TH>Port<TH>Ctr (IDX)<TH>GPIO<TH>Values");
 
     String deviceName;
 
@@ -1175,12 +1175,28 @@ void handle_devices() {
 
         reply += F("<TD>");
 
-        for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+        if (Device[DeviceIndex].SendDataOption)
         {
-          if (Settings.TaskDeviceID[controllerNr][x] != 0)
-            reply += Settings.TaskDeviceID[controllerNr][x];
-          if (x < CONTROLLER_MAX)
-            reply += F("<BR>");
+          boolean doBR = false;
+          for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+          {
+            byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
+            if (Settings.TaskDeviceSendData[controllerNr][x])
+            {
+              if (doBR)
+                reply += F("<BR>");
+              reply += controllerNr + 1;
+              if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
+              {
+                reply += F(" (");
+                reply += Settings.TaskDeviceID[controllerNr][x];
+                reply += F(")");
+                if (Settings.TaskDeviceID[controllerNr][x] == 0)
+                  reply += F(" &#9888;");
+              }
+              doBR = true;
+            }
+          }
         }
 
         reply += F("<TD>");
@@ -1281,6 +1297,7 @@ void handle_devices() {
           reply += F(" (Optional for this device)");
       }
 
+      /*
       if (!Device[DeviceIndex].Custom)
       {
         for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
@@ -1292,10 +1309,11 @@ void handle_devices() {
             label += controllerNr + 1;
             String id = F("taskdeviceid");
             id += controllerNr + 1;
-            addFormNumericBox(reply, label, id, Settings.TaskDevicePort[index - 1]);
+            addFormNumericBox(reply, label, id, Settings.TaskDeviceID[controllerNr][index - 1]);
           }
         }
       }
+      */
 
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[index - 1] == 0)
       {
@@ -1332,6 +1350,15 @@ void handle_devices() {
             reply += controllerNr + 1;
             reply += F("<TD>");
             addCheckBox(reply, id, Settings.TaskDeviceSendData[controllerNr][index - 1]);
+
+            byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
+            if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
+            {
+              reply += F(" IDX: ");
+              id = F("taskdeviceid");
+              id += controllerNr + 1;
+              addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][index - 1]);
+            }
           }
         }
       }
