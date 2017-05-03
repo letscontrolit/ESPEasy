@@ -130,6 +130,9 @@ void MQTTConnect()
       log = F("Subscribed to: ");
       log += subscribeTo;
       addLog(LOG_LEVEL_INFO, log);
+
+      MQTTclient.publish(LWTTopic.c_str(), "Connected");
+
       statusLED(true);
       break; // end loop if succesfull
     }

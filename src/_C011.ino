@@ -165,7 +165,7 @@ boolean HTTPSend011(struct EventStruct *event)
 
   String hostName = host.toString();
   if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName[event->ProtocolIndex];
+    hostName = ControllerSettings.HostName;
 
   String payload = String(customConfig.HttpMethod) + " /";
   payload += customConfig.HttpUri;
@@ -189,6 +189,7 @@ boolean HTTPSend011(struct EventStruct *event)
     payload += F("\r\n\r\n");
     payload += body;
   }
+  payload += F("\r\n");
 
   // This will send the request to the server
   client.print(payload);

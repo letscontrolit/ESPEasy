@@ -122,17 +122,6 @@ try:
 
     objectDumpBin = sys.argv[1]
 
-    output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
-    print(output_format.format(
-        "plugin",
-        "cache IRAM",
-        "init RAM",
-        "r.o. RAM",
-        "uninit RAM",
-        "Flash ROM",
-    ))
-
-
     enable_all()
 
 
@@ -152,6 +141,7 @@ try:
         test_plugins=plugins
     test_plugins.sort()
 
+    print("Analysing ESPEasy memory usage for env {} ...\n".format(env))
 
     #### disable all plugins and to get base size
     for plugin in test_plugins:
@@ -161,12 +151,33 @@ try:
     # for lib in libs:
     #     disable_lib(lib)
 
-    #build without plugins to get base memory usage
+    #just build the core without plugins to get base memory usage
     subprocess.check_call("platformio run --silent --environment "+env, shell=True)
     # #two times, sometimes it changes a few bytes somehow
     # SEEMS TO BE NOT USEFULL
     # subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
     base=analyse_memory(".pioenvs/"+env+"/firmware.elf")
+
+
+    output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
+    print(output_format.format(
+        "module",
+        "cache IRAM",
+        "init RAM",
+        "r.o. RAM",
+        "uninit RAM",
+        "Flash ROM",
+    ))
+
+
+    print(output_format.format(
+        "CORE",
+        base['text'],
+        base['data'],
+        base['rodata'],
+        base['bss'],
+        base['irom0_text'],
+    ))
 
 
     # note: unused libs never use any memory, so dont have to test this
@@ -218,13 +229,23 @@ try:
     total=analyse_memory(".pioenvs/"+env+"/firmware.elf")
 
     print(output_format.format(
-        "ALL",
+        "ALL PLUGINS",
         total['text']-base['text'],
         total['data']-base['data'],
         total['rodata']-base['rodata'],
         total['bss']-base['bss'],
         total['irom0_text']-base['irom0_text'],
     ))
+
+    print(output_format.format(
+        "ESPEasy",
+        total['text'],
+        total['data'],
+        total['rodata'],
+        total['bss'],
+        total['irom0_text'],
+    ))
+
 except:
     enable_all()
 
@@ -232,3 +253,5 @@ except:
 
 
 enable_all()
+
+print("\n")
