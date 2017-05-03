@@ -93,11 +93,8 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
-        string += F("<TR><TD>Send sensor to sleep:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-          string += F("<input type=checkbox name=plugin_010_sleep checked>");
-        else
-          string += F("<input type=checkbox name=plugin_010_sleep>");
+        addFormCheckBox(string, F("Send sensor to sleep:"), F("plugin_010_sleep"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;

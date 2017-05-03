@@ -5,15 +5,16 @@
 // Adafruit Motorshield v2
 // like this one: https://www.adafruit.com/products/1438
 // based on this library: https://github.com/adafruit/Adafruit_Motor_Shield_V2_Library
-// Currently DC Motors and Steppers are implemented, Servos are missing!!!
+// written by https://github.com/krikk
+// Currently DC Motors and Steppers are implemented, Servos are in default firmware!!!
 
-#ifdef PLUGIN_BUILD_DEV
+#ifdef PLUGIN_BUILD_TESTING
 
 #include <Adafruit_MotorShield.h>
 
 #define PLUGIN_048
 #define PLUGIN_ID_048         48
-#define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2 [DEVELOPMENT]"
+#define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2 [TEST]"
 #define PLUGIN_VALUENAME1_048 "MotorShield v2"
 
 uint8_t Plugin_048_MotorShield_address = 0x60;
@@ -57,25 +58,14 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-			string +=
-			F("<TR><TD>I2C Address (Hex): <TD><input type='text' title='Set i2c Address of sensor' name='");
-			string += F("plugin_048_adr' value='0x");
-			string += String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX);
-			string += F("'>");
+    	addFormTextBox(string, F("I2C Address (Hex):"), F("plugin_048_adr"), String(F("0x")) +
+    			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
-			string +=
-			F("<TR><TD>Stepper: steps per revolution: <TD><input type='text' title='Set steps per revolution for steppers' name='");
-			string += F("plugin_048_MotorStepsPerRevolution' value='");
-			string += String(Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-			string += F("'>");
+    	addFormNumericBox(string, F("Stepper: steps per revolution:"), F("plugin_048_MotorStepsPerRevolution")
+    			, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-			string +=
-			F("<TR><TD>Stepper speed (rpm): <TD><input type='text' title='Set speed of the stepper motor rotation in RPM' name='");
-			string += F("plugin_048_StepperSpeed' value='");
-			string += String(Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-			string += F("'>");
-
-
+    	addFormNumericBox(string, F("Stepper speed (rpm):"), F("plugin_048_StepperSpeed")
+    			, Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
 			success = true;
 			break;
