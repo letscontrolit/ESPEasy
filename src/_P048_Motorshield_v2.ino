@@ -74,10 +74,10 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		case PLUGIN_WEBFORM_SAVE: {
 			String plugin1 = WebServer.arg(F("plugin_048_adr"));
 			Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
-			String plugin2 = WebServer.arg(F("plugin_048_MotorStepsPerRevolution"));
-			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-			String plugin3 = WebServer.arg(F("plugin_048_StepperSpeed"));
-			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+
+			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_048_MotorStepsPerRevolution"));
+
+			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_048_StepperSpeed"));
 			success = true;
 			break;
 		}
