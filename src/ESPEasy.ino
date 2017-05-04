@@ -323,7 +323,7 @@ PubSubClient MQTTclient(mqtt);
 // WebServer
 ESP8266WebServer WebServer(80);
 
-// syslog stuff
+// udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
 
@@ -552,7 +552,7 @@ struct RTCStruct
 {
   byte ID1;
   byte ID2;
-  boolean valid;
+  boolean valid; // not used?
   byte factoryResetCounter;
   byte deepSleepState;
   byte rebootCounter; //not used yet?
@@ -858,7 +858,6 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-  checkUDP();
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
