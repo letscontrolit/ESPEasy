@@ -8,6 +8,8 @@
 #define PLUGIN_VALUENAME1_006 "Temperature"
 #define PLUGIN_VALUENAME2_006 "Pressure"
 
+
+// TODO this will not work if we have more than one of this task!
 boolean Plugin_006_init = false;
 
 boolean Plugin_006(byte function, struct EventStruct *event, String& string)
@@ -47,18 +49,14 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
-        string += F("_p006_bmp085_elev' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        string += F("'>");
+      	addFormNumericBox(string, F("Altitude [m]"), F("_p006_bmp085_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String elev = WebServer.arg(F("_p006_bmp085_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("_p006_bmp085_elev"));
         success = true;
         break;
       }

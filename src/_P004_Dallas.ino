@@ -98,8 +98,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         uint8_t addr[8];
-        String plugin1 = WebServer.arg(F("plugin_004_dev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_004_dev"));
 
         // find the address for selected device and store into extra tasksettings
         Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];

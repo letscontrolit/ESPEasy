@@ -1880,7 +1880,7 @@ bool isFormItemChecked(const String& id)
   return WebServer.arg(id) == "on";
 }
 
-bool getFormItemInt(const String& id)
+int getFormItemInt(const String& id)
 {
   String val = WebServer.arg(id);
   return val.toInt();
