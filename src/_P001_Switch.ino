@@ -99,11 +99,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
-        string += F("<TR><TD>Send Boot state:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
-          string += F("<input type=checkbox name=plugin_001_boot checked>");
-        else
-          string += F("<input type=checkbox name=plugin_001_boot>");
+        addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;
@@ -111,18 +108,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_001_type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_001_type"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          String plugin2 = WebServer.arg(F("plugin_001_dimvalue"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_001_dimvalue"));
         }
-        String plugin3 = WebServer.arg(F("plugin_001_button"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
 
-        String plugin4 = WebServer.arg(F("plugin_001_boot"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_001_button"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_boot"));
 
         success = true;
         break;

@@ -64,9 +64,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>Debounce Time (mSec):<TD><input type='text' name='plugin_003' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Debounce Time (mSec)"), F("plugin_003")
+      			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -128,12 +127,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_003");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg("plugin_003_countertype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg("plugin_003_raisetype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_003"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_003_countertype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_003_raisetype"));
         success = true;
         break;
       }
