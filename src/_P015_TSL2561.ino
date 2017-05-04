@@ -376,17 +376,11 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         }
         string += F("</select>");
 
-        string += F("<TR><TD>Send sensor to sleep:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-          string += F("<input type=checkbox name=plugin_015_sleep checked>");
-        else
-          string += F("<input type=checkbox name=plugin_015_sleep>");
+        addFormCheckBox(string, F("Send sensor to sleep:"), F("plugin_015_sleep"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-        string += F("<TR><TD>Enable 16x Gain:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
-          string += F("<input type=checkbox name=plugin_015_gain checked>");
-        else
-          string += F("<input type=checkbox name=plugin_015_gain>");
+        addFormCheckBox(string, F("Enable 16x Gain:"), F("plugin_015_gain"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;

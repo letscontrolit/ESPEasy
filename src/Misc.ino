@@ -729,7 +729,7 @@ boolean SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-  Save Custom Task settings to SPIFFS
+  Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
@@ -750,7 +750,7 @@ boolean SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasi
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
@@ -762,22 +762,22 @@ void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-boolean SaveCustomControllerSettings(byte* memAddress, int datasize)
+boolean SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return false;
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
 /********************************************************************************************\
-  Save Custom Controller settings to SPIFFS
+  Load Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-void LoadCustomControllerSettings(byte* memAddress, int datasize)
+void LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return;
-  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -792,7 +792,7 @@ boolean SaveNotificationSettings(int NotificationIndex, byte* memAddress, int da
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
@@ -1126,13 +1126,14 @@ void delayedReboot(int rebootDelay)
 /********************************************************************************************\
   Save RTC struct to RTC memory
   \*********************************************************************************************/
+//user-area of the esp starts at block 64 (bytes = block * 4)
 #define RTC_BASE_STRUCT 64
-void saveToRTC()
+boolean saveToRTC()
 {
   RTC.ID1 = 0xAA;
   RTC.ID2 = 0x55;
   RTC.valid = true;
-  system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  return(system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)));
 }
 
 
@@ -1141,7 +1142,9 @@ void saveToRTC()
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
+    return(false);
+
   if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
   {
     RTC.valid = false;
@@ -1155,9 +1158,9 @@ boolean readFromRTC()
   Save values to RTC memory
   \*********************************************************************************************/
 #define RTC_BASE_USERVAR 74
-void saveUserVarToRTC()
+boolean saveUserVarToRTC()
 {
-  system_rtc_mem_write(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+  return(system_rtc_mem_write(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar)));
 }
 
 
@@ -1166,7 +1169,7 @@ void saveUserVarToRTC()
   \*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  system_rtc_mem_read(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+  return(system_rtc_mem_read(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar)));
 }
 
 

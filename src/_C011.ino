@@ -49,7 +49,8 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         String escapeBuffer;
 
         P011_ConfigStruct customConfig;
-        LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+
+        LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
         for (byte i = 0; i < 5; i++)
@@ -95,11 +96,12 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         String httpuri = WebServer.arg(F("P011httpuri"));
         String httpheader = WebServer.arg(F("P011httpheader"));
         String httpbody = WebServer.arg(F("P011httpbody"));
+
         strlcpy(customConfig.HttpMethod, httpmethod.c_str(), sizeof(customConfig.HttpMethod));
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
         strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
         strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
-        SaveCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+        SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         break;
       }
 
@@ -134,7 +136,7 @@ boolean HTTPSend011(struct EventStruct *event)
   }
 
   P011_ConfigStruct customConfig;
-  LoadCustomControllerSettings((byte*)&customConfig, sizeof(customConfig));
+  LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
   // char log[80];
   boolean success = false;

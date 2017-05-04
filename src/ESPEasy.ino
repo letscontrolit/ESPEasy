@@ -263,12 +263,13 @@
 
 #define DAT_TASKS_SIZE                   2048
 #define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_CUSTOM_CONTROLLER_SIZE       1024
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
 #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-#define DAT_OFFSET_CUSTOMCONTROLLER     32768  // custom controller config = 4k, currently only one can use it.
+#define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
@@ -323,7 +324,7 @@ PubSubClient MQTTclient(mqtt);
 // WebServer
 ESP8266WebServer WebServer(80);
 
-// syslog stuff
+// udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
 
@@ -552,7 +553,7 @@ struct RTCStruct
 {
   byte ID1;
   byte ID2;
-  boolean valid;
+  boolean valid; // not used?
   byte factoryResetCounter;
   byte deepSleepState;
   byte rebootCounter; //not used yet?
@@ -858,7 +859,6 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-  checkUDP();
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
