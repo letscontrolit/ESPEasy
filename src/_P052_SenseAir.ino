@@ -19,7 +19,7 @@
 #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_052
-#define PLUGIN_ID_052         052
+#define PLUGIN_ID_052         52
 #define PLUGIN_NAME_052       "SenseAir"
 #define PLUGIN_VALUENAME1_052 ""
 
