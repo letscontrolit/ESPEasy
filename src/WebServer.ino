@@ -1062,7 +1062,7 @@ void handle_devices() {
         Settings.TaskDeviceID[controllerNr][index - 1] = taskdeviceid[controllerNr].toInt();
         Settings.TaskDeviceSendData[controllerNr][index - 1] = (taskdevicesenddata[controllerNr] == "on");
       }
-      
+
       if (taskdevicepin1.length() != 0)
         Settings.TaskDevicePin1[index - 1] = taskdevicepin1.toInt();
 
@@ -1696,7 +1696,44 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 
 }
 
+void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex )
+{
+  addRowLabel(str, label);
+  addSelector(str, id, optionCount, options, indices, selectedIndex );
+}
 
+void addSelector(String& str, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex )
+{
+  int index;
+
+  str += F("<select name='");
+  str += id;
+  str += F("'>");
+  for (byte x = 0; x < optionCount; x++)
+  {
+    if (indices)
+      index = indices[x];
+    else
+      index = x;
+    str += F("<option value='");
+    str += index;
+    str += "'";
+    if (selectedIndex == index)
+      str += F(" selected");
+    str += ">";
+    str += options[x];
+    str += F("</option>");
+  }
+  str += F("</select>");
+}
+
+
+void addUnit(String& str, const String &unit)
+{
+  str += F(" [");
+  str += unit;
+  str += F("]");
+}
 
 
 void addRowLabel(String& str, const String &label)
@@ -1724,9 +1761,9 @@ void addFormHeader(String& str, const String &header1, const String &header2)
 //********************************************************************************
 void addFormSubHeader(String& str, const String &header)
 {
-  str += F("<TR><TD><h3>");
+  str += F("<TR><TD colspan='2'><h3>");
   str += header;
-  str += F("</h3><TD><h3>&nbsp;</h3>");
+  str += F("</h3>");
 }
 
 
@@ -1746,7 +1783,7 @@ void addFormNote(String& str, const String &text)
 //********************************************************************************
 void addFormSeparator(String& str)
 {
-  str += F("<TR><TD><hr><TD><hr>");
+  str += F("<TR><TD colspan='2'><hr>");
 }
 
 
@@ -1767,7 +1804,7 @@ void addCheckBox(String& str, const String &id, boolean checked)
 
 void addFormCheckBox(String& str, const String &label, const String &id, boolean checked)
 {
-  addRowLabel(str,  label);
+  addRowLabel(str, label);
   addCheckBox(str, id, checked);
 }
 
