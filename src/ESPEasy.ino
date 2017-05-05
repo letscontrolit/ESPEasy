@@ -298,6 +298,7 @@ ADC_MODE(ADC_VCC);
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
 #include "include/UdpContext.h"
+#include "limits.h"
 
 extern "C" {
 #include "user_interface.h"

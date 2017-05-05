@@ -1775,20 +1775,42 @@ void addFormCheckBox(String& str, const String &label, const String &id, boolean
 //********************************************************************************
 // Add a numeric box
 //********************************************************************************
-void addNumericBox(String& str, const String &id, int value)
+void addNumericBox(String& str, const String &id, int value, int min, int max)
 {
   str += F("<input type='number' name='");
   str += id;
+  if (min != INT_MIN)
+  {
+		str += F("' min='");
+		str += min;
+  }
+  if (max != INT_MAX)
+  {
+    str += F("' max='");
+    str += max;
+  }
   str += F("' style='width: 80px;' value='");
   str += value;
   str += F("'>");
 }
 
-void addFormNumericBox(String& str, const String &label, const String &id, int value)
+void addNumericBox(String& str, const String &id, int value)
+{
+	addNumericBox(str, id, value, INT_MIN, INT_MAX);
+}
+
+void addFormNumericBox(String& str, const String &label, const String &id, int value, int min, int max)
 {
   addRowLabel(str,  label);
-  addNumericBox(str, id, value);
+  addNumericBox(str, id, value, min, max);
 }
+
+void addFormNumericBox(String& str, const String &label, const String &id, int value)
+{
+	addFormNumericBox(str, label, id, value, INT_MIN, INT_MAX);
+}
+
+
 
 void addTextBox(String& str, const String &id, const String & value, int maxlength)
 {
