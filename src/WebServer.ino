@@ -1886,6 +1886,12 @@ int getFormItemInt(const String& id)
   return val.toInt();
 }
 
+float getFormItemFloat(const String& id)
+{
+  String val = WebServer.arg(id);
+  return val.toFloat();
+}
+
 bool isFormItem(const String& id)
 {
   return (WebServer.arg(id).length() != 0);
