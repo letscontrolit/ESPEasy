@@ -573,47 +573,34 @@ void handle_controllers() {
 
       if (ControllerSettings.UseDNS)
       {
-        reply += F("<TR><TD>Controller Hostname:<TD><input type='text' name='controllerhostname' size='64' value='");
-        reply += ControllerSettings.HostName;
+      	addFormTextBox(reply, F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, 64);
       }
       else
       {
-        reply += F("<TR><TD>Controller IP:<TD><input type='text' name='controllerip' value='");
-        sprintf_P(str, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-        reply += str;
+      	addFormIPBox(reply, F("Controller IP"), F("controllerip"), ControllerSettings.IP);
       }
 
-      reply += F("'><TR><TD>Controller Port:<TD><input type='text' name='controllerport' value='");
-      reply += ControllerSettings.Port;
-      reply += F("'>");
+      addFormNumericBox(reply, F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
 
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
       if (Protocol[ProtocolIndex].usesAccount)
       {
-        reply += F("<TR><TD>Controller User:<TD><input type='text' name='controlleruser' value='");
-        reply += SecuritySettings.ControllerUser[index - 1];
-        reply += F("'>");
+      	addFormTextBox(reply, F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[index - 1], 26);
       }
 
       if (Protocol[ProtocolIndex].usesPassword)
       {
-        reply += F("<TR><TD>Controller Password:<TD><input type='password' name='controllerpassword' value='");
-        reply += SecuritySettings.ControllerPassword[index - 1];
-        reply += F("'>");
+      	addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], 64);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        reply += F("<TR><TD>Controller Subscribe:<TD><input type='text' name='controllersubscribe' size=64 value='");
-        reply += ControllerSettings.Subscribe;
-        reply += F("'>");
+      	addFormTextBox(reply, F("Controller Subscribe"), F("controllersubscribe"), ControllerSettings.Subscribe, 64);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        reply += F("<TR><TD>Controller Publish:<TD><input type='text' name='controllerpublish'  size=64 value='");
-        reply += ControllerSettings.Publish;
-        reply += F("'>");
+      	addFormTextBox(reply, F("Controller Publish"), F("controllerpublish"), ControllerSettings.Publish, 64);
       }
 
       addFormCheckBox(reply, F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[index - 1]);
