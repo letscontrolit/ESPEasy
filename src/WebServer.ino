@@ -523,24 +523,24 @@ void handle_controllers() {
     reply += F("<TH>Controller Settings<TH>");
     reply += F("<TR><TD>Protocol:");
     byte choice = Settings.Protocol[index - 1];
-    reply += F("<TD><select name='protocol' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\" >");
-    reply += F("<option value='0'>- Standalone -</option>");
+    reply += F("<TD>");
+    addSelector_Head(reply, F("protocol"), true);
+    addSelector_Item(reply, F("- Standalone -"), 0, false, false, F(""));
     for (byte x = 0; x <= protocolCount; x++)
     {
-      if ((index == 1) || !Protocol[x].usesMQTT) {  // Only show MQTT capable controllers for slot "0"
-        reply += F("<option value='");
-        reply += Protocol[x].Number;
-        reply += "'";
-        if (choice == Protocol[x].Number)
-          reply += F(" selected");
-        reply += ">";
-        String ProtocolName = "";
-        CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
-        reply += ProtocolName;
-        reply += F("</option>");
-      }
+      String ProtocolName = "";
+      CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
+
+      addSelector_Item(reply,
+        ProtocolName,
+        Protocol[x].Number,
+        choice == Protocol[x].Number,
+        !((index == 1) || !Protocol[x].usesMQTT),
+        F(""));
     }
-    reply += F("</select>");
+    addSelector_Foot(reply);
+
+
     reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyProtocols\" target=\"_blank\">?</a>");
 
 
@@ -554,22 +554,8 @@ void handle_controllers() {
       String options[2];
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
-      int optionValues[2];
-      optionValues[0] = 0;
-      optionValues[1] = 1;
-      reply += F("<TR><TD>Locate Controller:<TD><select name='usedns' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\" >");
-      for (byte x = 0; x < 2; x++)
-      {
-        reply += F("<option value='");
-        reply += optionValues[x];
-        reply += "'";
-        if (choice == optionValues[x])
-          reply += F(" selected");
-        reply += ">";
-        reply += options[x];
-        reply += F("</option>");
-      }
-      reply += F("</select>");
+
+      addFormSelector(reply, F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
 
       if (ControllerSettings.UseDNS)
       {
@@ -623,6 +609,9 @@ void handle_controllers() {
       CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
     }
+
+    addFormSeparator(reply);
+
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"controllers\">Close</a>");
     reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
     reply += F("</table></form>");
@@ -741,23 +730,22 @@ void handle_notifications() {
     reply += F("<TH>Notification Settings<TH>");
     reply += F("<TR><TD>Notification:");
     byte choice = Settings.Notification[index - 1];
-    reply += F("<TD><select name='notification' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\" >");
-    reply += F("<option value='0'>- None -</option>");
+    reply += F("<TD>");
+    addSelector_Head(reply, F("notification"), true);
+    addSelector_Item(reply, F("- None -"), 0, false, false, F(""));
     for (byte x = 0; x <= notificationCount; x++)
     {
-      reply += F("<option value='");
-      reply += Notification[x].Number;
-      reply += "'";
-      if (choice == Notification[x].Number)
-        reply += F(" selected");
-      reply += ">";
-
       String NotificationName = "";
       NPlugin_ptr[x](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
-      reply += NotificationName;
-      reply += F("</option>");
+      addSelector_Item(reply,
+        NotificationName,
+        Notification[x].Number,
+        choice == Notification[x].Number,
+        false,
+        F(""));
     }
-    reply += F("</select>");
+    addSelector_Foot(reply);
+
     reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyNotifications\" target=\"_blank\">?</a>");
 
 
@@ -814,6 +802,9 @@ void handle_notifications() {
       NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
     }
+
+    addFormSeparator(reply);
+
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"notifications\">Close</a>");
     reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
     reply += F("</table></form>");
@@ -914,32 +905,8 @@ void addFormPinStateSelect(String& str, const String& label, const String& id, i
 
 void addPinStateSelect(String& str, String name, int choice)
 {
-  String options[4];
-  options[0] = F("Default");
-  options[1] = F("Output Low");
-  options[2] = F("Output High");
-  options[3] = F("Input");
-  int optionValues[4];
-  optionValues[0] = 0;
-  optionValues[1] = 1;
-  optionValues[2] = 2;
-  optionValues[3] = 3;
-
-  str += F("<select name='");
-  str += name;
-  str += "'>";
-  for (byte x = 0; x < 4; x++)
-  {
-    str += F("<option value='");
-    str += optionValues[x];
-    str += "'";
-    if (choice == optionValues[x])
-      str += F(" selected");
-    str += ">";
-    str += options[x];
-    str += F("</option>");
-  }
-  str += F("</select>");
+  String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
+  addSelector(str, name, 4, options, NULL, NULL, choice, false);
 }
 
 
@@ -1452,27 +1419,22 @@ void addDeviceSelect(String& str, String name,  int choice)
 
   String deviceName;
 
-  str += F("<select name='");
-  str += name;
-  //str += "'>";
-  str += "' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\">";
-
-  str += F("<option value='0'></option>");
+  addSelector_Head(str, name, true);
+  addSelector_Item(str, F("- None -"), 0, false, false, F(""));
   for (byte x = 0; x <= deviceCount; x++)
   {
     byte index = sortedIndex[x];
     if (Plugin_id[index] != 0)
       Plugin_ptr[index](PLUGIN_GET_DEVICENAME, 0, deviceName);
-    str += F("<option value='");
-    str += Device[index].Number;
-    str += "'";
-    if (choice == Device[index].Number)
-      str += F(" selected");
-    str += ">";
-    str += deviceName;
-    str += F("</option>");
+
+    addSelector_Item(str,
+      deviceName,
+      Device[index].Number,
+      choice == Device[index].Number,
+      false,
+      F(""));
   }
-  str += F("</select>");
+  addSelector_Foot(str);
 }
 
 
@@ -1671,29 +1633,26 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 // Helper function actually rendering dropdown list for addPinSelect()
 //********************************************************************************
 void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, String& str, String name,  int choice, int count) {
-    str += F("<select name='");
-    str += name;
-    str += "'>";
+    addSelector_Head(str, name, false);
     for (byte x = 0; x < count; x++)
     {
-      str += F("<option value='");
-      str += optionValues[x];
-      str += "'";
+      boolean disabled = false;
+
       if (optionValues[x] != -1) // empty selection can never be disabled...
       {
         if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl)))
-          str += F(" disabled");
+          disabled = true;
         if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3)))
-          str += F(" disabled");
+        disabled = true;
       }
-      if (choice == optionValues[x])
-        str += F(" selected");
-      str += ">";
-      str += options[x];
-      str += F("</option>");
+      addSelector_Item(str,
+        options[x],
+        optionValues[x],
+        choice == optionValues[x],
+        disabled,
+        F(""));
     }
-    str += F("</select>");
-
+    addSelector_Foot(str);
 }
 
 void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex)
@@ -1737,6 +1696,42 @@ void addSelector(String& str, const String &id, int optionCount, const String op
     str += options[x];
     str += F("</option>");
   }
+  str += F("</select>");
+}
+
+
+void addSelector_Head(String& str, const String &id, boolean reloadonchange)
+{
+  str += F("<select name='");
+  str += id;
+  str += F("'");
+  if (reloadonchange)
+    str += F(" LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\"");
+  str += F(">");
+}
+
+void addSelector_Item(String& str, const String& option, int index, boolean selected, boolean disabled, const String& attr)
+{
+  str += F("<option value='");
+  str += index;
+  str += "'";
+  if (selected)
+    str += F(" selected");
+  if (disabled)
+    str += F(" disabled");
+  if (attr && attr.length() > 0)
+  {
+    str += F(" ");
+    str += attr;
+  }
+  str += ">";
+  str += option;
+  str += F("</option>");
+}
+
+
+void addSelector_Foot(String& str)
+{
   str += F("</select>");
 }
 
@@ -3041,19 +3036,9 @@ void handle_rules() {
     options[x] += x + 1;
     optionValues[x] = x + 1;
   }
-  reply += F("<TR><TD>Edit: <select name = 'set' LANGUAGE = javascript onchange = \"return dept_onchange(frmselect)\" >");
-  for (byte x = 0; x < RULESETS_MAX; x++)
-  {
-    reply += F("<option value='");
-    reply += optionValues[x];
-    reply += "'";
-    if (choice == optionValues[x])
-      reply += F(" selected");
-    reply += ">";
-    reply += options[x];
-    reply += F("</option>");
-  }
-  reply += F("</select>");
+
+  reply += F("<TR><TD>Edit: ");
+  addSelector(reply, F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
 
   // load form data from flash
 
@@ -3080,6 +3065,8 @@ void handle_rules() {
   reply += F(" characters (Max ");
   reply += RULES_MAX_SIZE;
   reply += F(")");
+
+  addFormSeparator(reply);
 
   reply += F("<TR><TD><input class=\"button-link\" type='submit' value='Submit'>");
   reply += F("</table></form>");
