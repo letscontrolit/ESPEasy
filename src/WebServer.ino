@@ -912,7 +912,7 @@ void addFormPinStateSelect(String& str, const String& label, const String& id, i
   addPinStateSelect(str, id, choice);
 }
 
-void addPinStateSelect(String& str, String name,  int choice)
+void addPinStateSelect(String& str, String name, int choice)
 {
   String options[4];
   options[0] = F("Default");
@@ -1696,19 +1696,27 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 
 }
 
-void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex )
+void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex)
 {
-  addRowLabel(str, label);
-  addSelector(str, id, optionCount, options, indices, selectedIndex );
+  addFormSelector(str, label, id, optionCount, options, indices, NULL, selectedIndex, false);
 }
 
-void addSelector(String& str, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex )
+void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
+{
+  addRowLabel(str, label);
+  addSelector(str, id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+}
+
+void addSelector(String& str, const String &id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
 {
   int index;
 
   str += F("<select name='");
   str += id;
-  str += F("'>");
+  str += F("'");
+  if (reloadonchange)
+    str += F(" LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\"");
+  str += F(">");
   for (byte x = 0; x < optionCount; x++)
   {
     if (indices)
@@ -1720,6 +1728,11 @@ void addSelector(String& str, const String &id, int optionCount, const String op
     str += "'";
     if (selectedIndex == index)
       str += F(" selected");
+    if (attr)
+    {
+      str += F(" ");
+      str += attr[x];
+    }
     str += ">";
     str += options[x];
     str += F("</option>");
