@@ -1975,8 +1975,10 @@ void handle_tools() {
   reply += F("<a class=\"button-link\" href=\"/?cmd=wifidisconnect\">Disconnect</a>");
   reply += F("<a class=\"button-link\" href=\"/wifiscanner\">Scan</a><BR><BR>");
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
-  reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
-  reply += F("<a class=\"button-link\" href=\"/download\">Save</a> (If you change filename, load will not work!!)");
+  addFormSeparator(reply);
+  reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a> (<B>File MUST be renamed to \"config.dat\" before upload!!!</B><BR><BR>");
+  reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
+  addFormSeparator(reply);
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
@@ -2491,7 +2493,32 @@ void handle_download()
   if (!dataFile)
     return;
 
-  WebServer.sendHeader("Content-Disposition", "attachment; filename=config.dat");
+  String str = F("attachment; filename=config_");
+  str += Settings.Name;
+  str += "_U";
+  str += Settings.Unit;
+  str += F("_Build");
+  str += BUILD;
+  str += F("_");
+  if (Settings.UseNTP)
+  {
+    str += year();
+    if (month() < 10)
+      str += "0";
+    str += month();
+    if (day() < 10)
+      str += F("0");
+    str += day();
+    if (hour() < 10)
+      str += F("0");
+    str += hour();
+    if (minute() < 10)
+      str += F("0");
+    str += minute();
+  }
+  str += (".dat");
+
+  WebServer.sendHeader("Content-Disposition", str);
   WebServer.streamFile(dataFile, "application/octet-stream");
 }
 
