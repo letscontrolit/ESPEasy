@@ -53,12 +53,9 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Check Value:<TD>");
         addTaskValueSelect(string, "plugin_021_value", Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-        string += F("<TR><TD>Set Value:<TD><input type='text' name='plugin_021_setvalue' value='");
-        string += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
-        string += F("'>");
-        string += F("<TR><TD>Hysteresis:<TD><input type='text' name='plugin_021_hyst' value='");
-        string += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
-        string += F("'>");
+      	addFormTextBox(string, F("Set Value"), F("plugin_021_setvalue"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 8);
+
+      	addFormTextBox(string, F("Hysteresis"), F("plugin_021_hyst"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), 8);
 
         LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
         success = true;
@@ -67,14 +64,10 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_021_task"));
-        String plugin2 = WebServer.arg(F("plugin_021_value"));
-        String plugin3 = WebServer.arg(F("plugin_021_setvalue"));
-        String plugin4 = WebServer.arg(F("plugin_021_hyst"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = plugin3.toFloat();
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = plugin4.toFloat();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_021_task"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_021_value"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_021_setvalue"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("plugin_021_hyst"));
         success = true;
         break;
       }

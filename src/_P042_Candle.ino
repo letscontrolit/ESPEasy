@@ -204,12 +204,9 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='");
         string += hexvalue;
         string += F("'>");
-        sprintf_P(tmpString, PSTR("<TR><TD>RGB Color:<TD><input type='text' name='web_RGB_Red' id='web_RGB_Red' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("&nbsp;&nbsp;<input type='text' name='web_RGB_Green' id='web_RGB_Green' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("&nbsp;&nbsp;<input type='text' name='web_RGB_Blue' id='web_RGB_Blue' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        string += tmpString;
+        addFormNumericBox(string, F("RGB Color"), F("web_RGB_Red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+        addNumericBox(string, F("web_RGB_Green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+        addNumericBox(string, F("web_RGB_Blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
 
         // Brightness Selection
         string += F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='");
@@ -241,18 +238,12 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("web_RGB_Red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("web_RGB_Green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("web_RGB_Blue"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("web_Bright_Text"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
-        String plugin5 = WebServer.arg(F("web_Candle_Type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = plugin5.toInt();
-        String plugin6 = WebServer.arg(F("web_Color_Type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = plugin6.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("web_RGB_Red"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("web_RGB_Green"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("web_RGB_Blue"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("web_Bright_Text"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("web_Candle_Type"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("web_Color_Type"));
 
         Candle_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Candle_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
