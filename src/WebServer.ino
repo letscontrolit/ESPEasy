@@ -2460,10 +2460,10 @@ void handle_advanced() {
   reply += F(" (minutes)");
   addFormCheckBox(reply, F("DST"), F("dst"), Settings.DST);
 
+
   addFormSubHeader(reply, F("Log Settings"));
 
   addFormIPBox(reply, F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
-  addFormNumericBox(reply, F("Syslog UDP port"), F("udpport"), Settings.UDPPort);
   addFormNumericBox(reply, F("Syslog Level"), F("sysloglevel"), Settings.SyslogLevel);
 
   addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel);
@@ -2476,8 +2476,15 @@ void handle_advanced() {
   addFormCheckBox(reply, F("Enable Serial port"), F("useserial"), Settings.UseSerial);
   addFormNumericBox(reply, F("Baud Rate"), F("baudrate"), Settings.BaudRate);
 
-  //TODO sort settings in groups
-  addFormSubHeader(reply, F("Special Settings"));
+
+  addFormSubHeader(reply, F("Inter-ESPEasy Network (experimental)"));
+
+  addFormCheckBox(reply, F("Global Sync"), F("globalsync"), Settings.GlobalSync);
+  addFormNumericBox(reply, F("UDP port"), F("udpport"), Settings.UDPPort);
+
+
+  //TODO sort settings in groups or move to other pages/groups
+  addFormSubHeader(reply, F("Special and Experimental Settings"));
 
   addFormNumericBox(reply, F("Fixed IP Octet"), F("ip"), Settings.IP_Octet);
 
@@ -2488,11 +2495,7 @@ void handle_advanced() {
 
   addFormNumericBox(reply, F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold);
 
-
-  addFormSubHeader(reply, F("Experimental Settings"));
-
   addFormNumericBox(reply, F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);
-  addFormCheckBox(reply, F("Global Sync"), F("globalsync"), Settings.GlobalSync);
 
   addFormSeparator(reply);
 
