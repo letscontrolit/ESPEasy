@@ -1278,6 +1278,61 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
+// returns the current Date seperated by the given delimiter
+String getDateString(char delimiter)
+{
+  String reply = String(year());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (month() < 10)
+    reply += "0";
+  reply += month();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (day() < 10)
+  	reply += F("0");
+  reply += day();
+  return reply;
+}
+
+// returns the current Date without delimiter
+String getDateString()
+{
+	return getDateString('\0');
+}
+
+// returns the current Time seperated by the given delimiter
+String getTimeString(char delimiter)
+{
+	String reply;
+	if (hour() < 10)
+		reply += F("0");
+  reply += String(hour());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (minute() < 10)
+    reply += F("0");
+  reply += minute();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  reply += second();
+  return reply;
+}
+
+// returns the current Time without delimiter
+String getTimeString()
+{
+	return getTimeString('\0');
+}
+
+String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+{
+	String ret = getDateString(dateDelimiter);
+	if (dateTimeDelimiter != '\0')
+		ret += dateTimeDelimiter;
+	ret += getTimeString(timeDelimiter);
+	return ret;
+}
 
 /********************************************************************************************\
   Match clock event
@@ -1395,15 +1450,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   // replace other system variables like %sysname%, %systime%, %ip%
   newString.replace(F("%sysname%"), Settings.Name);
 
-  String strTime = "";
-  if (hour() < 10)
-    strTime += " ";
-  strTime += hour();
-  strTime += ":";
-  if (minute() < 10)
-    strTime += "0";
-  strTime += minute();
-  newString.replace(F("%systime%"), strTime);
+  newString.replace(F("%systime%"), getTimeString(':'));
 
   newString.replace(F("%uptime%"), String(wdcounter / 2));
 
@@ -1825,6 +1872,11 @@ byte hour()
 byte minute()
 {
   return tm.Minute;
+}
+
+byte second()
+{
+	return tm.Second;
 }
 
 int weekday()

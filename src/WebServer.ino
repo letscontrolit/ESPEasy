@@ -169,21 +169,7 @@ void handle_root() {
     reply += F("<TR><TD>Local Time:<TD>");
     if (Settings.UseNTP)
     {
-      reply += year();
-      reply += F("-");
-      if (month() < 10)
-        reply += "0";
-      reply += month();
-      reply += F("-");
-      if (day() < 10)
-      	reply += F("0");
-      reply += day();
-      reply += F(" ");
-      reply += hour();
-      reply += F(":");
-      if (minute() < 10)
-        reply += F("0");
-      reply += minute();
+    	reply += getDateTimeString('-', ':', ' ');
     }
     else
       reply += F("NTP disabled");
@@ -2502,19 +2488,7 @@ void handle_download()
   str += F("_");
   if (Settings.UseNTP)
   {
-    str += year();
-    if (month() < 10)
-      str += "0";
-    str += month();
-    if (day() < 10)
-      str += F("0");
-    str += day();
-    if (hour() < 10)
-      str += F("0");
-    str += hour();
-    if (minute() < 10)
-      str += F("0");
-    str += minute();
+  	str += getDateTimeString('\0', '\0', '\0');
   }
   str += (".dat");
 
@@ -3089,21 +3063,7 @@ void handle_sysinfo() {
   {
 
     reply += F("<TR><TD>Local Time:<TD>");
-    reply += year();
-    reply += F("-");
-    if (month() < 10)
-      reply += "0";
-    reply += month();
-    reply += F("-");
-    if (day() < 10)
-    	reply += F("0");
-    reply += day();
-    reply += F(" ");
-    reply += hour();
-    reply += F(":");
-    if (minute() < 10)
-      reply += F("0");
-    reply += minute();
+  	reply += getDateTimeString('-', ':', ' ');
   }
 
   reply += F("<TR><TD>Uptime:<TD>");
