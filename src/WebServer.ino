@@ -1830,7 +1830,7 @@ void addNumericBox(String& str, const String& id, int value, int min, int max)
     str += F("' max='");
     str += max;
   }
-  str += F("' style='width: 80px;' value='");
+  str += F("' style='width: 5em;' value='");
   str += value;
   str += F("'>");
 }
