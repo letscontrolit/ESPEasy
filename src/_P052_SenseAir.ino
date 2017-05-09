@@ -66,29 +66,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
           byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          String options[4];
-          options[0] = F("Status");
-          options[1] = F("Carbon Dioxide");
-          options[2] = F("Temperature");
-          options[3] = F("Humidity");
-          int optionValues[4];
-          optionValues[0] = 0;
-          optionValues[1] = 1;
-          optionValues[2] = 2;
-          optionValues[3] = 3;
-          string += F("<TR><TD>Sensor:<TD><select name='plugin_052'>");
-          for (byte x = 0; x < 4; x++)
-          {
-            string += F("<option value='");
-            string += optionValues[x];
-            string += "'";
-            if (choice == optionValues[x])
-              string += F(" selected");
-            string += ">";
-            string += options[x];
-            string += F("</option>");
-          }
-          string += F("</select>");
+          String options[4] = { F("Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity") };
+          addFormSelector(string, F("Sensor"), F("plugin_052"), 4, options, NULL, choice);
 
           success = true;
           break;

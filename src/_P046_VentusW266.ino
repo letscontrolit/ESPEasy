@@ -152,22 +152,8 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         options[7] = F("Unknown 2, byte 16");
         options[8] = F("Unknown 3, byte 19");
 
-        int optionValues[nrchoices];
-        for (byte x = 0; x < nrchoices; x++) {
-          optionValues[x] = x;
-        }
-        string += F("<TR><TD>Plugin function:<TD><select name='plugin_046'>");
-        for (byte x = 0; x < nrchoices; x++) {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Plugin function"), F("plugin_046"), nrchoices, options, NULL, choice);
+
         if (choice==0) {
           string += F("<TR><TD>1st GPIO (5-MOSI):<TD>");
           addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePluginConfig[event->TaskIndex][1]);

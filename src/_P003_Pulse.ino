@@ -70,13 +70,11 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
-        /*
-        int optionValues[4];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        optionValues[2] = 2;
-        optionValues[3] = 3;
-        */
+        addFormSelector(string, F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
+
+        if (choice !=0)
+          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
+
         String modeRaise[4];
         modeRaise[0] = F("LOW");
         modeRaise[1] = F("CHANGE");
@@ -88,41 +86,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         modeValues[2] = RISING;
         modeValues[3] = FALLING;
 
-        addFormSelector(string, F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
-/*
-        string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_countertype'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-*/
-        if (choice !=0)
-          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
-
         addFormSelector(string, F("Mode Type"), F("plugin_003_raisetype"), 4, modeRaise, modeValues, choice2 );
-/*
-        string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_raisetype'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += modeValues[x];
-          string += "'";
-          if (choice2 == modeValues[x])
-            string += F(" selected");
-          string += ">";
-          string += modeRaise[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-*/
+
         success = true;
         break;
       }

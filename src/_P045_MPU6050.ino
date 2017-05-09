@@ -114,28 +114,19 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
       {
         // Setup webform for address selection
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        /*
         String options[10];
         options[0] = F("0x68 - default settings (ADDR Low)");
         options[1] = F("0x69 - alternate settings (ADDR High)");
+        */
         int optionValues[2];
         optionValues[0] = 0x68;
         optionValues[1] = 0x69;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_045_address'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-        // Setup webform for instance function
+        addFormSelectorI2C(string, F("plugin_045_address"), 2, optionValues, choice);
+        addFormNote(string, F("ADDR Low=0x68, High=0x69"));
+
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        string += F("<TR><TD>Function:<TD><select name='plugin_045_function'>");
+        String options[10];
         options[0] = F("Movement detection");
         options[1] = F("Range acceleration X");
         options[2] = F("Range acceleration Y");
@@ -146,18 +137,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         options[7] = F("G-force X");
         options[8] = F("G-force Y");
         options[9] = F("G-force Z");
-        for (byte x = 0; x < 10; x++)
-        {
-          string += F("<option value='");
-          string += x;
-          string += "'";
-          if (choice == x)
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Function"), F("plugin_045_function"), 10, options, NULL, choice);
+
         if (choice == 0) {
           // If this is instance function 0, setup webform for additional vars
           // Show some user information about the webform and what the vars mean.
