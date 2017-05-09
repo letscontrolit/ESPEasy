@@ -308,11 +308,11 @@ void handle_config() {
   char tmpString[64];
 
   String name = WebServer.arg(F("name"));
-  String password = WebServer.arg(F("password"));
+  //String password = WebServer.arg(F("password"));
   String ssid = WebServer.arg(F("ssid"));
-  String key = WebServer.arg(F("key"));
+  //String key = WebServer.arg(F("key"));
   String ssid2 = WebServer.arg(F("ssid2"));
-  String key2 = WebServer.arg(F("key2"));
+  //String key2 = WebServer.arg(F("key2"));
   String sensordelay = WebServer.arg(F("delay"));
   String deepsleep = WebServer.arg(F("deepsleep"));
   String espip = WebServer.arg(F("espip"));
@@ -320,7 +320,7 @@ void handle_config() {
   String espsubnet = WebServer.arg(F("espsubnet"));
   String espdns = WebServer.arg(F("espdns"));
   String unit = WebServer.arg(F("unit"));
-  String apkey = WebServer.arg(F("apkey"));
+  //String apkey = WebServer.arg(F("apkey"));
 
   String reply = "";
   addHeader(true, reply);
@@ -328,12 +328,16 @@ void handle_config() {
   if (ssid[0] != 0)
   {
     strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
-    strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
+    //strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
+    copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
-    strncpy(SecuritySettings.WifiKey, key.c_str(), sizeof(SecuritySettings.WifiKey));
+    //strncpy(SecuritySettings.WifiKey, key.c_str(), sizeof(SecuritySettings.WifiKey));
+    copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID2, ssid2.c_str(), sizeof(SecuritySettings.WifiSSID2));
-    strncpy(SecuritySettings.WifiKey2, key2.c_str(), sizeof(SecuritySettings.WifiKey2));
-    strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
+    //strncpy(SecuritySettings.WifiKey2, key2.c_str(), sizeof(SecuritySettings.WifiKey2));
+    copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
+    //strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
+    copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
@@ -357,7 +361,7 @@ void handle_config() {
   Settings.Name[25] = 0;
   SecuritySettings.Password[25] = 0;
   addFormTextBox(reply, F("Unit Name"), F("name"), Settings.Name, 25);
-  addFormNumericBox(reply, F("Unit Number"), F("unit"), Settings.Unit);
+  addFormNumericBox(reply, F("Unit Number"), F("unit"), Settings.Unit, 0, 9999);
   addFormPasswordBox(reply, F("Admin Password"), F("password"), SecuritySettings.Password, 25);
 
   addFormSubHeader(reply, F("Wifi Settings"));
@@ -383,8 +387,8 @@ void handle_config() {
 
   addFormCheckBox(reply, F("Sleep enabled"), F("deepsleep"), Settings.deepSleep);
   reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/SleepMode\" target=\"_blank\">?</a>");
-  addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay);
-  reply += F(" (sec)");
+  addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
+  addUnit(reply, F("sec"));
 
   addFormSeparator(reply);
 
@@ -1248,29 +1252,11 @@ void handle_devices() {
 
       if (Device[DeviceIndex].TimerOption)
       {
-        addFormNumericBox(reply, F("Delay"), F("taskdevicetimer"), Settings.TaskDeviceTimer[index - 1]);
-        reply += F(" (sec)");
+        addFormNumericBox(reply, F("Delay"), F("taskdevicetimer"), Settings.TaskDeviceTimer[index - 1], 0, 65535);
+        addUnit(reply, F("sec"));
         if (Device[DeviceIndex].TimerOptional)
           reply += F(" (Optional for this device)");
       }
-
-      /*
-      if (!Device[DeviceIndex].Custom)
-      {
-        for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
-        {
-          byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
-          if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
-          {
-            String label = F("IDX / Var for controller ");
-            label += controllerNr + 1;
-            String id = F("taskdeviceid");
-            id += controllerNr + 1;
-            addFormNumericBox(reply, label, id, Settings.TaskDeviceID[controllerNr][index - 1]);
-          }
-        }
-      }
-      */
 
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[index - 1] == 0)
       {
@@ -1314,7 +1300,7 @@ void handle_devices() {
               reply += F(" IDX: ");
               id = F("taskdeviceid");
               id += controllerNr + 1;
-              addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][index - 1]);
+              addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][index - 1], 0, 9999);
             }
           }
         }
@@ -1365,7 +1351,7 @@ void handle_devices() {
             reply += F(" Decimals: ");
             String id = F("taskdevicevaluedecimals");
             id += (varNr + 1);
-            addNumericBox(reply, id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+            addNumericBox(reply, id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
           }
 
           if (varNr == 0)
@@ -1413,6 +1399,16 @@ void addDeviceSelect(String& str, String name,  int choice)
     byte index = sortedIndex[x];
     if (Plugin_id[index] != 0)
       Plugin_ptr[index](PLUGIN_GET_DEVICENAME, 0, deviceName);
+
+#ifdef PLUGIN_BUILD_DEV
+    int num = index+1;
+    String plugin = F("P");
+    if (num<10) plugin += F("0");
+    if (num<100) plugin += F("0");
+    plugin += num;
+    plugin += F(" - ");
+    deviceName = plugin + deviceName;
+#endif
 
     addSelector_Item(str,
       deviceName,
@@ -1506,14 +1502,14 @@ void sortDeviceArray()
 }
 
 
-void addFormPinSelect(String& str, const String &label, const String &id, int choice)
+void addFormPinSelect(String& str, const String& label, const String& id, int choice)
 {
   addRowLabel(str, label);
   addPinSelect(false, str, id, choice);
 }
 
 
-void addFormPinSelectI2C(String& str, const String &label, const String &id, int choice)
+void addFormPinSelectI2C(String& str, const String& label, const String& id, int choice)
 {
   addRowLabel(str, label);
   addPinSelect(true, str, id, choice);
@@ -1642,18 +1638,31 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
     addSelector_Foot(str);
 }
 
-void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex)
+void addFormSelectorI2C(String& str, const String& id, int addressCount, const int addresses[], int selectedIndex)
+{
+  String options[addressCount];
+  for (byte x = 0; x < addressCount; x++)
+  {
+    options[x] = F("0x");
+    options[x] += String(addresses[x], HEX);
+    if (x == 0)
+      options[x] += F(" - (default)");
+  }
+  addFormSelector(str, F("I2C Address"), id, addressCount, options, addresses, NULL, selectedIndex, false);
+}
+
+void addFormSelector(String& str, const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
 {
   addFormSelector(str, label, id, optionCount, options, indices, NULL, selectedIndex, false);
 }
 
-void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
+void addFormSelector(String& str, const String& label, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
 {
   addRowLabel(str, label);
   addSelector(str, id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
 }
 
-void addSelector(String& str, const String &id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
+void addSelector(String& str, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
 {
   int index;
 
@@ -1687,7 +1696,7 @@ void addSelector(String& str, const String &id, int optionCount, const String op
 }
 
 
-void addSelector_Head(String& str, const String &id, boolean reloadonchange)
+void addSelector_Head(String& str, const String& id, boolean reloadonchange)
 {
   str += F("<select name='");
   str += id;
@@ -1723,7 +1732,7 @@ void addSelector_Foot(String& str)
 }
 
 
-void addUnit(String& str, const String &unit)
+void addUnit(String& str, const String& unit)
 {
   str += F(" [");
   str += unit;
@@ -1731,7 +1740,7 @@ void addUnit(String& str, const String &unit)
 }
 
 
-void addRowLabel(String& str, const String &label)
+void addRowLabel(String& str, const String& label)
 {
   str += F("<TR><TD>");
   str += label;
@@ -1741,7 +1750,7 @@ void addRowLabel(String& str, const String &label)
 //********************************************************************************
 // Add a header
 //********************************************************************************
-void addFormHeader(String& str, const String &header1, const String &header2)
+void addFormHeader(String& str, const String& header1, const String& header2)
 {
   str += F("<TR><TH>");
   str += header1;
@@ -1754,7 +1763,7 @@ void addFormHeader(String& str, const String &header1, const String &header2)
 //********************************************************************************
 // Add a sub header
 //********************************************************************************
-void addFormSubHeader(String& str, const String &header)
+void addFormSubHeader(String& str, const String& header)
 {
   str += F("<TR><TD colspan='2'><h3>");
   str += header;
@@ -1765,7 +1774,7 @@ void addFormSubHeader(String& str, const String &header)
 //********************************************************************************
 // Add a note as row start
 //********************************************************************************
-void addFormNote(String& str, const String &text)
+void addFormNote(String& str, const String& text)
 {
   str += F("<TR><TD><TD><div class='note'>Note: ");
   str += text;
@@ -1785,7 +1794,7 @@ void addFormSeparator(String& str)
 //********************************************************************************
 // Add a checkbox
 //********************************************************************************
-void addCheckBox(String& str, const String &id, boolean checked)
+void addCheckBox(String& str, const String& id, boolean checked)
 {
   str += F("<input type=checkbox id='");
   str += id;
@@ -1797,7 +1806,7 @@ void addCheckBox(String& str, const String &id, boolean checked)
   str += F(">");
 }
 
-void addFormCheckBox(String& str, const String &label, const String &id, boolean checked)
+void addFormCheckBox(String& str, const String& label, const String& id, boolean checked)
 {
   addRowLabel(str, label);
   addCheckBox(str, id, checked);
@@ -1807,7 +1816,7 @@ void addFormCheckBox(String& str, const String &label, const String &id, boolean
 //********************************************************************************
 // Add a numeric box
 //********************************************************************************
-void addNumericBox(String& str, const String &id, int value, int min, int max)
+void addNumericBox(String& str, const String& id, int value, int min, int max)
 {
   str += F("<input type='number' name='");
   str += id;
@@ -1826,25 +1835,25 @@ void addNumericBox(String& str, const String &id, int value, int min, int max)
   str += F("'>");
 }
 
-void addNumericBox(String& str, const String &id, int value)
+void addNumericBox(String& str, const String& id, int value)
 {
 	addNumericBox(str, id, value, INT_MIN, INT_MAX);
 }
 
-void addFormNumericBox(String& str, const String &label, const String &id, int value, int min, int max)
+void addFormNumericBox(String& str, const String& label, const String& id, int value, int min, int max)
 {
   addRowLabel(str,  label);
   addNumericBox(str, id, value, min, max);
 }
 
-void addFormNumericBox(String& str, const String &label, const String &id, int value)
+void addFormNumericBox(String& str, const String& label, const String& id, int value)
 {
 	addFormNumericBox(str, label, id, value, INT_MIN, INT_MAX);
 }
 
 
 
-void addTextBox(String& str, const String &id, const String & value, int maxlength)
+void addTextBox(String& str, const String& id, const String&  value, int maxlength)
 {
   str += F("<input type='text' name='");
   str += id;
@@ -1855,13 +1864,14 @@ void addTextBox(String& str, const String &id, const String & value, int maxleng
   str += F("'>");
 }
 
-void addFormTextBox(String& str, const String &label, const String &id, const String & value, int maxlength)
+void addFormTextBox(String& str, const String& label, const String& id, const String&  value, int maxlength)
 {
   addRowLabel(str, label);
   addTextBox(str, id, value, maxlength);
 }
 
-void addFormPasswordBox(String& str, const String &label, const String &id, const String & value, int maxlength)
+
+void addFormPasswordBox(String& str, const String& label, const String& id, const String& password, int maxlength)
 {
   addRowLabel(str, label);
   str += F("<input type='password' name='");
@@ -1869,15 +1879,27 @@ void addFormPasswordBox(String& str, const String &label, const String &id, cons
   str += F("' maxlength='");
   str += maxlength;
   str += F("' value='");
-  str += value;
+  if (password != F(""))   //no password?
+    str += F("*****");
+  //str += password;   //password will not published over HTTP
   str += F("'>");
-  //<input type='password' maxlength='63' name='key2' value='
 }
 
-void addFormIPBox(String& str, const String &label, const String &id, const byte ip[4])
+void copyFormPassword(const String& id, char* pPassword, int maxlength)
+{
+  String password = WebServer.arg(id);
+  if (password == F("*****"))   //no change?
+    return;
+  strncpy(pPassword, password.c_str(), maxlength);
+}
+
+void addFormIPBox(String& str, const String& label, const String& id, const byte ip[4])
 {
   char strip[20];
-  sprintf_P(strip, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+  if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
+    strip[0] = 0;
+  else
+    sprintf_P(strip, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
 
   addRowLabel(str, label);
   str += F("<input type='text' name='");
@@ -2464,53 +2486,53 @@ void handle_advanced() {
   addFormSubHeader(reply, F("Controller Settings"));
 
   addFormCheckBox(reply, F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
-  addFormNumericBox(reply, F("Message Delay"), F("messagedelay"), Settings.MessageDelay);
-  reply += F(" (ms)");
+  addFormNumericBox(reply, F("Message Delay"), F("messagedelay"), Settings.MessageDelay, 0, 10000);
+  addUnit(reply, F("ms"));
 
   addFormSubHeader(reply, F("NTP Settings"));
 
   addFormCheckBox(reply, F("Use NTP"), F("usentp"), Settings.UseNTP);
   addFormTextBox(reply, F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
-  addFormNumericBox(reply, F("Timezone Offset"), F("timezone"), Settings.TimeZone);
-  reply += F(" (minutes)");
+  addFormNumericBox(reply, F("Timezone Offset"), F("timezone"), Settings.TimeZone, -43200, 43200);   // +/-12h
+  addUnit(reply, F("minutes"));
   addFormCheckBox(reply, F("DST"), F("dst"), Settings.DST);
 
 
   addFormSubHeader(reply, F("Log Settings"));
 
   addFormIPBox(reply, F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
-  addFormNumericBox(reply, F("Syslog Level"), F("sysloglevel"), Settings.SyslogLevel);
+  addFormNumericBox(reply, F("Syslog Level"), F("sysloglevel"), Settings.SyslogLevel, 0, 4);
 
-  addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel);
-  addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel);
-  addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel);
+  addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel, 0, 4);
+  addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel, 0, 4);
+  addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel, 0, 4);
 
 
   addFormSubHeader(reply, F("Serial Settings"));
 
   addFormCheckBox(reply, F("Enable Serial port"), F("useserial"), Settings.UseSerial);
-  addFormNumericBox(reply, F("Baud Rate"), F("baudrate"), Settings.BaudRate);
+  addFormNumericBox(reply, F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
   addFormSubHeader(reply, F("Inter-ESPEasy Network (experimental)"));
 
   addFormCheckBox(reply, F("Global Sync"), F("globalsync"), Settings.GlobalSync);
-  addFormNumericBox(reply, F("UDP port"), F("udpport"), Settings.UDPPort);
+  addFormNumericBox(reply, F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
 
   //TODO sort settings in groups or move to other pages/groups
   addFormSubHeader(reply, F("Special and Experimental Settings"));
 
-  addFormNumericBox(reply, F("Fixed IP Octet"), F("ip"), Settings.IP_Octet);
+  addFormNumericBox(reply, F("Fixed IP Octet"), F("ip"), Settings.IP_Octet, 0, 255);
 
-  addFormNumericBox(reply, F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress);
+  addFormNumericBox(reply, F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   reply += F(" (decimal)");
 
   addFormCheckBox(reply, F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
-  addFormNumericBox(reply, F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold);
+  addFormNumericBox(reply, F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 
-  addFormNumericBox(reply, F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);
+  addFormNumericBox(reply, F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
 
   addFormSeparator(reply);
 
