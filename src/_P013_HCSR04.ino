@@ -49,7 +49,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_013));
         break;
       }
-    
+
 
     case PLUGIN_WEBFORM_LOAD:
       {
@@ -57,22 +57,8 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         String options[2];
         options[0] = F("Value");
         options[1] = F("State");
-        int optionValues[2];
-        optionValues[0] = 1;
-        optionValues[1] = 2;
-        string += F("<TR><TD>Mode:<TD><select name='plugin_013_mode'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues[2] = { 1, 2 };
+        addFormSelector(string, F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
@@ -194,4 +180,3 @@ void Plugin_013_interrupt()
     Plugin_013_timer = micros() - Plugin_013_timer;
   }
 }
-

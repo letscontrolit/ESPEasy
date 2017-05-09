@@ -1642,6 +1642,20 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
     addSelector_Foot(str);
 }
 
+
+void addFormSelectorI2C(String& str, const String& id, int addressCount, const int addresses[], int selectedIndex)
+{
+  String options[addressCount];
+  for (byte x = 0; x < addressCount; x++)
+  {
+    options[x] = F("0x");
+    options[x] += String(addresses[x], HEX);
+    if (x == 0)
+      options[x] += F(" - (default)");
+  }
+  addFormSelector(str, F("I2C Address"), id, addressCount, options, addresses, NULL, selectedIndex, false);
+}
+
 void addFormSelector(String& str, const String &label, const String &id, int optionCount, const String options[], const int indices[], int selectedIndex)
 {
   addFormSelector(str, label, id, optionCount, options, indices, NULL, selectedIndex, false);
