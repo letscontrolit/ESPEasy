@@ -48,25 +48,16 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        /*
         String options[2];
         options[0] = F("0x23 - default settings (ADDR Low)");
         options[1] = F("0x5c - alternate settings (ADDR High)");
+        */
         int optionValues[2];
         optionValues[0] = BH1750_DEFAULT_I2CADDR;
         optionValues[1] = BH1750_SECOND_I2CADDR;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_010'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelectorI2C(string, F("plugin_010"), 2, optionValues, choice);
+        addFormNote(string, F("ADDR Low=0x23, High=0x5c"));
 
         byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String optionsMode[4];
@@ -79,19 +70,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         optionValuesMode[1] = RESOLUTION_NORMAL;
         optionValuesMode[2] = RESOLUTION_HIGH;
         optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
-        string += F("<TR><TD>measurment mode:<TD><select name='plugin_010_mode'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += optionValuesMode[x];
-          string += "'";
-          if (choiceMode == optionValuesMode[x])
-            string += F(" selected");
-          string += ">";
-          string += optionsMode[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Measurment mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
 
         addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
@@ -143,4 +122,3 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

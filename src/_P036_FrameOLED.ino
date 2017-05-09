@@ -69,48 +69,22 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        /*
         String options0[2];
         options0[0] = F("3C");
         options0[1] = F("3D");
+        */
         int optionValues0[2];
         optionValues0[0] = 0x3C;
         optionValues0[1] = 0x3D;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_036_adr'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues0[x];
-          string += "'";
-          if (choice0 == optionValues0[x])
-            string += F(" selected");
-          string += ">";
-          string += options0[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-
-        //
+        addFormSelectorI2C(string, F("plugin_036_adr"), 2, optionValues0, choice0);
 
         byte choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options1[2];
         options1[0] = F("Normal");
         options1[1] = F("Rotated");
-        int optionValues1[2];
-        optionValues1[0] = 1;
-        optionValues1[1] = 2;
-        string += F("<TR><TD>Rotation:<TD><select name='plugin_036_rotate'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues1[x];
-          string += "'";
-          if (choice1 == optionValues1[x])
-            string += F(" selected");
-          string += ">";
-          string += options1[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues1[2] = { 1, 2 };
+        addFormSelector(string, F("Rotation"), F("plugin_036_rotate"), 2, options1, optionValues1, choice1);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options2[4];
@@ -118,24 +92,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         options2[1] = F("2");
         options2[2] = F("3");
         options2[3] = F("4");
-        int optionValues2[4];
-        optionValues2[0] = 1;
-        optionValues2[1] = 2;
-        optionValues2[2] = 3;
-        optionValues2[3] = 4;
-        string += F("<TR><TD>Lines per Frame:<TD><select name='plugin_036_nlines'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues2[4] = { 1, 2, 3, 4 };
+        addFormSelector(string, F("Lines per Frame"), F("plugin_036_nlines"), 4, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
         String options3[5];
@@ -150,20 +108,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[2] = 4;
         optionValues3[3] = 8;
         optionValues3[4] = 32;
-
-        string += F("<TR><TD>Scroll:<TD><select name='plugin_036_scroll'>");
-        for (byte x = 0; x < 5; x++)
-        {
-          string += F("<option value='");
-          string += optionValues3[x];
-          string += F("'");
-          if (choice3 == optionValues3[x])
-            string += F(" selected");
-          string += F(">");
-          string += options3[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Scroll"), F("plugin_036_scroll"), 5, options3, optionValues3, choice3);
 
         char deviceTemplate[Nlines][32];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));

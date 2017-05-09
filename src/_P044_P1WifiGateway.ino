@@ -74,23 +74,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         options[0] = F("No parity");
         options[1] = F("Even");
         options[2] = F("Odd");
-        int optionValues[3];
-        optionValues[0] = 0;
-        optionValues[1] = 2;
-        optionValues[2] = 3;
-        string += F("<TR><TD>Parity:<TD><select name='plugin_044_parity'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues[3] = { 0, 2, 3 };
+        addFormSelector(string, F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
 
       	addFormNumericBox(string, F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 

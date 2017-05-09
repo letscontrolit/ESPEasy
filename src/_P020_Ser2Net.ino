@@ -58,19 +58,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         optionValues[0] = 0;
         optionValues[1] = 2;
         optionValues[2] = 3;
-        string += F("<TR><TD>Parity:<TD><select name='plugin_020_parity'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Parity"), F("plugin_020_parity"), 3, options, optionValues, choice);
 
       	addFormNumericBox(string, F("Stop bits"), F("plugin_020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
@@ -84,23 +72,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         options2[0] = F("None");
         options2[1] = F("Generic");
         options2[2] = F("RFLink");
-        int optionValues2[3];
-        optionValues2[0] = 0;
-        optionValues2[1] = 1;
-        optionValues2[2] = 2;
-        string += F("<TR><TD>Event processing:<TD><select name='plugin_020_events'>");
-        for (byte x = 0; x < 3; x++)
-      {
-        string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Event processing"), F("plugin_020_events"), 3, options2, NULL, choice2);
 
         success = true;
         break;

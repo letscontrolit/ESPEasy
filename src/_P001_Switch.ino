@@ -52,22 +52,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         String options[2];
         options[0] = F("Switch");
         options[1] = F("Dimmer");
-        int optionValues[2];
-        optionValues[0] = 1;
-        optionValues[1] = 2;
-        string += F("<TR><TD>Switch Type:<TD><select name='plugin_001_type'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues[2] = { 1, 2 };
+        addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, choice);
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
@@ -81,23 +67,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[0] = F("Normal Switch");
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
-        int buttonOptionValues[3];
-        buttonOptionValues[0] = 0;
-        buttonOptionValues[1] = 1;
-        buttonOptionValues[2] = 2;
-        string += F("<TR><TD>Switch Button Type:<TD><select name='plugin_001_button'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += buttonOptionValues[x];
-          string += "'";
-          if (choice == buttonOptionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += buttonOptions[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, NULL, choice);
 
         addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
