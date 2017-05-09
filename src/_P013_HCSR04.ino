@@ -76,9 +76,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          char tmpString[128];
-          sprintf_P(tmpString, PSTR("<TR><TD>Threshold:<TD><input type='text' name='plugin_013_threshold' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-          string += tmpString;
+        	addFormNumericBox(string, F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         }
         success = true;
         break;
@@ -86,12 +84,10 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_013_mode"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_013_mode"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          String plugin2 = WebServer.arg(F("plugin_013_threshold"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_013_threshold"));
         }
         success = true;
         break;

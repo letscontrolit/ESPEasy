@@ -50,21 +50,17 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>Led Count:<TD><input type='text' name='plugin_038_leds' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1 ,999);
 
-        string += F("<TR><TD>GPIO:<TD>");
-        addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(string, F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-        success = true;
+      	success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_038_leds"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_038_leds"));
         success = true;
         break;
       }

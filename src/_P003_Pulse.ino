@@ -64,22 +64,19 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>Debounce Time (mSec):<TD><input type='text' name='plugin_003' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Debounce Time (mSec)"), F("plugin_003")
+      			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        String options[4];
-        options[0] = F("Delta");
-        options[1] = F("Delta/Total/Time");
-        options[2] = F("Total");
-        options[3] = F("Delta/Total");
+        String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
+        /*
         int optionValues[4];
         optionValues[0] = 0;
         optionValues[1] = 1;
         optionValues[2] = 2;
         optionValues[3] = 3;
+        */
         String modeRaise[4];
         modeRaise[0] = F("LOW");
         modeRaise[1] = F("CHANGE");
@@ -91,6 +88,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         modeValues[2] = RISING;
         modeValues[3] = FALLING;
 
+        addFormSelector(string, F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
+/*
         string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_countertype'>");
         for (byte x = 0; x < 4; x++)
         {
@@ -104,10 +103,12 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
-
+*/
         if (choice !=0)
           string += F("<span style=\"color:red\">Total count is not persistent!</span>");
 
+        addFormSelector(string, F("Mode Type"), F("plugin_003_raisetype"), 4, modeRaise, modeValues, choice2 );
+/*
         string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_raisetype'>");
         for (byte x = 0; x < 4; x++)
         {
@@ -121,19 +122,16 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
-
+*/
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_003");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg("plugin_003_countertype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg("plugin_003_raisetype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_003"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_003_countertype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_003_raisetype"));
         success = true;
         break;
       }

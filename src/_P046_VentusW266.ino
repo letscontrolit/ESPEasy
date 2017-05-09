@@ -244,17 +244,12 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_046");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        if (plugin1.toInt()==0) {
-          String plugin2 = WebServer.arg("taskdevicepin1");
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-          String plugin3 = WebServer.arg("taskdevicepin2");
-          Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-          String plugin4 = WebServer.arg("taskdevicepin3");
-          Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
-          String plugin5 = WebServer.arg("taskdeviceport");
-          Settings.TaskDevicePluginConfig[event->TaskIndex][4] = plugin5.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_046"));
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0) {
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("taskdevicepin1"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("taskdevicepin2"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("taskdevicepin3"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("taskdeviceport"));
         }
         success = true;
         break;

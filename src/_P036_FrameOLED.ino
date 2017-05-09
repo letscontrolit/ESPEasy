@@ -170,22 +170,12 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         for (byte varNr = 0; varNr < Nlines; varNr++)
         {
-          string += F("<TR><TD>Line ");
-          string += varNr + 1;
-          string += F(":<TD><input type='text' size='32' maxlength='32' name='Plugin_036_template");
-          string += varNr + 1;
-          string += F("' value='");
-          string += deviceTemplate[varNr];
-          string += F("'>");
+        	addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), deviceTemplate[varNr], 32);
         }
 
-        string += F("<TR><TD>Display button:<TD>");
-        addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+        addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-        char tmpString[128];
-
-        sprintf_P(tmpString, PSTR("<TR><TD>Display Timeout:<TD><input type='text' name='plugin_036_timer' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
-        string += tmpString;
+        addFormNumericBox(string, F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
 
         success = true;
         break;
@@ -193,21 +183,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-
-        String plugin0 = WebServer.arg(F("plugin_036_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin0.toInt();
-
-        String plugin1 = WebServer.arg(F("plugin_036_rotate"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin1.toInt();
-
-        String plugin2 = WebServer.arg(F("plugin_036_nlines"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin2.toInt();
-
-        String plugin3 = WebServer.arg(F("plugin_036_scroll"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin3.toInt();
-
-        String plugin4 = WebServer.arg(F("plugin_036_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = plugin4.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_036_rotate"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_036_nlines"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_036_scroll"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_036_timer"));
 
         String argName;
 

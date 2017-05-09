@@ -388,17 +388,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_015_tsl2561_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_015_tsl2561_i2c"));
 
-        String plugin2 = WebServer.arg(F("plugin_015_integration"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_015_integration"));
 
-        String plugin3 = WebServer.arg(F("plugin_015_sleep"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_015_sleep"));
 
-        String plugin4 = WebServer.arg(F("plugin_015_gain"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_015_gain"));
 
         success = true;
         break;

@@ -89,10 +89,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           string += F("</option>");
         }
         string += F("</select>");
-        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
-        string += F("plugin_032_ms5611_elev' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        string += F("'>");
+
+        addFormNumericBox(string, F("Altitude [m]"), F("plugin_032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         success = true;
         break;
@@ -100,10 +98,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_032_ms5611_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String elev = WebServer.arg(F("plugin_032_ms5611_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_032_ms5611_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_032_ms5611_elev"));
         success = true;
         break;
       }

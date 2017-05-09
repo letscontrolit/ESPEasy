@@ -126,22 +126,12 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-          string += F("<TR><TD>Line ");
-          string += varNr + 1;
-          string += F(":<TD><input type='text' size='64' maxlength='64' name='Plugin_023_template");
-          string += varNr + 1;
-          string += F("' value='");
-          string += deviceTemplate[varNr];
-          string += F("'>");
+        	addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
-        string += F("<TR><TD>Display button:<TD>");
-        addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+        addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-        char tmpString[128];
-
-        sprintf_P(tmpString, PSTR("<TR><TD>Display Timeout:<TD><input type='text' name='plugin_23_timer' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        string += tmpString;
+        addFormNumericBox(string, F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;
@@ -149,14 +139,10 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_023_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_023_rotate"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_23_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("plugin_023_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_023_adr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_023_rotate"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_23_timer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_023_size"));
 
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)
