@@ -442,10 +442,14 @@ void parseCommandString(struct EventStruct *event, String& string)
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
+  event->Par4 = 0;
+  event->Par5 = 0;
 
   if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
 }
 
 /********************************************************************************************\
