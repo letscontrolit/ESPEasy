@@ -1732,6 +1732,15 @@ void addRowLabel(String& str, const String& label)
   str += F(":<TD>");
 }
 
+void addButton(String& str, const String &url, const String &label)
+{
+  str += F("<a class=\"button-link\" href=");
+  str += url;
+  str += F(">");
+  str += label;
+  str += F("</a>");
+}
+
 //********************************************************************************
 // Add a header
 //********************************************************************************
@@ -2042,26 +2051,39 @@ void handle_tools() {
 
   reply += F("<form>");
   reply += F("<table><TH>Tools<TH>");
-  reply += F("<TR><TD>System<TD><a class=\"button-link\" href=\"/?cmd=reboot\">Reboot</a>");
-  reply += F("<a class=\"button-link\" href=\"log\">Log</a>");
-  reply += F("<a class=\"button-link\" href=\"sysinfo\">Info</a>");
-  reply += F("<a class=\"button-link\" href=\"advanced\">Advanced</a><BR><BR>");
-  reply += F("<TR><TD>Wifi<TD><a class=\"button-link\" href=\"/?cmd=wificonnect\">Connect</a>");
-  reply += F("<a class=\"button-link\" href=\"/?cmd=wifidisconnect\">Disconnect</a>");
-  reply += F("<a class=\"button-link\" href=\"/wifiscanner\">Scan</a><BR><BR>");
-  reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
+
+  reply += F("<TR><TD>System<TD>");
+  addButton(reply, F("?cmd=reboot"), F("Reboot"));
+  addButton(reply, F("log"), F("Log"));
+  addButton(reply, F("sysinfo"), F("Info"));
+  addButton(reply, F("advanced"), F("Advanced"));
+  reply += F("<BR><BR>");
+  reply += F("<TR><TD>Wifi<TD>");
+  addButton(reply, F("?cmd=wificonnect"), F("Connect"));
+  addButton(reply, F("?cmd=wifidisconnect"), F("Disconnect"));
+  addButton(reply, F("wifiscanner"), F("Scan"));
+  reply += F("<BR><BR>");
+  reply += F("<TR><TD>Interfaces<TD>");
+  addButton(reply, F("i2cscanner"), F("I2C Scan"));
+  reply += F("<BR><BR>");
   addFormSeparator(reply);
-  reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a> (<B>File MUST be renamed to \"config.dat\" before upload!!!</B><BR><BR>");
-  reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
+  reply += F("<TR><TD>Settings<TD>");
+  addButton(reply, F("upload"), F("Load"));
+  addButton(reply, F("download"), F("Save"));
+  reply += F("(<B>File MUST be renamed to \"config.dat\" before upload!)</B>)");
   addFormSeparator(reply);
   if (ESP.getFlashChipRealSize() > 524288)
   {
-    reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
+    reply += F("<BR><BR>");
+    reply += F("<TR><TD>Firmware<TD>");
+    addButton(reply, F("update"), F("Load"));
     addHelpButton(reply, F("EasyOTA"));
+    reply += F("<BR><BR>");
   }
-  reply += F("<TR><TD>Filesystem<TD><a class=\"button-link\" href=\"/filelist\">Flash</a>");
-  reply += F("<a class=\"button-link\" href=\"/SDfilelist\">SD Card</a><BR><BR>");
-
+  reply += F("<TR><TD>Filesystem<TD>");
+  addButton(reply, F("filelist"), F("Flash"));
+  addButton(reply, F("SDfilelist"), F("SD Card"));
+  reply += F("<BR><BR>");
   reply += F("<TR><TD>Command<TD>");
   reply += F("<input type='text' name='cmd' value='");
   reply += webrequest;
