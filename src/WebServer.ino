@@ -169,21 +169,7 @@ void handle_root() {
     reply += F("<TR><TD>Local Time:<TD>");
     if (Settings.UseNTP)
     {
-      reply += year();
-      reply += F("-");
-      if (month() < 10)
-        reply += "0";
-      reply += month();
-      reply += F("-");
-      if (day() < 10)
-      	reply += F("0");
-      reply += day();
-      reply += F(" ");
-      reply += hour();
-      reply += F(":");
-      if (minute() < 10)
-        reply += F("0");
-      reply += minute();
+    	reply += getDateTimeString('-', ':', ' ');
     }
     else
       reply += F("NTP disabled");
@@ -2049,8 +2035,10 @@ void handle_tools() {
   reply += F("<a class=\"button-link\" href=\"/?cmd=wifidisconnect\">Disconnect</a>");
   reply += F("<a class=\"button-link\" href=\"/wifiscanner\">Scan</a><BR><BR>");
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
-  reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
-  reply += F("<a class=\"button-link\" href=\"/download\">Save</a> (If you change filename, load will not work!!)");
+  addFormSeparator(reply);
+  reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a> (<B>File MUST be renamed to \"config.dat\" before upload!!!</B><BR><BR>");
+  reply += F("<a class=\"button-link\" href=\"/download\">Save</a>");
+  addFormSeparator(reply);
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
@@ -2568,7 +2556,20 @@ void handle_download()
   if (!dataFile)
     return;
 
-  WebServer.sendHeader("Content-Disposition", "attachment; filename=config.dat");
+  String str = F("attachment; filename=config_");
+  str += Settings.Name;
+  str += "_U";
+  str += Settings.Unit;
+  str += F("_Build");
+  str += BUILD;
+  str += F("_");
+  if (Settings.UseNTP)
+  {
+  	str += getDateTimeString('\0', '\0', '\0');
+  }
+  str += (".dat");
+
+  WebServer.sendHeader("Content-Disposition", str);
   WebServer.streamFile(dataFile, "application/octet-stream");
 }
 
@@ -3131,21 +3132,7 @@ void handle_sysinfo() {
   {
 
     reply += F("<TR><TD>Local Time:<TD>");
-    reply += year();
-    reply += F("-");
-    if (month() < 10)
-      reply += "0";
-    reply += month();
-    reply += F("-");
-    if (day() < 10)
-    	reply += F("0");
-    reply += day();
-    reply += F(" ");
-    reply += hour();
-    reply += F(":");
-    if (minute() < 10)
-      reply += F("0");
-    reply += minute();
+  	reply += getDateTimeString('-', ':', ' ');
   }
 
   reply += F("<TR><TD>Uptime:<TD>");

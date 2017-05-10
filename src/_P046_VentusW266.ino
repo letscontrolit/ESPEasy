@@ -308,18 +308,12 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             Plugin_046_MasterSlave = false;
             Plugin_046_newData = false;
             if (PLUGIN_046_DEBUG) {
-              String log = "Ventus W266 Rcvd(";
-              log += hour();
-              log += ":";
-              if (minute() < 10) { log += "0"; }
-              log += minute();
-              log += ":";
-              if (tm.Second < 10) { log += "0"; }
-              log += tm.Second;
-              log += ") ";
+              String log = F("Ventus W266 Rcvd(");
+              log += getTimeString(':');
+              log += F(") ");
               for (int i = 0; i < Plugin_046_Payload; i++) {
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {
-                  log += ":";
+                  log += F(":");
                 }
                 char myHex = (Plugin_046_databuffer[i] >> 4) + 0x30;
                 if (myHex > 0x39) { myHex += 7; }
@@ -328,7 +322,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
                 if (myHex > 0x39) { myHex += 7; }
                 log += myHex;
               }
-              log += " > ";
+              log += F(" > ");
               char myHex = (crc >> 4) + 0x30;
               if (myHex > 0x39) { myHex += 7; }
               log += myHex;
