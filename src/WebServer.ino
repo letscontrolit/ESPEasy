@@ -2050,11 +2050,11 @@ void handle_tools() {
   reply += F("<a class=\"button-link\" href=\"/wifiscanner\">Scan</a><BR><BR>");
   reply += F("<TR><TD>Interfaces<TD><a class=\"button-link\" href=\"/i2cscanner\">I2C Scan</a><BR><BR>");
   reply += F("<TR><TD>Settings<TD><a class=\"button-link\" href=\"/upload\">Load</a>");
-  reply += F("<a class=\"button-link\" href=\"/download\">Save</a> (If you change filename, load will not work!!)");
+  reply += F("<a class=\"button-link\" href=\"/download\">Save</a> (If you change filename, load will not work!!)<BR><BR>");
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyOTA\" target=\"_blank\">?</a>");
+    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyOTA\" target=\"_blank\">?</a><BR><BR>");
   }
   reply += F("<TR><TD>Filesystem<TD><a class=\"button-link\" href=\"/filelist\">Flash</a>");
   reply += F("<a class=\"button-link\" href=\"/SDfilelist\">SD Card</a><BR><BR>");
