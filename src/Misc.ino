@@ -1278,7 +1278,8 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
-// returns the current Date seperated by the given delimiter
+// returns the current Date separated by the given delimiter
+// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
 String getDateString(char delimiter)
 {
   String reply = String(year());
@@ -1296,12 +1297,14 @@ String getDateString(char delimiter)
 }
 
 // returns the current Date without delimiter
+// date format example: 20161231 (YYYYMMDD)
 String getDateString()
 {
 	return getDateString('\0');
 }
 
-// returns the current Time seperated by the given delimiter
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
 String getTimeString(char delimiter)
 {
 	String reply;
@@ -1320,11 +1323,15 @@ String getTimeString(char delimiter)
 }
 
 // returns the current Time without delimiter
+// time format example: 235959 (HHMMSS)
 String getTimeString()
 {
 	return getTimeString('\0');
 }
 
+// returns the current Date and Time separated by the given delimiter
+// if called like this: getDateTimeString('\0', '\0', '\0');
+// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
 String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
 {
 	String ret = getDateString(dateDelimiter);
