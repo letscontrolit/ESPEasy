@@ -169,21 +169,7 @@ void handle_root() {
     reply += F("<TR><TD>Local Time:<TD>");
     if (Settings.UseNTP)
     {
-      reply += year();
-      reply += F("-");
-      if (month() < 10)
-        reply += "0";
-      reply += month();
-      reply += F("-");
-      if (day() < 10)
-      	reply += F("0");
-      reply += day();
-      reply += F(" ");
-      reply += hour();
-      reply += F(":");
-      if (minute() < 10)
-        reply += F("0");
-      reply += minute();
+    	reply += getDateTimeString('-', ':', ' ');
     }
     else
       reply += F("NTP disabled");
@@ -382,7 +368,7 @@ void handle_config() {
   addFormSubHeader(reply, F("Sleep Mode"));
 
   addFormCheckBox(reply, F("Sleep enabled"), F("deepsleep"), Settings.deepSleep);
-  reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/SleepMode\" target=\"_blank\">?</a>");
+  addHelpButton(reply, F("SleepMode"));
   addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay);
   reply += F(" (sec)");
 
@@ -540,8 +526,7 @@ void handle_controllers() {
     }
     addSelector_Foot(reply);
 
-
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyProtocols\" target=\"_blank\">?</a>");
+    addHelpButton(reply, F("EasyProtocols"));
 
 
     char str[20];
@@ -733,7 +718,7 @@ void handle_notifications() {
     }
     addSelector_Foot(reply);
 
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyNotifications\" target=\"_blank\">?</a>");
+    addHelpButton(reply, F("EasyNotifications"));
 
 
     char str[20];
@@ -838,7 +823,6 @@ void handle_hardware() {
   }
 
   reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
-
   addFormSubHeader(reply, F("Wifi Status LED"));
 
   addFormPinSelect(reply, F("Pin LED"), "pled", Settings.Pin_status_led);
@@ -873,9 +857,10 @@ void handle_hardware() {
 
   addFormSeparator(reply);
 
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  addHelpButton(reply, F("ESPEasy#Hardware_page"));
 
-  reply += F("</table></form>");
+  reply += F("<TR><TD></table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
 }
@@ -1240,9 +1225,7 @@ void handle_devices() {
 
     if (Settings.TaskDeviceNumber[index - 1] != 0 )
     {
-      reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/Plugin");
-      reply += Settings.TaskDeviceNumber[index - 1];
-      reply += F("\" target=\"_blank\">?</a>");
+      addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
 
       addFormTextBox(reply, F("Name"), F("taskdevicename"), ExtraTaskSettings.TaskDeviceName, 40);
 
@@ -1369,7 +1352,7 @@ void handle_devices() {
           }
 
           if (varNr == 0)
-            reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyFormula\" target=\"_blank\">?</a>");
+            addHelpButton(reply, F("EasyFormula"));
         }
       }
     }
@@ -1910,6 +1893,14 @@ void addFormIPBox(String& str, const String &label, const String &id, const byte
   str += F("'>");
 }
 
+// adds a Help Button with points to the the given Wiki Subpage
+void addHelpButton(String& str, const String& url)
+{
+  str += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += url;
+  str += F("\" target=\"_blank\">?</a>");
+}
+
 
 //********************************************************************************
 // Add a task select dropdown list
@@ -2050,8 +2041,9 @@ void handle_tools() {
 
   reply += F("<form>");
   reply += F("<table><TH>Tools<TH>");
+
   reply += F("<TR><TD>System<TD>");
-  addButton(reply, F("reboot"), F("Reboot"));
+  addButton(reply, F("?cmd=reboot"), F("Reboot"));
   addButton(reply, F("log"), F("Log"));
   addButton(reply, F("sysinfo"), F("Info"));
   addButton(reply, F("advanced"), F("Advanced"));
@@ -2064,16 +2056,18 @@ void handle_tools() {
   reply += F("<TR><TD>Interfaces<TD>");
   addButton(reply, F("i2cscanner"), F("I2C Scan"));
   reply += F("<BR><BR>");
+  addFormSeparator(reply);
   reply += F("<TR><TD>Settings<TD>");
   addButton(reply, F("upload"), F("Load"));
   addButton(reply, F("download"), F("Save"));
-  reply += F("(If you change filename, load will not work!!)");
+  reply += F("(<B>File MUST be renamed to \"config.dat\" before upload!)</B>)");
+  addFormSeparator(reply);
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<BR><BR>");
     reply += F("<TR><TD>Firmware<TD>");
     addButton(reply, F("update"), F("Load"));
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyOTA\" target=\"_blank\">?</a>");
+    addHelpButton(reply, F("EasyOTA"));
     reply += F("<BR><BR>");
   }
   reply += F("<TR><TD>Filesystem<TD>");
@@ -2589,7 +2583,20 @@ void handle_download()
   if (!dataFile)
     return;
 
-  WebServer.sendHeader("Content-Disposition", "attachment; filename=config.dat");
+  String str = F("attachment; filename=config_");
+  str += Settings.Name;
+  str += "_U";
+  str += Settings.Unit;
+  str += F("_Build");
+  str += BUILD;
+  str += F("_");
+  if (Settings.UseNTP)
+  {
+  	str += getDateTimeString('\0', '\0', '\0');
+  }
+  str += (".dat");
+
+  WebServer.sendHeader("Content-Disposition", str);
   WebServer.streamFile(dataFile, "application/octet-stream");
 }
 
@@ -3092,6 +3099,7 @@ void handle_rules() {
 
   reply += F("<TR><TD>Edit: ");
   addSelector(reply, F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addHelpButton(reply, F("Tutorial_Rules"));
 
   // load form data from flash
 
@@ -3152,21 +3160,7 @@ void handle_sysinfo() {
   {
 
     reply += F("<TR><TD>Local Time:<TD>");
-    reply += year();
-    reply += F("-");
-    if (month() < 10)
-      reply += "0";
-    reply += month();
-    reply += F("-");
-    if (day() < 10)
-    	reply += F("0");
-    reply += day();
-    reply += F(" ");
-    reply += hour();
-    reply += F(":");
-    if (minute() < 10)
-      reply += F("0");
-    reply += minute();
+  	reply += getDateTimeString('-', ':', ' ');
   }
 
   reply += F("<TR><TD>Uptime:<TD>");

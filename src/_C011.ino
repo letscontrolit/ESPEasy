@@ -313,15 +313,8 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
   //NOTE: cant we just call parseTemplate() for all the standard stuff??
-  String strTime = "";
-  if (hour() < 10)
-    strTime += F(" ");
-  strTime += hour();
-  strTime += F(":");
-  if (minute() < 10)
-    strTime += F("0");
-  strTime += minute();
-  s.replace(F("%systime%"), strTime);
+
+  s.replace(F("%systime%"), getTimeString(':'));
 
 	#if FEATURE_ADC_VCC
 		newString.replace(F("%vcc%"), String(vcc));
