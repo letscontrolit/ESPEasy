@@ -111,7 +111,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
               {
                   int co2 = Plugin_052_readCo2();
                   UserVar[event->BaseVarIndex] = co2;
-                  log += F("co2: ")
+                  log += F("co2: ");
                   log += co2;
                   break;
               }
@@ -119,7 +119,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
               {
                   float temperature = Plugin_052_readTemperature();
                   UserVar[event->BaseVarIndex] = (float)temperature;
-                  log += F("temperature: ")
+                  log += F("temperature: ");
                   log += (float)temperature;
                   break;
               }
@@ -127,7 +127,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
               {
                   float relativeHumidity = Plugin_052_readRelativeHumidity();
                   UserVar[event->BaseVarIndex] = (float)relativeHumidity;
-                  log += F("humidity: ")
+                  log += F("humidity: ");
                   log += (float)relativeHumidity;
                   break;
               }
