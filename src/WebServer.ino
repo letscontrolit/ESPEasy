@@ -368,7 +368,7 @@ void handle_config() {
   addFormSubHeader(reply, F("Sleep Mode"));
 
   addFormCheckBox(reply, F("Sleep enabled"), F("deepsleep"), Settings.deepSleep);
-  reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/SleepMode\" target=\"_blank\">?</a>");
+  addHelpButton(reply, F("SleepMode"));
   addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay);
   reply += F(" (sec)");
 
@@ -526,8 +526,7 @@ void handle_controllers() {
     }
     addSelector_Foot(reply);
 
-
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyProtocols\" target=\"_blank\">?</a>");
+    addHelpButton(reply, F("EasyProtocols"));
 
 
     char str[20];
@@ -719,7 +718,7 @@ void handle_notifications() {
     }
     addSelector_Foot(reply);
 
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyNotifications\" target=\"_blank\">?</a>");
+    addHelpButton(reply, F("EasyNotifications"));
 
 
     char str[20];
@@ -824,7 +823,6 @@ void handle_hardware() {
   }
 
   reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
-
   addFormSubHeader(reply, F("Wifi Status LED"));
 
   addFormPinSelect(reply, F("Pin LED"), "pled", Settings.Pin_status_led);
@@ -859,9 +857,10 @@ void handle_hardware() {
 
   addFormSeparator(reply);
 
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  addHelpButton(reply, F("ESPEasy#Hardware_page"));
 
-  reply += F("</table></form>");
+  reply += F("<TR><TD></table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
 }
@@ -1226,9 +1225,7 @@ void handle_devices() {
 
     if (Settings.TaskDeviceNumber[index - 1] != 0 )
     {
-      reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/Plugin");
-      reply += Settings.TaskDeviceNumber[index - 1];
-      reply += F("\" target=\"_blank\">?</a>");
+      addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
 
       addFormTextBox(reply, F("Name"), F("taskdevicename"), ExtraTaskSettings.TaskDeviceName, 40);
 
@@ -1355,7 +1352,7 @@ void handle_devices() {
           }
 
           if (varNr == 0)
-            reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyFormula\" target=\"_blank\">?</a>");
+            addHelpButton(reply, F("EasyFormula"));
         }
       }
     }
@@ -1887,6 +1884,14 @@ void addFormIPBox(String& str, const String &label, const String &id, const byte
   str += F("'>");
 }
 
+// adds a Help Button with points to the the given Wiki Subpage
+void addHelpButton(String& str, const String& url)
+{
+  str += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += url;
+  str += F("\" target=\"_blank\">?</a>");
+}
+
 
 //********************************************************************************
 // Add a task select dropdown list
@@ -2042,7 +2047,7 @@ void handle_tools() {
   if (ESP.getFlashChipRealSize() > 524288)
   {
     reply += F("<TR><TD>Firmware<TD><a class=\"button-link\" href=\"/update\">Load</a>");
-    reply += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/EasyOTA\" target=\"_blank\">?</a>");
+    addHelpButton(reply, F("EasyOTA"));
   }
   reply += F("<TR><TD>Filesystem<TD><a class=\"button-link\" href=\"/filelist\">Flash</a>");
   reply += F("<a class=\"button-link\" href=\"/SDfilelist\">SD Card</a><BR><BR>");
@@ -3072,6 +3077,7 @@ void handle_rules() {
 
   reply += F("<TR><TD>Edit: ");
   addSelector(reply, F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addHelpButton(reply, F("Tutorial_Rules"));
 
   // load form data from flash
 
