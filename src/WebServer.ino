@@ -263,6 +263,8 @@ void handle_root() {
   }
   else
   {
+    //TODO: move this to handle_tools, from where it is actually called? 
+
     // have to disconnect or reboot from within the main loop
     // because the webconnection is still active at this point
     // disconnect here could result into a crash/reboot...
@@ -2053,14 +2055,14 @@ void handle_tools() {
   reply += F("<table><TH>Tools<TH>");
 
   reply += F("<TR><TD>System<TD>");
-  addButton(reply, F("?cmd=reboot"), F("Reboot"));
+  addButton(reply, F("/?cmd=reboot"), F("Reboot"));
   addButton(reply, F("log"), F("Log"));
   addButton(reply, F("sysinfo"), F("Info"));
   addButton(reply, F("advanced"), F("Advanced"));
   reply += F("<BR><BR>");
   reply += F("<TR><TD>Wifi<TD>");
-  addButton(reply, F("?cmd=wificonnect"), F("Connect"));
-  addButton(reply, F("?cmd=wifidisconnect"), F("Disconnect"));
+  addButton(reply, F("/?cmd=wificonnect"), F("Connect"));
+  addButton(reply, F("/?cmd=wifidisconnect"), F("Disconnect"));
   addButton(reply, F("wifiscanner"), F("Scan"));
   reply += F("<BR><BR>");
   reply += F("<TR><TD>Interfaces<TD>");
