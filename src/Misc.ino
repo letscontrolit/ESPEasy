@@ -23,14 +23,14 @@ bool isDeepSleepEnabled()
   //                    short 2-3 to cancel sleep loop for modifying settings
   pinMode(16,INPUT_PULLUP);
   if (!digitalRead(16))
+  {
     return false;
-
+  }
   return true;
 }
 
 void deepSleep(int delay)
 {
-  String log;
 
   if (!isDeepSleepEnabled())
   {
@@ -41,20 +41,17 @@ void deepSleep(int delay)
   //first time deep sleep? offer a way to escape
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
-    log = F("Entering deep sleep in 30 seconds.");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
-      log = F("Deep sleep disabled.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
       return;
     }
   }
 
-  log = F("Entering deep sleep...");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep..."));
 
   RTC.deepSleepState = 1;
   saveToRTC();
