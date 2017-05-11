@@ -263,7 +263,7 @@ void handle_root() {
   }
   else
   {
-    //TODO: move this to handle_tools, from where it is actually called? 
+    //TODO: move this to handle_tools, from where it is actually called?
 
     // have to disconnect or reboot from within the main loop
     // because the webconnection is still active at this point
@@ -381,7 +381,8 @@ void handle_config() {
 
   addFormSeparator(reply);
 
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("<TR><TD><TD>");
+  addSubmitButton(reply);
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
@@ -592,7 +593,7 @@ void handle_controllers() {
     addFormSeparator(reply);
 
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"controllers\">Close</a>");
-    reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
+    addSubmitButton(reply);
     reply += F("</table></form>");
   }
   addFooter(reply);
@@ -785,7 +786,7 @@ void handle_notifications() {
     addFormSeparator(reply);
 
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"notifications\">Close</a>");
-    reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
+    addSubmitButton(reply);
     reply += F("</table></form>");
   }
   addFooter(reply);
@@ -864,7 +865,8 @@ void handle_hardware() {
 
   addFormSeparator(reply);
 
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("<TR><TD><TD>");
+  addSubmitButton(reply);
   addHelpButton(reply, F("ESPEasy#Hardware_page"));
 
   reply += F("<TR><TD></table></form>");
@@ -1350,7 +1352,7 @@ void handle_devices() {
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices?setpage=");
     reply += page;
     reply += F("\">Close</a>");
-    reply += F("<input class=\"button-link\" type='submit' value='Submit'>");
+    addSubmitButton(reply);
     reply += F("<input type='hidden' name='edit' value='1'>");
     reply += F("<input type='hidden' name='page' value='1'>");
     reply += F("</table></form>");
@@ -1743,6 +1745,11 @@ void addButton(String& str, const String &url, const String &label)
   str += F("</a>");
 }
 
+void addSubmitButton(String& str)
+{
+  str += F("<input class=\"button-link\" type='submit' value='Submit'>");
+}
+
 //********************************************************************************
 // Add a header
 //********************************************************************************
@@ -2089,7 +2096,9 @@ void handle_tools() {
   reply += F("<TR><TD>Command<TD>");
   reply += F("<input type='text' name='cmd' value='");
   reply += webrequest;
-  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+  reply += F("'><TR><TD><TD>");
+  addSubmitButton(reply);
+  reply += F("<TR><TD>");
 
   printToWeb = true;
   printWebString = "";
@@ -2286,7 +2295,9 @@ void handle_login() {
   reply += F("<table><TR><TD>Password<TD>");
   reply += F("<input type='password' name='password' value='");
   reply += webrequest;
-  reply += F("'><TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'><TR><TD>");
+  reply += F("'><TR><TD><TD>");
+  addSubmitButton(reply);
+  reply += F("<TR><TD>");
   reply += F("</table></form>");
 
   if (webrequest.length() != 0)
@@ -2555,7 +2566,8 @@ void handle_advanced() {
 
   addFormSeparator(reply);
 
-  reply += F("<TR><TD><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("<TR><TD><TD>");
+  addSubmitButton(reply);
   reply += F("<input type='hidden' name='edit' value='1'>");
   reply += F("</table></form>");
   addFooter(reply);
@@ -3141,7 +3153,8 @@ void handle_rules() {
 
   addFormSeparator(reply);
 
-  reply += F("<TR><TD><input class=\"button-link\" type='submit' value='Submit'>");
+  reply += F("<TR><TD>");
+  addSubmitButton(reply);
   reply += F("</table></form>");
   addFooter(reply);
   WebServer.send(200, "text/html", reply);
