@@ -47,7 +47,6 @@ void sendWebPage(const String& tmplName, String& pageContent)
   String pageTemplate;
   String pageResult;
 
-
   String fileName = tmplName;
   fileName += F(".htm");
 
@@ -104,7 +103,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "</body>"
     );
   }
-  else   //all other template names
+  else   //all other template names e.g. TmplStd
   {
     tmpl = F(
       //"<script language=\"javascript\"><!--\n"
@@ -212,23 +211,23 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
     {
       varValue += F(
         "<style>"
-        "* {font-family:sans-serif; font-size:12pt;}"
-        "h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}"
-        "h2 {font-size:16pt; margin: 8px 0 0 0; padding:8px; background-color:black; color:#FFF; font-weight: bold;}"
-        "h3 {font-size:12pt; margin: 16px -6px 0 -6px; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}"
-        "h6 {font-size:10pt; color:black; text-align:center;}"
-        ".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}"
-        ".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}"
-        ".button-menu:hover {background:#ddddff;}"
-        ".button-link:hover {background:#369;}"
-        "th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}"
-        "td {padding:4px;}"
-        "tr {padding:8px;}"
-        "table {color:black;}"
-        ".div_l {float: left;}"
-        ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}"
-        ".div_br {clear: both;}"
-        ".note {color:#444; font-style: italic}"
+          "* {font-family:sans-serif; font-size:12pt;}"
+          "h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}"
+          "h2 {font-size:16pt; margin: 8px 0 0 0; padding:8px; background-color:black; color:#FFF; font-weight: bold;}"
+          "h3 {font-size:12pt; margin: 16px -6px 0 -6px; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}"
+          "h6 {font-size:10pt; color:black; text-align:center;}"
+          ".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}"
+          ".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}"
+          ".button-menu:hover {background:#ddddff;}"
+          ".button-link:hover {background:#369;}"
+          "th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}"
+          "td {padding:4px;}"
+          "tr {padding:8px;}"
+          "table {color:black;}"
+          ".div_l {float: left;}"
+          ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}"
+          ".div_br {clear: both;}"
+          ".note {color:#444; font-style: italic}"
         "</style>"
         );
     }
@@ -249,9 +248,8 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
     String log = F("Templ: Unknown Var : ");
     log += varName;
     addLog(LOG_LEVEL_ERROR, log);
+    //no return string - eat var name
   }
-
-
 }
 
 //********************************************************************************
@@ -259,7 +257,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
 //********************************************************************************
 void addHeader(boolean showMenu, String& str)
 {
-  /*
+  /*JK not longer used - now part of template
   boolean cssfile = false;
 
   str += F("<script language=\"javascript\"><!--\n");
@@ -337,7 +335,7 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 void addFooter(String& str)
 {
-  /*
+  /*JK not longer used - now part of template
   str += F("<h6>Powered by www.letscontrolit.com</h6></body>");
   */
 }
@@ -708,10 +706,7 @@ void handle_controllers() {
       reply += F("<TD>");
       if (Settings.Protocol[x] != 0)
       {
-        if (Settings.ControllerEnabled[x])
-          reply += F("<span style=\"color:green\">Yes</span>");
-        else
-          reply += F("<span style=\"color:red\">No</span>");
+        addEnabled(reply, Settings.ControllerEnabled[x]);
 
         reply += F("<TD>");
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
@@ -905,10 +900,7 @@ void handle_notifications() {
       reply += F("<TD>");
       if (Settings.Notification[x] != 0)
       {
-        if (Settings.NotificationEnabled[x])
-          reply += F("<span style=\"color:green\">Yes</span>");
-        else
-          reply += F("<span style=\"color:red\">No</span>");
+        addEnabled(reply, Settings.NotificationEnabled[x]);
 
         reply += F("<TD>");
         byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[x]);
@@ -1329,10 +1321,7 @@ void handle_devices() {
         deviceName = "";
         Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
 
-        if (Settings.TaskDeviceEnabled[x])
-          reply += F("<span style=\"color:green\">Yes</span>");
-        else
-          reply += F("<span style=\"color:red\">No</span>");
+        addEnabled(reply, Settings.TaskDeviceEnabled[x]);
 
         reply += F("<TD>");
         reply += deviceName;
@@ -1961,7 +1950,7 @@ void addRowLabel(String& str, const String& label)
 
 void addButton(String& str, const String &url, const String &label)
 {
-  str += F("<a class=\"button-link\" href=");
+  str += F("<a class=\"button-link btn btn-primary\" href=");
   str += url;
   str += F(">");
   str += label;
@@ -1970,7 +1959,7 @@ void addButton(String& str, const String &url, const String &label)
 
 void addSubmitButton(String& str)
 {
-  str += F("<input class=\"button-link\" type='submit' value='Submit'>");
+  str += F("<input class=\"button-link btn btn-primary\" type='submit' value='Submit'>");
 }
 
 //********************************************************************************
@@ -2138,9 +2127,18 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(String& str, const String& url)
 {
-  str += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += F(" <a class=\"button-link btn btn-info\" href=\"http://www.letscontrolit.com/wiki/index.php/");
   str += url;
   str += F("\" target=\"_blank\">?</a>");
+}
+
+
+void addEnabled(String& str, boolean enabled)
+{
+  if (enabled)
+    str += F("<span class=\"enabled on\" style=\"color:green\">Yes</span>");
+  else
+    str += F("<span class=\"enabled off\" style=\"color:red\">No</span>");
 }
 
 
