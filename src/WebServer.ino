@@ -106,9 +106,9 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   else   //all other template names e.g. TmplStd
   {
     tmpl = F(
-      //"<script language=\"javascript\"><!--\n"
-      //"function dept_onchange(frmselect) {frmselect.submit();}\n"
-      //"//--></script>"
+      "<script language=\"javascript\"><!--\n"
+      "function dept_onchange(frmselect) {frmselect.submit();}\n"
+      "//--></script>"
       "<head>"
         "<title>{{name}}</title>"
         "{{css}}"
