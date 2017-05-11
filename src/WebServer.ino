@@ -1751,6 +1751,33 @@ void addSubmitButton(String& str)
 }
 
 //********************************************************************************
+// Add form controls, <TR>, <TD>, <BR>
+//********************************************************************************
+void addFormContols(String& str, boolean newrow, int cells, int brakerow)
+{
+  if (newrow) {
+    str += F("<TR>");
+  }
+  if (cells > 0) {
+    for (size_t i = 0; i < cells; i++) {
+      str += F("<TD>");
+    }
+  }
+  if (brakerow > 0) {
+    for (size_t i = 0; i < brakerow; i++) {
+      str += F("<BR>");
+    }
+  }
+}
+
+void addFormRowLabel(String& str, const String& label)
+{
+  str += F("<TR><TD>");
+  str += label;
+  str += F("<TD>");
+}
+
+//********************************************************************************
 // Add a header
 //********************************************************************************
 void addFormHeader(String& str, const String& header1, const String& header2)
@@ -2061,44 +2088,45 @@ void handle_tools() {
   reply += F("<form>");
   reply += F("<table><TH>Tools<TH>");
 
-  reply += F("<TR><TD>System<TD>");
+  addFormRowLabel(reply, F("System"));
   addButton(reply, F("/?cmd=reboot"), F("Reboot"));
   addButton(reply, F("log"), F("Log"));
   addButton(reply, F("sysinfo"), F("Info"));
   addButton(reply, F("advanced"), F("Advanced"));
-  reply += F("<BR><BR>");
-  reply += F("<TR><TD>Wifi<TD>");
+  addFormContols(reply, false, 0, 2);
+  addFormRowLabel(reply, F("Wifi"));
   addButton(reply, F("/?cmd=wificonnect"), F("Connect"));
   addButton(reply, F("/?cmd=wifidisconnect"), F("Disconnect"));
   addButton(reply, F("wifiscanner"), F("Scan"));
-  reply += F("<BR><BR>");
-  reply += F("<TR><TD>Interfaces<TD>");
+  addFormContols(reply, false, 0, 2);
+  addFormRowLabel(reply, F("Interfaces"));
   addButton(reply, F("i2cscanner"), F("I2C Scan"));
-  reply += F("<BR><BR>");
+  addFormContols(reply, false, 0, 2);
   addFormSeparator(reply);
-  reply += F("<TR><TD>Settings<TD>");
+  addFormRowLabel(reply, F("Settings"));
   addButton(reply, F("upload"), F("Load"));
   addButton(reply, F("download"), F("Save"));
   reply += F("(<B>File MUST be renamed to \"config.dat\" before upload!)</B>)");
   addFormSeparator(reply);
   if (ESP.getFlashChipRealSize() > 524288)
   {
-    reply += F("<BR><BR>");
-    reply += F("<TR><TD>Firmware<TD>");
+    addFormContols(reply, false, 0, 2);
+    addFormRowLabel(reply, F("Firmware"));
     addButton(reply, F("update"), F("Load"));
     addHelpButton(reply, F("EasyOTA"));
-    reply += F("<BR><BR>");
+    addFormContols(reply, false, 0, 2);
   }
-  reply += F("<TR><TD>Filesystem<TD>");
+  addFormRowLabel(reply, F("Filesystem"));
   addButton(reply, F("filelist"), F("Flash"));
   addButton(reply, F("SDfilelist"), F("SD Card"));
-  reply += F("<BR><BR>");
-  reply += F("<TR><TD>Command<TD>");
+  addFormContols(reply, false, 0, 2);
+  addFormRowLabel(reply, F("Command"));
   reply += F("<input type='text' name='cmd' value='");
   reply += webrequest;
-  reply += F("'><TR><TD><TD>");
+  reply += F("'>");
+  addFormContols(reply, true, 2, 0);
   addSubmitButton(reply);
-  reply += F("<TR><TD>");
+  addFormContols(reply, true, 1, 0);
 
   printToWeb = true;
   printWebString = "";
