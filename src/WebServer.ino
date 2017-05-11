@@ -44,8 +44,11 @@ void WebServerInit()
 
 void sendWebPage(const String& tmplName, String& pageContent)
 {
-  String pageTemplate;
   String pageResult;
+  String pageTemplate = F(
+    "<script language=\"javascript\"><!--\n"
+    "function dept_onchange(frmselect) {frmselect.submit();}\n"
+    "//--></script>");
 
   String fileName = tmplName;
   fileName += F(".htm");
@@ -77,7 +80,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
   if (tmplName == F("TmplAP"))
   {
-    tmpl = F(
+    tmpl += F(
       "<head>"
         "<title>{{name}}</title>"
         "{{css}}"
@@ -91,7 +94,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   }
   else if (tmplName == F("TmplMsg"))
   {
-    tmpl = F(
+    tmpl += F(
       "<head>"
         "<title>{{name}}</title>"
         "{{css}}"
@@ -105,10 +108,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   }
   else   //all other template names e.g. TmplStd
   {
-    tmpl = F(
-      "<script language=\"javascript\"><!--\n"
-      "function dept_onchange(frmselect) {frmselect.submit();}\n"
-      "//--></script>"
+    tmpl += F(
       "<head>"
         "<title>{{name}}</title>"
         "{{css}}"
