@@ -127,7 +127,7 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
   int indexStart, indexEnd;
   String varName, varValue;
 
-  while ((indexStart = pageTemplate.indexOf("{{")) > 0)
+  while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
   {
     pageResult += pageTemplate.substring(0, indexStart);
     pageTemplate = pageTemplate.substring(indexStart);
@@ -158,6 +158,8 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
         pageResult += varValue;
       }
     }
+    else   //no closing "}}"
+      pageTemplate = pageTemplate.substring(2);   //eat "{{"
   }
   pageResult += pageTemplate;
   pageTemplate = F("");
@@ -180,6 +182,39 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
 
   else if (varName == F("menu"))
   {
+    static const __FlashStringHelper* gpMenu[8][2] = {
+      F("Main"), F("."),                      //0
+      F("Config"), F("config"),               //1
+      F("Controllers"), F("controllers"),     //2
+      F("Hardware"), F("hardware"),           //3
+      F("Devices"), F("devices"),             //4
+      F("Rules"), F("rules"),                 //5
+      F("Notifications"), F("notifications"), //6
+      F("Tools"), F("tools"),                 //7
+    };
+
+    /*TODO
+    varValue += F("<ul class='nav navbar-nav'>");
+    for (byte i=0; i<8; i++)
+    {
+      if (i == 5 && !Settings.UseRules)   //hide rules menu item
+        continue;
+
+      varValue += F("<li role='presentation'>");
+      varValue += F("<a class='button-menu");
+      if (i=2)
+        varValue += F(" active");
+      varValue += F("' href='");
+      varValue += gpMenu[i][1];
+      varValue += F("'>");
+      varValue += gpMenu[i][0];
+      varValue += F("</a>");
+      varValue += F("</li>");
+    }
+    varValue += F("</ul>");
+
+    varValue += F("<BR>");
+    */
     varValue += F("<a class=\"button-menu\" href=\".\">Main</a>");
     varValue += F("<a class=\"button-menu\" href=\"config\">Config</a>");
     varValue += F("<a class=\"button-menu\" href=\"controllers\">Controllers</a>");
