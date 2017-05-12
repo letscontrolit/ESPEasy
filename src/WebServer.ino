@@ -2066,6 +2066,7 @@ void handle_tools() {
   addButton(reply, F("log"), F("Log"));
   addButton(reply, F("sysinfo"), F("Info"));
   addButton(reply, F("advanced"), F("Advanced"));
+  addButton(reply, F("json"), F("Show JSON"));
   reply += F("<BR><BR>");
   reply += F("<TR><TD>Wifi<TD>");
   addButton(reply, F("/?cmd=wificonnect"), F("Connect"));
