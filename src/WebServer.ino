@@ -2121,7 +2121,7 @@ void handle_tools() {
   addButton(reply, F("upload"), F("Load"));
   reply += F("<TD>");
   reply += F("Loads a settings file");
-  reply += F("<TD><B>(File MUST be renamed to \"config.dat\" before upload!)</B>");
+  addFormNote(reply, F("(File MUST be renamed to \"config.dat\" before upload!)"));
 
   reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("download"), F("Save"));
