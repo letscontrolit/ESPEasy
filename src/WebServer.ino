@@ -2295,7 +2295,7 @@ void handle_tools() {
   reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("i2cscanner"), F("I2C Scan"));
   reply += F("<TD>");
-  reply += F("Scan for I2C units");
+  reply += F("Scan for I2C devices");
 
   addFormSubHeader(reply, F("Settings"));
 
@@ -2325,7 +2325,7 @@ void handle_tools() {
   reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("filelist"), F("Flash"));
   reply += F("<TD>");
-  reply += F("Show files on flash");
+  reply += F("Show files on internal flash");
 
   reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("SDfilelist"), F("SD Card"));
