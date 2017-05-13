@@ -2240,46 +2240,103 @@ void handle_tools() {
   String reply = "";
   addHeader(true, reply);
 
-  reply += F("<form>");
-  reply += F("<table><TH>Tools<TH>");
 
-  reply += F("<TR><TD>System<TD>");
+  reply += F("<form>");
+  reply += F("<table>");
+
+  addFormHeader(reply, F("Tools"), F(""));
+
+  addFormSubHeader(reply, F("System"));
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("/?cmd=reboot"), F("Reboot"));
+  reply += F("<TD>");
+  reply += F("Reboots ESP");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("log"), F("Log"));
+  reply += F("<TD>");
+  reply += F("Open log output");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("sysinfo"), F("Info"));
+  reply += F("<TD>");
+  reply += F("Open system info page");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("advanced"), F("Advanced"));
+  reply += F("<TD>");
+  reply += F("Open advanced settings");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("json"), F("Show JSON"));
-  reply += F("<BR><BR>");
-  reply += F("<TR><TD>Wifi<TD>");
+  reply += F("<TD>");
+  reply += F("Open JSON output");
+
+  addFormSubHeader(reply, F("Wifi"));
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("/?cmd=wificonnect"), F("Connect"));
+  reply += F("<TD>");
+  reply += F("Connects to known Wifi network");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("/?cmd=wifidisconnect"), F("Disconnect"));
+  reply += F("<TD>");
+  reply += F("Disconnect from wifi network");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("wifiscanner"), F("Scan"));
-  reply += F("<BR><BR>");
-  reply += F("<TR><TD>Interfaces<TD>");
+  reply += F("<TD>");
+  reply += F("Scan for wifi networks");
+
+  addFormSubHeader(reply, F("Interfaces"));
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("i2cscanner"), F("I2C Scan"));
-  reply += F("<BR><BR>");
-  addFormSeparator(reply);
-  reply += F("<TR><TD>Settings<TD>");
+  reply += F("<TD>");
+  reply += F("Scan for I2C units");
+
+  addFormSubHeader(reply, F("Settings"));
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("upload"), F("Load"));
+  reply += F("<TD>");
+  reply += F("Loads a settings file");
+  addFormNote(reply, F("(File MUST be renamed to \"config.dat\" before upload!)"));
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("download"), F("Save"));
-  reply += F("(<B>File MUST be renamed to \"config.dat\" before upload!)</B>)");
-  addFormSeparator(reply);
+  reply += F("<TD>");
+  reply += F("Saves a settings file");
+
   if (ESP.getFlashChipRealSize() > 524288)
   {
-    reply += F("<BR><BR>");
-    reply += F("<TR><TD>Firmware<TD>");
+    addFormSubHeader(reply, F("Firmware"));
+    reply += F("<TR><TD HEIGHT=\"30\">");
     addButton(reply, F("update"), F("Load"));
     addHelpButton(reply, F("EasyOTA"));
-    reply += F("<BR><BR>");
+    reply += F("<TD>");
+    reply += F("Load a new firmware");
   }
-  reply += F("<TR><TD>Filesystem<TD>");
+
+  addFormSubHeader(reply, F("Filesystem"));
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("filelist"), F("Flash"));
+  reply += F("<TD>");
+  reply += F("Show files on flash");
+
+  reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("SDfilelist"), F("SD Card"));
-  reply += F("<BR><BR>");
-  reply += F("<TR><TD>Command<TD>");
+  reply += F("<TD>");
+  reply += F("Show files on SD-Card");
+
+  addFormSubHeader(reply, F("Command"));
+  reply += F("<TR><TD HEIGHT=\"30\">");
   reply += F("<input type='text' name='cmd' value='");
   reply += webrequest;
-  reply += F("'><TR><TD><TD>");
+  reply += F("'><TD>");
   addSubmitButton(reply);
   reply += F("<TR><TD>");
 
