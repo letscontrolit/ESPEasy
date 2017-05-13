@@ -42,78 +42,252 @@ void WebServerInit()
   WebServer.begin();
 }
 
+void sendWebPage(const String& tmplName, String& pageContent)
+{
+  String pageResult;
+  String pageTemplate;
+
+  String fileName = tmplName;
+  fileName += F(".htm");
+
+  fs::File f = SPIFFS.open(fileName, "r+");
+  if (f)
+  {
+    while (f.available())
+      pageTemplate += (char)f.read();
+    f.close();
+  }
+  else
+  {
+    getWebPageTemplateDefault(tmplName, pageTemplate);
+  }
+
+  processWebPageTemplate(pageTemplate, pageResult, pageContent);
+
+  //TEST addLog(LOG_LEVEL_INFO, pageResult);
+
+  pageTemplate = F("");
+  pageContent = F("");
+
+  WebServer.send(200, "text/html", pageResult);
+}
+
+
+void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
+{
+  if (tmplName == F("TmplAP"))
+  {
+    tmpl += F(
+      "<head>"
+        "<title>{{name}}</title>"
+        "{{css}}"
+      "</head>"
+      "<body>"
+        "<h1>Welcome to ESP Easy Mega AP</h1>"
+        "{{error}}"
+        "<p>{{content}}</p>"
+        "<h6>Powered by www.letscontrolit.com</h6>"
+      "</body>"
+    );
+  }
+  else if (tmplName == F("TmplMsg"))
+  {
+    tmpl += F(
+      "<head>"
+        "<title>{{name}}</title>"
+        "{{css}}"
+      "</head>"
+      "<body>"
+        "<h1>ESP Easy Mega: {{name}}</h1>"
+        "{{error}}"
+        "<p>{{content}}</p>"
+        "<h6>Powered by www.letscontrolit.com</h6>"
+      "</body>"
+    );
+  }
+  else   //all other template names e.g. TmplStd
+  {
+    tmpl += F(
+      "<head>"
+        "<title>{{name}}</title>"
+        "{{js}}"
+        "{{css}}"
+      "</head>"
+      "<body>"
+        "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
+        "<p>{{menu}}</p>"
+        "{{error}}"
+        "<p>{{content}}</p>"
+        "<h6>Powered by www.letscontrolit.com</h6>"
+      "</body>"
+    );
+  }
+}
+
+
+void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pageContent)
+{
+  int indexStart, indexEnd;
+  String varName, varValue;
+
+  while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
+  {
+    pageResult += pageTemplate.substring(0, indexStart);
+    pageTemplate = pageTemplate.substring(indexStart);
+
+    if ((indexEnd = pageTemplate.indexOf("}}")) > 0)
+    {
+      varName = pageTemplate.substring(2, indexEnd);
+      pageTemplate = pageTemplate.substring(indexEnd+2);
+
+      varName.toLowerCase();
+
+      if (varName == F("content"))
+        pageResult += pageContent;
+      else
+      {
+        getWebPageTemplateVar(varName, varValue);
+/*TEST
+        String log = F("> VarName: ");
+        log += varName;
+        log += F(" ");
+        log += indexStart;
+        log += F("+");
+        log += indexEnd;
+        log += F(" : ");
+        log += varValue;
+        addLog(LOG_LEVEL_DEBUG, log);
+*/
+        pageResult += varValue;
+      }
+    }
+    else   //no closing "}}"
+      pageTemplate = pageTemplate.substring(2);   //eat "{{"
+  }
+  pageResult += pageTemplate;
+  pageTemplate = F("");
+}
+
+
+static byte navMenuIndex = 0;
+
+void getWebPageTemplateVar(const String& varName, String& varValue)
+{
+  varValue = F("");
+
+  if (varName == F("name"))
+  {
+    varValue = Settings.Name;
+  }
+
+  else if (varName == F("unit"))
+  {
+    varValue = Settings.Unit;
+  }
+
+  else if (varName == F("menu"))
+  {
+    static const __FlashStringHelper* gpMenu[8][2] = {
+      F("Main"), F("."),                      //0
+      F("Config"), F("config"),               //1
+      F("Controllers"), F("controllers"),     //2
+      F("Hardware"), F("hardware"),           //3
+      F("Devices"), F("devices"),             //4
+      F("Rules"), F("rules"),                 //5
+      F("Notifications"), F("notifications"), //6
+      F("Tools"), F("tools"),                 //7
+    };
+
+    for (byte i=0; i<8; i++)
+    {
+      if (i == 5 && !Settings.UseRules)   //hide rules menu item
+        continue;
+
+      varValue += F("<a class='button-menu w3-bar-item w3-button");
+      if (i == navMenuIndex)   //JK experimental
+        varValue += F(" active w3-teal");
+      varValue += F("' href='");
+      varValue += gpMenu[i][1];
+      varValue += F("'>");
+      varValue += gpMenu[i][0];
+      varValue += F("</a>");
+    }
+  }
+
+  else if (varName == F("logo"))
+  {
+    if (SPIFFS.exists("esp.png"))
+    {
+      varValue = F("<img src=\"esp.png\" width=48 height=48 align=right>");
+    }
+  }
+
+  else if (varName == F("css"))
+  {
+    if (SPIFFS.exists("esp.css"))
+    {
+      varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
+    }
+    else
+    {
+      varValue = F(
+        "<style>"
+          "* {font-family:sans-serif; font-size:12pt;}"
+          "h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}"
+          "h2 {font-size:16pt; margin: 8px 0 0 0; padding:8px; background-color:black; color:#FFF; font-weight: bold;}"
+          "h3 {font-size:12pt; margin: 16px -6px 0 -6px; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}"
+          "h6 {font-size:10pt; color:black; text-align:center;}"
+          ".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}"
+          ".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}"
+          ".button-menu:hover {background:#ddddff;}"
+          ".button-link:hover {background:#369;}"
+          "th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}"
+          "td {padding:4px;}"
+          "tr {padding:8px;}"
+          "table {color:black;}"
+          ".div_l {float: left;}"
+          ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}"
+          ".div_br {clear: both;}"
+          ".note {color:#444; font-style: italic}"
+          ".active {text-decoration: underline;}"
+        "</style>"
+        );
+    }
+  }
+
+  else if (varName == F("js"))
+  {
+    varValue += F(
+      "<script language=\"javascript\"><!--\n"
+      "function dept_onchange(frmselect) {frmselect.submit();}\n"
+      "//--></script>");
+  }
+
+  else if (varName == F("error"))
+  {
+    //print last error - not implemented yet
+  }
+
+  else if (varName == F("debug"))
+  {
+    //print debug messages - not implemented yet
+  }
+
+  else
+  {
+    String log = F("Templ: Unknown Var : ");
+    log += varName;
+    addLog(LOG_LEVEL_ERROR, log);
+    //no return string - eat var name
+  }
+}
 
 //********************************************************************************
 // Add top menu
 //********************************************************************************
 void addHeader(boolean showMenu, String& str)
 {
-  boolean cssfile = false;
-
-  str += F("<script language=\"javascript\"><!--\n");
-  str += F("function dept_onchange(frmselect) {frmselect.submit();}\n");
-  str += F("//--></script>");
-  str += F("<head><title>");
-  str += Settings.Name;
-  str += F("</title>");
-
-  fs::File f = SPIFFS.open("esp.css", "r");
-  if (f)
-  {
-    cssfile = true;
-    f.close();
-  }
-
-  if (!cssfile)
-  {
-    str += F("<style>");
-    str += F("* {font-family:sans-serif; font-size:12pt;}");
-    str += F("h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}");
-    str += F("h3 {font-size:12pt; margin: 16px -6px 0 -6px; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}");
-    str += F("h6 {font-size:10pt; color:black; text-align:center;}");
-    str += F(".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}");
-    str += F(".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}");
-    str += F(".button-menu:hover {background:#ddddff;}");
-    str += F(".button-link:hover {background:#369;}");
-    str += F("th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}");
-    str += F("td {padding:4px;}");
-    str += F("tr {padding:8px;}");
-    str += F("table {color:black;}");
-    str += F(".div_l {float: left;}");
-    str += F(".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}");
-    str += F(".div_br {clear: both;}");
-    str += F(".note {color:#444; font-style: italic}");
-    str += F("</style>");
-  }
-  else
-    str += F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
-
-  str += F("</head>");
-
-  str += F("<h1>Welcome to ESP Easy Mega: ");
-  str += Settings.Name;
-
-  f = SPIFFS.open("esp.png", "r");
-  if (f)
-  {
-    str += F("<img src=\"esp.png\" width=50 height=50 align=right >");
-    f.close();
-  }
-
-  str += F("</h1>");
-
-  if (showMenu)
-  {
-    str += F("<BR><a class=\"button-menu\" href=\".\">Main</a>");
-    str += F("<a class=\"button-menu\" href=\"config\">Config</a>");
-    str += F("<a class=\"button-menu\" href=\"controllers\">Controllers</a>");
-    str += F("<a class=\"button-menu\" href=\"hardware\">Hardware</a>");
-    str += F("<a class=\"button-menu\" href=\"devices\">Devices</a>");
-    if (Settings.UseRules)
-      str += F("<a class=\"button-menu\" href=\"rules\">Rules</a>");
-    str += F("<a class=\"button-menu\" href=\"notifications\">Notifications</a>");
-    str += F("<a class=\"button-menu\" href=\"tools\">Tools</a><BR><BR>");
-  }
+  //not longer used - now part of template
 }
 
 
@@ -122,7 +296,7 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 void addFooter(String& str)
 {
-  str += F("<h6>Powered by www.letscontrolit.com</h6></body>");
+  //not longer used - now part of template
 }
 
 
@@ -146,6 +320,7 @@ void handle_root() {
   if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
   {
     String reply = "";
+    navMenuIndex = 0;
     addHeader(true, reply);
 
     printToWeb = true;
@@ -257,7 +432,7 @@ void handle_root() {
 
     reply += F("</table></form>");
     addFooter(reply);
-    WebServer.send(200, "text/html", reply);
+    sendWebPage(F("TmplStd"), reply);
     printWebString = "";
     printToWeb = false;
   }
@@ -295,6 +470,7 @@ void handle_config() {
 
   char tmpString[64];
 
+  navMenuIndex = 1;
   String name = WebServer.arg(F("name"));
   //String password = WebServer.arg(F("password"));
   String ssid = WebServer.arg(F("ssid"));
@@ -385,7 +561,7 @@ void handle_config() {
   addSubmitButton(reply);
   reply += F("</table></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -398,6 +574,7 @@ void handle_controllers() {
   struct EventStruct TempEvent;
   char tmpString[64];
 
+  navMenuIndex = 2;
   String controllerindex = WebServer.arg(F("index"));
   String usedns = WebServer.arg(F("usedns"));
   String controllerip = WebServer.arg(F("controllerip"));
@@ -489,10 +666,7 @@ void handle_controllers() {
       reply += F("<TD>");
       if (Settings.Protocol[x] != 0)
       {
-        if (Settings.ControllerEnabled[x])
-          reply += F("<span style=\"color:green\">Yes</span>");
-        else
-          reply += F("<span style=\"color:red\">No</span>");
+        addEnabled(reply, Settings.ControllerEnabled[x]);
 
         reply += F("<TD>");
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
@@ -597,7 +771,7 @@ void handle_controllers() {
     reply += F("</table></form>");
   }
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -610,6 +784,7 @@ void handle_notifications() {
   struct EventStruct TempEvent;
   char tmpString[64];
 
+  navMenuIndex = 6;
   String notificationindex = WebServer.arg(F("index"));
   String notification = WebServer.arg(F("notification"));
   String domain = WebServer.arg(F("domain"));
@@ -685,10 +860,7 @@ void handle_notifications() {
       reply += F("<TD>");
       if (Settings.Notification[x] != 0)
       {
-        if (Settings.NotificationEnabled[x])
-          reply += F("<span style=\"color:green\">Yes</span>");
-        else
-          reply += F("<span style=\"color:red\">No</span>");
+        addEnabled(reply, Settings.NotificationEnabled[x]);
 
         reply += F("<TD>");
         byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[x]);
@@ -790,7 +962,7 @@ void handle_notifications() {
     reply += F("</table></form>");
   }
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -800,6 +972,7 @@ void handle_notifications() {
 void handle_hardware() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 3;
   String reply = "";
   addHeader(true, reply);
 
@@ -871,7 +1044,7 @@ void handle_hardware() {
 
   reply += F("<TR><TD></table></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -897,6 +1070,7 @@ void addPinStateSelect(String& str, String name, int choice)
 void handle_devices() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 4;
   char tmpString[41];
   struct EventStruct TempEvent;
 
@@ -1107,10 +1281,7 @@ void handle_devices() {
         deviceName = "";
         Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
 
-        if (Settings.TaskDeviceEnabled[x])
-          reply += F("<span style=\"color:green\">Yes</span>");
-        else
-          reply += F("<span style=\"color:red\">No</span>");
+        addEnabled(reply, Settings.TaskDeviceEnabled[x]);
 
         reply += F("<TD>");
         reply += deviceName;
@@ -1363,7 +1534,7 @@ void handle_devices() {
   String log = F("DEBUG: String size:");
   log += reply.length();
   addLog(LOG_LEVEL_DEBUG_MORE, log);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -1738,7 +1909,7 @@ void addRowLabel(String& str, const String& label)
 
 void addButton(String& str, const String &url, const String &label)
 {
-  str += F("<a class=\"button-link\" href=");
+  str += F("<a class=\"button-link btn btn-primary\" href=");
   str += url;
   str += F(">");
   str += label;
@@ -1747,7 +1918,7 @@ void addButton(String& str, const String &url, const String &label)
 
 void addSubmitButton(String& str)
 {
-  str += F("<input class=\"button-link\" type='submit' value='Submit'>");
+  str += F("<input class=\"button-link btn btn-primary\" type='submit' value='Submit'>");
 }
 
 //********************************************************************************
@@ -1915,9 +2086,18 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(String& str, const String& url)
 {
-  str += F("<a class=\"button-link\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += F(" <a class=\"button-link btn btn-info\" href=\"http://www.letscontrolit.com/wiki/index.php/");
   str += url;
   str += F("\" target=\"_blank\">?</a>");
+}
+
+
+void addEnabled(String& str, boolean enabled)
+{
+  if (enabled)
+    str += F("<span class='enabled on' style='color:green'>Yes</span>");
+  else
+    str += F("<span class='enabled off' style='color:red'>No</span>");
 }
 
 
@@ -2016,6 +2196,7 @@ void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
 void handle_log() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
   String reply = "";
@@ -2042,7 +2223,7 @@ void handle_log() {
   }
   reply += F("</table>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
   free(TempString);
 }
 
@@ -2053,6 +2234,7 @@ void handle_log() {
 void handle_tools() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   String webrequest = WebServer.arg(F("cmd"));
 
   String reply = "";
@@ -2121,7 +2303,7 @@ void handle_tools() {
   }
   reply += F("</table></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
   printWebString = "";
   printToWeb = false;
 }
@@ -2133,6 +2315,7 @@ void handle_tools() {
 void handle_i2cscanner() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
   String reply = "";
@@ -2242,7 +2425,7 @@ void handle_i2cscanner() {
 
   reply += F("</table>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
   free(TempString);
 }
 
@@ -2253,6 +2436,7 @@ void handle_i2cscanner() {
 void handle_wifiscanner() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
   String reply = "";
@@ -2276,7 +2460,7 @@ void handle_wifiscanner() {
 
   reply += F("</table>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
   free(TempString);
 }
 
@@ -2316,7 +2500,7 @@ void handle_login() {
     }
   }
 
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplMsg"), reply);
   printWebString = "";
   printToWeb = false;
 }
@@ -2447,6 +2631,7 @@ boolean handle_json()
 void handle_advanced() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char tmpString[81];
 
   String messagedelay = WebServer.arg(F("messagedelay"));
@@ -2572,7 +2757,7 @@ void handle_advanced() {
   reply += F("<input type='hidden' name='edit' value='1'>");
   reply += F("</table></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -2604,6 +2789,7 @@ void handle_download()
 {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   fs::File dataFile = SPIFFS.open("config.dat", "r");
   if (!dataFile)
     return;
@@ -2636,9 +2822,10 @@ void handle_upload() {
   String reply = "";
   addHeader(true, reply);
 
+  navMenuIndex = 7;
   reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
   printWebString = "";
   printToWeb = false;
 }
@@ -2650,6 +2837,7 @@ void handle_upload() {
 void handle_upload_post() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   String reply = "";
 
   if (uploadResult == 1)
@@ -2667,7 +2855,7 @@ void handle_upload_post() {
   addHeader(true, reply);
   reply += F("Upload finished");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
   printWebString = "";
   printToWeb = false;
 }
@@ -2802,6 +2990,7 @@ bool loadFromFS(boolean spiffs, String path) {
 //********************************************************************************
 void handle_filelist() {
 
+  navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
@@ -2837,7 +3026,7 @@ void handle_filelist() {
   reply += F("</table></form>");
   reply += F("<BR><a class=\"button-link\" href=\"/upload\">Upload</a>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -2846,6 +3035,7 @@ void handle_filelist() {
 //********************************************************************************
 void handle_SDfilelist() {
 
+  navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
@@ -2887,7 +3077,7 @@ void handle_SDfilelist() {
   reply += F("</table></form>");
   //reply += F("<BR><a class=\"button-link\" href=\"/upload\">Upload</a>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -2940,9 +3130,9 @@ void handle_setup() {
     reply += host;
     reply += F("/config'>Proceed to main config</a>");
     addFooter(reply);
-    WebServer.send(200, "text/html", reply);
+    sendWebPage(F("TmplAP"), reply);
     wifiSetup = false;
-    WifiAPMode(false);
+    WifiAPMode(false);  //JK TODO - this forces the iPhone to exit safari and this page was never displayed
     return;
   }
 
@@ -3042,7 +3232,7 @@ void handle_setup() {
 
   reply += F("</form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplAP"), reply);
   delay(10);
 }
 
@@ -3054,6 +3244,7 @@ void handle_rules() {
   if (!isLoggedIn()) return;
   static byte currentSet = 1;
 
+  navMenuIndex = 5;
   String set = WebServer.arg(F("set"));
   byte rulesSet = 1;
   if (set.length() > 0)
@@ -3144,6 +3335,7 @@ void handle_rules() {
       }
       reply += F("</textarea>");
     }
+    f.close();
   }
 
   reply += F("<TR><TD>Current size: ");
@@ -3158,7 +3350,7 @@ void handle_rules() {
   addSubmitButton(reply);
   reply += F("</table></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
@@ -3324,7 +3516,7 @@ void handle_sysinfo() {
 
   reply += F("</table></form>");
   addFooter(reply);
-  WebServer.send(200, "text/html", reply);
+  sendWebPage(F("TmplStd"), reply);
 }
 
 
