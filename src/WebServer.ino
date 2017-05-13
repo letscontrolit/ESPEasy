@@ -165,6 +165,7 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
   pageTemplate = F("");
 }
 
+static byte navMenuIndex = 0;
 
 void getWebPageTemplateVar(const String& varName, String& varValue)
 {
@@ -193,28 +194,21 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
       F("Tools"), F("tools"),                 //7
     };
 
-    /*TODO
-    varValue += F("<ul class='nav navbar-nav'>");
     for (byte i=0; i<8; i++)
     {
       if (i == 5 && !Settings.UseRules)   //hide rules menu item
         continue;
 
-      varValue += F("<li role='presentation'>");
-      varValue += F("<a class='button-menu");
-      if (i=2)
-        varValue += F(" active");
+      varValue += F("<a class='button-menu w3-bar-item w3-button");
+      if (i == navMenuIndex)   //JK experimental
+        varValue += F(" active w3-green");
       varValue += F("' href='");
       varValue += gpMenu[i][1];
       varValue += F("'>");
       varValue += gpMenu[i][0];
       varValue += F("</a>");
-      varValue += F("</li>");
     }
-    varValue += F("</ul>");
-
-    varValue += F("<BR>");
-    */
+/*
     varValue += F("<a class=\"button-menu\" href=\".\">Main</a>");
     varValue += F("<a class=\"button-menu\" href=\"config\">Config</a>");
     varValue += F("<a class=\"button-menu\" href=\"controllers\">Controllers</a>");
@@ -224,6 +218,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
       varValue += F("<a class=\"button-menu\" href=\"rules\">Rules</a>");
     varValue += F("<a class=\"button-menu\" href=\"notifications\">Notifications</a>");
     varValue += F("<a class=\"button-menu\" href=\"tools\">Tools</a>");
+*/
   }
 
   else if (varName == F("logo"))
@@ -261,6 +256,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
           ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}"
           ".div_br {clear: both;}"
           ".note {color:#444; font-style: italic}"
+          ".active {text-decoration: underline;}"
         "</style>"
         );
     }
@@ -402,6 +398,7 @@ void handle_root() {
   if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
   {
     String reply = "";
+    navMenuIndex = 0;
     addHeader(true, reply);
 
     printToWeb = true;
@@ -552,6 +549,7 @@ void handle_config() {
 
   char tmpString[64];
 
+  navMenuIndex = 1;
   String name = WebServer.arg(F("name"));
   //String password = WebServer.arg(F("password"));
   String ssid = WebServer.arg(F("ssid"));
@@ -656,6 +654,7 @@ void handle_controllers() {
   struct EventStruct TempEvent;
   char tmpString[64];
 
+  navMenuIndex = 2;
   String controllerindex = WebServer.arg(F("index"));
   String usedns = WebServer.arg(F("usedns"));
   String controllerip = WebServer.arg(F("controllerip"));
@@ -866,6 +865,7 @@ void handle_notifications() {
   struct EventStruct TempEvent;
   char tmpString[64];
 
+  navMenuIndex = 6;
   String notificationindex = WebServer.arg(F("index"));
   String notification = WebServer.arg(F("notification"));
   String domain = WebServer.arg(F("domain"));
@@ -1054,6 +1054,7 @@ void handle_notifications() {
 void handle_hardware() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 3;
   String reply = "";
   addHeader(true, reply);
 
@@ -1152,6 +1153,7 @@ void addPinStateSelect(String& str, String name, int choice)
 void handle_devices() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 4;
   char tmpString[41];
   struct EventStruct TempEvent;
 
@@ -2278,6 +2280,7 @@ void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
 void handle_log() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
   String reply = "";
@@ -2316,6 +2319,7 @@ void handle_log() {
 void handle_tools() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   String webrequest = WebServer.arg(F("cmd"));
 
   String reply = "";
@@ -2396,6 +2400,7 @@ void handle_tools() {
 void handle_i2cscanner() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
   String reply = "";
@@ -2517,6 +2522,7 @@ void handle_i2cscanner() {
 void handle_wifiscanner() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
   String reply = "";
@@ -2713,6 +2719,7 @@ boolean handle_json()
 void handle_advanced() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   char tmpString[81];
 
   String messagedelay = WebServer.arg(F("messagedelay"));
@@ -2871,6 +2878,7 @@ void handle_download()
 {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   fs::File dataFile = SPIFFS.open("config.dat", "r");
   if (!dataFile)
     return;
@@ -2903,6 +2911,7 @@ void handle_upload() {
   String reply = "";
   addHeader(true, reply);
 
+  navMenuIndex = 7;
   reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   addFooter(reply);
   //WebServer.send(200, "text/html", reply);
@@ -2918,6 +2927,7 @@ void handle_upload() {
 void handle_upload_post() {
   if (!isLoggedIn()) return;
 
+  navMenuIndex = 7;
   String reply = "";
 
   if (uploadResult == 1)
@@ -3071,6 +3081,7 @@ bool loadFromFS(boolean spiffs, String path) {
 //********************************************************************************
 void handle_filelist() {
 
+  navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
@@ -3116,6 +3127,7 @@ void handle_filelist() {
 //********************************************************************************
 void handle_SDfilelist() {
 
+  navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
@@ -3327,6 +3339,7 @@ void handle_rules() {
   if (!isLoggedIn()) return;
   static byte currentSet = 1;
 
+  navMenuIndex = 5;
   String set = WebServer.arg(F("set"));
   byte rulesSet = 1;
   if (set.length() > 0)
