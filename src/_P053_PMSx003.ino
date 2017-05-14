@@ -1,5 +1,5 @@
 //#######################################################################################################
-//#################################### Plugin 050: Plantower PMSx003 ####################################
+//#################################### Plugin 053: Plantower PMSx003 ####################################
 //#######################################################################################################
 //
 // http://www.aqmd.gov/docs/default-source/aq-spec/resources-page/plantower-pms5003-manual_v2-3.pdf?sfvrsn=2
@@ -7,6 +7,8 @@
 // The PMSx005 are particle sensors. Particles are measured by blowing air though the enclosue and,
 // togther with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
+
+#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
@@ -36,6 +38,7 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
     *checksum += data_high;
     *checksum += data_low;
   }
+// Low-level logging to see data from sensor
 #if 0
   String log = F("PMSx003 : byte high=0x");
   log += String(data_high,HEX);
@@ -202,3 +205,4 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // PLUGIN_BUILD_TESTING
