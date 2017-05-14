@@ -73,13 +73,8 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         for (byte varNr = 0; varNr < 4; varNr++)
         {
-          string += F("<TR><TD>MQTT Topic ");
-          string += varNr + 1;
-          string += F(":<TD><input type='text' size='40' maxlength='40' name='Plugin_037_template");
-          string += varNr + 1;
-          string += F("' value='");
-          string += deviceTemplate[varNr];
-          string += F("'>");
+        	addFormTextBox(string, String(F("MQTT Topic ")) + (varNr + 1), String(F("Plugin_037_template")) +
+        			(varNr + 1), deviceTemplate[varNr], 40);
         }
         success = true;
         break;
@@ -137,8 +132,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         if (!MQTTclient_037->connected()) {
 
-          String log = F("IMPT : MQTT 037 Connection lost");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
 
           MQTTclient_037->disconnect();
           delay(1000);

@@ -46,25 +46,8 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
-        options[0] = F("Digital");
-        options[1] = F("Analog");
-        int optionValues[2];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        string += F("<TR><TD>Port Type:<TD><select name='plugin_011'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        String options[2] = { F("Digital"), F("Analog") };
+        addFormSelector(string, F("Port Type"), F("plugin_011"), 2, options, NULL, choice);
 
         success = true;
         break;
@@ -72,8 +55,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_011"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_011"));
         success = true;
         break;
       }
@@ -229,4 +211,3 @@ boolean Plugin_011_Write(byte Par1, byte Par2)
   Wire.write((Par2 >> 8));
   Wire.endTransmission();
 }
-

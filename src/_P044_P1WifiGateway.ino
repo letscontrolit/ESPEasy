@@ -65,45 +65,23 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>TCP Port:<TD><input type='text' name='plugin_044_port' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Baud Rate:<TD><input type='text' name='plugin_044_baud' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Data bits:<TD><input type='text' name='plugin_044_data' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
-        string += tmpString;
+      	addFormNumericBox(string, F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(string, F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(string, F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
         options[0] = F("No parity");
         options[1] = F("Even");
         options[2] = F("Odd");
-        int optionValues[3];
-        optionValues[0] = 0;
-        optionValues[1] = 2;
-        optionValues[2] = 3;
-        string += F("<TR><TD>Parity:<TD><select name='plugin_044_parity'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues[3] = { 0, 2, 3 };
+        addFormSelector(string, F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
 
-        sprintf_P(tmpString, PSTR("<TR><TD>Stop bits:<TD><input type='text' name='plugin_044_stop' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-        string += F("<TR><TD>Reset target after boot:<TD>");
-        addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(string, F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-        sprintf_P(tmpString, PSTR("<TR><TD>RX Receive Timeout (mSec):<TD><input type='text' name='plugin_044_rxwait' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
+      	addFormNumericBox(string, F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -111,18 +89,13 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_044_port"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_044_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_044_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("plugin_044_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = plugin4.toInt();
-        String plugin5 = WebServer.arg(F("plugin_044_stop"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = plugin5.toInt();
-        String plugin6 = WebServer.arg(F("plugin_044_rxwait"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin6.toInt();
+        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("plugin_044_port"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("plugin_044_baud"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("plugin_044_data"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("plugin_044_parity"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("plugin_044_stop"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_044_rxwait"));
+
         success = true;
         break;
       }
@@ -162,12 +135,10 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         blinkLED();
 
         if (ExtraTaskSettings.TaskDevicePluginConfigLong[1] == 115200) {
-          String log = F("P1   : DSMR version 4 meter, CRC on");
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
           CRCcheck = true;
         } else {
-          String log = F("P1   : DSMR version 4 meter, CRC on");
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
           CRCcheck = false;
         }
 
@@ -186,9 +157,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           {
             if (P1GatewayClient) P1GatewayClient.stop();
             P1GatewayClient = P1GatewayServer->available();
-            char log[40];
-            strcpy_P(log, PSTR("P1   : Client connected!"));
-            addLog(LOG_LEVEL_ERROR, log);
+            addLog(LOG_LEVEL_ERROR, F("P1   : Client connected!"));
           }
 
           if (P1GatewayClient.connected())
@@ -207,9 +176,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
               if (count == P044_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
-                char log[40];
-                strcpy_P(log, PSTR("P1   : Error: network buffer full!"));   // and log buffer full situation
-                addLog(LOG_LEVEL_ERROR, log);
+                // and log buffer full situation
+                addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
               char log[P044_BUFFER_SIZE + 40];
@@ -222,9 +190,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             if (connectionState == 1) // there was a client connected before...
             {
               connectionState = 0;
-              char log[40];
-              strcpy_P(log, PSTR("P1   : Client disconnected!"));
-              addLog(LOG_LEVEL_ERROR, log);
+              addLog(LOG_LEVEL_ERROR, F("P1   : Client disconnected!"));
             }
 
             while (Serial.available())
@@ -274,8 +240,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                         Plugin_044_serial_buf[bytes_read] = ch;
                         bytes_read++;
                       } else {              // input is non-ascii
-                        String log = F("P1   : Error: DATA corrupt, discarded input.");
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
                         Serial.flush();
                         bytes_read = 0;
                         state = WAITING;
@@ -321,8 +286,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 Plugin_044_serial_buf[bytes_read] = 0;
                 P1GatewayClient.write((const uint8_t*)Plugin_044_serial_buf, bytes_read);
                 P1GatewayClient.flush();
-                String log = F("P1   : data send!");
-                addLog(LOG_LEVEL_DEBUG, log);
+                addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
                 blinkLED();
 
                 if (Settings.UseRules)
@@ -334,8 +298,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 }
 
               } else {
-                String log = F("P1   : Error: Invalid CRC, dropped data");
-                addLog(LOG_LEVEL_DEBUG, log);
+                addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
               }
 
               bytes_read = 0;
@@ -364,8 +327,7 @@ bool validP1char(char ch) {
   {
     return true;
   } else {
-    String log = F("P1   : Error: invalid char read from P1");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid char read from P1"));
     if (serialdebug) {
       Serial.print(F("faulty char>"));
       Serial.print(ch);
@@ -444,8 +406,7 @@ bool checkDatagram(int len) {
 
     validCRCFound = (strtol(messageCRC, NULL, 16) == currCRC);
     if (!validCRCFound) {
-      String log = F("P1   : Error: invalid CRC found");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid CRC found"));
     }
     currCRC = 0;
   }

@@ -23,6 +23,8 @@ import os
 TOTAL_IRAM = 32786;
 TOTAL_DRAM = 81920;
 
+env="dev_4096"
+
 sections = OrderedDict([
     ("data", "Initialized Data (RAM)"),
     ("rodata", "ReadOnly Data (RAM)"),
@@ -120,17 +122,6 @@ try:
 
     objectDumpBin = sys.argv[1]
 
-    output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
-    print(output_format.format(
-        "plugin",
-        "cache IRAM",
-        "init RAM",
-        "r.o. RAM",
-        "uninit RAM",
-        "Flash ROM",
-    ))
-
-
     enable_all()
 
 
@@ -143,19 +134,50 @@ try:
     libs.remove("lib/pubsubclient")
     libs.sort()
 
+    #which plugins to test?
+    if len(sys.argv)>2:
+        test_plugins=sys.argv[2:]
+    else:
+        test_plugins=plugins
+    test_plugins.sort()
+
+    print("Analysing ESPEasy memory usage for env {} ...\n".format(env))
 
     #### disable all plugins and to get base size
-    for plugin in plugins:
+    for plugin in test_plugins:
         disable_plugin(plugin)
+
 
     # for lib in libs:
     #     disable_lib(lib)
 
-    #build without plugins to get base memory usage
-    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    #two times, sometimes it changes a few bytes somehow
-    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    base=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    #just build the core without plugins to get base memory usage
+    subprocess.check_call("platformio run --silent --environment "+env, shell=True)
+    # #two times, sometimes it changes a few bytes somehow
+    # SEEMS TO BE NOT USEFULL
+    # subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
+    base=analyse_memory(".pioenvs/"+env+"/firmware.elf")
+
+
+    output_format="{:<30}|{:<11}|{:<11}|{:<11}|{:<11}|{:<11}"
+    print(output_format.format(
+        "module",
+        "cache IRAM",
+        "init RAM",
+        "r.o. RAM",
+        "uninit RAM",
+        "Flash ROM",
+    ))
+
+
+    print(output_format.format(
+        "CORE",
+        base['text'],
+        base['data'],
+        base['rodata'],
+        base['bss'],
+        base['irom0_text'],
+    ))
 
 
     # note: unused libs never use any memory, so dont have to test this
@@ -177,12 +199,6 @@ try:
     #     ))
 
 
-    #which plugins to test?
-    if len(sys.argv)>2:
-        test_plugins=sys.argv[2:]
-    else:
-        test_plugins=plugins
-    test_plugins.sort()
 
 
 
@@ -190,8 +206,8 @@ try:
     results={}
     for plugin in test_plugins:
         enable_plugin(plugin)
-        subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-        results[plugin]=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+        subprocess.check_call("platformio run --silent --environment "+env, shell=True)
+        results[plugin]=analyse_memory(".pioenvs/"+env+"/firmware.elf")
         disable_plugin(plugin)
 
         print(output_format.format(
@@ -209,18 +225,33 @@ try:
     for plugin in test_plugins:
         enable_plugin(plugin)
 
-    subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    total=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    subprocess.check_call("platformio run --silent --environment "+env, shell=True)
+    total=analyse_memory(".pioenvs/"+env+"/firmware.elf")
 
     print(output_format.format(
-        "ALL",
+        "ALL PLUGINS",
         total['text']-base['text'],
         total['data']-base['data'],
         total['rodata']-base['rodata'],
         total['bss']-base['bss'],
         total['irom0_text']-base['irom0_text'],
     ))
+
+    print(output_format.format(
+        "ESPEasy",
+        total['text'],
+        total['data'],
+        total['rodata'],
+        total['bss'],
+        total['irom0_text'],
+    ))
+
 except:
     enable_all()
 
     raise
+
+
+enable_all()
+
+print("\n")

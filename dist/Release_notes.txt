@@ -1,4 +1,128 @@
 -----------------------------
+Changes in release v2.0.0-dev8
+-----------------------------
+
+Release date: Mon Apr 24 13:21:32 CEST 2017
+
+DatuX (6):
+      Update README.md
+      Update README.md
+      Update README.md
+      Update CONTRIBUTING.md
+      Update CONTRIBUTING.md
+      Update README.md
+
+David Conran (2):
+      Update IRremoteESP8266 library url in .gitmodules
+      update sendSony() call to use repeats.
+
+Dirk Moeller (2):
+      new function, Plugin_004_DS_setResolution und Plugin_004_DS_getResolution
+      fix typo
+
+Edwin Eefting (36):
+      temporary disabled IR plugins, because of iram1_0_seg issues
+      initial version of memory analyser
+      moved arduinojson and liquidcrytal includes to correct plugins. reanbled IR-modules to solve memory issues
+      make the IRTX plugin work without the IR plugin
+      initial memory analyser and results
+      reduced memory usage _C001
+      reduced mem C001 C002
+      reduced ram usage C003 ... C011
+      reduce memory usage N001 N002
+      cleaned up servo stuff
+      recuded number of pulsecounters from 8 to 4 to save IRAM
+      contributing guidelines
+      fixed crash in C001 (when opening /controllers)
+      avoid static buffers in c001. addLog now also supports F(), so we dont need all those temporary variable definitions
+      removed unneccesay delays from c001
+      avoid unneccesary string conversions and static buffers in c001
+      fixed crashes caused by large MQTT packets
+      fixed lots of common issues that might cause crashes in c011. also see https://github.com/letscontrolit/ESPEasy/issues/117#issuecomment-293713370
+      added issue template to get cleaner bug reports
+      replaced all readstringuntil() with safeReadStringUntil()
+      starting working on stability reporting function
+      fixed stability issues in c009. probably caused by illegal PSTR usage, but i completly cleaned up all string handling
+      improved statusled handling in background tasks
+      converted submodule to normal directory. lib/Adafruit_Motor_Shield_V2 upstream commit ee4c4d334f498d54cdf80c9cc6f5bdec2533f8bf
+      now no longer a submodule lib/AS_BH1750, upstream version 092f0b1c5fa74eb2abe3d1b2925190d066e9506d
+      now no longer a submodule. lib/Adafruit_NeoPixel, upstream version v1.0.6
+      now no longer a submodule, lib/Adafruit_TCS34725 upstream version 1.0.1-13-g12be4c6
+      now no longer a submodule. lib/ArduinoJson upstream version v5.6.4
+      now no longer a submodule. lib/IRremoteESP8266 upstream version v1.0.2
+      oops moved lib/Adafruit_TCS34725 to wrong place
+      select env
+      Revert "Plugin_008-RFID extended with wiegand 34-bits and key-pad (4-bits per key) support". Now uses too much IRAM.
+      dont use arduino OTA in the dev env
+      escape html in the rules page, so that strings like &param do not cause problems. fixes issue #231
+      properly escape html in C011 generic http advanced.
+      fixed #239 due to improper PSTR. cleaned up string handling
+
+Emmanuel Tatto (1):
+      getBearing should be outside the FEATURE_ARDUINO_OTA condition (#207)
+
+Gerben Meijer (1):
+      Extend MH-Z19 sensor support
+
+JK (3):
+      More informative and intuitive status LED
+      Using 3 I/O-pins consequently
+      added union to TaskDevicePin1..3
+
+Jochen Krapf (1):
+      Added function isDeepSleepEnabled() (#177)
+
+adb76 (2):
+      Set BME280 to recommended values for climate / weather sensor
+      BME280: Ensure sensor is in sleep mode to set the config, fix small typo
+
+beic (13):
+      Menu correction, added BMP180 (#199)
+      Added detection for the HTU21D to I2C scenner
+      Environment naming will better fit in...
+      Environment naming will better fit in + HTU21D
+      Environment naming will better fit in... + naming
+      Environment naming will better fit in...
+      Environment naming will better fit in...
+      Environment naming will better fit in...
+      Environment naming will better fit in...
+      Environment naming will better fit in...
+      Little naming correction
+      Naming correction by Datasheet
+      Added detection for the SI1145 to I2C scenner
+
+dev0 (1):
+      _C009.ino: RFC conformity and removed obsolet code (#163)
+
+imthemichi (1):
+      Plugin_008-RFID extended with wiegand 34-bits and key-pad (4-bits per key) support
+
+jbaumann (1):
+      Addition of ESP8285 targets (#187)
+
+krikk (16):
+      motorshield library should be a submodule, enhanced the motorshield plugin... (#162)
+      http advanced: add replacement variable for systime, vcc, ip, sysload, uptime (#167)
+      corrected name for TSL2561, add option to use different sensor adress (#170)
+      re-did old pull requests (#172)
+      Tsl2561 rewrite (#174)
+      I2csoilmoisture fixed bug with sleep mode (#178)
+      Pulsecounter minor fix (#184)
+      rewrote bh1750 sensor based on better library... (#182)
+      cppcheck style fixes... (#186)
+      added i2c address selection to ino219 plugin (#192)
+      Motorshield plugin string fixes (#200) (reduced memory usage)
+      Support for Tcs34725 RGB Color Sensor (#195)
+      _P047_i2c-soil-moisture-sensor: allow change of sensor address (#201)
+      Httpadvanced crashfix + patch method (#204)
+      Bh1750: enhance to check for valid value (#208)
+      removed all unnecessary Strings due to new addLog with FlashStringHelper (#223)
+
+tedenda (1):
+      Update _P049_MHZ19.ino
+
+
+-----------------------------
 Changes in release v2.0.0-dev7
 -----------------------------
 

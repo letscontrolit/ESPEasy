@@ -14,7 +14,7 @@ static uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
   Wire.write((0x00));
   Wire.endTransmission();
   Wire.requestFrom(i2cAddress, (uint8_t)2);
-  return ((Wire.read() << 8) | Wire.read());  
+  return ((Wire.read() << 8) | Wire.read());
 }
 
 boolean Plugin_025(byte function, struct EventStruct *event, String& string)
@@ -57,7 +57,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[ADS1115_GAIN_OPTION];
-        uint optionValues[ADS1115_GAIN_OPTION];
+        int optionValues[ADS1115_GAIN_OPTION];
         optionValues[0] = (0x00);
         options[0] = F("2/3x gain 6.144V 0.1875mV");
         optionValues[1] = (0x02);
@@ -70,20 +70,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         options[4] = F("8x gain 0.512V 0.015625mV");
         optionValues[5] = (0x0A);
         options[5] = F("16x gain 0.256V 0.0078125mV");
-
-        string += F("<TR><TD>Gain:<TD><select name='plugin_025_gain'>");
-        for (byte x = 0; x < ADS1115_GAIN_OPTION; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Gain"), F("plugin_025_gain"), ADS1115_GAIN_OPTION, options, optionValues, choice);
 
         success = true;
         break;
@@ -91,8 +78,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_025_gain"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_025_gain"));
         Plugin_025_init = false; // Force device setup next time
         success = true;
         break;
@@ -173,7 +159,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         Wire.write((uint8_t)(config & 0xFF));
         Wire.endTransmission();
         delay(8);
-        UserVar[event->BaseVarIndex] = (float) readRegister025((address), (0x00)) ;  
+        UserVar[event->BaseVarIndex] = (float) readRegister025((address), (0x00)) ;
         String log = F("ADS1115  : Analog value: ");
         log += UserVar[event->BaseVarIndex];
         addLog(LOG_LEVEL_INFO,log);

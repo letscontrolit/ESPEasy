@@ -42,40 +42,25 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        String options[3];
+        options[0] = F("");
+        options[1] = F("Off");
+        options[2] = F("On");
+
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-          string += F("<TR><TD>Day,Time ");
-          string += x+1;
-          string += F(":<TD><input type='text' name='plugin_043_clock");
-          string += x;
-          string += F("' value='");
-          string += timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]);
-          string += F("'>");
+        	addFormTextBox(string, String(F("Day,Time ")) + (x + 1), String(F("plugin_043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
+//          string += F("<TR><TD>Day,Time ");
+//          string += x+1;
+//          string += F(":<TD><input type='text' name='plugin_043_clock");
+//          string += x;
+//          string += F("' value='");
+//          string += timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]);
+//          string += F("'>");
 
+          string += F(" ");
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-          String options[3];
-          options[0] = F("");
-          options[1] = F("Off");
-          options[2] = F("On");
-          int optionValues[3];
-          optionValues[0] = 0;
-          optionValues[1] = 1;
-          optionValues[2] = 2;
-          string += F("<select name='plugin_043_state");
-          string += x;
-          string += F("'>");
-          for (byte x = 0; x < 3; x++)
-          {
-            string += F("<option value='");
-            string += optionValues[x];
-            string += "'";
-            if (choice == optionValues[x])
-              string += F(" selected");
-            string += ">";
-            string += options[x];
-            string += F("</option>");
-          }
-          string += F("</select>");
+          addSelector(string, String(F("plugin_043_state")) + (x), 3, options, NULL, NULL, choice, false);
         }
         success = true;
         break;
@@ -134,4 +119,3 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

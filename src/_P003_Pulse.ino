@@ -14,10 +14,11 @@ void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
-void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
+//this takes 20 bytes of IRAM per handler
+// void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt6() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt7() ICACHE_RAM_ATTR;
+// void Plugin_003_pulse_interrupt8() ICACHE_RAM_ATTR;
 
 unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
@@ -63,76 +64,39 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>Debounce Time (mSec):<TD><input type='text' name='plugin_003' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Debounce Time (mSec)"), F("plugin_003")
+      			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        String options[4];
-        options[0] = F("Delta");
-        options[1] = F("Delta/Total/Time");
-        options[2] = F("Total");     
-        options[3] = F("Delta/Total");    
-        int optionValues[4];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        optionValues[2] = 2;
-        optionValues[3] = 3;
+        String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
+        addFormSelector(string, F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
+
+        if (choice !=0)
+          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
+
         String modeRaise[4];
         modeRaise[0] = F("LOW");
         modeRaise[1] = F("CHANGE");
-        modeRaise[2] = F("RISING");     
-        modeRaise[3] = F("FALLING");    
+        modeRaise[2] = F("RISING");
+        modeRaise[3] = F("FALLING");
         int modeValues[4];
         modeValues[0] = LOW;
         modeValues[1] = CHANGE;
         modeValues[2] = RISING;
         modeValues[3] = FALLING;
-        
-        string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_countertype'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
 
-        if (choice !=0)
-          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
+        addFormSelector(string, F("Mode Type"), F("plugin_003_raisetype"), 4, modeRaise, modeValues, choice2 );
 
-        string += F("<TR><TD>Counter Type:<TD><select name='plugin_003_raisetype'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += modeValues[x];
-          string += "'";
-          if (choice2 == modeValues[x])
-            string += F(" selected");
-          string += ">";
-          string += modeRaise[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-                  
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_003");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg("plugin_003_countertype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg("plugin_003_raisetype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_003"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_003_countertype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_003_raisetype"));
         success = true;
         break;
       }
@@ -162,8 +126,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         log += Settings.TaskDevicePin1[event->TaskIndex];
         addLog(LOG_LEVEL_INFO,log);
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
-        Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        success = true;
+        success = Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         break;
       }
 
@@ -201,7 +164,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             break;
-          }          
+          }
         }
         Plugin_003_pulseCounter[event->TaskIndex] = 0;
         success = true;
@@ -268,11 +231,8 @@ void Plugin_003_pulse_interrupt8()
 /*********************************************************************************************\
  * Init Pulse Counters
 \*********************************************************************************************/
-void Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
+bool Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
 {
-  // Init IO pins
-  String log = F("PULSE: Init");
-  addLog(LOG_LEVEL_INFO,log);
 
   switch (Index)
   {
@@ -288,17 +248,22 @@ void Plugin_003_pulseinit(byte Par1, byte Index, byte Mode)
     case 3:
       attachInterrupt(Par1, Plugin_003_pulse_interrupt4, Mode);
       break;
-    case 4:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt5, Mode);
-      break;
-    case 5:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt6, Mode);
-      break;
-    case 6:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt7, Mode);
-      break;
-    case 7:
-      attachInterrupt(Par1, Plugin_003_pulse_interrupt8, Mode);
-      break;
+    // case 4:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt5, Mode);
+    //   break;
+    // case 5:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt6, Mode);
+    //   break;
+    // case 6:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt7, Mode);
+    //   break;
+    // case 7:
+    //   attachInterrupt(Par1, Plugin_003_pulse_interrupt8, Mode);
+    //   break;
+    default:
+      addLog(LOG_LEVEL_ERROR,F("PULSE: Error, only the first 4 tasks can be pulse counters."));
+      return(false);
   }
+
+  return(true);
 }

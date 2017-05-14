@@ -40,15 +40,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (Plugin_035_irSender == 0 && irPin != -1)
         {
-          String log = F("INIT: IR TX");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
           Plugin_035_irSender = new IRsend(irPin);
           Plugin_035_irSender->begin(); // Start the sender
         }
         if (Plugin_035_irSender != 0 && irPin == -1)
         {
-          String log = F("INIT: IR TX Removed");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("INIT: IR TX Removed"));
           delete Plugin_035_irSender;
           Plugin_035_irSender = 0;
         }
@@ -177,8 +175,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase("PANASONIC")) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
           }
 
-          String log = F("IRTX :IR Code Sent");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
           if (printToWeb)
           {
             printWebString += F("IR Code Sent ");

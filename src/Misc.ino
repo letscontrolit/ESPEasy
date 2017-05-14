@@ -1,4 +1,17 @@
 
+// clean up tcp connections that are in TIME_WAIT status, to conserve memory
+// In future versions of WiFiClient it should be possible to call abort(), but
+// this feature is not in all upstream versions yet.
+// See https://github.com/esp8266/Arduino/issues/1923
+// and https://github.com/letscontrolit/ESPEasy/issues/253
+void tcpCleanup()
+{
+  while(tcp_tw_pcbs!=NULL)
+  {
+    tcp_abort(tcp_tw_pcbs);
+  }
+}
+
 bool isDeepSleepEnabled()
 {
   if (!Settings.deepSleep)
@@ -10,14 +23,14 @@ bool isDeepSleepEnabled()
   //                    short 2-3 to cancel sleep loop for modifying settings
   pinMode(16,INPUT_PULLUP);
   if (!digitalRead(16))
+  {
     return false;
-
+  }
   return true;
 }
 
 void deepSleep(int delay)
 {
-  String log;
 
   if (!isDeepSleepEnabled())
   {
@@ -28,20 +41,17 @@ void deepSleep(int delay)
   //first time deep sleep? offer a way to escape
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
-    log = F("Entering deep sleep in 30 seconds.");
-    addLog(LOG_LEVEL_INFO, log);
-    delayMillis(30000);
+    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
-      log = F("Deep sleep disabled.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
       return;
     }
   }
 
-  log = F("Entering deep sleep...");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep..."));
 
   RTC.deepSleepState = 1;
   saveToRTC();
@@ -344,35 +354,62 @@ boolean timeOut(unsigned long timer)
 
 /********************************************************************************************\
   Status LED
-  \*********************************************************************************************/
+\*********************************************************************************************/
+#define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+#define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
+#define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
+
 void statusLED(boolean traffic)
 {
+  static int gnStatusValueCurrent = -1;
+  static long int gnLastUpdate = millis();
+
   if (Settings.Pin_status_led == -1)
     return;
 
-  static unsigned long timer = 0;
-  static byte currentState = 0;
+  if (gnStatusValueCurrent<0)
+    pinMode(Settings.Pin_status_led, OUTPUT);
+
+  int nStatusValue = gnStatusValueCurrent;
 
   if (traffic)
   {
-    currentState = HIGH;
-    digitalWrite(Settings.Pin_status_led, currentState); // blink off
-    timer = millis() + 100;
+    nStatusValue += STATUS_PWM_TRAFFICRISE; //ramp up fast
+  }
+  else
+  {
+    if (AP_Mode) //apmode is active
+    {
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+    }
+    else if (WiFi.status() != WL_CONNECTED)
+    {
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
+    }
+    else //connected
+    {
+      long int delta=millis()-gnLastUpdate;
+      if (delta>0 || delta<0 )
+      {
+        nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
+        nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+        gnLastUpdate=millis();
+      }
+    }
   }
 
-  if (timer == 0 || millis() > timer)
-  {
-    timer = 0;
-    byte state = HIGH;
-    if (WiFi.status() == WL_CONNECTED)
-      state = LOW;
+  nStatusValue = constrain(nStatusValue, 0, PWMRANGE);
 
-    if (currentState != state)
-    {
-      currentState = state;
-      pinMode(Settings.Pin_status_led, OUTPUT);
-      digitalWrite(Settings.Pin_status_led, state);
-    }
+  if (gnStatusValueCurrent != nStatusValue)
+  {
+    gnStatusValueCurrent = nStatusValue;
+
+    long pwm = nStatusValue * nStatusValue; //simple gamma correction
+    pwm >>= 10;
+    if (Settings.Pin_status_led_Inversed)
+      pwm = PWMRANGE-pwm;
+
+    analogWrite(Settings.Pin_status_led, pwm);
   }
 }
 
@@ -380,7 +417,7 @@ void statusLED(boolean traffic)
 /********************************************************************************************\
   delay in milliseconds with background processing
   \*********************************************************************************************/
-void delayMillis(unsigned long delay)
+void delayBackground(unsigned long delay)
 {
   unsigned long timer = millis() + delay;
   while (millis() < timer)
@@ -402,10 +439,14 @@ void parseCommandString(struct EventStruct *event, String& string)
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
+  event->Par4 = 0;
+  event->Par5 = 0;
 
   if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
 }
 
 /********************************************************************************************\
@@ -689,7 +730,7 @@ boolean SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-  Save Custom Task settings to SPIFFS
+  Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
@@ -710,7 +751,7 @@ boolean SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasi
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
@@ -722,22 +763,22 @@ void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-boolean SaveCustomControllerSettings(byte* memAddress, int datasize)
+boolean SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return false;
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
 /********************************************************************************************\
-  Save Custom Controller settings to SPIFFS
+  Load Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-void LoadCustomControllerSettings(byte* memAddress, int datasize)
+void LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return;
-  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -752,7 +793,7 @@ boolean SaveNotificationSettings(int NotificationIndex, byte* memAddress, int da
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
@@ -918,6 +959,7 @@ void ResetFactory(void)
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
   Settings.Pin_status_led  = -1;
+  Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
@@ -1027,6 +1069,12 @@ void addLog(byte loglevel, String& string)
   addLog(loglevel, string.c_str());
 }
 
+void addLog(byte logLevel, const __FlashStringHelper* flashString)
+{
+    String s(flashString);
+    addLog(logLevel, s.c_str());
+}
+
 void addLog(byte loglevel, const char *line)
 {
   if (Settings.UseSerial)
@@ -1044,7 +1092,9 @@ void addLog(byte loglevel, const char *line)
     Logging[logcount].timeStamp = millis();
     if (Logging[logcount].Message == 0)
       Logging[logcount].Message =  (char *)malloc(128);
-    strncpy(Logging[logcount].Message, line, 128);
+    strncpy(Logging[logcount].Message, line, 127);
+    Logging[logcount].Message[127]=0; //make sure its null terminated!
+
   }
 
   if (loglevel <= Settings.SDLogLevel)
@@ -1077,13 +1127,14 @@ void delayedReboot(int rebootDelay)
 /********************************************************************************************\
   Save RTC struct to RTC memory
   \*********************************************************************************************/
+//user-area of the esp starts at block 64 (bytes = block * 4)
 #define RTC_BASE_STRUCT 64
-void saveToRTC()
+boolean saveToRTC()
 {
   RTC.ID1 = 0xAA;
   RTC.ID2 = 0x55;
   RTC.valid = true;
-  system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  return(system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)));
 }
 
 
@@ -1092,7 +1143,9 @@ void saveToRTC()
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
+    return(false);
+
   if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
   {
     RTC.valid = false;
@@ -1104,20 +1157,47 @@ boolean readFromRTC()
 
 /********************************************************************************************\
   Save values to RTC memory
-  \*********************************************************************************************/
+\*********************************************************************************************/
 #define RTC_BASE_USERVAR 74
-void saveUserVarToRTC()
+boolean saveUserVarToRTC()
 {
-  system_rtc_mem_write(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
+  byte* buffer = (byte*)&UserVar;
+  size_t size = sizeof(UserVar);
+  uint32 sum = getChecksum(buffer, size);
+  boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+  ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  return ret;
 }
 
 
 /********************************************************************************************\
   Read RTC struct from RTC memory
-  \*********************************************************************************************/
+\*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  system_rtc_mem_read(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
+  byte* buffer = (byte*)&UserVar;
+  size_t size = sizeof(UserVar);
+  boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+  uint32 sumRAM = getChecksum(buffer, size);
+  uint32 sumRTC = 0;
+  ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
+  if (!ret || sumRTC != sumRAM)
+  {
+    addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+    memset(buffer, 0, size);
+  }
+  return ret;
+}
+
+
+uint32 getChecksum(byte* buffer, size_t size)
+{
+  uint32 sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
+  for (size_t i=0; i<size; i++)
+    sum += buffer[i];
+  return sum;
 }
 
 
@@ -1226,6 +1306,68 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
+// returns the current Date separated by the given delimiter
+// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
+String getDateString(char delimiter)
+{
+  String reply = String(year());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (month() < 10)
+    reply += "0";
+  reply += month();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (day() < 10)
+  	reply += F("0");
+  reply += day();
+  return reply;
+}
+
+// returns the current Date without delimiter
+// date format example: 20161231 (YYYYMMDD)
+String getDateString()
+{
+	return getDateString('\0');
+}
+
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+String getTimeString(char delimiter)
+{
+	String reply;
+	if (hour() < 10)
+		reply += F("0");
+  reply += String(hour());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (minute() < 10)
+    reply += F("0");
+  reply += minute();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  reply += second();
+  return reply;
+}
+
+// returns the current Time without delimiter
+// time format example: 235959 (HHMMSS)
+String getTimeString()
+{
+	return getTimeString('\0');
+}
+
+// returns the current Date and Time separated by the given delimiter
+// if called like this: getDateTimeString('\0', '\0', '\0');
+// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
+String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+{
+	String ret = getDateString(dateDelimiter);
+	if (dateTimeDelimiter != '\0')
+		ret += dateTimeDelimiter;
+	ret += getTimeString(timeDelimiter);
+	return ret;
+}
 
 /********************************************************************************************\
   Match clock event
@@ -1343,15 +1485,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   // replace other system variables like %sysname%, %systime%, %ip%
   newString.replace(F("%sysname%"), Settings.Name);
 
-  String strTime = "";
-  if (hour() < 10)
-    strTime += " ";
-  strTime += hour();
-  strTime += ":";
-  if (minute() < 10)
-    strTime += "0";
-  strTime += minute();
-  newString.replace(F("%systime%"), strTime);
+  newString.replace(F("%systime%"), getTimeString(':'));
 
   newString.replace(F("%uptime%"), String(wdcounter / 2));
 
@@ -1773,6 +1907,11 @@ byte hour()
 byte minute()
 {
   return tm.Minute;
+}
+
+byte second()
+{
+	return tm.Second;
 }
 
 int weekday()
@@ -2311,6 +2450,7 @@ void checkRAM(byte id)
   \*********************************************************************************************/
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   analogWriteFreq(frequency);
+  //NOTE: analogwrite reserves IRAM and uninitalized ram.
   analogWrite(_pin,100);
   delay(duration);
   analogWrite(_pin,0);
@@ -2526,5 +2666,39 @@ void ArduinoOTAInit()
 
 }
 
-
 #endif
+
+String getBearing(int degrees)
+{
+  const char* bearing[] = {
+    PSTR("N"),
+    PSTR("NNE"),
+    PSTR("NE"),
+    PSTR("ENE"),
+    PSTR("E"),
+    PSTR("ESE"),
+    PSTR("SE"),
+    PSTR("SSE"),
+    PSTR("S"),
+    PSTR("SSW"),
+    PSTR("SW"),
+    PSTR("WSW"),
+    PSTR("W"),
+    PSTR("WNW"),
+    PSTR("NW"),
+    PSTR("NNW")
+  };
+
+    return(bearing[int(degrees/22.5)]);
+
+}
+
+//escapes special characters in strings for use in html-forms
+void htmlEscape(String & html)
+{
+  html.replace("&",  "&amp;");
+  html.replace("\"", "&quot;");
+  html.replace("'",  "&#039;");
+  html.replace("<",  "&lt;");
+  html.replace(">",  "&gt;");
+}

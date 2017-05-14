@@ -48,25 +48,16 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        /*
         String options[2];
         options[0] = F("0x23 - default settings (ADDR Low)");
         options[1] = F("0x5c - alternate settings (ADDR High)");
+        */
         int optionValues[2];
         optionValues[0] = BH1750_DEFAULT_I2CADDR;
         optionValues[1] = BH1750_SECOND_I2CADDR;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_010'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelectorI2C(string, F("plugin_010"), 2, optionValues, choice);
+        addFormNote(string, F("ADDR Low=0x23, High=0x5c"));
 
         byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String optionsMode[4];
@@ -79,25 +70,9 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         optionValuesMode[1] = RESOLUTION_NORMAL;
         optionValuesMode[2] = RESOLUTION_HIGH;
         optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
-        string += F("<TR><TD>measurment mode:<TD><select name='plugin_010_mode'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += optionValuesMode[x];
-          string += "'";
-          if (choiceMode == optionValuesMode[x])
-            string += F(" selected");
-          string += ">";
-          string += optionsMode[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Measurment mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
 
-        string += F("<TR><TD>Send sensor to sleep:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-          string += F("<input type=checkbox name=plugin_010_sleep checked>");
-        else
-          string += F("<input type=checkbox name=plugin_010_sleep>");
+        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;
@@ -105,12 +80,9 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_010"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_010_mode"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_010_sleep"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_010"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_010_mode"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_010_sleep"));
         success = true;
         break;
       }
@@ -133,20 +105,20 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
       sensor.begin(mode,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-			UserVar[event->BaseVarIndex] = sensor.readLightLevel();
-
-			String log = F("BH1750 Address: 0x");
-			log += String(address,HEX);
-			log += F(" Mode: 0x");
-			log += String(mode);
-			log += F(" : Light intensity: ");
-			log += UserVar[event->BaseVarIndex];
-			addLog(LOG_LEVEL_INFO,log);
-			success=true;
-
+      float lux = sensor.readLightLevel();
+      if (lux != -1) {
+      	UserVar[event->BaseVarIndex] = lux;
+  			String log = F("BH1750 Address: 0x");
+  			log += String(address,HEX);
+  			log += F(" Mode: 0x");
+  			log += String(mode);
+  			log += F(" : Light intensity: ");
+  			log += UserVar[event->BaseVarIndex];
+  			addLog(LOG_LEVEL_INFO,log);
+      	success=true;
+      }
       break;
     }
   }
   return success;
 }
-

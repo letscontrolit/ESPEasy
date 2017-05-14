@@ -60,88 +60,30 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
-        options[0] = F("3C");
-        options[1] = F("3D");
-        int optionValues[2];
-        optionValues[0] = 0x3C;
-        optionValues[1] = 0x3D;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_023_adr'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        /*String options[2] = { F("3C"), F("3D") };*/
+        int optionValues[2] = { 0x3C, 0x3D };
+        addFormSelectorI2C(string, F("plugin_023_adr"), 2, optionValues, choice);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        String options2[2];
-        options2[0] = F("Normal");
-        options2[1] = F("Rotated");
-        int optionValues2[2];
-        optionValues2[0] = 1;
-        optionValues2[1] = 2;
-        string += F("<TR><TD>Rotation:<TD><select name='plugin_023_rotate'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        String options2[2] = { F("Normal"), F("Rotated") };
+        int optionValues2[2] = { 1, 2 };
+        addFormSelector(string, F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        String options3[2];
-        options3[0] = F("128x64");
-        options3[1] = F("64x48");
-        int optionValues3[2];
-        optionValues3[0] = 1;
-        optionValues3[1] = 2;
-        string += F("<TR><TD>Display Size:<TD><select name='plugin_023_size'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues3[x];
-          string += "'";
-          if (choice3 == optionValues3[x])
-            string += F(" selected");
-          string += ">";
-          string += options3[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        String options3[2] = { F("128x64"), F("64x48") };
+        int optionValues3[2] = { 1, 2 };
+        addFormSelector(string, F("Display Size"), F("plugin_023_size"), 2, options3, optionValues3, choice3);
 
         char deviceTemplate[8][64];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-          string += F("<TR><TD>Line ");
-          string += varNr + 1;
-          string += F(":<TD><input type='text' size='64' maxlength='64' name='Plugin_023_template");
-          string += varNr + 1;
-          string += F("' value='");
-          string += deviceTemplate[varNr];
-          string += F("'>");
+        	addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
-        string += F("<TR><TD>Display button:<TD>");
-        addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+        addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-        char tmpString[128];
-
-        sprintf_P(tmpString, PSTR("<TR><TD>Display Timeout:<TD><input type='text' name='plugin_23_timer' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        string += tmpString;
+        addFormNumericBox(string, F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;
@@ -149,14 +91,10 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_023_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_023_rotate"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_23_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("plugin_023_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_023_adr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_023_rotate"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_23_timer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_023_size"));
 
         char deviceTemplate[8][64];
         for (byte varNr = 0; varNr < 8; varNr++)

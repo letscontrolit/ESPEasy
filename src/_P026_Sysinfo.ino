@@ -46,25 +46,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         options[2] = F("Wifi RSSI");
         options[3] = F("Input VCC");
         options[4] = F("System load");
-        int optionValues[5];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        optionValues[2] = 2;
-        optionValues[3] = 3;
-        optionValues[4] = 4;
-        string += F("<TR><TD>Indicator:<TD><select name='plugin_026'>");
-        for (byte x = 0; x < 5; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Indicator"), F("plugin_026"), 5, options, NULL, choice);
 
         success = true;
         break;
@@ -72,12 +54,11 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_026"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_026"));
         success = true;
         break;
       }
-      
+
     case PLUGIN_READ:
       {
         float value = 0;
@@ -111,7 +92,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           {
             value = (100 - (100 * loopCounterLast / loopCounterMax));
             break;
-          }          
+          }
         }
         UserVar[event->BaseVarIndex] = value;
         String log = F("SYS  : ");

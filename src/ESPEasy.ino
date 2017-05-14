@@ -112,9 +112,13 @@
 
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-//Normally only enabled for the platformio dev environment, since its helpfull while developing.
 // #define FEATURE_ARDUINO_OTA
 
+
+//enable reporting status to ESPEasy developers.
+//this informs us of crashes and stability issues.
+// not finished yet!
+// #define FEATURE_REPORTING
 
 //Select which plugin sets you want to build.
 //These are normally automaticly set via the Platformio build environment.
@@ -228,9 +232,10 @@
 #define NO_SEARCH_PIN_STATE             false
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
-#define DEVICE_TYPE_I2C                     2  // connected through I2C
-#define DEVICE_TYPE_ANALOG                  3  // tout pin
-#define DEVICE_TYPE_DUAL                    4  // connected through 2 datapins
+#define DEVICE_TYPE_DUAL                    2  // connected through 2 datapins
+#define DEVICE_TYPE_TRIPLE                  3  // connected through 3 datapins
+#define DEVICE_TYPE_ANALOG                 10  // AIN/tout pin
+#define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 #define SENSOR_TYPE_SINGLE                  1
@@ -258,13 +263,15 @@
 
 #define DAT_TASKS_SIZE                   2048
 #define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_CUSTOM_CONTROLLER_SIZE       1024
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
 #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-#define DAT_OFFSET_CUSTOMCONTROLLER     32768  // custom controller config = 4k, currently only one can use it.
+#define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
+#include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <WiFiUdp.h>
@@ -291,6 +298,7 @@ ADC_MODE(ADC_VCC);
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
 #include "include/UdpContext.h"
+#include "limits.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -303,13 +311,12 @@ extern "C" {
 bool ArduinoOTAtriggered=false;
 #endif
 
+
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 DNSServer dnsServer;
 
-Servo myservo1;
-Servo myservo2;
 
 // MQTT client
 WiFiClient mqtt;
@@ -318,8 +325,10 @@ PubSubClient MQTTclient(mqtt);
 // WebServer
 ESP8266WebServer WebServer(80);
 
-// syslog stuff
+// udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
+
+
 
 extern "C" {
 #include "spi_flash.h"
@@ -386,10 +395,15 @@ struct SettingsStruct
   byte          Notification[NOTIFICATION_MAX];
   byte          TaskDeviceNumber[TASKS_MAX];
   unsigned int  OLD_TaskDeviceID[TASKS_MAX];
-  int8_t        TaskDevicePin1[TASKS_MAX];
-  int8_t        TaskDevicePin2[TASKS_MAX];
-  int8_t        TaskDevicePin3[TASKS_MAX];
-  byte          TaskDevicePort[TASKS_MAX];
+  union {
+    struct {
+      int8_t        TaskDevicePin1[TASKS_MAX];
+      int8_t        TaskDevicePin2[TASKS_MAX];
+      int8_t        TaskDevicePin3[TASKS_MAX];
+      byte          TaskDevicePort[TASKS_MAX];
+    };
+    int8_t        TaskDevicePin[4][TASKS_MAX];
+  };
   boolean       TaskDevicePin1PullUp[TASKS_MAX];
   int16_t       TaskDevicePluginConfig[TASKS_MAX][PLUGIN_CONFIGVAR_MAX];
   boolean       TaskDevicePin1Inversed[TASKS_MAX];
@@ -404,6 +418,7 @@ struct SettingsStruct
   boolean       NotificationEnabled[NOTIFICATION_MAX];
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
+  boolean       Pin_status_led_Inversed;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -454,6 +469,8 @@ struct EventStruct
   int Par1;
   int Par2;
   int Par3;
+  int Par4;
+  int Par5;
   byte OriginTaskIndex;
   String String1;
   String String2;
@@ -539,7 +556,7 @@ struct RTCStruct
 {
   byte ID1;
   byte ID2;
-  boolean valid;
+  boolean valid; // not used?
   byte factoryResetCounter;
   byte deepSleepState;
   byte rebootCounter; //not used yet?
@@ -626,6 +643,7 @@ void setup()
   lowestRAM = FreeMem();
 
   Serial.begin(115200);
+  // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
 
@@ -686,6 +704,9 @@ void setup()
   if (!WifiConnect(true,3))
     WifiConnect(false,3);
 
+  #ifdef FEATURE_REPORTING
+  ReportStatus();
+  #endif
 
   //After booting, we want all the tasks to run without delaying more than neccesary.
   //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
@@ -772,6 +793,7 @@ void setup()
   RTC.deepSleepState=0;
   saveToRTC();
 
+
 }
 
 
@@ -789,10 +811,6 @@ void loop()
     wifiSetupConnect = false;
   }
 
-  if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
 
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
   if (isDeepSleepEnabled())
@@ -833,6 +851,8 @@ void run50TimesPerSecond()
 {
   timer20ms = millis() + 20;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
+
+  // statusLED(false);
 }
 
 /*********************************************************************************************\
@@ -843,7 +863,6 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-  checkUDP();
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
@@ -960,6 +979,10 @@ void runEach30Seconds()
     loopCounterMax = loopCounterLast;
 
   WifiCheck();
+
+  #ifdef FEATURE_REPORTING
+  ReportStatus();
+  #endif
 
 }
 
@@ -1143,13 +1166,19 @@ boolean checkSystemTimers()
 \*********************************************************************************************/
 void backgroundtasks()
 {
+  tcpCleanup();
+
+  if (Settings.UseSerial)
+    if (Serial.available())
+      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+        serial();
+
   // process DNS, only used if the ESP has no valid WiFi config
   if (wifiSetup)
     dnsServer.processNextRequest();
 
   WebServer.handleClient();
   MQTTclient.loop();
-  statusLED(false);
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
@@ -1165,4 +1194,6 @@ void backgroundtasks()
   #endif
 
   yield();
+
+  statusLED(false);
 }

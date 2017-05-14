@@ -108,52 +108,22 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         options[0] = F("Voltage");
         options[1] = F("Current");
         options[2] = F("Power");
-        int optionValues[3];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        optionValues[2] = 2;
-        string += F("<TR><TD>Report:<TD><select name='plugin_027_value'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-
-
+        addFormSelector(string, F("Report"), F("plugin_027_value"), 3, options, NULL, choice);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        /*
         String options2[4];
         options2[0] = F("0x40 - (default)");
         options2[1] = F("0x41");
         options2[2] = F("0x44");
         options2[3] = F("0x45");
-        int optionValues2[3];
+        */
+        int optionValues2[4];
         optionValues2[0] = INA219_ADDRESS;
         optionValues2[1] = INA219_ADDRESS2;
         optionValues2[2] = INA219_ADDRESS3;
         optionValues2[3] = INA219_ADDRESS4;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_027_i2c'>");
-        for (byte x = 0; x < 4; x++)
-        {
-          string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-
-
+        addFormSelectorI2C(string, F("plugin_027_i2c"), 4, optionValues2, choice2);
 
         success = true;
         break;
@@ -161,11 +131,9 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_027_value"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_027_value"));
 
-        String plugin2 = WebServer.arg(F("plugin_027_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_027_i2c"));
         success = true;
         break;
       }
@@ -386,4 +354,3 @@ float Plugin_027_getCurrent_mA() {
   valueDec /= ina219_currentDivider_mA;
   return valueDec;
 }
-

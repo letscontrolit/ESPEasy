@@ -69,19 +69,8 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         optionValues[8] = SENSOR_TYPE_DIMMER;
         optionValues[9] = SENSOR_TYPE_LONG;
         optionValues[10] = SENSOR_TYPE_WIND;
-        string += F("<TR><TD>Simulate Data Type:<TD><select name='plugin_033_sensortype'>");
-        for (byte x = 0; x < 11; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        
+        addFormSelector(string, F("Simulate Data Type"), F("plugin_033_sensortype"), 11, options, optionValues, choice );
 
         success = true;
         break;
@@ -89,12 +78,11 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_033_sensortype"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_033_sensortype"));
         success = true;
         break;
       }
-      
+
     case PLUGIN_READ:
       {
         event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
@@ -112,4 +100,3 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

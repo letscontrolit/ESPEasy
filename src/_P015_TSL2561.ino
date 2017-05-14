@@ -327,28 +327,17 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+				/*
         String options1[3];
         options1[0] = F("0x39 - (default)");
         options1[1] = F("0x49");
         options1[2] = F("0x29");
+				*/
         int optionValues1[3];
         optionValues1[0] = TSL2561_ADDR;
         optionValues1[1] = TSL2561_ADDR_1;
         optionValues1[2] = TSL2561_ADDR_0;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_015_tsl2561_i2c'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues1[x];
-          string += "'";
-          if (choice1 == optionValues1[x])
-            string += F(" selected");
-          string += ">";
-          string += options1[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-
+				addFormSelectorI2C(string, F("plugin_015_tsl2561_i2c"), 3, optionValues1, choice1);
 
         #define TSL2561_INTEGRATION_OPTION 3
 
@@ -361,32 +350,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         options2[1] = F("101 ms");
         optionValues2[2] = 0x02;
         options2[2] = F("402 ms");
+				addFormSelector(string, F("Integration time"), F("plugin_015_integration"), TSL2561_INTEGRATION_OPTION, options2, optionValues2, choice2);
 
-        string += F("<TR><TD>Integration time:<TD><select name='plugin_015_integration'>");
-        for (byte x = 0; x < TSL2561_INTEGRATION_OPTION; x++)
-        {
-          string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormCheckBox(string, F("Send sensor to sleep:"), F("plugin_015_sleep"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-        string += F("<TR><TD>Send sensor to sleep:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
-          string += F("<input type=checkbox name=plugin_015_sleep checked>");
-        else
-          string += F("<input type=checkbox name=plugin_015_sleep>");
-
-        string += F("<TR><TD>Enable 16x Gain:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
-          string += F("<input type=checkbox name=plugin_015_gain checked>");
-        else
-          string += F("<input type=checkbox name=plugin_015_gain>");
+        addFormCheckBox(string, F("Enable 16x Gain:"), F("plugin_015_gain"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;
@@ -394,17 +364,13 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_015_tsl2561_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_015_tsl2561_i2c"));
 
-        String plugin2 = WebServer.arg(F("plugin_015_integration"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_015_integration"));
 
-        String plugin3 = WebServer.arg(F("plugin_015_sleep"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = (plugin3 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_015_sleep"));
 
-        String plugin4 = WebServer.arg(F("plugin_015_gain"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_015_gain"));
 
         success = true;
         break;
@@ -429,7 +395,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
          unsigned char time = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
          plugin_015_setTiming(gain,time,ms);
          plugin_015_setPowerUp();
-         delayMillis(ms);
+         delayBackground(ms);
          unsigned int data0, data1;
 
          if (plugin_015_getData(data0,data1))
@@ -444,8 +410,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         	 UserVar[event->BaseVarIndex] = lux;
            if (!good)
            {
-             String log = F("TSL2561: Sensor saturated! > 65535 Lux");
-             addLog(LOG_LEVEL_INFO,log);
+             addLog(LOG_LEVEL_INFO,F("TSL2561: Sensor saturated! > 65535 Lux"));
            }
 
            success = true;
@@ -462,13 +427,11 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
          else
          {
            // getData() returned false because of an I2C error, inform the user.
-           String log = F("TSL2561: i2c error");
-        	 addLog(LOG_LEVEL_ERROR, log);
+        	 addLog(LOG_LEVEL_ERROR, F("TSL2561: i2c error"));
 
          }
          if (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
-           String log = F("TSL2561: sleeping...");
-        	 addLog(LOG_LEVEL_DEBUG_MORE, log);
+        	 addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
         	 plugin_015_setPowerDown();
          }
 
@@ -478,7 +441,3 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-
-
-
