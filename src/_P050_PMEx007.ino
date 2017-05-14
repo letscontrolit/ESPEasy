@@ -14,12 +14,6 @@
 #define PLUGIN_VALUENAME1_050 "pm1.0"
 #define PLUGIN_VALUENAME2_050 "pm2.5"
 #define PLUGIN_VALUENAME3_050 "pm10"
-#define PLUGIN_VALUENAME4_050 ">0.3um / 100ml"
-#define PLUGIN_VALUENAME5_050 ">0.5um / 100ml"
-#define PLUGIN_VALUENAME6_050 ">1.0um / 100ml"
-#define PLUGIN_VALUENAME7_050 ">2.5um / 100ml"
-#define PLUGIN_VALUENAME8_050 ">5.0um / 100ml"
-#define PLUGIN_VALUENAME9_050 ">10.0um / 100ml"
 
 boolean Plugin_050_init = false;
 byte Plugin_PMSx003_UART = 0;
@@ -85,12 +79,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_050));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_050));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_050));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_050));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_050));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[5], PSTR(PLUGIN_VALUENAME6_050));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[6], PSTR(PLUGIN_VALUENAME7_050));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[7], PSTR(PLUGIN_VALUENAME8_050));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[8], PSTR(PLUGIN_VALUENAME9_050));
         break;
       }
 
@@ -190,12 +178,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex]     = data[3];
               UserVar[event->BaseVarIndex + 1] = data[4];
               UserVar[event->BaseVarIndex + 2] = data[5];
-              UserVar[event->BaseVarIndex + 3] = data[6];
-              UserVar[event->BaseVarIndex + 4] = data[7];
-              UserVar[event->BaseVarIndex + 5] = data[8];
-              UserVar[event->BaseVarIndex + 6] = data[9];
-              UserVar[event->BaseVarIndex + 7] = data[10];
-              UserVar[event->BaseVarIndex + 8] = data[11];
             }
           }
         }
