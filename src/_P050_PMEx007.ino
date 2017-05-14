@@ -65,12 +65,14 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
+        success = true;
         break;
       }
 
     case PLUGIN_GET_DEVICENAME:
       {
         string = F(PLUGIN_NAME_050);
+        success = true;
         break;
       }
 
@@ -79,6 +81,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_050));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_050));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_050));
+        success = true;
         break;
       }
 
@@ -103,6 +106,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
       {
+        // Do measurements only every 30 seconds
         #if 0
         if ((timer++) % 30 == 0)
           if (digitalRead(Settings.TaskDevicePin2[event->TaskIndex]))
@@ -110,6 +114,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
           else
             digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);
         #endif
+        success = true;
       }
 
     case PLUGIN_SERIAL_IN:
@@ -181,7 +186,8 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-      break;
+        success = true;
+        break;
       }
 
   }
