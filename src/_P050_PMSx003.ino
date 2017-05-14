@@ -18,6 +18,7 @@
 boolean Plugin_050_init = false;
 byte Plugin_PMSx003_UART = 0;
 byte timer = 0;
+boolean values_received = false;
 
 void SerialRead16(uint16_t* value, uint16_t* checksum)
 {
@@ -61,7 +62,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 4;
+        Device[deviceCount].ValueCount = 3;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
@@ -183,6 +184,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex]     = data[3];
               UserVar[event->BaseVarIndex + 1] = data[4];
               UserVar[event->BaseVarIndex + 2] = data[5];
+              values_received = true;
             }
           }
         }
@@ -190,6 +192,13 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_READ:
+      {
+        // Prevent sending data to controller when nothing received yet
+        if (values_received)
+          success = true;
+        break;
+      }
   }
   return success;
 }
