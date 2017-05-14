@@ -3376,10 +3376,12 @@ void handle_rules() {
 
   // load form data from flash
 
+  int size = 0;
   fs::File f = SPIFFS.open(fileName, "r+");
   if (f)
   {
-    if (f.size() > RULES_MAX_SIZE)
+    size = f.size();
+    if (size > RULES_MAX_SIZE)
       reply += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
     else
     {
@@ -3396,7 +3398,7 @@ void handle_rules() {
   }
 
   reply += F("<TR><TD>Current size: ");
-  reply += f.size();
+  reply += size;
   reply += F(" characters (Max ");
   reply += RULES_MAX_SIZE;
   reply += F(")");
