@@ -138,21 +138,16 @@ boolean HTTPSend011(struct EventStruct *event)
   P011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
-  // char log[80];
   boolean success = false;
-  // char host[20];
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  // char tmp[22];
-  // strcpy_P(tmp, PSTR("HTTP : connecting to "));
-  // sprintf_P(log, PSTR("%s%s using port %u"), tmp, host, ControllerSettings.Port);
-  // addLog(LOG_LEVEL_DEBUG, log);
 
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
+  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
+
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
+  		(ControllerSettings.UseDNS ? ControllerSettings.HostName : host.toString() ) +":"+ControllerSettings.Port);
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-   if (!client.connect(host, ControllerSettings.Port))
+   if (ControllerSettings.UseDNS ? !client.connect(ControllerSettings.HostName, ControllerSettings.Port) : !client.connect(host, ControllerSettings.Port))
   {
     connectionFailures++;
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
