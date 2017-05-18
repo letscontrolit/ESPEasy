@@ -177,7 +177,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         string += F("<label for='web_Color_Selected'> Use selected color</label><br>");
 
         // Color Selection
-        char hexvalue[6] = {0};
+        char hexvalue[7] = {0};
         sprintf(hexvalue, "%02X%02X%02X",     // Create Hex value for color
                 Settings.TaskDevicePluginConfig[event->TaskIndex][0],
                 Settings.TaskDevicePluginConfig[event->TaskIndex][1],
