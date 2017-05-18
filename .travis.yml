@@ -6,8 +6,14 @@ cache:
   directories:
   - "~/.platformio"
   - "./.pioenvs"
+addons:
+  apt:
+    packages:
+    - cppcheck
+
 install:
   - pip install -U platformio
+
 script:
   - cppcheck --enable=warning src/*.ino -q --inconclusive  --force -I src --include=src/ESPEasy.ino --error-exitcode=1
   - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
