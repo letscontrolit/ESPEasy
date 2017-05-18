@@ -2,14 +2,22 @@ language: python
 python:
 - '2.7'
 sudo: false
+
 cache:
   directories:
   - "~/.platformio"
   - "./.pioenvs"
+
+before_install:
+  - sudo add-apt-repository ppa:j-rivero/cppcheck-precise
+
+
 addons:
   apt:
     packages:
     - cppcheck
+
+
 
 install:
   - pip install -U platformio
