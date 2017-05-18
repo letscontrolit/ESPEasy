@@ -1,6 +1,10 @@
 language: python
 python:
-- '2.7'
+  - '2.7'
+
+#we want a newer cppcheck, so use trusty
+dist: trusty
+
 sudo: false
 
 cache:
@@ -8,8 +12,6 @@ cache:
   - "~/.platformio"
   - "./.pioenvs"
 
-before_install:
-  - sudo add-apt-repository ppa:j-rivero/cppcheck-precise
 
 
 addons:
