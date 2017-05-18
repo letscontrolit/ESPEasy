@@ -464,7 +464,6 @@ float string2float(String myString) {
 
   if (myString.substring(0, 1) == "-") {
     start = 1;   //allow a minus in front of string
-    tmp[i] = '-';
   }
 
   for (i = start; i < len; i++)

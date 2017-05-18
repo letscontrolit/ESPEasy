@@ -420,7 +420,7 @@ static void Plugin_023_sendStr(unsigned char *string)
     {
       Plugin_023_SendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
-    *string++;
+    string++;
   }
 }
 
@@ -437,7 +437,7 @@ static void Plugin_023_sendStrXY(const char *string, int X, int Y)
     {
       Plugin_023_SendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
-    *string++;
+    string++;
   }
 }
 

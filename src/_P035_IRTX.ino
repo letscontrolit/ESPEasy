@@ -82,9 +82,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (IrType.equalsIgnoreCase("RAW")) {
             String IrRaw;
-            unsigned int IrHz;
-            unsigned int IrPLen;
-            unsigned int IrBLen;
+            unsigned int IrHz=0;
+            unsigned int IrPLen=0;
+            unsigned int IrBLen=0;
 
             if (GetArgv(command, TmpStr1, 3)) IrRaw = TmpStr1;
             if (GetArgv(command, TmpStr1, 4)) IrHz = str2int(TmpStr1);

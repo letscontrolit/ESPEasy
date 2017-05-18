@@ -1044,6 +1044,7 @@ float ul2float(unsigned long ul)
   return f;
 }
 
+
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
   \*********************************************************************************************/
@@ -1055,7 +1056,7 @@ void initLog()
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
-  for (int l; l<9; l++)
+  for (int l=0; l<10; l++)
   {
     Logging[l].Message=0;
   }
