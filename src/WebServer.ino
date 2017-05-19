@@ -1403,24 +1403,33 @@ void handle_devices() {
     reply += F("<TR><TD>Device:<TD>");
     addDeviceSelect(reply, "taskdevicenumber", Settings.TaskDeviceNumber[index - 1]);
 
-    if (Settings.TaskDeviceNumber[index - 1] != 0 )
+    if (Settings.TaskDeviceNumber[index - 1] != 0 )   //any device selected?
     {
       addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
 
       addFormTextBox(reply, F("Name"), F("taskdevicename"), ExtraTaskSettings.TaskDeviceName, 40);
 
-      if (Device[DeviceIndex].TimerOption)
+      addFormCheckBox(reply, F("Enabled"), F("taskdeviceenabled"), Settings.TaskDeviceEnabled[index - 1]);
+
+      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[index - 1] == 0 && Settings.UDPPort != 0)
       {
-        addFormNumericBox(reply, F("Delay"), F("taskdevicetimer"), Settings.TaskDeviceTimer[index - 1], 0, 65535);
-        addUnit(reply, F("sec"));
-        if (Device[DeviceIndex].TimerOptional)
-          reply += F(" (Optional for this device)");
+        reply += F("<TR><TD>Global Sync:<TD>");
+        addFormCheckBox(reply, F("Global Sync"), F("taskdeviceglobalsync"), Settings.TaskDeviceGlobalSync[index - 1]);
       }
 
+      // interface
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[index - 1] == 0)
       {
+        addFormSubHeader(reply, F("Sensor / Actuator"));
+
         if (Device[DeviceIndex].Ports != 0)
           addFormNumericBox(reply, F("Port"), F("taskdeviceport"), Settings.TaskDevicePort[index - 1]);
+
+        if (Device[DeviceIndex].PullUpOption)
+          addFormCheckBox(reply, F("Internal PullUp"), F("taskdevicepin1pullup"), Settings.TaskDevicePin1PullUp[index - 1]);
+
+        if (Device[DeviceIndex].InverseLogicOption)
+          addFormCheckBox(reply, F("Inversed Logic"), F("taskdevicepin1inversed"), Settings.TaskDevicePin1Inversed[index - 1]);
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
           addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
@@ -1428,19 +1437,27 @@ void handle_devices() {
           addFormPinSelect(reply, F("2nd GPIO"), F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
           addFormPinSelect(reply, F("3rd GPIO"), F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
-
-        if (Device[DeviceIndex].PullUpOption)
-          addFormCheckBox(reply, F("Pull UP"), F("taskdevicepin1pullup"), Settings.TaskDevicePin1PullUp[index - 1]);
-
-        if (Device[DeviceIndex].InverseLogicOption)
-          addFormCheckBox(reply, F("Inversed"), F("taskdevicepin1inversed"), Settings.TaskDevicePin1Inversed[index - 1]);
       }
 
+      //add plugins content
       if (Settings.TaskDeviceDataFeed[index - 1] == 0) // only show additional config for local connected sensors
         PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
+      //transmissions
       if (Device[DeviceIndex].SendDataOption)
       {
+        addFormSubHeader(reply, F("Data Acquisition"));
+
+        if (Device[DeviceIndex].TimerOption)
+        {
+          addFormNumericBox(reply, F("Delay"), F("taskdevicetimer"), Settings.TaskDeviceTimer[index - 1], 0, 65535);
+          addUnit(reply, F("sec"));
+          if (Device[DeviceIndex].TimerOptional)
+            reply += F(" (Optional for this Device)");
+        }
+
+        addFormSeparator(reply);
+
         for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
         {
           if (Settings.Protocol[controllerNr] != 0)
@@ -1448,7 +1465,7 @@ void handle_devices() {
             String id = F("taskdevicesenddata");
             id += controllerNr + 1;
 
-            reply += F("<TR><TD>Send Data to controller ");
+            reply += F("<TR><TD>Send to Controller ");
             reply += controllerNr + 1;
             reply += F("<TD>");
             addCheckBox(reply, id, Settings.TaskDeviceSendData[controllerNr][index - 1]);
@@ -1456,7 +1473,7 @@ void handle_devices() {
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
-              reply += F(" IDX: ");
+              reply += F(" &nbsp; IDX: ");
               id = F("taskdeviceid");
               id += controllerNr + 1;
               addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][index - 1], 0, 9999);
@@ -1465,59 +1482,54 @@ void handle_devices() {
         }
       }
 
-      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[index - 1] == 0 && Settings.UDPPort != 0)
+      if (!Device[DeviceIndex].Custom && Device[DeviceIndex].ValueCount > 0)
       {
-        reply += F("<TR><TD>Global Sync:<TD>");
-        addCheckBox(reply, F("taskdeviceglobalsync"), Settings.TaskDeviceGlobalSync[index - 1]);
-      }
+        addFormSubHeader(reply, F("Values"));
+        reply += F("</table><table>");
 
-      reply += F("<TR><TD>Enabled:<TD>");
-      addCheckBox(reply, F("taskdeviceenabled"), Settings.TaskDeviceEnabled[index - 1]);
+        reply += F("<TR><TH>Value");
+        reply += F("<TH>Name");
 
-      if (!Device[DeviceIndex].Custom)
-      {
-        //reply += F("<TR><TH>Optional Settings<TH>Value");
-        if (Device[DeviceIndex].ValueCount > 0)
-          addFormSubHeader(reply,F("Value Settings"));
+        if (Device[DeviceIndex].FormulaOption)
+        {
+          reply += F("<TH>Formula");
+          addHelpButton(reply, F("EasyFormula"));
+        }
+
+        if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+        {
+          reply += F("<TH>Decimals");
+        }
+
 
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
-          {
-            reply += F("<TR><TD>Value ");
-            reply += varNr + 1;
-            reply += F(":<TD>");
-            reply += F("Name: ");
-            String id = F("taskdevicevaluename");
-            id += (varNr + 1);
-            addTextBox(reply, id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
-          }
+          reply += F("<TR><TD>");
+          reply += varNr + 1;
+          reply += F("<TD>");
+          String id = F("taskdevicevaluename");
+          id += (varNr + 1);
+          addTextBox(reply, id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
 
           if (Device[DeviceIndex].FormulaOption)
           {
-            //String label = F(" Formula ");
-            //label += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-            reply += F(" Formula: ");
+            reply += F("<TD>");
             String id = F("taskdeviceformula");
             id += (varNr + 1);
             addTextBox(reply, id, ExtraTaskSettings.TaskDeviceFormula[varNr], 40);
-
           }
 
           if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
           {
-            //String label = F(" Decimals ");
-            //label += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-            reply += F(" Decimals: ");
+            reply += F("<TD>");
             String id = F("taskdevicevaluedecimals");
             id += (varNr + 1);
             addNumericBox(reply, id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
           }
-
-          if (varNr == 0)
-            addHelpButton(reply, F("EasyFormula"));
         }
       }
     }
+
     addFormSeparator(reply);
 
     reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices?setpage=");
