@@ -78,6 +78,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   if (tmplName == F("TmplAP"))
   {
     tmpl += F(
+      "<!DOCTYPE html>"
       "<head>"
         "<title>{{name}}</title>"
         "{{css}}"
@@ -85,14 +86,15 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<body>"
         "<h1>Welcome to ESP Easy Mega AP</h1>"
         "{{error}}"
-        "<p>{{content}}</p>"
-        "<h6>Powered by www.letscontrolit.com</h6>"
+        "{{content}}"
+        "<BR><h6>Powered by www.letscontrolit.com</h6>"
       "</body>"
     );
   }
   else if (tmplName == F("TmplMsg"))
   {
     tmpl += F(
+      "<!DOCTYPE html>"
       "<head>"
         "<title>{{name}}</title>"
         "{{css}}"
@@ -100,14 +102,15 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<body>"
         "<h1>ESP Easy Mega: {{name}}</h1>"
         "{{error}}"
-        "<p>{{content}}</p>"
-        "<h6>Powered by www.letscontrolit.com</h6>"
+        "{{content}}"
+        "<BR><h6>Powered by www.letscontrolit.com</h6>"
       "</body>"
     );
   }
   else   //all other template names e.g. TmplStd
   {
     tmpl += F(
+      "<!DOCTYPE html>"
       "<head>"
         "<title>{{name}}</title>"
         "{{js}}"
@@ -117,9 +120,11 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
         "<p>{{menu}}</p>"
         "{{error}}"
-        "<p>{{content}}</p>"
-        "<h6>Powered by www.letscontrolit.com</h6>"
+        "{{content}}"
+        "<BR><h6>Powered by www.letscontrolit.com</h6>"
+        "<script>var f=document.getElementsByTagName(\"form\")[0];console.log(f.innerHTML);f.innerHTML=f.innerHTML.split(\"EM\").join(\"option\");</script>"
       "</body>"
+
     );
   }
 }
@@ -129,6 +134,11 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
 {
   int indexStart, indexEnd;
   String varName, varValue;
+
+  String log = F("HTML : [processWebPageTemplate] emplate-Size=");
+  log += pageTemplate.length();
+  log += F(" Content-Size=");
+  log += pageContent.length();
 
   while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
   {
@@ -143,7 +153,10 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
       varName.toLowerCase();
 
       if (varName == F("content"))
+      {
         pageResult += pageContent;
+        pageContent = F("");   //free mem - content can only added once
+      }
       else
       {
         getWebPageTemplateVar(varName, varValue);
@@ -165,7 +178,11 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
       pageTemplate = pageTemplate.substring(2);   //eat "{{"
   }
   pageResult += pageTemplate;
-  pageTemplate = F("");
+  pageTemplate = F("");   //free mem
+
+  log += F(" Result-Size=");
+  log += pageResult.length();
+  addLog(LOG_LEVEL_INFO, log);
 }
 
 
@@ -203,9 +220,9 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
       if (i == 5 && !Settings.UseRules)   //hide rules menu item
         continue;
 
-      varValue += F("<a class='button-menu w3-bar-item w3-button");
+      varValue += F("<a class='button-menu");
       if (i == navMenuIndex)   //JK experimental
-        varValue += F(" active w3-teal");
+        varValue += F(" active");
       varValue += F("' href='");
       varValue += gpMenu[i][1];
       varValue += F("'>");
@@ -233,12 +250,13 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
       varValue = F(
         "<style>"
           "* {font-family:sans-serif; font-size:12pt;}"
-          "h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}"
-          "h2 {font-size:12pt; margin: 8px 0 0 0; padding:8px; background-color:black; color:#FFF; font-weight: bold;}"
-          "h3 {font-size:12pt; margin: 16px 0 0 0; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}"
+          "h1 {font-size:16pt; color:black; margin:8px 0 0 0; font-weight:bold;}"
+          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:8px; background-color:black; color:#FFF; font-weight:bold;}"
+          "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
           "h6 {font-size:10pt; color:black; text-align:center;}"
-          ".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}"
+          ".button-menu {background-color:#ffffff; color:blue; margin:10px; text-decoration:none}"
           ".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}"
+          ".button-help {color:#00f; text-decoration:none}"
           ".button-menu:hover {background:#ddddff;}"
           ".button-link:hover {background:#369;}"
           "th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}"
@@ -250,6 +268,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
           ".div_br {clear: both;}"
           ".note {color:#444; font-style: italic}"
           ".active {text-decoration: underline;}"
+          "EM {}"
         "</style>"
         );
     }
@@ -258,9 +277,10 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
   else if (varName == F("js"))
   {
     varValue += F(
-      "<script language=\"javascript\"><!--\n"
-      "function dept_onchange(frmselect) {frmselect.submit();}\n"
+      "<script language=\"javascript\"><!-- "
+      "function dept_onchange(frmselect) {frmselect.submit();} "
       "//--></script>");
+
   }
 
   else if (varName == F("error"))
@@ -662,7 +682,7 @@ void handle_controllers() {
       reply += x + 1;
       reply += F("\">Edit</a>");
       reply += F("<TD>");
-      reply += x + 1;
+      reply += getControllerSymbol(x);
       reply += F("<TD>");
       if (Settings.Protocol[x] != 0)
       {
@@ -1075,37 +1095,37 @@ void handle_devices() {
   struct EventStruct TempEvent;
 
   String taskindex = WebServer.arg(F("index"));
-  String taskdevicenumber = WebServer.arg(F("taskdevicenumber"));
-  String taskdevicetimer = WebServer.arg(F("taskdevicetimer"));
+  String taskdevicenumber = WebServer.arg(F("TDNUM"));
+  String taskdevicetimer = WebServer.arg(F("TDT"));
   String taskdeviceid[CONTROLLER_MAX];
-  String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));
-  String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
-  String taskdevicepin3 = WebServer.arg(F("taskdevicepin3"));
-  String taskdevicepin1pullup = WebServer.arg(F("taskdevicepin1pullup"));
-  String taskdevicepin1inversed = WebServer.arg(F("taskdevicepin1inversed"));
-  String taskdevicename = WebServer.arg(F("taskdevicename"));
-  String taskdeviceport = WebServer.arg(F("taskdeviceport"));
+  String taskdevicepin1 = WebServer.arg(F("TDP1"));
+  String taskdevicepin2 = WebServer.arg(F("TDP2"));
+  String taskdevicepin3 = WebServer.arg(F("TDP3"));
+  String taskdevicepin1pullup = WebServer.arg(F("TDPPU"));
+  String taskdevicepin1inversed = WebServer.arg(F("TDPI"));
+  String taskdevicename = WebServer.arg(F("TDN"));
+  String taskdeviceport = WebServer.arg(F("TDP"));
   String taskdeviceformula[VARS_PER_TASK];
   String taskdevicevaluename[VARS_PER_TASK];
   String taskdevicevaluedecimals[VARS_PER_TASK];
   String taskdevicesenddata[CONTROLLER_MAX];
-  String taskdeviceglobalsync = WebServer.arg(F("taskdeviceglobalsync"));
-  String taskdeviceenabled = WebServer.arg(F("taskdeviceenabled"));
+  String taskdeviceglobalsync = WebServer.arg(F("TDGS"));
+  String taskdeviceenabled = WebServer.arg(F("TDE"));
 
   for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
     char argc[25];
-    String arg = F("taskdeviceformula");
+    String arg = F("TDF");
     arg += varNr + 1;
     arg.toCharArray(argc, 25);
     taskdeviceformula[varNr] = WebServer.arg(argc);
 
-    arg = F("taskdevicevaluename");
+    arg = F("TDVN");
     arg += varNr + 1;
     arg.toCharArray(argc, 25);
     taskdevicevaluename[varNr] = WebServer.arg(argc);
 
-    arg = F("taskdevicevaluedecimals");
+    arg = F("TDVD");
     arg += varNr + 1;
     arg.toCharArray(argc, 25);
     taskdevicevaluedecimals[varNr] = WebServer.arg(argc);
@@ -1114,12 +1134,12 @@ void handle_devices() {
   for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
     char argc[25];
-    String arg = F("taskdeviceid");
+    String arg = F("TDID");
     arg += controllerNr + 1;
     arg.toCharArray(argc, 25);
     taskdeviceid[controllerNr] = WebServer.arg(argc);
 
-    arg = F("taskdevicesenddata");
+    arg = F("TDSD");
     arg += controllerNr + 1;
     arg.toCharArray(argc, 25);
     taskdevicesenddata[controllerNr] = WebServer.arg(argc);
@@ -1307,7 +1327,7 @@ void handle_devices() {
             {
               if (doBR)
                 reply += F("<BR>");
-              reply += controllerNr + 1;
+              reply += getControllerSymbol(controllerNr);
               if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
               {
                 reply += F(" (");
@@ -1402,20 +1422,19 @@ void handle_devices() {
     addFormHeader(reply, F("Task Settings"));
 
     reply += F("<TR><TD>Device:<TD>");
-    addDeviceSelect(reply, "taskdevicenumber", Settings.TaskDeviceNumber[index - 1]);
+    addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[index - 1]);   //="taskdevicenumber"
 
     if (Settings.TaskDeviceNumber[index - 1] != 0 )   //any device selected?
     {
       addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
 
-      addFormTextBox(reply, F("Name"), F("taskdevicename"), ExtraTaskSettings.TaskDeviceName, 40);
+      addFormTextBox(reply, F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
 
-      addFormCheckBox(reply, F("Enabled"), F("taskdeviceenabled"), Settings.TaskDeviceEnabled[index - 1]);
+      addFormCheckBox(reply, F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[index - 1]);   //="taskdeviceenabled"
 
       if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[index - 1] == 0 && Settings.UDPPort != 0)
       {
-        reply += F("<TR><TD>Global Sync:<TD>");
-        addFormCheckBox(reply, F("Global Sync"), F("taskdeviceglobalsync"), Settings.TaskDeviceGlobalSync[index - 1]);
+        addFormCheckBox(reply, F("Global Sync"), F("TDGS"), Settings.TaskDeviceGlobalSync[index - 1]);   //="taskdeviceglobalsync"
       }
 
       // section: Sensor / Actuator
@@ -1425,24 +1444,24 @@ void handle_devices() {
         addFormSubHeader(reply, (Device[DeviceIndex].SendDataOption) ? F("Sensor") : F("Actuator"));
 
         if (Device[DeviceIndex].Ports != 0)
-          addFormNumericBox(reply, F("Port"), F("taskdeviceport"), Settings.TaskDevicePort[index - 1]);
+          addFormNumericBox(reply, F("Port"), F("TDP"), Settings.TaskDevicePort[index - 1]);   //="taskdeviceport"
 
         if (Device[DeviceIndex].PullUpOption)
         {
-          addFormCheckBox(reply, F("Internal PullUp"), F("taskdevicepin1pullup"), Settings.TaskDevicePin1PullUp[index - 1]);
+          addFormCheckBox(reply, F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[index - 1]);   //="taskdevicepin1pullup"
           if ((Settings.TaskDevicePin1[index - 1] == 16) || (Settings.TaskDevicePin2[index - 1] == 16) || (Settings.TaskDevicePin3[index - 1] == 16))
             addFormNote(reply, F("GPIO-16 (D0) does not support PullUp"));
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
-          addFormCheckBox(reply, F("Inversed Logic"), F("taskdevicepin1inversed"), Settings.TaskDevicePin1Inversed[index - 1]);
+          addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
+          addFormPinSelect(reply, F("1st GPIO"), F("TDP1"), Settings.TaskDevicePin1[index - 1]);   //="taskdevicepin1"
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("2nd GPIO"), F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
+          addFormPinSelect(reply, F("2nd GPIO"), F("TDP2"), Settings.TaskDevicePin2[index - 1]);   //="taskdevicepin2"
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("3rd GPIO"), F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
+          addFormPinSelect(reply, F("3rd GPIO"), F("TDP3"), Settings.TaskDevicePin3[index - 1]);   //="taskdevicepin3"
       }
 
       //add plugins content
@@ -1456,7 +1475,7 @@ void handle_devices() {
 
         if (Device[DeviceIndex].TimerOption)
         {
-          addFormNumericBox(reply, F("Delay"), F("taskdevicetimer"), Settings.TaskDeviceTimer[index - 1], 0, 65535);
+          addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
           addUnit(reply, F("sec"));
           if (Device[DeviceIndex].TimerOptional)
             reply += F(" (Optional for this Device)");
@@ -1468,11 +1487,11 @@ void handle_devices() {
         {
           if (Settings.Protocol[controllerNr] != 0)
           {
-            String id = F("taskdevicesenddata");
+            String id = F("TDSD");   //="taskdevicesenddata"
             id += controllerNr + 1;
 
             reply += F("<TR><TD>Send to Controller ");
-            reply += controllerNr + 1;
+            reply += getControllerSymbol(controllerNr);
             reply += F("<TD>");
             addCheckBox(reply, id, Settings.TaskDeviceSendData[controllerNr][index - 1]);
 
@@ -1480,7 +1499,7 @@ void handle_devices() {
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
               reply += F(" &nbsp; IDX: ");
-              id = F("taskdeviceid");
+              id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
               addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][index - 1], 0, 9999);
             }
@@ -1515,14 +1534,14 @@ void handle_devices() {
           reply += F("<TR><TD>");
           reply += varNr + 1;
           reply += F("<TD>");
-          String id = F("taskdevicevaluename");
+          String id = F("TDVN");   //="taskdevicevaluename"
           id += (varNr + 1);
           addTextBox(reply, id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
 
           if (Device[DeviceIndex].FormulaOption)
           {
             reply += F("<TD>");
-            String id = F("taskdeviceformula");
+            String id = F("TDF");   //="taskdeviceformula"
             id += (varNr + 1);
             addTextBox(reply, id, ExtraTaskSettings.TaskDeviceFormula[varNr], 40);
           }
@@ -1530,7 +1549,7 @@ void handle_devices() {
           if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
           {
             reply += F("<TD>");
-            String id = F("taskdevicevaluedecimals");
+            String id = F("TDVD");   //="taskdevicevaluedecimals"
             id += (varNr + 1);
             addNumericBox(reply, id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
           }
@@ -1858,9 +1877,10 @@ void addSelector(String& str, const String& id, int optionCount, const String op
       index = indices[x];
     else
       index = x;
-    str += F("<option value='");
+    //JK str += F("<option value='");
+    str += F("<EM value=");
     str += index;
-    str += "'";
+    //JK str += "'";
     if (selectedIndex == index)
       str += F(" selected");
     if (attr)
@@ -1870,7 +1890,7 @@ void addSelector(String& str, const String& id, int optionCount, const String op
     }
     str += ">";
     str += options[x];
-    str += F("</option>");
+    str += F("</EM>");
   }
   str += F("</select>");
 }
@@ -1888,9 +1908,10 @@ void addSelector_Head(String& str, const String& id, boolean reloadonchange)
 
 void addSelector_Item(String& str, const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
-  str += F("<option value='");
+  //JK str += F("<option value='");
+  str += F("<EM value=");
   str += index;
-  str += "'";
+  //JK str += "'";
   if (selected)
     str += F(" selected");
   if (disabled)
@@ -1902,7 +1923,7 @@ void addSelector_Item(String& str, const String& option, int index, boolean sele
   }
   str += ">";
   str += option;
-  str += F("</option>");
+  str += F("</EM>");
 }
 
 
@@ -1929,7 +1950,7 @@ void addRowLabel(String& str, const String& label)
 
 void addButton(String& str, const String &url, const String &label)
 {
-  str += F("<a class=\"button-link btn btn-primary\" href=");
+  str += F("<a class=\"button-link\" href=");
   str += url;
   str += F(">");
   str += label;
@@ -1938,7 +1959,7 @@ void addButton(String& str, const String &url, const String &label)
 
 void addSubmitButton(String& str)
 {
-  str += F("<input class=\"button-link btn btn-primary\" type='submit' value='Submit'>");
+  str += F("<input class=\"button-link\" type='submit' value='Submit'>");
 }
 
 //********************************************************************************
@@ -2031,9 +2052,11 @@ void addNumericBox(String& str, const String& id, int value, int min, int max)
     str += F("' max='");
     str += max;
   }
-  str += F("' style='width: 5em;' value='");
+  //JK str += F("' style='width:5em;' value='");
+  str += F("' style='width:5em;' value=");
   str += value;
-  str += F("'>");
+  //JK str += F("'>");
+  str += F(">");
 }
 
 void addNumericBox(String& str, const String& id, int value)
@@ -2113,18 +2136,18 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(String& str, const String& url)
 {
-  str += F(" <a class=\"button-link btn btn-info\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += F(" <a class=\"button-help\" href=\"http://www.letscontrolit.com/wiki/index.php/");
   str += url;
-  str += F("\" target=\"_blank\">?</a>");
+  str += F("\" target=\"_blank\">&#10068;</a>");
 }
 
 
 void addEnabled(String& str, boolean enabled)
 {
   if (enabled)
-    str += F("<span class='enabled on' style='color:green'>Yes</span>");
+    str += F("<span class='enabled on' style='color:green'>&#10004;</span>");
   else
-    str += F("<span class='enabled off' style='color:red'>No</span>");
+    str += F("<span class='enabled off' style='color:red'>&#10008;</span>");
 }
 
 
@@ -3627,4 +3650,21 @@ String URLEncode(const char* msg)
     msg++;
   }
   return encodedMsg;
+}
+
+
+String getControllerSymbol(byte index)
+{
+  String ret = F("&#");
+  ret += 10102 + index;
+  ret += F(";");
+  return ret;
+}
+
+String getValueSymbol(byte index)
+{
+  String ret = F("&#");
+  ret += 10112 + index;
+  ret += F(";");
+  return ret;
 }
