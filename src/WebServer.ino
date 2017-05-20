@@ -234,8 +234,8 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
         "<style>"
           "* {font-family:sans-serif; font-size:12pt;}"
           "h1 {font-size:16pt; color:black; margin: 8px 0 0 0;}"
-          "h2 {font-size:16pt; margin: 8px 0 0 0; padding:8px; background-color:black; color:#FFF; font-weight: bold;}"
-          "h3 {font-size:12pt; margin: 16px -6px 0 -6px; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}"
+          "h2 {font-size:12pt; margin: 8px 0 0 0; padding:8px; background-color:black; color:#FFF; font-weight: bold;}"
+          "h3 {font-size:12pt; margin: 16px 0 0 0; padding:4px; background-color:#EEE; color:#444; font-weight: bold;}"
           "h6 {font-size:10pt; color:black; text-align:center;}"
           ".button-menu {background-color:#ffffff; color:blue; margin: 10px; text-decoration:none}"
           ".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}"
@@ -520,7 +520,7 @@ void handle_config() {
 
   reply += F("<form name='frmselect' method='post'><table>");
 
-  addFormHeader(reply, F("Main Settings"), F(""));
+  addFormHeader(reply, F("Main Settings"));
 
   Settings.Name[25] = 0;
   SecuritySettings.Password[25] = 0;
@@ -1398,7 +1398,8 @@ void handle_devices() {
     DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
     TempEvent.TaskIndex = index - 1;
 
-    reply += F("<form name='frmselect' method='post'><table><TH>Task Settings<TH>Value");
+    reply += F("<form name='frmselect' method='post'><table>");
+    addFormHeader(reply, F("Task Settings"));
 
     reply += F("<TR><TD>Device:<TD>");
     addDeviceSelect(reply, "taskdevicenumber", Settings.TaskDeviceNumber[index - 1]);
@@ -1417,16 +1418,21 @@ void handle_devices() {
         addFormCheckBox(reply, F("Global Sync"), F("taskdeviceglobalsync"), Settings.TaskDeviceGlobalSync[index - 1]);
       }
 
-      // interface
-      if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[index - 1] == 0)
+      // section: Sensor / Actuator
+      if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[index - 1] == 0 &&
+        ((Device[DeviceIndex].Ports != 0) || (Device[DeviceIndex].PullUpOption) || (Device[DeviceIndex].InverseLogicOption) || (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)) )
       {
-        addFormSubHeader(reply, F("Sensor / Actuator"));
+        addFormSubHeader(reply, (Device[DeviceIndex].SendDataOption) ? F("Sensor") : F("Actuator"));
 
         if (Device[DeviceIndex].Ports != 0)
           addFormNumericBox(reply, F("Port"), F("taskdeviceport"), Settings.TaskDevicePort[index - 1]);
 
         if (Device[DeviceIndex].PullUpOption)
+        {
           addFormCheckBox(reply, F("Internal PullUp"), F("taskdevicepin1pullup"), Settings.TaskDevicePin1PullUp[index - 1]);
+          if ((Settings.TaskDevicePin1[index - 1] == 16) || (Settings.TaskDevicePin2[index - 1] == 16) || (Settings.TaskDevicePin3[index - 1] == 16))
+            addFormNote(reply, F("GPIO-16 (D0) does not support PullUp"));
+        }
 
         if (Device[DeviceIndex].InverseLogicOption)
           addFormCheckBox(reply, F("Inversed Logic"), F("taskdevicepin1inversed"), Settings.TaskDevicePin1Inversed[index - 1]);
@@ -1443,7 +1449,7 @@ void handle_devices() {
       if (Settings.TaskDeviceDataFeed[index - 1] == 0) // only show additional config for local connected sensors
         PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
-      //transmissions
+      //section: Data Acquisition
       if (Device[DeviceIndex].SendDataOption)
       {
         addFormSubHeader(reply, F("Data Acquisition"));
@@ -1482,11 +1488,13 @@ void handle_devices() {
         }
       }
 
+      //section: Values
       if (!Device[DeviceIndex].Custom && Device[DeviceIndex].ValueCount > 0)
       {
         addFormSubHeader(reply, F("Values"));
         reply += F("</table><table>");
 
+        //table header
         reply += F("<TR><TH>Value");
         reply += F("<TH>Name");
 
@@ -1501,7 +1509,7 @@ void handle_devices() {
           reply += F("<TH>Decimals");
         }
 
-
+        //table body
         for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
         {
           reply += F("<TR><TD>");
@@ -1945,6 +1953,13 @@ void addFormHeader(String& str, const String& header1, const String& header2)
   str += F("");
 }
 
+void addFormHeader(String& str, const String& header)
+{
+  str += F("<TR><TD colspan='2'><h2>");
+  str += header;
+  str += F("</h2>");
+}
+
 
 //********************************************************************************
 // Add a sub header
@@ -2256,7 +2271,7 @@ void handle_tools() {
   reply += F("<form>");
   reply += F("<table>");
 
-  addFormHeader(reply, F("Tools"), F(""));
+  addFormHeader(reply, F("Tools"));
 
   addFormSubHeader(reply, F("System"));
 
@@ -2764,7 +2779,7 @@ void handle_advanced() {
 
   reply += F("<form  method='post'><table>");
 
-  addFormHeader(reply, F("Advanced Settings"), F("Value"));
+  addFormHeader(reply, F("Advanced Settings"));
 
   addFormCheckBox(reply, F("Rules"), F("userules"), Settings.UseRules);
 
