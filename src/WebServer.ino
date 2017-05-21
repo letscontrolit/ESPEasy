@@ -222,7 +222,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
         continue;
 
       varValue += F("<a class='menu");
-      if (i == navMenuIndex)   //JK experimental
+      if (i == navMenuIndex)
         varValue += F(" active");
       varValue += F("' href='");
       varValue += gpMenu[i][1];
@@ -2050,10 +2050,8 @@ void addNumericBox(String& str, const String& id, int value, int min, int max)
     str += F("' max='");
     str += max;
   }
-  //JK str += F("' style='width:5em;' value='");
   str += F("' style='width:5em;' value=");
   str += value;
-  //JK str += F("'>");
   str += F(">");
 }
 
