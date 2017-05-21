@@ -260,7 +260,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
           ".menu {background-color:#FFF; color:blue; margin:8px; text-decoration:none}"
           ".button {padding:4px 16px; background-color:#07D; color:#FFF; border:solid 1px #FFF; text-decoration:none}"
           ".button.link {}"
-          ".button.help {width:2em; height:2em; padding:0; border-radius:100%;}"
+          ".button.help {padding:2px 4px; border-radius:50%}"
           ".menu:hover {background:#DDF;}"
           ".button:hover {background:#369;}"
           "th {padding:8px; background-color:black; color:#FFF; font-weight:bold;}"
