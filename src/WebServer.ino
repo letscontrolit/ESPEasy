@@ -122,7 +122,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{error}}"
         "{{content}}"
         "<BR><h6>Powered by www.letscontrolit.com</h6>"
-        "<script>var f=document.getElementsByTagName(\"form\")[0];console.log(f.innerHTML);f.innerHTML=f.innerHTML.split(\"EM\").join(\"option\");</script>"
       "</body>"
 
     );
@@ -215,12 +214,14 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
       F("Tools"), F("tools"),                 //7
     };
 
+    varValue += F("<div class='menubar'>");
+
     for (byte i=0; i<8; i++)
     {
       if (i == 5 && !Settings.UseRules)   //hide rules menu item
         continue;
 
-      varValue += F("<a class='button-menu");
+      varValue += F("<a class='menu");
       if (i == navMenuIndex)   //JK experimental
         varValue += F(" active");
       varValue += F("' href='");
@@ -229,6 +230,8 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
       varValue += gpMenu[i][0];
       varValue += F("</a>");
     }
+
+    varValue += F("</div>");
   }
 
   else if (varName == F("logo"))
@@ -254,21 +257,21 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
           "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:8px; background-color:black; color:#FFF; font-weight:bold;}"
           "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
           "h6 {font-size:10pt; color:black; text-align:center;}"
-          ".button-menu {background-color:#ffffff; color:blue; margin:10px; text-decoration:none}"
-          ".button-link {padding:5px 15px; background-color:#0077dd; color:#fff; border:solid 1px #fff; text-decoration:none}"
-          ".button-help {color:#00f; text-decoration:none}"
-          ".button-menu:hover {background:#ddddff;}"
-          ".button-link:hover {background:#369;}"
-          "th {padding:8px; background-color:black; color:#ffffff; font-weight: bold;}"
+          ".menu {background-color:#FFF; color:blue; margin:8px; text-decoration:none}"
+          ".button {padding:4px 16px; background-color:#07D; color:#FFF; border:solid 1px #FFF; text-decoration:none}"
+          ".button.link {}"
+          ".button.help {width:2em; height:2em; padding:0; border-radius:100%;}"
+          ".menu:hover {background:#DDF;}"
+          ".button:hover {background:#369;}"
+          "th {padding:8px; background-color:black; color:#FFF; font-weight:bold;}"
           "td {padding:4px;}"
           "tr {padding:8px;}"
           "table {color:black;}"
-          ".div_l {float: left;}"
-          ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 7px; background-color:#080; color:white;}"
-          ".div_br {clear: both;}"
-          ".note {color:#444; font-style: italic}"
-          ".active {text-decoration: underline;}"
-          "EM {}"
+          ".div_l {float:left;}"
+          ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:7px; background-color:#080; color:#FFF;}"
+          ".div_br {clear:both;}"
+          ".note {color:#444; font-style:italic}"
+          ".active {text-decoration:underline;}"
         "</style>"
         );
     }
@@ -277,10 +280,9 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
   else if (varName == F("js"))
   {
     varValue += F(
-      "<script language=\"javascript\"><!-- "
+      "<script><!-- "
       "function dept_onchange(frmselect) {frmselect.submit();} "
       "//--></script>");
-
   }
 
   else if (varName == F("error"))
@@ -678,7 +680,7 @@ void handle_controllers() {
     {
       LoadControllerSettings(x, (byte*)&ControllerSettings, sizeof(ControllerSettings));
       reply += F("<TR><TD>");
-      reply += F("<a class=\"button-link\" href=\"controllers?index=");
+      reply += F("<a class='button link' href=\"controllers?index=");
       reply += x + 1;
       reply += F("\">Edit</a>");
       reply += F("<TD>");
@@ -786,7 +788,7 @@ void handle_controllers() {
 
     addFormSeparator(reply);
 
-    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"controllers\">Close</a>");
+    reply += F("<TR><TD><TD><a class='button link' href=\"controllers\">Close</a>");
     addSubmitButton(reply);
     reply += F("</table></form>");
   }
@@ -872,7 +874,7 @@ void handle_notifications() {
     {
       LoadNotificationSettings(x, (byte*)&NotificationSettings, sizeof(NotificationSettings));
       reply += F("<TR><TD>");
-      reply += F("<a class=\"button-link\" href=\"notifications?index=");
+      reply += F("<a class='button link' href=\"notifications?index=");
       reply += x + 1;
       reply += F("\">Edit</a>");
       reply += F("<TD>");
@@ -977,7 +979,7 @@ void handle_notifications() {
 
     addFormSeparator(reply);
 
-    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"notifications\">Close</a>");
+    reply += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
     addSubmitButton(reply);
     reply += F("</table></form>");
   }
@@ -1263,13 +1265,13 @@ void handle_devices() {
   if (index == 0)
   {
     reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
-    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    reply += F("<a class='button link' href=\"devices?setpage=");
     if (page > 1)
       reply += page - 1;
     else
       reply += page;
     reply += F("\"><</a>");
-    reply += F("<a class=\"button-link\" href=\"devices?setpage=");
+    reply += F("<a class='button link' href=\"devices?setpage=");
     if (page < (TASKS_MAX / 4))
       reply += page + 1;
     else
@@ -1283,7 +1285,7 @@ void handle_devices() {
     for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
     {
       reply += F("<TR><TD>");
-      reply += F("<a class=\"button-link\" href=\"devices?index=");
+      reply += F("<a class='button link' href=\"devices?index=");
       reply += x + 1;
       reply += F("&page=");
       reply += page;
@@ -1559,7 +1561,7 @@ void handle_devices() {
 
     addFormSeparator(reply);
 
-    reply += F("<TR><TD><TD><a class=\"button-link\" href=\"devices?setpage=");
+    reply += F("<TR><TD><TD><a class='button link' href=\"devices?setpage=");
     reply += page;
     reply += F("\">Close</a>");
     addSubmitButton(reply);
@@ -1869,7 +1871,7 @@ void addSelector(String& str, const String& id, int optionCount, const String op
   str += id;
   str += F("'");
   if (reloadonchange)
-    str += F(" LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\"");
+    str += F(" onchange=\"return dept_onchange(frmselect)\"");
   str += F(">");
   for (byte x = 0; x < optionCount; x++)
   {
@@ -1877,10 +1879,8 @@ void addSelector(String& str, const String& id, int optionCount, const String op
       index = indices[x];
     else
       index = x;
-    //JK str += F("<option value='");
-    str += F("<EM value=");
+    str += F("<option value=");
     str += index;
-    //JK str += "'";
     if (selectedIndex == index)
       str += F(" selected");
     if (attr)
@@ -1890,7 +1890,7 @@ void addSelector(String& str, const String& id, int optionCount, const String op
     }
     str += ">";
     str += options[x];
-    str += F("</EM>");
+    str += F("</option>");
   }
   str += F("</select>");
 }
@@ -1902,16 +1902,14 @@ void addSelector_Head(String& str, const String& id, boolean reloadonchange)
   str += id;
   str += F("'");
   if (reloadonchange)
-    str += F(" LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\"");
+    str += F(" onchange=\"return dept_onchange(frmselect)\"");
   str += F(">");
 }
 
 void addSelector_Item(String& str, const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
-  //JK str += F("<option value='");
-  str += F("<EM value=");
+  str += F("<option value=");
   str += index;
-  //JK str += "'";
   if (selected)
     str += F(" selected");
   if (disabled)
@@ -1923,7 +1921,7 @@ void addSelector_Item(String& str, const String& option, int index, boolean sele
   }
   str += ">";
   str += option;
-  str += F("</EM>");
+  str += F("</option>");
 }
 
 
@@ -1950,7 +1948,7 @@ void addRowLabel(String& str, const String& label)
 
 void addButton(String& str, const String &url, const String &label)
 {
-  str += F("<a class=\"button-link\" href=");
+  str += F("<a class='button link' href=");
   str += url;
   str += F(">");
   str += label;
@@ -1959,7 +1957,7 @@ void addButton(String& str, const String &url, const String &label)
 
 void addSubmitButton(String& str)
 {
-  str += F("<input class=\"button-link\" type='submit' value='Submit'>");
+  str += F("<input class='button link' type='submit' value='Submit'>");
 }
 
 //********************************************************************************
@@ -2136,7 +2134,7 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(String& str, const String& url)
 {
-  str += F(" <a class=\"button-help\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += F(" <a class=\"button help\" href=\"http://www.letscontrolit.com/wiki/index.php/");
   str += url;
   str += F("\" target=\"_blank\">&#10068;</a>");
 }
@@ -2161,7 +2159,7 @@ void addTaskSelect(String& str, String name,  int choice)
 
   str += F("<select name='");
   str += name;
-  str += F("' LANGUAGE=javascript onchange=\"return dept_onchange(frmselect)\">");
+  str += F("' onchange=\"return dept_onchange(frmselect)\">");
 
   for (byte x = 0; x < TASKS_MAX; x++)
   {
@@ -2251,7 +2249,7 @@ void handle_log() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<script language='JavaScript'>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
+  reply += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
   reply += F("<table><TH>Log<TR><TD>");
 
   if (logcount != -1)
@@ -2599,7 +2597,7 @@ void handle_login() {
     {
       WebLoggedIn = true;
       WebLoggedInTimer = 0;
-      reply = F("<script language='JavaScript'>window.location = '.'</script>");
+      reply = F("<script>window.location = '.'</script>");
     }
     else
     {
@@ -2930,7 +2928,7 @@ void handle_upload() {
   addHeader(true, reply);
 
   navMenuIndex = 7;
-  reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class=\"button-link\" type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  reply += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
   printWebString = "";
@@ -3116,7 +3114,7 @@ void handle_filelist() {
     reply += F("<TR><TD>");
     if (dir.fileName() != "config.dat" && dir.fileName() != "security.dat" && dir.fileName() != "notification.dat")
     {
-      reply += F("<a class=\"button-link\" href=\"filelist?delete=");
+      reply += F("<a class='button link' href=\"filelist?delete=");
       reply += dir.fileName();
       reply += F("\">Del</a>");
     }
@@ -3131,7 +3129,7 @@ void handle_filelist() {
     reply += f.size();
   }
   reply += F("</table></form>");
-  reply += F("<BR><a class=\"button-link\" href=\"/upload\">Upload</a>");
+  reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
 }
@@ -3164,7 +3162,7 @@ void handle_SDfilelist() {
       reply += F("<TR><TD>");
       if (entry.name() != "config.dat" && entry.name() != "security.dat")
       {
-        reply += F("<a class=\"button-link\" href=\"SDfilelist?delete=");
+        reply += F("<a class='button link' href=\"SDfilelist?delete=");
         reply += entry.name();
         reply += F("\">Del</a>");
       }
@@ -3182,7 +3180,7 @@ void handle_SDfilelist() {
   //entry.close();
   root.close();
   reply += F("</table></form>");
-  //reply += F("<BR><a class=\"button-link\" href=\"/upload\">Upload</a>");
+  //reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
 }
@@ -3233,7 +3231,7 @@ void handle_setup() {
     reply += F("<BR>ESP is connected and using IP Address: ");
     reply += host;
     reply += F("<BR><BR>Connect your laptop / tablet / phone back to your main Wifi network and ");
-    reply += F("<a class=\"button-menu\" href='http://");
+    reply += F("<a class='button' href='http://");
     reply += host;
     reply += F("/config'>Proceed to main config</a>");
     addFooter(reply);
@@ -3308,7 +3306,7 @@ void handle_setup() {
       status = 0;
       strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
       SecuritySettings.WifiKey[0] = 0;
-      reply += F("<a class=\"button-menu\" href=\"setup\">Back to Setup</a>");
+      reply += F("<a class=\"button\" href=\"setup\">Back to Setup</a>");
     }
     else
     {
