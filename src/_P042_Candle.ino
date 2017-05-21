@@ -696,7 +696,7 @@ void RGBtoHSV(byte r, byte g, byte b, double hsv[3]) {
     double minval = rd;
     if (gd < minval) { minval = gd; }
     if (bd < minval) { minval = bd; }
-    double h, s, v = maxval;
+    double h = 0, s, v = maxval;
     double d = maxval - minval;
 
     s = maxval == 0 ? 0 : d / maxval;
