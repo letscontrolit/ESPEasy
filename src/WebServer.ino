@@ -123,7 +123,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{content}}"
         "<BR><h6>Powered by www.letscontrolit.com</h6>"
       "</body>"
-
     );
   }
 }
@@ -134,7 +133,7 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
   int indexStart, indexEnd;
   String varName, varValue;
 
-  String log = F("HTML : [processWebPageTemplate] emplate-Size=");
+  String log = F("HTML : [processWebPageTemplate] Template-Size=");
   log += pageTemplate.length();
   log += F(" Content-Size=");
   log += pageContent.length();
@@ -181,7 +180,7 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
 
   log += F(" Result-Size=");
   log += pageResult.length();
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
 }
 
 
@@ -280,9 +279,9 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
   else if (varName == F("js"))
   {
     varValue += F(
-      "<script><!-- "
-      "function dept_onchange(frmselect) {frmselect.submit();} "
-      "//--></script>");
+      "<script><!--\n"
+      "function dept_onchange(frmselect) {frmselect.submit();}"
+      "\n//--></script>");
   }
 
   else if (varName == F("error"))
@@ -414,7 +413,7 @@ void handle_root() {
       if (Nodes[x].ip[0] != 0)
       {
         char url[80];
-        sprintf_P(url, PSTR("<a href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+        sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
         reply += F("<TR><TD>Unit ");
         reply += x;
         reply += F("<TD>");
