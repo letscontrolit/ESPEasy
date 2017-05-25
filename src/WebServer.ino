@@ -271,6 +271,8 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
           ".div_br {clear:both;}"
           ".note {color:#444; font-style:italic}"
           ".active {text-decoration:underline;}"
+          ".on {color:green;}"
+          ".off {color:red;}"
         "</style>"
         );
     }
@@ -2039,17 +2041,18 @@ void addNumericBox(String& str, const String& id, int value, int min, int max)
 {
   str += F("<input type='number' name='");
   str += id;
+  str += F("'");
   if (min != INT_MIN)
   {
-		str += F("' min='");
+		str += F(" min=");
 		str += min;
   }
   if (max != INT_MAX)
   {
-    str += F("' max='");
+    str += F(" max=");
     str += max;
   }
-  str += F("' style='width:5em;' value=");
+  str += F(" style='width:5em;' value=");
   str += value;
   str += F(">");
 }
@@ -2076,9 +2079,9 @@ void addTextBox(String& str, const String& id, const String&  value, int maxleng
 {
   str += F("<input type='text' name='");
   str += id;
-  str += F("' maxlength='");
+  str += F("' maxlength=");
   str += maxlength;
-  str += F("' value='");
+  str += F(" value='");
   str += value;
   str += F("'>");
 }
@@ -2095,9 +2098,9 @@ void addFormPasswordBox(String& str, const String& label, const String& id, cons
   addRowLabel(str, label);
   str += F("<input type='password' name='");
   str += id;
-  str += F("' maxlength='");
+  str += F("' maxlength=");
   str += maxlength;
-  str += F("' value='");
+  str += F(" value='");
   if (password != F(""))   //no password?
     str += F("*****");
   //str += password;   //password will not published over HTTP
@@ -2140,9 +2143,9 @@ void addHelpButton(String& str, const String& url)
 void addEnabled(String& str, boolean enabled)
 {
   if (enabled)
-    str += F("<span class='enabled on' style='color:green'>&#10004;</span>");
+    str += F("<span class='enabled on'>&#10004;</span>");
   else
-    str += F("<span class='enabled off' style='color:red'>&#10008;</span>");
+    str += F("<span class='enabled off'>&#10008;</span>");
 }
 
 
