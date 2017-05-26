@@ -118,7 +118,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "</head>"
       "<body>"
         "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
-        "<p>{{menu}}</p>"
+        "<br/>{{menu}}<br/>"
         "{{error}}"
         "{{content}}"
         "<BR><h6>Powered by www.letscontrolit.com</h6>"
@@ -253,7 +253,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
         "<style>"
           "* {font-family:sans-serif; font-size:12pt;}"
           "h1 {font-size:16pt; color:black; margin:8px 0 0 0; font-weight:bold;}"
-          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:8px; background-color:black; color:#FFF; font-weight:bold;}"
+          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:black; color:#FFF; font-weight:bold;}"
           "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
           "h6 {font-size:10pt; color:black; text-align:center;}"
           ".menu {background-color:#FFF; color:blue; margin:8px; text-decoration:none}"
@@ -262,15 +262,17 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
           ".button.help {padding:2px 4px; border-radius:50%}"
           ".menu:hover {background:#DDF;}"
           ".button:hover {background:#369;}"
-          "th {padding:8px; background-color:black; color:#FFF; font-weight:bold;}"
+          "th {padding:6px; background-color:black; color:#FFF; font-weight:bold;}"
           "td {padding:4px;}"
-          "tr {padding:8px;}"
+          "tr {padding:4px;}"
           "table {color:black;}"
           ".div_l {float:left;}"
           ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:7px; background-color:#080; color:#FFF;}"
           ".div_br {clear:both;}"
           ".note {color:#444; font-style:italic}"
           ".active {text-decoration:underline;}"
+          ".on {color:green;}"
+          ".off {color:red;}"
         "</style>"
         );
     }
@@ -354,7 +356,7 @@ void handle_root() {
 
     reply += printWebString;
     reply += F("<form>");
-    reply += F("<table><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
+    reply += F("<table><TR><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
 
     reply += F("<TR><TD>Unit:<TD>");
     reply += Settings.Unit;
@@ -667,11 +669,11 @@ void handle_controllers() {
       reply += F("<span style=\"color:red\">Error saving to flash!</span>");
   }
 
-  reply += F("<form name='frmselect' method='post'><table>");
+  reply += F("<form name='frmselect' method='post'>");
 
   if (index == 0)
   {
-    reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
+    reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
     reply += F("<TH>Nr<TH>Enabled<TH>Protocol<TH>IP<TH>Port");
 
     ControllerSettingsStruct ControllerSettings;
@@ -705,11 +707,11 @@ void handle_controllers() {
       else
         reply += F("<TD><TD><TD>");
     }
-    reply += F("</table>");
+    reply += F("</table></form>");
   }
   else
   {
-    reply += F("<TH>Controller Settings<TH>");
+    reply += F("<table><TR><TH>Controller Settings<TH>");
     reply += F("<TR><TD>Protocol:");
     byte choice = Settings.Protocol[index - 1];
     reply += F("<TD>");
@@ -861,11 +863,11 @@ void handle_notifications() {
       reply += F("<span style=\"color:red\">Error saving to flash!</span>");
   }
 
-  reply += F("<form name='frmselect' method='post'><table>");
+  reply += F("<form name='frmselect' method='post'>");
 
   if (index == 0)
   {
-    reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
+    reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
     reply += F("<TH>Nr<TH>Enabled<TH>Service<TH>Server<TH>Port");
 
     NotificationSettingsStruct NotificationSettings;
@@ -896,11 +898,11 @@ void handle_notifications() {
       else
         reply += F("<TD><TD><TD>");
     }
-    reply += F("</table>");
+    reply += F("</table></form>");
   }
   else
   {
-    reply += F("<TH>Notification Settings<TH>");
+    reply += F("<table><TR><TH>Notification Settings<TH>");
     reply += F("<TR><TD>Notification:");
     byte choice = Settings.Notification[index - 1];
     reply += F("<TD>");
@@ -1024,7 +1026,7 @@ void handle_hardware() {
       reply += F("<span style=\"color:red\">Error saving to flash!</span>");
   }
 
-  reply += F("<form  method='post'><table><TH>Hardware Settings<TH><TR><TD>");
+  reply += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
   addFormSubHeader(reply, F("Wifi Status LED"));
 
   addFormPinSelect(reply, F("Pin LED"), "pled", Settings.Pin_status_led);
@@ -1263,19 +1265,19 @@ void handle_devices() {
   // show all tasks as table
   if (index == 0)
   {
-    reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>");
+    reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
     reply += F("<a class='button link' href=\"devices?setpage=");
     if (page > 1)
       reply += page - 1;
     else
       reply += page;
-    reply += F("\"><</a>");
+    reply += F("\">&lt;</a>");
     reply += F("<a class='button link' href=\"devices?setpage=");
     if (page < (TASKS_MAX / 4))
       reply += page + 1;
     else
       reply += page;
-    reply += F("\">></a>");
+    reply += F("\">&gt;</a>");
 
     reply += F("<TH>Task<TH>Enabled<TH>Device<TH>Name<TH>Port<TH>Ctr (IDX)<TH>GPIO<TH>Values");
 
@@ -1410,7 +1412,7 @@ void handle_devices() {
         reply += F("<TD><TD><TD><TD><TD><TD>");
 
     } // next
-    reply += F("</table>");
+    reply += F("</table></form>");
   }
   // Show edit form if a specific entry is chosen with the edit button
   else
@@ -1947,9 +1949,9 @@ void addRowLabel(String& str, const String& label)
 
 void addButton(String& str, const String &url, const String &label)
 {
-  str += F("<a class='button link' href=");
+  str += F("<a class='button link' href='");
   str += url;
-  str += F(">");
+  str += F("'>");
   str += label;
   str += F("</a>");
 }
@@ -2039,17 +2041,18 @@ void addNumericBox(String& str, const String& id, int value, int min, int max)
 {
   str += F("<input type='number' name='");
   str += id;
+  str += F("'");
   if (min != INT_MIN)
   {
-		str += F("' min='");
+		str += F(" min=");
 		str += min;
   }
   if (max != INT_MAX)
   {
-    str += F("' max='");
+    str += F(" max=");
     str += max;
   }
-  str += F("' style='width:5em;' value=");
+  str += F(" style='width:5em;' value=");
   str += value;
   str += F(">");
 }
@@ -2076,9 +2079,9 @@ void addTextBox(String& str, const String& id, const String&  value, int maxleng
 {
   str += F("<input type='text' name='");
   str += id;
-  str += F("' maxlength='");
+  str += F("' maxlength=");
   str += maxlength;
-  str += F("' value='");
+  str += F(" value='");
   str += value;
   str += F("'>");
 }
@@ -2095,9 +2098,9 @@ void addFormPasswordBox(String& str, const String& label, const String& id, cons
   addRowLabel(str, label);
   str += F("<input type='password' name='");
   str += id;
-  str += F("' maxlength='");
+  str += F("' maxlength=");
   str += maxlength;
-  str += F("' value='");
+  str += F(" value='");
   if (password != F(""))   //no password?
     str += F("*****");
   //str += password;   //password will not published over HTTP
@@ -2140,9 +2143,9 @@ void addHelpButton(String& str, const String& url)
 void addEnabled(String& str, boolean enabled)
 {
   if (enabled)
-    str += F("<span class='enabled on' style='color:green'>&#10004;</span>");
+    str += F("<span class='enabled on'>&#10004;</span>");
   else
-    str += F("<span class='enabled off' style='color:red'>&#10008;</span>");
+    str += F("<span class='enabled off'>&#10008;</span>");
 }
 
 
@@ -2247,7 +2250,7 @@ void handle_log() {
   String reply = "";
   addHeader(true, reply);
   reply += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  reply += F("<table><TH>Log<TR><TD>");
+  reply += F("<table><TR><TH>Log<TR><TD>");
 
   if (logcount != -1)
   {
@@ -2422,7 +2425,7 @@ void handle_i2cscanner() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
+  reply += F("<table border=1px frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
 
   byte error, address;
   int nDevices;
@@ -2543,7 +2546,7 @@ void handle_wifiscanner() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table><TH>Access Points:<TH>RSSI");
+  reply += F("<table><TR><TH>Access Points:<TH>RSSI");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -3103,7 +3106,7 @@ void handle_filelist() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH><TH>Filename:<TH>Size");
+  reply += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
 
   fs::Dir dir = SPIFFS.openDir("");
   while (dir.next())
@@ -3147,7 +3150,7 @@ void handle_SDfilelist() {
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table cellpadding='4' border='1' frame='box' rules='all'><TH><TH>Filename:<TH>Size");
+  reply += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
 
   File root = SD.open("/");
   root.rewindDirectory();
@@ -3403,7 +3406,7 @@ void handle_rules() {
   if (rulesSet != currentSet)
     currentSet = rulesSet;
 
-  reply += F("<form name = 'frmselect' method = 'post'><table><TH>Rules");
+  reply += F("<form name = 'frmselect' method = 'post'><table><TR><TH>Rules");
 
   byte choice = rulesSet;
   String options[RULESETS_MAX];
@@ -3473,7 +3476,7 @@ void handle_sysinfo() {
 
   reply += printWebString;
   reply += F("<form>");
-  reply += F("<table><TH>System Info<TH>");
+  reply += F("<table><TR><TH>System Info<TH>");
 
   reply += F("<TR><TD>Unit:<TD>");
   reply += Settings.Unit;
