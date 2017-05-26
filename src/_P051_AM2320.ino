@@ -70,35 +70,32 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-      	AM2320 sensor;
-      	sensor.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+      	AM2320 th;
 
-        // sensor.measure() returns boolean value
-        // - true indicates measurement is completed and success
-        // - false indicates that either sensor is not ready or crc validation failed
-        //   use getErrorCode() to check for cause of error.
-        if (sensor.measure()) {
-        	UserVar[event->BaseVarIndex] = sensor.getTemperature();
-        	UserVar[event->BaseVarIndex + 1] = sensor.getHumidity();
+//      	sensor.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
-        	String log = F("AM2320: Temperature: ");
-        	log += UserVar[event->BaseVarIndex];
-        	addLog(LOG_LEVEL_INFO, log);
-        	log = F("AM2320: Humidity: ");
-        	log += UserVar[event->BaseVarIndex + 1];
-        	addLog(LOG_LEVEL_INFO, log);
-        	success = true;
-        	break;
+        switch(th.Read()) {
+          case 2:
+          	addLog(LOG_LEVEL_ERROR, F("AM2320: CRC failed"));
+            break;
+          case 1:
+          	addLog(LOG_LEVEL_ERROR, F("AM2320: Sensor offline"));
+            break;
+          case 0:
+          	UserVar[event->BaseVarIndex] = th.t;
+          	UserVar[event->BaseVarIndex + 1] = th.h;
+
+          	String log = F("AM2320: Temperature: ");
+          	log += UserVar[event->BaseVarIndex];
+          	addLog(LOG_LEVEL_INFO, log);
+          	log = F("AM2320: Humidity: ");
+          	log += UserVar[event->BaseVarIndex + 1];
+          	addLog(LOG_LEVEL_INFO, log);
+            success = true;
+            break;
         }
-        else {  // error has occured
-          int errorCode = sensor.getErrorCode();
-          switch (errorCode) {
-            case 1: addLog(LOG_LEVEL_ERROR, F("AM2320: Sensor is offline")); break;
-            case 2: addLog(LOG_LEVEL_ERROR, F("AM2320: CRC validation failed.")); break;
-          }
-          success = false;
-          break;
-        }
+
+
       }
   }
   return success;
