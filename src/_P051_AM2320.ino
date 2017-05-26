@@ -4,8 +4,9 @@
 //
 // Temperature and Humidity Sensor AM2320
 // written by https://github.com/krikk
-// based on this library: https://github.com/hibikiledo/AM2320
-// this code is based on version 1.0 of the above library
+// based on this library: https://github.com/thakshak/AM2320
+// this code is based on git-version https://github.com/thakshak/AM2320/commit/ddaabaf37952d4c74f3ea70af20e5a95cfdfcadb
+// of the above library
 //
 
 #ifdef PLUGIN_BUILD_TESTING
@@ -71,8 +72,6 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
       	AM2320 th;
-
-//      	sensor.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
         switch(th.Read()) {
           case 2:
