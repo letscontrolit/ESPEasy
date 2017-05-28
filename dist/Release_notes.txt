@@ -1,4 +1,101 @@
 -----------------------------
+Changes in release v2.0.0-dev9
+-----------------------------
+
+Release date: Sun May 28 15:16:00 CEST 2017
+
+Alex Schwantes (1):
+      Implemented use of addFormSelector methods to _P004_Dallas plugin.     Changed the device select box to show the one wire address for each connected sensor instead of just a number.     Added a blank option to the device address select box so that in the event that multiple devices are present and the configured device is not currently available, the select box will be blank instead of selecting a different device.
+
+Bartlomiej Zimon (5):
+      - Misc: typo
+      Custom Controller Settings - add controller index
+      Push ProtocolIndex and ControllerIndex into CPLUGIN_WEBFORM_SAVE/LOAD
+      Add WifiSSID2,WifiKey2 commands
+      Add backup Wifi network to Settings command
+
+Blair Thompson (1):
+      Added Par4 and Par5 Variables (#248)
+
+Daniel Tedenljung (5):
+      Updated wrong plugin number. (#269)
+      P052: More descriptive  log messages (#283)
+      GUI touchup on Tools (#286)
+      addSubmitButton function added (#289)
+      New look on Tools page (#296)
+
+DatuX (5):
+      Update README.md
+      Update issue_template.md
+      Update CONTRIBUTING.md
+      Update README.md
+      Update README.md
+
+Edwin Eefting (17):
+      cleaned up messagedelay: use the same function everywhere. and do serial processing as well during the messagedelay
+      fixed issue #253 (memory leaks/crashes)
+      more details in memory analyser. run memory analyser via Travis
+      cosmetic buildlog fix
+      publish MQTT Connected message
+      timer boundschecker was off by one. fixed memanalyser total
+      input box fix on setting pages
+      comments. checkudp only in backgroundtasks()
+      reboot and wifidisconnect should be handled by /
+      bugfix in rtc checksum
+      nicer sleep messages
+      fixed a few out of bounds bugs in Misc.ino _P023_OLED.ino _P035_IRTX.ino _P037_MQTTImport.ino with cppcheck. also added cppcheck to travis to prevent such cases in the future
+      fixing cpp check
+      fixing cpp check
+      fixing cpp check
+      fixing cpp check
+      also distribute ESP8285 binaries
+
+JK (5):
+      added functions addCheckBox and addNumericBox
+      added checkbox for status LED inversed
+      fine tuning of status LED and pimp hardware web site
+      solved my commit mismatch
+      Fixed #196 and rework of IDX display
+
+Jochen Krapf (11):
+      Added addForm*-functions for easy web-interface and pimp GUI (#259)
+      Added function addFormSelector (#270)
+      Preliminary final draft of bugfix #264 (#271)
+      Replaced HTML code with addFormSelector() in all plugins (#278)
+      Fixed readUserVarFromRTC() #265 (#280)
+      Limits to NumericBox and a bit of security to PasswordBox (#281)
+      Added HTML templates for customization (#290)
+      Fixed rules bug #297 (#299)
+      Pimp device-GUI and optimized HTML (#306)
+      Fixed some minor HTML syntax bugs (#310)
+      Rework of plugin ADS1115 (#315)
+
+PieVo (1):
+      Plantower (#300)
+
+beic (1):
+      Some little description corrections (#297)
+
+krikk (13):
+      http advanced controller, correct passing of hostname (#250)
+      i2c Temperatur & Humidity Sensor Am2320 (#251)
+      use the new addCheckBox function and better display of device config page
+      another fix to http advanced...
+      replaced static html code with the new addForm* Functions
+      bug fix wrong return type + form function fixes (#266)
+      addFormNumeric with min and max & More Form-Function replacements (#272)
+      make the Settings - Save. Filename more descriptive... (#273)
+      addHelpButton Function and a new Help Button for the Rules and Hardware Page (#282)
+      DHT plugin fix 'NaN' issue (#285)
+      i don't like hidden features, added a json button to the tools menu, next to the advanced button (#292)
+      do a dns lookup on every request, solves issue #261 (#302)
+      AM2320: negative temperature fix... (#312)
+
+tedenda (1):
+      Moving plugin from Playground into main repo. (#262)
+
+
+-----------------------------
 Changes in release v2.0.0-dev8
 -----------------------------
 
