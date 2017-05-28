@@ -28,7 +28,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_025;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-        Device[deviceCount].Ports = 4;
+        Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
@@ -53,24 +53,59 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        #define ADS1115_GAIN_OPTION 6
+        byte port = Settings.TaskDevicePort[event->TaskIndex];
+        if (port > 0)   //map old port logic to new gain and mode settings
+        {
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = Settings.TaskDevicePluginConfig[event->TaskIndex][0] / 2;
+          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = 0x48 + ((port-1)/4);
+          Settings.TaskDevicePluginConfig[event->TaskIndex][2] = ((port-1) & 3) | 4;
+          Settings.TaskDevicePort[event->TaskIndex] = 0;
+        }
 
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[ADS1115_GAIN_OPTION];
-        int optionValues[ADS1115_GAIN_OPTION];
-        optionValues[0] = (0x00);
-        options[0] = F("2/3x gain 6.144V 0.1875mV");
-        optionValues[1] = (0x02);
-        options[1] = F("1x gain 4.096V 0.125mV");
-        optionValues[2] = (0x04);
-        options[2] = F("2x gain 2.048V 0.0625mV");
-        optionValues[3] = (0x06);
-        options[3] = F("4x gain 1.024V 0.03125mV");
-        optionValues[4] = (0x08);
-        options[4] = F("8x gain 0.512V 0.015625mV");
-        optionValues[5] = (0x0A);
-        options[5] = F("16x gain 0.256V 0.0078125mV");
-        addFormSelector(string, F("Gain"), F("plugin_025_gain"), ADS1115_GAIN_OPTION, options, optionValues, choice);
+        #define ADS1115_I2C_OPTION 4
+        byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
+        addFormSelectorI2C(string, F("plugin_025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+
+        addFormSubHeader(string, F("Input"));
+
+        #define ADS1115_PGA_OPTION 6
+        byte pga = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        String pgaOptions[ADS1115_PGA_OPTION] = {
+          F("2/3x gain (FS=6.144V)"),
+          F("1x gain (FS=4.096V)"),
+          F("2x gain (FS=2.048V)"),
+          F("4x gain (FS=1.024V)"),
+          F("8x gain (FS=0.512V)"),
+          F("16x gain (FS=0.256V)")
+        };
+        addFormSelector(string, F("Gain"), F("plugin_025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
+
+        #define ADS1115_MUX_OPTION 8
+        byte mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        String muxOptions[ADS1115_MUX_OPTION] = {
+          F("AIN0 - AIN1 (Differential)"),
+          F("AIN0 - AIN3 (Differential)"),
+          F("AIN1 - AIN3 (Differential)"),
+          F("AIN2 - AIN3 (Differential)"),
+          F("AIN0 - GND (Single-Ended)"),
+          F("AIN1 - GND (Single-Ended)"),
+          F("AIN2 - GND (Single-Ended)"),
+          F("AIN3 - GND (Single-Ended)"),
+        };
+        addFormSelector(string, F("Input Multiplexer"), F("plugin_025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
+
+        addFormSubHeader(string, F("Two Point Calibration"));
+
+        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+
+        addFormNumericBox(string, F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
+        string += F(" &#8793; ");
+        addTextBox(string, F("plugin_025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+
+        addFormNumericBox(string, F("Point 2"), F("plugin_025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        string += F(" &#8793; ");
+        addTextBox(string, F("plugin_025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -78,7 +113,20 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_025_gain"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_025_i2c"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_025_gain"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_025_mode"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_025_cal"));
+
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("plugin_025_adc1"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_025_out1"));
+
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("plugin_025_adc2"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("plugin_025_out2"));
+
         Plugin_025_init = false; // Force device setup next time
         success = true;
         break;
@@ -93,76 +141,57 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        uint8_t m_gain = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        int value;
-        value = 0;
-        byte unit = (Settings.TaskDevicePort[event->TaskIndex] - 1) / 4;
-        byte port = Settings.TaskDevicePort[event->TaskIndex] - (unit * 4);
-        uint8_t address = 0x48 + unit;
-        // get the current pin value
+        //int value = 0;
+        //byte unit = (Settings.TaskDevicePort[event->TaskIndex] - 1) / 4;
+        //byte port = Settings.TaskDevicePort[event->TaskIndex] - (unit * 4);
+        //uint8_t address = 0x48 + unit;
 
- uint16_t config = (0x0003)    |  // Disable the comparator (default val)
-                   (0x0000)    |  // Non-latching (default val)
-                   (0x0000)    |  // Alert/Rdy active low   (default val)
-                   (0x0000)    |  // Traditional comparator (default val)
-                   (0x0080)    |  // 1600 samples per second (default)
-                   (0x0100) ;      // Single-shot mode (default)
+        uint8_t address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
-  // m_Gain = (0x0000);  // 2/3x gain +/- 6.144V  1 bit = 3mV      0.1875mV (default)
-  // m_Gain = (0x0200);        // 1x gain   +/- 4.096V  1 bit = 2mV      0.125mV
-  // m_Gain = (0x0400);        // 2x gain   +/- 2.048V  1 bit = 1mV      0.0625mV
-  // m_Gain = (0x0600);       // 4x gain   +/- 1.024V  1 bit = 0.5mV    0.03125mV
-  // m_Gain = (0x0800);      // 8x gain   +/- 0.512V  1 bit = 0.25mV   0.015625mV
-  // m_Gain = (0x0A00);    // 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
-  //      config |= m_gain;
-  //      config |= (0x0000);
-        switch (m_gain)
-        {
-        case (0x00):
-          config |= (0x0000);
-          break;
-        case (0x02):
-          config |= (0x0200);
-          break;
-        case (0x04):
-          config |= (0x0400);
-          break;
-        case (0x06):
-          config |= (0x0600);
-          break;
-        case (0x08):
-          config |= (0x0800);
-          break;
-        case (0x0A):
-          config |= (0x0A00);
-          break;
-        }
-        switch (port)
-        {
-        case (1):
-          config |= (0x4000);
-          break;
-        case (2):
-          config |= (0x5000);
-          break;
-        case (3):
-          config |= (0x6000);
-          break;
-        case (4):
-          config |= (0x7000);
-          break;
-        }
-        config |= (0x8000);
+        uint16_t config = (0x0003)    |  // Disable the comparator (default val)
+                          (0x0000)    |  // Non-latching (default val)
+                          (0x0000)    |  // Alert/Rdy active low   (default val)
+                          (0x0000)    |  // Traditional comparator (default val)
+                          (0x0080)    |  // 128 samples per second (default)
+                          (0x0100);      // Single-shot mode (default)
+
+        uint16_t pga = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        config |= pga << 9;
+
+        uint16_t mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        config |= mux << 12;
+
+        config |= (0x8000);   // Start a single conversion
+
         Wire.beginTransmission(address);
         Wire.write((uint8_t)(0x01));
-        Wire.write((uint8_t)(config>>8));
+        Wire.write((uint8_t)(config >> 8));
         Wire.write((uint8_t)(config & 0xFF));
         Wire.endTransmission();
+
         delay(8);
-        UserVar[event->BaseVarIndex] = (float) readRegister025((address), (0x00)) ;
-        String log = F("ADS1115  : Analog value: ");
+        int16_t value = readRegister025((address), (0x00));
+        UserVar[event->BaseVarIndex] = (float)value;
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])   //Calibration?
+        {
+          int adc1 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0];
+          int adc2 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][1];
+          float out1 = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
+          float out2 = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
+          if (adc1 != adc2)
+          {
+            float normalized = (float)(value - adc1) / (float)(adc2 - adc1);
+            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+          }
+        }
+
+        String log = F("ADS1115 : Analog value: ");
+        log += value;
+        log += F(" ");
         log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO,log);
+        log += F(" @0x");
+        log += String(config, 16);
+        addLog(LOG_LEVEL_DEBUG,log);
         success = true;
         break;
       }
