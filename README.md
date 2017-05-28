@@ -23,19 +23,19 @@ Binary development releases are here: https://github.com/letscontrolit/ESPEasy/r
 
 Depending on your needs, we release different types of files.
 
-For version 2.0.0-dev8:
+For version 2.0.0-dev9 and higer:
 
 Firmware name                        | Hardware                | Included plugins            |
 -------------------------------------|-------------------------|-----------------------------|
-ESPEasy_v2.0.0-dev8_dev_1024.bin     | ESP8266 with 1Mb flash  | Stable + Test + Development |
-ESPEasy_v2.0.0-dev8_test_1024.bin    | ESP8266 with 1Mb flash  | Stable + Test               |
-ESPEasy_v2.0.0-dev8_normal_1024.bin  | ESP8266 with 1Mb flash  | Stable                      |
-ESPEasy_v2.0.0-dev8_dev_4096.bin     | ESP8266 with 4Mb flash  | Stable + Test + Development |
-ESPEasy_v2.0.0-dev8_test_4096.bin    | ESP8266 with 4Mb flash  | Stable + Test               |
-ESPEasy_v2.0.0-dev8_normal_4096.bin  | ESP8266 with 4Mb flash  | Stable                      |
-ESPEasy_v2.0.0-dev8_dev_8285.bin     | ESP8285                 | Stable + Test + Development |
-ESPEasy_v2.0.0-dev8_test_8285.bin    | ESP8285                 | Stable + Test               |
-ESPEasy_v2.0.0-dev8_normal_8285.bin  | ESP8285                 | Stable                      |
+ESPEasy_v2.0.0-dev9_dev_1024.bin     | ESP8266 with 1Mb flash  | Stable + Test + Development |
+ESPEasy_v2.0.0-dev9_test_1024.bin    | ESP8266 with 1Mb flash  | Stable + Test               |
+ESPEasy_v2.0.0-dev9_normal_1024.bin  | ESP8266 with 1Mb flash  | Stable                      |
+ESPEasy_v2.0.0-dev9_dev_4096.bin     | ESP8266 with 4Mb flash  | Stable + Test + Development |
+ESPEasy_v2.0.0-dev9_test_4096.bin    | ESP8266 with 4Mb flash  | Stable + Test               |
+ESPEasy_v2.0.0-dev9_normal_4096.bin  | ESP8266 with 4Mb flash  | Stable                      |
+ESPEasy_v2.0.0-dev9_dev_8285.bin     | ESP8285                 | Stable + Test + Development |
+ESPEasy_v2.0.0-dev9_test_8285.bin    | ESP8285                 | Stable + Test               |
+ESPEasy_v2.0.0-dev9_normal_8285.bin  | ESP8285                 | Stable                      |
 
 ## More info
 
