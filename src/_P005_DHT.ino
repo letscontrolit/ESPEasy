@@ -79,8 +79,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         // DHT start condition, pull-down i/o pin for 18ms
         digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
         delay(18);
-        // disabled to fix issue described here: https://github.com/adafruit/DHT-sensor-library/issues/48
-        //digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
+        digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
         delayMicroseconds(20); // was 40
         pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
         delayMicroseconds(10);
