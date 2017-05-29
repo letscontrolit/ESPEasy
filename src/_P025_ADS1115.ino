@@ -13,7 +13,8 @@ static uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
   Wire.beginTransmission(i2cAddress);
   Wire.write((0x00));
   Wire.endTransmission();
-  Wire.requestFrom(i2cAddress, (uint8_t)2);
+  if (Wire.requestFrom(i2cAddress, (uint8_t)2) != 2)
+    return 0x8000;
   return ((Wire.read() << 8) | Wire.read());
 }
 
@@ -99,11 +100,11 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(string, F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(string, F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
+        addFormNumericBox(string, F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
         string += F(" &#8793; ");
         addTextBox(string, F("plugin_025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(string, F("Point 2"), F("plugin_025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        addFormNumericBox(string, F("Point 2"), F("plugin_025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], -32768, 32767);
         string += F(" &#8793; ");
         addTextBox(string, F("plugin_025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
@@ -169,9 +170,13 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         Wire.write((uint8_t)(config & 0xFF));
         Wire.endTransmission();
 
+        String log = F("ADS1115 : Analog value: ");
+
         delay(8);
         int16_t value = readRegister025((address), (0x00));
         UserVar[event->BaseVarIndex] = (float)value;
+        log += value;
+
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])   //Calibration?
         {
           int adc1 = Settings.TaskDevicePluginConfigLong[event->TaskIndex][0];
@@ -182,15 +187,14 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           {
             float normalized = (float)(value - adc1) / (float)(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+
+            log += F(" ");
+            log += UserVar[event->BaseVarIndex];
           }
         }
 
-        String log = F("ADS1115 : Analog value: ");
-        log += value;
-        log += F(" ");
-        log += UserVar[event->BaseVarIndex];
-        log += F(" @0x");
-        log += String(config, 16);
+        //TEST log += F(" @0x");
+        //TEST log += String(config, 16);
         addLog(LOG_LEVEL_DEBUG,log);
         success = true;
         break;
