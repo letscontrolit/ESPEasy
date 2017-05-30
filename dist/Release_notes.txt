@@ -1,4 +1,20 @@
 -----------------------------
+Changes in release v2.0.0-dev10
+-----------------------------
+
+Release date: Mon May 29 22:53:54 CEST 2017
+
+DatuX (1):
+      Update README.md
+
+Jochen Krapf (1):
+      Rework of plugin ADC (#319)
+
+krikk (1):
+      reverted change, this fix seems to have exactly opposite outcome than expected... with the fix applied i get errors, without is i get no errors... (#320)
+
+
+-----------------------------
 Changes in release v2.0.0-dev9
 -----------------------------
 
