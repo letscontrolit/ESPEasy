@@ -79,7 +79,7 @@ class CHT16K33 {
     Wire.write(0x40); // start data at address 0x40
     Wire.endTransmission();
 
-    Wire.requestFrom(_addr, 6);
+    Wire.requestFrom(_addr, (uint8_t)6);
     if (Wire.available() == 6)
     {
       for (byte i=0; i<3; i++)
@@ -192,10 +192,10 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
 
 
 
-        Settings.TaskDevicePin1[event->TaskIndex] = 2;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_148_DMXSize;
-        addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
-        addFormNumericBox(string, F("Channels"), F("channels"), Plugin_148_DMXSize, 1, 512);
+        //Settings.TaskDevicePin1[event->TaskIndex] = 2;
+        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_148_DMXSize;
+        //addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
+        //addFormNumericBox(string, F("Channels"), F("channels"), Plugin_148_DMXSize, 1, 512);
         success = true;
         break;
       }
@@ -204,7 +204,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("i2c_addr"));
 
-        Plugin_148_DMXSize = getFormItemInt(F("channels"));
+        //Plugin_148_DMXSize = getFormItemInt(F("channels"));
         //Limit (Plugin_148_DMXSize, 1, 512);
         //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_148_DMXSize;
         success = true;
@@ -232,20 +232,51 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
         string.toLowerCase();
         String command = parseString(string, 1);
 
-        if (command == F("num"))
+        if (command == F("mprint"))
         {
-          String number = parseString(string, 2);
+          int paramPos = getParamStartPos(string, 2);
+          String text = string.substring(paramPos);
           byte seg = 0;
 
           Plugin_148_M->Clear();
-          while (number[seg] && seg < 8)
+          while (text[seg] && seg < 8)
           {
-            int value = number[seg];
-            if (value >= 'A')
-              value -= 'A' - 10;
-            else
-              value -= '0';
-            value = digits[value & 0xF];
+            uint16_t value = 0;
+            char c = text[seg];
+            switch (c)
+            {
+              case 'a':
+              case 'b':
+              case 'c':
+              case 'd':
+              case 'e':
+              case 'f':
+                value = c + 10 - 'a';
+                value = digits[value & 0xF];
+                break;
+              case '0':
+              case '1':
+              case '2':
+              case '3':
+              case '4':
+              case '5':
+              case '6':
+              case '7':
+              case '8':
+              case '9':
+                value = c - '0';
+                value = digits[value & 0xF];
+                break;
+              case ' ':
+                value = 0;
+                break;
+              case ':':
+                value = 0x02;
+                break;
+              case '-':
+                value = 0x40;
+                break;
+            }
             Plugin_148_M->SetRow(seg, value);
             seg++;
           }
@@ -253,14 +284,14 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
-        else if (command == F("mx") || command == F("seg7"))
+        else if (command == F("m") || command == F("mx") || command == F("num"))
         {
           String param;
           String paramKey;
           String paramVal;
           byte paramIdx = 2;
-          int row = 0;
-          int value = 0;
+          uint8_t seg = 0;
+          uint16_t value = 0;
 
           string.replace("  ", " ");
           string.replace(" =", "=");
@@ -276,7 +307,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
               if (param == F("log"))
               {
                 String log = F("MX   : ");
-                for (int i = 0; i < 8; i++)
+                for (byte i = 0; i < 8; i++)
                 {
                   log += String(Plugin_148_M->GetRow(i), 16);
                   log += F("h, ");
@@ -287,7 +318,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
 
               else if (param == F("test"))
               {
-                for (int i = 0; i < 8; i++)
+                for (byte i = 0; i < 8; i++)
                   Plugin_148_M->SetRow(i, 1 << i);
                 success = true;
               }
@@ -301,31 +332,39 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
               else
               {
                 int index = param.indexOf('=');
-                if (index > 0)   //syntax: "<row>=<value>"
+                if (index > 0)   //syntax: "<seg>=<value>"
                 {
                   paramKey = param.substring(0, index);
                   paramVal = param.substring(index+1);
-                  row = paramKey.toInt();
+                  seg = paramKey.toInt();
                 }
                 else   //syntax: "<value>"
                 {
                   paramVal = param;
                 }
 
-                value = paramVal.toInt();
-
-                if (command == F("seg7"))
+                if (command == F("num"))
                 {
+                  value = paramVal.toInt();
                   if (value < 16)
                     value = digits[value & 0xF];
                   else
                     value = 0;
                 }
+                else if (command == F("mx"))
+                {
+                  char* ep;
+                  value = strtol(paramVal.c_str(), &ep, 16);
+                }
+                else
+                {
+                  value = paramVal.toInt();
+                }
 
-                if (row >= 0 && row < 8)
-                  Plugin_148_M->SetRow(row, value);
+                if (seg >= 0 && seg < 8)
+                  Plugin_148_M->SetRow(seg, value);
                 success = true;
-                row++;
+                seg++;
               }
 
               param = parseString(string, paramIdx++);
@@ -346,7 +385,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_148_DMXBuffer)
+        if (Plugin_148_M)
         {
 
         }
