@@ -1,7 +1,7 @@
 //######################################## HT16K33 ####################################################
 //#######################################################################################################
 
-// ESPEasy Plugin to control LED matrix chip HT16K33
+// ESPEasy Plugin to control a 16x8 LED matrix chip HT16K33
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
 // List of commands:
@@ -77,11 +77,32 @@ class CHT16K33 {
     // Display Memory
     Wire.beginTransmission(_addr);
     Wire.write(0x40); // start data at address 0x40
+    Wire.endTransmission();
+
+    Wire.requestFrom(_addr, 6);
+    if (Wire.available() == 6)
+    {
+      for (byte i=0; i<3; i++)
+      {
+        _keys[i] = Wire.read() | (Wire.read() << 8);
+      }
+      Wire.endTransmission();
+    }
+
     for (byte i=0; i<3; i++)
     {
-      _keys[i] = Wire.read() | (Wire.read() << 8);
+      byte mask = 1;
+      for (byte k=0; k<12; k++)
+      {
+        if (_keys[i] & mask)
+        {
+          _keydown = 16*(i+1) + (k+1);
+          return;
+        }
+        mask <<= 1;
+      }
     }
-    Wire.endTransmission();
+    _keydown = 0;
   };
 
   void Clear(void)
@@ -107,28 +128,29 @@ class CHT16K33 {
   uint8_t _addr;
   uint16_t _buffer[8];
   uint16_t _keys[3];
+  byte _keydown;
 };
 
 CHT16K33* Plugin_148_M = NULL;
 
 PROGMEM static const uint8_t diits[] =
 {
-	0x3F, /* 0 */
-	0x06, /* 1 */
-	0x5B, /* 2 */
-	0x4F, /* 3 */
-	0x66, /* 4 */
-	0x6D, /* 5 */
-	0x7D, /* 6 */
-	0x07, /* 7 */
-	0x7F, /* 8 */
-	0x6F, /* 9 */
-	0x77, /* a */
-	0x7C, /* b */
-	0x39, /* C */
-	0x5E, /* d */
-	0x79, /* E */
-	0x71, /* F */
+  0x3F,   // 0
+  0x06,   // 1
+  0x5B,   // 2
+  0x4F,   // 3
+  0x66,   // 4
+  0x6D,   // 5
+  0x7D,   // 6
+  0x07,   // 7
+  0x7F,   // 8
+  0x6F,   // 9
+  0x77,   // A
+  0x7C,   // B
+  0x39,   // C
+  0x5E,   // D
+  0x79,   // E
+  0x71,   // F
 };
 
 
