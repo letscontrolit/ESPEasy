@@ -552,17 +552,25 @@ struct pinStatesStruct
   uint16_t value;
 } pinStates[PINSTATE_TABLE_MAX];
 
+
+// this offsets are in blocks, bytes = blocks * 4
+#define RTC_BASE_STRUCT 64
+#define RTC_BASE_USERVAR 74
+
+//max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
   byte ID1;
   byte ID2;
-  boolean valid; // not used?
+  boolean unused1;
   byte factoryResetCounter;
   byte deepSleepState;
-  byte rebootCounter; //not used yet?
+  byte unused2;
   byte flashDayCounter;
   unsigned long flashCounter;
+  unsigned long bootCounter;
 } RTC;
+
 
 int deviceCount = -1;
 int protocolCount = -1;
@@ -640,6 +648,7 @@ byte lowestRAMid=0;
 \*********************************************************************************************/
 void setup()
 {
+
   lowestRAM = FreeMem();
 
   Serial.begin(115200);
@@ -743,24 +752,24 @@ void setup()
   //warm boot
   if (readFromRTC())
   {
+    RTC.bootCounter++;
     readUserVarFromRTC();
+
     if (RTC.deepSleepState == 1)
     {
-      log = F("INIT : Rebooted from deepsleep");
+      log = F("INIT : Rebooted from deepsleep #");
       lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
     }
     else
-      log = F("INIT : Normal boot");
+      log = F("INIT : Warm boot #");
+
+    log += RTC.bootCounter;
+
   }
   //cold boot (RTC memory empty)
   else
   {
-    RTC.factoryResetCounter=0;
-    RTC.deepSleepState=0;
-    RTC.rebootCounter=0;
-    RTC.flashDayCounter=0;
-    RTC.flashCounter=0;
-    saveToRTC();
+    initRTC();
 
     // cold boot situation
     if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
