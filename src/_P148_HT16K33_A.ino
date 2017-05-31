@@ -133,7 +133,7 @@ class CHT16K33 {
 
 CHT16K33* Plugin_148_M = NULL;
 
-PROGMEM static const uint8_t diits[] =
+static const uint8_t digits[] =
 {
   0x3F,   // 0
   0x06,   // 1
@@ -235,21 +235,22 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
         if (command == F("num"))
         {
           String number = parseString(string, 2);
-          byte row = 0;
+          byte seg = 0;
 
           Plugin_148_M->Clear();
-          while (number[row] && row < 8)
+          while (number[seg] && seg < 8)
           {
-            int value = number[row];
+            int value = number[seg];
             if (value >= 'A')
               value -= 'A' - 10;
             else
               value -= '0';
-            value = diits[value & 0xF];
-            Plugin_148_M->SetRow(row, value);
-            row++;
+            value = digits[value & 0xF];
+            Plugin_148_M->SetRow(seg, value);
+            seg++;
           }
           Plugin_148_M->Transmit();
+          success = true;
         }
 
         else if (command == F("mx") || command == F("seg7"))
@@ -316,7 +317,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
                 if (command == F("seg7"))
                 {
                   if (value < 16)
-                    value = diits[value];
+                    value = digits[value & 0xF];
                   else
                     value = 0;
                 }
