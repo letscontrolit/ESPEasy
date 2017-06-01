@@ -86,12 +86,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("clearRTCRAM")) == 0)
   {
     success = true;
-    RTC.factoryResetCounter = 0;
-    RTC.deepSleepState = 0;
-    RTC.rebootCounter = 0;
-    RTC.flashDayCounter = 0;
-    RTC.flashCounter = 0;
-    saveToRTC();
+    initRTC();
   }
 
   if (strcasecmp_P(Command, PSTR("notify")) == 0)

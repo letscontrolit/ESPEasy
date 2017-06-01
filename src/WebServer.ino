@@ -3377,7 +3377,7 @@ void handle_rules() {
 
         if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
         {
-          String log = F("FS   : Daily flash write rate exceeded!");
+          String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
           addLog(LOG_LEVEL_ERROR, log);
           reply += F("<span style=\"color:red\">Error saving to flash!</span>");
         }
@@ -3602,6 +3602,9 @@ void handle_sysinfo() {
       reply += F("External Watchdog");
       break;
   }
+
+  reply += F("<TR><TD>Warm boot count:<TD>");
+  reply += RTC.bootCounter;
 
   reply += F("<TR><TD>STA MAC:<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
