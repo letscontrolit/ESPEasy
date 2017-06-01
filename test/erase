@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+source configlib
+
+esptool.py --port $SERIAL -b 1500000  erase_flash
+
