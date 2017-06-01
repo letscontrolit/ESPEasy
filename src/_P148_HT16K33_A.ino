@@ -22,10 +22,8 @@
 
 #define PLUGIN_148
 #define PLUGIN_ID_148         148
-#define PLUGIN_NAME_148       "HT16K33"
+#define PLUGIN_NAME_148       "LED - HT16K33"
 
-byte* Plugin_148_DMXBuffer = 0;
-int Plugin_148_DMXSize = 32;
 
 class CHT16K33 {
  public:
@@ -46,7 +44,8 @@ class CHT16K33 {
     Wire.endTransmission();
 
     SetBrightness(15);
-    Clear();
+    ClearRowBuffer();
+    TransmitRowBuffer();
   };
 
   void SetBrightness(uint8_t b)
@@ -59,20 +58,91 @@ class CHT16K33 {
     Wire.endTransmission();
   };
 
-  void Transmit(void)
+  void TransmitRowBuffer(void)
   {
     // Display Memory
     Wire.beginTransmission(_addr);
     Wire.write(0); // start data at address 0
     for (byte i=0; i<8; i++)
     {
-      Wire.write(_buffer[i] & 0xFF);
-      Wire.write(_buffer[i] >> 8);
+      Wire.write(_rowBuffer[i] & 0xFF);
+      Wire.write(_rowBuffer[i] >> 8);
     }
     Wire.endTransmission();
   };
 
-  void Keys(void)
+  void ClearRowBuffer(void)
+  {
+    for (byte i=0; i<8; i++)
+      _rowBuffer[i] = 0;
+  };
+
+  void SetRow(uint8_t com, uint16_t data)
+  {
+    if (com < 8)
+      _rowBuffer[com] = data;
+  };
+
+  uint16_t GetRow(uint8_t com)
+  {
+    if (com < 8)
+      return _rowBuffer[com];
+    else
+      return 0;
+  };
+
+  void SetDigit(uint8_t com, uint8_t c)
+  {
+    uint16_t value = 0;
+
+    if (c <= 0xF)
+      value = _digits[c];
+
+    switch (c)
+    {
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+        value = c + 10 - 'A';
+        value = _digits[value & 0xF];
+        break;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        value = c - '0';
+        value = _digits[value & 0xF];
+        break;
+      case ' ':
+        value = 0;
+        break;
+      case ':':
+        value = 0x02;   //special for China 4 x 7-seg big display
+        break;
+      case '-':
+        value = 0x40;
+        break;
+    }
+
+    SetRow(com, value);
+  }
+
+uint8_t ReadKeys(void)
   {
     // Display Memory
     Wire.beginTransmission(_addr);
@@ -84,7 +154,7 @@ class CHT16K33 {
     {
       for (byte i=0; i<3; i++)
       {
-        _keys[i] = Wire.read() | (Wire.read() << 8);
+        _keyBuffer[i] = Wire.read() | (Wire.read() << 8);
       }
       Wire.endTransmission();
     }
@@ -94,46 +164,30 @@ class CHT16K33 {
       byte mask = 1;
       for (byte k=0; k<12; k++)
       {
-        if (_keys[i] & mask)
+        if (_keyBuffer[i] & mask)
         {
           _keydown = 16*(i+1) + (k+1);
-          return;
+          return _keydown;
         }
         mask <<= 1;
       }
     }
     _keydown = 0;
+    return _keydown;
   };
 
-  void Clear(void)
-  {
-    for (byte i=0; i<8; i++)
-      _buffer[i] = 0;
-  };
-
-  void SetRow(uint8_t row, uint16_t data)
-  {
-    if (row < 8)
-      _buffer[row] = data;
-  };
-
-  uint16_t GetRow(uint8_t row)
-  {
-    if (row < 8)
-      return _buffer[row];
-    else
-      return 0;
-  };
-
+protected:
   uint8_t _addr;
-  uint16_t _buffer[8];
-  uint16_t _keys[3];
+  uint16_t _rowBuffer[8];
+  uint16_t _keyBuffer[3];
   byte _keydown;
+
+  static const uint8_t _digits[16];
 };
 
 CHT16K33* Plugin_148_M = NULL;
 
-static const uint8_t digits[] =
+const uint8_t CHT16K33::_digits[16] =
 {
   0x3F,   // 0
   0x06,   // 1
@@ -169,10 +223,10 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 0;
-        Device[deviceCount].SendDataOption = false;
-        Device[deviceCount].TimerOption = false;
-        Device[deviceCount].TimerOptional = false;
+        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].SendDataOption = true;
+        Device[deviceCount].TimerOption = true;
+        Device[deviceCount].TimerOptional = true;
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
@@ -190,7 +244,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
 
-
+        addFormCheckBox(string, F("Scan Keys"), F("usekeys"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         //Settings.TaskDevicePin1[event->TaskIndex] = 2;
         //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_148_DMXSize;
@@ -203,6 +257,8 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("i2c_addr"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("usekeys"));
 
         //Plugin_148_DMXSize = getFormItemInt(F("channels"));
         //Limit (Plugin_148_DMXSize, 1, 512);
@@ -238,49 +294,15 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
           String text = string.substring(paramPos);
           byte seg = 0;
 
-          Plugin_148_M->Clear();
+          Plugin_148_M->ClearRowBuffer();
           while (text[seg] && seg < 8)
           {
             uint16_t value = 0;
             char c = text[seg];
-            switch (c)
-            {
-              case 'a':
-              case 'b':
-              case 'c':
-              case 'd':
-              case 'e':
-              case 'f':
-                value = c + 10 - 'a';
-                value = digits[value & 0xF];
-                break;
-              case '0':
-              case '1':
-              case '2':
-              case '3':
-              case '4':
-              case '5':
-              case '6':
-              case '7':
-              case '8':
-              case '9':
-                value = c - '0';
-                value = digits[value & 0xF];
-                break;
-              case ' ':
-                value = 0;
-                break;
-              case ':':
-                value = 0x02;
-                break;
-              case '-':
-                value = 0x40;
-                break;
-            }
-            Plugin_148_M->SetRow(seg, value);
+            Plugin_148_M->SetDigit(seg, c);
             seg++;
           }
-          Plugin_148_M->Transmit();
+          Plugin_148_M->TransmitRowBuffer();
           success = true;
         }
 
@@ -325,7 +347,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
 
               else if (param == F("clear"))
               {
-                Plugin_148_M->Clear();
+                Plugin_148_M->ClearRowBuffer();
                 success = true;
               }
 
@@ -347,22 +369,22 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
                 {
                   value = paramVal.toInt();
                   if (value < 16)
-                    value = digits[value & 0xF];
+                    Plugin_148_M->SetDigit(seg, value);
                   else
-                    value = 0;
+                    Plugin_148_M->SetRow(seg, value);
                 }
                 else if (command == F("mx"))
                 {
                   char* ep;
                   value = strtol(paramVal.c_str(), &ep, 16);
+                  Plugin_148_M->SetRow(seg, value);
                 }
                 else
                 {
                   value = paramVal.toInt();
+                  Plugin_148_M->SetRow(seg, value);
                 }
 
-                if (seg >= 0 && seg < 8)
-                  Plugin_148_M->SetRow(seg, value);
                 success = true;
                 seg++;
               }
@@ -376,7 +398,7 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
           }
 
           if (success)
-            Plugin_148_M->Transmit();
+            Plugin_148_M->TransmitRowBuffer();
           success = true;
         }
 
@@ -385,16 +407,33 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_148_M)
+        if (Plugin_148_M && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
         {
 
         }
+        success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        //no values
+        if (Plugin_148_M && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        {
+          uint8_t key = Plugin_148_M->ReadKeys();
+          UserVar[event->BaseVarIndex] = (float)key;
+
+          if (1)
+          {
+            event->sensorType = SENSOR_TYPE_SWITCH;
+
+            String log = F("M    : key=");
+            log += key;
+            addLog(LOG_LEVEL_INFO, log);
+
+            sendData(event);
+          }
+
+        }
         success = true;
         break;
       }
