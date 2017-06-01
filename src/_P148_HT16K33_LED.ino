@@ -6,9 +6,9 @@
 
 // List of commands:
 // (1) ???,<param>
-// (2) DMX,<param>,<param>,<param>, ...
+// (2) M,<param>,<param>,<param>, ...
 
-// List of DMX params:
+// List of M* params:
 // (a) <value>
 //     DMX-value (0...255) to write to the next channel address (1...512) starting with 1
 
@@ -22,7 +22,7 @@
 
 #define PLUGIN_148
 #define PLUGIN_ID_148         148
-#define PLUGIN_NAME_148       "LED - HT16K33"
+#define PLUGIN_NAME_148       "LED - HT16K33 [TESTING]"
 
 
 class CHT16K33 {
@@ -223,10 +223,10 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 1;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].TimerOptional = true;
+        Device[deviceCount].ValueCount = 0;
+        Device[deviceCount].SendDataOption = false;
+        Device[deviceCount].TimerOption = false;
+        Device[deviceCount].TimerOptional = false;
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
@@ -244,8 +244,6 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
 
-        addFormCheckBox(string, F("Scan Keys"), F("usekeys"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-
         //Settings.TaskDevicePin1[event->TaskIndex] = 2;
         //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_148_DMXSize;
         //addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
@@ -257,8 +255,6 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("i2c_addr"));
-
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("usekeys"));
 
         //Plugin_148_DMXSize = getFormItemInt(F("channels"));
         //Limit (Plugin_148_DMXSize, 1, 512);
@@ -402,39 +398,6 @@ boolean Plugin_148(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
-        break;
-      }
-
-    case PLUGIN_TEN_PER_SECOND:
-      {
-        if (Plugin_148_M && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
-        {
-
-        }
-        success = true;
-        break;
-      }
-
-    case PLUGIN_READ:
-      {
-        if (Plugin_148_M && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
-        {
-          uint8_t key = Plugin_148_M->ReadKeys();
-          UserVar[event->BaseVarIndex] = (float)key;
-
-          if (1)
-          {
-            event->sensorType = SENSOR_TYPE_SWITCH;
-
-            String log = F("M    : key=");
-            log += key;
-            addLog(LOG_LEVEL_INFO, log);
-
-            sendData(event);
-          }
-
-        }
-        success = true;
         break;
       }
 
