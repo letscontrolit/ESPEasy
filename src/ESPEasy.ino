@@ -591,7 +591,6 @@ unsigned long timerwd;
 unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
-boolean AP_Mode = false;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
@@ -710,8 +709,12 @@ void setup()
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
-  if (!WifiConnect(true,3))
-    WifiConnect(false,3);
+
+  //only one attempt in deepsleep, to conserve battery
+  if (Settings.deepSleep)
+    WifiConnect(1);
+  else
+    WifiConnect(3);
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -816,7 +819,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WifiConnect(true,1);
+    WifiConnect(1);
     wifiSetupConnect = false;
   }
 

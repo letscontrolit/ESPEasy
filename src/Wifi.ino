@@ -11,35 +11,52 @@ void WifiAPconfig()
   // setup ssid for AP Mode when needed
   WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
   // We start in STA mode
-  WiFi.mode(WIFI_STA);
+  WifiAPMode(false);
 }
 
+
+bool WifiIsAP()
+{
+  byte wifimode = wifi_get_opmode();
+  return(wifimode == 2 || wifimode == 3); //apmode is enabled
+}
 
 //********************************************************************************
 // Set Wifi AP Mode
 //********************************************************************************
 void WifiAPMode(boolean state)
 {
-  if (state)
+  if (WifiIsAP())
   {
-    AP_Mode = true;
-    WiFi.mode(WIFI_AP_STA);
+    //want to disable?
+    if (!state)
+    {
+      WiFi.mode(WIFI_STA);
+      addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode disabled"));
+    }
   }
   else
   {
-    AP_Mode = false;
-    WiFi.mode(WIFI_STA);
+    //want to enable?
+    if (state)
+    {
+      WiFi.mode(WIFI_AP_STA);
+      String log=F("WIFI : AP Mode enabled, reachable on ");
+      log=log+apIP.toString();
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
 }
 
 
 //********************************************************************************
-// Connect to Wifi AP
+// Configure network and connect to Wifi SSID and SSID2
 //********************************************************************************
-boolean WifiConnect(boolean primary, byte connectAttempts)
+boolean WifiConnect(byte connectAttempts)
 {
   String log = "";
 
+  //replace spaces in hostname with dashes, and set station hostname (for dhcp)
   char hostName[sizeof(Settings.Name)];
   strcpy(hostName,Settings.Name);
   for(byte x=0; x< sizeof(hostName); x++)
@@ -47,6 +64,7 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
       hostName[x] = '-';
   wifi_station_set_hostname(hostName);
 
+  //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
   {
     char str[20];
@@ -61,87 +79,101 @@ boolean WifiConnect(boolean primary, byte connectAttempts)
     WiFi.config(ip, gw, subnet, dns);
   }
 
-
-  if (WiFi.status() != WL_CONNECTED)
+  //try to connect to one of the access points
+  if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts) ||
+      WifiConnectSSID(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2, connectAttempts))
   {
-    if ((SecuritySettings.WifiSSID[0] != 0)  && (strcasecmp(SecuritySettings.WifiSSID, "ssid") != 0))
+    // fix octet?
+    if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
     {
-      for (byte tryConnect = 1; tryConnect <= connectAttempts; tryConnect++)
+      IPAddress ip = WiFi.localIP();
+      IPAddress gw = WiFi.gatewayIP();
+      IPAddress subnet = WiFi.subnetMask();
+      ip[3] = Settings.IP_Octet;
+      log = F("IP   : Fixed IP octet:");
+      log += ip;
+      addLog(LOG_LEVEL_INFO, log);
+      WiFi.config(ip, gw, subnet);
+    }
+
+    return(true);
+  }
+
+  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
+
+  //everything failed, activate AP mode (will deactivate automaticly after a while if its connected again)
+  WifiAPMode(true);
+
+  return(false);
+}
+
+
+//********************************************************************************
+// Connect to Wifi specific SSID
+//********************************************************************************
+boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
+{
+  String log;
+
+  //already connected, need to disconnect first
+  if (WiFi.status() == WL_CONNECTED)
+    return(true);
+
+  //no ssid specified
+  if ((WifiSSID[0] == 0)  || (strcasecmp(WifiSSID, "ssid") == 0))
+    return(false);
+
+  for (byte tryConnect = 1; tryConnect <= connectAttempts; tryConnect++)
+  {
+    log = F("WIFI : Connecting ");
+    log += WifiSSID;
+    log += F(" attempt #");
+    log += tryConnect;
+    addLog(LOG_LEVEL_INFO, log);
+
+    if (tryConnect == 1)
+      WiFi.begin(WifiSSID, WifiKey);
+    else
+      WiFi.begin();
+
+    //wait until it connects
+    for (byte x = 0; x < 200; x++)
+    {
+      if (WiFi.status() != WL_CONNECTED)
       {
-        log = F("WIFI : Connecting... ");
-        log += tryConnect;
-        addLog(LOG_LEVEL_INFO, log);
-
-        if (tryConnect == 1)
-          {
-            if (primary)
-              WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
-            else
-              WiFi.begin(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2);
-          }
-        else
-          WiFi.begin();
-
-        for (byte x = 0; x < 200; x++)
-        {
-          if (WiFi.status() != WL_CONNECTED)
-          {
-            statusLED(false);
-            delay(50);
-          }
-          else
-            break;
-        }
-        if (WiFi.status() == WL_CONNECTED)
-        {
-          log = F("WIFI : Connected! IP: ");
-          IPAddress ip = WiFi.localIP();
-          char str[20];
-          sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-          log += str;
-          addLog(LOG_LEVEL_INFO, log);
-          statusLED(true);
-          break;
-        }
-        else
-        {
-          log = F("WIFI : Disconnecting!");
-          addLog(LOG_LEVEL_INFO, log);
-          ETS_UART_INTR_DISABLE();
-          wifi_station_disconnect();
-          ETS_UART_INTR_ENABLE();
-          for (byte x = 0; x < 20; x++)
-          {
-            statusLED(true);
-            delay(50);
-          }
-        }
+        statusLED(false);
+        delay(50);
       }
+      else
+        break;
+    }
 
-      // fix ip if last octet is set
-      if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
-      {
-        IPAddress ip = WiFi.localIP();
-        IPAddress gw = WiFi.gatewayIP();
-        IPAddress subnet = WiFi.subnetMask();
-        ip[3] = Settings.IP_Octet;
-        log = F("IP   : Fixed IP :");
-        log += ip;
-        addLog(LOG_LEVEL_INFO, log);
-        WiFi.config(ip, gw, subnet);
-      }
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      log = F("WIFI : Connected! IP: ");
+      IPAddress ip = WiFi.localIP();
+      char str[20];
+      sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+      log += str;
+      addLog(LOG_LEVEL_INFO, log);
+      statusLED(true);
+      return(true);
     }
     else
     {
-      log = F("WIFI : No SSID!");
-      addLog(LOG_LEVEL_INFO, log);
-      NC_Count = 1;
-      WifiAPMode(true);
+      // log = F("WIFI : Disconnecting!");
+      // addLog(LOG_LEVEL_INFO, log);
+      ETS_UART_INTR_DISABLE();
+      wifi_station_disconnect();
+      ETS_UART_INTR_ENABLE();
+      for (byte x = 0; x < 20; x++)
+      {
+        statusLED(true);
+        delay(50);
+      }
     }
   }
 
-  if (WiFi.status() == WL_CONNECTED)
-    return true;
 
   return false;
 }
@@ -203,30 +235,23 @@ void WifiCheck()
   if (WiFi.status() != WL_CONNECTED)
   {
     NC_Count++;
+    //give it time to automaticly reconnect
     if (NC_Count > 2)
     {
-      if (!WifiConnect(true,2))
-        WifiConnect(false,2);
+      WifiConnect(2);
 
       C_Count=0;
-      if (WiFi.status() != WL_CONNECTED)
-        WifiAPMode(true);
       NC_Count = 0;
     }
   }
+  //connected
   else
   {
     C_Count++;
     NC_Count = 0;
-    if (C_Count > 2) // close AP after timeout if a Wifi connection is established...
+    if (C_Count > 2) // disable AP after timeout if a Wifi connection is established...
     {
-      byte wifimode = wifi_get_opmode();
-      if (wifimode == 2 || wifimode == 3) //apmode is active
-      {
-        WifiAPMode(false);
-        log = F("WIFI : AP Mode inactive");
-        addLog(LOG_LEVEL_INFO, log);
-      }
+      WifiAPMode(false);
     }
   }
 }

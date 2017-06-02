@@ -378,15 +378,8 @@ void statusLED(boolean traffic)
   }
   else
   {
-    if (AP_Mode) //apmode is active
-    {
-      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
-    }
-    else if (WiFi.status() != WL_CONNECTED)
-    {
-      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
-    }
-    else //connected
+
+    if (WiFi.status() == WL_CONNECTED)
     {
       long int delta=millis()-gnLastUpdate;
       if (delta>0 || delta<0 )
@@ -395,6 +388,16 @@ void statusLED(boolean traffic)
         nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
         gnLastUpdate=millis();
       }
+    }
+    //AP mode is active
+    else if (WifiIsAP())
+    {
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+    }
+    //Disconnected
+    else 
+    {
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }
   }
 
