@@ -1,7 +1,7 @@
 #ifndef CHT16K33_h
 #define CHT16K33_h
 
-#include <arduino.h>
+#include <Arduino.h>
 
 class CHT16K33 {
  public:
