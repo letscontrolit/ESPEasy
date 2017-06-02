@@ -1176,8 +1176,17 @@ boolean checkSystemTimers()
 /*********************************************************************************************\
  * run background tasks
 \*********************************************************************************************/
+bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //prevent recursion!
+  if (runningBackgroundTasks)
+  {
+    yield();
+    return;
+  }
+  runningBackgroundTasks=true;
+
   tcpCleanup();
 
   if (Settings.UseSerial)
@@ -1208,4 +1217,6 @@ void backgroundtasks()
   yield();
 
   statusLED(false);
+
+  runningBackgroundTasks=false;
 }
