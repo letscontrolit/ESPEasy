@@ -5,6 +5,7 @@
 source configlib
 source wifi.txt
 
+./pingserial $UNIT
 
 echo "
 wifissid $WIFI_SSID
