@@ -2495,22 +2495,35 @@ void handle_i2cscanner() {
           reply += F("PCF8591");
           break;
         case 0x5A:
-          reply += F("MLX90614");
+          reply += F("MLX90614<BR>MPR121");
+          break;
+        case 0x5B:
+          reply += F("MPR121");
           break;
         case 0x5C:
-          reply += F("DHT12<BR>AM2320<BR>BH1750");
+          reply += F("DHT12<BR>AM2320<BR>BH1750<BR>MPR121");
+          break;
+        case 0x5D:
+          reply += F("MPR121");
           break;
         case 0x60:
           reply += F("Adafruit Motorshield v2<BR>SI1145");
           break;
         case 0x70:
-          reply += F("Adafruit Motorshield v2 (Catchall)");
+          reply += F("Adafruit Motorshield v2 (Catchall)<BR>HT16K33");
+          break;
+        case 0x71:
+        case 0x72:
+        case 0x73:
+        case 0x74:
+        case 0x75:
+          reply += F("HT16K33");
           break;
         case 0x76:
-          reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611");
+          reply += F("BME280<BR>BMP280<BR>MS5607<BR>MS5611<BR>HT16K33");
           break;
         case 0x77:
-          reply += F("BMP085<BR>BMP180<BR>BME280<BR>BMP280<BR>MS5607<BR>MS5611");
+          reply += F("BMP085<BR>BMP180<BR>BME280<BR>BMP280<BR>MS5607<BR>MS5611<BR>HT16K33");
           break;
         case 0x7f:
           reply += F("Arduino PME");

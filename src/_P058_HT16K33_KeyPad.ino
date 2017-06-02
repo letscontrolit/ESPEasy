@@ -1,23 +1,23 @@
-//######################################## HT16K33 ####################################################
+//#######################################################################################################
+//#################################### Plugin 058: HT16K33 KeyPad #######################################
 //#######################################################################################################
 
 // ESPEasy Plugin to scan a 13x3 key pad matrix chip HT16K33
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-//#include <*.h>   //no lib needed
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#define PLUGIN_147
-#define PLUGIN_ID_147         147
-#define PLUGIN_NAME_147       "KeyPad - HT16K33 [TESTING]"
+#define PLUGIN_058
+#define PLUGIN_ID_058         58
+#define PLUGIN_NAME_058       "KeyPad - HT16K33 [TESTING]"
 
-extern class CHT16K33;
+#include <HT16K33.h>
 
-CHT16K33* Plugin_147_K = NULL;
+CHT16K33* Plugin_058_K = NULL;
 
 
-boolean Plugin_147(byte function, struct EventStruct *event, String& string)
+boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -25,7 +25,7 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_147;
+        Device[++deviceCount].Number = PLUGIN_ID_058;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
@@ -42,7 +42,7 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_147);
+        string = F(PLUGIN_NAME_058);
         break;
       }
 
@@ -53,12 +53,12 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
 
-        addFormCheckBox(string, F("Scan Keys"), F("usekeys"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        //addFormCheckBox(string, F("Scan Keys"), F("usekeys"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         //Settings.TaskDevicePin1[event->TaskIndex] = 2;
-        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_147_DMXSize;
+        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_058_DMXSize;
         //addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
-        //addFormNumericBox(string, F("Channels"), F("channels"), Plugin_147_DMXSize, 1, 512);
+        //addFormNumericBox(string, F("Channels"), F("channels"), Plugin_058_DMXSize, 1, 512);
         success = true;
         break;
       }
@@ -67,11 +67,11 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("i2c_addr"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("usekeys"));
+        //Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("usekeys"));
 
-        //Plugin_147_DMXSize = getFormItemInt(F("channels"));
-        //Limit (Plugin_147_DMXSize, 1, 512);
-        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_147_DMXSize;
+        //Plugin_058_DMXSize = getFormItemInt(F("channels"));
+        //Limit (Plugin_058_DMXSize, 1, 512);
+        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_058_DMXSize;
         success = true;
         break;
       }
@@ -80,10 +80,10 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
       {
         byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
-        if (!Plugin_147_K)
-          Plugin_147_K = new CHT16K33;
+        if (!Plugin_058_K)
+          Plugin_058_K = new CHT16K33;
 
-        Plugin_147_K->Init(addr);
+        Plugin_058_K->Init(addr);
 
         success = true;
         break;
@@ -91,11 +91,11 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_147_K && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        if (Plugin_058_K && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
         {
           static uint8_t keyLast = 0;
 
-          uint8_t key = Plugin_147_K->ReadKeys();
+          uint8_t key = Plugin_058_K->ReadKeys();
 
           if (keyLast != key)
           {
@@ -117,7 +117,7 @@ boolean Plugin_147(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        if (Plugin_147_K && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        if (Plugin_058_K && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
         {
         }
         success = true;
