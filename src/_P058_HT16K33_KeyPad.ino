@@ -16,6 +16,10 @@
 
 CHT16K33* Plugin_058_K = NULL;
 
+#ifndef CONFIG
+#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
+#endif
+
 
 boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 {
@@ -48,7 +52,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte addr = CONFIG(0);
 
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
@@ -65,13 +69,8 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("i2c_addr"));
+        CONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        //Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("usekeys"));
-
-        //Plugin_058_DMXSize = getFormItemInt(F("channels"));
-        //Limit (Plugin_058_DMXSize, 1, 512);
-        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_058_DMXSize;
         success = true;
         break;
       }
@@ -103,7 +102,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = (float)key;
             event->sensorType = SENSOR_TYPE_SWITCH;
 
-            String log = F("M    : key=");
+            String log = F("Mkey : key=");
             log += key;
             addLog(LOG_LEVEL_INFO, log);
 

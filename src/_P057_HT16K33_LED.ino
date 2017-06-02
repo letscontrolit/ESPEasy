@@ -27,6 +27,10 @@
 
 CHT16K33* Plugin_057_M = NULL;
 
+#ifndef CONFIG
+#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
+#endif
+
 
 boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 {
@@ -59,7 +63,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte addr = CONFIG(0);
 
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
@@ -67,18 +71,18 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(string, F("7-Seg. Clock"));
 
-        int16_t choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        int16_t choice = CONFIG(1);
         String options[2] = { F("none"), F("7-Seg. HH:MM") };
         addFormSelector(string, F("Clock Type"), F("clocktype"), 2, options, NULL, choice);
 
-        addFormNumericBox(string, F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 7);
-        addFormNumericBox(string, F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], 0, 7);
-        addFormNumericBox(string, F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), Settings.TaskDevicePluginConfig[event->TaskIndex][4], 0, 7);
-        addFormNumericBox(string, F("Seg. for xx:x<b>X</b>"), F("clocksegm1"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 0, 7);
+        addFormNumericBox(string, F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
+        addFormNumericBox(string, F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);
+        addFormNumericBox(string, F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), CONFIG(4), 0, 7);
+        addFormNumericBox(string, F("Seg. for xx:x<b>X</b>"), F("clocksegm1"), CONFIG(5), 0, 7);
 
-        addFormNumericBox(string, F("Seg. for Colon"), F("clocksegcol"), Settings.TaskDevicePluginConfig[event->TaskIndex][6], -1, 7);
+        addFormNumericBox(string, F("Seg. for Colon"), F("clocksegcol"), CONFIG(6), -1, 7);
         string += F(" Value ");
-        addNumericBox(string, F("clocksegcolval"), Settings.TaskDevicePluginConfig[event->TaskIndex][7], 0, 255);
+        addNumericBox(string, F("clocksegcolval"), CONFIG(7), 0, 255);
 
         success = true;
         break;
@@ -86,16 +90,16 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("i2c_addr"));
+        CONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("clocktype"));
+        CONFIG(1) = getFormItemInt(F("clocktype"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("clocksegh10"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("clocksegh1"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("clocksegm10"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("clocksegm1"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("clocksegcol"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][7] = getFormItemInt(F("clocksegcolval"));
+        CONFIG(2) = getFormItemInt(F("clocksegh10"));
+        CONFIG(3) = getFormItemInt(F("clocksegh1"));
+        CONFIG(4) = getFormItemInt(F("clocksegm10"));
+        CONFIG(5) = getFormItemInt(F("clocksegm1"));
+        CONFIG(6) = getFormItemInt(F("clocksegcol"));
+        CONFIG(7) = getFormItemInt(F("clocksegcolval"));
 
         success = true;
         break;
@@ -103,7 +107,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte addr = CONFIG(0);
 
         if (!Plugin_057_M)
           Plugin_057_M = new CHT16K33;
@@ -241,7 +245,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
       {
-        if (!Plugin_057_M)
+        if (!Plugin_057_M || CONFIG(1) == 0)
           break;
 
         byte hours = hour();
@@ -249,19 +253,37 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         //Plugin_057_M->ClearRowBuffer();
         if (hours >= 10)
-          Plugin_057_M->SetDigit(Settings.TaskDevicePluginConfig[event->TaskIndex][2], hours/10);
+          Plugin_057_M->SetDigit(CONFIG(2), hours/10);
         else
-          Plugin_057_M->SetRow(Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0);
-        Plugin_057_M->SetDigit(Settings.TaskDevicePluginConfig[event->TaskIndex][3], hours%10);
-        Plugin_057_M->SetDigit(Settings.TaskDevicePluginConfig[event->TaskIndex][4], minutes/10);
-        Plugin_057_M->SetDigit(Settings.TaskDevicePluginConfig[event->TaskIndex][5], minutes%10);
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][6] >= 0)
-          Plugin_057_M->SetDigit(Settings.TaskDevicePluginConfig[event->TaskIndex][6], Settings.TaskDevicePluginConfig[event->TaskIndex][7]);
+          Plugin_057_M->SetRow(CONFIG(2), 0);   //empty seg
+        Plugin_057_M->SetDigit(CONFIG(3), hours%10);
+        Plugin_057_M->SetDigit(CONFIG(4), minutes/10);
+        Plugin_057_M->SetDigit(CONFIG(5), minutes%10);
+        //if (CONFIG(6) >= 0)
+        //  Plugin_057_M->SetRow(CONFIG(6), CONFIG(7));
         Plugin_057_M->TransmitRowBuffer();
 
         success = true;
 
         break;
+      }
+
+    case PLUGIN_TEN_PER_SECOND:
+      {
+        if (!Plugin_057_M || CONFIG(1) == 0)   //clock enabled?
+          break;
+
+        if (CONFIG(6) >= 0)   //colon used?
+        {
+          uint8_t act = ((uint16_t)millis() >> 9) & 1;
+          static uint8_t last = 0;
+          if (act != last)
+          {
+            last = act;
+            Plugin_057_M->SetRow(CONFIG(6), (act) ? CONFIG(7) : 0);
+            Plugin_057_M->TransmitRowBuffer();
+          }
+        }
       }
 
   }
