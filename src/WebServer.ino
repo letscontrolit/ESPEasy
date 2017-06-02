@@ -502,6 +502,7 @@ void handle_config() {
   //String key2 = WebServer.arg(F("key2"));
   String sensordelay = WebServer.arg(F("delay"));
   String deepsleep = WebServer.arg(F("deepsleep"));
+  String deepsleeponfail = WebServer.arg(F("deepsleeponfail"));
   String espip = WebServer.arg(F("espip"));
   String espgateway = WebServer.arg(F("espgateway"));
   String espsubnet = WebServer.arg(F("espsubnet"));
@@ -528,6 +529,7 @@ void handle_config() {
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
+    Settings.deepSleepOnFail = (deepsleeponfail == "on");
     espip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.IP);
     espgateway.toCharArray(tmpString, 26);
@@ -577,6 +579,8 @@ void handle_config() {
   addHelpButton(reply, F("SleepMode"));
   addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   addUnit(reply, F("sec"));
+
+  addFormCheckBox(reply, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
   addFormSeparator(reply);
 

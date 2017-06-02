@@ -51,15 +51,18 @@ void deepSleep(int delay)
     }
   }
 
-  addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep..."));
+
+  String event = F("System#Sleep");
+  rulesProcessing(event);
+
 
   RTC.deepSleepState = 1;
   saveToRTC();
 
-  String event = F("System#Sleep");
-  rulesProcessing(event);
   if (delay > 4294 || delay < 0)
     delay = 4294;   //max sleep time ~1.2h
+
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
 }
 
@@ -395,7 +398,7 @@ void statusLED(boolean traffic)
       nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
     }
     //Disconnected
-    else 
+    else
     {
       nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }

@@ -348,6 +348,7 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
+  //its safe to extend this struct, up to 512 bytes, default values in config are 0
 } SecuritySettings;
 
 struct SettingsStruct
@@ -419,6 +420,8 @@ struct SettingsStruct
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
+  boolean       deepSleepOnFail;
+  //its safe to extend this struct, up to 65535 bytes, default values in config are 0
 } Settings;
 
 struct ControllerSettingsStruct
@@ -442,6 +445,7 @@ struct NotificationSettingsStruct
   char          Body[513];
   byte          Pin1;
   byte          Pin2;
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
 struct ExtraTaskSettingsStruct
@@ -669,6 +673,40 @@ void setup()
   log += BUILD_GIT;
   addLog(LOG_LEVEL_INFO, log);
 
+
+  //warm boot
+  if (readFromRTC())
+  {
+    RTC.bootCounter++;
+    readUserVarFromRTC();
+
+    if (RTC.deepSleepState == 1)
+    {
+      log = F("INIT : Rebooted from deepsleep #");
+      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
+    }
+    else
+      log = F("INIT : Warm boot #");
+
+    log += RTC.bootCounter;
+
+  }
+  //cold boot (RTC memory empty)
+  else
+  {
+    initRTC();
+
+    // cold boot situation
+    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
+      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    log = F("INIT : Cold Boot");
+  }
+
+  addLog(LOG_LEVEL_INFO, log);
+
+
+
+
   fileSystemCheck();
   LoadSettings();
 
@@ -710,10 +748,20 @@ void setup()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
 
-  //only one attempt in deepsleep, to conserve battery
   if (Settings.deepSleep)
-    WifiConnect(1);
+  {
+    //only one attempt in deepsleep, to conserve battery
+    if (!WifiConnect(1))
+    {
+        if (Settings.deepSleepOnFail)
+        {
+          addLog(LOG_LEVEL_ERROR, F("SLEEP: Connection failed, going back to sleep."));
+          deepSleep(Settings.Delay);
+        }
+    }
+  }
   else
+    // 3 connect attempts
     WifiConnect(3);
 
   #ifdef FEATURE_REPORTING
@@ -751,37 +799,6 @@ void setup()
     MQTTConnect();
 
   sendSysInfoUDP(3);
-
-  //warm boot
-  if (readFromRTC())
-  {
-    RTC.bootCounter++;
-    readUserVarFromRTC();
-
-    if (RTC.deepSleepState == 1)
-    {
-      log = F("INIT : Rebooted from deepsleep #");
-      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
-    }
-    else
-      log = F("INIT : Warm boot #");
-
-    log += RTC.bootCounter;
-
-  }
-  //cold boot (RTC memory empty)
-  else
-  {
-    initRTC();
-
-    // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
-      lastBootCause = BOOT_CAUSE_COLD_BOOT;
-    log = F("INIT : Cold Boot");
-  }
-
-  addLog(LOG_LEVEL_INFO, log);
-
 
   if (Settings.UseNTP)
     initTime();
