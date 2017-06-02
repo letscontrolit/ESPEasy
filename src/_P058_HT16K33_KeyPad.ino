@@ -5,12 +5,30 @@
 // ESPEasy Plugin to scan a 13x3 key pad matrix chip HT16K33
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
+// Connecting KeyPad to HT16K33:
+// Column 1 = C1 (over diode)
+// Column 2 = C2 (over diode)
+// Column 3 = C3 (over diode)
+// Row 1 = A3
+// Row 2 = A4
+// Row 3 = A5
+// ...
+// Row 13 = A15
+
+// ScanCode;
+// 16*Column + Row
+// Pressing the top left key (typically "1") the code is 17 (0x11)
+// Pressing the key in column 2 and row 3 (typically "8") the code is 35 (0x23)
+
+// Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
+
 
 #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_058
 #define PLUGIN_ID_058         58
 #define PLUGIN_NAME_058       "KeyPad - HT16K33 [TESTING]"
+#define PLUGIN_VALUENAME1_058 "ScanCode"
 
 #include <HT16K33.h>
 
@@ -50,6 +68,12 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_058));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         byte addr = CONFIG(0);
@@ -57,12 +81,6 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
 
-        //addFormCheckBox(string, F("Scan Keys"), F("usekeys"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-
-        //Settings.TaskDevicePin1[event->TaskIndex] = 2;
-        //Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_058_DMXSize;
-        //addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
-        //addFormNumericBox(string, F("Channels"), F("channels"), Plugin_058_DMXSize, 1, 512);
         success = true;
         break;
       }
@@ -77,7 +95,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte addr = CONFIG(0);
 
         if (!Plugin_058_K)
           Plugin_058_K = new CHT16K33;
@@ -90,7 +108,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_058_K && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        if (Plugin_058_K)
         {
           static uint8_t keyLast = 0;
 
@@ -102,8 +120,8 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = (float)key;
             event->sensorType = SENSOR_TYPE_SWITCH;
 
-            String log = F("Mkey : key=");
-            log += key;
+            String log = F("Mkey : key=0x");
+            log += String(key, 16);
             addLog(LOG_LEVEL_INFO, log);
 
             sendData(event);
@@ -116,7 +134,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        if (Plugin_058_K && Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+        if (Plugin_058_K)
         {
         }
         success = true;

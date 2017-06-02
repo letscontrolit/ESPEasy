@@ -2,19 +2,31 @@
 //#################################### Plugin 057: HT16K33 LED ##########################################
 //#######################################################################################################
 
-// ESPEasy Plugin to control a 16x8 LED matrix chip HT16K33
+// ESPEasy Plugin to control a 16x8 LED matrix or 8 7-segment displays with chip HT16K33
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
 // List of commands:
-// (1) ???,<param>
-// (2) M,<param>,<param>,<param>, ...
+// (1) M,<param>,<param>,<param>, ...    with decimal values
+// (2) MX,<param>,<param>,<param>, ...    with hexadecimal values
+// (3) MNUM,<param>,<param>,<param>, ...    with decimal values for 7-segment displays
+// (4) MPRINT,<text>    with decimal values for 7-segment displays
 
 // List of M* params:
 // (a) <value>
-//     DMX-value (0...255) to write to the next channel address (1...512) starting with 1
+//     Writes a decimal / hexadecimal (0...0xFFFF) values to actual segment starting with 0
+// (b) <seg>=<value>
+//     Writes a decimal / hexadecimal (0...0xFFFF) values to given segment (0...7)
+// (c) "CLEAR"
+//     Set all LEDs to 0.
+// (d) "TEST"
+//     Set test pattern to LED buffer.
+// (e) "LOG"
+//     Print LED buffer to log output.
 
 // Examples:
-// DMX,123"   Set channel 1 to value 123
+// MX,AA,55,AA,55,AA,55,AA,55   Set chess pattern to LED buffer
+
+// Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
 
 #ifdef PLUGIN_BUILD_TESTING
@@ -144,7 +156,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
-        else if (command == F("m") || command == F("mx") || command == F("num"))
+        else if (command == F("m") || command == F("mx") || command == F("mnum"))
         {
           String param;
           String paramKey;
@@ -203,7 +215,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
                   paramVal = param;
                 }
 
-                if (command == F("num"))
+                if (command == F("mnum"))
                 {
                   value = paramVal.toInt();
                   if (value < 16)
