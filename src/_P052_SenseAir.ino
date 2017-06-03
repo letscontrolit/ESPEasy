@@ -210,7 +210,7 @@ float Plugin_052_readTemperature(void)
   byte frame[8] = {0};
   Plugin_052_buildFrame(0xFE, 0x04, 0x04, 1, frame);
   temperatureX100 = Plugin_052_sendCommand(frame);
-  temperature = temperatureX100/100;
+  temperature = (float)temperatureX100/100;
   return temperature;
 }
 
@@ -221,7 +221,7 @@ float Plugin_052_readRelativeHumidity(void)
   byte frame[8] = {0};
   Plugin_052_buildFrame(0xFE, 0x04, 0x05, 1, frame);
   rhX100 = Plugin_052_sendCommand(frame);
-  rh = rhX100/100;
+  rh = (float)rhX100/100;
   return rh;
 }
 
