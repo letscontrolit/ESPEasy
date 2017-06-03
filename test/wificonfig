@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+
+
+source configlib
+source wifi.txt
+
+./pingserial $UNIT
+
+echo "
+wifissid $WIFI_SSID
+wifikey $WIFI_PASS
+ip $IP
+save
+reboot
+" > $SERIAL
+
+echo -n "Waiting for unit $UNIT to connect: "
+sleep 1
+trap "exit 1" SIGINT
+
+while ! ping -w 1 -c 1 $IP &>/dev/null; do
+        echo -n "."
+done
+
+echo "ONLINE"

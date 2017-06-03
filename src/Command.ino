@@ -86,12 +86,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("clearRTCRAM")) == 0)
   {
     success = true;
-    RTC.factoryResetCounter = 0;
-    RTC.deepSleepState = 0;
-    RTC.rebootCounter = 0;
-    RTC.flashDayCounter = 0;
-    RTC.flashCounter = 0;
-    saveToRTC();
+    initRTC();
   }
 
   if (strcasecmp_P(Command, PSTR("notify")) == 0)
@@ -445,7 +440,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
   {
     success = true;
-    WifiConnect(true, 1);
+    WifiConnect(1);
   }
 
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
@@ -453,6 +448,13 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     WifiDisconnect();
   }
+
+  if (strcasecmp_P(Command, PSTR("WifiAPMode")) == 0)
+  {
+    WifiAPMode(true);
+    success = true;
+  }
+
 
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
   {

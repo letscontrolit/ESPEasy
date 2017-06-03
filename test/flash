@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+source configlib
+
+pushd .. >/dev/null
+$FLASHCMD
+popd > /dev/null
+
+#to prevent hangs when ESPEasy tries to reboot (due to an ESP/lib bug)
+./reboot $UNIT
+
+
+

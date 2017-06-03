@@ -348,6 +348,7 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
+  //its safe to extend this struct, up to 512 bytes, default values in config are 0
 } SecuritySettings;
 
 struct SettingsStruct
@@ -419,6 +420,8 @@ struct SettingsStruct
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
+  boolean       deepSleepOnFail;
+  //its safe to extend this struct, up to 65535 bytes, default values in config are 0
 } Settings;
 
 struct ControllerSettingsStruct
@@ -442,6 +445,7 @@ struct NotificationSettingsStruct
   char          Body[513];
   byte          Pin1;
   byte          Pin2;
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
 struct ExtraTaskSettingsStruct
@@ -552,17 +556,25 @@ struct pinStatesStruct
   uint16_t value;
 } pinStates[PINSTATE_TABLE_MAX];
 
+
+// this offsets are in blocks, bytes = blocks * 4
+#define RTC_BASE_STRUCT 64
+#define RTC_BASE_USERVAR 74
+
+//max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
   byte ID1;
   byte ID2;
-  boolean valid; // not used?
+  boolean unused1;
   byte factoryResetCounter;
   byte deepSleepState;
-  byte rebootCounter; //not used yet?
+  byte unused2;
   byte flashDayCounter;
   unsigned long flashCounter;
+  unsigned long bootCounter;
 } RTC;
+
 
 int deviceCount = -1;
 int protocolCount = -1;
@@ -583,7 +595,6 @@ unsigned long timerwd;
 unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
-boolean AP_Mode = false;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
@@ -640,6 +651,7 @@ byte lowestRAMid=0;
 \*********************************************************************************************/
 void setup()
 {
+
   lowestRAM = FreeMem();
 
   Serial.begin(115200);
@@ -660,6 +672,40 @@ void setup()
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
   addLog(LOG_LEVEL_INFO, log);
+
+
+  //warm boot
+  if (readFromRTC())
+  {
+    RTC.bootCounter++;
+    readUserVarFromRTC();
+
+    if (RTC.deepSleepState == 1)
+    {
+      log = F("INIT : Rebooted from deepsleep #");
+      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
+    }
+    else
+      log = F("INIT : Warm boot #");
+
+    log += RTC.bootCounter;
+
+  }
+  //cold boot (RTC memory empty)
+  else
+  {
+    initRTC();
+
+    // cold boot situation
+    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
+      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    log = F("INIT : Cold Boot");
+  }
+
+  addLog(LOG_LEVEL_INFO, log);
+
+
+
 
   fileSystemCheck();
   LoadSettings();
@@ -701,8 +747,22 @@ void setup()
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
-  if (!WifiConnect(true,3))
-    WifiConnect(false,3);
+
+  if (Settings.deepSleep)
+  {
+    //only one attempt in deepsleep, to conserve battery
+    if (!WifiConnect(1))
+    {
+        if (Settings.deepSleepOnFail)
+        {
+          addLog(LOG_LEVEL_ERROR, F("SLEEP: Connection failed, going back to sleep."));
+          deepSleep(Settings.Delay);
+        }
+    }
+  }
+  else
+    // 3 connect attempts
+    WifiConnect(3);
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -740,37 +800,6 @@ void setup()
 
   sendSysInfoUDP(3);
 
-  //warm boot
-  if (readFromRTC())
-  {
-    readUserVarFromRTC();
-    if (RTC.deepSleepState == 1)
-    {
-      log = F("INIT : Rebooted from deepsleep");
-      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
-    }
-    else
-      log = F("INIT : Normal boot");
-  }
-  //cold boot (RTC memory empty)
-  else
-  {
-    RTC.factoryResetCounter=0;
-    RTC.deepSleepState=0;
-    RTC.rebootCounter=0;
-    RTC.flashDayCounter=0;
-    RTC.flashCounter=0;
-    saveToRTC();
-
-    // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
-      lastBootCause = BOOT_CAUSE_COLD_BOOT;
-    log = F("INIT : Cold Boot");
-  }
-
-  addLog(LOG_LEVEL_INFO, log);
-
-
   if (Settings.UseNTP)
     initTime();
 
@@ -807,7 +836,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WifiConnect(true,1);
+    WifiConnect(1);
     wifiSetupConnect = false;
   }
 
@@ -1164,8 +1193,17 @@ boolean checkSystemTimers()
 /*********************************************************************************************\
  * run background tasks
 \*********************************************************************************************/
+bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //prevent recursion!
+  if (runningBackgroundTasks)
+  {
+    yield();
+    return;
+  }
+  runningBackgroundTasks=true;
+
   tcpCleanup();
 
   if (Settings.UseSerial)
@@ -1196,4 +1234,6 @@ void backgroundtasks()
   yield();
 
   statusLED(false);
+
+  runningBackgroundTasks=false;
 }

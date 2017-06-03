@@ -502,6 +502,7 @@ void handle_config() {
   //String key2 = WebServer.arg(F("key2"));
   String sensordelay = WebServer.arg(F("delay"));
   String deepsleep = WebServer.arg(F("deepsleep"));
+  String deepsleeponfail = WebServer.arg(F("deepsleeponfail"));
   String espip = WebServer.arg(F("espip"));
   String espgateway = WebServer.arg(F("espgateway"));
   String espsubnet = WebServer.arg(F("espsubnet"));
@@ -528,6 +529,7 @@ void handle_config() {
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
+    Settings.deepSleepOnFail = (deepsleeponfail == "on");
     espip.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.IP);
     espgateway.toCharArray(tmpString, 26);
@@ -577,6 +579,8 @@ void handle_config() {
   addHelpButton(reply, F("SleepMode"));
   addFormNumericBox(reply, F("Sleep Delay"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   addUnit(reply, F("sec"));
+
+  addFormCheckBox(reply, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
   addFormSeparator(reply);
 
@@ -3377,7 +3381,7 @@ void handle_rules() {
 
         if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
         {
-          String log = F("FS   : Daily flash write rate exceeded!");
+          String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
           addLog(LOG_LEVEL_ERROR, log);
           reply += F("<span style=\"color:red\">Error saving to flash!</span>");
         }
@@ -3602,6 +3606,9 @@ void handle_sysinfo() {
       reply += F("External Watchdog");
       break;
   }
+
+  reply += F("<TR><TD>Warm boot count:<TD>");
+  reply += RTC.bootCounter;
 
   reply += F("<TR><TD>STA MAC:<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};

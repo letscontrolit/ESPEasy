@@ -51,15 +51,18 @@ void deepSleep(int delay)
     }
   }
 
-  addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep..."));
+
+  String event = F("System#Sleep");
+  rulesProcessing(event);
+
 
   RTC.deepSleepState = 1;
   saveToRTC();
 
-  String event = F("System#Sleep");
-  rulesProcessing(event);
   if (delay > 4294 || delay < 0)
     delay = 4294;   //max sleep time ~1.2h
+
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
 }
 
@@ -378,15 +381,8 @@ void statusLED(boolean traffic)
   }
   else
   {
-    if (AP_Mode) //apmode is active
-    {
-      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
-    }
-    else if (WiFi.status() != WL_CONNECTED)
-    {
-      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
-    }
-    else //connected
+
+    if (WiFi.status() == WL_CONNECTED)
     {
       long int delta=millis()-gnLastUpdate;
       if (delta>0 || delta<0 )
@@ -395,6 +391,16 @@ void statusLED(boolean traffic)
         nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
         gnLastUpdate=millis();
       }
+    }
+    //AP mode is active
+    else if (WifiIsAP())
+    {
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+    }
+    //Disconnected
+    else
+    {
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }
   }
 
@@ -522,10 +528,18 @@ void BuildFixes()
   \*********************************************************************************************/
 void fileSystemCheck()
 {
+  addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
-    String log = F("FS   : Mount successful");
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+
+    String log = F("FS   : Mount successful, used ");
+    log=log+fs_info.usedBytes;
+    log=log+F(" bytes of ");
+    log=log+fs_info.totalBytes;
     addLog(LOG_LEVEL_INFO, log);
+
     fs::File f = SPIFFS.open("config.dat", "r");
     if (!f)
     {
@@ -537,6 +551,7 @@ void fileSystemCheck()
     String log = F("FS   : Mount failed");
     Serial.println(log);
     addLog(LOG_LEVEL_ERROR, log);
+    ResetFactory();
   }
 }
 
@@ -811,7 +826,7 @@ boolean SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
-    String log = F("FS   : Daily flash write rate exceeded!");
+    String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
     addLog(LOG_LEVEL_ERROR, log);
     return false;
   }
@@ -874,33 +889,35 @@ void ResetFactory(void)
 {
 
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.println(F("Resetting factory defaults..."));
+  Serial.println(F("RESET: Resetting factory defaults..."));
   delay(1000);
   if (readFromRTC())
   {
-    Serial.print(F("RESET: Reboot count: "));
+    Serial.print(F("RESET: Warm boot, reset count: "));
     Serial.println(RTC.factoryResetCounter);
     if (RTC.factoryResetCounter > 3)
     {
-      Serial.println(F("RESET: To many reset attempts"));
+      Serial.println(F("RESET: Too many resets, protecting your flash memory (powercycle to solve this)"));
       return;
     }
   }
   else
+  {
     Serial.println(F("RESET: Cold boot"));
+    initRTC();
+  }
 
   RTC.factoryResetCounter++;
-  RTC.flashDayCounter = 0;
   saveToRTC();
 
   //always format on factory reset, in case of corrupt SPIFFS
   SPIFFS.end();
-  Serial.println(F("FS   : formatting..."));
+  Serial.println(F("RESET: formatting..."));
   SPIFFS.format();
-  Serial.println(F("FS   : formatting done..."));
+  Serial.println(F("RESET: formatting done..."));
   if (!SPIFFS.begin())
   {
-    Serial.println(F("FS   : FORMATTING SPIFFS FAILED!"));
+    Serial.println(F("RESET: FORMAT SPIFFS FAILED!"));
     return;
   }
 
@@ -984,7 +1001,8 @@ void ResetFactory(void)
   Settings.Build = BUILD;
   Settings.UseSerial = true;
   SaveSettings();
-  Serial.println("Factory reset succesful, rebooting...");
+  Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
+  //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
@@ -1128,16 +1146,25 @@ void delayedReboot(int rebootDelay)
 /********************************************************************************************\
   Save RTC struct to RTC memory
   \*********************************************************************************************/
-//user-area of the esp starts at block 64 (bytes = block * 4)
-#define RTC_BASE_STRUCT 64
 boolean saveToRTC()
 {
-  RTC.ID1 = 0xAA;
-  RTC.ID2 = 0x55;
-  RTC.valid = true;
   return(system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)));
 }
 
+
+/********************************************************************************************\
+  Initialize RTC memory
+  \*********************************************************************************************/
+void initRTC()
+{
+  memset(&RTC, 0, sizeof(RTC));
+  RTC.ID1 = 0xAA;
+  RTC.ID2 = 0x55;
+  saveToRTC();
+
+  memset(&UserVar, 0, sizeof(UserVar));
+  saveUserVarToRTC();
+}
 
 /********************************************************************************************\
   Read RTC struct from RTC memory
@@ -1148,18 +1175,15 @@ boolean readFromRTC()
     return(false);
 
   if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-  {
-    RTC.valid = false;
     return true;
-  }
-  return false;
+  else
+    return false;
 }
 
 
 /********************************************************************************************\
   Save values to RTC memory
 \*********************************************************************************************/
-#define RTC_BASE_USERVAR 74
 boolean saveUserVarToRTC()
 {
   //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
