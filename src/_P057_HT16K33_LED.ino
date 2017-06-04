@@ -25,6 +25,20 @@
 
 // Examples:
 // MX,AA,55,AA,55,AA,55,AA,55   Set chess pattern to LED buffer
+// MNUM,CLEAR,1,0   Clear the LED buffer and then set 0x06 to 1st segment and 0x3F to 2nd segment
+
+// Connecting LEDs to HT16K33-board:
+// Cathode for Column 0 = C0
+// Cathode for Column 1 = C1
+// ...
+// Cathode for Column 7 = C7
+//
+// Anode for bit 0x0001 = A0
+// Anode for bit 0x0002 = A1
+// ...
+// Anode for bit 0x0080 = A7
+// ...
+// Anode for bit 0x8000 = A15
 
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
@@ -287,7 +301,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         if (CONFIG(6) >= 0)   //colon used?
         {
-          uint8_t act = ((uint16_t)millis() >> 9) & 1;
+          uint8_t act = ((uint16_t)millis() >> 9) & 1;   //blink with about 2 Hz
           static uint8_t last = 0;
           if (act != last)
           {

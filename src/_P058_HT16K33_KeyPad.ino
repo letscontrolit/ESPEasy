@@ -5,7 +5,7 @@
 // ESPEasy Plugin to scan a 13x3 key pad matrix chip HT16K33
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-// Connecting KeyPad to HT16K33:
+// Connecting KeyPad to HT16K33-board:
 // Column 1 = C1 (over diode)
 // Column 2 = C2 (over diode)
 // Column 3 = C3 (over diode)
@@ -19,6 +19,9 @@
 // 16*Column + Row
 // Pressing the top left key (typically "1") the code is 17 (0x11)
 // Pressing the key in column 2 and row 3 (typically "8") the code is 35 (0x23)
+
+// Use diodes (e.g. 1N4148) for column lines:
+//   HT16K33]-----|>|-----[key-matrix
 
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
