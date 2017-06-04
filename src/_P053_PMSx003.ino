@@ -18,7 +18,6 @@
 #define PLUGIN_VALUENAME3_053 "pm10"
 
 boolean Plugin_053_init = false;
-byte Plugin_PMSx003_UART = 0;
 byte timer = 0;
 boolean values_received = false;
 
