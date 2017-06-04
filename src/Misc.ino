@@ -1148,7 +1148,15 @@ void delayedReboot(int rebootDelay)
   \*********************************************************************************************/
 boolean saveToRTC()
 {
-  return(system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)));
+  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
+  {
+    addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+    return(false);
+  }
+  else
+  {
+    return(true);
+  }
 }
 
 

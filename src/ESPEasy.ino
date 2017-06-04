@@ -702,6 +702,9 @@ void setup()
     log = F("INIT : Cold Boot");
   }
 
+  RTC.deepSleepState=0;
+  saveToRTC();
+
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -819,8 +822,6 @@ void setup()
     rulesProcessing(event);
   }
 
-  RTC.deepSleepState=0;
-  saveToRTC();
 
 
 }
