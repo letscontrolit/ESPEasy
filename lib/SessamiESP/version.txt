@@ -1,0 +1,70 @@
+v2.3.0
+WORKING:
+	CAP1114 Driver - Replace Enums by define
+	Done:
+		MSControl
+		CS
+		Threshold
+	CAP1114 Driver - Use static varible for decrease I2C Write Bit.
+CHANGED:
+	Replace Enums by define in CS and
+	Fixed bug of reading Proximity and Slider
+	Put CAP1114_Button to lib, delete in main
+PENDING:
+	Modify I2CSensor - change functions to protected and virual, 
+						and BlockRead, BlockWrite, WriteBit.
+BUG:
+	OpenWeather - ArduinoJson phasing float to int, int to float.
+
+v2.2.5
+WORKING:
+CHANGED:
+	Added button example into lib
+PENDING:
+	CAP1114 Driver - Replace Enums by define
+	CAP1114 Driver - Use static varible for decrease I2C Write Bit.
+	Modify I2CSensor - change functions to protected and virual, 
+						and BlockRead, BlockWrite, WriteBit.
+BUG:
+	OpenWeather - ArduinoJson phasing float to int, int to float.
+
+v2.2.4
+WORKING:
+CHANGED:
+	I2CSensor - change ReadRegister(uint8_t, uint8_t) for Si7020
+PENDING:
+	CAP1114 Driver - Replace Enums by define
+	CAP1114 Driver - Use static varible for decrease I2C Write Bit.
+	Modify I2CSensor - change functions to protected and virual, 
+						and BlockRead, BlockWrite, WriteBit.
+BUG:
+	OpenWeather - ArduinoJson phasing float to int, int to float.
+
+v2.2.3
+WORKING:
+CHANGED:
+	CAP1114 Driver - Detla Count add parameter with Define value
+	CAP1114_Driver - Add threshold function
+PENDING:
+	CAP1114 Driver - Replace Enums by define
+	CAP1114 Driver - Use static varible for decrease I2C Write Bit.
+BUG:
+	OpenWeather - ArduinoJson phasing float to int, int to float.
+
+v2.2.2
+WORKING:
+CHANGED:
+	CAP1114 Driver - Detla Count add parameter with Define value
+PENDING:
+	CAP1114 Driver - Replace Enums by define
+	CAP1114 Driver - Use static varible for decrease I2C Write Bit.
+BUG:
+	OpenWeather - ArduinoJson phasing float to int, int to float.
+
+	
+	
+External Libraries:
+	- TimeLib https://github.com/PaulStoffregen/Time
+	- ArduinoJson 		v5.8.2
+	- Adafruit GFX 		v1.1.5
+	- Adafruit ILI9341 	v1.0.2
