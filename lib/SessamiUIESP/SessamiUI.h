@@ -10,7 +10,6 @@
 
 #include "Arduino.h"
 #include <ImageDraw.h>
-#include "SessamiController.h"
 #include <string>
 
 typedef String string;
