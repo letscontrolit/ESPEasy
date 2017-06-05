@@ -9,6 +9,18 @@
 
 using namespace CAP1114;
 
+
+uint8_t Sessami_Button::button_state = 0;
+uint8_t Sessami_Button::slide_state = 0;
+unsigned long Sessami_Button::held_t = 0;
+unsigned long Sessami_Button::button_hold_t = 0;
+unsigned int Sessami_Button::button_tap = 0;
+bool Sessami_Button::slide_tap = 0;
+bool Sessami_Button::slide_ph = 0;
+uint8_t Sessami_Button::delta_sen;
+uint8_t Sessami_Button::threshold[8];
+int8_t Sessami_Button::delta_count[8];
+
 bool Sessami_Button::operator==(const unsigned int key) const {
   if ((key == B_PROX) && ((button_state & key) > 0) ) //For Proximity
     return true;
@@ -233,4 +245,62 @@ uint8_t Sessami_Button::Getthreshold(uint8_t key) {
       return threshold[6];
       break;
   }
+}
+
+Sessami_Button::Sessami_Button() : CAP1114_Driver()  {
+#if defined(ESP8266)
+  Serial.println("I2C Max Speed");
+#endif
+
+  Serial.println("---------CAP1114 initialization Start-----------");
+  if (!initWireI2C())
+    Serial.println("CAP1114 communication fail!");
+  else {
+    //-----------------------Sessami Setting-----------------------------
+    //Set LED and Touch IO
+    SetGPIODir(B01111111);
+    SetOutputType(B01110000);
+    
+    SetMTConfig(0); //Multi Touch
+    SetCalAct(0xFF); //Calibrate all Sensor
+
+    SetProxEN(HI); //On Proximity
+    SetProxSen(4); //Set Sensivity  0-most, 7-least
+    /*SetDeltaSen(4);
+    Serial.print("Delta Sensitivity : ");
+    Serial.println(GetDeltaSen());*/
+
+    
+    /*SetIntEn(0xFF);//(uint8_t)IntEn::G); //interrupt Enable
+    Serial.print("Interrupt Enable : ");
+    Serial.println(GetIntEn(), 2);
+
+    /*SetMaxDurCalConfig(LO, LO);
+    SetRptRateConfig(LO, HI);
+    Serial.print("Repeat Rate Enable : ");
+    GetRptRateConfig(&sg, &gp);
+    Serial.print(sg);
+    Serial.print("   ");
+    Serial.println(gp);
+
+    GetGroupConfig(&rpt_ph, &m_press, &max_dur, &rpt_sl);
+    Serial.print("Group Config : ");
+    Serial.print(rpt_ph, 2);
+    Serial.print("   ");
+    Serial.print(m_press, 2);
+    Serial.print("   ");
+    Serial.print(max_dur, 2);
+    Serial.print("   ");
+    Serial.println(rpt_sl, 2);
+
+    SetAccelEN(HI);*/
+
+
+    Serial.println("---------CAP1114 initialization End-----------");
+    Serial.println();
+  }
+}
+
+Sessami_Button::~Sessami_Button() {
+
 }

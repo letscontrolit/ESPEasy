@@ -1,6 +1,7 @@
 //#######################################################################################################
 //################################ Plugin 197: Capactive Touch ##########################################
 //#######################################################################################################
+#ifdef PLUGIN_BUILD_DEV
 
 #include <CAP1114_Driver.h>
 #include <CAP1114_Button.h>
@@ -55,14 +56,18 @@ boolean Plugin_197(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        button = new Sessami_Button;
       }
 
     case PLUGIN_TEN_PER_SECOND:
       {
+        button->UpdateBut();
       }
 
     case PLUGIN_ONCE_A_SECOND:
       {
+        button->HeldCount();
+        button->HoldCount();
       }
 
     case PLUGIN_READ:
@@ -76,3 +81,5 @@ boolean Plugin_197(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+#endif
