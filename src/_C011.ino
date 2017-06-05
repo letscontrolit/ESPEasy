@@ -312,7 +312,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
   s.replace(F("%systime%"), getTimeString(':'));
 
 	#if FEATURE_ADC_VCC
-		newString.replace(F("%vcc%"), String(vcc));
+		s.replace(F("%vcc%"), String(vcc));
 	#endif
 
   // IPAddress ip = WiFi.localIP();
