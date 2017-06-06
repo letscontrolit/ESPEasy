@@ -1,11 +1,11 @@
 //#######################################################################################################
-//############################# Plugin 052: SenseAir CO2 Sensors ########################################
+//############################# Plugin 052: Senseair CO2 Sensors ########################################
 //#######################################################################################################
 /*
   Plugin originally written by: Daniel Tedenljung info__AT__tedenljungconsulting.com
   Rewritten by: Mikael Trieb mikael__AT__triebconsulting.se
 
-  This plugin reads availble values of SenseAir Co2 Sensors.
+  This plugin reads availble values of Senseair Co2 Sensors.
   Datasheet can be found here:
   S8: http://www.senseair.com/products/oem-modules/senseair-s8/
   K30: http://www.senseair.com/products/oem-modules/k30/
@@ -20,7 +20,7 @@
 
 #define PLUGIN_052
 #define PLUGIN_ID_052         52
-#define PLUGIN_NAME_052       "SenseAir"
+#define PLUGIN_NAME_052       "Senseair"
 #define PLUGIN_VALUENAME1_052 ""
 
 boolean Plugin_052_init = false;
@@ -96,7 +96,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
         if (Plugin_052_init)
         {
 
-          String log = F("SenseAir ");
+          String log = F("Senseair ");
           switch(Settings.TaskDevicePluginConfig[event->TaskIndex][0])
           {
               case 0:
