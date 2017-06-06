@@ -66,8 +66,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
           byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          String options[4] = { F("Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity") };
-          addFormSelector(string, F("Sensor"), F("plugin_052"), 4, options, NULL, choice);
+          String options[5] = { F("Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status") };
+          addFormSelector(string, F("Sensor"), F("plugin_052"), 5, options, NULL, choice);
 
           success = true;
           break;
@@ -131,6 +131,14 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
                   log += (float)relativeHumidity;
                   break;
               }
+              case 4:
+-              {
+-                  int relayStatus = Plugin_052_readRelayStatus();
+-                  UserVar[event->BaseVarIndex] = relayStatus;
+-                  log += F("relay status = ");
+-                  log += relayStatus;
+-                  break;
+-              }
           }
           addLog(LOG_LEVEL_INFO, log);
 
@@ -224,6 +232,19 @@ float Plugin_052_readRelativeHumidity(void)
   rh = (float)rhX100/100;
   return rh;
 }
+
+int Plugin_052_readRelayStatus(void)
+-{
+-  int status = 0;
+-  bool result;
+-  byte frame[8] = {0};
+-
+-  Plugin_052_buildFrame(0xFE, 0x04, 0x1C, 1, frame);
+-  status = Plugin_052_sendCommand(frame);
+-  result = status >> 8 & 0x1;
+-
+-  return result;
+-}
 
 // Compute the MODBUS RTU CRC
 unsigned int Plugin_052_ModRTU_CRC(byte buf[], int len, byte checkSum[2])
