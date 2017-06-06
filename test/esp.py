@@ -3,17 +3,21 @@ import sys
 import time
 import subprocess
 import wificonfig
+import requests
+
 
 def log(txt):
     print(txt, end="", flush=True)
 
 
 class Esp():
+
+
     def __init__(self, config):
         print("Using unit {unit} ({type}) with ip {ip}".format(**config))
         self._config=config
         self._serial=serial.Serial(port=config['port'], baudrate=115200, timeout=1, write_timeout=1)
-
+        self._url="http://{ip}/".format(**self._config)
 
 
     def pingserial(self, timeout=60):
@@ -92,5 +96,32 @@ class Esp():
 
 
     def erase(self):
-        """erase flash"""
+        """erase flash via serial"""
         subprocess.check_call("esptool.py --port {port} -b 1500000  erase_flash".format(**self._config), shell=True, cwd='..')
+
+
+    def config_device(self):
+
+        r=requests.post(
+            self._url+"devices",
+            params={
+                'index':1,
+                'page':1
+            },
+            data={
+                'TDNUM':1,
+                'TDN': "",
+                'TDE': 'on',
+                'TDP1': 12,
+                'plugin_001_type':1,
+                'plugin_001_button':0,
+                'TDT':0,
+                'TDSD1':'on',
+                'TDID1':1,
+                'TDVN1':'Switch',
+                'edit':1,
+                'page':1
+            }
+        )
+
+        print(r.url)
