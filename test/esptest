@@ -5,8 +5,9 @@ import json
 import sys
 import config
 import esp
+import pydoc
 
-parser = argparse.ArgumentParser(description='ESPEasy testing framework')
+parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog=pydoc.render_doc(esp.Esp), formatter_class=argparse.RawDescriptionHelpFormatter)
 
 # parser.add_argument('--url', default='http://localhost:8080/rpc', help='url of rpc server to connect to. default: %(default)s')
 # parser.add_argument('--user', default=None, help='user to login.')
@@ -17,7 +18,7 @@ parser = argparse.ArgumentParser(description='ESPEasy testing framework')
 # parser.add_argument('--short', action='store_true', help='return short single-line JSON output (for scripting)')
 # parser.add_argument('--verbose', action='store_true', help='request verbose mode (module help output)')
 # parser.add_argument('--insecure', action='store_true', help='dont verify SSL certificates. (use with self-signed certificates)')
-parser.add_argument('command',      nargs=1, help='esptest command to run')
+parser.add_argument('command',      nargs=1, help='Function from the Esp class to run (help below)')
 parser.add_argument('unit',         type=int,nargs=1, help='Unit number (from config)')
 parser.add_argument('params',  default=[], nargs='*', help='command parameters. in foo=bar form ')
 
