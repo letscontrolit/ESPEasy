@@ -1,2 +1,0 @@
-ssid="yourssid"
-password="yourpassword"
