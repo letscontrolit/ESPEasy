@@ -101,10 +101,10 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
           {
               case 0:
               {
-                  int sensor_status = Plugin_052_readStatus();
-                  UserVar[event->BaseVarIndex] = sensor_status;
+                  int error_Status = Plugin_052_readErrorStatus();
+                  UserVar[event->BaseVarIndex] = error_Status;
                   log += F("error status = ");
-                  log += sensor_status;
+                  log += error_Status;
                   break;
               }
               case 1:
@@ -201,13 +201,13 @@ int Plugin_052_sendCommand(byte command[])
   return value;
 }
 
-int Plugin_052_readStatus(void)
+int Plugin_052_readErrorStatus(void)
 {
-  int sensor_status = -1;
+  int error_Status = -1;
   byte frame[8] = {0};
   Plugin_052_buildFrame(0xFE, 0x04, 0x00, 1, frame);
-  sensor_status = Plugin_052_sendCommand(frame);
-  return sensor_status;
+  error_Status = Plugin_052_sendCommand(frame);
+  return error_Status;
 }
 
 int Plugin_052_readCo2(void)
@@ -256,7 +256,7 @@ int Plugin_052_readRelayStatus(void)
 
 int Plugin_052_readTemperatureAdjustment(void)
 {
-  int value = 0x0000;
+  int value = 0;
   byte frame[8] = {0};
 
   Plugin_052_buildFrame(0xFE, 0x04, 0x0A, 1, frame);
