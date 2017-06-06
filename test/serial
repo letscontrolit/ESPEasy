@@ -1,6 +1,0 @@
-#!/bin/bash -e
-
-source configlib
-
-platformio serialports monitor --baud 115200 --port $SERIAL --echo; 
-

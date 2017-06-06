@@ -1,5 +1,0 @@
-#!/bin/bash -e
-
-./build $1
-./flash $1
-./serial $1

@@ -11,25 +11,25 @@ def log(txt):
 class Esp():
     def __init__(self, config):
         print("Using unit {unit} ({type}) with ip {ip}".format(**config))
-        self.config=config
-        self.serial=serial.Serial(port=config['port'], baudrate=115200, timeout=1, write_timeout=1)
+        self._config=config
+        self._serial=serial.Serial(port=config['port'], baudrate=115200, timeout=1, write_timeout=1)
 
 
 
     def pingserial(self, timeout=60):
         """waits until espeasy reponds via serial"""
-        self.serial.reset_input_buffer();
+        self._serial.reset_input_buffer();
         log("Waiting for serial response: ")
         start_time=time.time()
 
         while (time.time()-start_time)< int(timeout):
-                self.serial.write(bytes('\n', 'ascii'));
+                self._serial.write(bytes('\n', 'ascii'));
                 a=True
                 while a!=b'':
-                    a=self.serial.readline()
+                    a=self._serial.readline()
                     if a==b"Unknown command!\r\n":
                         log("OK\n")
-                        self.serial.reset_input_buffer();
+                        self._serial.reset_input_buffer();
                         return
                 log(".")
 
@@ -38,9 +38,9 @@ class Esp():
 
     def reboot(self):
         '''reboot the esp via the serial DTR line'''
-        self.serial.setDTR(0)
+        self._serial.setDTR(0)
         time.sleep(0.1)
-        self.serial.setDTR(1)
+        self._serial.setDTR(1)
 
 
     def pingwifi(self, timeout=60):
@@ -51,7 +51,7 @@ class Esp():
 
         while (time.time()-start_time)< int(timeout):
                 log(".")
-                if not subprocess.call(["ping", "-w", "1", "-c", "1", self.config['ip']], stdout=subprocess.DEVNULL):
+                if not subprocess.call(["ping", "-w", "1", "-c", "1", self._config['ip']], stdout=subprocess.DEVNULL):
                     log("OK\n")
                     return
 
@@ -60,8 +60,37 @@ class Esp():
 
     def wificonfig(self, timeout=60):
         """configure wifi via serial and make sure esp is online and pingable."""
+
         self.pingserial(timeout=timeout)
 
-        serial_str="wifissid {ssid}\nwifikey {password}\nip {ip}\nsave\nreboot\n".format(ssid=wificonfig.ssid, password=wificonfig.password, ip=self.config['ip'])
-        self.serial.write(bytes(serial_str, 'ascii'));
+        serial_str="wifissid {ssid}\nwifikey {password}\nip {ip}\nsave\nreboot\n".format(ssid=wificonfig.ssid, password=wificonfig.password, ip=self._config['ip'])
+        self._serial.write(bytes(serial_str, 'ascii'));
+
         self.pingwifi(timeout=timeout)
+
+
+    def build(self):
+        """compile binary"""
+
+        subprocess.check_call(self._config['build_cmd'].format(**self._config), shell=True, cwd='..')
+
+
+    def flashserial(self):
+        """flash binary to esp via serial"""
+
+        self.pingserial()
+
+        subprocess.check_call(self._config['flash_cmd'].format(**self._config), shell=True, cwd='..')
+
+        #to prevent hangs when ESPEasy tries to reboot via ESP.reboot (due to an ESP/lib bug)
+        self.reboot()
+
+
+    def serial(self):
+        """open serial terminal to esp"""
+        subprocess.check_call("platformio serialports monitor --baud 115200 --port {port} --echo".format(**self._config), shell=True, cwd='..')
+
+
+    def erase(self):
+        """erase flash"""
+        subprocess.check_call("esptool.py --port {port} -b 1500000  erase_flash".format(**self._config), shell=True, cwd='..')

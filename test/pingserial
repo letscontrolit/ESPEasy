@@ -1,5 +1,0 @@
-#!/bin/bash -e
-
-source configlib
-
-./pingserial.py $SERIAL
