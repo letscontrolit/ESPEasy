@@ -2,35 +2,22 @@
 //#################################### Plugin 059: Rotary Encoder #######################################
 //#######################################################################################################
 
-// ESPEasy Plugin to scan a 13x3 key pad matrix chip HT16K33
+// ESPEasy Plugin to process the quadrature encoder interface signals (e.g. rotary encoder)
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-// Connecting KeyPad to HT16K33-board:
-// Column 1 = C1 (over diode)
-// Column 2 = C2 (over diode)
-// Column 3 = C3 (over diode)
-// Row 1 = A3
-// Row 2 = A4
-// Row 3 = A5
-// ...
-// Row 13 = A15
+// Connection:
+// Use 1st and 2nd GPIO for encoders A and B signal.
+// Optional use 3rd GPIO for encoders I signel to reset counter to 0 at first trigger.
+// If counter runs in wrong direction, change A and B GPIOs in settings page
 
-// ScanCode;
-// 16*Column + Row
-// Pressing the top left key (typically "1") the code is 17 (0x11)
-// Pressing the key in column 2 and row 3 (typically "8") the code is 35 (0x23)
-
-// Use diodes (e.g. 1N4148) for column lines:
-//   HT16K33]-----|>|-----[key-matrix
-
-// Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
+// Note: Up to 4 encoders can be used simultaniously
 
 
 #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_059
 #define PLUGIN_ID_059         59
-#define PLUGIN_NAME_059       "Switch - Rotary Encoder [TESTING]"
+#define PLUGIN_NAME_059       "Switch Input - Rotary Encoder [TESTING]"
 #define PLUGIN_VALUENAME1_059 "Counter"
 
 #include <QEIx4.h>
@@ -39,6 +26,12 @@ QEIx4* Plugin_059_QE = NULL;
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
+#endif
+#ifndef CONFIG_L
+#define CONFIG_L(n) (Settings.TaskDevicePluginConfigLong[event->TaskIndex][n])
+#endif
+#ifndef PIN
+#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
 
@@ -51,10 +44,10 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_059;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
-        Device[deviceCount].PullUpOption = true;
+        Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
@@ -79,11 +72,16 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = CONFIG(0);
+        // default values
+        if (CONFIG_L(0) == 0 && CONFIG_L(1) == 0)
+          CONFIG_L(1) = 100;
 
         String options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
         int optionValues[3] = { 1, 2, 4 };
         addFormSelector(string, F("Mode"), F("qei_mode"), 3, options, optionValues, CONFIG(0));
+
+        addFormNumericBox(string, F("Limit min."), F("qei_limitmin"), CONFIG_L(0));
+        addFormNumericBox(string, F("Limit max."), F("qei_limitmax"), CONFIG_L(1));
 
         success = true;
         break;
@@ -93,18 +91,37 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         CONFIG(0) = getFormItemInt(F("qei_mode"));
 
+        CONFIG_L(0) = getFormItemInt(F("qei_limitmin"));
+        CONFIG_L(1) = getFormItemInt(F("qei_limitmax"));
+
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        byte addr = CONFIG(0);
-
         if (!Plugin_059_QE)
           Plugin_059_QE = new QEIx4;
 
-        Plugin_059_QE->begin(1,2,-1,4);
+        Plugin_059_QE->begin(PIN(0),PIN(1),PIN(2),CONFIG(0));
+        Plugin_059_QE->setLimit(CONFIG_L(0), CONFIG_L(1));
+        Plugin_059_QE->setIndexTrigger(true);
+
+        ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
+
+        String log = F("QEI  : GPIO: ");
+        for (byte i=0; i<3; i++)
+        {
+          int pin = PIN(i);
+          if (pin >= 0)
+          {
+            //pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
+            setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
+          }
+          log += pin;
+          log += F(" ");
+        }
+        addLog(LOG_LEVEL_INFO, log);
 
         success = true;
         break;
@@ -116,12 +133,13 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         {
           if (Plugin_059_QE->hasChanged())
           {
-            UserVar[event->BaseVarIndex] = (float)Plugin_059_QE->read();
+            long c = Plugin_059_QE->read();
+            UserVar[event->BaseVarIndex] = (float)c;
             event->sensorType = SENSOR_TYPE_SWITCH;
 
-            //String log = F("Mkey : key=0x");
-            //log += String(key, 16);
-            //addLog(LOG_LEVEL_INFO, log);
+            String log = F("QEI  : ");
+            log += c;
+            addLog(LOG_LEVEL_INFO, log);
 
             sendData(event);
           }
