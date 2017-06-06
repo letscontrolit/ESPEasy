@@ -24,7 +24,7 @@
   -------------------------------------------------------------------------*/
 
 #include "QEIx4.h"
-#include <Limits.h>
+#include <limits.h>
 
 
 // bit masks for state machine - don't change!!!
