@@ -27,6 +27,10 @@ boolean Plugin_053_init = false;
 byte timer = 0;
 boolean values_received = false;
 
+// Read 2 bytes from serial and make an uint16 of it
+// Additionally calculate checksum for PMSx003
+// Assumption is that there is data available, otherwise
+// blocking.
 void SerialRead16(uint16_t* value, uint16_t* checksum)
 {
   uint8_t data_high, data_low;
@@ -34,13 +38,11 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
   // If swSerial is initialized, we are using soft serial
   if (swSerial != NULL)
   {
-    while(swSerial.available() < 2) {};
-    data_high = swSerial.read();
-    data_low = swSerial.read();
+    data_high = swSerial->read();
+    data_low = swSerial->read();
   }
   else
   {
-    while(Serial.available() < 2) {};
     data_high = Serial.read();
     data_low = Serial.read();
   }
@@ -67,34 +69,38 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 
 boolean PacketAvailable(void)
 {
-  boolean ret = false;
+  boolean success = false;
 
   if (swSerial != NULL)
-  { 
-    // First check if there is a complete packet (needed?)
-    if (swSerial.available >= PMSx003_SIZE)
+  {
+    // Search through the buffer to find header (buffer may be out of sync)
+    while (swSerial->available() > 1)
     {
-      // Search through the buffer to find header (buffer may be out of sync)
-      while (swSerial.available() > 1)
+      if (swSerial->read() == PMSx003_SIG1 && swSerial->read() == PMSx003_SIG2)
       {
-        if (swSerial.read() == PMSx003_SIG1 && swSerial.read() == PMSx003_SIG2)
-          ret = true;
+        success = true;
+        break;
       }
     }
   }
-  else
+  else // Hardware serial
   {
-    if (Serial.available >= PMSx003_SIZE && 
-        Serial.read() == PMSx003_SIG1 && Serial.read() == PMSx003_SIG2)
+    // Search through the buffer to find header (buffer may be out of sync)
+    while (Serial.available() > 1)
     {
-      ret = true;
+      if (Serial.read() == PMSx003_SIG1 && Serial.read() == PMSx003_SIG2)
+      {
+        success = true;
+        break;
+      }
     }
   }
-  return ret;
+  return success;
 }
 
 boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 {
+  String log;
   boolean success = false;
 
   switch (function)
@@ -102,7 +108,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_053;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -134,29 +140,33 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        String Log;
         int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
         int txPin = Settings.TaskDevicePin2[event->TaskIndex];
         int resetPin = Settings.TaskDevicePin3[event->TaskIndex];
-        log = F("PMSx003 : config ") + rxPin + txPin + resetPin;
+
+        log = F("PMSx003 : config ");
+        log += rxPin;
+        log += txPin;
+        log += resetPin;
         addLog(LOG_LEVEL_INFO, log);
 
         // Hardware serial is RX on 3 and TX on 1
         if (rxPin == 3 && txPin == 1)
         {
-          log = F("PMSx003 : using hardware serial"); 
+          log = F("PMSx003 : using hardware serial");
           addLog(LOG_LEVEL_INFO, log);
           Serial.begin(9600);
-        {
+          Serial.flush();
+        }
         else
         {
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
           swSerial = new SoftwareSerial(rxPin, txPin);
-          swSerial.begin(9600);
+          swSerial->begin(9600);
         }
-        
-        if (resetPin)
+
+        if (resetPin >= 0) // Reset if pin is configured
         {
           // Toggle 'reset' to assure we start reading header
           log = F("PMSx003: resetting module");
@@ -167,7 +177,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           digitalWrite(resetPin, HIGH);
           pinMode(resetPin, INPUT_PULLUP);
         }
-        
+
         Plugin_053_init = true;
         success = true;
         break;
@@ -182,9 +192,8 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           uint16_t data[13];
           byte data_low, data_high;
           int i = 0;
-          String log;
 
-          // Check if a packet is available in the UART buffer.
+          // Check if a packet is available in the UART FIFO.
           if (PacketAvailable())
           {
             checksum += PMSx003_SIG1 + PMSx003_SIG2;
@@ -192,15 +201,13 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
             if (framelength != (PMSx003_SIZE - 4))
             {
               log = F("PMSx003 : invalid framelength - ");
-              log+=framelength;
+              log += framelength;
               addLog(LOG_LEVEL_INFO, log);
               break;
             }
 
             for (i = 0; i < 13; i++)
-            {
               SerialRead16(&data[i], &checksum);
-            }
 
             log = F("PMSx003 : pm1.0=");
             log += data[0];
@@ -234,10 +241,17 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
             SerialRead16(&checksum2, NULL);
             if (checksum == checksum2)
             {
-              /* Data is checked and good, fill in output */
+              // Data is checked and good, fill in output
               UserVar[event->BaseVarIndex]     = data[3];
               UserVar[event->BaseVarIndex + 1] = data[4];
               UserVar[event->BaseVarIndex + 2] = data[5];
+
+              // FLush the other packets in the FIFO
+              if (swSerial != NULL)
+                swSerial->flush();
+              else
+                Serial.flush();
+
               success = true;
             }
           }
