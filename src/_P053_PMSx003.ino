@@ -10,13 +10,19 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
+#include <SoftwareSerial.h>
+
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
 #define PLUGIN_NAME_053 "Particle Sensor - PMSx003"
 #define PLUGIN_VALUENAME1_053 "pm1.0"
 #define PLUGIN_VALUENAME2_053 "pm2.5"
 #define PLUGIN_VALUENAME3_053 "pm10"
+#define PMSx003_SIG1 0X42
+#define PMSx003_SIG2 0X4d
+#define PMSx003_SIZE 32
 
+SoftwareSerial *swSerial = NULL;
 boolean Plugin_053_init = false;
 byte timer = 0;
 boolean values_received = false;
@@ -25,10 +31,20 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 {
   uint8_t data_high, data_low;
 
-  while(Serial.available() == 0) {};
-  data_high = Serial.read();
-  while(Serial.available() == 0) {};
-  data_low = Serial.read();
+  // If swSerial is initialized, we are using soft serial
+  if (swSerial != NULL)
+  {
+    while(swSerial.available() < 2) {};
+    data_high = swSerial.read();
+    data_low = swSerial.read();
+  }
+  else
+  {
+    while(Serial.available() < 2) {};
+    data_high = Serial.read();
+    data_low = Serial.read();
+  }
+
   *value = data_low;
   *value |= (data_high << 8);
 
@@ -47,6 +63,34 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
   log += String(*value,HEX);
   addLog(LOG_LEVEL_INFO, log);
 #endif
+}
+
+boolean PacketAvailable(void)
+{
+  boolean ret = false;
+
+  if (swSerial != NULL)
+  { 
+    // First check if there is a complete packet (needed?)
+    if (swSerial.available >= PMSx003_SIZE)
+    {
+      // Search through the buffer to find header (buffer may be out of sync)
+      while (swSerial.available() > 1)
+      {
+        if (swSerial.read() == PMSx003_SIG1 && swSerial.read() == PMSx003_SIG2)
+          ret = true;
+      }
+    }
+  }
+  else
+  {
+    if (Serial.available >= PMSx003_SIZE && 
+        Serial.read() == PMSx003_SIG1 && Serial.read() == PMSx003_SIG2)
+    {
+      ret = true;
+    }
+  }
+  return ret;
 }
 
 boolean Plugin_053(byte function, struct EventStruct *event, String& string)
@@ -90,37 +134,46 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Serial.begin(9600);
-        // Toggle 'reset' to assure we start reading header
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-        digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
-        delay(250);
-        digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+        String Log;
+        int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int txPin = Settings.TaskDevicePin2[event->TaskIndex];
+        int resetPin = Settings.TaskDevicePin3[event->TaskIndex];
+        log = F("PMSx003 : config ") + rxPin + txPin + resetPin;
+        addLog(LOG_LEVEL_INFO, log);
 
-        // Put device in suspend by driving 'set'low
-        pinMode(Settings.TaskDevicePin2[event->TaskIndex], OUTPUT);
-        digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);
-
+        // Hardware serial is RX on 3 and TX on 1
+        if (rxPin == 3 && txPin == 1)
+        {
+          log = F("PMSx003 : using hardware serial"); 
+          addLog(LOG_LEVEL_INFO, log);
+          Serial.begin(9600);
+        {
+        else
+        {
+          log = F("PMSx003: using software serial");
+          addLog(LOG_LEVEL_INFO, log);
+          swSerial = new SoftwareSerial(rxPin, txPin);
+          swSerial.begin(9600);
+        }
+        
+        if (resetPin)
+        {
+          // Toggle 'reset' to assure we start reading header
+          log = F("PMSx003: resetting module");
+          addLog(LOG_LEVEL_INFO, log);
+          pinMode(resetPin, OUTPUT);
+          digitalWrite(resetPin, LOW);
+          delay(250);
+          digitalWrite(resetPin, HIGH);
+          pinMode(resetPin, INPUT_PULLUP);
+        }
+        
         Plugin_053_init = true;
         success = true;
         break;
       }
 
-    case PLUGIN_ONCE_A_SECOND:
-      {
-        // Do measurements only every 30 seconds
-        #if 0
-        if ((timer++) % 30 == 0)
-          if (digitalRead(Settings.TaskDevicePin2[event->TaskIndex]))
-            digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW);
-          else
-            digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);
-        #endif
-        success = true;
-      }
-
-    case PLUGIN_SERIAL_IN:
+    case PLUGIN_READ:
       {
         if (Plugin_053_init)
         {
@@ -131,12 +184,12 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           int i = 0;
           String log;
 
-          // Check for 2-byte header. A total of 32 bytes is to be received.
-          if (Serial.read() == 0x42 && Serial.read() == 0x4d)
+          // Check if a packet is available in the UART buffer.
+          if (PacketAvailable())
           {
-            checksum += 0x42 + 0x4d;
+            checksum += PMSx003_SIG1 + PMSx003_SIG2;
             SerialRead16(&framelength, &checksum);
-            if (framelength != 28)
+            if (framelength != (PMSx003_SIZE - 4))
             {
               log = F("PMSx003 : invalid framelength - ");
               log+=framelength;
@@ -175,7 +228,6 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
             log += data[10];
             log += F(", 10um=");
             log += data[11];
-
             addLog(LOG_LEVEL_INFO, log);
 
             // Compare checksums
@@ -186,19 +238,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex]     = data[3];
               UserVar[event->BaseVarIndex + 1] = data[4];
               UserVar[event->BaseVarIndex + 2] = data[5];
-              values_received = true;
+              success = true;
             }
           }
         }
-        success = true;
-        break;
-      }
-
-    case PLUGIN_READ:
-      {
-        // Prevent sending data to controller when nothing received yet
-        if (values_received)
-          success = true;
         break;
       }
   }
