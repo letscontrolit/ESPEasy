@@ -342,6 +342,9 @@ void handle_root() {
 
   if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
   {
+    if (timerAPoff)
+      timerAPoff = 1;   //user has reached the main page - AP can be switched off now
+
     String reply = "";
     navMenuIndex = 0;
     addHeader(true, reply);
@@ -3233,16 +3236,17 @@ void handle_setup() {
     IPAddress ip = WiFi.localIP();
     char host[20];
     sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    reply += F("<BR>ESP is connected and using IP Address: ");
+    reply += F("<BR>ESP is connected and using IP Address: <BR><h3>");
     reply += host;
-    reply += F("<BR><BR>Connect your laptop / tablet / phone back to your main Wifi network and ");
+    reply += F("</h3><BR><BR>Connect your laptop / tablet / phone back to your main Wifi network and ");
     reply += F("<a class='button' href='http://");
     reply += host;
     reply += F("/config'>Proceed to main config</a>");
     addFooter(reply);
     sendWebPage(F("TmplAP"), reply);
     wifiSetup = false;
-    WifiAPMode(false);  //JK TODO - this forces the iPhone to exit safari and this page was never displayed
+    //WifiAPMode(false);  //this forces the iPhone to exit safari and this page was never displayed
+    timerAPoff = millis() + 30000;  //switch the AP off in 30 sec
     return;
   }
 
