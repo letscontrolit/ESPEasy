@@ -1379,6 +1379,8 @@ String getTimeString(char delimiter)
   reply += minute();
   if (delimiter != '\0')
   	reply += delimiter;
+  if (second() < 10)
+  	reply += F("0");
   reply += second();
   return reply;
 }
