@@ -30,7 +30,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
+        Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
@@ -97,14 +97,14 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
           float value = Plugin_013_read();
           String log = F("SR04 : Distance: ");
-          if (value != -1)
+          if (value > 0)
           {
-            UserVar[event->BaseVarIndex] = (float)Plugin_013_timer / 58;
+            UserVar[event->BaseVarIndex] = value;
             log += UserVar[event->BaseVarIndex];
             success = true;
           }
           else
-            log += F("SR04 : Distance: No reading!");
+            log += F("No reading!");
 
         addLog(LOG_LEVEL_INFO,log);
         }
@@ -118,7 +118,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
           byte state = 0;
           float value = Plugin_013_read();
-          if (value != -1)
+          if (value > 0)
           {
             if (value < Settings.TaskDevicePluginConfig[event->TaskIndex][1])
               state = 1;
