@@ -598,6 +598,7 @@ unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
+unsigned long timerAPoff = 0;
 
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
@@ -979,6 +980,12 @@ void runOncePerSecond()
     Serial.print(elapsed);
     Serial.print(F(" uS  1 ps:"));
     Serial.println(timer);
+  }
+
+  if (timerAPoff != 0 && millis() > timerAPoff)
+  {
+    timerAPoff = 0;
+    WifiAPMode(false);
   }
 }
 
