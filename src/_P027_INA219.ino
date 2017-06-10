@@ -126,6 +126,10 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         optionValues2[3] = INA219_ADDRESS4;
         addFormSelectorI2C(string, F("plugin_027_i2c"), 4, optionValues2, choice2);
 
+        byte choiceMeasureType = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+        addFormSelector(string, F("Measurement Type"), F("plugin_027_measuretype"), 4, options, NULL, choiceMeasureType );
+
         success = true;
         break;
       }
@@ -134,6 +138,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_027_range"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_027_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_027_measuretype"));
         success = true;
         break;
       }
@@ -190,13 +195,52 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
       	String log = F("INA219 0x");
       	log += String(ina219_i2caddr,HEX);
-      	log += F(": Voltage: ");
-      	log += voltage;
-      	log += F(" Current: ");
-      	log += current;
-      	log += F(" Power: ");
-      	log += power;
-      	addLog(LOG_LEVEL_INFO, log);
+
+      	// for backward compability we allow the user to select if only one measurement should be returned
+      	// or all 3 measurement at once
+        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+        {
+          case 0:
+          {
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = voltage;
+          	log += F(": Voltage: ");
+          	log += voltage;
+            break;
+          }
+          case 1:
+          {
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = current;
+          	log += F(" Current: ");
+          	log += current;
+            break;
+          }
+          case 2:
+          {
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = power;
+          	log += F(" Power: ");
+          	log += power;
+            break;
+          }
+          case 3:
+          {
+            event->sensorType = SENSOR_TYPE_TRIPLE;
+            UserVar[event->BaseVarIndex] = voltage;
+            UserVar[event->BaseVarIndex+1] = current;
+            UserVar[event->BaseVarIndex+2] = power;
+          	log += F(": Voltage: ");
+          	log += voltage;
+          	log += F(" Current: ");
+          	log += current;
+          	log += F(" Power: ");
+          	log += power;
+            break;
+          }
+        }
+
+        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }
