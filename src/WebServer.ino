@@ -342,6 +342,9 @@ void handle_root() {
 
   if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
   {
+    if (timerAPoff)
+      timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
+
     String reply = "";
     navMenuIndex = 0;
     addHeader(true, reply);
@@ -490,6 +493,9 @@ void handle_root() {
 //********************************************************************************
 void handle_config() {
   if (!isLoggedIn()) return;
+
+  if (timerAPoff)
+    timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
 
   char tmpString[64];
 
@@ -663,7 +669,8 @@ void handle_controllers() {
         Settings.ControllerEnabled[index - 1] = (controllerenabled == "on");
         ControllerSettings.Port = controllerport.toInt();
         strncpy(SecuritySettings.ControllerUser[index - 1], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
-        strncpy(SecuritySettings.ControllerPassword[index - 1], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
+        //strncpy(SecuritySettings.ControllerPassword[index - 1], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
+        copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], sizeof(SecuritySettings.ControllerPassword[0]));
         strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
       }
@@ -1105,9 +1112,9 @@ void handle_devices() {
   String taskdevicenumber = WebServer.arg(F("TDNUM"));
   String taskdevicetimer = WebServer.arg(F("TDT"));
   String taskdeviceid[CONTROLLER_MAX];
-  String taskdevicepin1 = WebServer.arg(F("TDP1"));
-  String taskdevicepin2 = WebServer.arg(F("TDP2"));
-  String taskdevicepin3 = WebServer.arg(F("TDP3"));
+  String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
+  String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
+  String taskdevicepin3 = WebServer.arg(F("taskdevicepin3"));
   String taskdevicepin1pullup = WebServer.arg(F("TDPPU"));
   String taskdevicepin1inversed = WebServer.arg(F("TDPI"));
   String taskdevicename = WebServer.arg(F("TDN"));
@@ -1464,11 +1471,11 @@ void handle_devices() {
           addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("1st GPIO"), F("TDP1"), Settings.TaskDevicePin1[index - 1]);   //="taskdevicepin1"
+          addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("2nd GPIO"), F("TDP2"), Settings.TaskDevicePin2[index - 1]);   //="taskdevicepin2"
+          addFormPinSelect(reply, F("2nd GPIO"), F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("3rd GPIO"), F("TDP3"), Settings.TaskDevicePin3[index - 1]);   //="taskdevicepin3"
+          addFormPinSelect(reply, F("3rd GPIO"), F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
       }
 
       //add plugins content
@@ -1479,16 +1486,6 @@ void handle_devices() {
       if (Device[DeviceIndex].SendDataOption)
       {
         addFormSubHeader(reply, F("Data Acquisition"));
-
-        if (Device[DeviceIndex].TimerOption)
-        {
-          addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
-          addUnit(reply, F("sec"));
-          if (Device[DeviceIndex].TimerOptional)
-            reply += F(" (Optional for this Device)");
-        }
-
-        addFormSeparator(reply);
 
         for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
         {
@@ -1512,6 +1509,16 @@ void handle_devices() {
             }
           }
         }
+      }
+
+      addFormSeparator(reply);
+
+      if (Device[DeviceIndex].TimerOption)
+      {
+        addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
+        addUnit(reply, F("sec"));
+        if (Device[DeviceIndex].TimerOptional)
+          reply += F(" (Optional for this Device)");
       }
 
       //section: Values
@@ -2493,10 +2500,12 @@ void handle_i2cscanner() {
           reply += F("PCF8591<BR>ADS1115<BR>TSL2561");
           break;
         case 0x4C:
-        case 0x4D:
         case 0x4E:
         case 0x4F:
           reply += F("PCF8591");
+          break;
+        case 0x4D:
+          reply += F("PCF8591<BR>MCP3221");
           break;
         case 0x5A:
           reply += F("MLX90614<BR>MPR121");
@@ -3245,16 +3254,18 @@ void handle_setup() {
     IPAddress ip = WiFi.localIP();
     char host[20];
     sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    reply += F("<BR>ESP is connected and using IP Address: ");
+    reply += F("<BR>ESP is connected and using IP Address: <BR><h1>");
     reply += host;
-    reply += F("<BR><BR>Connect your laptop / tablet / phone back to your main Wifi network and ");
+    reply += F("</h1><BR><BR>Connect your laptop / tablet / phone<BR>back to your main Wifi network and<BR><BR>");
     reply += F("<a class='button' href='http://");
     reply += host;
     reply += F("/config'>Proceed to main config</a>");
     addFooter(reply);
     sendWebPage(F("TmplAP"), reply);
+
     wifiSetup = false;
-    WifiAPMode(false);  //JK TODO - this forces the iPhone to exit safari and this page was never displayed
+    //WifiAPMode(false);  //this forces the iPhone to exit safari and this page was never displayed
+    timerAPoff = millis() + 60000L;  //switch the AP off in 1 minute
     return;
   }
 
@@ -3271,7 +3282,7 @@ void handle_setup() {
   }
 
   // if ssid config not set and params are both provided
-  if (status == 0 && ssid.length() != 0 && password.length() != 0 && strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+  if (status == 0 && ssid.length() != 0 && strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
   {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));

@@ -1,6 +1,0 @@
-#!/bin/bash -e
-
-source configlib
-
-cd ..
-$BUILDCMD

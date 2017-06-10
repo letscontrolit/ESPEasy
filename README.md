@@ -13,9 +13,7 @@ Check here to learn how to use this branch and help us improving ESPEasy: http:/
 * v2.0.0-devX: these are the current development releases. use these if you want bleeding edge features, or if you want to help us testing and developing. new release every month.
 * v2.0.0-betaX: as soon as we think its stable/complete enough for real testing, we will start numbering beta's.
 * v2.0.0-rcX: release candidates (probably stable)
-* v2.0.0: This will be the first stable release
-
-After this we will use more standard numbering. Next bugfix release will probably be 2.0.1.
+* v2.0.0: This will be the first stable release. After this we will use more standard numbering. Next bugfix release will probably be 2.0.1.
 
 ## Firmware binary releases
 
@@ -39,7 +37,7 @@ ESPEasy_v2.0.0-dev9_normal_8285.bin  | ESP8285                 | Stable         
 
 ## More info
 
-Details and discussion are on the Experimental forum: http://www.letscontrolit.com/forum/viewtopic.php?f=18&t=2257&p=13600#p13600
+Details and discussion are on the Experimental forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
 
 We're also on IRC: #ESPEasy @freenode
 
