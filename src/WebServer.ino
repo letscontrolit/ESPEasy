@@ -1106,9 +1106,9 @@ void handle_devices() {
   String taskdevicenumber = WebServer.arg(F("TDNUM"));
   String taskdevicetimer = WebServer.arg(F("TDT"));
   String taskdeviceid[CONTROLLER_MAX];
-  String taskdevicepin1 = WebServer.arg(F("TDP1"));
-  String taskdevicepin2 = WebServer.arg(F("TDP2"));
-  String taskdevicepin3 = WebServer.arg(F("TDP3"));
+  String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
+  String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
+  String taskdevicepin3 = WebServer.arg(F("taskdevicepin3"));
   String taskdevicepin1pullup = WebServer.arg(F("TDPPU"));
   String taskdevicepin1inversed = WebServer.arg(F("TDPI"));
   String taskdevicename = WebServer.arg(F("TDN"));
@@ -1465,11 +1465,11 @@ void handle_devices() {
           addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("1st GPIO"), F("TDP1"), Settings.TaskDevicePin1[index - 1]);   //="taskdevicepin1"
+          addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("2nd GPIO"), F("TDP2"), Settings.TaskDevicePin2[index - 1]);   //="taskdevicepin2"
+          addFormPinSelect(reply, F("2nd GPIO"), F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("3rd GPIO"), F("TDP3"), Settings.TaskDevicePin3[index - 1]);   //="taskdevicepin3"
+          addFormPinSelect(reply, F("3rd GPIO"), F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
       }
 
       //add plugins content
