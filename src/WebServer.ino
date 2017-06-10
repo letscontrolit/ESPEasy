@@ -1481,16 +1481,6 @@ void handle_devices() {
       {
         addFormSubHeader(reply, F("Data Acquisition"));
 
-        if (Device[DeviceIndex].TimerOption)
-        {
-          addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
-          addUnit(reply, F("sec"));
-          if (Device[DeviceIndex].TimerOptional)
-            reply += F(" (Optional for this Device)");
-        }
-
-        addFormSeparator(reply);
-
         for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
         {
           if (Settings.Protocol[controllerNr] != 0)
@@ -1513,6 +1503,16 @@ void handle_devices() {
             }
           }
         }
+      }
+
+      addFormSeparator(reply);
+
+      if (Device[DeviceIndex].TimerOption)
+      {
+        addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
+        addUnit(reply, F("sec"));
+        if (Device[DeviceIndex].TimerOptional)
+          reply += F(" (Optional for this Device)");
       }
 
       //section: Values
