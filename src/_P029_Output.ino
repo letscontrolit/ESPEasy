@@ -39,6 +39,23 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        // We need the index of the controller we are: 0-CONTROLLER_MAX
+        byte controllerNr = 0;
+          for (byte i=0; i < CONTROLLER_MAX; i++)
+          {
+            if (Settings.Protocol[i] == CPLUGIN_ID_002) { controllerNr = i; }
+          }
+        
+        string += F("<TR><TD>IDX:<TD>");
+        String id = F("TDID");   //="taskdeviceid"
+        id += controllerNr + 1;
+        addNumericBox(string, id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);
+        success = true;
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         success = true;
