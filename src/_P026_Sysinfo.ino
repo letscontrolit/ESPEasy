@@ -1,5 +1,5 @@
 //#######################################################################################################
-//#################################### Plugin 026: Analog ###############################################
+//#################################### Plugin 026: System Info ##########################################
 //#######################################################################################################
 
 #define PLUGIN_026
@@ -40,13 +40,17 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[5];
+        String options[9];
         options[0] = F("Uptime");
         options[1] = F("Free RAM");
         options[2] = F("Wifi RSSI");
         options[3] = F("Input VCC");
         options[4] = F("System load");
-        addFormSelector(string, F("Indicator"), F("plugin_026"), 5, options, NULL, choice);
+        options[5] = F("IP 1.Octet");
+        options[6] = F("IP 2.Octet");
+        options[7] = F("IP 3.Octet");
+        options[8] = F("IP 4.Octet");
+        addFormSelector(string, F("Indicator"), F("plugin_026"), 9, options, NULL, choice);
 
         success = true;
         break;
@@ -91,6 +95,26 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           case 4:
           {
             value = (100 - (100 * loopCounterLast / loopCounterMax));
+            break;
+          }
+          case 5:
+          {
+            value = WiFi.localIP()[0];
+            break;
+          }
+          case 6:
+          {
+            value = WiFi.localIP()[1];
+            break;
+          }
+          case 7:
+          {
+            value = WiFi.localIP()[2];
+            break;
+          }
+          case 8:
+          {
+            value = WiFi.localIP()[3];
             break;
           }
         }
