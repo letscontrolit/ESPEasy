@@ -799,7 +799,7 @@ void setup()
 
   // Setup MQTT Client
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
-  if (Protocol[ProtocolIndex].usesMQTT)
+  if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[0])
     MQTTConnect();
 
   sendSysInfoUDP(3);
@@ -1004,7 +1004,8 @@ void runEach30Seconds()
   addLog(LOG_LEVEL_INFO, log);
   sendSysInfoUDP(1);
   refreshNodeList();
-  MQTTCheck();
+  if(Settings.ControllerEnabled[0])
+    MQTTCheck();
   if (Settings.UseSSDP)
     SSDP_update();
 #if FEATURE_ADC_VCC
@@ -1224,7 +1225,8 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   WebServer.handleClient();
-  MQTTclient.loop();
+  if(Settings.ControllerEnabled[0])
+    MQTTclient.loop();
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
