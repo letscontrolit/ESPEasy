@@ -39,7 +39,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_037;
-        Device[deviceCount].Type = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;     // This means it has a single pin
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
