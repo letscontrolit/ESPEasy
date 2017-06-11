@@ -1,11 +1,11 @@
 //#######################################################################################################
-//############################# Plugin 052: SenseAir CO2 Sensors ########################################
+//############################# Plugin 052: Senseair CO2 Sensors ########################################
 //#######################################################################################################
 /*
   Plugin originally written by: Daniel Tedenljung info__AT__tedenljungconsulting.com
   Rewritten by: Mikael Trieb mikael__AT__triebconsulting.se
 
-  This plugin reads availble values of SenseAir Co2 Sensors.
+  This plugin reads availble values of Senseair Co2 Sensors.
   Datasheet can be found here:
   S8: http://www.senseair.com/products/oem-modules/senseair-s8/
   K30: http://www.senseair.com/products/oem-modules/k30/
@@ -20,7 +20,7 @@
 
 #define PLUGIN_052
 #define PLUGIN_ID_052         52
-#define PLUGIN_NAME_052       "SenseAir"
+#define PLUGIN_NAME_052       "Senseair"
 #define PLUGIN_VALUENAME1_052 ""
 
 boolean Plugin_052_init = false;
@@ -66,8 +66,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
           byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          String options[4] = { F("Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity") };
-          addFormSelector(string, F("Sensor"), F("plugin_052"), 4, options, NULL, choice);
+          String options[6] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment") };
+          addFormSelector(string, F("Sensor"), F("plugin_052"), 6, options, NULL, choice);
 
           success = true;
           break;
@@ -96,22 +96,22 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
         if (Plugin_052_init)
         {
 
-          String log = F("SenseAir ");
+          String log = F("Senseair: ");
           switch(Settings.TaskDevicePluginConfig[event->TaskIndex][0])
           {
               case 0:
               {
-                  int sensor_status = Plugin_052_readStatus();
-                  UserVar[event->BaseVarIndex] = sensor_status;
-                  log += F("status: ");
-                  log += sensor_status;
+                  int error_Status = Plugin_052_readErrorStatus();
+                  UserVar[event->BaseVarIndex] = error_Status;
+                  log += F("error status = ");
+                  log += error_Status;
                   break;
               }
               case 1:
               {
                   int co2 = Plugin_052_readCo2();
                   UserVar[event->BaseVarIndex] = co2;
-                  log += F("co2: ");
+                  log += F("co2 = ");
                   log += co2;
                   break;
               }
@@ -119,7 +119,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
               {
                   float temperature = Plugin_052_readTemperature();
                   UserVar[event->BaseVarIndex] = (float)temperature;
-                  log += F("temperature: ");
+                  log += F("temperature = ");
                   log += (float)temperature;
                   break;
               }
@@ -127,8 +127,24 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
               {
                   float relativeHumidity = Plugin_052_readRelativeHumidity();
                   UserVar[event->BaseVarIndex] = (float)relativeHumidity;
-                  log += F("humidity: ");
+                  log += F("humidity = ");
                   log += (float)relativeHumidity;
+                  break;
+              }
+              case 4:
+              {
+                  int relayStatus = Plugin_052_readRelayStatus();
+                  UserVar[event->BaseVarIndex] = relayStatus;
+                  log += F("relay status = ");
+                  log += relayStatus;
+                  break;
+              }
+              case 5:
+              {
+                  int temperatureAdjustment = Plugin_052_readTemperatureAdjustment();
+                  UserVar[event->BaseVarIndex] = temperatureAdjustment;
+                  log += F("temperature adjustment = ");
+                  log += temperatureAdjustment;
                   break;
               }
           }
@@ -185,13 +201,13 @@ int Plugin_052_sendCommand(byte command[])
   return value;
 }
 
-int Plugin_052_readStatus(void)
+int Plugin_052_readErrorStatus(void)
 {
-  int sensor_status = -1;
+  int error_Status = -1;
   byte frame[8] = {0};
   Plugin_052_buildFrame(0xFE, 0x04, 0x00, 1, frame);
-  sensor_status = Plugin_052_sendCommand(frame);
-  return sensor_status;
+  error_Status = Plugin_052_sendCommand(frame);
+  return error_Status;
 }
 
 int Plugin_052_readCo2(void)
@@ -223,6 +239,30 @@ float Plugin_052_readRelativeHumidity(void)
   rhX100 = Plugin_052_sendCommand(frame);
   rh = (float)rhX100/100;
   return rh;
+}
+
+int Plugin_052_readRelayStatus(void)
+{
+  int status = 0;
+  bool result;
+  byte frame[8] = {0};
+
+  Plugin_052_buildFrame(0xFE, 0x04, 0x1C, 1, frame);
+  status = Plugin_052_sendCommand(frame);
+  result = status >> 8 & 0x1;
+
+  return result;
+}
+
+int Plugin_052_readTemperatureAdjustment(void)
+{
+  int value = 0;
+  byte frame[8] = {0};
+
+  Plugin_052_buildFrame(0xFE, 0x04, 0x0A, 1, frame);
+  value = Plugin_052_sendCommand(frame);
+
+  return value;
 }
 
 // Compute the MODBUS RTU CRC
