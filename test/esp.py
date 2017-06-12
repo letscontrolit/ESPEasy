@@ -82,7 +82,6 @@ class Esp():
     def flashserial(self):
         """flash binary to esp via serial"""
 
-        self.pingserial()
 
         subprocess.check_call(self._config['flash_cmd'].format(**self._config), shell=True, cwd='..')
 
@@ -112,7 +111,7 @@ class Esp():
                 'TDNUM':1,
                 'TDN': "",
                 'TDE': 'on',
-                'TDP1': 12,
+                'taskdevicepin1': 12,
                 'plugin_001_type':1,
                 'plugin_001_button':0,
                 'TDT':0,

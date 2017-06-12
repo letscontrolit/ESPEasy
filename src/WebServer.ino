@@ -1101,63 +1101,64 @@ void addPinStateSelect(String& str, String name, int choice)
 //********************************************************************************
 // Web Interface device page
 //********************************************************************************
+	//19480 (11128)
 void handle_devices() {
   if (!isLoggedIn()) return;
 
   navMenuIndex = 4;
-  char tmpString[41];
+  // char tmpString[41];
   struct EventStruct TempEvent;
 
-  String taskindex = WebServer.arg(F("index"));
-  String taskdevicenumber = WebServer.arg(F("TDNUM"));
-  String taskdevicetimer = WebServer.arg(F("TDT"));
-  String taskdeviceid[CONTROLLER_MAX];
-  String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
-  String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
-  String taskdevicepin3 = WebServer.arg(F("taskdevicepin3"));
-  String taskdevicepin1pullup = WebServer.arg(F("TDPPU"));
-  String taskdevicepin1inversed = WebServer.arg(F("TDPI"));
-  String taskdevicename = WebServer.arg(F("TDN"));
-  String taskdeviceport = WebServer.arg(F("TDP"));
-  String taskdeviceformula[VARS_PER_TASK];
-  String taskdevicevaluename[VARS_PER_TASK];
-  String taskdevicevaluedecimals[VARS_PER_TASK];
-  String taskdevicesenddata[CONTROLLER_MAX];
-  String taskdeviceglobalsync = WebServer.arg(F("TDGS"));
-  String taskdeviceenabled = WebServer.arg(F("TDE"));
+  // String taskindex = WebServer.arg(F("index"));
+  byte taskdevicenumber = WebServer.arg(F("TDNUM")).toInt();
+  unsigned long taskdevicetimer = WebServer.arg(F("TDT")).toInt();
+  // String taskdeviceid[CONTROLLER_MAX];
+  // String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
+  // String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
+  // String taskdevicepin3 = WebServer.arg(F("taskdevicepin3"));
+  // String taskdevicepin1pullup = WebServer.arg(F("TDPPU"));
+  // String taskdevicepin1inversed = WebServer.arg(F("TDPI"));
+  // String taskdevicename = WebServer.arg(F("TDN"));
+  // String taskdeviceport = WebServer.arg(F("TDP"));
+  // String taskdeviceformula[VARS_PER_TASK];
+  // String taskdevicevaluename[VARS_PER_TASK];
+  // String taskdevicevaluedecimals[VARS_PER_TASK];
+  // String taskdevicesenddata[CONTROLLER_MAX];
+    // String taskdeviceglobalsync = WebServer.arg(F("TDGS"));
+  // String taskdeviceenabled = WebServer.arg(F("TDE"));
 
-  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
-    char argc[25];
-    String arg = F("TDF");
-    arg += varNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdeviceformula[varNr] = WebServer.arg(argc);
+  // for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+  // {
+  //   char argc[25];
+  //   String arg = F("TDF");
+  //   arg += varNr + 1;
+  //   arg.toCharArray(argc, 25);
+  //   taskdeviceformula[varNr] = WebServer.arg(argc);
+  //
+  //   arg = F("TDVN");
+  //   arg += varNr + 1;
+  //   arg.toCharArray(argc, 25);
+  //   taskdevicevaluename[varNr] = WebServer.arg(argc);
+  //
+  //   arg = F("TDVD");
+  //   arg += varNr + 1;
+  //   arg.toCharArray(argc, 25);
+  //   taskdevicevaluedecimals[varNr] = WebServer.arg(argc);
+  // }
 
-    arg = F("TDVN");
-    arg += varNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdevicevaluename[varNr] = WebServer.arg(argc);
-
-    arg = F("TDVD");
-    arg += varNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdevicevaluedecimals[varNr] = WebServer.arg(argc);
-  }
-
-  for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
-  {
-    char argc[25];
-    String arg = F("TDID");
-    arg += controllerNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdeviceid[controllerNr] = WebServer.arg(argc);
-
-    arg = F("TDSD");
-    arg += controllerNr + 1;
-    arg.toCharArray(argc, 25);
-    taskdevicesenddata[controllerNr] = WebServer.arg(argc);
-  }
+  // for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+  // {
+  //   char argc[25];
+  //   String arg = F("TDID");
+  //   arg += controllerNr + 1;
+  //   arg.toCharArray(argc, 25);
+  //   taskdeviceid[controllerNr] = WebServer.arg(argc);
+  //
+  //   arg = F("TDSD");
+  //   arg += controllerNr + 1;
+  //   arg.toCharArray(argc, 25);
+  //   taskdevicesenddata[controllerNr] = WebServer.arg(argc);
+  // }
 
   String edit = WebServer.arg(F("edit"));
   byte page = WebServer.arg(F("page")).toInt();
@@ -1176,30 +1177,30 @@ void handle_devices() {
   //reply.reserve(8192);
   addHeader(true, reply);
 
-  byte index = taskindex.toInt();
+  byte index = WebServer.arg(F("index")).toInt();
 
   byte DeviceIndex = 0;
 
   if (edit.toInt() != 0) // when form submitted
   {
-    if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber.toInt()) // change of device, clear all other values
+    if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber) // change of device, clear all other values
     {
       taskClear(index - 1, false); // clear settings, but do not save
-      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
-      if (taskdevicenumber.toInt() != 0) // preload valuenames
+      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
+      if (taskdevicenumber != 0) // preload valuenames
       {
         TempEvent.TaskIndex = index - 1;
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
       }
     }
-    else if (taskdevicenumber.toInt() != 0)
+    else if (taskdevicenumber != 0)
     {
-      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber.toInt();
+      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
       DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
 
-      if (taskdevicetimer.toInt() > 0)
-        Settings.TaskDeviceTimer[index - 1] = taskdevicetimer.toInt();
+      if (taskdevicetimer > 0)
+        Settings.TaskDeviceTimer[index - 1] = taskdevicetimer;
       else
       {
         if (!Device[DeviceIndex].TimerOptional) // Set default delay, unless it's optional...
@@ -1208,36 +1209,36 @@ void handle_devices() {
           Settings.TaskDeviceTimer[index - 1] = 0;
       }
 
-      taskdevicename.toCharArray(tmpString, 41);
-      Settings.TaskDeviceEnabled[index - 1] = (taskdeviceenabled == "on");
-      strcpy(ExtraTaskSettings.TaskDeviceName, tmpString);
-      Settings.TaskDevicePort[index - 1] = taskdeviceport.toInt();
+      Settings.TaskDeviceEnabled[index - 1] = (WebServer.arg(F("TDE")) == F("on"));
+      strcpy(ExtraTaskSettings.TaskDeviceName, WebServer.arg(F("TDN")).c_str());
+      Settings.TaskDevicePort[index - 1] =  WebServer.arg(F("TDP")).toInt();
 
       for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
       {
-        Settings.TaskDeviceID[controllerNr][index - 1] = taskdeviceid[controllerNr].toInt();
-        Settings.TaskDeviceSendData[controllerNr][index - 1] = (taskdevicesenddata[controllerNr] == "on");
+
+        Settings.TaskDeviceID[controllerNr][index - 1] = WebServer.arg(String(F("TDID")) +(controllerNr+1)).toInt();
+        Settings.TaskDeviceSendData[controllerNr][index - 1] = (WebServer.arg(String(F("TDSD")) +(controllerNr+1)) == F("on"));
       }
 
-      if (taskdevicepin1.length() != 0)
-        Settings.TaskDevicePin1[index - 1] = taskdevicepin1.toInt();
+      if (WebServer.arg(F("taskdevicepin1")).length() != 0)
+        Settings.TaskDevicePin1[index - 1] = WebServer.arg(F("taskdevicepin1")).toInt();
 
-      if (taskdevicepin2.length() != 0)
-        Settings.TaskDevicePin2[index - 1] = taskdevicepin2.toInt();
+      if (WebServer.arg(F("taskdevicepin2")).length() != 0)
+        Settings.TaskDevicePin2[index - 1] = WebServer.arg(F("taskdevicepin2")).toInt();
 
-      if (taskdevicepin3.length() != 0)
-        Settings.TaskDevicePin3[index - 1] = taskdevicepin3.toInt();
+      if (WebServer.arg(F("taskdevicepin3")).length() != 0)
+        Settings.TaskDevicePin3[index - 1] = WebServer.arg(F("taskdevicepin3")).toInt();
 
       if (Device[DeviceIndex].PullUpOption)
-        Settings.TaskDevicePin1PullUp[index - 1] = (taskdevicepin1pullup == "on");
+        Settings.TaskDevicePin1PullUp[index - 1] = (WebServer.arg(F("TDPPU")) == F("on"));
 
       if (Device[DeviceIndex].InverseLogicOption)
-        Settings.TaskDevicePin1Inversed[index - 1] = (taskdevicepin1inversed == "on");
+        Settings.TaskDevicePin1Inversed[index - 1] = (WebServer.arg(F("TDPI")) == F("on"));
 
       if (Settings.GlobalSync)
       {
         if (Device[DeviceIndex].GlobalSyncOption)
-          Settings.TaskDeviceGlobalSync[index - 1] = (taskdeviceglobalsync == "on");
+          Settings.TaskDeviceGlobalSync[index - 1] = (WebServer.arg(F("TDGS")) == F("on"));
 
         // Send task info if set global
         if (Settings.TaskDeviceGlobalSync[index - 1])
@@ -1248,17 +1249,24 @@ void handle_devices() {
 
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
-        taskdeviceformula[varNr].toCharArray(tmpString, 41);
-        strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
-        ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = taskdevicevaluedecimals[varNr].toInt();
+
+          strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], WebServer.arg(String(F("TDF")) + (varNr+1)).c_str());
+          ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = WebServer.arg(String(F("TDVD")) + (varNr+1)).toInt();
+          strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], WebServer.arg(String(F("TDVN")) + (varNr+1)).c_str());
+
+        // taskdeviceformula[varNr].toCharArray(tmpString, 41);
+        // strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
+        // ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = taskdevicevaluedecimals[varNr].toInt();
+        // taskdevicevaluename[varNr].toCharArray(tmpString, 41);
+
       }
 
-      // task value names handling.
-      for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-      {
-        taskdevicevaluename[varNr].toCharArray(tmpString, 41);
-        strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
-      }
+      // // task value names handling.
+      // for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+      // {
+      //   taskdevicevaluename[varNr].toCharArray(tmpString, 41);
+      //   strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
+      // }
 
       TempEvent.TaskIndex = index - 1;
       if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
@@ -1269,7 +1277,7 @@ void handle_devices() {
     SaveTaskSettings(index - 1);
     if (!SaveSettings())
       reply += F("<span style=\"color:red\">Error saving to flash!</span>");
-    if (taskdevicenumber.toInt() != 0 && Settings.TaskDeviceEnabled[index - 1])
+    if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[index - 1])
       PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
   }
 
@@ -1515,6 +1523,7 @@ void handle_devices() {
 
       if (Device[DeviceIndex].TimerOption)
       {
+        //FIXME: shoudnt the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
         addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
         addUnit(reply, F("sec"));
         if (Device[DeviceIndex].TimerOptional)

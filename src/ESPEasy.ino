@@ -112,7 +112,7 @@
 
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-// #define FEATURE_ARDUINO_OTA
+#define FEATURE_ARDUINO_OTA
 
 
 //enable reporting status to ESPEasy developers.
