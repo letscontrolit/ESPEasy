@@ -201,12 +201,16 @@
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
-#define DEVICES_MAX                        64
+#ifdef PLUGIN_BUILD_NORMAL
+  #define DEVICES_MAX                      64
+#else
+  #define DEVICES_MAX                      72
+#endif
 #define TASKS_MAX                          12 // max 12!
 #define CONTROLLER_MAX                      3 // max 4!
 #define NOTIFICATION_MAX                    3 // max 4!
 #define VARS_PER_TASK                       4
-#define PLUGIN_MAX                         64
+#define PLUGIN_MAX                DEVICES_MAX
 #define PLUGIN_CONFIGVAR_MAX                8
 #define PLUGIN_CONFIGFLOATVAR_MAX           4
 #define PLUGIN_CONFIGLONGVAR_MAX            4
