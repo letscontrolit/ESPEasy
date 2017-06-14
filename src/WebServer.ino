@@ -243,6 +243,8 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
 
   else if (varName == F("css"))
   {
+    varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
+    /*now css is written in writeDefaultCSS() to SPIFFS and always present
     if (SPIFFS.exists("esp.css"))
     {
       varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
@@ -276,6 +278,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
         "</style>"
         );
     }
+    */
   }
 
   else if (varName == F("js"))
@@ -304,6 +307,52 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
     //no return string - eat var name
   }
 }
+
+void writeDefaultCSS(void)
+{
+  if (!SPIFFS.exists("esp.css"))
+  {
+    String defaultCSS = F(
+      //color sheme: #07D #D50 #DB0 #A0D
+      "* {font-family:sans-serif; font-size:12pt;}"
+      "h1 {font-size:16pt; color:#D50; margin:8px 0 0 0; font-weight:bold;}"
+      "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
+      "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
+      "h6 {font-size:10pt; color:#D50; text-align:center;}"
+      ".menu {background-color:#FFF; color:#07D; margin:8px; text-decoration:none}"
+      ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
+      ".button.link {}"
+      ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
+      ".menu:hover {background:#DDF;}"
+      ".button:hover {background:#369;}"
+      "th {padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
+      "td {padding:4px;}"
+      "tr {padding:4px;}"
+      "table {color:black;}"
+      ".div_l {float:left;}"
+      ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
+      ".div_br {clear:both;}"
+      ".note {color:#444; font-style:italic}"
+      ".active {text-decoration:underline;}"
+      ".on {color:green;}"
+      ".off {color:red;}"
+      );
+
+    fs::File f = SPIFFS.open("esp.css", "w");
+    if (f)
+    {
+      String log = F("CSS  : Writing default CSS file to SPIFFS (");
+      log += defaultCSS.length();
+      log += F(" bytes)");
+      addLog(LOG_LEVEL_INFO, log);
+
+      f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
+      f.close();
+    }
+
+  }
+}
+
 
 //********************************************************************************
 // Add top menu
