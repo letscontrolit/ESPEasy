@@ -262,16 +262,6 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
       {
         // When new data is available, return true
         success = values_received;
-        if (values_received)
-        {
-          log = F("PMSx003 : pm1.0a=");
-          log += UserVar[event->BaseVarIndex];
-          log += F(", pm2.5a=");
-          log += UserVar[event->BaseVarIndex + 1];
-          log += F(", pm10a=");
-          log += UserVar[event->BaseVarIndex + 2];
-          addLog(LOG_LEVEL_INFO, log);
-        }
         values_received = false;
       }
   }
