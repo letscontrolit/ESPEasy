@@ -1919,7 +1919,7 @@ unsigned long now() {
 }
 
 unsigned long now_utc() {
-  return now() -  Settings.TimeZone * SECS_PER_MIN;
+    return now() -  Settings.TimeZone * SECS_PER_MIN;
 }
 
 int year()
