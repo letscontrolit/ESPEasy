@@ -827,7 +827,7 @@ void setup()
     rulesProcessing(event);
   }
 
-
+  writeDefaultCSS();
 
 }
 
