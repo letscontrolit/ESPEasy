@@ -44,7 +44,7 @@ void WebServerInit()
 
 void sendWebPage(const String& tmplName, String& pageContent)
 {
-  String pageResult;
+  //String pageResult;
   String pageTemplate;
 
   String fileName = tmplName;
@@ -62,14 +62,15 @@ void sendWebPage(const String& tmplName, String& pageContent)
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
 
-  processWebPageTemplate(pageTemplate, pageResult, pageContent);
+  //processWebPageTemplate(pageTemplate, pageResult, pageContent);
+  processAndSendWebPageTemplate(pageTemplate, pageContent);
 
   //TEST addLog(LOG_LEVEL_INFO, pageResult);
 
   pageTemplate = F("");
   pageContent = F("");
 
-  WebServer.send(200, "text/html", pageResult);
+  //WebServer.send(200, "text/html", pageResult);
 }
 
 
@@ -181,6 +182,96 @@ void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pa
   log += F(" Result-Size=");
   log += pageResult.length();
   addLog(LOG_LEVEL_DEBUG, log);
+}
+
+void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
+{
+  int indexStart, indexEnd;
+  String pageResult, varName, varValue;
+
+  String log = F("HTML : [processAndSendWebPageTemplate] Template-Size=");
+  log += pageTemplate.length();
+  log += F(" Content-Size=");
+  log += pageContent.length();
+
+  //prepare chunked send
+  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  WebServer.sendHeader("Content-Type","text/html",true);
+  WebServer.sendHeader("Cache-Control","no-cache");
+  WebServer.send(200);
+
+  while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
+  {
+    pageResult += pageTemplate.substring(0, indexStart);
+    pageTemplate = pageTemplate.substring(indexStart);
+
+    if ((indexEnd = pageTemplate.indexOf("}}")) > 0)
+    {
+      varName = pageTemplate.substring(2, indexEnd);
+      pageTemplate = pageTemplate.substring(indexEnd+2);
+
+      varName.toLowerCase();
+
+      if (varName == F("content"))
+      {
+        //send the rest before content
+        if (pageResult.length() > 0)
+        {
+          log += F(" [");
+          log += pageResult.length();
+          log += F("]");
+          WebServer.sendContent(pageResult);
+          pageResult = F("");
+        }
+        //send the content
+        if (pageContent.length() > 0)
+        {
+          log += F(" [*");          log += pageContent.length();          log += F("*]");
+          WebServer.sendContent(pageContent);
+        }
+        pageContent = F("");   //free mem - content can only added once
+      }
+      else
+      {
+        getWebPageTemplateVar(varName, varValue);
+/*TEST
+        String log = F("> VarName: ");
+        log += varName;
+        log += F(" ");
+        log += indexStart;
+        log += F("+");
+        log += indexEnd;
+        log += F(" : ");
+        log += varValue;
+        addLog(LOG_LEVEL_DEBUG, log);
+*/
+        pageResult += varValue;
+      }
+    }
+    else   //no closing "}}"
+      pageTemplate = pageTemplate.substring(2);   //eat "{{"
+
+    if (pageResult.length() > 250)
+    {
+      log += F(" [");      log += pageResult.length();      log += F("]");
+      WebServer.sendContent(pageResult);
+      pageResult = F("");
+    }
+  }
+  pageResult += pageTemplate;
+  pageTemplate = F("");   //free mem
+
+  if (pageResult.length() > 0)
+  {
+    log += F(" [");    log += pageResult.length();    log += F("]");
+    WebServer.sendContent(pageResult);
+    pageResult = F("");
+  }
+  //close chunked send
+  log += F(" [0]");
+  WebServer.sendContent("");
+
+  addLog(LOG_LEVEL_INFO, log);
 }
 
 
