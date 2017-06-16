@@ -44,7 +44,6 @@ void WebServerInit()
 
 void sendWebPage(const String& tmplName, String& pageContent)
 {
-  //String pageResult;
   String pageTemplate;
 
   String fileName = tmplName;
@@ -62,15 +61,10 @@ void sendWebPage(const String& tmplName, String& pageContent)
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
 
-  //processWebPageTemplate(pageTemplate, pageResult, pageContent);
   processAndSendWebPageTemplate(pageTemplate, pageContent);
-
-  //TEST addLog(LOG_LEVEL_INFO, pageResult);
 
   pageTemplate = F("");
   pageContent = F("");
-
-  //WebServer.send(200, "text/html", pageResult);
 }
 
 
@@ -129,76 +123,46 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 }
 
 
-void processWebPageTemplate(String& pageTemplate, String& pageResult, String& pageContent)
+void sendWebPageJunkedBegin(String& log)
 {
-  int indexStart, indexEnd;
-  String varName, varValue;
-
-  String log = F("HTML : [processWebPageTemplate] Template-Size=");
-  log += pageTemplate.length();
-  log += F(" Content-Size=");
-  log += pageContent.length();
-
-  while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
-  {
-    pageResult += pageTemplate.substring(0, indexStart);
-    pageTemplate = pageTemplate.substring(indexStart);
-
-    if ((indexEnd = pageTemplate.indexOf("}}")) > 0)
-    {
-      varName = pageTemplate.substring(2, indexEnd);
-      pageTemplate = pageTemplate.substring(indexEnd+2);
-
-      varName.toLowerCase();
-
-      if (varName == F("content"))
-      {
-        pageResult += pageContent;
-        pageContent = F("");   //free mem - content can only added once
-      }
-      else
-      {
-        getWebPageTemplateVar(varName, varValue);
-/*TEST
-        String log = F("> VarName: ");
-        log += varName;
-        log += F(" ");
-        log += indexStart;
-        log += F("+");
-        log += indexEnd;
-        log += F(" : ");
-        log += varValue;
-        addLog(LOG_LEVEL_DEBUG, log);
-*/
-        pageResult += varValue;
-      }
-    }
-    else   //no closing "}}"
-      pageTemplate = pageTemplate.substring(2);   //eat "{{"
-  }
-  pageResult += pageTemplate;
-  pageTemplate = F("");   //free mem
-
-  log += F(" Result-Size=");
-  log += pageResult.length();
-  addLog(LOG_LEVEL_DEBUG, log);
+  statusLED(true);
+  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  WebServer.sendHeader("Content-Type","text/html",true);
+  WebServer.sendHeader("Cache-Control","no-cache");
+  WebServer.send(200);
 }
+
+void sendWebPageJunkedData(String& log, String& data)
+{
+  if (data.length() > 0)
+  {
+    statusLED(true);
+    log += F(" [");
+    log += data.length();
+    log += F("]");
+    WebServer.sendContent(data);
+    data = F("");   //free RAM
+  }
+}
+
+void sendWebPageJunkedEnd(String& log)
+{
+  log += F(" [0]");
+  WebServer.sendContent("");
+}
+
 
 void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 {
   int indexStart, indexEnd;
   String pageResult, varName, varValue;
 
-  String log = F("HTML : [processAndSendWebPageTemplate] Template-Size=");
+  String log = F("HTML : Template-Size=");
   log += pageTemplate.length();
   log += F(" Content-Size=");
   log += pageContent.length();
 
-  //prepare chunked send
-  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader("Content-Type","text/html",true);
-  WebServer.sendHeader("Cache-Control","no-cache");
-  WebServer.send(200);
+  sendWebPageJunkedBegin(log);   //prepare chunked send
 
   while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
   {
@@ -212,24 +176,10 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 
       varName.toLowerCase();
 
-      if (varName == F("content"))
+      if (varName == F("content"))   //is var == page content?
       {
-        //send the rest before content
-        if (pageResult.length() > 0)
-        {
-          log += F(" [");
-          log += pageResult.length();
-          log += F("]");
-          WebServer.sendContent(pageResult);
-          pageResult = F("");
-        }
-        //send the content
-        if (pageContent.length() > 0)
-        {
-          log += F(" [*");          log += pageContent.length();          log += F("*]");
-          WebServer.sendContent(pageContent);
-        }
-        pageContent = F("");   //free mem - content can only added once
+        sendWebPageJunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
+        sendWebPageJunkedData(log, pageContent);   //send the content - free mem - content can only added once
       }
       else
       {
@@ -251,25 +201,17 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
     else   //no closing "}}"
       pageTemplate = pageTemplate.substring(2);   //eat "{{"
 
+    //send the accumulated HTML if junk is 250+ bytes
     if (pageResult.length() > 250)
     {
-      log += F(" [");      log += pageResult.length();      log += F("]");
-      WebServer.sendContent(pageResult);
-      pageResult = F("");
+      sendWebPageJunkedData(log, pageResult);
     }
   }
-  pageResult += pageTemplate;
+  pageResult += pageTemplate;   //add the rest without vars
   pageTemplate = F("");   //free mem
 
-  if (pageResult.length() > 0)
-  {
-    log += F(" [");    log += pageResult.length();    log += F("]");
-    WebServer.sendContent(pageResult);
-    pageResult = F("");
-  }
-  //close chunked send
-  log += F(" [0]");
-  WebServer.sendContent("");
+  sendWebPageJunkedData(log, pageResult);   //send the rest of the accumulated HTML
+  sendWebPageJunkedEnd(log);   //close chunked send
 
   addLog(LOG_LEVEL_INFO, log);
 }
