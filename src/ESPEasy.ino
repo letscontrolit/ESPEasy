@@ -76,8 +76,6 @@
 #define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
-#define DEFAULT_SERVER      "192.168.0.8"       // Enter your Domoticz Server IP address
-#define DEFAULT_PORT        8080                // Enter your Domoticz Server port value
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
@@ -87,9 +85,12 @@
 #define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
 
-#define DEFAULT_MQTT_TEMPLATE false              // true or false enabled or disabled set mqqt sub and pub
-#define DEFAULT_MQTT_PUB    "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
-#define DEFAULT_MQTT_SUB    "sensors/espeasy/%sysname%/#" // Enter your sub
+#define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
+// using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
+#define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
+#define DEFAULT_SUB         "sensors/espeasy/%sysname%/#" // Enter your sub
+#define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
+#define DEFAULT_PORT        8080                // Enter your Server port value
 
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
 //   1 = Domoticz HTTP
