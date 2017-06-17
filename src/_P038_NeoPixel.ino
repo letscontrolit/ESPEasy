@@ -38,6 +38,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
+        Device[deviceCount].Custom = true;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -109,7 +110,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
             success = true;
           }
-          
+
           if (tmpString.equalsIgnoreCase(F("NeoPixelAll")))
 				  {
 					  char Line[80];
@@ -121,9 +122,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
 					  }
 					  Plugin_038_pixels->show();
-					  success = true;  
+					  success = true;
           }
-          
+
           if (tmpString.equalsIgnoreCase(F("NeoPixelLine")))
 				  {
 					  char Line[80];
@@ -148,4 +149,3 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
