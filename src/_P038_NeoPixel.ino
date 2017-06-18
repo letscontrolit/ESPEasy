@@ -36,17 +36,8 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_038;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-        Device[deviceCount].Ports = 0;
         Device[deviceCount].Custom = true;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 0;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].TimerOptional = true;
-        Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].TimerOption = false;
         break;
       }
 
@@ -65,6 +56,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormNumericBox(string, F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
+      	addFormPinSelect(string, F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
       	success = true;
         break;
       }
@@ -110,7 +102,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
             success = true;
           }
-
+          
           if (tmpString.equalsIgnoreCase(F("NeoPixelAll")))
 				  {
 					  char Line[80];
@@ -122,9 +114,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
 					  }
 					  Plugin_038_pixels->show();
-					  success = true;
+					  success = true;  
           }
-
+          
           if (tmpString.equalsIgnoreCase(F("NeoPixelLine")))
 				  {
 					  char Line[80];
@@ -149,3 +141,4 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
