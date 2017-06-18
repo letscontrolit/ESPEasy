@@ -958,11 +958,6 @@ void ResetFactory(void)
   str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
 #endif
 
-#if DEFAULT_MQTT_TEMPLATE
-  strcpy_P(Settings.MQTTsubscribe, PSTR(DEFAULT_MQTT_SUB));
-  strcpy_P(Settings.MQTTpublish, PSTR(DEFAULT_MQTT_PUB));
-#endif
-
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;
@@ -970,8 +965,6 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
-  //str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP[0]);
-  //Settings.ControllerPort[0]      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
@@ -1001,6 +994,17 @@ void ResetFactory(void)
   Settings.Build = BUILD;
   Settings.UseSerial = true;
   SaveSettings();
+
+#if DEFAULT_CONTROLLER
+  ControllerSettingsStruct ControllerSettings;
+  strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
+  strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
+  str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+  ControllerSettings.HostName[0]=0;
+  ControllerSettings.Port = DEFAULT_PORT;
+  SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+#endif
+  
   Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
