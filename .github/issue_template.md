@@ -1,4 +1,4 @@
-** NOTE: This is not a support forum! For questions and support go here: https://www.letscontrolit.com/forum/viewforum.php?f=1 **
+**NOTE: This is not a support forum! For questions and support go here: https://www.letscontrolit.com/forum/viewforum.php?f=1**
 
 ### Steps to reproduce
 How can we trigger this problem?
