@@ -2,6 +2,8 @@
 //#################################### Plugin 038: NeoPixel Basic #######################################
 //#######################################################################################################
 
+// 15-June-2017: Fixed broken plugin; tested with several neopixels (single LED, 8 LED bars and 300 leds strips.
+
 // List of commands:
 // (1) NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>
 // (2) NeoPixelAll,<red 0-255>,<green 0-255>,<blue 0-255>
@@ -20,6 +22,9 @@ Adafruit_NeoPixel *Plugin_038_pixels;
 #define PLUGIN_ID_038         38
 #define PLUGIN_NAME_038       "NeoPixel - Basic"
 #define PLUGIN_VALUENAME1_038 ""
+
+int MaxPixels = 0;
+
 boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -50,10 +55,8 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1 ,999);
-
+      	addFormNumericBox(string, F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
       	addFormPinSelect(string, F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
-
       	success = true;
         break;
       }
@@ -61,6 +64,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_038_leds"));
+        MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         success = true;
         break;
       }
@@ -72,6 +76,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
           Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
           Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
         }
+        MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         success = true;
         break;
       }
@@ -104,7 +109,8 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 					  char TmpStr1[80];
 					  TmpStr1[0] = 0;
 					  string.toCharArray(Line, 80);
-					  for (int i = 0; i < (Settings.TaskDevicePluginConfig[event->TaskIndex][0]); i++){
+					  for (int i = 0; i < MaxPixels; i++)
+					  {
 						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
 					  }
 					  Plugin_038_pixels->show();
