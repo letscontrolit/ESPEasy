@@ -1922,6 +1922,10 @@ unsigned long now() {
   return (unsigned long)sysTime;
 }
 
+unsigned long now_utc() {
+  return now() - Settings.TimeZone * SECS_PER_MIN;
+}
+
 int year()
 {
   return 1970 + tm.Year;
