@@ -2982,7 +2982,7 @@ void handle_advanced() {
   addFormSubHeader(reply, F("Controller Settings"));
 
   addFormCheckBox(reply, F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
-  addFormNumericBox(reply, F("Message Delay"), F("messagedelay"), Settings.MessageDelay, 0, 10000);
+  addFormNumericBox(reply, F("Message Delay"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
   addUnit(reply, F("ms"));
 
   addFormSubHeader(reply, F("NTP Settings"));
