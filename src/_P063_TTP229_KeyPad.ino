@@ -58,7 +58,7 @@ uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
     digitalWrite(pinSCL, LOW);
-    if (digitalRead(pinSDO))
+    if (!digitalRead(pinSDO))
       value |= mask;
     delayMicroseconds(1);
     mask <<= 1;
@@ -124,12 +124,20 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
         int16_t pinSCL = PIN(0);
         int16_t pinSDO = PIN(1);
 
+        String log = F("Tkey : GPIO: ");
+        log += pinSCL;
+        log += F(" ");
+        log += pinSDO;
+        addLog(LOG_LEVEL_INFO, log);
+
         if (pinSCL >= 0 && pinSDO >= 0)
         {
           pinMode(pinSCL, OUTPUT);
           digitalWrite(pinSCL, LOW);
+          setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
           pinMode(pinSDO, OUTPUT);
           digitalWrite(pinSDO, LOW);
+          setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
         }
 
         success = true;
