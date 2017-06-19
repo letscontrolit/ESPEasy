@@ -124,7 +124,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 }
 
 
-void sendWebPageJunkedBegin(String& log)
+void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -133,7 +133,7 @@ void sendWebPageJunkedBegin(String& log)
   WebServer.send(200);
 }
 
-void sendWebPageJunkedData(String& log, String& data)
+void sendWebPageChunkedData(String& log, String& data)
 {
   if (data.length() > 0)
   {
@@ -146,10 +146,11 @@ void sendWebPageJunkedData(String& log, String& data)
   }
 }
 
-void sendWebPageJunkedEnd(String& log)
+void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
   WebServer.sendContent("");
+  WebServer.client().stop();   // Stop is needed because we sent no content length
 }
 
 
@@ -163,7 +164,7 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   log += F(" Content-Size=");
   log += pageContent.length();
 
-  sendWebPageJunkedBegin(log);   //prepare chunked send
+  sendWebPageChunkedBegin(log);   //prepare chunked send
 
   while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
   {
@@ -179,8 +180,8 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 
       if (varName == F("content"))   //is var == page content?
       {
-        sendWebPageJunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
-        sendWebPageJunkedData(log, pageContent);   //send the content - free mem - content can only added once
+        sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
+        sendWebPageChunkedData(log, pageContent);   //send the content - free mem - content can only added once
       }
       else
       {
@@ -205,14 +206,14 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
     //send the accumulated HTML if junk is 250+ bytes
     if (pageResult.length() > 250)
     {
-      sendWebPageJunkedData(log, pageResult);
+      sendWebPageChunkedData(log, pageResult);
     }
   }
   pageResult += pageTemplate;   //add the rest without vars
   pageTemplate = F("");   //free mem
 
-  sendWebPageJunkedData(log, pageResult);   //send the rest of the accumulated HTML
-  sendWebPageJunkedEnd(log);   //close chunked send
+  sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
+  sendWebPageChunkedEnd(log);   //close chunked send
 
   addLog(LOG_LEVEL_INFO, log);
 }
