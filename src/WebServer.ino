@@ -1,6 +1,45 @@
 //********************************************************************************
 // Web Interface init
 //********************************************************************************
+
+static const char pgDefaultCSS[] PROGMEM = {
+  //color sheme: #07D #D50 #DB0 #A0D
+  "* {font-family:sans-serif; font-size:12pt;}"
+  "h1 {font-size:16pt; color:#D50; margin:8px 0 0 0; font-weight:bold;}"
+  "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
+  "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
+  "h6 {font-size:10pt; color:#D50; text-align:center;}"
+  //buttons
+  ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
+  ".button.link {}"
+  ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
+  ".button:hover {background:#369;}"
+  //tables
+  "th {padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
+  "td {padding:4px;}"
+  "tr {padding:4px;}"
+  "table {color:black;}"
+
+  ".div_l {float:left;}"
+  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
+  ".div_br {clear:both;}"
+  ".note {color:#444; font-style:italic}"
+  ".active {text-decoration:underline;}"
+  ".on {color:green;}"
+  ".off {color:red;}"
+  //header with title and menu
+  ".header {margin:-8px -8px 16px -4px; padding:8px; background-color:#F8F8F8;}"
+  //menu
+  ".menubar {position:relative; margin:8px -8px -8px -8px; padding:20px 8px; border-bottom: 1px solid #DDD;}"
+  ".menu {float:left; height:20px; margin-top:-16px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
+  ".menu.active {color:#000; background-color:#FFF; border-color:#D50 #DDD #FFF;}"
+  ".menu:hover {background:#DEF;}"
+  "\0"
+};
+
+#define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
+
+
 void WebServerInit()
 {
   // Prepare webserver pages
@@ -113,8 +152,9 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{css}}"
               "</head>"
               "<body>"
+              "<div class='header'>"
               "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
-              "<br/>{{menu}}<br/>"
+              "{{menu}}</div>"
               "{{error}}"
               "{{content}}"
               "<BR><h6>Powered by www.letscontrolit.com</h6>"
@@ -124,16 +164,17 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 }
 
 
-void sendWebPageJunkedBegin(String& log)
+void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
+  WebServer.sendHeader("Connection","close");
   WebServer.send(200);
 }
 
-void sendWebPageJunkedData(String& log, String& data)
+void sendWebPageChunkedData(String& log, String& data)
 {
   if (data.length() > 0)
   {
@@ -146,10 +187,11 @@ void sendWebPageJunkedData(String& log, String& data)
   }
 }
 
-void sendWebPageJunkedEnd(String& log)
+void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
   WebServer.sendContent("");
+  WebServer.client().stop();   // Stop is needed because we sent no content length
 }
 
 
@@ -163,7 +205,7 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   log += F(" Content-Size=");
   log += pageContent.length();
 
-  sendWebPageJunkedBegin(log);   //prepare chunked send
+  sendWebPageChunkedBegin(log);   //prepare chunked send
 
   while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
   {
@@ -179,8 +221,8 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 
       if (varName == F("content"))   //is var == page content?
       {
-        sendWebPageJunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
-        sendWebPageJunkedData(log, pageContent);   //send the content - free mem - content can only added once
+        sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
+        sendWebPageChunkedData(log, pageContent);   //send the content - free mem - content can only added once
       }
       else
       {
@@ -202,17 +244,17 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
     else   //no closing "}}"
       pageTemplate = pageTemplate.substring(2);   //eat "{{"
 
-    //send the accumulated HTML if junk is 250+ bytes
-    if (pageResult.length() > 250)
+    //send the accumulated HTML if junk is 500+ bytes
+    if (pageResult.length() > 500)
     {
-      sendWebPageJunkedData(log, pageResult);
+      sendWebPageChunkedData(log, pageResult);
     }
   }
   pageResult += pageTemplate;   //add the rest without vars
   pageTemplate = F("");   //free mem
 
-  sendWebPageJunkedData(log, pageResult);   //send the rest of the accumulated HTML
-  sendWebPageJunkedEnd(log);   //close chunked send
+  sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
+  sendWebPageChunkedEnd(log);   //close chunked send
 
   addLog(LOG_LEVEL_INFO, log);
 }
@@ -277,42 +319,17 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
 
   else if (varName == F("css"))
   {
-    varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
-    /*now css is written in writeDefaultCSS() to SPIFFS and always present
-      if (SPIFFS.exists("esp.css"))
-      {
+    if (SPIFFS.exists("esp.css"))   //now css is written in writeDefaultCSS() to SPIFFS and always present
+    //if (0) //TODO
+    {
       varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
-      }
-      else
-      {
-      varValue = F(
-        "<style>"
-          "* {font-family:sans-serif; font-size:12pt;}"
-          "h1 {font-size:16pt; color:black; margin:8px 0 0 0; font-weight:bold;}"
-          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:black; color:#FFF; font-weight:bold;}"
-          "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-          "h6 {font-size:10pt; color:black; text-align:center;}"
-          ".menu {background-color:#FFF; color:blue; margin:8px; text-decoration:none}"
-          ".button {padding:4px 16px; background-color:#07D; color:#FFF; border:solid 1px #FFF; text-decoration:none}"
-          ".button.link {}"
-          ".button.help {padding:2px 4px; border-radius:50%}"
-          ".menu:hover {background:#DDF;}"
-          ".button:hover {background:#369;}"
-          "th {padding:6px; background-color:black; color:#FFF; font-weight:bold;}"
-          "td {padding:4px;}"
-          "tr {padding:4px;}"
-          "table {color:black;}"
-          ".div_l {float:left;}"
-          ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:7px; background-color:#080; color:#FFF;}"
-          ".div_br {clear:both;}"
-          ".note {color:#444; font-style:italic}"
-          ".active {text-decoration:underline;}"
-          ".on {color:green;}"
-          ".off {color:red;}"
-        "</style>"
-        );
-      }
-    */
+    }
+    else
+    {
+      varValue += F("<style>");
+      varValue += PGMT(pgDefaultCSS);
+      varValue += F("</style>");
+    }
   }
 
   else if (varName == F("js"))
@@ -342,35 +359,14 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
   }
 }
 
+
 void writeDefaultCSS(void)
 {
+  return; //TODO
+
   if (!SPIFFS.exists("esp.css"))
   {
-    String defaultCSS = F(
-                          //color sheme: #07D #D50 #DB0 #A0D
-                          "* {font-family:sans-serif; font-size:12pt;}"
-                          "h1 {font-size:16pt; color:#D50; margin:8px 0 0 0; font-weight:bold;}"
-                          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
-                          "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-                          "h6 {font-size:10pt; color:#D50; text-align:center;}"
-                          ".menu {background-color:#FFF; color:#07D; margin:8px; text-decoration:none}"
-                          ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
-                          ".button.link {}"
-                          ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
-                          ".menu:hover {background:#DDF;}"
-                          ".button:hover {background:#369;}"
-                          "th {padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
-                          "td {padding:4px;}"
-                          "tr {padding:4px;}"
-                          "table {color:black;}"
-                          ".div_l {float:left;}"
-                          ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
-                          ".div_br {clear:both;}"
-                          ".note {color:#444; font-style:italic}"
-                          ".active {text-decoration:underline;}"
-                          ".on {color:green;}"
-                          ".off {color:red;}"
-                        );
+    String defaultCSS = PGMT(pgDefaultCSS);
 
     fs::File f = SPIFFS.open("esp.css", "w");
     if (f)
@@ -3226,6 +3222,8 @@ void handleFileUpload() {
 bool loadFromFS(boolean spiffs, String path) {
   if (!isLoggedIn()) return false;
 
+  statusLED(true);
+
   String dataType = F("text/plain");
   if (path.endsWith("/")) path += F("index.htm");
 
@@ -3240,6 +3238,9 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(".txt")) dataType = F("application/octet-stream");
   else if (path.endsWith(".dat")) dataType = F("application/octet-stream");
 
+  String log = F("HTML : Request file ");
+  log += path;
+
   path = path.substring(1);
   if (spiffs)
   {
@@ -3248,7 +3249,10 @@ bool loadFromFS(boolean spiffs, String path) {
       return false;
 
     //prevent reloading stuff on every click
-    WebServer.sendHeader("Cache-Control","max-age=3600");
+    WebServer.sendHeader("Cache-Control","max-age=3600, public");
+    WebServer.sendHeader("Vary","*");
+    WebServer.sendHeader("ETag","\"2.0.0\"");
+
     if (path.endsWith(".dat"))
       WebServer.sendHeader("Content-Disposition", "attachment;");
     WebServer.streamFile(dataFile, dataType);
@@ -3264,6 +3268,9 @@ bool loadFromFS(boolean spiffs, String path) {
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
   }
+  statusLED(true);
+
+  addLog(LOG_LEVEL_INFO, log);
   return true;
 }
 
