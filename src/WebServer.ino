@@ -1,6 +1,37 @@
 //********************************************************************************
 // Web Interface init
 //********************************************************************************
+
+static const char pgDefaultCSS[] PROGMEM = {
+  //color sheme: #07D #D50 #DB0 #A0D
+  "* {font-family:sans-serif; font-size:12pt;}"
+  "h1 {font-size:16pt; color:#D50; margin:8px 0 0 0; font-weight:bold;}"
+  "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
+  "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
+  "h6 {font-size:10pt; color:#D50; text-align:center;}"
+  ".menu {background-color:#FFF; color:#07D; margin:8px; text-decoration:none}"
+  ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
+  ".button.link {}"
+  ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
+  ".menu:hover {background:#DDF;}"
+  ".button:hover {background:#369;}"
+  "th {padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
+  "td {padding:4px;}"
+  "tr {padding:4px;}"
+  "table {color:black;}"
+  ".div_l {float:left;}"
+  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
+  ".div_br {clear:both;}"
+  ".note {color:#444; font-style:italic}"
+  ".active {text-decoration:underline;}"
+  ".on {color:green;}"
+  ".off {color:red;}"
+  "\0"
+};
+
+#define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
+
+
 void WebServerInit()
 {
   // Prepare webserver pages
@@ -130,6 +161,7 @@ void sendWebPageChunkedBegin(String& log)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
+  WebServer.sendHeader("Connection","close");
   WebServer.send(200);
 }
 
@@ -278,42 +310,17 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
 
   else if (varName == F("css"))
   {
-    varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
-    /*now css is written in writeDefaultCSS() to SPIFFS and always present
-      if (SPIFFS.exists("esp.css"))
-      {
+    if (SPIFFS.exists("esp.css"))   //now css is written in writeDefaultCSS() to SPIFFS and always present
+    //if (0) //TODO
+    {
       varValue = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
-      }
-      else
-      {
-      varValue = F(
-        "<style>"
-          "* {font-family:sans-serif; font-size:12pt;}"
-          "h1 {font-size:16pt; color:black; margin:8px 0 0 0; font-weight:bold;}"
-          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:black; color:#FFF; font-weight:bold;}"
-          "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-          "h6 {font-size:10pt; color:black; text-align:center;}"
-          ".menu {background-color:#FFF; color:blue; margin:8px; text-decoration:none}"
-          ".button {padding:4px 16px; background-color:#07D; color:#FFF; border:solid 1px #FFF; text-decoration:none}"
-          ".button.link {}"
-          ".button.help {padding:2px 4px; border-radius:50%}"
-          ".menu:hover {background:#DDF;}"
-          ".button:hover {background:#369;}"
-          "th {padding:6px; background-color:black; color:#FFF; font-weight:bold;}"
-          "td {padding:4px;}"
-          "tr {padding:4px;}"
-          "table {color:black;}"
-          ".div_l {float:left;}"
-          ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:7px; background-color:#080; color:#FFF;}"
-          ".div_br {clear:both;}"
-          ".note {color:#444; font-style:italic}"
-          ".active {text-decoration:underline;}"
-          ".on {color:green;}"
-          ".off {color:red;}"
-        "</style>"
-        );
-      }
-    */
+    }
+    else
+    {
+      varValue += F("<style>");
+      varValue += PGMT(pgDefaultCSS);
+      varValue += F("</style>");
+    }
   }
 
   else if (varName == F("js"))
@@ -343,35 +350,14 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
   }
 }
 
+
 void writeDefaultCSS(void)
 {
+  return; //TODO
+  
   if (!SPIFFS.exists("esp.css"))
   {
-    String defaultCSS = F(
-                          //color sheme: #07D #D50 #DB0 #A0D
-                          "* {font-family:sans-serif; font-size:12pt;}"
-                          "h1 {font-size:16pt; color:#D50; margin:8px 0 0 0; font-weight:bold;}"
-                          "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
-                          "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-                          "h6 {font-size:10pt; color:#D50; text-align:center;}"
-                          ".menu {background-color:#FFF; color:#07D; margin:8px; text-decoration:none}"
-                          ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
-                          ".button.link {}"
-                          ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
-                          ".menu:hover {background:#DDF;}"
-                          ".button:hover {background:#369;}"
-                          "th {padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
-                          "td {padding:4px;}"
-                          "tr {padding:4px;}"
-                          "table {color:black;}"
-                          ".div_l {float:left;}"
-                          ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
-                          ".div_br {clear:both;}"
-                          ".note {color:#444; font-style:italic}"
-                          ".active {text-decoration:underline;}"
-                          ".on {color:green;}"
-                          ".off {color:red;}"
-                        );
+    String defaultCSS = PGMT(pgDefaultCSS);
 
     fs::File f = SPIFFS.open("esp.css", "w");
     if (f)
@@ -3227,6 +3213,8 @@ void handleFileUpload() {
 bool loadFromFS(boolean spiffs, String path) {
   if (!isLoggedIn()) return false;
 
+  statusLED(true);
+
   String dataType = F("text/plain");
   if (path.endsWith("/")) path += F("index.htm");
 
@@ -3241,6 +3229,9 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(".txt")) dataType = F("application/octet-stream");
   else if (path.endsWith(".dat")) dataType = F("application/octet-stream");
 
+  String log = F("HTML : Request file ");
+  log += path;
+
   path = path.substring(1);
   if (spiffs)
   {
@@ -3249,7 +3240,10 @@ bool loadFromFS(boolean spiffs, String path) {
       return false;
 
     //prevent reloading stuff on every click
-    WebServer.sendHeader("Cache-Control","max-age=3600");
+    WebServer.sendHeader("Cache-Control","max-age=3600, public");
+    WebServer.sendHeader("Vary","*");
+    WebServer.sendHeader("ETag","\"2.0.0\"");
+
     if (path.endsWith(".dat"))
       WebServer.sendHeader("Content-Disposition", "attachment;");
     WebServer.streamFile(dataFile, dataType);
@@ -3265,6 +3259,9 @@ bool loadFromFS(boolean spiffs, String path) {
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
   }
+  statusLED(true);
+
+  addLog(LOG_LEVEL_INFO, log);
   return true;
 }
 
