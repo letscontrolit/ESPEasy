@@ -51,7 +51,12 @@ void deepSleep(int delay)
     }
   }
 
+  deepSleepStart(delay); // Call deepSleepStart function after these checks
+}
 
+void deepSleepStart(int delay)
+{
+  // separate function that is called from above function or directly from rules, usign deepSleep as a one-shot
   String event = F("System#Sleep");
   rulesProcessing(event);
 
@@ -1004,7 +1009,7 @@ void ResetFactory(void)
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
-  
+
   Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
