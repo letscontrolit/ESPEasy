@@ -3247,6 +3247,9 @@ bool loadFromFS(boolean spiffs, String path) {
     fs::File dataFile = SPIFFS.open(path.c_str(), "r");
     if (!dataFile)
       return false;
+
+    //prevent reloading stuff on every click
+    WebServer.sendHeader("Cache-Control","max-age=3600");
     if (path.endsWith(".dat"))
       WebServer.sendHeader("Content-Disposition", "attachment;");
     WebServer.streamFile(dataFile, dataType);

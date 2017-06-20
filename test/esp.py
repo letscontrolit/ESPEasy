@@ -27,7 +27,7 @@ class Esp():
         start_time=time.time()
 
         while (time.time()-start_time)< int(timeout):
-                self._serial.write(bytes('\n', 'ascii'));
+                self._serial.write(bytes('.\n', 'ascii'));
                 a=True
                 while a!=b'':
                     a=self._serial.readline()
