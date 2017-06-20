@@ -9,16 +9,17 @@ static const char pgDefaultCSS[] PROGMEM = {
   "h2 {font-size:12pt; margin:8px -4px 0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
   "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
   "h6 {font-size:10pt; color:#D50; text-align:center;}"
-  ".menu {background-color:#FFF; color:#07D; margin:8px; text-decoration:none}"
+  //buttons
   ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
   ".button.link {}"
   ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
-  ".menu:hover {background:#DDF;}"
   ".button:hover {background:#369;}"
+  //tables
   "th {padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
   "td {padding:4px;}"
   "tr {padding:4px;}"
   "table {color:black;}"
+
   ".div_l {float:left;}"
   ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
   ".div_br {clear:both;}"
@@ -26,6 +27,13 @@ static const char pgDefaultCSS[] PROGMEM = {
   ".active {text-decoration:underline;}"
   ".on {color:green;}"
   ".off {color:red;}"
+  //header with title and menu
+  ".header {margin:-8px -8px 16px -4px; padding:8px; background-color:#F8F8F8;}"
+  //menu
+  ".menubar {position:relative; margin:8px -8px -8px -8px; padding:20px 8px; border-bottom: 1px solid #DDD;}"
+  ".menu {float:left; margin-top:-16px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
+  ".menu.active {color:#000; background-color:#fff; border-color:#D50 #DDD transparent;}"
+  ".menu:hover {background:#DEF;}"
   "\0"
 };
 
@@ -144,8 +152,9 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{css}}"
               "</head>"
               "<body>"
+              "<div class='header'>"
               "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
-              "<br/>{{menu}}<br/>"
+              "{{menu}}</div>"
               "{{error}}"
               "{{content}}"
               "<BR><h6>Powered by www.letscontrolit.com</h6>"
