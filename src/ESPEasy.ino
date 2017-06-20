@@ -202,10 +202,10 @@
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
-#ifdef PLUGIN_BUILD_NORMAL
-  #define DEVICES_MAX                      64
-#else
+#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
   #define DEVICES_MAX                      72
+#else
+  #define DEVICES_MAX                      64
 #endif
 #define TASKS_MAX                          12 // max 12!
 #define CONTROLLER_MAX                      3 // max 4!
