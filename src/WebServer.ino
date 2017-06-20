@@ -235,8 +235,8 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
     else   //no closing "}}"
       pageTemplate = pageTemplate.substring(2);   //eat "{{"
 
-    //send the accumulated HTML if junk is 250+ bytes
-    if (pageResult.length() > 250)
+    //send the accumulated HTML if junk is 500+ bytes
+    if (pageResult.length() > 500)
     {
       sendWebPageChunkedData(log, pageResult);
     }
@@ -354,7 +354,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
 void writeDefaultCSS(void)
 {
   return; //TODO
-  
+
   if (!SPIFFS.exists("esp.css"))
   {
     String defaultCSS = PGMT(pgDefaultCSS);
