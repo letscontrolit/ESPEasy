@@ -31,8 +31,8 @@ static const char pgDefaultCSS[] PROGMEM = {
   ".header {margin:-8px -8px 16px -4px; padding:8px; background-color:#F8F8F8;}"
   //menu
   ".menubar {position:relative; margin:8px -8px -8px -8px; padding:20px 8px; border-bottom: 1px solid #DDD;}"
-  ".menu {float:left; margin-top:-16px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
-  ".menu.active {color:#000; background-color:#fff; border-color:#D50 #DDD transparent;}"
+  ".menu {float:left; height:20px; margin-top:-16px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
+  ".menu.active {color:#000; background-color:#FFF; border-color:#D50 #DDD #FFF;}"
   ".menu:hover {background:#DEF;}"
   "\0"
 };
