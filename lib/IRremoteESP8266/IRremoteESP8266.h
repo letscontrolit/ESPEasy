@@ -32,6 +32,7 @@
 #define IRremote_h
 
 #include <stdint.h>
+#include "IRremoteInt.h"
 
 // The following are compile-time library options.
 // If you change them, recompile the library.
@@ -68,7 +69,8 @@ enum decode_type_t {
   DENON,
   KELVINATOR,
   SHERWOOD,
-  MITSUBISHI_AC
+  MITSUBISHI_AC,
+  RCMM
 };
 
 // Results returned from the decoder
@@ -89,30 +91,33 @@ public:
 // Decoded value for NEC when a repeat code is received
 #define REPEAT 0xffffffff
 
-#define SEND_PROTOCOL_NEC     case NEC: sendNEC(data, nbits); break;
-#define SEND_PROTOCOL_SONY    case SONY: sendSony(data, nbits); break;
-#define SEND_PROTOCOL_RC5     case RC5: sendRC5(data, nbits); break;
-#define SEND_PROTOCOL_RC6     case RC6: sendRC6(data, nbits); break;
-#define SEND_PROTOCOL_DISH    case DISH: sendDISH(data, nbits); break;
-#define SEND_PROTOCOL_JVC     case JVC: sendJVC(data, nbits, 0); break;
-#define SEND_PROTOCOL_SAMSUNG case SAMSUNG: sendSAMSUNG(data, nbits); break;
-#define SEND_PROTOCOL_LG      case LG: sendLG(data, nbits); break;
-#define SEND_PROTOCOL_WHYNTER case WHYNTER: sendWhynter(data, nbits); break;
-#define SEND_PROTOCOL_COOLIX  case COOLIX: sendCOOLIX(data, nbits); break;
-#define SEND_PROTOCOL_DENON  case DENON: sendDenon(data, nbits); break;
+#define SEND_PROTOCOL_NEC      case NEC: sendNEC(data, nbits); break;
+#define SEND_PROTOCOL_SONY     case SONY: sendSony(data, nbits); break;
+#define SEND_PROTOCOL_RC5      case RC5: sendRC5(data, nbits); break;
+#define SEND_PROTOCOL_RC6      case RC6: sendRC6(data, nbits); break;
+#define SEND_PROTOCOL_DISH     case DISH: sendDISH(data, nbits); break;
+#define SEND_PROTOCOL_JVC      case JVC: sendJVC(data, nbits, 0); break;
+#define SEND_PROTOCOL_SAMSUNG  case SAMSUNG: sendSAMSUNG(data, nbits); break;
+#define SEND_PROTOCOL_LG       case LG: sendLG(data, nbits); break;
+#define SEND_PROTOCOL_WHYNTER  case WHYNTER: sendWhynter(data, nbits); break;
+#define SEND_PROTOCOL_COOLIX   case COOLIX: sendCOOLIX(data, nbits); break;
+#define SEND_PROTOCOL_DENON    case DENON: sendDenon(data, nbits); break;
 #define SEND_PROTOCOL_SHERWOOD case SHERWOOD: sendSherwood(data, nbits); break;
+#define SEND_PROTOCOL_RCMM     case RCMM: sendRCMM(data, nbits); break;
+
 
 // main class for receiving IR
 class IRrecv
 {
 public:
   IRrecv(int recvpin);
-  bool decode(decode_results *results);
+  bool decode(decode_results *results, irparams_t *save=NULL);
   void enableIRIn();
   void disableIRIn();
   void resume();
   private:
   // These are called by decode
+  void copyIrParams(irparams_t *dest);
   int getRClevel(decode_results *results, int *offset, int *used, int t1);
   bool decodeNEC(decode_results *results);
   bool decodeSony(decode_results *results);
@@ -120,6 +125,7 @@ public:
   bool decodeMitsubishi(decode_results *results);
   bool decodeRC5(decode_results *results);
   bool decodeRC6(decode_results *results);
+  bool decodeRCMM(decode_results *results);
   bool decodePanasonic(decode_results *results);
   bool decodeLG(decode_results *results);
   bool decodeJVC(decode_results *results);
@@ -131,6 +137,14 @@ public:
   bool decodeDaikin(decode_results *results);
   bool decodeDenon(decode_results *results);
   int compare(unsigned int oldval, unsigned int newval);
+  uint32_t ticksLow(uint32_t usecs, uint8_t tolerance=TOLERANCE);
+  uint32_t ticksHigh(uint32_t usecs, uint8_t tolerance=TOLERANCE);
+  bool match(uint32_t measured_ticks, uint32_t desired_us,
+             uint8_t tolerance=TOLERANCE);
+  bool matchMark(uint32_t measured_ticks, uint32_t desired_us,
+                 uint8_t tolerance=TOLERANCE, int excess=MARK_EXCESS);
+  bool matchSpace(uint32_t measured_ticks, uint32_t desired_us,
+                  uint8_t tolerance=TOLERANCE, int excess=MARK_EXCESS);
 };
 
 // Only used for testing; can remove virtual for shorter code
@@ -139,6 +153,7 @@ public:
 #else
 #define VIRTUAL
 #endif
+
 class IRsend
 {
 public:
@@ -158,12 +173,13 @@ public:
         SEND_PROTOCOL_COOLIX
         SEND_PROTOCOL_DENON
         SEND_PROTOCOL_SHERWOOD
+        SEND_PROTOCOL_RCMM
       }
   };
   void sendCOOLIX(unsigned long data, int nbits);
   void sendWhynter(unsigned long data, int nbits);
   void sendNEC(unsigned long data, int nbits=32, unsigned int repeat=0);
-  void sendLG(unsigned long data, int nbits);
+  void sendLG(unsigned long data, int nbits=28, unsigned int repeat=0);
   // sendSony() should typically be called with repeat=2 as Sony devices
   // expect the code to be sent at least 3 times. (code + 2 repeats = 3 codes)
   // As the legacy use of this procedure was only to send a single code
@@ -176,15 +192,19 @@ public:
   void sendGC(unsigned int buf[], int len);
   void sendRC5(unsigned long data, int nbits);
   void sendRC6(unsigned long data, int nbits);
-  void sendDISH(unsigned long data, int nbits);
+  void sendRCMM(uint32_t data, uint8_t nbits=24);
+  // sendDISH() should typically be called with repeat=3 as DISH devices
+  // expect the code to be sent at least 4 times. (code + 3 repeats = 4 codes)
+  // As the legacy use of this procedure was only to send a single code
+  // it defaults to repeat=0 for backward compatiblity.
+  void sendDISH(unsigned long data, int nbits, unsigned int repeat=0);
   void sendSharp(unsigned int address, unsigned int command);
   void sendSharpRaw(unsigned long data, int nbits);
   void sendPanasonic(unsigned int address, unsigned long data);
-  void sendJVC(unsigned long data, int nbits, int repeat); // *Note instead of sending the REPEAT constant if you want the JVC repeat signal sent, send the original code value and change the repeat argument from 0 to 1. JVC protocol repeats by skipping the header NOT by sending a separate code value like NEC does.
-  void sendSAMSUNG(unsigned long data, int nbits);
-  void sendDaikin(unsigned char daikin[]);
-  void sendDaikinChunk(unsigned char buf[], int len, int start);
-  void sendDenon(unsigned long data, int nbits);
+  void sendJVC(unsigned long data, int nbits, unsigned int repeat=0);
+  void sendSAMSUNG(unsigned long data, int nbits=32);
+  void sendDaikin(unsigned char data[]);
+  void sendDenon(unsigned long data, int nbits=14);
   void sendKelvinator(unsigned char data[]);
   void sendSherwood(unsigned long data, int nbits=32, unsigned int repeat=1);
   void sendMitsubishiAC(unsigned char data[]);
@@ -209,13 +229,5 @@ public:
 private:
   uint32_t start;
 };
-
-// Some useful constants
-#define USECPERTICK 50  // microseconds per clock interrupt tick
-#define RAWBUF 100 // Length of raw duration buffer
-
-// Marks tend to be 100us too long, and spaces 100us too short
-// when received due to sensor lag.
-#define MARK_EXCESS 100
 
 #endif

@@ -60,10 +60,11 @@
 #define NEC_RPT_SPACE	2250
 #define NEC_MIN_COMMAND_LENGTH 108000UL
 
+// Timings based on http://www.sbprojects.com/knowledge/ir/sirc.php
 #define SONY_HDR_MARK	2400
 #define SONY_HDR_SPACE	600
-#define SONY_ONE_MARK	1200
-#define SONY_ZERO_MARK	600
+#define SONY_ONE_MARK	1250  // Experiments suggest +50 to spec is better.
+#define SONY_ZERO_MARK	650  // Experiments suggest +50 to spec is better.
 #define SONY_RPT_LENGTH 45000
 #define SONY_DOUBLE_SPACE_USECS  500  // usually see 713 - not using ticks as get number wrapround
 
@@ -105,6 +106,20 @@
 #define RC6_T1		444
 #define RC6_RPT_LENGTH	46000
 
+// http://www.sbprojects.com/knowledge/ir/rcmm.php
+#define RCMM_HDR_MARK 416
+#define RCMM_HDR_SPACE 277
+#define RCMM_BIT_MARK 166
+#define RCMM_BIT_SPACE_0 277
+#define RCMM_BIT_SPACE_1 444
+#define RCMM_BIT_SPACE_2 611
+#define RCMM_BIT_SPACE_3 777
+#define RCMM_RPT_LENGTH 27778
+#define RCMM_MIN_GAP 3360
+// Use a tolerance of +/-10% when matching some data spaces.
+#define RCMM_TOLERANCE 10
+#define RCMM_EXCESS 50
+
 #define SHARP_BIT_MARK 245
 #define SHARP_ONE_SPACE 1805
 #define SHARP_ZERO_SPACE 795
@@ -118,13 +133,13 @@
 #define DISH_ONE_SPACE 1700
 #define DISH_ZERO_SPACE 2800
 #define DISH_RPT_SPACE 6200
-#define DISH_TOP_BIT 0x8000
 
-#define PANASONIC_HDR_MARK 3502
-#define PANASONIC_HDR_SPACE 1750
-#define PANASONIC_BIT_MARK 502
-#define PANASONIC_ONE_SPACE 1244
-#define PANASONIC_ZERO_SPACE 400
+// Ref: http://www.remotecentral.com/cgi-bin/mboard/rc-pronto/thread.cgi?26152
+#define PANASONIC_HDR_MARK             3456
+#define PANASONIC_HDR_SPACE            1728
+#define PANASONIC_BIT_MARK              432
+#define PANASONIC_ONE_SPACE            1296
+#define PANASONIC_ZERO_SPACE            432
 
 #define JVC_HDR_MARK 8000
 #define JVC_HDR_SPACE 4000
@@ -184,15 +199,18 @@
 #define KELVINATOR_GAP_SPACE	19950U
 #define KELVINATOR_CMD_FOOTER	2U
 
-#define TOLERANCE 25  // percent tolerance in measurements
-#define LTOL (1.0 - TOLERANCE/100.)
-#define UTOL (1.0 + TOLERANCE/100.)
+// Some useful constants
+#define USECPERTICK 50  // microseconds per clock interrupt tick
+#define RAWBUF 100 // Length of raw duration buffer
+
+// Marks tend to be 100us too long, and spaces 100us too short
+// when received due to sensor lag.
+#define MARK_EXCESS 100
 
 #define _GAP 5000 // Minimum map between transmissions
 #define GAP_TICKS (_GAP/USECPERTICK)
 
-#define TICKS_LOW(us) (int) (((us)*LTOL/USECPERTICK))
-#define TICKS_HIGH(us) (int) (((us)*UTOL/USECPERTICK + 1))
+#define TOLERANCE 25  // default percent tolerance in measurements
 
 // receiver states
 #define STATE_IDLE     2
@@ -200,14 +218,18 @@
 #define STATE_SPACE    4
 #define STATE_STOP     5
 
+#define RAWBUF 100 // Length of raw duration buffer
+
 // information for the interrupt handler
 typedef struct {
-  uint8_t recvpin;           // pin for IR data from detector
-  uint8_t rcvstate;          // state machine
-  unsigned int timer;     // state timer, counts 50uS ticks.
-  unsigned int rawbuf[RAWBUF]; // raw data
-  uint8_t rawlen;         // counter of entries in rawbuf
-  uint8_t overflow;
+  uint8_t recvpin;              // pin for IR data from detector
+  uint8_t rcvstate;             // state machine
+  unsigned int timer;           // state timer, counts 50uS ticks.
+  unsigned int rawbuf[RAWBUF];  // raw data
+  // uint16_t is used for rawlen as it saves 3 bytes of iram in the interrupt
+  // handler. Don't ask why, I don't know. It just does.
+  uint16_t rawlen;              // counter of entries in rawbuf.
+  uint8_t overflow;             // Buffer overflow indicator.
 }
 irparams_t;
 
