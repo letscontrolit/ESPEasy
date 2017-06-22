@@ -48,7 +48,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
       {
         String escapeBuffer;
 
-        ConfigStruct customConfig;
+        C011_ConfigStruct customConfig;
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
