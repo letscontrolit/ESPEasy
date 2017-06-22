@@ -8,17 +8,17 @@
 #define CPLUGIN_ID_011         11
 #define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
 
-#define P011_HTTP_METHOD_MAX_LEN          16
-#define P011_HTTP_URI_MAX_LEN             240
-#define P011_HTTP_HEADER_MAX_LEN          256
-#define P011_HTTP_BODY_MAX_LEN            512
+#define C011_HTTP_METHOD_MAX_LEN          16
+#define C011_HTTP_URI_MAX_LEN             240
+#define C011_HTTP_HEADER_MAX_LEN          256
+#define C011_HTTP_BODY_MAX_LEN            512
 
-struct P011_ConfigStruct
+struct C011_ConfigStruct
 {
-  char          HttpMethod[P011_HTTP_METHOD_MAX_LEN];
-  char          HttpUri[P011_HTTP_URI_MAX_LEN];
-  char          HttpHeader[P011_HTTP_HEADER_MAX_LEN];
-  char          HttpBody[P011_HTTP_BODY_MAX_LEN];
+  char          HttpMethod[C011_HTTP_METHOD_MAX_LEN];
+  char          HttpUri[C011_HTTP_URI_MAX_LEN];
+  char          HttpHeader[C011_HTTP_HEADER_MAX_LEN];
+  char          HttpBody[C011_HTTP_BODY_MAX_LEN];
 };
 
 boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
@@ -48,7 +48,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
       {
         String escapeBuffer;
 
-        P011_ConfigStruct customConfig;
+        C011_ConfigStruct customConfig;
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
@@ -65,14 +65,14 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string += F("</select>");
 
         string += F("<TR><TD>HTTP URI:<TD><input type='text' name='P011httpuri' size=80 maxlength='");
-        string += P011_HTTP_URI_MAX_LEN-1;
+        string += C011_HTTP_URI_MAX_LEN-1;
         string += F("' value='");
         string += customConfig.HttpUri;
 
         string += F("'>");
 
         string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
-        string += P011_HTTP_HEADER_MAX_LEN-1;
+        string += C011_HTTP_HEADER_MAX_LEN-1;
         string += F("'>");
         escapeBuffer=customConfig.HttpHeader;
         htmlEscape(escapeBuffer);
@@ -80,7 +80,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string += F("</textarea>");
 
         string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
-        string += P011_HTTP_BODY_MAX_LEN-1;
+        string += C011_HTTP_BODY_MAX_LEN-1;
         string += F("'>");
         escapeBuffer=customConfig.HttpBody;
         htmlEscape(escapeBuffer);
@@ -91,7 +91,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_WEBFORM_SAVE:
       {
-        P011_ConfigStruct customConfig;
+        C011_ConfigStruct customConfig;
         String httpmethod = WebServer.arg(F("P011httpmethod"));
         String httpuri = WebServer.arg(F("P011httpuri"));
         String httpheader = WebServer.arg(F("P011httpheader"));
@@ -135,7 +135,7 @@ boolean HTTPSend011(struct EventStruct *event)
     authHeader += F(" \r\n");
   }
 
-  P011_ConfigStruct customConfig;
+  C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
   boolean success = false;
