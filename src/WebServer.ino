@@ -151,7 +151,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<!DOCTYPE html><html lang='en'>"
       "<head>"
         "<title>{{name}}</title>"
-        //"{{js}}"
+        "{{js}}"
         "{{css}}"
       "</head>"
       "<body class='bodymenu'>"
