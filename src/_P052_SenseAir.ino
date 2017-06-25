@@ -101,10 +101,19 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
           {
               case 0:
               {
-                  int error_Status = Plugin_052_readErrorStatus();
-                  UserVar[event->BaseVarIndex] = error_Status;
-                  log += F("error status = ");
-                  log += error_Status;
+                  int errorWord = Plugin_052_readErrorStatus();
+                  for (size_t i = 0; i < 9; i++) {
+                    if (bitRead(errorWord,i)) {
+                      UserVar[event->BaseVarIndex] = i;
+                      log += F("error code = ");
+                      log += i;
+                      break;
+                    }
+                  }
+
+                  UserVar[event->BaseVarIndex] = -1;
+                  log += F("error code = ");
+                  log += -1;
                   break;
               }
               case 1:
