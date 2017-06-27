@@ -2,6 +2,19 @@
 // Initialize all Controller NPlugins that where defined earlier
 // and initialize the function call pointer into the CNPlugin array
 //********************************************************************************
+
+static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - To much N-Plugins";
+
+#define ADDNPLUGIN(NNN) \
+  if (x < NPLUGIN_MAX) \
+  { \
+    NPlugin_id[x] = NPLUGIN_ID_##NNN; \
+    NPlugin_ptr[x++] = &NPlugin_##NNN; \
+  } \
+  else \
+    addLog(LOG_LEVEL_ERROR, FPSTR(ADDNPLUGIN_ERROR));
+
+
 void NPluginInit(void)
 {
   byte x;
@@ -16,103 +29,103 @@ void NPluginInit(void)
   x = 0;
 
 #ifdef NPLUGIN_001
-  NPlugin_id[x] = 1; NPlugin_ptr[x++] = &NPlugin_001;
+  ADDNPLUGIN(001)
 #endif
 
 #ifdef NPLUGIN_002
-  NPlugin_id[x] = 2; NPlugin_ptr[x++] = &NPlugin_002;
+  ADDNPLUGIN(002)
 #endif
 
 #ifdef NPLUGIN_003
-  NPlugin_id[x] = 3; NPlugin_ptr[x++] = &NPlugin_003;
+  ADDNPLUGIN(003)
 #endif
 
 #ifdef NPLUGIN_004
-  NPlugin_id[x] = 4; NPlugin_ptr[x++] = &NPlugin_004;
+  ADDNPLUGIN(004)
 #endif
 
 #ifdef NPLUGIN_005
-  NPlugin_id[x] = 5; NPlugin_ptr[x++] = &NPlugin_005;
+  ADDNPLUGIN(005)
 #endif
 
 #ifdef NPLUGIN_006
-  NPlugin_id[x] = 6; NPlugin_ptr[x++] = &NPlugin_006;
+  ADDNPLUGIN(006)
 #endif
 
 #ifdef NPLUGIN_007
-  NPlugin_id[x] = 7; NPlugin_ptr[x++] = &NPlugin_007;
+  ADDNPLUGIN(007)
 #endif
 
 #ifdef NPLUGIN_008
-  NPlugin_id[x] = 8; NPlugin_ptr[x++] = &NPlugin_008;
+  ADDNPLUGIN(008)
 #endif
 
 #ifdef NPLUGIN_009
-  NPlugin_id[x] = 9; NPlugin_ptr[x++] = &NPlugin_009;
+  ADDNPLUGIN(009)
 #endif
 
 #ifdef NPLUGIN_010
-  NPlugin_id[x] = 10; NPlugin_ptr[x++] = &NPlugin_010;
+  ADDNPLUGIN(010)
 #endif
 
 #ifdef NPLUGIN_011
-  NPlugin_id[x] = 11; NPlugin_ptr[x++] = &NPlugin_011;
+  ADDNPLUGIN(011)
 #endif
 
 #ifdef NPLUGIN_012
-  NPlugin_id[x] = 12; NPlugin_ptr[x++] = &NPlugin_012;
+  ADDNPLUGIN(012)
 #endif
 
 #ifdef NPLUGIN_013
-  NPlugin_id[x] = 13; NPlugin_ptr[x++] = &NPlugin_013;
+  ADDNPLUGIN(013)
 #endif
 
 #ifdef NPLUGIN_014
-  NPlugin_id[x] = 14; NPlugin_ptr[x++] = &NPlugin_014;
+  ADDNPLUGIN(014)
 #endif
 
 #ifdef NPLUGIN_015
-  NPlugin_id[x] = 15; NPlugin_ptr[x++] = &NPlugin_015;
+  ADDNPLUGIN(015)
 #endif
 
 #ifdef NPLUGIN_016
-  NPlugin_id[x] = 16; NPlugin_ptr[x++] = &NPlugin_016;
+  ADDNPLUGIN(016)
 #endif
 
 #ifdef NPLUGIN_017
-  NPlugin_id[x] = 17; NPlugin_ptr[x++] = &NPlugin_017;
+  ADDNPLUGIN(017)
 #endif
 
 #ifdef NPLUGIN_018
-  NPlugin_id[x] = 18; NPlugin_ptr[x++] = &NPlugin_018;
+  ADDNPLUGIN(018)
 #endif
 
 #ifdef NPLUGIN_019
-  NPlugin_id[x] = 19; NPlugin_ptr[x++] = &NPlugin_019;
+  ADDNPLUGIN(019)
 #endif
 
 #ifdef NPLUGIN_020
-  NPlugin_id[x] = 20; NPlugin_ptr[x++] = &NPlugin_020;
+  ADDNPLUGIN(020)
 #endif
 
 #ifdef NPLUGIN_021
-  NPlugin_id[x] = 21; NPlugin_ptr[x++] = &NPlugin_021;
+  ADDNPLUGIN(021)
 #endif
 
 #ifdef NPLUGIN_022
-  NPlugin_id[x] = 22; NPlugin_ptr[x++] = &NPlugin_022;
+  ADDNPLUGIN(022)
 #endif
 
 #ifdef NPLUGIN_023
-  NPlugin_id[x] = 23; NPlugin_ptr[x++] = &NPlugin_023;
+  ADDNPLUGIN(023)
 #endif
 
 #ifdef NPLUGIN_024
-  NPlugin_id[x] = 24; NPlugin_ptr[x++] = &NPlugin_024;
+  ADDNPLUGIN(024)
 #endif
 
 #ifdef NPLUGIN_025
-  NPlugin_id[x] = 25; NPlugin_ptr[x++] = &NPlugin_025;
+  ADDNPLUGIN(025)
 #endif
 
   NPluginCall(NPLUGIN_PROTOCOL_ADD, 0);
@@ -125,7 +138,7 @@ byte NPluginCall(byte Function, struct EventStruct *event)
 
  if (event == 0)
     event=&TempEvent;
-    
+
   switch (Function)
   {
     // Unconditional calls to all plugins
@@ -139,4 +152,3 @@ byte NPluginCall(byte Function, struct EventStruct *event)
 
   return false;
 }
-
