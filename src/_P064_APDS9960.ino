@@ -14,6 +14,11 @@
 #define PLUGIN_ID_064         64
 #define PLUGIN_NAME_064       "??? Gesture - APDS9960 [TESTING]"
 #define PLUGIN_VALUENAME1_064 "Gesture"
+#define PLUGIN_VALUENAME2_064 "Proximity"
+#define PLUGIN_VALUENAME3_064 "Light"
+#define PLUGIN_VALUENAME4_064 "R"
+#define PLUGIN_VALUENAME5_064 "G"
+#define PLUGIN_VALUENAME6_064 "B"
 
 #include <SparkFun_APDS9960.h>
 
@@ -39,7 +44,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].ValueCount = 6;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].TimerOptional = true;
@@ -56,17 +61,22 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_064));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_064));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_064));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_064));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_064));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[5], PSTR(PLUGIN_VALUENAME6_064));
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte addr = CONFIG(0);
+        //byte addr = CONFIG(0);
 
         int optionValues[1] = { 0x39 };
-        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, addr);
+        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, 0x39);
 
-        addFormNote(string, F("???"));
+        //addFormNote(string, F("???"));
 
         //String options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
         //addFormSelector(string, F("Chip (Mode)"), F("chip"), 3, options, NULL, CONFIG(1));
@@ -87,22 +97,29 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if ( apds.init() ) {
-          Serial.println(F("APDS-9960 initialization complete"));
-        } else {
-          Serial.println(F("Something went wrong during APDS-9960 init!"));
+        String log = F("APDS : ");
+        if ( apds.init() )
+        {
+          log += F("Init");
+          if (! apds.enableGestureSensor(false))
+            log += F(" - Error during gesture sensor init!");
+          if (! apds.enableLightSensor(false))
+            log += F(" - Error during light sensor init!");
+          if (! apds.enableProximitySensor(false))
+            log += F(" - Error during proximity sensor init!");
+        }
+        else
+        {
+          log += F("Error during APDS-9960 init!");
         }
 
         // Start running the APDS-9960 gesture sensor engine
-        if ( apds.enableGestureSensor(true) ) {
-          Serial.println(F("Gesture sensor is now running"));
-        } else {
-          Serial.println(F("Something went wrong during gesture sensor init!"));
-        }
 
         //switch (CONFIG(1))
         {
         }
+
+        addLog(LOG_LEVEL_INFO, log);
 
         success = true;
         break;
@@ -110,57 +127,36 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        static byte lastScanCode = 0xFF;
-      	static byte sentScanCode = 0xFF;
-        byte actScanCode = 0;
-
-        if ( apds.isGestureAvailable() )
+        Serial.print(".");
+        if ( 1 && apds.isGestureAvailable() )
         {
-          switch ( apds.readGesture() )
+          Serial.print("<");
+          byte gesture = apds.readGesture();
+          Serial.print(">");
+
+          String log = F("APDS : Gesture=");
+
+          switch ( gesture )
           {
-            case DIR_UP:
-              Serial.println("UP");
-              break;
-            case DIR_DOWN:
-              Serial.println("DOWN");
-              break;
-            case DIR_LEFT:
-              Serial.println("LEFT");
-              break;
-            case DIR_RIGHT:
-              Serial.println("RIGHT");
-              break;
-            case DIR_NEAR:
-              Serial.println("NEAR");
-              break;
-            case DIR_FAR:
-              Serial.println("FAR");
-              break;
-            default:
-              Serial.println("NONE");
+            case DIR_UP:      log += F("UP");      break;
+            case DIR_DOWN:    log += F("DOWN");    break;
+            case DIR_LEFT:    log += F("LEFT");    break;
+            case DIR_RIGHT:   log += F("RIGHT");   break;
+            case DIR_NEAR:    log += F("NEAR");    break;
+            case DIR_FAR:     log += F("FAR");     break;
+            default:          log += F("NONE");    break;
           }
+          log += F(" (");
+          log += gesture;
+          log += F(")");
+
+          UserVar[event->BaseVarIndex] = (float)gesture;
+          event->sensorType = SENSOR_TYPE_SWITCH;
+
+          sendData(event);
+
+          addLog(LOG_LEVEL_INFO, log);
         }
-
-        //switch (CONFIG(1))
-
-      	if (lastScanCode == actScanCode)   // debounced? - two times the same value?
-      	{
-      		if (sentScanCode != actScanCode)   // any change to last sent data?
-      		{
-            UserVar[event->BaseVarIndex] = (float)actScanCode;
-            event->sensorType = SENSOR_TYPE_SWITCH;
-
-            String log = F("APDS : Gesture=");
-            log += String(actScanCode, 10);
-            addLog(LOG_LEVEL_INFO, log);
-
-            sendData(event);
-
-      			sentScanCode = actScanCode;
-      		}
-      	}
-      	else
-      		lastScanCode = actScanCode;
 
         success = true;
         break;
@@ -168,7 +164,28 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        // work is done in PLUGIN_FIFTY_PER_SECOND
+        // Gesture - work is done in PLUGIN_FIFTY_PER_SECOND
+
+        if (1)
+        {
+          uint8_t proximity_data = 0;
+          apds.readProximity(proximity_data);
+          UserVar[event->BaseVarIndex + 1] = (float)proximity_data;
+
+          uint16_t ambient_light = 0;
+          uint16_t red_light = 0;
+          uint16_t green_light = 0;
+          uint16_t blue_light = 0;
+          apds.readAmbientLight(ambient_light);
+          apds.readRedLight(red_light);
+          apds.readGreenLight(green_light);
+          apds.readBlueLight(blue_light);
+          UserVar[event->BaseVarIndex + 2] = (float)ambient_light;
+          UserVar[event->BaseVarIndex + 3] = (float)red_light;
+          UserVar[event->BaseVarIndex + 4] = (float)green_light;
+          UserVar[event->BaseVarIndex + 5] = (float)blue_light;
+        }
+
         success = true;
         break;
       }
