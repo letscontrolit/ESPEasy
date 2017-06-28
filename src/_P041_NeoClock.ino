@@ -50,25 +50,18 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>Red:<TD><input type='text' name='plugin_041_red' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Green:<TD><input type='text' name='plugin_041_green' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Blue:<TD><input type='text' name='plugin_041_blue' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Red"), F("plugin_041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+      	addFormNumericBox(string, F("Green"), F("plugin_041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+      	addFormNumericBox(string, F("Blue"), F("plugin_041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_041_red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_041_green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_041_blue"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_041_red"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_041_green"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_041_blue"));
         Plugin_041_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Plugin_041_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         Plugin_041_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];

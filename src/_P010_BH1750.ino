@@ -2,38 +2,13 @@
 //#################################### Plugin-010: LuxRead   ############################################
 //#######################################################################################################
 
+#include <AS_BH1750.h>
+
 #define PLUGIN_010
 #define PLUGIN_ID_010         10
 #define PLUGIN_NAME_010       "Luminosity - BH1750"
 #define PLUGIN_VALUENAME1_010 "Lux"
 
-#define BH1750_ADDRESS_1    0x23
-#define BH1750_ADDRESS_2    0x5c
-
-// Start measurement at 1lx resolution. Measurement time is approx 120ms.
-#define BH1750_CONTINUOUS_HIGH_RES_MODE  0x10
-
-// Start measurement at 0.5lx resolution. Measurement time is approx 120ms.
-#define BH1750_CONTINUOUS_HIGH_RES_MODE_2  0x11
-
-// Start measurement at 4lx resolution. Measurement time is approx 16ms.
-#define BH1750_CONTINUOUS_LOW_RES_MODE  0x13
-
-// Start measurement at 1lx resolution. Measurement time is approx 120ms.
-// Device is automatically set to Power Down after measurement.
-#define BH1750_ONE_TIME_HIGH_RES_MODE  0x20
-
-// Start measurement at 0.5lx resolution. Measurement time is approx 120ms.
-// Device is automatically set to Power Down after measurement.
-#define BH1750_ONE_TIME_HIGH_RES_MODE_2  0x21
-
-// Start measurement at 1lx resolution. Measurement time is approx 120ms.
-// Device is automatically set to Power Down after measurement.
-#define BH1750_ONE_TIME_LOW_RES_MODE  0x23
-
-
-boolean Plugin_010_init_1 = false;
-boolean Plugin_010_init_2 = false;
 
 boolean Plugin_010(byte function, struct EventStruct *event, String& string)
   {
@@ -73,54 +48,31 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        /*
         String options[2];
         options[0] = F("0x23 - default settings (ADDR Low)");
         options[1] = F("0x5c - alternate settings (ADDR High)");
+        */
         int optionValues[2];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_010'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        optionValues[0] = BH1750_DEFAULT_I2CADDR;
+        optionValues[1] = BH1750_SECOND_I2CADDR;
+        addFormSelectorI2C(string, F("plugin_010"), 2, optionValues, choice);
+        addFormNote(string, F("ADDR Low=0x23, High=0x5c"));
 
         byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        String optionsMode[6];
-        optionsMode[0] = F("BH1750_CONTINUOUS_HIGH_RES_MODE");
-        optionsMode[1] = F("BH1750_CONTINUOUS_HIGH_RES_MODE_2");
-        optionsMode[2] = F("BH1750_CONTINUOUS_LOW_RES_MODE");
-        optionsMode[3] = F("BH1750_ONE_TIME_HIGH_RES_MODE");
-        optionsMode[4] = F("BH1750_ONE_TIME_HIGH_RES_MODE_2");
-        optionsMode[5] = F("BH1750_ONE_TIME_LOW_RES_MODE");
-        int optionValuesMode[6];
-        optionValuesMode[0] = 0;
-        optionValuesMode[1] = 1;
-        optionValuesMode[2] = 2;
-        optionValuesMode[3] = 3;
-        optionValuesMode[4] = 4;
-        optionValuesMode[5] = 5;
-        string += F("<TR><TD>measurment mode:<TD><select name='plugin_010_mode'>");
-        for (byte x = 0; x < 6; x++)
-        {
-          string += F("<option value='");
-          string += optionValuesMode[x];
-          string += "'";
-          if (choiceMode == optionValuesMode[x])
-            string += F(" selected");
-          string += ">";
-          string += optionsMode[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        String optionsMode[4];
+        optionsMode[0] = F("RESOLUTION_LOW");
+        optionsMode[1] = F("RESOLUTION_NORMAL");
+        optionsMode[2] = F("RESOLUTION_HIGH");
+        optionsMode[3] = F("RESOLUTION_AUTO_HIGH");
+        int optionValuesMode[4];
+        optionValuesMode[0] = RESOLUTION_LOW;
+        optionValuesMode[1] = RESOLUTION_NORMAL;
+        optionValuesMode[2] = RESOLUTION_HIGH;
+        optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
+        addFormSelector(string, F("Measurment mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
+
+        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;
@@ -128,89 +80,45 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_010"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_010_mode"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_010"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_010_mode"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_010_sleep"));
         success = true;
         break;
       }
 
   case PLUGIN_READ:
     {
-      uint8_t address = -1;
-      boolean *Plugin_010_init;
-
-      if(Settings.TaskDevicePluginConfig[event->TaskIndex][0]==0)
-        {
-            address = BH1750_ADDRESS_1;
-            Plugin_010_init = &Plugin_010_init_1;
-        }
-      else
-        {
-            address = BH1750_ADDRESS_2;
-            Plugin_010_init = &Plugin_010_init_2;
-        }
-
-      byte mode = -1;
-      switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
-        case 0:
-          mode = BH1750_CONTINUOUS_HIGH_RES_MODE;
-          break;
-        case 1:
-          mode = BH1750_CONTINUOUS_HIGH_RES_MODE_2;
-          break;
-        case 2:
-          mode = BH1750_CONTINUOUS_LOW_RES_MODE;
-          break;
-        case 3:
-          mode = BH1750_ONE_TIME_HIGH_RES_MODE;
-          break;
-        case 4:
-          mode = BH1750_ONE_TIME_HIGH_RES_MODE_2;
-          break;
-        case 5:
-          mode = BH1750_ONE_TIME_LOW_RES_MODE;
-          break;
-        }
+    	uint8_t address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
 
-        *Plugin_010_init = Plugin_010_setResolution(address,mode);
-        delay(150);  //need this otherwise we get one wrong reading after mode change
+      AS_BH1750 sensor = AS_BH1750(address);
+      sensors_resolution_t mode;
+      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_LOW)
+      	mode = RESOLUTION_LOW;
+      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_NORMAL)
+      	mode = RESOLUTION_NORMAL;
+      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_HIGH)
+      	mode = RESOLUTION_HIGH;
+      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_AUTO_HIGH)
+      	mode = RESOLUTION_AUTO_HIGH;
 
+      sensor.begin(mode,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-      if (Wire.requestFrom(address, (uint8_t)2) == 2)
-        {
-          byte b1 = Wire.read();
-          byte b2 = Wire.read();
-          float val = 0xffff; //pm-cz: Maximum obtainable value
-          if (b1 != 0xff || b2 != 0xff) { //pm-cz: Add maximum range check
-            val=((b1<<8)|b2)/1.2;
-          }
-          if (mode==BH1750_CONTINUOUS_HIGH_RES_MODE_2 || mode==BH1750_ONE_TIME_HIGH_RES_MODE_2) {
-            UserVar[event->BaseVarIndex] = val/2;
-          }
-          else {
-            UserVar[event->BaseVarIndex] = val;
-          }
-          String log = F("LUX 0x");
-          log += String(address,HEX);
-          log += F(" Mode: 0x");
-          log += String(mode,HEX);
-          log += F(" : Light intensity: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO,log);
-          success=true;
-        }
+      float lux = sensor.readLightLevel();
+      if (lux != -1) {
+      	UserVar[event->BaseVarIndex] = lux;
+  			String log = F("BH1750 Address: 0x");
+  			log += String(address,HEX);
+  			log += F(" Mode: 0x");
+  			log += String(mode);
+  			log += F(" : Light intensity: ");
+  			log += UserVar[event->BaseVarIndex];
+  			addLog(LOG_LEVEL_INFO,log);
+      	success=true;
+      }
       break;
     }
   }
   return success;
-}
-
-boolean Plugin_010_setResolution(uint8_t address, byte mode){
-          Wire.beginTransmission(address);
-          Wire.write(mode);
-          Wire.endTransmission();
-          return true;
 }

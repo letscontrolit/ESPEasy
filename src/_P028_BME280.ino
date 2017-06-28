@@ -4,7 +4,7 @@
 
 #define PLUGIN_028
 #define PLUGIN_ID_028        28
-#define PLUGIN_NAME_028       "Temperature & Humidity & Pressure - BME280"
+#define PLUGIN_NAME_028       "Environment - BME280"
 #define PLUGIN_VALUENAME1_028 "Temperature"
 #define PLUGIN_VALUENAME2_028 "Humidity"
 #define PLUGIN_VALUENAME3_028 "Pressure"
@@ -39,13 +39,16 @@ enum
   BME280_REGISTER_CAL26              = 0xE1,  // R calibration stored in 0xE1-0xF0
 
   BME280_REGISTER_CONTROLHUMID       = 0xF2,
+  BME280_REGISTER_STATUS             = 0xF3,
   BME280_REGISTER_CONTROL            = 0xF4,
   BME280_REGISTER_CONFIG             = 0xF5,
   BME280_REGISTER_PRESSUREDATA       = 0xF7,
   BME280_REGISTER_TEMPDATA           = 0xFA,
   BME280_REGISTER_HUMIDDATA          = 0xFD,
 
-  BME280_CONTROL_SETTING             = 0x57, // Oversampling: 16x P, 2x T, normal mode
+  BME280_CONTROL_SETTING             = 0x25, // Oversampling: 1x P, 1x T, forced
+  BME280_CONTROL_SETTING_HUMIDITY    = 0x01, // Oversampling: 1x H
+  BME280_CONFIG_SETTING              = 0xA0, // Tstandby 1000ms, filter off, 3-wire SPI Disable
 };
 
 typedef struct
@@ -121,29 +124,17 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        /*
         String options[2];
         options[0] = F("0x76 - default settings (SDO Low)");
         options[1] = F("0x77 - alternate settings (SDO HIGH)");
-        int optionValues[2];
-        optionValues[0] = 0x76;
-        optionValues[1] = 0x77;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_028_bme280_i2c'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
-        string += F("plugin_028_bme280_elev' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        string += F("'>");
+        */
+        int optionValues[2] = { 0x76, 0x77 };
+        addFormSelectorI2C(string, F("plugin_028_bme280_i2c"), 2, optionValues, choice);
+        addFormNote(string, F("SDO Low=0x76, High=0x77"));
+
+        addFormNumericBox(string, F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(string, F("m"));
 
         success = true;
         break;
@@ -151,10 +142,8 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_028_bme280_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String elev = WebServer.arg(F("plugin_028_bme280_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_028_bme280_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_028_bme280_elev"));
         success = true;
         break;
       }
@@ -225,8 +214,14 @@ bool Plugin_028_begin(uint8_t a) {
     return false;
 
   Plugin_028_readCoefficients(_i2caddr & 0x01);
-  Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, 0x03);
+
+  // Set the Sensor in sleep to be make sure that the following configs will be stored
+  Plugin_028_write8(BME280_REGISTER_CONTROL, 0x00);
+
+  Plugin_028_write8(BME280_REGISTER_CONFIG, BME280_CONFIG_SETTING);
+  Plugin_028_write8(BME280_REGISTER_CONTROLHUMID, BME280_CONTROL_SETTING_HUMIDITY);
   Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
+
   return true;
 }
 
@@ -350,6 +345,13 @@ float Plugin_028_readTemperature(uint8_t idx)
 {
   int32_t var1, var2;
 
+  // set to forced mode, i.e. "take next measurement"
+  Plugin_028_write8(BME280_REGISTER_CONTROL, BME280_CONTROL_SETTING);
+  // wait until measurement has been completed, otherwise we would read
+  // the values from the last measurement
+  while (Plugin_028_read8(BME280_REGISTER_STATUS) & 0x08)
+    delay(1);
+
   int32_t adc_T = Plugin_028_read24(BME280_REGISTER_TEMPDATA);
   adc_T >>= 4;
 
@@ -446,4 +448,3 @@ float Plugin_028_readAltitude(float seaLevel)
 float Plugin_028_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
-

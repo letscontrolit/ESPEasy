@@ -1,0 +1,4 @@
+AM2320          KEYWORD1
+getTemperature	KEYWORD2
+getHumidity     KEYWORD2
+CRCCheck        KEYWORD2

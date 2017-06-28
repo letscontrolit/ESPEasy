@@ -6,6 +6,8 @@
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input"
 #define PLUGIN_VALUENAME1_001 "Switch"
+Servo servo1;
+Servo servo2;
 
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
@@ -50,22 +52,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         String options[2];
         options[0] = F("Switch");
         options[1] = F("Dimmer");
-        int optionValues[2];
-        optionValues[0] = 1;
-        optionValues[1] = 2;
-        string += F("<TR><TD>Switch Type:<TD><select name='plugin_001_type'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues[2] = { 1, 2 };
+        addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, choice);
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
@@ -79,29 +67,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[0] = F("Normal Switch");
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
-        int buttonOptionValues[3];
-        buttonOptionValues[0] = 0;
-        buttonOptionValues[1] = 1;
-        buttonOptionValues[2] = 2;
-        string += F("<TR><TD>Switch Button Type:<TD><select name='plugin_001_button'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += buttonOptionValues[x];
-          string += "'";
-          if (choice == buttonOptionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += buttonOptions[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, NULL, choice);
 
-        string += F("<TR><TD>Send Boot state:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
-          string += F("<input type=checkbox name=plugin_001_boot checked>");
-        else
-          string += F("<input type=checkbox name=plugin_001_boot>");
+        addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;
@@ -109,18 +78,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_001_type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_001_type"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-          String plugin2 = WebServer.arg(F("plugin_001_dimvalue"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_001_dimvalue"));
         }
-        String plugin3 = WebServer.arg(F("plugin_001_button"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
 
-        String plugin4 = WebServer.arg(F("plugin_001_boot"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (plugin4 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_001_button"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_boot"));
 
         success = true;
         break;
@@ -137,7 +103,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
         outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
-        
+
         // if boot state must be send, inverse default state
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
         {
@@ -231,27 +197,28 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 16)
           {
             pinMode(event->Par1, OUTPUT);
-            
+
             if(event->Par3 != 0)
             {
               byte prev_mode;
-              uint16_t prev_value;            
+              uint16_t prev_value;
               getPinState(PLUGIN_ID_001, event->Par1, &prev_mode, &prev_value);
               if(prev_mode != PIN_MODE_PWM)
                 prev_value = 0;
 
               int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
               int32_t curr_value = prev_value << 12;
-              int16_t new_value;
+
               int i = event->Par3;
               while(i--){
                 curr_value += step_value;
+                int16_t new_value;
                 new_value = (uint16_t)(curr_value >> 12);
                 analogWrite(event->Par1, new_value);
                 delay(1);
               }
             }
-            
+
             analogWrite(event->Par1, event->Par2);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
@@ -298,12 +265,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             switch (event->Par1)
             {
               case 1:
-                myservo1.attach(event->Par2);
-                myservo1.write(event->Par3);
+
+                //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
+                servo1.attach(event->Par2);
+                servo1.write(event->Par3);
                 break;
               case 2:
-                myservo2.attach(event->Par2);
-                myservo2.write(event->Par3);
+                servo2.attach(event->Par2);
+                servo2.write(event->Par3);
                 break;
             }
           setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);
@@ -327,6 +296,41 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
           outputstate[event->Par1] = event->Par2;
         }
+
+        #ifdef PLUGIN_BUILD_TESTING
+        //play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more info.
+        if (command == F("rtttl"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            pinMode(event->Par1, OUTPUT);
+            char sng[1024] ="";
+            string.replace("-","#");
+            string.toCharArray(sng, 1024);
+            play_rtttl(event->Par1, sng);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            log = String(F("SW   : ")) + string;
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+          }
+        }
+
+        //play a tone on pin par1, with frequency par2 and duration par3.
+        if (command == F("tone"))
+        {
+          success = true;
+          if (event->Par1 >= 0 && event->Par1 <= 16)
+          {
+            pinMode(event->Par1, OUTPUT);
+            tone(event->Par1, event->Par2, event->Par3);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            log = String(F("SW   : ")) + string;
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+          }
+        }
+        #endif
 
         break;
       }

@@ -45,7 +45,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[9];
+        String options[11];
         options[0] = F("SENSOR_TYPE_SINGLE");
         options[1] = F("SENSOR_TYPE_TEMP_HUM");
         options[2] = F("SENSOR_TYPE_TEMP_BARO");
@@ -55,7 +55,9 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         options[6] = F("SENSOR_TYPE_QUAD");
         options[7] = F("SENSOR_TYPE_SWITCH");
         options[8] = F("SENSOR_TYPE_DIMMER");
-        int optionValues[9];
+        options[9] = F("SENSOR_TYPE_LONG");
+        options[10] = F("SENSOR_TYPE_WIND");
+        int optionValues[11];
         optionValues[0] = SENSOR_TYPE_SINGLE;
         optionValues[1] = SENSOR_TYPE_TEMP_HUM;
         optionValues[2] = SENSOR_TYPE_TEMP_BARO;
@@ -65,19 +67,10 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         optionValues[6] = SENSOR_TYPE_QUAD;
         optionValues[7] = SENSOR_TYPE_SWITCH;
         optionValues[8] = SENSOR_TYPE_DIMMER;
-        string += F("<TR><TD>Simulate Data Type:<TD><select name='plugin_033_sensortype'>");
-        for (byte x = 0; x < 9; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        optionValues[9] = SENSOR_TYPE_LONG;
+        optionValues[10] = SENSOR_TYPE_WIND;
+        
+        addFormSelector(string, F("Simulate Data Type"), F("plugin_033_sensortype"), 11, options, optionValues, choice );
 
         success = true;
         break;
@@ -85,15 +78,14 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_033_sensortype"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_033_sensortype"));
         success = true;
         break;
       }
-      
+
     case PLUGIN_READ:
       {
-        event->sensorType =Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        event->sensorType = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         for (byte x=0; x<4;x++)
         {
           String log = F("Dummy: value ");
@@ -108,4 +100,3 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

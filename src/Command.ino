@@ -1,5 +1,45 @@
 char* ramtest;
 
+//Reads a string from a stream until a terminator-character.
+//We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
+bool safeReadStringUntil(Stream &input, String &str, char terminator, int maxSize=1024, int timeout=1000)
+{
+    unsigned long startMillis;
+    int c;
+    startMillis = millis();
+    str="";
+
+    do {
+        //read character
+        c = input.read();
+        if(c >= 0) {
+
+            //found terminator, we're ok
+            if (c==terminator)
+            {
+                return(true);
+            }
+            //found character, add to string
+            else
+            {
+                str+=char(c);
+                //string at max size?
+                if (str.length()>=maxSize)
+                {
+                    addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+                    return(false);
+                }
+            }
+        }
+        yield();
+    } while(millis() - startMillis < timeout);
+
+    addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
+    return(false);
+
+}
+
+
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(byte source, const char *Line)
 {
@@ -31,7 +71,7 @@ void ExecuteCommand(byte source, const char *Line)
       backgroundtasks();
     Serial.println("end");
   }
-          
+
   if (strcasecmp_P(Command, PSTR("executeRules")) == 0)
   {
     success = true;
@@ -46,12 +86,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("clearRTCRAM")) == 0)
   {
     success = true;
-    RTC.factoryResetCounter = 0;
-    RTC.deepSleepState = 0;
-    RTC.rebootCounter = 0;
-    RTC.flashDayCounter = 0;
-    RTC.flashCounter = 0;
-    saveToRTC();
+    initRTC();
   }
 
   if (strcasecmp_P(Command, PSTR("notify")) == 0)
@@ -198,6 +233,27 @@ void ExecuteCommand(byte source, const char *Line)
     Settings.deepSleep = 0;
   }
 
+  if (strcasecmp_P(Command, PSTR("i2cscanner")) == 0)
+  {
+    success = true;
+
+    byte error, address;
+    for (address = 1; address <= 127; address++ )
+    {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0)
+      {
+        Serial.print(F("I2C  : Found 0x"));
+        Serial.println(String(address, HEX));
+      }
+      else if (error == 4)
+      {
+        Serial.print(F("I2C  : Error at 0x"));
+        Serial.println(String(address, HEX));
+      }
+    }
+  }
 
   // ****************************************
   // commands for rules
@@ -207,7 +263,7 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     if (Par1 > 0)
-      deepSleep(Par1);
+      deepSleepStart(Par1); // call the second part of the function to avoid check and enable one-shot operation
   }
 
   if (strcasecmp_P(Command, PSTR("TaskValueSet")) == 0)
@@ -229,14 +285,26 @@ void ExecuteCommand(byte source, const char *Line)
 
   if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
   {
-    success = true;
-    RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
+    {
+      success = true;
+      if (Par2)
+        //start new timer
+        RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+      else
+        //disable existing timer
+        RulesTimer[Par1 - 1] = 0L;
+    }
+    else
+    {
+      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
+    }
   }
 
   if (strcasecmp_P(Command, PSTR("Delay")) == 0)
   {
     success = true;
-    delayMillis(Par1);
+    delayBackground(Par1);
   }
 
   if (strcasecmp_P(Command, PSTR("Rules")) == 0)
@@ -321,7 +389,11 @@ void ExecuteCommand(byte source, const char *Line)
         delay(1);
 
       while (client.available()) {
-        String line = client.readStringUntil('\n');
+        // String line = client.readStringUntil('\n');
+        String line;
+        safeReadStringUntil(client, line, '\n');
+
+
         if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           addLog(LOG_LEVEL_DEBUG, line);
         delay(1);
@@ -347,6 +419,18 @@ void ExecuteCommand(byte source, const char *Line)
     strcpy(SecuritySettings.WifiKey, Line + 8);
   }
 
+  if (strcasecmp_P(Command, PSTR("WifiSSID2")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.WifiSSID2, Line + 10);
+  }
+
+  if (strcasecmp_P(Command, PSTR("WifiKey2")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.WifiKey2, Line + 9);
+  }
+
   if (strcasecmp_P(Command, PSTR("WifiScan")) == 0)
   {
     success = true;
@@ -356,7 +440,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
   {
     success = true;
-    WifiConnect(true, 1);
+    WifiConnect(1);
   }
 
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
@@ -364,6 +448,13 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     WifiDisconnect();
   }
+
+  if (strcasecmp_P(Command, PSTR("WifiAPMode")) == 0)
+  {
+    WifiAPMode(true);
+    success = true;
+  }
+
 
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
   {
@@ -433,6 +524,8 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.print(F("  Unit          : ")); Serial.println((int)Settings.Unit);
     Serial.print(F("  WifiSSID      : ")); Serial.println(SecuritySettings.WifiSSID);
     Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);
+    Serial.print(F("  WifiSSID2     : ")); Serial.println(SecuritySettings.WifiSSID2);
+    Serial.print(F("  WifiKey2      : ")); Serial.println(SecuritySettings.WifiKey2);
     Serial.print(F("  Free mem      : ")); Serial.println(FreeMem());
   }
 

@@ -78,12 +78,12 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
     // The MTA Exchange
     while (true) {
 
-      if (NPlugin_001_MTA(client, "",                                                   "220 ") == false) break;
-      if (NPlugin_001_MTA(client, "EHLO " + aDomain,                                    "250 ") == false) break;
-      if (NPlugin_001_MTA(client, "MAIL FROM:" + aFrom + "",                            "250 ") == false) break;
-      if (NPlugin_001_MTA(client, "RCPT TO:" + aTo + "",                                "250 ") == false) break;
-      if (NPlugin_001_MTA(client, "DATA",                                               "354 ") == false) break;
-      if (NPlugin_001_MTA(client, "Subject:" + aSub + "\r\n\r\n" + aMesg + "\r\n.\r\n", "250 ") == false) break;
+      if (NPlugin_001_MTA(client, "",                                                         F("220 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("EHLO ")) + aDomain,                                    F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("MAIL FROM:")) + aFrom + "",                            F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("RCPT TO:")) + aTo + "",                                F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, F("DATA"),                                               F("354 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("Subject:")) + aSub + F("\r\n\r\n") + aMesg + F("\r\n.\r\n"), F("250 ")) == false) break;
 
       myStatus = true;
       break;
@@ -94,12 +94,10 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
     client.stop();
 
     if (myStatus == true) {
-      String log = F("EMAIL: Connection Closed Successfully");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
     }
     else {
-      String log = F("EMAIL: Connection Closed With Error");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLog(LOG_LEVEL_ERROR, F("EMAIL: Connection Closed With Error"));
     }
 
   }
@@ -130,7 +128,9 @@ boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
 
     yield();
 
-    String line = client.readStringUntil('\n');
+    // String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
 
     addLog(LOG_LEVEL_DEBUG, line);
 
@@ -142,4 +142,3 @@ boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
 
   return myStatus;
 }
-

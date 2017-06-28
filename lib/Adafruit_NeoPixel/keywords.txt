@@ -1,0 +1,29 @@
+#######################################
+# Syntax Coloring Map For Adafruit_NeoPixel
+####################################### 
+# Class
+#######################################
+
+Adafruit_NeoPixel	KEYWORD1
+
+#######################################
+# Methods and Functions 
+#######################################	
+
+setPixelColor	KEYWORD2
+setPin			KEYWORD2
+setBrightness	KEYWORD2
+numPixels		KEYWORD2
+getPixelColor	KEYWORD2
+Color			KEYWORD2
+
+#######################################
+# Constants
+#######################################
+ 
+NEO_GRB			LITERAL1
+NEO_COLMASK		LITERAL1
+NEO_KHZ800		LITERAL1
+NEO_SPDMASK		LITERAL1
+NEO_RGB			LITERAL1
+NEO_KHZ400		LITERAL1

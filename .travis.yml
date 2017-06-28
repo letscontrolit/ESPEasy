@@ -1,15 +1,33 @@
 language: python
 python:
-- '2.7'
+  - '2.7'
+
+#we want a newer cppcheck, so use trusty
+dist: trusty
+
 sudo: false
+
 cache:
   directories:
   - "~/.platformio"
   - "./.pioenvs"
+
+
+
+addons:
+  apt:
+    packages:
+    - cppcheck
+
+
+
 install:
-- pip install -U platformio
+  - pip install -U platformio
+
 script:
-- platformio run
+  - cppcheck --enable=warning src/*.ino -q --force -I src --include=src/ESPEasy.ino --error-exitcode=1
+  - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
+  - platformio run -s
 
 before_deploy:
   - ./before_deploy

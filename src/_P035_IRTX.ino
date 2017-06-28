@@ -1,6 +1,7 @@
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
+#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRsend *Plugin_035_irSender;
@@ -39,15 +40,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (Plugin_035_irSender == 0 && irPin != -1)
         {
-          String log = F("INIT: IR TX");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
           Plugin_035_irSender = new IRsend(irPin);
           Plugin_035_irSender->begin(); // Start the sender
         }
         if (Plugin_035_irSender != 0 && irPin == -1)
         {
-          String log = F("INIT: IR TX Removed");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("INIT: IR TX Removed"));
           delete Plugin_035_irSender;
           Plugin_035_irSender = 0;
         }
@@ -75,15 +74,17 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         if (cmdCode.equalsIgnoreCase("IRSEND") && Plugin_035_irSender != 0)
         {
           success = true;
+          #ifdef PLUGIN_016
           if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
+          #endif
 
           if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
 
           if (IrType.equalsIgnoreCase("RAW")) {
             String IrRaw;
-            unsigned int IrHz;
-            unsigned int IrPLen;
-            unsigned int IrBLen;
+            unsigned int IrHz=0;
+            unsigned int IrPLen=0;
+            unsigned int IrBLen=0;
 
             if (GetArgv(command, TmpStr1, 3)) IrRaw = TmpStr1;
             if (GetArgv(command, TmpStr1, 4)) IrHz = str2int(TmpStr1);
@@ -174,8 +175,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase("PANASONIC")) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
           }
 
-          String log = F("IRTX :IR Code Sent");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
           if (printToWeb)
           {
             printWebString += F("IR Code Sent ");
@@ -183,7 +183,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += F("<BR>");
           }
 
+          #ifdef PLUGIN_016
           if (irReceiver != 0) irReceiver->enableIRIn(); // Start the receiver
+          #endif
         }
         break;
       }
@@ -191,3 +193,4 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+#endif

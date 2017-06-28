@@ -19,12 +19,13 @@ boolean sendData(struct EventStruct *event)
     if (dif < Settings.MessageDelay)
     {
       uint16_t delayms = Settings.MessageDelay - dif;
-      char log[30];
-      sprintf_P(log, PSTR("HTTP : Delay %u ms"), delayms);
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
-      unsigned long timer = millis() + delayms;
-      while (millis() < timer)
-        backgroundtasks();
+      //this is logged nowhere else, so might as well disable it here also:
+      // addLog(LOG_LEVEL_DEBUG_MORE, String(F("CTRL : Message delay (ms): "))+delayms);
+      delayBackground(delayms);
+
+      // unsigned long timer = millis() + delayms;
+      // while (millis() < timer)
+      //   backgroundtasks();
     }
   }
 
@@ -41,7 +42,7 @@ boolean sendData(struct EventStruct *event)
       CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
     }
   }
-  
+
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
 }
@@ -52,16 +53,33 @@ boolean sendData(struct EventStruct *event)
 \*********************************************************************************************/
 // handle MQTT messages
 void callback(char* c_topic, byte* b_payload, unsigned int length) {
-  char log[256];
-  char c_payload[256];
-  strncpy(c_payload,(char*)b_payload,length);
-  c_payload[length] = 0;
+  // char log[256];
+  char c_payload[384];
+
   statusLED(true);
 
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
+  if (length>sizeof(c_payload)-1)
+  {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
+  }
+
+  //convert payload to string, and 0 terminate
+  strncpy(c_payload,(char*)b_payload,length);
+  c_payload[length] = 0;
+
+  String log;
+  log=F("MQTT : Topic: ");
+  log+=c_topic;
   addLog(LOG_LEVEL_DEBUG, log);
-  sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
+
+  log=F("MQTT : Payload: ");
+  log+=c_payload;
   addLog(LOG_LEVEL_DEBUG, log);
+
+  // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
+  // addLog(LOG_LEVEL_DEBUG, log);
+  // sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
+  // addLog(LOG_LEVEL_DEBUG, log);
 
   struct EventStruct TempEvent;
   TempEvent.String1 = c_topic;
@@ -91,7 +109,7 @@ void MQTTConnect()
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
   LWTTopic.replace(F("%sysname%"), Settings.Name);
-  
+
   for (byte x = 1; x < 3; x++)
   {
     String log = "";
@@ -112,6 +130,10 @@ void MQTTConnect()
       log = F("Subscribed to: ");
       log += subscribeTo;
       addLog(LOG_LEVEL_INFO, log);
+
+      MQTTclient.publish(LWTTopic.c_str(), "Connected");
+
+      statusLED(true);
       break; // end loop if succesfull
     }
     else
@@ -181,6 +203,3 @@ void MQTTStatus(String& status)
   pubname.replace(F("%sysname%"), Settings.Name);
   MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
 }
-
-
-

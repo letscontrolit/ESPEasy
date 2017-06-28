@@ -28,7 +28,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         string = F(CPLUGIN_NAME_007);
         break;
       }
-      
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         ControllerSettingsStruct ControllerSettings;
@@ -51,15 +51,15 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, log);
           return false;
         }
-        statusLED(true);        
+        statusLED(true);
         if (connectionFailures)
           connectionFailures--;
 
         String postDataStr = F("GET /emoncms/input/post.json?node=");
-        
+
         postDataStr += Settings.Unit;
         postDataStr += F("&json=");
-        
+
         switch (event->sensorType)
         {
           case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
@@ -129,7 +129,10 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
 
         // Read all the lines of the reply from server and print them to Serial
         while (client.available()) {
-          String line = client.readStringUntil('\n');
+          //   String line = client.readStringUntil('\n');
+          String line;
+          safeReadStringUntil(client, line, '\n');
+
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
@@ -151,4 +154,3 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

@@ -1,12 +1,74 @@
+
+// clean up tcp connections that are in TIME_WAIT status, to conserve memory
+// In future versions of WiFiClient it should be possible to call abort(), but
+// this feature is not in all upstream versions yet.
+// See https://github.com/esp8266/Arduino/issues/1923
+// and https://github.com/letscontrolit/ESPEasy/issues/253
+void tcpCleanup()
+{
+  while(tcp_tw_pcbs!=NULL)
+  {
+    tcp_abort(tcp_tw_pcbs);
+  }
+}
+
+bool isDeepSleepEnabled()
+{
+  if (!Settings.deepSleep)
+    return false;
+
+  //cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
+  //recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
+  //                    short 1-2 for normal deep sleep / wakeup loop
+  //                    short 2-3 to cancel sleep loop for modifying settings
+  pinMode(16,INPUT_PULLUP);
+  if (!digitalRead(16))
+  {
+    return false;
+  }
+  return true;
+}
+
 void deepSleep(int delay)
 {
-  RTC.deepSleepState = 1;
-  saveToRTC();
-  String log = F("Enter deep sleep...");
-  addLog(LOG_LEVEL_INFO, log);
+
+  if (!isDeepSleepEnabled())
+  {
+    //Deep sleep canceled by GPIO16(D0)=LOW
+    return;
+  }
+
+  //first time deep sleep? offer a way to escape
+  if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
+  {
+    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    delayBackground(30000);
+    //disabled?
+    if (!isDeepSleepEnabled())
+    {
+      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
+      return;
+    }
+  }
+
+  deepSleepStart(delay); // Call deepSleepStart function after these checks
+}
+
+void deepSleepStart(int delay)
+{
+  // separate function that is called from above function or directly from rules, usign deepSleep as a one-shot
   String event = F("System#Sleep");
   rulesProcessing(event);
-  ESP.deepSleep(delay * 1000000, WAKE_RF_DEFAULT);
+
+
+  RTC.deepSleepState = 1;
+  saveToRTC();
+
+  if (delay > 4294 || delay < 0)
+    delay = 4294;   //max sleep time ~1.2h
+
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
+  ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
 }
 
 boolean remoteConfig(struct EventStruct *event, String& string)
@@ -300,35 +362,65 @@ boolean timeOut(unsigned long timer)
 
 /********************************************************************************************\
   Status LED
-  \*********************************************************************************************/
+\*********************************************************************************************/
+#define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
+#define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
+#define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
+
 void statusLED(boolean traffic)
 {
+  static int gnStatusValueCurrent = -1;
+  static long int gnLastUpdate = millis();
+
   if (Settings.Pin_status_led == -1)
     return;
 
-  static unsigned long timer = 0;
-  static byte currentState = 0;
+  if (gnStatusValueCurrent<0)
+    pinMode(Settings.Pin_status_led, OUTPUT);
+
+  int nStatusValue = gnStatusValueCurrent;
 
   if (traffic)
   {
-    currentState = HIGH;
-    digitalWrite(Settings.Pin_status_led, currentState); // blink off
-    timer = millis() + 100;
+    nStatusValue += STATUS_PWM_TRAFFICRISE; //ramp up fast
+  }
+  else
+  {
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      long int delta=millis()-gnLastUpdate;
+      if (delta>0 || delta<0 )
+      {
+        nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
+        nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+        gnLastUpdate=millis();
+      }
+    }
+    //AP mode is active
+    else if (WifiIsAP())
+    {
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+    }
+    //Disconnected
+    else
+    {
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
+    }
   }
 
-  if (timer == 0 || millis() > timer)
-  {
-    timer = 0;
-    byte state = HIGH;
-    if (WiFi.status() == WL_CONNECTED)
-      state = LOW;
+  nStatusValue = constrain(nStatusValue, 0, PWMRANGE);
 
-    if (currentState != state)
-    {
-      currentState = state;
-      pinMode(Settings.Pin_status_led, OUTPUT);
-      digitalWrite(Settings.Pin_status_led, state);
-    }
+  if (gnStatusValueCurrent != nStatusValue)
+  {
+    gnStatusValueCurrent = nStatusValue;
+
+    long pwm = nStatusValue * nStatusValue; //simple gamma correction
+    pwm >>= 10;
+    if (Settings.Pin_status_led_Inversed)
+      pwm = PWMRANGE-pwm;
+
+    analogWrite(Settings.Pin_status_led, pwm);
   }
 }
 
@@ -336,7 +428,7 @@ void statusLED(boolean traffic)
 /********************************************************************************************\
   delay in milliseconds with background processing
   \*********************************************************************************************/
-void delayMillis(unsigned long delay)
+void delayBackground(unsigned long delay)
 {
   unsigned long timer = millis() + delay;
   while (millis() < timer)
@@ -358,10 +450,14 @@ void parseCommandString(struct EventStruct *event, String& string)
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
+  event->Par4 = 0;
+  event->Par5 = 0;
 
   if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
 }
 
 /********************************************************************************************\
@@ -437,10 +533,18 @@ void BuildFixes()
   \*********************************************************************************************/
 void fileSystemCheck()
 {
+  addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
-    String log = F("SPIFFS Mount successful");
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+
+    String log = F("FS   : Mount successful, used ");
+    log=log+fs_info.usedBytes;
+    log=log+F(" bytes of ");
+    log=log+fs_info.totalBytes;
     addLog(LOG_LEVEL_INFO, log);
+
     fs::File f = SPIFFS.open("config.dat", "r");
     if (!f)
     {
@@ -449,9 +553,10 @@ void fileSystemCheck()
   }
   else
   {
-    String log = F("SPIFFS Mount failed");
+    String log = F("FS   : Mount failed");
     Serial.println(log);
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_ERROR, log);
+    ResetFactory();
   }
 }
 
@@ -645,7 +750,7 @@ boolean SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
-  Save Custom Task settings to SPIFFS
+  Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 void LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
@@ -666,7 +771,7 @@ boolean SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasi
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
@@ -678,22 +783,22 @@ void LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-boolean SaveCustomControllerSettings(byte* memAddress, int datasize)
+boolean SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return false;
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
 /********************************************************************************************\
-  Save Custom Controller settings to SPIFFS
+  Load Custom Controller settings to SPIFFS
   \*********************************************************************************************/
-void LoadCustomControllerSettings(byte* memAddress, int datasize)
+void LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
-  if (datasize > 4096)
+  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return;
-  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOMCONTROLLER, memAddress, datasize);
+  LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -708,7 +813,7 @@ boolean SaveNotificationSettings(int NotificationIndex, byte* memAddress, int da
 
 
 /********************************************************************************************\
-  Save Controller settings to SPIFFS
+  Load Controller settings to SPIFFS
   \*********************************************************************************************/
 void LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
@@ -726,7 +831,7 @@ boolean SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
-    String log = F("FS   : Daily flash write rate exceeded!");
+    String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
     addLog(LOG_LEVEL_ERROR, log);
     return false;
   }
@@ -789,33 +894,35 @@ void ResetFactory(void)
 {
 
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.println(F("Resetting factory defaults..."));
+  Serial.println(F("RESET: Resetting factory defaults..."));
   delay(1000);
   if (readFromRTC())
   {
-    Serial.print(F("RESET: Reboot count: "));
+    Serial.print(F("RESET: Warm boot, reset count: "));
     Serial.println(RTC.factoryResetCounter);
     if (RTC.factoryResetCounter > 3)
     {
-      Serial.println(F("RESET: To many reset attempts"));
+      Serial.println(F("RESET: Too many resets, protecting your flash memory (powercycle to solve this)"));
       return;
     }
   }
   else
+  {
     Serial.println(F("RESET: Cold boot"));
+    initRTC();
+  }
 
   RTC.factoryResetCounter++;
-  RTC.flashDayCounter = 0;
   saveToRTC();
 
   //always format on factory reset, in case of corrupt SPIFFS
   SPIFFS.end();
-  Serial.println(F("formatting..."));
+  Serial.println(F("RESET: formatting..."));
   SPIFFS.format();
-  Serial.println(F("formatting done..."));
+  Serial.println(F("RESET: formatting done..."));
   if (!SPIFFS.begin())
   {
-    Serial.println(F("FORMATTING SPIFFS FAILED!"));
+    Serial.println(F("RESET: FORMAT SPIFFS FAILED!"));
     return;
   }
 
@@ -856,11 +963,6 @@ void ResetFactory(void)
   str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
 #endif
 
-#if DEFAULT_MQTT_TEMPLATE
-  strcpy_P(Settings.MQTTsubscribe, PSTR(DEFAULT_MQTT_SUB));
-  strcpy_P(Settings.MQTTpublish, PSTR(DEFAULT_MQTT_PUB));
-#endif
-
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;
@@ -868,12 +970,11 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
-  //str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP[0]);
-  //Settings.ControllerPort[0]      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
   Settings.Pin_status_led  = -1;
+  Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
@@ -898,7 +999,19 @@ void ResetFactory(void)
   Settings.Build = BUILD;
   Settings.UseSerial = true;
   SaveSettings();
-  Serial.println("Factory reset succesful, rebooting...");
+
+#if DEFAULT_CONTROLLER
+  ControllerSettingsStruct ControllerSettings;
+  strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
+  strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
+  str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+  ControllerSettings.HostName[0]=0;
+  ControllerSettings.Port = DEFAULT_PORT;
+  SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+#endif
+
+  Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
+  //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
@@ -958,6 +1071,7 @@ float ul2float(unsigned long ul)
   return f;
 }
 
+
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
   \*********************************************************************************************/
@@ -969,7 +1083,7 @@ void initLog()
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
-  for (int l; l<9; l++)
+  for (int l=0; l<10; l++)
   {
     Logging[l].Message=0;
   }
@@ -981,6 +1095,12 @@ void initLog()
 void addLog(byte loglevel, String& string)
 {
   addLog(loglevel, string.c_str());
+}
+
+void addLog(byte logLevel, const __FlashStringHelper* flashString)
+{
+    String s(flashString);
+    addLog(logLevel, s.c_str());
 }
 
 void addLog(byte loglevel, const char *line)
@@ -1000,7 +1120,9 @@ void addLog(byte loglevel, const char *line)
     Logging[logcount].timeStamp = millis();
     if (Logging[logcount].Message == 0)
       Logging[logcount].Message =  (char *)malloc(128);
-    strncpy(Logging[logcount].Message, line, 128);
+    strncpy(Logging[logcount].Message, line, 127);
+    Logging[logcount].Message[127]=0; //make sure its null terminated!
+
   }
 
   if (loglevel <= Settings.SDLogLevel)
@@ -1033,47 +1155,91 @@ void delayedReboot(int rebootDelay)
 /********************************************************************************************\
   Save RTC struct to RTC memory
   \*********************************************************************************************/
-#define RTC_BASE_STRUCT 64
-void saveToRTC()
+boolean saveToRTC()
 {
-  RTC.ID1 = 0xAA;
-  RTC.ID2 = 0x55;
-  RTC.valid = true;
-  system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
+  {
+    addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+    return(false);
+  }
+  else
+  {
+    return(true);
+  }
 }
 
+
+/********************************************************************************************\
+  Initialize RTC memory
+  \*********************************************************************************************/
+void initRTC()
+{
+  memset(&RTC, 0, sizeof(RTC));
+  RTC.ID1 = 0xAA;
+  RTC.ID2 = 0x55;
+  saveToRTC();
+
+  memset(&UserVar, 0, sizeof(UserVar));
+  saveUserVarToRTC();
+}
 
 /********************************************************************************************\
   Read RTC struct from RTC memory
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC));
+  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
+    return(false);
+
   if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-  {
-    RTC.valid = false;
     return true;
-  }
-  return false;
+  else
+    return false;
 }
 
 
 /********************************************************************************************\
   Save values to RTC memory
-  \*********************************************************************************************/
-#define RTC_BASE_USERVAR 74
-void saveUserVarToRTC()
+\*********************************************************************************************/
+boolean saveUserVarToRTC()
 {
-  system_rtc_mem_write(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
+  byte* buffer = (byte*)&UserVar;
+  size_t size = sizeof(UserVar);
+  uint32 sum = getChecksum(buffer, size);
+  boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+  ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  return ret;
 }
 
 
 /********************************************************************************************\
   Read RTC struct from RTC memory
-  \*********************************************************************************************/
+\*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  system_rtc_mem_read(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar));
+  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
+  byte* buffer = (byte*)&UserVar;
+  size_t size = sizeof(UserVar);
+  boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+  uint32 sumRAM = getChecksum(buffer, size);
+  uint32 sumRTC = 0;
+  ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
+  if (!ret || sumRTC != sumRAM)
+  {
+    addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+    memset(buffer, 0, size);
+  }
+  return ret;
+}
+
+
+uint32 getChecksum(byte* buffer, size_t size)
+{
+  uint32 sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
+  for (size_t i=0; i<size; i++)
+    sum += buffer[i];
+  return sum;
 }
 
 
@@ -1182,6 +1348,70 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
+// returns the current Date separated by the given delimiter
+// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
+String getDateString(char delimiter)
+{
+  String reply = String(year());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (month() < 10)
+    reply += "0";
+  reply += month();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (day() < 10)
+  	reply += F("0");
+  reply += day();
+  return reply;
+}
+
+// returns the current Date without delimiter
+// date format example: 20161231 (YYYYMMDD)
+String getDateString()
+{
+	return getDateString('\0');
+}
+
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+String getTimeString(char delimiter)
+{
+	String reply;
+	if (hour() < 10)
+		reply += F("0");
+  reply += String(hour());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (minute() < 10)
+    reply += F("0");
+  reply += minute();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (second() < 10)
+  	reply += F("0");
+  reply += second();
+  return reply;
+}
+
+// returns the current Time without delimiter
+// time format example: 235959 (HHMMSS)
+String getTimeString()
+{
+	return getTimeString('\0');
+}
+
+// returns the current Date and Time separated by the given delimiter
+// if called like this: getDateTimeString('\0', '\0', '\0');
+// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
+String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+{
+	String ret = getDateString(dateDelimiter);
+	if (dateTimeDelimiter != '\0')
+		ret += dateTimeDelimiter;
+	ret += getTimeString(timeDelimiter);
+	return ret;
+}
 
 /********************************************************************************************\
   Match clock event
@@ -1299,15 +1529,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   // replace other system variables like %sysname%, %systime%, %ip%
   newString.replace(F("%sysname%"), Settings.Name);
 
-  String strTime = "";
-  if (hour() < 10)
-    strTime += " ";
-  strTime += hour();
-  strTime += ":";
-  if (minute() < 10)
-    strTime += "0";
-  strTime += minute();
-  newString.replace(F("%systime%"), strTime);
+  newString.replace(F("%systime%"), getTimeString(':'));
 
   newString.replace(F("%uptime%"), String(wdcounter / 2));
 
@@ -1705,14 +1927,35 @@ unsigned long now() {
   return (unsigned long)sysTime;
 }
 
-int hour()
+int year()
+{
+  return 1970 + tm.Year;
+}
+
+byte month()
+{
+	return tm.Month;
+}
+
+byte day()
+{
+	return tm.Day;
+}
+
+
+byte hour()
 {
   return tm.Hour;
 }
 
-int minute()
+byte minute()
 {
   return tm.Minute;
+}
+
+byte second()
+{
+	return tm.Second;
 }
 
 int weekday()
@@ -1824,6 +2067,13 @@ unsigned long getNtpTime()
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  unsigned long timer = millis();
+  String log = "";
+
+  log = F("EVENT: ");
+  log += event;
+  addLog(LOG_LEVEL_INFO, log);
+
   for (byte x = 1; x < RULESETS_MAX + 1; x++)
   {
     String fileName = F("rules");
@@ -1832,6 +2082,12 @@ void rulesProcessing(String& event)
     if (SPIFFS.exists(fileName))
       rulesProcessingFile(fileName, event);
   }
+
+  log = F("EVENT: Processing time:");
+  log += millis() - timer;
+  log += F(" milliSeconds");
+  addLog(LOG_LEVEL_DEBUG, log);
+
 }
 
 /********************************************************************************************\
@@ -1839,7 +2095,6 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 void rulesProcessingFile(String fileName, String& event)
 {
-  unsigned long timer = millis();
   fs::File f = SPIFFS.open(fileName, "r+");
   if (!f)
     return;
@@ -1857,9 +2112,6 @@ void rulesProcessingFile(String fileName, String& event)
     return;
   }
 
-  log = F("EVENT: ");
-  log += event;
-  addLog(LOG_LEVEL_INFO, log);
 
   int pos = 0;
   String line = "";
@@ -1990,13 +2242,7 @@ void rulesProcessingFile(String fileName, String& event)
   }
 
   nestingLevel--;
-  if (nestingLevel == 0)
-  {
-    log = F("EVENT: Processing time:");
-    log += millis() - timer;
-    log += F(" milliSeconds");
-    addLog(LOG_LEVEL_INFO, log);
-  }
+
 }
 
 
@@ -2190,7 +2436,7 @@ void rulesTimers()
   {
     if (RulesTimer[x] != 0L) // timer active?
     {
-      if (RulesTimer[x] < millis()) // timer finished?
+      if (RulesTimer[x] <= millis()) // timer finished?
       {
         RulesTimer[x] = 0L; // turn off this timer
         String event = F("Rules#Timer=");
@@ -2237,4 +2483,266 @@ void checkRAM(byte id)
     lowestRAM = freeRAM;
     lowestRAMid = id;
   }
+}
+
+#ifdef PLUGIN_BUILD_TESTING
+
+#define isdigit(n) (n >= '0' && n <= '9')
+
+/********************************************************************************************\
+  Generate a tone of specified frequency on pin
+  \*********************************************************************************************/
+void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
+  analogWriteFreq(frequency);
+  //NOTE: analogwrite reserves IRAM and uninitalized ram.
+  analogWrite(_pin,100);
+  delay(duration);
+  analogWrite(_pin,0);
+}
+
+/********************************************************************************************\
+  Play RTTTL string on specified pin
+  \*********************************************************************************************/
+void play_rtttl(uint8_t _pin, char *p )
+{
+  #define OCTAVE_OFFSET 0
+  // Absolutely no error checking in here
+
+  int notes[] = { 0,
+    262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,
+    523, 554, 587, 622, 659, 698, 740, 784, 831, 880, 932, 988,
+    1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661, 1760, 1865, 1976,
+    2093, 2217, 2349, 2489, 2637, 2794, 2960, 3136, 3322, 3520, 3729, 3951
+  };
+
+
+
+  byte default_dur = 4;
+  byte default_oct = 6;
+  int bpm = 63;
+  int num;
+  long wholenote;
+  long duration;
+  byte note;
+  byte scale;
+
+  // format: d=N,o=N,b=NNN:
+  // find the start (skip name, etc)
+
+  while(*p != ':') p++;    // ignore name
+  p++;                     // skip ':'
+
+  // get default duration
+  if(*p == 'd')
+  {
+    p++; p++;              // skip "d="
+    num = 0;
+    while(isdigit(*p))
+    {
+      num = (num * 10) + (*p++ - '0');
+    }
+    if(num > 0) default_dur = num;
+    p++;                   // skip comma
+  }
+
+  // get default octave
+  if(*p == 'o')
+  {
+    p++; p++;              // skip "o="
+    num = *p++ - '0';
+    if(num >= 3 && num <=7) default_oct = num;
+    p++;                   // skip comma
+  }
+
+  // get BPM
+  if(*p == 'b')
+  {
+    p++; p++;              // skip "b="
+    num = 0;
+    while(isdigit(*p))
+    {
+      num = (num * 10) + (*p++ - '0');
+    }
+    bpm = num;
+    p++;                   // skip colon
+  }
+
+  // BPM usually expresses the number of quarter notes per minute
+  wholenote = (60 * 1000L / bpm) * 4;  // this is the time for whole note (in milliseconds)
+
+  // now begin note loop
+  while(*p)
+  {
+    // first, get note duration, if available
+    num = 0;
+    while(isdigit(*p))
+    {
+      num = (num * 10) + (*p++ - '0');
+    }
+
+    if (num) duration = wholenote / num;
+    else duration = wholenote / default_dur;  // we will need to check if we are a dotted note after
+
+    // now get the note
+    note = 0;
+
+    switch(*p)
+    {
+      case 'c':
+        note = 1;
+        break;
+      case 'd':
+        note = 3;
+        break;
+      case 'e':
+        note = 5;
+        break;
+      case 'f':
+        note = 6;
+        break;
+      case 'g':
+        note = 8;
+        break;
+      case 'a':
+        note = 10;
+        break;
+      case 'b':
+        note = 12;
+        break;
+      case 'p':
+      default:
+        note = 0;
+    }
+    p++;
+
+    // now, get optional '#' sharp
+    if(*p == '#')
+    {
+      note++;
+      p++;
+    }
+
+    // now, get optional '.' dotted note
+    if(*p == '.')
+    {
+      duration += duration/2;
+      p++;
+    }
+
+    // now, get scale
+    if(isdigit(*p))
+    {
+      scale = *p - '0';
+      p++;
+    }
+    else
+    {
+      scale = default_oct;
+    }
+
+    scale += OCTAVE_OFFSET;
+
+    if(*p == ',')
+      p++;       // skip comma for next note (or we may be at the end)
+
+    // now play the note
+    if(note)
+    {
+      tone(_pin, notes[(scale - 4) * 12 + note], duration);
+    }
+    else
+    {
+      delay(duration/10);
+    }
+  }
+}
+
+#endif
+
+
+#ifdef FEATURE_ARDUINO_OTA
+/********************************************************************************************\
+  Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
+  \*********************************************************************************************/
+
+void ArduinoOTAInit()
+{
+  // Default port is 8266
+  ArduinoOTA.setPort(8266);
+	ArduinoOTA.setHostname(Settings.Name);
+
+  if (SecuritySettings.Password[0]!=0)
+    ArduinoOTA.setPassword(SecuritySettings.Password);
+
+  ArduinoOTA.onStart([]() {
+      Serial.println(F("OTA  : Start upload"));
+      SPIFFS.end(); //important, otherwise it fails
+  });
+
+  ArduinoOTA.onEnd([]() {
+      Serial.println(F("\nOTA  : End"));
+      //"dangerous": if you reset during flash you have to reflash via serial
+      //so dont touch device until restart is complete
+      Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
+      delay(100);
+      ESP.reset();
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+
+      Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+      Serial.print(F("\nOTA  : Error (will reboot): "));
+      if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
+      else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
+      else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
+      else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
+      else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
+
+      delay(100);
+      ESP.reset();
+  });
+  ArduinoOTA.begin();
+
+  String log = F("OTA  : Arduino OTA enabled on port 8266");
+  addLog(LOG_LEVEL_INFO, log);
+
+}
+
+#endif
+
+String getBearing(int degrees)
+{
+  const char* bearing[] = {
+    PSTR("N"),
+    PSTR("NNE"),
+    PSTR("NE"),
+    PSTR("ENE"),
+    PSTR("E"),
+    PSTR("ESE"),
+    PSTR("SE"),
+    PSTR("SSE"),
+    PSTR("S"),
+    PSTR("SSW"),
+    PSTR("SW"),
+    PSTR("WSW"),
+    PSTR("W"),
+    PSTR("WNW"),
+    PSTR("NW"),
+    PSTR("NNW")
+  };
+
+    return(bearing[int(degrees/22.5)]);
+
+}
+
+//escapes special characters in strings for use in html-forms
+void htmlEscape(String & html)
+{
+  html.replace("&",  "&amp;");
+  html.replace("\"", "&quot;");
+  html.replace("'",  "&#039;");
+  html.replace("<",  "&lt;");
+  html.replace(">",  "&gt;");
 }

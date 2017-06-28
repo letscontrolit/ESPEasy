@@ -44,19 +44,11 @@ boolean NPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         NotificationSettingsStruct NotificationSettings;
         LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
-        NPlugin_002_tone(NotificationSettings.Pin1, 500, 500);
+        //this reserves IRAM and uninitalized RAM
+        tone(NotificationSettings.Pin1, 500, 500);
         success = true;
       }
 
   }
   return success;
 }
-
-void NPlugin_002_tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
-
-analogWriteFreq(frequency);
-analogWrite(_pin,100);
-delay(duration);
-analogWrite(_pin,0);
-} 
-

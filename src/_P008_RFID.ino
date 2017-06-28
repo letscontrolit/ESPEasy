@@ -7,15 +7,13 @@
 #define PLUGIN_NAME_008       "RFID Reader - Wiegand"
 #define PLUGIN_VALUENAME1_008 "Tag"
 
-#define PLUGIN_008_WGSIZE 26
-
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
 
-volatile byte Plugin_008_bitCount = 0;             // Count the number of bits received.
-volatile unsigned long Plugin_008_keyBuffer = 0;   // A 32-bit-long keyBuffer into which the number is stored.
-byte Plugin_008_bitCountPrev = 0;                  // to detect noise
-byte Plugin_008_Unit = 0;
+volatile byte Plugin_008_bitCount = 0;     // Count the number of bits received.
+uint64_t Plugin_008_keyBuffer = 0;    // A 64-bit-long keyBuffer into which the number is stored.
+byte Plugin_008_timeoutCount = 0;
+byte Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
 
 boolean Plugin_008_init = false;
 
@@ -52,10 +50,11 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_008));
         break;
       }
-      
+
     case PLUGIN_INIT:
       {
         Plugin_008_init = true;
+        Plugin_008_WiegandSize = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
         attachInterrupt(Settings.TaskDevicePin1[event->TaskIndex], Plugin_008_interrupt1, FALLING);
@@ -68,31 +67,93 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_008_init)
         {
-          if ((Plugin_008_bitCount != PLUGIN_008_WGSIZE) && (Plugin_008_bitCount == Plugin_008_bitCountPrev))
+          if (Plugin_008_bitCount > 0)
           {
-            // must be noise
-            Plugin_008_bitCount = 0;
+            if (Plugin_008_bitCount % 4 == 0 && ((Plugin_008_keyBuffer & 0xF) == 11))
+            {
+              // a number of keys were pressed and finished by #
+              Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 4;  // Strip #
+              UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
+              UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
+            }
+            else if (Plugin_008_bitCount == Plugin_008_WiegandSize)
+            {
+              // read a tag
+              Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1;          // Strip leading and trailing parity bits from the keyBuffer
+              if (Plugin_008_WiegandSize == 26)
+                Plugin_008_keyBuffer &= 0xFFFFFF;
+              else
+                Plugin_008_keyBuffer &= 0xFFFFFFFF;
+              UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
+              UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
+            }
+            else
+            {
+              // not enough bits, maybe next time
+              Plugin_008_timeoutCount++;
+              if (Plugin_008_timeoutCount > 5)
+              {
+                String log = F("RFID : reset bits: ");
+                log += Plugin_008_bitCount;
+                addLog(LOG_LEVEL_INFO, log );
+                // reset after ~5 sec
+                Plugin_008_keyBuffer = 0;
+                Plugin_008_bitCount = 0;
+                Plugin_008_timeoutCount = 0;
+              }
+              break;
+            }
+            // reset everything
+            unsigned long bitCount = Plugin_008_bitCount;    // copy for log
+            unsigned long keyBuffer = Plugin_008_keyBuffer;  // copy for log
             Plugin_008_keyBuffer = 0;
-          }
-
-          if (Plugin_008_bitCount == PLUGIN_008_WGSIZE)
-          {
-            Plugin_008_bitCount = 0;          // Read in the current key and reset everything so that the interrupts can
-
-            Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1;          // Strip leading and trailing parity bits from the keyBuffer
-            Plugin_008_keyBuffer &= 0xFFFFFF;
-            UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
-            UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
+            Plugin_008_bitCount = 0;
+            Plugin_008_timeoutCount = 0;
+            // write log
             String log = F("RFID : Tag: ");
-            log += Plugin_008_keyBuffer;
+            log += keyBuffer;
+            log += F(" Bits: ");
+            log += bitCount;
             addLog(LOG_LEVEL_INFO, log);
             sendData(event);
           }
-
-          Plugin_008_bitCountPrev = Plugin_008_bitCount; // store this value for next check, detect noise
         }
         break;
       }
+      case PLUGIN_WEBFORM_LOAD:
+        {
+          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          String options[2];
+          options[0] = F("26 Bits");
+          options[1] = F("34 Bits");
+          int optionValues[2];
+          optionValues[0] = 26;
+          optionValues[1] = 34;
+          string += F("<TR><TD>Wiegand Type:<TD><select name='plugin_008_type'>");
+          for (byte x = 0; x < 2; x++)
+          {
+            string += F("<option value='");
+            string += optionValues[x];
+            string += "'";
+            if (choice == optionValues[x])
+              string += F(" selected");
+            string += ">";
+            string += options[x];
+            string += F("</option>");
+          }
+          string += F("</select>");
+
+          success = true;
+          break;
+        }
+
+      case PLUGIN_WEBFORM_SAVE:
+        {
+          String plugin1 = WebServer.arg(F("plugin_008_type"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+          success = true;
+          break;
+        }
   }
   return success;
 }
@@ -115,4 +176,3 @@ void Plugin_008_interrupt2()
   Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1;     // Left shift the number (effectively multiplying by 2)
   Plugin_008_bitCount++;           // Increment the bit count
 }
-

@@ -6,8 +6,13 @@
 #define PLUGIN_ID_027         27
 #define PLUGIN_NAME_027       "Voltage & Current (DC) - INA219"
 #define PLUGIN_VALUENAME1_027 "Voltage"
+#define PLUGIN_VALUENAME2_027 "Current"
+#define PLUGIN_VALUENAME3_027 "Power"
 
 #define INA219_ADDRESS                         (0x40)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS2                         (0x41)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS3                         (0x44)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS4                         (0x45)    // 1000000 (A0+A1=GND)
 #define INA219_READ                            (0x01)
 #define INA219_REG_CONFIG                      (0x00)
 #define INA219_CONFIG_RESET                    (0x8000)  // Reset Bit
@@ -74,13 +79,13 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_027;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
-        Device[deviceCount].SendDataOption = false;
+        Device[deviceCount].ValueCount = 3;
+        Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
         break;
@@ -95,33 +100,35 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_027));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_027));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_027));
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[3];
-        options[0] = F("Voltage");
-        options[1] = F("Current");
-        options[2] = F("Power");
-        int optionValues[3];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        optionValues[2] = 2;
-        string += F("<TR><TD>Report:<TD><select name='plugin_027_value'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String optionsMode[3];
+        optionsMode[0] = F("32V, 2A");
+        optionsMode[1] = F("32V, 1A");
+        optionsMode[2] = F("16V, 0.4A");
+        int optionValuesMode[3];
+        optionValuesMode[0] = 0;
+        optionValuesMode[1] = 1;
+        optionValuesMode[2] = 2;
+        addFormSelector(string, F("Measure range"), F("plugin_027_range"), 3, optionsMode, optionValuesMode, choiceMode);
+
+        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        int optionValues2[4];
+        optionValues2[0] = INA219_ADDRESS;
+        optionValues2[1] = INA219_ADDRESS2;
+        optionValues2[2] = INA219_ADDRESS3;
+        optionValues2[3] = INA219_ADDRESS4;
+        addFormSelectorI2C(string, F("plugin_027_i2c"), 4, optionValues2, choice2);
+
+        byte choiceMeasureType = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+        addFormSelector(string, F("Measurement Type"), F("plugin_027_measuretype"), 4, options, NULL, choiceMeasureType );
 
         success = true;
         break;
@@ -129,15 +136,41 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_027_value"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_027_range"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_027_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_027_measuretype"));
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        Plugin_027_begin();
+      	ina219_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+
+        ina219_currentDivider_mA = 0;
+        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+        {
+      		case 0:
+      		{
+      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 2A"));
+      		  Plugin_027_setCalibration_32V_2A();
+      			break;
+      		}
+      		case 1:
+      		{
+      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 1A"));
+      			Plugin_027_setCalibration_32V_1A();
+      			break;
+      		}
+      		case 2:
+      		{
+      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 16V, 400mA"));
+      			Plugin_027_setCalibration_16V_400mA();
+      			break;
+      		}
+
+        }
+
         success = true;
         break;
       }
@@ -148,29 +181,66 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         // busvoltage = Plugin_027_getBusVoltage_V();
         // current_mA = Plugin_027_getCurrent_mA();
         // loadvoltage = Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000);
-        float value=0;
-        switch(Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+
+
+				float voltage = Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000);
+
+				float current = Plugin_027_getCurrent_mA()/1000;
+
+				float power = (Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000)) * Plugin_027_getCurrent_mA() / 1000;
+
+        UserVar[event->BaseVarIndex] = voltage;
+      	UserVar[event->BaseVarIndex + 1] = current;
+      	UserVar[event->BaseVarIndex + 2] = power;
+
+      	String log = F("INA219 0x");
+      	log += String(ina219_i2caddr,HEX);
+
+      	// for backward compability we allow the user to select if only one measurement should be returned
+      	// or all 3 measurement at once
+        switch (Settings.TaskDevicePluginConfig[event->TaskIndex][2])
         {
           case 0:
           {
-            value = Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000);
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = voltage;
+          	log += F(": Voltage: ");
+          	log += voltage;
             break;
           }
           case 1:
           {
-            value = Plugin_027_getCurrent_mA()/1000;
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = current;
+          	log += F(" Current: ");
+          	log += current;
             break;
           }
           case 2:
           {
-            value = (Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000)) * Plugin_027_getCurrent_mA() / 1000;
+            event->sensorType = SENSOR_TYPE_SINGLE;
+            UserVar[event->BaseVarIndex] = power;
+          	log += F(" Power: ");
+          	log += power;
+            break;
+          }
+          case 3:
+          {
+            event->sensorType = SENSOR_TYPE_TRIPLE;
+            UserVar[event->BaseVarIndex] = voltage;
+            UserVar[event->BaseVarIndex+1] = current;
+            UserVar[event->BaseVarIndex+2] = power;
+          	log += F(": Voltage: ");
+          	log += voltage;
+          	log += F(" Current: ");
+          	log += current;
+          	log += F(" Power: ");
+          	log += power;
             break;
           }
         }
-        UserVar[event->BaseVarIndex] = value;
-        String log = F("INA  : value: ");
-        log += value;
-        addLog(LOG_LEVEL_INFO,log);
+
+        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }
@@ -276,18 +346,6 @@ void Plugin_027_setCalibration_16V_400mA(void) {
 
 
 //**************************************************************************/
-//  Setups the HW (defaults to 32V and 2A for calibration values)
-//**************************************************************************/
-
-void Plugin_027_begin(void) {
-  ina219_i2caddr = INA219_ADDRESS;
-  ina219_currentDivider_mA = 0;
-
-  // Set chip to large range config values to start
-  Plugin_027_setCalibration_32V_2A();
-}
-
-//**************************************************************************/
 // Gets the raw bus voltage (16-bit signed integer, so +-32767)
 //**************************************************************************/
 int16_t Plugin_027_getBusVoltage_raw() {
@@ -351,4 +409,3 @@ float Plugin_027_getCurrent_mA() {
   valueDec /= ina219_currentDivider_mA;
   return valueDec;
 }
-

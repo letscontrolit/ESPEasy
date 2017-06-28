@@ -23,7 +23,7 @@
 
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 256 // need to fix this here, because this define cannot be overruled within the Arduino sketch...
+#define MQTT_MAX_PACKET_SIZE 384 // need to fix this here, because this define cannot be overruled within the Arduino sketch...
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds
