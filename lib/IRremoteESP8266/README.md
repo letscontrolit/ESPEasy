@@ -1,7 +1,5 @@
 # IRremote ESP8266 Library
 
-[![Build Status](https://travis-ci.org/markszabo/IRremoteESP8266.svg?branch=master)](https://travis-ci.org/markszabo/IRremoteESP8266)
-
 This library enables you to **send and receive** infra-red signals on an ESP8266 using Arduino framework (https://github.com/esp8266/Arduino)
 
 This library is based on Ken Shirriff's work (https://github.com/shirriff/Arduino-IRremote/)
@@ -18,15 +16,6 @@ Seb's notes : I also changed the pulse parameters for Samsung, update the Panaso
 5. Restart your Arduino ide
 6. Check out the examples
 
-###### Using Git to install library ( Linux )
-```
-cd ~/Arduino/libraries
-git clone https://github.com/markszabo/IRremoteESP8266.git
-```
-###### To Update to the latest version of the library
-`
-cd ~/Arduino/libraries/IRremoteESP8266 && git pull
-`
 ## Contributing
 If you want to contribute to this project:
 - Report bugs and errors

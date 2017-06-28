@@ -1,39 +1,33 @@
 /*
  * IRremoteESP8266: IRrecvDumpV2 - dump details of IR codes with IRrecv
  * An IR detector/demodulator must be connected to the input RECV_PIN.
- * Example circuit diagram:
- *  https://github.com/markszabo/IRremoteESP8266/wiki#ir-receiving
- * Changes:
- *   Version 0.2 April, 2017
- *     - Decode from a copy of the data so we can start capturing faster thus
- *       reduce the likelihood of miscaptures.
+ * Version 0.1 Sept, 2015
  * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009, Copyright 2009 Ken Shirriff, http://arcfn.com
  */
 
 #include <IRremoteESP8266.h>
 
-// An IR detector/demodulator is connected to GPIO pin 14(D5 on a NodeMCU board).
-int RECV_PIN = 14;
+int RECV_PIN = 2; //an IR detector/demodulator is connected to GPIO pin 2
 
 IRrecv irrecv(RECV_PIN);
 
-decode_results results; // Somewhere to store the results
-irparams_t save;        // A place to copy the interrupt state while decoding.
-
-void setup() {
-  Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);  // Status message will be sent to the PC at 115200 baud
+void  setup ( )
+{
+  Serial.begin(9600);   // Status message will be sent to PC at 9600 baud
   irrecv.enableIRIn();  // Start the receiver
 }
 
 //+=============================================================================
 // Display IR code
 //
-void ircode(decode_results *results) {
+void  ircode (decode_results *results)
+{
   // Panasonic has an Address
   if (results->decode_type == PANASONIC) {
     Serial.print(results->panasonicAddress, HEX);
     Serial.print(":");
   }
+
   // Print Code
   Serial.print(results->value, HEX);
 }
@@ -41,7 +35,8 @@ void ircode(decode_results *results) {
 //+=============================================================================
 // Display encoding type
 //
-void encoding(decode_results *results) {
+void  encoding (decode_results *results)
+{
   switch (results->decode_type) {
     default:
     case UNKNOWN:      Serial.print("UNKNOWN");       break ;
@@ -59,19 +54,14 @@ void encoding(decode_results *results) {
     case WHYNTER:      Serial.print("WHYNTER");       break ;
     case AIWA_RC_T501: Serial.print("AIWA_RC_T501");  break ;
     case PANASONIC:    Serial.print("PANASONIC");     break ;
-    case DENON:        Serial.print("DENON");         break ;
   }
 }
 
 //+=============================================================================
 // Dump out the decode_results structure.
 //
-void dumpInfo (decode_results *results) {
-  if (results->overflow) {
-    Serial.println("IR code too long. Edit IRremoteInt.h and increase RAWBUF");
-    return;
-  }
-
+void  dumpInfo (decode_results *results)
+{
   // Show Encoding standard
   Serial.print("Encoding  : ");
   encoding(results);
@@ -88,7 +78,8 @@ void dumpInfo (decode_results *results) {
 //+=============================================================================
 // Dump out the decode_results structure.
 //
-void dumpRaw(decode_results *results) {
+void  dumpRaw (decode_results *results)
+{
   // Print Raw data
   Serial.print("Timing[");
   Serial.print(results->rawlen-1, DEC);
@@ -117,7 +108,8 @@ void dumpRaw(decode_results *results) {
 //+=============================================================================
 // Dump out the decode_results structure.
 //
-void dumpCode (decode_results *results) {
+void  dumpCode (decode_results *results)
+{
   // Start declaration
   Serial.print("unsigned int  ");          // variable type
   Serial.print("rawData[");                // array name
@@ -132,7 +124,7 @@ void dumpCode (decode_results *results) {
   }
 
   // End declaration
-  Serial.print("};");  //
+  Serial.print("};");  // 
 
   // Comment
   Serial.print("  // ");
@@ -145,6 +137,7 @@ void dumpCode (decode_results *results) {
 
   // Now dump "known" codes
   if (results->decode_type != UNKNOWN) {
+
     // Some protocols have an address
     if (results->decode_type == PANASONIC) {
       Serial.print("unsigned int  addr = 0x");
@@ -162,12 +155,15 @@ void dumpCode (decode_results *results) {
 //+=============================================================================
 // The repeating section of the code
 //
-void loop() {
-  // Check if the IR code has been received.
-  if (irrecv.decode(&results, &save)) {
+void  loop ( )
+{
+  decode_results  results;        // Somewhere to store the results
+
+  if (irrecv.decode(&results)) {  // Grab an IR code
     dumpInfo(&results);           // Output the results
     dumpRaw(&results);            // Output the results in RAW format
     dumpCode(&results);           // Output the results as source code
     Serial.println("");           // Blank line between entries
+    irrecv.resume();              // Prepare for the next value
   }
 }

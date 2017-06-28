@@ -26,8 +26,8 @@ void handleIr(){
   for (uint8_t i=0; i<server.args(); i++){
     if(server.argName(i) == "code") 
     {
-      unsigned long code = strtoul(server.arg(i).c_str(), NULL, 10);
-      irsend.sendNEC(code, 32);
+      unsigned long code = server.arg(i).toInt();
+      irsend.sendNEC(code, 36);
     }
   }
   handleRoot();
