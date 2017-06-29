@@ -142,7 +142,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                   //the 0s counter
                   c0 = 0;
                 } else {
-                  //if bit is 0
+                  //So, bit is 0
+
+                  //On first call, ignore 0s (supress left-most 0s)
                   if (c0+c1 != 0) {
                     //add 1 to counter c0
                     c0++;
