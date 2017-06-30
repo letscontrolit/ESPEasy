@@ -217,7 +217,7 @@ int Plugin_052_readErrorStatus(void)
   byte frame[8] = {0};
   Plugin_052_buildFrame(0xFE, 0x04, 0x00, 1, frame);
   errorBits = Plugin_052_sendCommand(frame);
-  for (size_t i = 0; i < 9; i++) {
+  for (size_t i = 0; i < 15; i++) {
     if (getBitOfInt(errorBits, i) == 1) {
       error_Status = i;
     }
