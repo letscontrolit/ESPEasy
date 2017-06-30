@@ -306,10 +306,10 @@ unsigned int Plugin_052_ModRTU_CRC(byte buf[], int len, byte checkSum[2])
 int getBitOfInt(int reg, int pos)
 {
   // Create a mask
-  int mask = B0000000000000001 << pos;
+  int mask = 0x01 << pos;
 
   // Mask the status register
-  int masked_register = mask & status_reg;
+  int masked_register = mask & reg;
 
   // Shift the result of masked register back to position 0
   int result = masked_register >> pos;
