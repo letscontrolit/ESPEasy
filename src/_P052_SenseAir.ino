@@ -63,6 +63,26 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+      case PLUGIN_WRITE:
+          {
+            String tmpString = string;
+
+      			String cmd = parseString(tmpString, 1);
+      			String param1 = parseString(tmpString, 2);
+
+
+            if (cmd.equalsIgnoreCase(F("relaystatus")))
+            {
+              if (param1.toInt() == 0 || param1.toInt() == 1 || param1.toInt() == -1) {
+                Plugin_052_setRelayStatus(param1.toInt());
+                addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
+              }
+              success = true;
+            }
+
+            break;
+          }
+
     case PLUGIN_WEBFORM_LOAD:
       {
           byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
@@ -278,6 +298,19 @@ int Plugin_052_readTemperatureAdjustment(void)
   value = Plugin_052_sendCommand(frame);
 
   return value;
+}
+
+void Plugin_052_setRelayStatus(int status) {
+  int response;
+  byte frame[8] = {0};
+  if (status == 0) {
+    Plugin_052_buildFrame(0xFE, 0x06, 0x18, 0x0000, frame);
+  } else if (status == 1){
+    Plugin_052_buildFrame(0xFE, 0x06, 0x18, 0x3FFF, frame);
+  } else {
+    Plugin_052_buildFrame(0xFE, 0x06, 0x18, 0x7FFF, frame);
+  }
+  response = Plugin_052_sendCommand(frame);
 }
 
 // Compute the MODBUS RTU CRC
