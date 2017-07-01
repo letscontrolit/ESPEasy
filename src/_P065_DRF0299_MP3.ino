@@ -26,7 +26,7 @@
 
 #define PLUGIN_065
 #define PLUGIN_ID_065         65
-#define PLUGIN_NAME_065       "Notify - MP3"
+#define PLUGIN_NAME_065       "Notify - MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
 #include <SoftwareSerial.h>
