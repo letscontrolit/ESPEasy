@@ -101,10 +101,19 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
           {
               case 0:
               {
-                  int error_Status = Plugin_052_readErrorStatus();
-                  UserVar[event->BaseVarIndex] = error_Status;
-                  log += F("error status = ");
-                  log += error_Status;
+                  int errorWord = Plugin_052_readErrorStatus();
+                  for (size_t i = 0; i < 9; i++) {
+                    if (bitRead(errorWord,i)) {
+                      UserVar[event->BaseVarIndex] = i;
+                      log += F("error code = ");
+                      log += i;
+                      break;
+                    }
+                  }
+
+                  UserVar[event->BaseVarIndex] = -1;
+                  log += F("error code = ");
+                  log += -1;
                   break;
               }
               case 1:
@@ -203,10 +212,16 @@ int Plugin_052_sendCommand(byte command[])
 
 int Plugin_052_readErrorStatus(void)
 {
+  int errorBits = 0;
   int error_Status = -1;
   byte frame[8] = {0};
   Plugin_052_buildFrame(0xFE, 0x04, 0x00, 1, frame);
-  error_Status = Plugin_052_sendCommand(frame);
+  errorBits = Plugin_052_sendCommand(frame);
+  for (size_t i = 0; i < 15; i++) {
+    if (getBitOfInt(errorBits, i) == 1) {
+      error_Status = i;
+    }
+  }
   return error_Status;
 }
 
@@ -286,5 +301,19 @@ unsigned int Plugin_052_ModRTU_CRC(byte buf[], int len, byte checkSum[2])
   checkSum[1] = (byte)((crc >> 8) & 0xFF);
   checkSum[0] = (byte)(crc & 0xFF);
   return crc;
+}
+
+int getBitOfInt(int reg, int pos)
+{
+  // Create a mask
+  int mask = 0x01 << pos;
+
+  // Mask the status register
+  int masked_register = mask & reg;
+
+  // Shift the result of masked register back to position 0
+  int result = masked_register >> pos;
+
+  return result;
 }
 #endif
