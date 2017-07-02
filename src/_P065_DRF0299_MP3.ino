@@ -1,8 +1,8 @@
 //#######################################################################################################
-//############################# Plugin 065: P065_DRF0299_MP3 ############################################
+//############################# Plugin 065: P065_WTV020_MP3 ############################################
 //#######################################################################################################
 
-// ESPEasy Plugin to controls a MP3-player-module with chip DRF0299
+// ESPEasy Plugin to controls a MP3-player-module WTV020-SD-16P with chip DRF0299
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
 // Commands:
@@ -13,13 +13,14 @@
 
 // Circuit wiring
 // 1st-GPIO -> ESP TX to module RX
-// 5V to module VCC
+// 3.3V to module VCC (can be more than 100mA)
 // GND to module GND
 // Speaker to module SPK_1 and SPK_2 (not to GND!)
-// (optional) module BUSY to LED driver
+// (optional) module BUSY to LED driver (low active)
 
 // Note: Use a capacitor to denoise VCC
 // Note: If speaker has to low impedance, use a resistor (like 33 Ohm) in line to speaker
+// Note: Notification sounds with Creative Commons Attribution license: https://notificationsounds.com/
 
 
 #ifdef PLUGIN_BUILD_TESTING
@@ -94,7 +95,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
         Plugin_065_SoftSerial->begin(9600);
 
-        Plugin_065_SendCmd(0x06, CONFIG(0));   // set default volume
+        Plugin_065_SetVol(CONFIG(0));   // set default volume
 
         success = true;
         break;
@@ -113,12 +114,9 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         {
           String log = F("MP3  : play=");
 
-          if (param.length())
-          {
-            uint16_t track = param.toInt();
-            Plugin_065_SendCmd(0x03, track);
-            log += track;
-          }
+          uint16_t track = param.toInt();
+          Plugin_065_Play(track);
+          log += track;
 
           addLog(LOG_LEVEL_INFO, log);
           success = true;
@@ -138,14 +136,10 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         {
           String log = F("MP3  : vol=");
 
-          if (param.length())
-          {
-            int16_t vol = param.toInt();
-            if (vol < 1) vol = 1;
-            if (vol > 30) vol = 30;
-            Plugin_065_SendCmd(0x06, vol);
-            log += vol;
-          }
+          int8_t vol = param.toInt();
+          if (vol == 0) vol = 30;
+          Plugin_065_SetVol(vol);
+          log += vol;
 
           addLog(LOG_LEVEL_INFO, log);
           success = true;
@@ -155,14 +149,9 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         {
           String log = F("MP3  : eq=");
 
-          if (param.length())
-          {
-            int16_t eq = param.toInt();
-            if (eq < 0) eq = 0;
-            if (eq > 5) eq = 5;
-            Plugin_065_SendCmd(0x07, eq);
-            log += eq;
-          }
+          int8_t eq = param.toInt();
+          Plugin_065_SetEQ(eq);
+          log += eq;
 
           addLog(LOG_LEVEL_INFO, log);
           success = true;
@@ -175,6 +164,25 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 }
 
 
+void Plugin_065_Play(uint16_t track)
+{
+  Plugin_065_SendCmd(0x03, track);
+}
+
+void Plugin_065_SetVol(int8_t vol)
+{
+  if (vol < 1) vol = 1;
+  if (vol > 30) vol = 30;
+  Plugin_065_SendCmd(0x06, vol);
+}
+
+void Plugin_065_SetEQ(int8_t eq)
+{
+  if (eq < 0) eq = 0;
+  if (eq > 5) eq = 5;
+  Plugin_065_SendCmd(0x07, eq);
+}
+
 void Plugin_065_SendCmd(byte cmd, int16_t data)
 {
   if (!Plugin_065_SoftSerial)
@@ -183,8 +191,8 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   byte buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
 
   buffer[3] = cmd;
-  buffer[5] = data >> 8;
-  buffer[6] = data & 0xFF;
+  buffer[5] = data >> 8;   // high byte
+  buffer[6] = data & 0xFF;   // low byte
 
   int16_t checksum = -(buffer[1] + buffer[2] + buffer[3] + buffer[4] + buffer[5] + buffer[6]);
   buffer[7] = checksum >> 8;   // high byte
