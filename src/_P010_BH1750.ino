@@ -94,7 +94,8 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
       AS_BH1750 sensor = AS_BH1750(address);
       sensors_resolution_t mode;
-      mode = Settings.TaskDevicePluginConfig[event->TaskIndex][1];     // replaced the 8 lines below to optimize code
+      // replaced the 8 lines below to optimize code
+      mode = (sensors_resolution_t)Settings.TaskDevicePluginConfig[event->TaskIndex][1];
       // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_LOW)
       // 	mode = RESOLUTION_LOW;
       // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_NORMAL)
