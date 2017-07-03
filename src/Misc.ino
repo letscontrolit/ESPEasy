@@ -2474,14 +2474,14 @@ void createRuleEvents(byte TaskIndex)
   }
 }
 
-void checkRAM(byte id)
+void checkRAM( const __FlashStringHelper* flashString)
 {
   uint16_t freeRAM = FreeMem();
 
   if (freeRAM < lowestRAM)
   {
     lowestRAM = freeRAM;
-    lowestRAMid = id;
+    lowestRAMfunction = flashString;
   }
 }
 

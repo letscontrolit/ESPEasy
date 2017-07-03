@@ -4,11 +4,13 @@
 //
 // http://www.aqmd.gov/docs/default-source/aq-spec/resources-page/plantower-pms5003-manual_v2-3.pdf?sfvrsn=2
 //
-// The PMSx005 are particle sensors. Particles are measured by blowing air though the enclosue and,
+// The PMSx003 are particle sensors. Particles are measured by blowing air though the enclosue and,
 // togther with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
 
 #ifdef PLUGIN_BUILD_TESTING
+
+#include <SoftwareSerial.h>
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
@@ -16,20 +18,33 @@
 #define PLUGIN_VALUENAME1_053 "pm1.0"
 #define PLUGIN_VALUENAME2_053 "pm2.5"
 #define PLUGIN_VALUENAME3_053 "pm10"
+#define PMSx003_SIG1 0X42
+#define PMSx003_SIG2 0X4d
+#define PMSx003_SIZE 32
 
+SoftwareSerial *swSerial = NULL;
 boolean Plugin_053_init = false;
-byte Plugin_PMSx003_UART = 0;
-byte timer = 0;
 boolean values_received = false;
 
+// Read 2 bytes from serial and make an uint16 of it. Additionally calculate
+// checksum for PMSx003. Assumption is that there is data available, otherwise
+// this function is blocking.
 void SerialRead16(uint16_t* value, uint16_t* checksum)
 {
   uint8_t data_high, data_low;
 
-  while(Serial.available() == 0) {};
-  data_high = Serial.read();
-  while(Serial.available() == 0) {};
-  data_low = Serial.read();
+  // If swSerial is initialized, we are using soft serial
+  if (swSerial != NULL)
+  {
+    data_high = swSerial->read();
+    data_low = swSerial->read();
+  }
+  else
+  {
+    data_high = Serial.read();
+    data_low = Serial.read();
+  }
+
   *value = data_low;
   *value |= (data_high << 8);
 
@@ -38,8 +53,9 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
     *checksum += data_high;
     *checksum += data_low;
   }
-// Low-level logging to see data from sensor
+
 #if 0
+  // Low-level logging to see data from sensor
   String log = F("PMSx003 : byte high=0x");
   log += String(data_high,HEX);
   log += F(" byte low=0x");
@@ -50,8 +66,42 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 #endif
 }
 
+boolean PacketAvailable(void)
+{
+  boolean success = false;
+
+  if (swSerial != NULL) // Software serial
+  {
+    // When there is enough data in the buffer, search through the buffer to
+    // find header (buffer may be out of sync)
+    while (swSerial->available() >= PMSx003_SIZE)
+    {
+      if (swSerial->read() == PMSx003_SIG1 && swSerial->read() == PMSx003_SIG2)
+      {
+        success = true;
+        break;
+      }
+    }
+  }
+  else // Hardware serial
+  {
+    // When there is enough data in the buffer, search through the buffer to
+    // find header (buffer may be out of sync)
+    while (Serial.available() >= PMSx003_SIZE)
+    {
+      if (Serial.read() == PMSx003_SIG1 && Serial.read() == PMSx003_SIG2)
+      {
+        success = true;
+        break;
+      }
+    }
+  }
+  return success;
+}
+
 boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 {
+  String log;
   boolean success = false;
 
   switch (function)
@@ -59,7 +109,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_053;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
+        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -91,37 +141,53 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Serial.begin(9600);
-        // Toggle 'reset' to assure we start reading header
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-        digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
-        delay(250);
-        digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+        int rxPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int txPin = Settings.TaskDevicePin2[event->TaskIndex];
+        int resetPin = Settings.TaskDevicePin3[event->TaskIndex];
 
-        // Put device in suspend by driving 'set'low
-        pinMode(Settings.TaskDevicePin2[event->TaskIndex], OUTPUT);
-        digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);
+        log = F("PMSx003 : config ");
+        log += rxPin;
+        log += txPin;
+        log += resetPin;
+        addLog(LOG_LEVEL_DEBUG, log);
+
+        // Hardware serial is RX on 3 and TX on 1
+        if (rxPin == 3 && txPin == 1)
+        {
+          log = F("PMSx003 : using hardware serial");
+          addLog(LOG_LEVEL_INFO, log);
+          Serial.begin(9600);
+          Serial.flush();
+        }
+        else
+        {
+          log = F("PMSx003: using software serial");
+          addLog(LOG_LEVEL_INFO, log);
+          swSerial = new SoftwareSerial(rxPin, txPin);
+          swSerial->begin(9600);
+          swSerial->flush();
+        }
+
+        if (resetPin >= 0) // Reset if pin is configured
+        {
+          // Toggle 'reset' to assure we start reading header
+          log = F("PMSx003: resetting module");
+          addLog(LOG_LEVEL_INFO, log);
+          pinMode(resetPin, OUTPUT);
+          digitalWrite(resetPin, LOW);
+          delay(250);
+          digitalWrite(resetPin, HIGH);
+          pinMode(resetPin, INPUT_PULLUP);
+        }
 
         Plugin_053_init = true;
         success = true;
         break;
       }
-
-    case PLUGIN_ONCE_A_SECOND:
-      {
-        // Do measurements only every 30 seconds
-        #if 0
-        if ((timer++) % 30 == 0)
-          if (digitalRead(Settings.TaskDevicePin2[event->TaskIndex]))
-            digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW);
-          else
-            digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH);
-        #endif
-        success = true;
-      }
-
-    case PLUGIN_SERIAL_IN:
+    // The update rate from the module is 200ms .. multiple seconds. Practise
+    // shows that we need to read the buffer many times per seconds to stay in
+    // sync.
+    case PLUGIN_TEN_PER_SECOND:
       {
         if (Plugin_053_init)
         {
@@ -130,25 +196,24 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           uint16_t data[13];
           byte data_low, data_high;
           int i = 0;
-          String log;
 
-          // Check for 2-byte header. A total of 32 bytes is to be received.
-          if (Serial.read() == 0x42 && Serial.read() == 0x4d)
+          // Check if a packet is available in the UART FIFO.
+          if (PacketAvailable())
           {
-            checksum += 0x42 + 0x4d;
+            log = F("PMSx003 : Packet available");
+            addLog(LOG_LEVEL_DEBUG_MORE, log);
+            checksum += PMSx003_SIG1 + PMSx003_SIG2;
             SerialRead16(&framelength, &checksum);
-            if (framelength != 28)
+            if (framelength != (PMSx003_SIZE - 4))
             {
               log = F("PMSx003 : invalid framelength - ");
-              log+=framelength;
-              addLog(LOG_LEVEL_INFO, log);
+              log += framelength;
+              addLog(LOG_LEVEL_ERROR, log);
               break;
             }
 
             for (i = 0; i < 13; i++)
-            {
               SerialRead16(&data[i], &checksum);
-            }
 
             log = F("PMSx003 : pm1.0=");
             log += data[0];
@@ -162,7 +227,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
             log += data[4];
             log += F(", pm10a=");
             log += data[5];
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_DEBUG, log);
 
             log = F("PMSx003 : count/0.1L : 0.3um=");
             log += data[6];
@@ -176,31 +241,28 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
             log += data[10];
             log += F(", 10um=");
             log += data[11];
-
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_DEBUG_MORE, log);
 
             // Compare checksums
             SerialRead16(&checksum2, NULL);
             if (checksum == checksum2)
             {
-              /* Data is checked and good, fill in output */
+              // Data is checked and good, fill in output
               UserVar[event->BaseVarIndex]     = data[3];
               UserVar[event->BaseVarIndex + 1] = data[4];
               UserVar[event->BaseVarIndex + 2] = data[5];
               values_received = true;
+              success = true;
             }
           }
         }
-        success = true;
         break;
       }
-
     case PLUGIN_READ:
       {
-        // Prevent sending data to controller when nothing received yet
-        if (values_received)
-          success = true;
-        break;
+        // When new data is available, return true
+        success = values_received;
+        values_received = false;
       }
   }
   return success;
