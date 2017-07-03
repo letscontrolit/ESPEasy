@@ -16,9 +16,11 @@
 #define PLUGIN_VALUENAME1_064 "Gesture"
 #define PLUGIN_VALUENAME2_064 "Proximity"
 #define PLUGIN_VALUENAME3_064 "Light"
+/*
 #define PLUGIN_VALUENAME4_064 "R"
 #define PLUGIN_VALUENAME5_064 "G"
 #define PLUGIN_VALUENAME6_064 "B"
+*/
 
 #include <SparkFun_APDS9960.h>
 
@@ -26,7 +28,7 @@
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-SparkFun_APDS9960 apds = SparkFun_APDS9960();
+SparkFun_APDS9960* PLUGIN_064_pds = NULL;
 
 
 boolean Plugin_064(byte function, struct EventStruct *event, String& string)
@@ -44,7 +46,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 6;
+        Device[deviceCount].ValueCount = 3;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].TimerOptional = true;
@@ -63,18 +65,20 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_064));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_064));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_064));
+        /*
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_064));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[4], PSTR(PLUGIN_VALUENAME5_064));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[5], PSTR(PLUGIN_VALUENAME6_064));
+        */
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        //byte addr = CONFIG(0);
+        byte addr = 0x39;   // CONFIG(0); chip has only 1 address
 
         int optionValues[1] = { 0x39 };
-        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, 0x39);
+        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, addr);
 
         //addFormNote(string, F("???"));
 
@@ -97,16 +101,24 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        if (PLUGIN_064_pds)
+          delete PLUGIN_064_pds;
+        PLUGIN_064_pds = new SparkFun_APDS9960();
+
         String log = F("APDS : ");
-        if ( apds.init() )
+        if ( PLUGIN_064_pds->init() )
         {
           log += F("Init");
-          if (! apds.enableGestureSensor(false))
-            log += F(" - Error during gesture sensor init!");
-          if (! apds.enableLightSensor(false))
+
+          PLUGIN_064_pds->enablePower();
+
+          if (! PLUGIN_064_pds->enableLightSensor(false))
             log += F(" - Error during light sensor init!");
-          if (! apds.enableProximitySensor(false))
+          if (! PLUGIN_064_pds->enableProximitySensor(false))
             log += F(" - Error during proximity sensor init!");
+
+          if (! PLUGIN_064_pds->enableGestureSensor(false))
+            log += F(" - Error during gesture sensor init!");
         }
         else
         {
@@ -127,13 +139,22 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        Serial.print(".");
-        if ( 1 && apds.isGestureAvailable() )
-        {
-          Serial.print("<");
-          byte gesture = apds.readGesture();
-          Serial.print(">");
+        if (!PLUGIN_064_pds)
+          break;
 
+        if ( !PLUGIN_064_pds->isGestureAvailable() )
+          break;
+
+        int gesture = PLUGIN_064_pds->readGesture();
+//          int gesture = PLUGIN_064_pds->readGestureNonBlocking();
+
+        if (gesture == -1) Serial.print(".");
+        if (gesture == -2) Serial.print(":");
+        if (gesture == -3) Serial.print("|");
+
+        //if ( 0 && PLUGIN_064_pds->isGestureAvailable() )
+        if (gesture >= 0)
+        {
           String log = F("APDS : Gesture=");
 
           switch ( gesture )
@@ -164,26 +185,32 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
+        if (!PLUGIN_064_pds)
+          break;
+
         // Gesture - work is done in PLUGIN_FIFTY_PER_SECOND
 
-        if (1)
+        if (0)
         {
           uint8_t proximity_data = 0;
-          apds.readProximity(proximity_data);
+          PLUGIN_064_pds->readProximity(proximity_data);
           UserVar[event->BaseVarIndex + 1] = (float)proximity_data;
 
           uint16_t ambient_light = 0;
+          PLUGIN_064_pds->readAmbientLight(ambient_light);
+          UserVar[event->BaseVarIndex + 2] = (float)ambient_light;
+
+          /*
           uint16_t red_light = 0;
           uint16_t green_light = 0;
           uint16_t blue_light = 0;
-          apds.readAmbientLight(ambient_light);
-          apds.readRedLight(red_light);
-          apds.readGreenLight(green_light);
-          apds.readBlueLight(blue_light);
-          UserVar[event->BaseVarIndex + 2] = (float)ambient_light;
+          PLUGIN_064_pds->readRedLight(red_light);
+          PLUGIN_064_pds->readGreenLight(green_light);
+          PLUGIN_064_pds->readBlueLight(blue_light);
           UserVar[event->BaseVarIndex + 3] = (float)red_light;
           UserVar[event->BaseVarIndex + 4] = (float)green_light;
           UserVar[event->BaseVarIndex + 5] = (float)blue_light;
+          */
         }
 
         success = true;

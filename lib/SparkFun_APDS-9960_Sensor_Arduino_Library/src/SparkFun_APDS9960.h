@@ -288,6 +288,7 @@ public:
     /* Gesture methods */
     bool isGestureAvailable();
     int readGesture();
+    int readGestureNonBlocking();
 
 private:
 
