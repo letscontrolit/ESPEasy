@@ -94,14 +94,16 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
       AS_BH1750 sensor = AS_BH1750(address);
       sensors_resolution_t mode;
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_LOW)
-      	mode = RESOLUTION_LOW;
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_NORMAL)
-      	mode = RESOLUTION_NORMAL;
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_HIGH)
-      	mode = RESOLUTION_HIGH;
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_AUTO_HIGH)
-      	mode = RESOLUTION_AUTO_HIGH;
+      // replaced the 8 lines below to optimize code
+      mode = (sensors_resolution_t)Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_LOW)
+      // 	mode = RESOLUTION_LOW;
+      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_NORMAL)
+      // 	mode = RESOLUTION_NORMAL;
+      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_HIGH)
+      // 	mode = RESOLUTION_HIGH;
+      // if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]==RESOLUTION_AUTO_HIGH)
+      // 	mode = RESOLUTION_AUTO_HIGH;
 
       sensor.begin(mode,Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
