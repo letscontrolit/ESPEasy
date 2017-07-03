@@ -2632,7 +2632,7 @@ void handle_i2cscanner() {
           reply += F("PCF8574A");
           break;
         case 0x39:
-          reply += F("PCF8574A<BR>TSL2561");
+          reply += F("PCF8574A<BR>TSL2561<BR>APDS9960");
           break;
         case 0x3C:
         case 0x3D:
@@ -3560,7 +3560,7 @@ void handle_rules() {
 
   String reply = "";
   checkRAM(F("handle_rules"));
-  
+
   addHeader(true, reply);
 
   if (WebServer.args() > 0)

@@ -2,17 +2,23 @@
 //#################################### Plugin 064: APDS9960 Gesture ##############################
 //#######################################################################################################
 
-// ESPEasy Plugin to scan a ??? chip APDS9960
+// ESPEasy Plugin to scan a gesture, proximity and light chip APDS9960
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
+// A new gesture is send immediately to controllers.
+// Proximity and Light are scanned frequently by given 'Delay' setting.
+// RGB is not scanned because there are only 4 vars per task.
 
-// ScanCode;
+// Known BUG: While performing a gesture the reader function blocks rest of ESPEasy processing!!! (Feel free to fix...)
 
-#ifdef PLUGIN_BUILD_TESTING
+// Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
+
+
+#ifdef PLUGIN_BUILD_DEV
 
 #define PLUGIN_064
 #define PLUGIN_ID_064         64
-#define PLUGIN_NAME_064       "??? Gesture - APDS9960 [TESTING]"
+#define PLUGIN_NAME_064       "Gesture - APDS9960 [DEV]"
 #define PLUGIN_VALUENAME1_064 "Gesture"
 #define PLUGIN_VALUENAME2_064 "Proximity"
 #define PLUGIN_VALUENAME3_064 "Light"
@@ -22,7 +28,7 @@
 #define PLUGIN_VALUENAME6_064 "B"
 */
 
-#include <SparkFun_APDS9960.h>
+#include <SparkFun_APDS9960.h>   //Lib is modified to work with ESP
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -78,12 +84,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         byte addr = 0x39;   // CONFIG(0); chip has only 1 address
 
         int optionValues[1] = { 0x39 };
-        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, addr);
-
-        //addFormNote(string, F("???"));
-
-        //String options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
-        //addFormSelector(string, F("Chip (Mode)"), F("chip"), 3, options, NULL, CONFIG(1));
+        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
 
         success = true;
         break;
@@ -91,9 +92,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = getFormItemInt(F("i2c_addr"));
-
-        //CONFIG(1) = getFormItemInt(F("chip"));
+        //CONFIG(0) = getFormItemInt(F("i2c_addr"));
 
         success = true;
         break;
@@ -125,19 +124,12 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
           log += F("Error during APDS-9960 init!");
         }
 
-        // Start running the APDS-9960 gesture sensor engine
-
-        //switch (CONFIG(1))
-        {
-        }
-
         addLog(LOG_LEVEL_INFO, log);
-
         success = true;
         break;
       }
 
-    case PLUGIN_TEN_PER_SECOND:
+    case PLUGIN_FIFTY_PER_SECOND:
       {
         if (!PLUGIN_064_pds)
           break;
@@ -146,11 +138,12 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
           break;
 
         int gesture = PLUGIN_064_pds->readGesture();
-//          int gesture = PLUGIN_064_pds->readGestureNonBlocking();
 
-        if (gesture == -1) Serial.print(".");
-        if (gesture == -2) Serial.print(":");
-        if (gesture == -3) Serial.print("|");
+        //int gesture = PLUGIN_064_pds->readGestureNonBlocking();
+
+        //if (gesture == -1) Serial.print(".");
+        //if (gesture == -2) Serial.print(":");
+        //if (gesture == -3) Serial.print("|");
 
         //if ( 0 && PLUGIN_064_pds->isGestureAvailable() )
         if (gesture >= 0)
@@ -190,7 +183,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
         // Gesture - work is done in PLUGIN_FIFTY_PER_SECOND
 
-        if (0)
+        if (1)
         {
           uint8_t proximity_data = 0;
           PLUGIN_064_pds->readProximity(proximity_data);

@@ -584,7 +584,7 @@ int SparkFun_APDS9960::readGestureNonBlocking()
     uint8_t gstatus;
     int motion;
     int i;
-    boolean gbGestureAvailable = false;
+    static boolean gbGestureAvailable = false;
 
     if( isGestureAvailable())
       gbGestureAvailable = true;
