@@ -72,6 +72,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
+        addFormCheckBox(string, F("Update switch status only (Domoticz HTTP)"),F("plugin_001_udevice"),
+            Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        
         success = true;
         break;
       }
@@ -87,6 +90,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_001_button"));
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_boot"));
+        
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("plugin_001_udevice"));
 
         success = true;
         break;
@@ -110,6 +115,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
           outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
         }
+        
+        // are we sending command or udevice update to Domoticz HTTP
+        UserVar[event->BaseVarIndex + 1] = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        
         success = true;
         break;
       }
