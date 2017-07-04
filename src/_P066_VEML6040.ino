@@ -82,7 +82,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
           F("R, G, B, Color Temperature [K]"),
           F("R, G, B, Ambient Light [Lux]"),
           F("Color Temperature [K], Ambient Light [Lux], Y, W") };
-        addFormSelector(string, F("Variable Mapping"), F("map"), 6, optionsVarMap, NULL, CONFIG(2));
+        addFormSelector(string, F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, CONFIG(2));
 
         success = true;
         break;
@@ -108,10 +108,12 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        float R = (float)VEML6040_GetValue(0x8);
-        float G = (float)VEML6040_GetValue(0x9);
-        float B = (float)VEML6040_GetValue(0xA);
-        float W = (float)VEML6040_GetValue(0xB);
+        float R, G, B, W;
+
+        R = VEML6040_GetValue(0x08);
+        G = VEML6040_GetValue(0x09);
+        B = VEML6040_GetValue(0x0A);
+        W = VEML6040_GetValue(0x0B);
 
         switch (CONFIG(2))
         {
@@ -134,9 +136,9 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
           }
           case 2:
           {
-            UserVar[event->BaseVarIndex + 0] = pow(Plugin_066_CalcRelW(R, W), -2.2) * 100.0;
-            UserVar[event->BaseVarIndex + 1] = pow(Plugin_066_CalcRelW(G, W), -2.2) * 100.0;
-            UserVar[event->BaseVarIndex + 2] = pow(Plugin_066_CalcRelW(B, W), -2.2) * 100.0;
+            UserVar[event->BaseVarIndex + 0] = pow(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0;
+            UserVar[event->BaseVarIndex + 1] = pow(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0;
+            UserVar[event->BaseVarIndex + 2] = pow(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0;
             UserVar[event->BaseVarIndex + 3] = W;
             break;
           }
@@ -179,23 +181,25 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 void VEML6040_setControlReg(byte data)
 {
 	Wire.beginTransmission(VEML6040_ADDR);
-  Wire.write(0);
-	Wire.write(data);
-  Wire.write(0);
+  Wire.write(0);   //command 0=control register
+	Wire.write(data);   //lsb
+  Wire.write(0);   //msb
 	Wire.endTransmission();
 }
 
-uint16_t VEML6040_GetValue(byte reg)
+float VEML6040_GetValue(byte reg)
 {
 	Wire.beginTransmission(VEML6040_ADDR);
 	Wire.write(reg);
-	Wire.endTransmission();
+	Wire.endTransmission(false);
 	Wire.requestFrom((uint8_t)VEML6040_ADDR, (uint8_t)0x2);
 	if (Wire.available() == 2)
 	{
-		return (Wire.read() | (Wire.read() << 8));
+    uint16_t lsb = Wire.read();
+    uint16_t msb = Wire.read();
+		return (float)((msb << 8) | lsb);
 	}
-	return 0xFFFF;
+	return -1.0;
 }
 
 void VEML6040_Init(byte it)
@@ -228,6 +232,5 @@ float Plugin_066_CalcRelW(float X, float W)
 
   return X / W;
 }
-
 
 #endif
