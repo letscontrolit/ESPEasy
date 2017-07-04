@@ -131,24 +131,55 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);
               break;
             case SENSOR_TYPE_SWITCH:
-              url = F("/json.htm?type=command&param=switchlight&idx=");
-              url += event->idx;
-              url += F("&switchcmd=");
-              if (UserVar[event->BaseVarIndex] == 0)
-                url += F("Off");
-              else
-                url += F("On");
-              break;
-            case SENSOR_TYPE_DIMMER:
-              url = F("/json.htm?type=command&param=switchlight&idx=");
-              url += event->idx;
-              url += F("&switchcmd=");
-              if (UserVar[event->BaseVarIndex] == 0)
-                url += ("Off");
+              if (UserVar[event->BaseVarIndex + 1])
+              {
+                url = F("/json.htm?type=command&param=udevice&idx=");
+                url += event->idx;
+                url += F("&nvalue=");
+                url += UserVar[event->BaseVarIndex];
+                url += F("&svalue=");
+              }
               else
               {
-                url += F("Set%20Level&level=");
-                url += UserVar[event->BaseVarIndex];
+                url = F("/json.htm?type=command&param=switchlight&idx=");
+                url += event->idx;
+                url += F("&switchcmd=");
+                if (UserVar[event->BaseVarIndex] == 0)
+                  url += F("Off");
+                else
+                  url += F("On");
+              }
+              break;
+            case SENSOR_TYPE_DIMMER:
+              if (UserVar[event->BaseVarIndex + 1])
+              {
+                url = F("/json.htm?type=command&param=udevice&idx=");
+                url += event->idx;
+                url += F("&nvalue=");
+                if (UserVar[event->BaseVarIndex] == 0)
+                {
+                  url += ("0");
+                  url += ("&svalue=");
+                }
+                else
+                {
+                  url += F("1");
+                  url += F("&svalue=");
+                  url += UserVar[event->BaseVarIndex];
+                }
+              }
+              else
+              {
+                url = F("/json.htm?type=command&param=switchlight&idx=");
+                url += event->idx;
+                url += F("&switchcmd=");
+                if (UserVar[event->BaseVarIndex] == 0)
+                  url += ("Off");
+                else
+                {
+                  url += F("Set%20Level&level=");
+                  url += UserVar[event->BaseVarIndex];
+                }
               }
               break;
             case (SENSOR_TYPE_WIND):
