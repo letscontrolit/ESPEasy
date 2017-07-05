@@ -117,9 +117,9 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(string, F("Oversampling"), F("oversampling"), CONFIG(0));
 
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
-        addFormSelector(string, F("Integration Time (Max Lux)"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
+        addFormSelector(string, F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
 
-        addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 10);
+        addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 15);
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
