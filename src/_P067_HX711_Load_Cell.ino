@@ -1,26 +1,14 @@
 //#######################################################################################################
-//#################################### Plugin 063: _P067_HX711_Load_Cell ########################################
+//#################################### Plugin 063: _P067_HX711_Load_Cell ################################
 //#######################################################################################################
 
-// ESPEasy Plugin to scan a 16 key touch pad chip TTP229
+// ESPEasy Plugin to scan a 24 bit AD value from a load cell chip HX711
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-// Important: There are several types of TTP299 chips with different features available. They are namead all TTP229 but differ in the letter(s) followed.
-// On the china boards (found on eBay and AliExpress) the TTP229-B is used which has NO! I2C-interface. It uses a properitary serial protocol with clock (SCL) and bidirectional data (SDO)
-
-// ScanCode;
-// Value 1...16 for the key number
-// No key - the code 0
-// If more than one key is pressed, the scan code is the code with the lowest value
-
-// If ScanCode is unchecked the value is the KeyMap 1.Key=1, 2.Key=2, 3.Key=4, 4.Key=8 ... 16.Key=32768
-// If more than one key is pressed, the value is sum of all KeyMap-values
-
 // Electronics:
-// Connect SCL to 1st GPIO and SDO to 2nd GPIO. Use 3.3 volt for VCC.
-// Set the jumper for 16 key mode (TP2=jumper3). Additional set jumper for multi-key (TP3=jumper4, TP4=jumper5).
-// Scematics: https://www.openimpulse.com/blog/wp-content/uploads/wpsc/downloadables/TTP229B-Schematic-Diagram.pdf
-// Datasheet: http://www.datasheet4u.com/download_new.php?id=996751
+// Connect SCL to 1st GPIO and DOUT to 2nd GPIO. Use 3.3 volt for VCC.
+
+// Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 
 #ifdef PLUGIN_BUILD_TESTING
@@ -51,6 +39,7 @@ void initHX711(int16_t pinSCL, int16_t pinDOUT)
 
   pinMode(pinDOUT, INPUT_PULLUP);
 }
+
 
 boolean isReadyHX711(int16_t pinSCL, int16_t pinDOUT)
 {
@@ -125,20 +114,22 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("Oversampling"), F("Plugin_067_oversampling"), CONFIG(0));
+        addFormCheckBox(string, F("Oversampling"), F("oversampling"), CONFIG(0));
 
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
         addFormSelector(string, F("Integration Time (Max Lux)"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
+
+        addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 10);
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
         addFormCheckBox(string, F("Calibration Enabled"), F("Plugin_067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(string, F("Point 1"), F("Plugin_067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
+        addFormNumericBox(string, F("Point 1"), F("Plugin_067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
         string += F(" &#8793; ");
         addTextBox(string, F("Plugin_067_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(string, F("Point 2"), F("Plugin_067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 1023);
+        addFormNumericBox(string, F("Point 2"), F("Plugin_067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
         string += F(" &#8793; ");
         addTextBox(string, F("Plugin_067_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
@@ -148,9 +139,11 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        CONFIG(0) = isFormItemChecked(F("Plugin_067_oversampling"));
+        CONFIG(0) = isFormItemChecked(F("oversampling"));
 
         CONFIG(1) = getFormItemInt(F("mode"));
+
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = getFormItemFloat(F("Plugin_067_offset"));
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("Plugin_067_cal"));
 
@@ -220,6 +213,8 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = (float)Plugin_067_OversamplingValue / Plugin_067_OversamplingCount;
           Plugin_067_OversamplingValue = 0;
           Plugin_067_OversamplingCount = 0;
+
+          UserVar[event->BaseVarIndex] += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3];   //Offset
 
           log += String(UserVar[event->BaseVarIndex], 3);
 
