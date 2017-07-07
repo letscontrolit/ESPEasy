@@ -5,6 +5,8 @@
 
 static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - To much N-Plugins";
 
+// Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
+/*
 #define ADDNPLUGIN(NNN) \
   if (x < NPLUGIN_MAX) \
   { \
@@ -13,6 +15,8 @@ static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - To much N-Plugin
   } \
   else \
     addLog(LOG_LEVEL_ERROR, FPSTR(ADDNPLUGIN_ERROR));
+*/
+#define ADDNPLUGIN(NNN) if (x < NPLUGIN_MAX) { NPlugin_id[x] = NPLUGIN_ID_##NNN; NPlugin_ptr[x++] = &NPlugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDNPLUGIN_ERROR));
 
 
 void NPluginInit(void)
