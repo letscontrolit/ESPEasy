@@ -96,6 +96,21 @@ boolean WifiConnect(byte connectAttempts)
       WiFi.config(ip, gw, subnet);
     }
 
+    //mdns setup
+    char mdns_name[20];
+    mdns_name[0] = 0;
+    sprintf_P(mdns_name, PSTR("%s_%u"), Settings.Name, Settings.Unit);
+
+    String log = F("SYS  : ");
+    if (MDNS.begin(mdns_name, WiFi.localIP())) {
+      log += F("mDNS started");
+
+    }
+    else{
+      log += F("mDNS failed");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+
     return(true);
   }
 

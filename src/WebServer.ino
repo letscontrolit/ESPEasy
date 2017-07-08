@@ -495,6 +495,15 @@ void handle_root() {
       reply += F(" dB");
     }
 
+    char mdns_link[80];
+    sprintf_P(mdns_link, PSTR("<TR><TD>mDNS:<TD><a href='http://%s_%u.local'>%s_%u.local</a>"), Settings.Name, Settings.Unit, Settings.Name, Settings.Unit);
+    reply += mdns_link;
+
+    reply += F("<TD><TD><TD>");
+    //reply += placeholder;
+
+
+
     reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < UNIT_MAX; x++)
     {
