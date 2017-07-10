@@ -16,7 +16,6 @@
     GPIO Setting 2 -> TX
     Use 1kOhm in serie on datapins!
 */
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_052
 #define PLUGIN_ID_052         52
@@ -349,4 +348,3 @@ int getBitOfInt(int reg, int pos)
 
   return result;
 }
-#endif
