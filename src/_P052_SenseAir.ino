@@ -71,7 +71,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
       			String param1 = parseString(tmpString, 2);
 
 
-            if (cmd.equalsIgnoreCase(F("relaystatus")))
+            if (cmd.equalsIgnoreCase(F("senseair_setrelay")))
             {
               if (param1.toInt() == 0 || param1.toInt() == 1 || param1.toInt() == -1) {
                 Plugin_052_setRelayStatus(param1.toInt());
