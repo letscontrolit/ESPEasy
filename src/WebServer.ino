@@ -174,9 +174,9 @@ void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader("Content-Type","text/html",true);
+  // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  WebServer.sendHeader("Connection","close");
+  WebServer.sendHeader("Transfer-Encoding","chunked");
   WebServer.send(200);
 }
 
@@ -189,7 +189,14 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
+    String size;
+    size=String(data.length(), HEX)+"\r\n";
+
+    //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+    WebServer.sendContent(size);
     WebServer.sendContent(data);
+    WebServer.sendContent("\r\n");
+
     data = F("");   //free RAM
   }
 }
@@ -197,9 +204,7 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  WebServer.sendContent("");
-  WebServer.client().flush();
-  WebServer.client().stop();   // Stop is needed because we sent no content length
+  WebServer.sendContent("0\r\n\r\n");
 }
 
 
