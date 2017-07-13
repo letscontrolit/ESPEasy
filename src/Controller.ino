@@ -102,10 +102,12 @@ void MQTTConnect()
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = "ESPClient";
-  clientid += Settings.Unit;
+  String clientid = Settings.Name; // clientid = %sysname%
+  if (Settings.Unit != 0) // set unit number to zero if don't want to add to clientid
+  {
+    clientid += Settings.Unit;
+  }
   String subscribeTo = "";
-
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
   LWTTopic.replace(F("%sysname%"), Settings.Name);
@@ -122,7 +124,9 @@ void MQTTConnect()
 
     if (MQTTresult)
     {
-      log = F("MQTT : Connected to broker");
+      log = F("MQTT : ClientID ");
+      log += clientid;
+      log += " connected to broker";
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = ControllerSettings.Subscribe;
       subscribeTo.replace(F("%sysname%"), Settings.Name);
@@ -138,7 +142,9 @@ void MQTTConnect()
     }
     else
     {
-      log = F("MQTT : Failed to connected to broker");
+      log = F("MQTT : ClientID ");
+      log += clientid;
+      log +=" failed to connected to broker";
       addLog(LOG_LEVEL_ERROR, log);
     }
 
