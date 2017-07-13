@@ -2474,6 +2474,45 @@ void createRuleEvents(byte TaskIndex)
   }
 }
 
+
+void SendValueLogger(byte TaskIndex)
+{
+  String logger;
+
+  LoadTaskSettings(TaskIndex);
+  byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+  byte sensorType = Device[DeviceIndex].VType;
+  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+  {
+    logger += getDateString('-');
+    logger += F(" ");
+    logger += getTimeString(':');
+    logger += F(",");
+    logger += Settings.Unit;
+    logger += F(",");
+    logger += ExtraTaskSettings.TaskDeviceName;
+    logger += F(",");
+    logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+    logger += F(",");
+
+    if (sensorType == SENSOR_TYPE_LONG)
+      logger += (unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+    else
+      logger += String(UserVar[BaseVarIndex + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+    logger += F("\r\n");
+  }
+
+  addLog(LOG_LEVEL_DEBUG, logger);
+
+  String filename = F("VALUES.CSV");
+  File logFile = SD.open(filename, FILE_WRITE);
+  if (logFile)
+    logFile.print(logger);
+  logFile.close();
+}
+
+
 void checkRAM( const __FlashStringHelper* flashString)
 {
   uint16_t freeRAM = FreeMem();

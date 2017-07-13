@@ -426,6 +426,7 @@ struct SettingsStruct
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
+  boolean       UseValueLogger;
   //its safe to extend this struct, up to 65535 bytes, default values in config are 0
 } Settings;
 
