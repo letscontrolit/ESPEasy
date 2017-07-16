@@ -1580,7 +1580,10 @@ void handle_devices() {
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
+        {
           addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
+          addFormNote(reply, F("Will go into effect on next input change."));
+        }
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
           addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
