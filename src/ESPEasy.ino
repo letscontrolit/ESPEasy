@@ -73,7 +73,7 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
+#define DEFAULT_NAME        "ESP_Easy"         // Enter your device friendly name
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds

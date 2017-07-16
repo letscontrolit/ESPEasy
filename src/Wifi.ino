@@ -6,8 +6,7 @@ void WifiAPconfig()
   // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
   char ap_ssid[20];
   ap_ssid[0] = 0;
-  strcpy(ap_ssid, "ESP_");
-  sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
+  sprintf_P(ap_ssid, PSTR("%s_%u"), Settings.Name, Settings.Unit);
   // setup ssid for AP Mode when needed
   WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
   // We start in STA mode
