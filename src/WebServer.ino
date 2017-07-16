@@ -506,13 +506,13 @@ void handle_root() {
       reply += F(" dB");
     }
 
-    char mdns_link[80];
-    sprintf_P(mdns_link, PSTR("<TR><TD>mDNS:<TD><a href='http://%s_%u.local'>%s_%u.local</a>"), Settings.Name, Settings.Unit, Settings.Name, Settings.Unit);
-    reply += mdns_link;
-
-    reply += F("<TD><TD><TD>");
-    //reply += placeholder;
-
+    #ifdef FEATURE_MDNS
+      reply += F("<TR><TD>mDNS:<TD><a href='http://");
+      reply += WifiGetHostname();
+      reply += F(".local'>");
+      reply += WifiGetHostname();
+      reply += F(".local</a><TD><TD><TD>");
+    #endif
 
 
     reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age<TR><TD><TD>");

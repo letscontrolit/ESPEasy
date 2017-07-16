@@ -115,6 +115,9 @@
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
 // #define FEATURE_ARDUINO_OTA
 
+//enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+// #define FEATURE_MDNS
+
 
 //enable reporting status to ESPEasy developers.
 //this informs us of crashes and stability issues.
@@ -281,7 +284,10 @@
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
+#ifdef FEATURE_MDNS
 #include <ESP8266mDNS.h>
+#endif
+
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
@@ -322,8 +328,9 @@ bool ArduinoOTAtriggered=false;
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 DNSServer dnsServer;
+#ifdef FEATURE_MDNS
 MDNSResponder mdns;
-
+#endif
 
 // MQTT client
 WiFiClient mqtt;
