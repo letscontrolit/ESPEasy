@@ -114,12 +114,16 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        addFormSubHeader(string, F("Measurement"));
+
         addFormCheckBox(string, F("Oversampling"), F("oversampling"), CONFIG(0));
 
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
         addFormSelector(string, F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
 
-        addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 15);
+        addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
+        string += F(" &nbsp; &nbsp; &#8617; Tare: ");
+        addCheckBox(string, F("tare"), 0);   //always off
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
@@ -143,7 +147,16 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         CONFIG(1) = getFormItemInt(F("mode"));
 
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = getFormItemFloat(F("Plugin_067_offset"));
+        if (isFormItemChecked(F("tare")))
+        {
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = -UserVar[event->BaseVarIndex + 1];
+          Plugin_067_OversamplingValue = 0;
+          Plugin_067_OversamplingCount = 0;
+        }
+        else
+        {
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = getFormItemFloat(F("Plugin_067_offset"));
+        }
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("Plugin_067_cal"));
 
@@ -210,11 +223,11 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_067_OversamplingCount > 0)
         {
-          UserVar[event->BaseVarIndex] = (float)Plugin_067_OversamplingValue / Plugin_067_OversamplingCount;
+          UserVar[event->BaseVarIndex + 1] = (float)Plugin_067_OversamplingValue / Plugin_067_OversamplingCount;
           Plugin_067_OversamplingValue = 0;
           Plugin_067_OversamplingCount = 0;
 
-          UserVar[event->BaseVarIndex] += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3];   //Offset
+          UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 1] + Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3];   //Offset
 
           log += String(UserVar[event->BaseVarIndex], 3);
 
@@ -241,6 +254,25 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         addLog(LOG_LEVEL_INFO,log);
         success = true;
+        break;
+      }
+
+    case PLUGIN_WRITE:
+      {
+        string.toLowerCase();
+        String command = parseString(string, 1);
+
+        if (command == F("tare"))
+        {
+          String log = F("HX711: tare");
+
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = -UserVar[event->BaseVarIndex + 1];
+          Plugin_067_OversamplingValue = 0;
+          Plugin_067_OversamplingCount = 0;
+
+          addLog(LOG_LEVEL_INFO, log);
+          success = true;
+        }
         break;
       }
 
