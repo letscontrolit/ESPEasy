@@ -141,6 +141,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
           int8_t vol = param.toInt();
           if (vol == 0) vol = 30;
+          CONFIG(0) = vol;
           Plugin_065_SetVol(vol);
           log += vol;
 
