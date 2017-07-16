@@ -269,7 +269,7 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
   sendWebPageChunkedEnd(log);   //close chunked send
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
 }
 
 
@@ -3298,7 +3298,7 @@ bool loadFromFS(boolean spiffs, String path) {
   }
   statusLED(true);
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
   return true;
 }
 
