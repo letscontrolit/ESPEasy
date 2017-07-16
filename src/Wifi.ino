@@ -11,6 +11,15 @@ void WifiAPconfig()
   WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
   // We start in STA mode
   WifiAPMode(false);
+
+  String log("WIFI : AP Mode ssid will be ");
+  log=log+ap_ssid;
+
+  log=log+F(" with address ");
+  log=log+apIP.toString();
+  addLog(LOG_LEVEL_INFO, log);
+
+
 }
 
 
@@ -40,9 +49,7 @@ void WifiAPMode(boolean state)
     if (state)
     {
       WiFi.mode(WIFI_AP_STA);
-      String log=F("WIFI : AP Mode enabled, reachable on ");
-      log=log+apIP.toString();
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode enabled"));
     }
   }
 }
