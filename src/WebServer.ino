@@ -5,10 +5,10 @@
 static const char pgDefaultCSS[] PROGMEM = {
   //color sheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
-  "h1 {font-size:16pt; color:#D50; margin:8px 0; font-weight:bold;}"
+  "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
   "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
   "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-  "h6 {font-size:10pt; color:#D50;}"
+  "h6 {font-size:10pt; color:#07D;}"
   //buttons
   ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
   ".button.link {}"
@@ -27,14 +27,14 @@ static const char pgDefaultCSS[] PROGMEM = {
   //menu
   ".menubar {position:inherit; top:44px;}"
   ".menu {float:left; height:20px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
-  ".menu.active {color:#000; background-color:#FFF; border-color:#D50 #DDD #FFF;}"
+  ".menu.active {color:#000; background-color:#FFF; border-color:#07D #DDD #FFF;}"
   ".menu:hover {color:#000; background:#DEF;}"
   //symbols for enabled
   ".on {color:green;}"
   ".off {color:red;}"
   //others
   ".div_l {float:left;}"
-  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
+  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
   ".div_br {clear:both;}"
   //".active {text-decoration:underline;}"
   "\0"
@@ -174,9 +174,9 @@ void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader("Content-Type","text/html",true);
+  // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  WebServer.sendHeader("Connection","close");
+  WebServer.sendHeader("Transfer-Encoding","chunked");
   WebServer.send(200);
 }
 
@@ -189,7 +189,14 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
+    String size;
+    size=String(data.length(), HEX)+"\r\n";
+
+    //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+    WebServer.sendContent(size);
     WebServer.sendContent(data);
+    WebServer.sendContent("\r\n");
+
     data = F("");   //free RAM
   }
 }
@@ -197,9 +204,7 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  WebServer.sendContent("");
-  WebServer.client().flush();
-  WebServer.client().stop();   // Stop is needed because we sent no content length
+  WebServer.sendContent("0\r\n\r\n");
 }
 
 
@@ -264,7 +269,7 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
   sendWebPageChunkedEnd(log);   //close chunked send
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
 }
 
 
@@ -500,6 +505,15 @@ void handle_root() {
       reply += WiFi.RSSI();
       reply += F(" dB");
     }
+
+    #ifdef FEATURE_MDNS
+      reply += F("<TR><TD>mDNS:<TD><a href='http://");
+      reply += WifiGetHostname();
+      reply += F(".local'>");
+      reply += WifiGetHostname();
+      reply += F(".local</a><TD><TD><TD>");
+    #endif
+
 
     reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < UNIT_MAX; x++)
@@ -1142,6 +1156,7 @@ void handle_hardware() {
   addFormSubHeader(reply, F("SPI Interface"));
 
   addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
+  addFormNote(reply, F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
   addFormPinSelect(reply, F("SD Card CS Pin"), "sd", Settings.Pin_sd_cs);
 
@@ -1565,7 +1580,10 @@ void handle_devices() {
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
+        {
           addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
+          addFormNote(reply, F("Will go into effect on next input change."));
+        }
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
           addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
@@ -2961,6 +2979,7 @@ void handle_advanced() {
     Settings.SerialLogLevel = serialloglevel.toInt();
     Settings.WebLogLevel = webloglevel.toInt();
     Settings.SDLogLevel = sdloglevel.toInt();
+    Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate = baudrate.toInt();
     Settings.UseNTP = (usentp == "on");
     Settings.DST = (dst == "on");
@@ -3008,6 +3027,8 @@ void handle_advanced() {
   addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel, 0, 4);
   addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel, 0, 4);
   addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel, 0, 4);
+
+  addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 
 
   addFormSubHeader(reply, F("Serial Settings"));
@@ -3280,7 +3301,7 @@ bool loadFromFS(boolean spiffs, String path) {
   }
   statusLED(true);
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
   return true;
 }
 

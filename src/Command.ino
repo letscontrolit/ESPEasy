@@ -455,6 +455,24 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
   }
 
+  if (strcasecmp_P(Command, PSTR("Unit")) == 0)
+  {
+    success = true;
+    Settings.Unit=Par1;
+  }
+
+  if (strcasecmp_P(Command, PSTR("Name")) == 0)
+  {
+    success = true;
+    strcpy(Settings.Name, Line + 5);
+  }
+
+  if (strcasecmp_P(Command, PSTR("Password")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.Password, Line + 9);
+  }
+
 
   if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
   {
@@ -521,6 +539,7 @@ void ExecuteCommand(byte source, const char *Line)
     sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     Serial.print(F("  IP Address    : ")); Serial.println(str);
     Serial.print(F("  Build         : ")); Serial.println((int)BUILD);
+    Serial.print(F("  Name          : ")); Serial.println(Settings.Name);
     Serial.print(F("  Unit          : ")); Serial.println((int)Settings.Unit);
     Serial.print(F("  WifiSSID      : ")); Serial.println(SecuritySettings.WifiSSID);
     Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);

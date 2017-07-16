@@ -73,7 +73,7 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
+#define DEFAULT_NAME        "ESP_Easy"         // Enter your device friendly name
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
@@ -114,6 +114,9 @@
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
 // #define FEATURE_ARDUINO_OTA
+
+//enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+// #define FEATURE_MDNS
 
 
 //enable reporting status to ESPEasy developers.
@@ -281,6 +284,10 @@
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
+#ifdef FEATURE_MDNS
+#include <ESP8266mDNS.h>
+#endif
+
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
@@ -321,7 +328,9 @@ bool ArduinoOTAtriggered=false;
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 DNSServer dnsServer;
-
+#ifdef FEATURE_MDNS
+MDNSResponder mdns;
+#endif
 
 // MQTT client
 WiFiClient mqtt;
@@ -426,6 +435,7 @@ struct SettingsStruct
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
+  boolean       UseValueLogger;
   //its safe to extend this struct, up to 65535 bytes, default values in config are 0
 } Settings;
 
