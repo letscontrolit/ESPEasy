@@ -257,6 +257,25 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WRITE:
+      {
+        string.toLowerCase();
+        String command = parseString(string, 1);
+
+        if (command == F("tare"))
+        {
+          String log = F("HX711: tare");
+
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = -UserVar[event->BaseVarIndex + 1];
+          Plugin_067_OversamplingValue = 0;
+          Plugin_067_OversamplingCount = 0;
+
+          addLog(LOG_LEVEL_INFO, log);
+          success = true;
+        }
+        break;
+      }
+
   }
   return success;
 }
