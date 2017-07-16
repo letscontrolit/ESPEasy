@@ -5,10 +5,10 @@
 static const char pgDefaultCSS[] PROGMEM = {
   //color sheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
-  "h1 {font-size:16pt; color:#D50; margin:8px 0; font-weight:bold;}"
+  "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
   "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
   "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-  "h6 {font-size:10pt; color:#D50;}"
+  "h6 {font-size:10pt; color:#07D;}"
   //buttons
   ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
   ".button.link {}"
@@ -27,14 +27,14 @@ static const char pgDefaultCSS[] PROGMEM = {
   //menu
   ".menubar {position:inherit; top:44px;}"
   ".menu {float:left; height:20px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
-  ".menu.active {color:#000; background-color:#FFF; border-color:#D50 #DDD #FFF;}"
+  ".menu.active {color:#000; background-color:#FFF; border-color:#07D #DDD #FFF;}"
   ".menu:hover {color:#000; background:#DEF;}"
   //symbols for enabled
   ".on {color:green;}"
   ".off {color:red;}"
   //others
   ".div_l {float:left;}"
-  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
+  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
   ".div_br {clear:both;}"
   //".active {text-decoration:underline;}"
   "\0"
