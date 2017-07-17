@@ -86,6 +86,7 @@ class Esp():
 
         subprocess.check_call(self._config['flash_cmd'].format(**self._config), shell=True, cwd='..')
 
+        time.sleep(1)
         #to prevent hangs when ESPEasy tries to reboot via ESP.reboot (due to an ESP/lib bug)
         self.reboot()
 

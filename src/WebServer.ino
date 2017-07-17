@@ -3097,7 +3097,7 @@ void handle_download()
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
-  fs::File dataFile = SPIFFS.open("config.dat", "r");
+  fs::File dataFile = SPIFFS.open(F("config.dat"), "r");
   if (!dataFile)
     return;
 
@@ -3223,7 +3223,7 @@ void handleFileUpload() {
         // once we're safe, remove file and create empty one...
         SPIFFS.remove((char *)upload.filename.c_str());
         uploadFile = SPIFFS.open(upload.filename.c_str(), "w");
-        flashCount();
+        // dont count manual uploads: flashCount();
       }
     }
     if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
@@ -3317,7 +3317,7 @@ void handle_filelist() {
   if (fdelete.length() > 0)
   {
     SPIFFS.remove(fdelete);
-    flashCount();
+    // flashCount();
   }
 
   String reply = "";
@@ -3594,22 +3594,22 @@ void handle_rules() {
       else
       {
 
-        if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
-        {
-          String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
-          addLog(LOG_LEVEL_ERROR, log);
-          reply += F("<span style=\"color:red\">Error saving to flash!</span>");
-        }
-        else
-        {
+        // if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
+        // {
+        //   String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
+        //   addLog(LOG_LEVEL_ERROR, log);
+        //   reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+        // }
+        // else
+        // {
           fs::File f = SPIFFS.open(fileName, "w");
           if (f)
           {
             f.print(rules);
             f.close();
-            flashCount();
+            // flashCount();
           }
-        }
+        // }
       }
     }
     else // changed set, check if file exists and create new

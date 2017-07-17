@@ -362,7 +362,7 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
-  //its safe to extend this struct, up to 512 bytes, default values in config are 0
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 } SecuritySettings;
 
 struct SettingsStruct
@@ -436,7 +436,9 @@ struct SettingsStruct
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
-  //its safe to extend this struct, up to 65535 bytes, default values in config are 0
+  //its safe to extend this struct, up to several bytes, default values in config are 0
+  //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
+  //TODO: document config.dat somewhere here
 } Settings;
 
 struct ControllerSettingsStruct
@@ -738,7 +740,11 @@ void setup()
   }
 
   if (Settings.UseSerial)
+  {
+    //make sure previous serial buffers are flushed before resetting baudrate
+    Serial.flush();
     Serial.begin(Settings.BaudRate);
+  }
 
   if (Settings.Build != BUILD)
     BuildFixes();
