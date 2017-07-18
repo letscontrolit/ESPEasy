@@ -106,6 +106,10 @@ private:
 
 #endif
 
+#ifndef CONFIG
+#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
+#endif
+
 LM75A* PLUGIN_069_LM75A = NULL;
 
 

@@ -83,6 +83,10 @@ void SHT3X::get()
 	}
 }
 
+#ifndef CONFIG
+#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
+#endif
+
 SHT3X*  Plugin_068_SHT3x = NULL;
 
 
