@@ -2664,21 +2664,25 @@ void handle_i2cscanner() {
         case 0x43:
           reply += F("INA219");
           break;
+        case 0x44:
+        case 0x45:
+          reply += F("SHT30/31/35");
+          break;
         case 0x48:
         case 0x4A:
         case 0x4B:
-          reply += F("PCF8591<BR>ADS1115");
+          reply += F("PCF8591<BR>ADS1115<BR>LM75A");
           break;
         case 0x49:
-          reply += F("PCF8591<BR>ADS1115<BR>TSL2561");
+          reply += F("PCF8591<BR>ADS1115<BR>TSL2561<BR>LM75A");
           break;
         case 0x4C:
         case 0x4E:
         case 0x4F:
-          reply += F("PCF8591");
+          reply += F("PCF8591<BR>LM75A");
           break;
         case 0x4D:
-          reply += F("PCF8591<BR>MCP3221");
+          reply += F("PCF8591<BR>MCP3221<BR>LM75A");
           break;
         case 0x5A:
           reply += F("MLX90614<BR>MPR121");
