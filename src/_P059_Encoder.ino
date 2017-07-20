@@ -70,6 +70,14 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = F("GPIO &larr; A");
+        event->String2 = F("GPIO &larr; B");
+        event->String3 = F("GPIO &#8672; I (optional)");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         // default values

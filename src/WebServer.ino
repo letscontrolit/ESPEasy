@@ -2,6 +2,8 @@
 // Web Interface init
 //********************************************************************************
 
+#define HTML_SYMBOL_WARNING "&#9888;"
+
 static const char pgDefaultCSS[] PROGMEM = {
   //color sheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
@@ -1143,14 +1145,14 @@ void handle_hardware() {
   reply += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
   addFormSubHeader(reply, F("Wifi Status LED"));
 
-  addFormPinSelect(reply, F("Pin LED"), "pled", Settings.Pin_status_led);
+  addFormPinSelect(reply, F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
   addFormCheckBox(reply, F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(reply, F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(reply, F("I2C Interface"));
 
-  addFormPinSelectI2C(reply, F("SDA"), F("psda"), Settings.Pin_i2c_sda);
-  addFormPinSelectI2C(reply, F("SCL"), F("pscl"), Settings.Pin_i2c_scl);
+  addFormPinSelectI2C(reply, F("GPIO &#8703; SDA"), F("psda"), Settings.Pin_i2c_sda);
+  addFormPinSelectI2C(reply, F("GPIO &#8702; SCL"), F("pscl"), Settings.Pin_i2c_scl);
 
   // SPI Init
   addFormSubHeader(reply, F("SPI Interface"));
@@ -1158,7 +1160,7 @@ void handle_hardware() {
   addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
   addFormNote(reply, F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
-  addFormPinSelect(reply, F("SD Card CS Pin"), "sd", Settings.Pin_sd_cs);
+  addFormPinSelect(reply, F("GPIO &rarr; SD Card CS"), "sd", Settings.Pin_sd_cs);
 
   addFormSubHeader(reply, F("GPIO boot states"));
 
@@ -1289,11 +1291,13 @@ void handle_devices() {
   {
     if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber) // change of device, clear all other values
     {
+      TempEvent.TaskIndex = index - 1;
+      PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
+
       taskClear(index - 1, false); // clear settings, but do not save
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
       if (taskdevicenumber != 0) // preload valuenames
       {
-        TempEvent.TaskIndex = index - 1;
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
       }
@@ -1460,7 +1464,7 @@ void handle_devices() {
                 reply += Settings.TaskDeviceID[controllerNr][x];
                 reply += F(")");
                 if (Settings.TaskDeviceID[controllerNr][x] == 0)
-                  reply += F(" &#9888;");
+                  reply += F(" " HTML_SYMBOL_WARNING);
               }
               doBR = true;
             }
@@ -1585,12 +1589,18 @@ void handle_devices() {
           addFormNote(reply, F("Will go into effect on next input change."));
         }
 
+        //get descriptive GPIO-names from plugin
+        TempEvent.String1 = F("1st GPIO");
+        TempEvent.String2 = F("2nd GPIO");
+        TempEvent.String3 = F("3rd GPIO");
+        PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummyString);
+
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
+          addFormPinSelect(reply, TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("2nd GPIO"), F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
+          addFormPinSelect(reply, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("3rd GPIO"), F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
+          addFormPinSelect(reply, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
       }
 
       //add plugins content
@@ -1856,7 +1866,7 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
   String options[18];
-  options[0] = F(" ");
+  options[0] = F("- None -");
   options[1] = F("GPIO-0 (D3)");
   options[2] = F("GPIO-1 (D10)");
   options[3] = F("GPIO-2 (D4)");
@@ -1906,14 +1916,14 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
   String options[14];
-  options[0] = F(" ");
+  options[0] = F("- None -");
   options[1] = F("GPIO-0 (D3)");
   options[2] = F("GPIO-1 (D10)");
   options[3] = F("GPIO-2 (D4)");
   options[4] = F("GPIO-3 (D9)");
   options[5] = F("GPIO-4 (D2)");
   options[6] = F("GPIO-5 (D1)");
-  options[7] = F("GPIO-9 (D11)");
+  options[7] = F("GPIO-9 (D11) " HTML_SYMBOL_WARNING);
   options[8] = F("GPIO-10 (D12)");
   options[9] = F("GPIO-12 (D6)");
   options[10] = F("GPIO-13 (D7)");

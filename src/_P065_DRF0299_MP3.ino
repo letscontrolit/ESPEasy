@@ -74,6 +74,12 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+      case PLUGIN_GET_DEVICEGPIONAMES:
+        {
+          event->String1 = F("GPIO &rarr; RX");
+          break;
+        }
+
     case PLUGIN_WEBFORM_LOAD:
       {
           addFormNumericBox(string, F("Volume"), F("volume"), CONFIG(0), 1, 30);
