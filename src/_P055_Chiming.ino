@@ -119,6 +119,14 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = F("GPIO &rarr; Driver#1");
+        event->String2 = F("GPIO &rarr; Driver#2");
+        event->String3 = F("GPIO &rarr; Driver#4");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         //default values
@@ -127,7 +135,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] <= 0)   //Plugin_055_millisPauseTime
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = 400;
 
-        addFormPinSelect(string, F("4th GPIO"), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
+        addFormPinSelect(string, F("GPIO &rarr; Driver#8"), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
 
 
         addFormSubHeader(string, F("Timing"));

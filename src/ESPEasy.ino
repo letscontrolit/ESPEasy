@@ -181,6 +181,8 @@
 #define PLUGIN_TIMER_IN                    19
 #define PLUGIN_FIFTY_PER_SECOND            20
 #define PLUGIN_REMOTE_CONFIG               21
+#define PLUGIN_GET_DEVICEGPIONAMES         22
+#define PLUGIN_EXIT                        23
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -495,6 +497,7 @@ struct EventStruct
   byte OriginTaskIndex;
   String String1;
   String String2;
+  String String3;
   byte *Data;
 };
 

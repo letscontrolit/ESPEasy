@@ -112,6 +112,13 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = F("GPIO &rarr; SCL");
+        event->String2 = F("GPIO &larr; DOUT");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormSubHeader(string, F("Measurement"));
