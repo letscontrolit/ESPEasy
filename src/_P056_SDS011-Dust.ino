@@ -2,8 +2,8 @@
 //#################################### Plugin 056: Dust Sensor SDS011 / SDS018 ##########################
 //#######################################################################################################
 /*
-  Plugin is based upon SDS011 dust sensor PM2.5 and PM10 lib (https://github.xxx) by xxx
-  This plug in is written by Jochen Krapf (jk@nerd2nerd.org)
+  Plugin is based upon SDS011 dust sensor PM2.5 and PM10 lib
+  This plugin and lib was written by Jochen Krapf (jk@nerd2nerd.org)
 
   This plugin reads the particle concentration from SDS011 Sensor
   DevicePin1 - RX on ESP, TX on SDS
@@ -14,12 +14,10 @@
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
 #define PLUGIN_NAME_056       "Dust Sensor - SDS011/018/198 [TESTING]"
-#define PLUGIN_VALUENAME1_056 "PM2.5"   // Dust <2.5µm in µg/m³
-#define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³   SDS198:<100µm in µg/m³
-//#define PLUGIN_READ_TIMEOUT   3000
+#define PLUGIN_VALUENAME1_056 "PM2.5"   // Dust <2.5µm in µg/m³   SDS198:<100µm in µg/m³
+#define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 
 #include <jkSDS011.h>
-//#include <SensorSerial.h>
 
 
 CjkSDS011 *Plugin_056_SDS = NULL;
@@ -76,10 +74,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         Plugin_056_SDS = new CjkSDS011(Settings.TaskDevicePin1[event->TaskIndex], -1);
         addLog(LOG_LEVEL_INFO, F("SDS  : Init OK "));
 
-        //delay first read, because hardware needs to initialize on cold boot
-        //otherwise we get a weird value or read error
-        //JK timerSensor[event->TaskIndex] = millis() + 15000;
-
         success = true;
         break;
       }
@@ -92,28 +86,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-/*    case PLUGIN_WRITE:
-      {
-        if (!Plugin_056_SDS)
-          break;
-
-        String command = parseString(string, 1);
-
-        if (command == F("sdssleep"))
-        {
-          //JK Plugin_056_SDS->sleep();;
-          addLog(LOG_LEVEL_INFO, F("SDS  : sleep"));
-          success = true;
-        }
-        if (command == F("sdswakeup"))
-        {
-          //JK Plugin_056_SDS->wakeup();;
-          addLog(LOG_LEVEL_INFO, F("SDS  : wake up"));
-          success = true;
-        }
-        break;
-      }
-*/
     case PLUGIN_FIFTY_PER_SECOND:
       {
         if (!Plugin_056_SDS)
@@ -127,7 +99,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           log += Plugin_056_SDS->GetPM2_5();
           log += F(" ");
           log += Plugin_056_SDS->GetPM10_();
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_DEBUG, log);
 
           if (Settings.TaskDeviceTimer[event->TaskIndex] == 0)
           {
@@ -160,4 +132,4 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif   //PLUGIN_BUILD_DEV
+#endif   //PLUGIN_BUILD_TESTING
