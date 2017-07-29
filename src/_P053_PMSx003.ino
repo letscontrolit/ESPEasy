@@ -14,7 +14,7 @@
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
-#define PLUGIN_NAME_053 "Particle Sensor - PMSx003"
+#define PLUGIN_NAME_053 "Dust Sensor - PMSx003"
 #define PLUGIN_VALUENAME1_053 "pm1.0"
 #define PLUGIN_VALUENAME2_053 "pm2.5"
 #define PLUGIN_VALUENAME3_053 "pm10"
@@ -138,6 +138,14 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+
+      case PLUGIN_GET_DEVICEGPIONAMES:
+        {
+          event->String1 = F("GPIO &larr; TX");
+          event->String2 = F("GPIO &rarr; RX");
+          event->String3 = F("GPIO &rarr; Reset");
+          break;
+        }
 
     case PLUGIN_INIT:
       {
