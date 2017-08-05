@@ -103,7 +103,7 @@ void sendWebPage(const String& tmplName, String& pageContent)
   {
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
-
+  checkRAM(F("sendWebPage"));
   processAndSendWebPageTemplate(pageTemplate, pageContent);
 
   pageTemplate = F("");
@@ -182,6 +182,7 @@ void sendWebPageChunkedBegin(String& log)
 
 void sendWebPageChunkedData(String& log, String& data)
 {
+  checkRAM(F("sendWebPageChunkedData"));
   if (data.length() > 0)
   {
     statusLED(true);
@@ -484,6 +485,8 @@ void handle_root() {
     reply += freeMem;
     reply += F(" (");
     reply += lowestRAM;
+    reply += F(" - ");
+    reply += lowestRAMfunction;
     reply += F(")");
 
     char str[20];
@@ -1678,7 +1681,7 @@ void handle_devices() {
   }
 
   addFooter(reply);
-  checkRAM(9);
+  checkRAM(F("handle_devices"));
   String log = F("DEBUG: String size:");
   log += reply.length();
   addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -3556,7 +3559,8 @@ void handle_rules() {
   fileName += F(".txt");
 
   String reply = "";
-  checkRAM(8);
+  checkRAM(F("handle_rules"));
+  
   addHeader(true, reply);
 
   if (WebServer.args() > 0)
@@ -3705,6 +3709,8 @@ void handle_sysinfo() {
   reply += freeMem;
   reply += F(" (");
   reply += lowestRAM;
+  reply += F(" - ");
+  reply += lowestRAMfunction;
   reply += F(")");
 
   if (WiFi.status() == WL_CONNECTED)

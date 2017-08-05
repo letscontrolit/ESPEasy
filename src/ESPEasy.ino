@@ -639,18 +639,7 @@ unsigned long dailyResetCounter = 0;
 String eventBuffer = "";
 
 uint16_t lowestRAM = 0;
-byte lowestRAMid=0;
-/*
-1 savetoflash - obsolete
-2 loadfrom flash - obsolete
-3 zerofillflash - obsolete
-4 rulesprocessing
-5 handle_download
-6 handle_css
-7 handlefileupload
-8 handle_rules
-9 handle_devices
-*/
+String lowestRAMfunction = "";
 
 /*********************************************************************************************\
  * SETUP

@@ -149,7 +149,7 @@ void ExecuteCommand(byte source, const char *Line)
   {
     Serial.print(lowestRAM);
     Serial.print(F(" : "));
-    Serial.println(lowestRAMid);
+    Serial.println(lowestRAMfunction);
     success = true;
   }
 
