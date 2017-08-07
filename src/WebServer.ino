@@ -3282,6 +3282,7 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(".ico")) dataType = F("image/x-icon");
   else if (path.endsWith(".txt")) dataType = F("application/octet-stream");
   else if (path.endsWith(".dat")) dataType = F("application/octet-stream");
+  else if (path.endsWith(".esp")) return handle_custom(path);
 
   String log = F("HTML : Request file ");
   log += path;
@@ -3316,6 +3317,139 @@ bool loadFromFS(boolean spiffs, String path) {
   statusLED(true);
 
   addLog(LOG_LEVEL_DEBUG, log);
+  return true;
+}
+
+
+//********************************************************************************
+// Web Interface custom page handler
+//********************************************************************************
+boolean handle_custom(String path) {
+  path = path.substring(1);
+  String reply = "";
+
+  if (path.startsWith(F("dashboard"))) // for the dashboard page, create a default unit dropdown selector 
+  {
+    reply += F("<script><!--\n"
+             "function dept_onchange(frmselect) {frmselect.submit();}"
+             "\n//--></script>");
+
+    reply += F("<form name='frmselect' method='post'>");
+
+    // handle page redirects to other unit's as requested by the unit dropdown selector
+    byte unit = WebServer.arg(F("unit")).toInt();
+    byte btnunit = WebServer.arg(F("btnunit")).toInt();
+    if(!unit) unit = btnunit; // unit element prevails, if not used then set to btnunit
+    if (unit && unit != Settings.Unit)
+    {
+      char url[20];
+      sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
+      reply = F("<meta http-equiv=\"refresh\" content=\"0; URL=");
+      reply += url; 
+      reply += F("\">");
+      WebServer.send(200, F("text/html"), reply);
+      return true;
+    }
+
+    // create unit selector dropdown
+    addSelector_Head(reply, F("unit"), true);
+    byte choice = Settings.Unit;
+    for (byte x = 0; x < UNIT_MAX; x++)
+    {
+      if (Nodes[x].ip[0] != 0 || x == Settings.Unit)
+      {
+      String name = String(x) + F(" - ");
+      if (x != Settings.Unit)
+        name += Nodes[x].nodeName;
+      else
+        name += Settings.Name;
+
+      addSelector_Item(reply, name, x, choice == x, false, F(""));
+      }
+    } 
+    addSelector_Foot(reply);
+
+    // create <> navigation buttons
+    byte prev=Settings.Unit;
+    byte next=Settings.Unit;
+    for (byte x = Settings.Unit-1; x > 0; x--)
+      if (Nodes[x].ip[0] != 0) {prev = x; break;}
+    for (byte x = Settings.Unit+1; x < UNIT_MAX; x++)
+      if (Nodes[x].ip[0] != 0) {next = x; break;}
+      
+    reply += F("<a class='button link' href=");
+    reply += path;
+    reply += F("?btnunit=");
+    reply += prev;
+    reply += F(">&lt;</a>");
+    reply += F("<a class='button link' href=");
+    reply += path;
+    reply += F("?btnunit=");
+    reply += next;
+    reply += F(">&gt;</a>");
+  }
+
+  // handle commands from a custom page
+  String webrequest = WebServer.arg(F("cmd"));
+  if (webrequest.length() > 0){
+    struct EventStruct TempEvent;
+    parseCommandString(&TempEvent, webrequest);
+    TempEvent.Source = VALUE_SOURCE_HTTP;
+
+    if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
+    else if (remoteConfig(&TempEvent, webrequest));
+    else if (webrequest.startsWith(F("event")))
+      ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+
+    // handle some update processes first, before returning page update...
+    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  }
+
+  // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
+  fs::File dataFile = SPIFFS.open(path.c_str(), "r");
+  if (dataFile)
+  {
+    String page = "";
+    while (dataFile.available())
+      page += ((char)dataFile.read());
+
+    reply += parseTemplate(page,0);
+    dataFile.close();
+  }
+  else // if the requestef file does not exist, create a default action in case the page is named "dashboard*"
+  {
+    if (path.startsWith(F("dashboard")))
+    {
+      // if the custom page does not exist, create a basic task value overview page in case of dashboard request...
+      reply += F("<meta name=\"viewport\" content=\"width=width=device-width, initial-scale=1\"><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
+      reply += F("<table>");
+      for (byte x = 0; x < TASKS_MAX; x++)
+      {
+        if (Settings.TaskDeviceNumber[x] != 0)
+          {
+            LoadTaskSettings(x);
+            byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
+            reply += F("<TR><TD>");
+            reply += ExtraTaskSettings.TaskDeviceName;
+            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+              {
+                if ((Settings.TaskDeviceNumber[x] != 0) && (varNr < Device[DeviceIndex].ValueCount) && ExtraTaskSettings.TaskDeviceValueNames[varNr][0] !=0)
+                {
+                  if (varNr > 0)
+                    reply += F("<TR><TD>");
+                  reply += F("<TD>");
+                  reply += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+                  reply += F("<TD>");
+                  reply += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+                }
+              }
+          }
+      }
+    }
+    else
+      return false; // unknown file that does not exist...
+  }
+  WebServer.send(200, "text/html", reply);
   return true;
 }
 
