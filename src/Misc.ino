@@ -753,8 +753,10 @@ String LoadTaskSettings(byte TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String());
 
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
+  String result = "";
+  result = LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
+  return result;
 }
 
 
