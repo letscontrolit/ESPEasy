@@ -1,17 +1,44 @@
 //********************************************************************************
+// Determine Wifi AP name to set. (also used for mDNS)
+//********************************************************************************
+String WifiGetAPssid()
+{
+  String ssid(Settings.Name);
+  ssid+=F("_");
+  ssid+=Settings.Unit;
+  return (ssid);
+}
+
+//********************************************************************************
+// Determine hostname: basically WifiGetAPssid with spaces changed to -
+//********************************************************************************
+String WifiGetHostname()
+{
+  String hostname(WifiGetAPssid());
+  hostname.replace(F(" "), F("-"));
+  return (hostname);
+}
+
+
+//********************************************************************************
 // Set Wifi AP Mode config
 //********************************************************************************
 void WifiAPconfig()
 {
   // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
-  char ap_ssid[20];
-  ap_ssid[0] = 0;
-  strcpy(ap_ssid, "ESP_");
-  sprintf_P(ap_ssid, PSTR("%s%u"), ap_ssid, Settings.Unit);
   // setup ssid for AP Mode when needed
-  WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey);
+  WiFi.softAP(WifiGetAPssid().c_str(), SecuritySettings.WifiAPKey);
   // We start in STA mode
   WifiAPMode(false);
+
+  String log("WIFI : AP Mode ssid will be ");
+  log=log+WifiGetAPssid();
+
+  log=log+F(" with address ");
+  log=log+apIP.toString();
+  addLog(LOG_LEVEL_INFO, log);
+
+
 }
 
 
@@ -41,9 +68,7 @@ void WifiAPMode(boolean state)
     if (state)
     {
       WiFi.mode(WIFI_AP_STA);
-      String log=F("WIFI : AP Mode enabled, reachable on ");
-      log=log+apIP.toString();
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode enabled"));
     }
   }
 }
@@ -55,14 +80,9 @@ void WifiAPMode(boolean state)
 boolean WifiConnect(byte connectAttempts)
 {
   String log = "";
-
-  //replace spaces in hostname with dashes, and set station hostname (for dhcp)
-  char hostName[sizeof(Settings.Name)];
-  strcpy(hostName,Settings.Name);
-  for(byte x=0; x< sizeof(hostName); x++)
-    if (hostName[x] == ' ')
-      hostName[x] = '-';
-  wifi_station_set_hostname(hostName);
+  char hostname[40];
+  strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  wifi_station_set_hostname(hostname);
 
   //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
@@ -95,6 +115,21 @@ boolean WifiConnect(byte connectAttempts)
       addLog(LOG_LEVEL_INFO, log);
       WiFi.config(ip, gw, subnet);
     }
+
+    #ifdef FEATURE_MDNS
+
+      String log = F("WIFI : ");
+      if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
+
+        log += F("mDNS started, with name: ");
+        log += WifiGetHostname();
+        log += F(".local");
+      }
+      else{
+        log += F("mDNS failed");
+      }
+      addLog(LOG_LEVEL_INFO, log);
+    #endif
 
     return(true);
   }
@@ -155,6 +190,10 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
       char str[20];
       sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
       log += str;
+      log += F(" (");
+      log += WifiGetHostname();
+      log += F(")");
+
       addLog(LOG_LEVEL_INFO, log);
       statusLED(true);
       return(true);

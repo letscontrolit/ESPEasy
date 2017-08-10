@@ -1,4 +1,136 @@
 -----------------------------
+Changes in release v2.0.0-dev11
+-----------------------------
+
+Release date: Mon Jul 17 00:55:29 CEST 2017
+
+Daniel Tedenljung (5):
+      Fixed decimal values (#329)
+      Senseair update (#333)
+      Reading error code in other way (#394)
+      Added relay control from commands (#395)
+      Renamed command to be unique. (#427)
+
+DatuX (4):
+      Update README.md
+      Update README.md
+      Update issue_template.md
+      Update issue_template.md
+
+Edwin Eefting (27):
+      automaticly updated release notes for v2.0.0-dev10
+      cleaned up RTC initialisation. fixed some fuzzy issues after flashing/factory reset. improved flash-counter messages and added powercycle tips
+      started working on regression testing scripts for The Rig
+      large changes to wifi handling. code cleanup, more efficent connecting, only one connect retry in deepsleep. better serial logging for connections and APmode. always enable ap mode when wifi is disconnected
+      prevent recursion when processing background tasks. might help with issue #117
+      added option do deepsleep on connection failures. had to change boot order a bit, so the rebooted/warmboot message is the first one now. (this also makes more sense). issue #206
+      better rtc error logging
+      Fixed crashbug in email notification
+      Fixed variable naming bug in FEATURE_ADC_VCC
+      working on test framework
+      esptesting framework
+      dont want wifi passwords on github
+      dont want wifi passwords on github
+      converted all commands to python
+      backup
+      saved ~800 bytes ram in handle_devices(), issue #352. left old code commented for reference, in case i created bugs. will remove later
+      accidently enabled FEATURE_ARDUINO_OTA
+      fix #372
+      serial now no longer resonds to empty commands
+      add caching headers to static content
+      upgraded IRremoteESP8266 from v1.0.2 to v1.2.0. fixes #188
+      fix HTTP chunked transfer encoding, since WebServer class doesnt support it. this fixes the 2 second delay in some browsers. (we where out of spec.)
+      more details AP mode serial output
+      made mdns a feature. consitent use of hostname for both mdns and dhcp client. hostname now is name_unitnumber, with spaces replaced by -
+      gave some html logging debug-level
+      imlemented setting name, unit and password via serial. implements #317
+      added note to inverse logic to fix #318
+
+Gustavo Spadari (1):
+      Adding comments on RAW code (#386) (#393)
+
+JK (7):
+      First draft
+      Send web page as junked data
+      Accept CR and LF at serial commands
+      First draft
+      Added Plugin for Touch KeyPad Chip TTP229
+      Fine tuning of CSS and menu
+      Reenabled javascript for device-selector
+
+Jochen Krapf (26):
+      Rework of plugin ADC (#319)
+      Added _P054_DMX512 (#322)
+      Added _P055_Chiming (#323)
+      Added _P056_SDS011-Dust (#324)
+      Added Plugin for Quadrature Encoder Interface (Rotary Encoder) (#335)
+      Added Plugin _P061_KeyPad (#340)
+      Added Plugin _P060_MCP3221 (#342)
+      Formula option for  _P013_HCSR04 plugin issue #343 #313 (#344)
+      Fixed issues #308 #305 (#345)
+      Added Plugin _P062_MPR121_KeyPad (#346)
+      Fixed issue #348 (#349)
+      Added plugins for HT16K33 LED matrix driver and key pad scanner (#328)
+      Increase DEVICES_MAX for more testing and dev plugins (#353)
+      Write default CSS to SPIFFS on boot (#357)
+      Fixed DEVICES_MAX for testing and dev (#374)
+      Step back to style-based-css for speed up + pimp menu (#376)
+      Check plugin-array size on init - issue #119 (#389)
+      Added Plugin for MP3 module (#402)
+      Minor corrections and documentation (#404)
+      Added Plugin for Gesture Sensor APDS9960 (#409)
+      Added Plugin for Color Sensor VEML6040 (#412)
+      Added Plugin for HX711 Load Cell - Request #408 (#415)
+      Fixed multiline define bug on CRLF (#416)
+      Added Value Logger on SD Card (#429)
+      Plugin65 MP3 - volume updated in device menu - issue #424 (#438)
+      Plugin HX711 - Added Tare function (#419)
+
+PieVo (1):
+      Update P053 (PMSx003) to support software serial and minor cleanup (#390)
+
+SloMusti (3):
+      fixed deep sleep, such that it can be enabled from Rules (#375)
+      Implemented a better WiFI AP naming strategy. ESP_Easy has replaced the newdevice text as the default name and now the name is used as and AP SSID (#410)
+      added mDNS implementation (#418)
+
+elucas2uy (1):
+      FIX Pass and Index on handle_controllers() (#331)
+
+imthemichi (1):
+      Plugin_008-RFID extended with wiegand 34-bits and key-pad (#387)
+
+krikk (6):
+      reverted change, this fix seems to have exactly opposite outcome than expected... with the fix applied i get errors, without is i get no errors... (#320)
+      changed the ina219 plugin so that is always sends 3 values, voltage, current, power... like a normal plugin should do... (#325)
+      delay option should be displayed even if the SendDataOption is false, because the delay option also controls the refresh rate of the oled display... fixes issue #336 (#339)
+      seconds were displayed without leading zero issue #337 (#338)
+      added local ip to sysinfo plugin, due to limitation of return type float, i had to split up the ip in its octets... fixes issue #228 (#341)
+      implemented a measurement type selection to retain backward compability to Domoticz... hope this works... (#351)
+
+mvdbro (8):
+      Fix Domoticz helper plugin  #330
+      Enlarge MQTT buffer for Domoticz MQTT controller
+      MQTT Controller enable/disable fix (#287)
+      Fix incorrect ADC GPIO display
+      Fix default controller settings (#360)
+      Added pin state buffer table page (mainly for debugging)
+      Update checkRAM function
+      Revert to default ESP Easy colorscheme
+
+papperone (5):
+      Fixed Broken P038
+      p038
+      reverted some changes due to bug fixed in the "webserver.ino #348"
+      P038 - optimization
+      P010 plugin optimization (#403)
+
+tedenda (2):
+      Renamed Prefix from P011 to C011
+      Missed one...
+
+
+-----------------------------
 Changes in release v2.0.0-dev10
 -----------------------------
 

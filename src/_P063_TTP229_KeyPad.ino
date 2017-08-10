@@ -103,6 +103,13 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = F("GPIO &rarr; SCL");
+        event->String2 = F("GPIO &#8644; SDO");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormCheckBox(string, F("ScanCode"), F("scancode"), CONFIG(1));

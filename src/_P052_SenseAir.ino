@@ -16,11 +16,10 @@
     GPIO Setting 2 -> TX
     Use 1kOhm in serie on datapins!
 */
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_052
 #define PLUGIN_ID_052         52
-#define PLUGIN_NAME_052       "Senseair"
+#define PLUGIN_NAME_052       "Gases - CO2 Senseair"
 #define PLUGIN_VALUENAME1_052 ""
 
 boolean Plugin_052_init = false;
@@ -71,7 +70,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
       			String param1 = parseString(tmpString, 2);
 
 
-            if (cmd.equalsIgnoreCase(F("relaystatus")))
+            if (cmd.equalsIgnoreCase(F("senseair_setrelay")))
             {
               if (param1.toInt() == 0 || param1.toInt() == 1 || param1.toInt() == -1) {
                 Plugin_052_setRelayStatus(param1.toInt());
@@ -349,4 +348,3 @@ int getBitOfInt(int reg, int pos)
 
   return result;
 }
-#endif

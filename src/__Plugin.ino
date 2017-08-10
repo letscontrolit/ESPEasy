@@ -5,6 +5,8 @@
 
 static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
 
+// Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
+/*
 #define ADDPLUGIN(NNN) \
   if (x < PLUGIN_MAX) \
   { \
@@ -13,6 +15,8 @@ static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
   } \
   else \
     addLog(LOG_LEVEL_ERROR, FPSTR(ADDPLUGIN_ERROR));
+*/
+#define ADDPLUGIN(NNN) if (x < PLUGIN_MAX) { Plugin_id[x] = PLUGIN_ID_##NNN; Plugin_ptr[x++] = &Plugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDPLUGIN_ERROR));
 
 
 void PluginInit(void)
@@ -1148,13 +1152,16 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
     // Call to specific plugin that is used for current task
     case PLUGIN_INIT:
+    case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_WEBFORM_SAVE:
     case PLUGIN_WEBFORM_SHOW_VALUES:
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_GET_DEVICEVALUENAMES:
+    case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_READ:
-    case PLUGIN_REMOTE_CONFIG:
+    case PLUGIN_SET_CONFIG:
+    case PLUGIN_GET_CONFIG:
       for (x = 0; x < PLUGIN_MAX; x++)
       {
         if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))

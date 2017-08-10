@@ -4,6 +4,7 @@ import time
 import subprocess
 import wificonfig
 import requests
+import serial.tools.miniterm
 
 
 def log(txt):
@@ -85,6 +86,7 @@ class Esp():
 
         subprocess.check_call(self._config['flash_cmd'].format(**self._config), shell=True, cwd='..')
 
+        time.sleep(1)
         #to prevent hangs when ESPEasy tries to reboot via ESP.reboot (due to an ESP/lib bug)
         self.reboot()
 
@@ -92,11 +94,23 @@ class Esp():
     def serial(self):
         """open serial terminal to esp"""
         subprocess.check_call("platformio serialports monitor --baud 115200 --port {port} --echo".format(**self._config), shell=True, cwd='..')
+        # print("JA")
+        # term=serial.tools.miniterm.Miniterm(self._serial)
+        # term.start()
+        # term.join()
+        # print("kk")
 
 
     def erase(self):
         """erase flash via serial"""
         subprocess.check_call("esptool.py --port {port} -b 1500000  erase_flash".format(**self._config), shell=True, cwd='..')
+
+
+    def bfs(self):
+        """build + flashserial + serial, all in one"""
+        self.build()
+        self.flashserial()
+        self.serial()
 
 
     def config_device(self):
