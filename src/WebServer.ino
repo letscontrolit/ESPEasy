@@ -2,13 +2,15 @@
 // Web Interface init
 //********************************************************************************
 
+#define HTML_SYMBOL_WARNING "&#9888;"
+
 static const char pgDefaultCSS[] PROGMEM = {
   //color sheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
-  "h1 {font-size:16pt; color:#D50; margin:8px 0; font-weight:bold;}"
+  "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
   "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
   "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-  "h6 {font-size:10pt; color:#D50;}"
+  "h6 {font-size:10pt; color:#07D;}"
   //buttons
   ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
   ".button.link {}"
@@ -27,14 +29,14 @@ static const char pgDefaultCSS[] PROGMEM = {
   //menu
   ".menubar {position:inherit; top:44px;}"
   ".menu {float:left; height:20px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
-  ".menu.active {color:#000; background-color:#FFF; border-color:#D50 #DDD #FFF;}"
+  ".menu.active {color:#000; background-color:#FFF; border-color:#07D #DDD #FFF;}"
   ".menu:hover {color:#000; background:#DEF;}"
   //symbols for enabled
   ".on {color:green;}"
   ".off {color:red;}"
   //others
   ".div_l {float:left;}"
-  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#FD0; color:#06B;}"
+  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
   ".div_br {clear:both;}"
   //".active {text-decoration:underline;}"
   "\0"
@@ -174,9 +176,9 @@ void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader("Content-Type","text/html",true);
+  // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  WebServer.sendHeader("Connection","close");
+  WebServer.sendHeader("Transfer-Encoding","chunked");
   WebServer.send(200);
 }
 
@@ -189,7 +191,14 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
+    String size;
+    size=String(data.length(), HEX)+"\r\n";
+
+    //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+    WebServer.sendContent(size);
     WebServer.sendContent(data);
+    WebServer.sendContent("\r\n");
+
     data = F("");   //free RAM
   }
 }
@@ -197,9 +206,7 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  WebServer.sendContent("");
-  WebServer.client().flush();
-  WebServer.client().stop();   // Stop is needed because we sent no content length
+  WebServer.sendContent("0\r\n\r\n");
 }
 
 
@@ -264,7 +271,7 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
   sendWebPageChunkedEnd(log);   //close chunked send
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
 }
 
 
@@ -500,6 +507,15 @@ void handle_root() {
       reply += WiFi.RSSI();
       reply += F(" dB");
     }
+
+    #ifdef FEATURE_MDNS
+      reply += F("<TR><TD>mDNS:<TD><a href='http://");
+      reply += WifiGetHostname();
+      reply += F(".local'>");
+      reply += WifiGetHostname();
+      reply += F(".local</a><TD><TD><TD>");
+    #endif
+
 
     reply += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age<TR><TD><TD>");
     for (byte x = 0; x < UNIT_MAX; x++)
@@ -849,7 +865,7 @@ void handle_controllers() {
 
       if (ControllerSettings.UseDNS)
       {
-        addFormTextBox(reply, F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, 64);
+        addFormTextBox(reply, F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
       }
       else
       {
@@ -861,22 +877,22 @@ void handle_controllers() {
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
       if (Protocol[ProtocolIndex].usesAccount)
       {
-        addFormTextBox(reply, F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[index - 1], 26);
+        addFormTextBox(reply, F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[index - 1], sizeof(SecuritySettings.ControllerUser[0])-1);
       }
 
       if (Protocol[ProtocolIndex].usesPassword)
       {
-        addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], 64);
+        addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], sizeof(SecuritySettings.ControllerPassword[0])-1);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addFormTextBox(reply, F("Controller Subscribe"), F("controllersubscribe"), ControllerSettings.Subscribe, 64);
+        addFormTextBox(reply, F("Controller Subscribe"), F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addFormTextBox(reply, F("Controller Publish"), F("controllerpublish"), ControllerSettings.Publish, 64);
+        addFormTextBox(reply, F("Controller Publish"), F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
       }
 
       addFormCheckBox(reply, F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[index - 1]);
@@ -1129,21 +1145,22 @@ void handle_hardware() {
   reply += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
   addFormSubHeader(reply, F("Wifi Status LED"));
 
-  addFormPinSelect(reply, F("Pin LED"), "pled", Settings.Pin_status_led);
+  addFormPinSelect(reply, F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
   addFormCheckBox(reply, F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(reply, F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(reply, F("I2C Interface"));
 
-  addFormPinSelectI2C(reply, F("SDA"), F("psda"), Settings.Pin_i2c_sda);
-  addFormPinSelectI2C(reply, F("SCL"), F("pscl"), Settings.Pin_i2c_scl);
+  addFormPinSelectI2C(reply, F("GPIO &#8703; SDA"), F("psda"), Settings.Pin_i2c_sda);
+  addFormPinSelectI2C(reply, F("GPIO &#8702; SCL"), F("pscl"), Settings.Pin_i2c_scl);
 
   // SPI Init
   addFormSubHeader(reply, F("SPI Interface"));
 
   addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
+  addFormNote(reply, F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
-  addFormPinSelect(reply, F("SD Card CS Pin"), "sd", Settings.Pin_sd_cs);
+  addFormPinSelect(reply, F("GPIO &rarr; SD Card CS"), "sd", Settings.Pin_sd_cs);
 
   addFormSubHeader(reply, F("GPIO boot states"));
 
@@ -1274,11 +1291,13 @@ void handle_devices() {
   {
     if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber) // change of device, clear all other values
     {
+      TempEvent.TaskIndex = index - 1;
+      PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
+
       taskClear(index - 1, false); // clear settings, but do not save
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
       if (taskdevicenumber != 0) // preload valuenames
       {
-        TempEvent.TaskIndex = index - 1;
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
       }
@@ -1445,7 +1464,7 @@ void handle_devices() {
                 reply += Settings.TaskDeviceID[controllerNr][x];
                 reply += F(")");
                 if (Settings.TaskDeviceID[controllerNr][x] == 0)
-                  reply += F(" &#9888;");
+                  reply += F(" " HTML_SYMBOL_WARNING);
               }
               doBR = true;
             }
@@ -1565,14 +1584,23 @@ void handle_devices() {
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
+        {
           addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
+          addFormNote(reply, F("Will go into effect on next input change."));
+        }
+
+        //get descriptive GPIO-names from plugin
+        TempEvent.String1 = F("1st GPIO");
+        TempEvent.String2 = F("2nd GPIO");
+        TempEvent.String3 = F("3rd GPIO");
+        PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummyString);
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("1st GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
+          addFormPinSelect(reply, TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("2nd GPIO"), F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
+          addFormPinSelect(reply, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, F("3rd GPIO"), F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
+          addFormPinSelect(reply, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
       }
 
       //add plugins content
@@ -1838,7 +1866,7 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
   String options[18];
-  options[0] = F(" ");
+  options[0] = F("- None -");
   options[1] = F("GPIO-0 (D3)");
   options[2] = F("GPIO-1 (D10)");
   options[3] = F("GPIO-2 (D4)");
@@ -1888,14 +1916,14 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 {
   String options[14];
-  options[0] = F(" ");
+  options[0] = F("- None -");
   options[1] = F("GPIO-0 (D3)");
   options[2] = F("GPIO-1 (D10)");
   options[3] = F("GPIO-2 (D4)");
   options[4] = F("GPIO-3 (D9)");
   options[5] = F("GPIO-4 (D2)");
   options[6] = F("GPIO-5 (D1)");
-  options[7] = F("GPIO-9 (D11)");
+  options[7] = F("GPIO-9 (D11) " HTML_SYMBOL_WARNING);
   options[8] = F("GPIO-10 (D12)");
   options[9] = F("GPIO-12 (D6)");
   options[10] = F("GPIO-13 (D7)");
@@ -2632,7 +2660,7 @@ void handle_i2cscanner() {
           reply += F("PCF8574A");
           break;
         case 0x39:
-          reply += F("PCF8574A<BR>TSL2561");
+          reply += F("PCF8574A<BR>TSL2561<BR>APDS9960");
           break;
         case 0x3C:
         case 0x3D:
@@ -2646,21 +2674,25 @@ void handle_i2cscanner() {
         case 0x43:
           reply += F("INA219");
           break;
+        case 0x44:
+        case 0x45:
+          reply += F("SHT30/31/35");
+          break;
         case 0x48:
         case 0x4A:
         case 0x4B:
-          reply += F("PCF8591<BR>ADS1115");
+          reply += F("PCF8591<BR>ADS1115<BR>LM75A");
           break;
         case 0x49:
-          reply += F("PCF8591<BR>ADS1115<BR>TSL2561");
+          reply += F("PCF8591<BR>ADS1115<BR>TSL2561<BR>LM75A");
           break;
         case 0x4C:
         case 0x4E:
         case 0x4F:
-          reply += F("PCF8591");
+          reply += F("PCF8591<BR>LM75A");
           break;
         case 0x4D:
-          reply += F("PCF8591<BR>MCP3221");
+          reply += F("PCF8591<BR>MCP3221<BR>LM75A");
           break;
         case 0x5A:
           reply += F("MLX90614<BR>MPR121");
@@ -2961,6 +2993,7 @@ void handle_advanced() {
     Settings.SerialLogLevel = serialloglevel.toInt();
     Settings.WebLogLevel = webloglevel.toInt();
     Settings.SDLogLevel = sdloglevel.toInt();
+    Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate = baudrate.toInt();
     Settings.UseNTP = (usentp == "on");
     Settings.DST = (dst == "on");
@@ -3008,6 +3041,8 @@ void handle_advanced() {
   addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel, 0, 4);
   addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel, 0, 4);
   addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel, 0, 4);
+
+  addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 
 
   addFormSubHeader(reply, F("Serial Settings"));
@@ -3076,7 +3111,7 @@ void handle_download()
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
-  fs::File dataFile = SPIFFS.open("config.dat", "r");
+  fs::File dataFile = SPIFFS.open(F("config.dat"), "r");
   if (!dataFile)
     return;
 
@@ -3202,7 +3237,7 @@ void handleFileUpload() {
         // once we're safe, remove file and create empty one...
         SPIFFS.remove((char *)upload.filename.c_str());
         uploadFile = SPIFFS.open(upload.filename.c_str(), "w");
-        flashCount();
+        // dont count manual uploads: flashCount();
       }
     }
     if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
@@ -3280,7 +3315,7 @@ bool loadFromFS(boolean spiffs, String path) {
   }
   statusLED(true);
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
   return true;
 }
 
@@ -3296,7 +3331,7 @@ void handle_filelist() {
   if (fdelete.length() > 0)
   {
     SPIFFS.remove(fdelete);
-    flashCount();
+    // flashCount();
   }
 
   String reply = "";
@@ -3560,7 +3595,7 @@ void handle_rules() {
 
   String reply = "";
   checkRAM(F("handle_rules"));
-  
+
   addHeader(true, reply);
 
   if (WebServer.args() > 0)
@@ -3573,22 +3608,22 @@ void handle_rules() {
       else
       {
 
-        if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
-        {
-          String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
-          addLog(LOG_LEVEL_ERROR, log);
-          reply += F("<span style=\"color:red\">Error saving to flash!</span>");
-        }
-        else
-        {
+        // if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
+        // {
+        //   String log = F("FS   : Daily flash write rate exceeded! (powercyle to reset this)");
+        //   addLog(LOG_LEVEL_ERROR, log);
+        //   reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+        // }
+        // else
+        // {
           fs::File f = SPIFFS.open(fileName, "w");
           if (f)
           {
             f.print(rules);
             f.close();
-            flashCount();
+            // flashCount();
           }
-        }
+        // }
       }
     }
     else // changed set, check if file exists and create new

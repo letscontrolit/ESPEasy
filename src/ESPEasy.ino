@@ -73,7 +73,7 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
+#define DEFAULT_NAME        "ESP_Easy"         // Enter your device friendly name
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
@@ -114,6 +114,9 @@
 //enable Arduino OTA updating.
 //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
 // #define FEATURE_ARDUINO_OTA
+
+//enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+// #define FEATURE_MDNS
 
 
 //enable reporting status to ESPEasy developers.
@@ -178,6 +181,8 @@
 #define PLUGIN_TIMER_IN                    19
 #define PLUGIN_FIFTY_PER_SECOND            20
 #define PLUGIN_REMOTE_CONFIG               21
+#define PLUGIN_GET_DEVICEGPIONAMES         22
+#define PLUGIN_EXIT                        23
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -281,6 +286,10 @@
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
+#ifdef FEATURE_MDNS
+#include <ESP8266mDNS.h>
+#endif
+
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
@@ -321,7 +330,9 @@ bool ArduinoOTAtriggered=false;
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 DNSServer dnsServer;
-
+#ifdef FEATURE_MDNS
+MDNSResponder mdns;
+#endif
 
 // MQTT client
 WiFiClient mqtt;
@@ -353,7 +364,7 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
-  //its safe to extend this struct, up to 512 bytes, default values in config are 0
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 } SecuritySettings;
 
 struct SettingsStruct
@@ -426,7 +437,10 @@ struct SettingsStruct
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
-  //its safe to extend this struct, up to 65535 bytes, default values in config are 0
+  boolean       UseValueLogger;
+  //its safe to extend this struct, up to several bytes, default values in config are 0
+  //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
+  //TODO: document config.dat somewhere here
 } Settings;
 
 struct ControllerSettingsStruct
@@ -483,6 +497,7 @@ struct EventStruct
   byte OriginTaskIndex;
   String String1;
   String String2;
+  String String3;
   byte *Data;
 };
 
@@ -728,7 +743,11 @@ void setup()
   }
 
   if (Settings.UseSerial)
+  {
+    //make sure previous serial buffers are flushed before resetting baudrate
+    Serial.flush();
     Serial.begin(Settings.BaudRate);
+  }
 
   if (Settings.Build != BUILD)
     BuildFixes();

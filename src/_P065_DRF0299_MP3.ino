@@ -1,9 +1,11 @@
 //#######################################################################################################
-//############################# Plugin 065: P065_WTV020_MP3 ############################################
+//############################# Plugin 065: P065_DFR0299_MP3 ############################################
 //#######################################################################################################
 
-// ESPEasy Plugin to controls a MP3-player-module WTV020-SD-16P with chip DRF0299
+// ESPEasy Plugin to controls a MP3-player-module DFPlayer-Mini SKU:DFR0299
 // written by Jochen Krapf (jk@nerd2nerd.org)
+
+// Important! The module WTV020-SD look similar to the module DFPlayer-Mini but is NOT pin and command compatible!
 
 // Commands:
 // play,<track>        Plays the n-th track 1...3000 on SD-card in root folder. The track number is the physical ordenr - not the order displayed in file explorer!
@@ -12,22 +14,23 @@
 // eq,<type>           Set the equalizer type 0=Normal, 1=Pop, 2=Rock, 3=Jazz, 4=classic, 5=Base
 
 // Circuit wiring
-// 1st-GPIO -> ESP TX to module RX
-// 3.3V to module VCC (can be more than 100mA)
-// GND to module GND
-// Speaker to module SPK_1 and SPK_2 (not to GND!)
-// (optional) module BUSY to LED driver (low active)
+// 1st-GPIO -> ESP TX to module RX [Pin2]
+// 5V to module VCC [Pin1] (can be more than 100mA) Note: Use a capacitor to denoise VCC
+// GND to module GND [Pin7+Pin10]
+// Speaker to module SPK_1 and SPK_2 [Pin6,Pin8] (not to GND!) Note: If speaker has to low impedance, use a resistor (like 33 Ohm) in line to speaker
+// (optional) module BUSY [Pin16] to LED driver (3.3V on idle, 0V on playing)
+// All other pins unconnected
 
-// Note: Use a capacitor to denoise VCC
-// Note: If speaker has to low impedance, use a resistor (like 33 Ohm) in line to speaker
 // Note: Notification sounds with Creative Commons Attribution license: https://notificationsounds.com/
+
+// Datasheet: https://www.dfrobot.com/wiki/index.php/DFPlayer_Mini_SKU:DFR0299
 
 
 #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_065
 #define PLUGIN_ID_065         65
-#define PLUGIN_NAME_065       "Notify - MP3 [TESTING]"
+#define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
 #include <SoftwareSerial.h>
@@ -70,6 +73,12 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         string = F(PLUGIN_NAME_065);
         break;
       }
+
+      case PLUGIN_GET_DEVICEGPIONAMES:
+        {
+          event->String1 = F("GPIO &rarr; RX");
+          break;
+        }
 
     case PLUGIN_WEBFORM_LOAD:
       {
@@ -138,6 +147,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
           int8_t vol = param.toInt();
           if (vol == 0) vol = 30;
+          CONFIG(0) = vol;
           Plugin_065_SetVol(vol);
           log += vol;
 
