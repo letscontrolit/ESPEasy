@@ -76,8 +76,6 @@ boolean remoteConfig(struct EventStruct *event, String& string)
   boolean success = false;
   String command = parseString(string, 1);
 
-  Serial.print("config call:");
-  Serial.println(string);
   if (command == F("config"))
   {
     success = true;
@@ -88,15 +86,12 @@ boolean remoteConfig(struct EventStruct *event, String& string)
 
       String configTaskName = string.substring(configCommandPos1, configCommandPos2 - 1);
       String configCommand = string.substring(configCommandPos2);
-      Serial.println(configTaskName);
-      Serial.println(configCommand);
 
       int8_t index = getTaskIndexByName(configTaskName);
-      Serial.println(index);
       if (index != -1)
       {
         event->TaskIndex = index;
-        success = PluginCall(PLUGIN_REMOTE_CONFIG, event, configCommand);
+        success = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
       }
     }
   }
@@ -758,8 +753,10 @@ String LoadTaskSettings(byte TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String());
 
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
+  String result = "";
+  result = LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
+  return result;
 }
 
 
@@ -1549,10 +1546,12 @@ String parseTemplate(String &tmpString, byte lineSize)
           {
             if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
             {
+              boolean match = false;
               for (byte z = 0; z < VARS_PER_TASK; z++)
                 if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
                 {
                   // here we know the task and value, so find the uservar
+                  match = true;
                   String value = "";
                   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
                   if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
@@ -1569,6 +1568,14 @@ String parseTemplate(String &tmpString, byte lineSize)
                   newString += String(value);
                   break;
                 }
+              if (!match) // try if this is a get config request
+              {
+                struct EventStruct TempEvent;
+                TempEvent.TaskIndex = y;
+                String tmpName = valueName;
+                if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+                  newString += tmpName;
+              }
               break;
             }
           }

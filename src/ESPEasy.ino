@@ -180,9 +180,10 @@
 #define PLUGIN_CLOCK_IN                    18
 #define PLUGIN_TIMER_IN                    19
 #define PLUGIN_FIFTY_PER_SECOND            20
-#define PLUGIN_REMOTE_CONFIG               21
+#define PLUGIN_SET_CONFIG                  21
 #define PLUGIN_GET_DEVICEGPIONAMES         22
 #define PLUGIN_EXIT                        23
+#define PLUGIN_GET_CONFIG                  24
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
