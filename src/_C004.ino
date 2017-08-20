@@ -64,7 +64,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           postDataStr += F("&field");
           postDataStr += event->idx + x;
           postDataStr += "=";
-          postDataStr += toString(UserVar[event->BaseVarIndex + x],ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+          postDataStr += formatUserVar(event, x);
         }
         String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
         if (ControllerSettings.UseDNS)
@@ -94,7 +94,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           //   String line = client.readStringUntil('\n');
           String line;
           safeReadStringUntil(client, line, '\n');
-          
+
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
