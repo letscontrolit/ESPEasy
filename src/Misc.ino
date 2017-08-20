@@ -184,6 +184,16 @@ String toString(float value, byte decimals)
 }
 
 /*********************************************************************************************\
+   Format a value to the set number of decimals
+  \*********************************************************************************************/
+String formatUserVar(struct EventStruct *event, byte rel_index)
+{
+  return toString(
+    UserVar[event->BaseVarIndex + rel_index],
+    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+}
+
+/*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
 String parseString(String& string, byte indexFind)
