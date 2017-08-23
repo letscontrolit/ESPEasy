@@ -6,6 +6,13 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
+#ifndef CONFIG
+#define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
+#endif
+#ifndef PIN
+#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
+#endif
+
 #include <Adafruit_NeoPixel.h>
 
 #define NUMBER_LEDS      60			//number of LED in the strip
@@ -34,9 +41,16 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_070;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].Custom = true;
+        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
+        Device[deviceCount].Ports = 0;
+        Device[deviceCount].PullUpOption = false;
+        Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 3;
+        Device[deviceCount].SendDataOption = false;
         Device[deviceCount].TimerOption = false;
+        Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].Custom = true;
         break;
       }
 
@@ -54,41 +68,44 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+	case PLUGIN_GET_DEVICEGPIONAMES:
+	  {
+		    event->String1 = F("GPIO &rarr; LED");
+        break;
+	  }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        string += F("<TR><TD>LED pin:<TD>");
-        addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+        addFormPinSelect(string, F("GPIO &rarr; LED"), F("pin"), PIN(0));
 
-        sprintf_P(tmpString, PSTR("<TR><TD>LED Offset:<TD><input title=\"Position of the 12 o'clock LED in the strip\" type='text' name='plugin_070_offset' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Clock display enabled:<TD><input title=\"LED activation\" type='text' name='plugin_070_enabled' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>LED brightness:<TD><input title=\"Brightness level of the H/M/S hands (0-255)\" type='text' name='plugin_070_brightness' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Hour mark brightness:<TD><input title=\"Brightness level of the hour marks (0-255)\" type='text' name='plugin_070_marks' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        string += tmpString;
+        addFormSubHeader(string, F("Clock configuration"));
+
+    		addFormNumericBox(string, F("LED Offset"), F("offset"), CONFIG(3), 0, 59);
+    		addFormNote(string, F("Position of the 12 o'clock LED in the strip"));
+    		addFormNumericBox(string, F("Clock display enabled"), F("enabled"), CONFIG(0),0,1);
+    		addFormNote(string, F("LED activation"));
+    		addFormNumericBox(string, F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
+    		addFormNote(string, F("Brightness level of the H/M/S hands (0-255)"));
+    		addFormNumericBox(string, F("Hour mark brightness"), F("marks"), CONFIG(2), 0, 255);
+    		addFormNote(string, F("Brightness level of the hour marks (0-255)"));
+
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_070_enabled"));
-        if (plugin1.toInt() > 1) Settings.TaskDevicePluginConfig[event->TaskIndex][0] = 1;	//ignore values greater than 1
-        else Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_070_brightness"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_070_marks"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("plugin_070_offset"));
-        if (plugin4.toInt() > 59) Settings.TaskDevicePluginConfig[event->TaskIndex][3] = 0;
-        else Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
+        PIN(0) = (int8_t)getFormItemInt(F("pin"));
 
-        Plugin_070_enabled = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_070_brightness = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Plugin_070_marks = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        Plugin_070_offset = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        CONFIG(0) = getFormItemInt(F("enabled"));
+        CONFIG(1) = getFormItemInt(F("brightness"));
+        CONFIG(2) = getFormItemInt(F("marks"));
+        CONFIG(3) = getFormItemInt(F("offset"));
+
+        Plugin_070_enabled = CONFIG(0);
+        Plugin_070_brightness = CONFIG(1);
+        Plugin_070_marks = CONFIG(2);
+        Plugin_070_offset = CONFIG(3);
 
         success = true;
         break;
@@ -101,10 +118,10 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
           Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
           Plugin_070_pixels->begin(); // This initializes the NeoPixel library.
         }
-        Plugin_070_enabled = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_070_brightness = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Plugin_070_marks = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        Plugin_070_offset = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        Plugin_070_enabled = CONFIG(0);
+        Plugin_070_brightness = CONFIG(1);
+        Plugin_070_marks = CONFIG(2);
+        Plugin_070_offset = CONFIG(3);
 
         success = true;
         break;
@@ -119,35 +136,47 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String tmpString  = string;
+        string.toLowerCase();
+        String command = parseString(string, 1);
+        String param1 = parseString(string, 2);
+        String param2 = parseString(string, 3);
+        String param3 = parseString(string, 4);
 
-        if (tmpString.startsWith("Clock,")) {
-          int idx1 = tmpString.indexOf(',');
-          int idx2 = tmpString.indexOf(',', idx1 + 1);
-          int idx3 = tmpString.indexOf(',', idx2 + 1);
-          int idx4 = tmpString.indexOf(',', idx3 + 1);
-          String val_Mode = tmpString.substring(idx1 + 1, idx2);
-          String val_Bright = tmpString.substring(idx2 + 1, idx3);
-          String val_Marks = tmpString.substring(idx3 + 1, idx4);
+        if (command == F("clock")) {
+          if (param1 != "") {
+            int val_Mode = param1.toInt();
+            if (val_Mode > -1 && val_Mode < 2) {
+              Plugin_070_enabled = val_Mode;
+              CONFIG(0) = Plugin_070_enabled;
+            }
+          }
+          if (param2 != "") {
+            int val_Bright = param2.toInt();
+            if (val_Bright > -1 && val_Bright < 256) {
+              Plugin_070_brightness = val_Bright;
+              CONFIG(1) = Plugin_070_brightness;
+            }
+          }
+          if (param3 != "") {
+            int val_Marks = param3.toInt();
+            if (val_Marks > -1 && val_Marks < 256) {
+              Plugin_070_marks = val_Marks;
+              CONFIG(2) = Plugin_070_marks;
+            }
+          }
 
-          if (val_Mode != "") {
-            if (val_Mode.toInt() > -1 && val_Mode.toInt() < 2) {
-              Settings.TaskDevicePluginConfig[event->TaskIndex][0] = val_Mode.toInt();
-              Plugin_070_enabled = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-            }
-          }
-          if (val_Bright != "") {
-            if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
-              Settings.TaskDevicePluginConfig[event->TaskIndex][1] = val_Bright.toInt();
-              Plugin_070_brightness = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-            }
-          }
-          if (val_Marks != "") {
-            if (val_Marks.toInt() > -1 && val_Marks.toInt() < 256) {
-              Settings.TaskDevicePluginConfig[event->TaskIndex][2] = val_Marks.toInt();
-              Plugin_070_marks = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-            }
-          }
+          String log = F("Clock: ");
+          addLog(LOG_LEVEL_INFO,log);
+          log = F("   Enabled = ");
+          log += param1;
+          addLog(LOG_LEVEL_INFO,log);
+          log = F("   Brightness = ");
+          log += param2;
+          addLog(LOG_LEVEL_INFO,log);
+          log = F("   Marks = ");
+          log += param3;
+          addLog(LOG_LEVEL_INFO,log);
+
           success = true;
         }
         break;
@@ -193,7 +222,7 @@ void timeToStrip(int hours, int minutes, int seconds) {
   if (minutes > 59) minutes = minutes - 60;
   seconds = seconds + Plugin_070_offset;	//apply offset to seconds
   if (seconds > 59) seconds = seconds - 60;
-  for (int i = 0; i < NUMBER_LEDS; i = i + 5) {	//set the hour marks as white;
+  for (int i = 0 + (Plugin_070_offset % 5); i < NUMBER_LEDS; i = i + 5) {	//set the hour marks as white;
     if ((i != hours) && (i != minutes) && (i != seconds)) {	//do not draw a mark there is a clock hand in that position
       Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(Plugin_070_marks, Plugin_070_marks, Plugin_070_marks));
     }
