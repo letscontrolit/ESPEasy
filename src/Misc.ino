@@ -1808,7 +1808,7 @@ int Calculate(const char *input, float* result)
 
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-  oc=0;
+  oc=c=0;
   while (strpos < strend)
   {
     // read one token from the input stream
