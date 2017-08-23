@@ -1474,17 +1474,28 @@ String getTimeString(char delimiter)
   return reply;
 }
 
-String getTimeStringShort(char delimiter)
+String getHourString()
 {
   String reply;
   if (hour() < 10)
     reply += F("0");
   reply += String(hour());
-  if (delimiter != '\0')
-    reply += delimiter;
+  return reply;
+}
+String getMinuteString()
+{
+  String reply;
   if (minute() < 10)
     reply += F("0");
   reply += minute();
+  return reply;
+}
+String getSecondString()
+{
+  String reply;
+  if (second() < 10)
+    reply += F("0");
+  reply += second();
   return reply;
 }
 
@@ -1635,7 +1646,9 @@ String parseTemplate(String &tmpString, byte lineSize)
 
   newString.replace(F("%systime%"), getTimeString(':'));
 
-  newString.replace(F("%systimes%"), getTimeStringShort(':'));
+  newString.replace(F("%syshour%"), getHourString());
+  newString.replace(F("%sysmin%"), getMinuteString());
+  newString.replace(F("%syssec%"), getSecondString());
   newString.replace(F("%sysday%"), getDayString());
   newString.replace(F("%sysmonth%"), getMonthString());
   newString.replace(F("%sysyear%"), getYearString());
