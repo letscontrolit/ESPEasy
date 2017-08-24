@@ -9,9 +9,6 @@
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
-#ifndef PIN
-#define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
-#endif
 
 #include <Adafruit_NeoPixel.h>
 
@@ -95,8 +92,6 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PIN(0) = (int8_t)getFormItemInt(F("pin"));
-
         CONFIG(0) = isFormItemChecked(F("enabled"));
         CONFIG(1) = getFormItemInt(F("brightness"));
         CONFIG(2) = getFormItemInt(F("marks"));
