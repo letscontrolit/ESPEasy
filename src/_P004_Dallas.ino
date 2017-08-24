@@ -103,6 +103,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
             Plugin_004_DS_setResolution(addr, getFormItemInt(F("plugin_004_res")));
+            Plugin_004_DS_convertTemp(addr);
 
             success = true;
             break;
@@ -132,7 +133,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
                 float value = 0;
                 String log  = F("DS   : Temperature: ");
-                if (Plugin_004_DS_readTemp(addr, &value))
+
+                if (Plugin_004_DS_readonlyTemp(addr, &value))
                 {
                     UserVar[event->BaseVarIndex] = value;
                     log    += UserVar[event->BaseVarIndex];
@@ -143,6 +145,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                     UserVar[event->BaseVarIndex] = NAN;
                     log += F("Error!");
                 }
+                Plugin_004_DS_convertTemp(addr);
 
                 log += (" (");
                 for (byte x = 0; x < 8; x++)
@@ -184,7 +187,7 @@ byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM)
 /*********************************************************************************************\
 *  Dallas Read temperature
 \*********************************************************************************************/
-boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
+void Plugin_004_DS_convertTemp(uint8_t ROM[8])
 {
     int16_t DSTemp;
     byte ScratchPad[12];
@@ -193,9 +196,13 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
     Plugin_004_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
         Plugin_004_DS_write(ROM[i]);
-    Plugin_004_DS_write(0x44);
+    Plugin_004_DS_write(0x44); // Take temperature mesurement
+}
 
-    delay(800);
+boolean Plugin_004_DS_readonlyTemp(uint8_t ROM[8], float * value)
+{
+    int16_t DSTemp;
+    byte ScratchPad[12];
 
     Plugin_004_DS_reset();
     Plugin_004_DS_write(0x55); // Choose ROM
@@ -203,7 +210,7 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
         Plugin_004_DS_write(ROM[i]);
     Plugin_004_DS_write(0xBE); // Read scratchpad
 
-    for (byte i = 0; i < 9; i++) // copy 8 bytes
+    for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
     if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
@@ -229,7 +236,14 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
     }
 
     return true;
-} // Plugin_004_DS_readTemp
+}
+
+boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
+{
+    Plugin_004_DS_convertTemp(ROM);
+    delay(800); // <- Give at least 750ms to make a 12 bits conversion
+    return Plugin_004_DS_readonlyTemp(ROM, value);
+}
 
 /*********************************************************************************************\
 * Dallas Get Resolution
@@ -250,12 +264,12 @@ int Plugin_004_DS_getResolution(uint8_t ROM[8])
 
     Plugin_004_DS_write(0xBE); // Read scratchpad
 
-    for (byte i = 0; i < 9; i++) // copy 8 bytes
+    for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
     if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
     {
-        return 0;
+        return false;
     }
     else
     {
@@ -295,29 +309,29 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
 
     Plugin_004_DS_write(0xBE); // Read scratchpad
 
-    for (byte i = 0; i < 9; i++) // copy 8 bytes
+    for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
     if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
     {
-        return 0;
+        return false;
     }
     else
     {
         switch (res)
         {
             case 12:
-                ScratchPad[4] = 0x7F; // 12 bit
+                ScratchPad[4] = 0x7F; // 12 bits
                 break;
             case 11:
-                ScratchPad[4] = 0x5F; // 11 bit
+                ScratchPad[4] = 0x5F; // 11 bits
                 break;
             case 10:
-                ScratchPad[4] = 0x3F; // 10 bit
+                ScratchPad[4] = 0x3F; // 10 bits
                 break;
             case 9:
             default:
-                ScratchPad[4] = 0x1F; //  9 bit
+                ScratchPad[4] = 0x1F; //  9 bits
                 break;
         }
 
