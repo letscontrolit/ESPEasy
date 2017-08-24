@@ -17,10 +17,12 @@
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 
-byte Plugin_070_enabled = 1;		//used to enable/disable the display.
-byte Plugin_070_brightness = 64;	//brightness of the clock "hands"
-byte Plugin_070_marks = 4;			//brightness of the hour marks
-byte Plugin_070_offset = 30;		//position of the 12 o'clock LED on the strip
+boolean Plugin_070_enabled;		//used to enable/disable the display.
+byte Plugin_070_brightness;	//brightness of the clock "hands"
+byte Plugin_070_marks;			//brightness of the hour marks
+byte Plugin_070_offset;		//position of the 12 o'clock LED on the strip
+boolean thick_12_mark;
+byte marks[14];
 
 Adafruit_NeoPixel * Plugin_070_pixels;
 
@@ -50,7 +52,6 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = false;
         Device[deviceCount].TimerOption = false;
         Device[deviceCount].GlobalSyncOption = true;
-        Device[deviceCount].Custom = true;
         break;
       }
 
@@ -76,13 +77,12 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormPinSelect(string, F("GPIO &rarr; LED"), F("pin"), PIN(0));
-
         addFormSubHeader(string, F("Clock configuration"));
-
-    		addFormNumericBox(string, F("LED Offset"), F("offset"), CONFIG(3), 0, 59);
+    		addFormNumericBox(string, F("12 o'clock LED position"), F("offset"), CONFIG(3), 0, 59);
     		addFormNote(string, F("Position of the 12 o'clock LED in the strip"));
-    		addFormNumericBox(string, F("Clock display enabled"), F("enabled"), CONFIG(0),0,1);
+        addFormCheckBox(string, F("Thick 12 o'clock mark"), F("thick_12_mark"), CONFIG(4));
+    		addFormNote(string, F("Check to have 3 LEDs marking the 12 o'clock position"));
+    		addFormCheckBox(string, F("Clock display enabled"), F("enabled"), CONFIG(0));
     		addFormNote(string, F("LED activation"));
     		addFormNumericBox(string, F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
     		addFormNote(string, F("Brightness level of the H/M/S hands (0-255)"));
@@ -97,15 +97,19 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
       {
         PIN(0) = (int8_t)getFormItemInt(F("pin"));
 
-        CONFIG(0) = getFormItemInt(F("enabled"));
+        CONFIG(0) = isFormItemChecked(F("enabled"));
         CONFIG(1) = getFormItemInt(F("brightness"));
         CONFIG(2) = getFormItemInt(F("marks"));
         CONFIG(3) = getFormItemInt(F("offset"));
+        CONFIG(4) = isFormItemChecked(F("thick_12_mark"));
 
         Plugin_070_enabled = CONFIG(0);
         Plugin_070_brightness = CONFIG(1);
         Plugin_070_marks = CONFIG(2);
         Plugin_070_offset = CONFIG(3);
+        thick_12_mark = CONFIG(4);
+
+        calculateMarks();
 
         success = true;
         break;
@@ -122,6 +126,9 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         Plugin_070_brightness = CONFIG(1);
         Plugin_070_marks = CONFIG(2);
         Plugin_070_offset = CONFIG(3);
+        thick_12_mark = CONFIG(4);
+
+        calculateMarks();
 
         success = true;
         break;
@@ -164,7 +171,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
               CONFIG(2) = Plugin_070_marks;
             }
           }
-
+/*        //Command debuging routine
           String log = F("Clock: ");
           addLog(LOG_LEVEL_INFO,log);
           log = F("   Enabled = ");
@@ -176,7 +183,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
           log = F("   Marks = ");
           log += param3;
           addLog(LOG_LEVEL_INFO,log);
-
+*/
           success = true;
         }
         break;
@@ -207,6 +214,30 @@ void Clock_update()
   Plugin_070_pixels->show(); // This sends the updated pixel color to the hardware.
 }
 
+void calculateMarks()
+{ //generate a list of the LEDs that have hour marks
+  for (int i = 0; i < 12; i++) {
+    marks[i] = 5 * i + (Plugin_070_offset % 5);
+  }
+  if (thick_12_mark) {
+    if (Plugin_070_offset == 0) {
+      marks[12] = 1;
+      marks[13] = 59;
+    }
+    else if (Plugin_070_offset == 59) {
+      marks[12] = 0;
+      marks[13] = 58;
+    }
+    else {
+      marks[12] = Plugin_070_offset + 1;
+      marks[13] = Plugin_070_offset - 1;
+    }
+  }
+  else {
+    marks[12] = 255;
+    marks[13] = 255;
+  }
+}
 
 void clearClock() {
   for (int i = 0; i < NUMBER_LEDS; i++) {
@@ -222,9 +253,9 @@ void timeToStrip(int hours, int minutes, int seconds) {
   if (minutes > 59) minutes = minutes - 60;
   seconds = seconds + Plugin_070_offset;	//apply offset to seconds
   if (seconds > 59) seconds = seconds - 60;
-  for (int i = 0 + (Plugin_070_offset % 5); i < NUMBER_LEDS; i = i + 5) {	//set the hour marks as white;
-    if ((i != hours) && (i != minutes) && (i != seconds)) {	//do not draw a mark there is a clock hand in that position
-      Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(Plugin_070_marks, Plugin_070_marks, Plugin_070_marks));
+  for (int i = 0 ; i < 14; i ++) {	//set the hour marks as white;
+    if ((marks[i] != hours) && (marks[i] != minutes) && (marks[i] != seconds) && (marks[i] != 255)) {	//do not draw a mark there is a clock hand in that position
+      Plugin_070_pixels->setPixelColor(marks[i], Plugin_070_pixels->Color(Plugin_070_marks, Plugin_070_marks, Plugin_070_marks));
     }
   }
   uint32_t currentColor;
