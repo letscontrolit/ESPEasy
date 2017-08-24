@@ -269,7 +269,7 @@ int Plugin_004_DS_getResolution(uint8_t ROM[8])
 
     if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
     {
-        return false;
+        return 0;
     }
     else
     {
