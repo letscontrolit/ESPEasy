@@ -3924,6 +3924,9 @@ void handle_sysinfo() {
   reply += F("[Development] ");
 #endif
 
+  reply += F("<TR><TD>Number of Plugins:<TD>");
+  reply += deviceCount + 1;
+
   reply += F("<TR><TD>Core Version:<TD>");
   reply += ESP.getCoreVersion();
 
@@ -3941,9 +3944,6 @@ void handle_sysinfo() {
   reply += F(" kB / ");
   reply += ESP.getFreeSketchSpace() / 1024;
   reply += F(" kB");
-
-  reply += F("<TR><TD>Devices:<TD>");
-  reply += deviceCount + 1;
 
   reply += F("<TR><TD>Boot cause:<TD>");
   switch (lastBootCause)
