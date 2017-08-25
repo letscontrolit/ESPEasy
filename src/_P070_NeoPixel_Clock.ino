@@ -29,7 +29,7 @@ Adafruit_NeoPixel * Plugin_070_pixels;
 
 #define PLUGIN_070
 #define PLUGIN_ID_070         70
-#define PLUGIN_NAME_070       "NeoPixel - Ring Clock [TESTING]"
+#define PLUGIN_NAME_070       "Output - NeoPixel Ring Clock [TESTING]"
 #define PLUGIN_VALUENAME1_070 "Enabled"
 #define PLUGIN_VALUENAME2_070 "Brightness"
 #define PLUGIN_VALUENAME3_070 "Marks"
@@ -79,16 +79,16 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormSubHeader(string, F("Clock configuration"));
-    		addFormNumericBox(string, F("12 o'clock LED position"), F("offset"), CONFIG(3), 0, 59);
-    		addFormNote(string, F("Position of the 12 o'clock LED in the strip"));
+    	addFormNumericBox(string, F("12 o'clock LED position"), F("offset"), CONFIG(3), 0, 59);
+    	addFormNote(string, F("Position of the 12 o'clock LED in the strip"));
         addFormCheckBox(string, F("Thick 12 o'clock mark"), F("thick_12_mark"), CONFIG(4));
-    		addFormNote(string, F("Check to have 3 LEDs marking the 12 o'clock position"));
-    		addFormCheckBox(string, F("Clock display enabled"), F("enabled"), CONFIG(0));
-    		addFormNote(string, F("LED activation"));
-    		addFormNumericBox(string, F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
-    		addFormNote(string, F("Brightness level of the H/M/S hands (0-255)"));
-    		addFormNumericBox(string, F("Hour mark brightness"), F("marks"), CONFIG(2), 0, 255);
-    		addFormNote(string, F("Brightness level of the hour marks (0-255)"));
+    	addFormNote(string, F("Check to have 3 LEDs marking the 12 o'clock position"));
+    	addFormCheckBox(string, F("Clock display enabled"), F("enabled"), CONFIG(0));
+    	addFormNote(string, F("LED activation"));
+    	addFormNumericBox(string, F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
+    	addFormNote(string, F("Brightness level of the H/M/S hands (0-255)"));
+    	addFormNumericBox(string, F("Hour mark brightness"), F("marks"), CONFIG(2), 0, 255);
+    	addFormNote(string, F("Brightness level of the hour marks (0-255)"));
 
         success = true;
         break;
