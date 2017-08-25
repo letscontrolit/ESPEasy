@@ -2,6 +2,8 @@
 //#################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 //#######################################################################################################
 
+//#include <math.h>
+
 #define PLUGIN_028
 #define PLUGIN_ID_028        28
 #define PLUGIN_NAME_028       "Environment - BMx280"
@@ -13,48 +15,48 @@
 #define PLUGIN_028_BMP280_DEVICE "BMP280"
 
 
-enum
-{
-  BMx280_REGISTER_DIG_T1              = 0x88,
-  BMx280_REGISTER_DIG_T2              = 0x8A,
-  BMx280_REGISTER_DIG_T3              = 0x8C,
+#define BMx280_REGISTER_DIG_T1           0x88
+#define BMx280_REGISTER_DIG_T2           0x8A
+#define BMx280_REGISTER_DIG_T3           0x8C
 
-  BMx280_REGISTER_DIG_P1              = 0x8E,
-  BMx280_REGISTER_DIG_P2              = 0x90,
-  BMx280_REGISTER_DIG_P3              = 0x92,
-  BMx280_REGISTER_DIG_P4              = 0x94,
-  BMx280_REGISTER_DIG_P5              = 0x96,
-  BMx280_REGISTER_DIG_P6              = 0x98,
-  BMx280_REGISTER_DIG_P7              = 0x9A,
-  BMx280_REGISTER_DIG_P8              = 0x9C,
-  BMx280_REGISTER_DIG_P9              = 0x9E,
+#define BMx280_REGISTER_DIG_P1           0x8E
+#define BMx280_REGISTER_DIG_P2           0x90
+#define BMx280_REGISTER_DIG_P3           0x92
+#define BMx280_REGISTER_DIG_P4           0x94
+#define BMx280_REGISTER_DIG_P5           0x96
+#define BMx280_REGISTER_DIG_P6           0x98
+#define BMx280_REGISTER_DIG_P7           0x9A
+#define BMx280_REGISTER_DIG_P8           0x9C
+#define BMx280_REGISTER_DIG_P9           0x9E
 
-  BMx280_REGISTER_DIG_H1              = 0xA1,
-  BMx280_REGISTER_DIG_H2              = 0xE1,
-  BMx280_REGISTER_DIG_H3              = 0xE3,
-  BMx280_REGISTER_DIG_H4              = 0xE4,
-  BMx280_REGISTER_DIG_H5              = 0xE5,
-  BMx280_REGISTER_DIG_H6              = 0xE7,
+#define BMx280_REGISTER_DIG_H1           0xA1
+#define BMx280_REGISTER_DIG_H2           0xE1
+#define BMx280_REGISTER_DIG_H3           0xE3
+#define BMx280_REGISTER_DIG_H4           0xE4
+#define BMx280_REGISTER_DIG_H5           0xE5
+#define BMx280_REGISTER_DIG_H6           0xE7
 
-  BMx280_REGISTER_CHIPID             = 0xD0,
-  BMx280_REGISTER_VERSION            = 0xD1,
-  BMx280_REGISTER_SOFTRESET          = 0xE0,
+#define BMx280_REGISTER_CHIPID           0xD0
+#define BMx280_REGISTER_VERSION          0xD1
+#define BMx280_REGISTER_SOFTRESET        0xE0
 
-  BMx280_REGISTER_CAL26              = 0xE1,  // R calibration stored in 0xE1-0xF0
+#define BMx280_REGISTER_CAL26            0xE1  // R calibration stored in 0xE1-0xF0
 
-  BMx280_REGISTER_CONTROLHUMID       = 0xF2,
-  BMx280_REGISTER_STATUS             = 0xF3,
-  BMx280_REGISTER_CONTROL            = 0xF4,
-  BMx280_REGISTER_CONFIG             = 0xF5,
-  BMx280_REGISTER_PRESSUREDATA       = 0xF7,
-  BMx280_REGISTER_TEMPDATA           = 0xFA,
-  BMx280_REGISTER_HUMIDDATA          = 0xFD,
+#define BMx280_REGISTER_CONTROLHUMID     0xF2
+#define BMx280_REGISTER_STATUS           0xF3
+#define BMx280_REGISTER_CONTROL          0xF4
+#define BMx280_REGISTER_CONFIG           0xF5
+#define BMx280_REGISTER_PRESSUREDATA     0xF7
+#define BMx280_REGISTER_TEMPDATA         0xFA
+#define BMx280_REGISTER_HUMIDDATA        0xFD
 
-  BME280_CONTROL_SETTING_HUMIDITY    = 0x01, // Oversampling: 1x H
-};
+#define BME280_CONTROL_SETTING_HUMIDITY  0x02 // Oversampling: 2x H
+
 
 enum BMx_ChipId {
   Unknown_DEVICE = 0,
+  BMP280_DEVICE_SAMPLE1 = 0x56,
+  BMP280_DEVICE_SAMPLE2 = 0x57,
   BMP280_DEVICE = 0x58,
   BME280_DEVICE = 0x60
 };
@@ -63,32 +65,40 @@ BMx_ChipId _sensorID = Unknown_DEVICE;
 
 byte Plugin_028_get_config_settings()  {
   switch (_sensorID) {
-    case BME280_DEVICE:  return 0xA0; // Tstandby 1000ms, filter off, 3-wire SPI Disable
-    case BMP280_DEVICE:  return 0xE0; // Tstandby 1000ms, filter 16, 3-wire SPI Disable
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
+    case BME280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
   }
   return 0;
 }
 
 byte Plugin_028_get_control_settings()  {
   switch (_sensorID) {
-    case BME280_DEVICE:  return 0x25; // Oversampling: 1x P, 1x T, forced
-    case BMP280_DEVICE:  return 0x57; // Oversampling: 16x P, 2x T, normal mode
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
+    case BME280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
   }
   return 0;
 }
 
 String Plugin_028_getDeviceName()  {
   switch (_sensorID) {
-    case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
     case BMP280_DEVICE:  return PLUGIN_028_BMP280_DEVICE;
+    case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
   }
   return F("Unknown");
 }
 
 boolean Plugin_028_hasHumidity()  {
   switch (_sensorID) {
-    case BME280_DEVICE:  return true;
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
     case BMP280_DEVICE:  return false;
+    case BME280_DEVICE:  return true;
   }
   return false;
 }
@@ -120,6 +130,13 @@ typedef struct
 bme280_calib_data _bme280_calib[2];
 uint8_t _i2caddr;
 int32_t t_fine;
+
+static float last_hum_val = 0.0;
+static float last_press_val = 0.0;
+static float last_temp_val = 0.0;
+static float last_dew_temp_val = 0.0;
+static unsigned long last_measurement = 0;
+unsigned long measurement_interval = 50000; // Minimal interval in msec.
 
 uint8_t Plugin_028_read8(byte reg, bool * is_ok = NULL); // Declaration
 
@@ -176,6 +193,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(string, F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         addUnit(string, F("m"));
 
+        addFormNumericBox(string, F("Temperature offset"), F("plugin_028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addUnit(string, F("x 0.1C"));
+        addFormNote(string, F("Offset in units of 0.1 degree Celcius"));
+
         success = true;
         break;
       }
@@ -184,61 +205,135 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_028_bme280_i2c"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_028_bme280_elev"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_028_bme280_tempoffset"));
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
-        Plugin_028_init[idx] &= Plugin_028_check(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // Check id device is present
-        Plugin_028_init[idx] &=  (Plugin_028_read8(BMx280_REGISTER_CONTROL) == Plugin_028_get_control_settings()); // Check if the coefficients are still valid
-
-        if (!Plugin_028_init[idx])
-        {
-          Plugin_028_init[idx] = Plugin_028_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-          delay(65); //May be needed here as well to fix first wrong measurement?
+        const uint8_t deviceAddress = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        const float tempOffset = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 10.0;
+        if (!Plugin_028_update_measurements(deviceAddress, tempOffset)) {
+          success = false;
+          break;
         }
-
-        if (Plugin_028_init[idx])
-        {
-          UserVar[event->BaseVarIndex] = Plugin_028_readTemperature(idx);
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_028_readHumidity(idx));
-          int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-          if (elev)
-          {
-             UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation((float)Plugin_028_readPressure(idx) / 100, elev);
-          } else {
-             UserVar[event->BaseVarIndex + 2] = ((float)Plugin_028_readPressure(idx)) / 100;
-          }
-          String log;
-          log.reserve(40); // Prevent re-allication
-          log = Plugin_028_getDeviceName();
-          log += F(" : Address: 0x");
-          log += String(_i2caddr,HEX);
-          addLog(LOG_LEVEL_INFO, log);
-          log = Plugin_028_getDeviceName();
-          log += F(" : Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
-          if (Plugin_028_hasHumidity()) {
-            log = Plugin_028_getDeviceName();
-            log += F(" : Humidity: ");
-            log += UserVar[event->BaseVarIndex + 1];
-            addLog(LOG_LEVEL_INFO, log);
-          }
-          log = Plugin_028_getDeviceName();
-          log += F(" : Barometric Pressure: ");
-          log += UserVar[event->BaseVarIndex + 2];
-          addLog(LOG_LEVEL_INFO, log);
-          success = true;
+        UserVar[event->BaseVarIndex] = last_temp_val;
+        UserVar[event->BaseVarIndex + 1] = last_hum_val;
+        const int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        if (elev) {
+           UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation(last_press_val, elev);
+        } else {
+           UserVar[event->BaseVarIndex + 2] = last_press_val;
         }
+        String log;
+        log.reserve(40); // Prevent re-allocation
+        log = Plugin_028_getDeviceName();
+        log += F(" : Address: 0x");
+        log += String(_i2caddr,HEX);
+        addLog(LOG_LEVEL_INFO, log);
+        log = Plugin_028_getDeviceName();
+        log += F(" : Temperature: ");
+        log += UserVar[event->BaseVarIndex];
+        addLog(LOG_LEVEL_INFO, log);
+        if (Plugin_028_hasHumidity()) {
+          log = Plugin_028_getDeviceName();
+          log += F(" : Humidity: ");
+          log += UserVar[event->BaseVarIndex + 1];
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        log = Plugin_028_getDeviceName();
+        log += F(" : Barometric Pressure: ");
+        log += UserVar[event->BaseVarIndex + 2];
+        addLog(LOG_LEVEL_INFO, log);
+        success = true;
         break;
       }
 
   }
   return success;
 }
+
+// Only perform the measurements with big interval to prevent the sensor from warming up.
+bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
+  const unsigned long current_time = millis();
+  if ((last_measurement > measurement_interval) &&
+      (current_time < (last_measurement + measurement_interval))) {
+    // Timeout has not yet been reached.
+    return false;
+  }
+  uint8_t idx = deviceAddress & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
+  Plugin_028_init[idx] &= Plugin_028_check(deviceAddress); // Check id device is present
+  if (!Plugin_028_init[idx]) {
+    Plugin_028_init[idx] = Plugin_028_begin(deviceAddress);
+  }
+
+  if (Plugin_028_init[idx]) {
+    last_measurement = current_time;
+    // Set the Sensor in sleep to be make sure that the following configs will be stored
+    Plugin_028_write8(BMx280_REGISTER_CONTROL, 0x00);
+    if (Plugin_028_hasHumidity()) {
+      Plugin_028_write8(BMx280_REGISTER_CONTROLHUMID, BME280_CONTROL_SETTING_HUMIDITY);
+    }
+    Plugin_028_write8(BMx280_REGISTER_CONFIG, Plugin_028_get_config_settings());
+    Plugin_028_write8(BMx280_REGISTER_CONTROL, Plugin_028_get_control_settings());
+
+    // Start measurement
+    delay(1000); // Wait one second to make sure the filtered values stabilize.
+
+    last_temp_val = Plugin_028_readTemperature(idx);
+    last_press_val = ((float)Plugin_028_readPressure(idx)) / 100;
+    last_hum_val = ((float)Plugin_028_readHumidity(idx));
+
+    // Set to sleep mode again to prevent the sensor from heating up.
+    Plugin_028_write8(BMx280_REGISTER_CONTROL, 0x00);
+
+    String log;
+    log.reserve(120); // Prevent re-allocation
+    log = Plugin_028_getDeviceName();
+    boolean logAdded = false;
+    if (Plugin_028_hasHumidity()) {
+      // Apply half of the temp offset, to correct the dew point offset.
+      // The sensor is warmer than the surrounding air, which has effect on the perceived humidity.
+      last_dew_temp_val = compute_dew_point_temp(last_temp_val + (tempOffset / 2.0), last_hum_val);
+    } else {
+      // No humidity measurement, thus set dew point equal to air temperature.
+      last_dew_temp_val = last_temp_val;
+    }
+    if (tempOffset > 0.1 || tempOffset < -0.1) {
+      // There is some offset to apply.
+      log += F(" : Apply temp offset ");
+      log += tempOffset;
+      log += F("C");
+      if (Plugin_028_hasHumidity()) {
+        log += F(" humidity ");
+        log += last_hum_val;
+        last_hum_val = compute_humidity_from_dewpoint(last_temp_val + tempOffset, last_dew_temp_val);
+        log += F("% => ");
+        log += last_hum_val;
+        log += F("%");
+      }
+      log += F(" temperature ");
+      log += last_temp_val;
+      last_temp_val = last_temp_val + tempOffset;
+      log += F("C => ");
+      log += last_temp_val;
+      log += F("C");
+      logAdded = true;
+    }
+    if (Plugin_028_hasHumidity()) {
+      log += F(" dew point ");
+      log += last_dew_temp_val;
+      log += F("C");
+      logAdded = true;
+    }
+    if (logAdded)
+      addLog(LOG_LEVEL_INFO, log);
+    return true;
+  }
+  return false;
+}
+
 
 //**************************************************************************/
 // Check BME280 presence
@@ -248,14 +343,21 @@ bool Plugin_028_check(uint8_t a) {
   bool wire_status = false;
   const uint8_t chip_id = Plugin_028_read8(BMx280_REGISTER_CHIPID, &wire_status);
   switch (chip_id) {
-    case BME280_DEVICE:
-    case BMP280_DEVICE: {
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:
+    case BME280_DEVICE: {
       if (wire_status) {
         // Store detected chip ID when chip found.
         if (_sensorID != chip_id) {
           _sensorID = static_cast<BMx_ChipId>(chip_id);
           String log = F("BMx280 : Detected ");
           log += Plugin_028_getDeviceName();
+          if (chip_id == BMP280_DEVICE_SAMPLE1 ||
+              chip_id == BMP280_DEVICE_SAMPLE2)
+          {
+            log += F(" sample");
+          }
           addLog(LOG_LEVEL_INFO, log);
         }
       }
@@ -274,14 +376,7 @@ bool Plugin_028_begin(uint8_t a) {
     return false;
 
   Plugin_028_readCoefficients(_i2caddr & 0x01);
-
-  // Set the Sensor in sleep to be make sure that the following configs will be stored
-  Plugin_028_write8(BMx280_REGISTER_CONTROL, 0x00);
-  Plugin_028_write8(BMx280_REGISTER_CONFIG, Plugin_028_get_config_settings());
-  Plugin_028_write8(BMx280_REGISTER_CONTROL, Plugin_028_get_control_settings());
-  if (Plugin_028_hasHumidity()) {
-    Plugin_028_write8(BMx280_REGISTER_CONTROLHUMID, BME280_CONTROL_SETTING_HUMIDITY);
-  }
+  delay(65); //May be needed here as well to fix first wrong measurement?
   return true;
 }
 
@@ -407,8 +502,6 @@ float Plugin_028_readTemperature(uint8_t idx)
 {
   int32_t var1, var2;
 
-  // set to forced mode, i.e. "take next measurement"
-  Plugin_028_write8(BMx280_REGISTER_CONTROL, Plugin_028_get_control_settings());
   // wait until measurement has been completed, otherwise we would read
   // the values from the last measurement
   while (Plugin_028_read8(BMx280_REGISTER_STATUS) & 0x08)
@@ -467,7 +560,13 @@ float Plugin_028_readHumidity(uint8_t idx) {
     // No support for humidity
     return 0.0;
   }
-
+  // It takes at least 1.587 sec for valit measurements to complete.
+  // The datasheet names this the "T63" moment.
+  // 1 second = 63% of the time needed to perform a measurement.
+  unsigned long difTime = millis() - last_measurement;
+  if (difTime < 1587) {
+    delay(1587 - difTime);
+  }
   int32_t adc_H = Plugin_028_read16(BMx280_REGISTER_HUMIDDATA);
 
   int32_t v_x1_u32r;

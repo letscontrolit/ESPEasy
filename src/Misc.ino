@@ -2847,3 +2847,22 @@ void htmlEscape(String & html)
   html.replace("<",  "&lt;");
   html.replace(">",  "&gt;");
 }
+
+
+
+
+// Compute the dew point temperature, given temperature and humidity (temp in Celcius)
+// Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
+// Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
+float compute_dew_point_temp(float temperature, float humidity_percentage) {
+  return pow(humidity_percentage / 100.0, 0.125) *
+         (112.0 + 0.9*temperature) + 0.1*temperature - 112.0;
+}
+
+// Compute the humidity given temperature and dew point temperature (temp in Celcius)
+// Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_relative_humidity.php
+// f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
+float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
+  return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
+                     (112.0 + 0.9 * temperature), 8);
+}
