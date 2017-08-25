@@ -58,7 +58,20 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        addFormCheckBox(string, F("Ignore Stability value (for MH-Z19B)"), F("plugin_049_ignorestability"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+		success = true;
+        break;
+      }
+	      case PLUGIN_WEBFORM_SAVE:
+      {
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("plugin_049_ignorestability"));
+        success = true;
+        break;
+      }
 
+	  
     case PLUGIN_GET_DEVICENAME:
       {
         string = F(PLUGIN_NAME_049);
@@ -247,8 +260,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                 log += F("Bootup detected! ");
                 success = false;
 
-              // If s = 0x40 the reading is stable; anything else should be ignored
-              } else if (s < 64) {
+              // If s = 0x40 the reading is stable; anything else should be ignored, unless ignore stability flag is on.
+              } else if (s < 64 && !Settings.TaskDevicePluginConfig[event->TaskIndex][0]) {
 
                 log += F("Unstable reading, ignoring! ");
                 success = false;
