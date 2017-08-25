@@ -2,9 +2,11 @@
 // #################################### Plugin 004: TempSensor Dallas DS18B20  ###########################
 // #######################################################################################################
 
+// Maxime Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
+
 #define PLUGIN_004
 #define PLUGIN_ID_004         4
-#define PLUGIN_NAME_004       "Temperature - DS18b20"
+#define PLUGIN_NAME_004       "Environment - DS18B20"
 #define PLUGIN_VALUENAME1_004 "Temperature"
 
 uint8_t Plugin_004_DallasPin;
@@ -52,9 +54,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
 
             // get currently saved address
-            for (byte i = 0; i < 8; i++) {
+            for (byte i = 0; i < 8; i++)
                 savedAddress[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
-            }
 
             // find all suitable devices
             addRowLabel(string, F("Device Address"));
@@ -103,7 +104,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
             Plugin_004_DS_setResolution(addr, getFormItemInt(F("plugin_004_res")));
-            Plugin_004_DS_convertTemp(addr);
+            Plugin_004_DS_startConvertion(addr);
 
             success = true;
             break;
@@ -134,7 +135,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 float value = 0;
                 String log  = F("DS   : Temperature: ");
 
-                if (Plugin_004_DS_readonlyTemp(addr, &value))
+                if (Plugin_004_DS_readTemp(addr, &value))
                 {
                     UserVar[event->BaseVarIndex] = value;
                     log    += UserVar[event->BaseVarIndex];
@@ -145,7 +146,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                     UserVar[event->BaseVarIndex] = NAN;
                     log += F("Error!");
                 }
-                Plugin_004_DS_convertTemp(addr);
+                Plugin_004_DS_startConvertion(addr);
 
                 log += (" (");
                 for (byte x = 0; x < 8; x++)
@@ -169,29 +170,30 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
   \*********************************************************************************************/
 byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM)
 {
-  byte tmpaddr[8];
-  byte devCount = 0;
-  Plugin_004_DS_reset();
+    byte tmpaddr[8];
+    byte devCount = 0;
+    Plugin_004_DS_reset();
 
-  Plugin_004_DS_reset_search();
-  while (Plugin_004_DS_search(tmpaddr))
-  {
-    if (getDeviceROM == devCount)
-      for (byte  i = 0; i < 8; i++)
-        ROM[i] = tmpaddr[i];
-    devCount++;
-  }
-  return devCount;
+    Plugin_004_DS_reset_search();
+    while (Plugin_004_DS_search(tmpaddr))
+    {
+        if (getDeviceROM == devCount)
+            for (byte  i = 0; i < 8; i++)
+                ROM[i] = tmpaddr[i];
+        devCount++;
+    }
+    return devCount;
 }
 
 /*********************************************************************************************\
-*  Dallas Read temperature
+*  Dallas Start Temperature Conversion, expected duration:
+*    9 bits resolution ->  93.75 ms
+*   10 bits resolution -> 187.5 ms
+*   11 bits resolution -> 375 ms
+*   12 bits resolution -> 750 ms
 \*********************************************************************************************/
-void Plugin_004_DS_convertTemp(uint8_t ROM[8])
+void Plugin_004_DS_startConvertion(uint8_t ROM[8])
 {
-    int16_t DSTemp;
-    byte ScratchPad[12];
-
     Plugin_004_DS_reset();
     Plugin_004_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
@@ -199,7 +201,10 @@ void Plugin_004_DS_convertTemp(uint8_t ROM[8])
     Plugin_004_DS_write(0x44); // Take temperature mesurement
 }
 
-boolean Plugin_004_DS_readonlyTemp(uint8_t ROM[8], float * value)
+/*********************************************************************************************\
+*  Dallas Read temperature from scratchpad
+\*********************************************************************************************/
+boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
 {
     int16_t DSTemp;
     byte ScratchPad[12];
@@ -208,12 +213,13 @@ boolean Plugin_004_DS_readonlyTemp(uint8_t ROM[8], float * value)
     Plugin_004_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
         Plugin_004_DS_write(ROM[i]);
+
     Plugin_004_DS_write(0xBE); // Read scratchpad
 
     for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
-    if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
+    if (!Plugin_004_DS_crc8(ScratchPad))
     {
         *value = 0;
         return false;
@@ -228,21 +234,10 @@ boolean Plugin_004_DS_readonlyTemp(uint8_t ROM[8], float * value)
     {
         DSTemp = (ScratchPad[1] << 11) | ScratchPad[0] << 3;
         DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
-            (
-                ((ScratchPad[7] - ScratchPad[6]) << 7) /
-                ScratchPad[7]
-            );
+                 (((ScratchPad[7] - ScratchPad[6]) << 7) / ScratchPad[7]);
         *value = float(DSTemp) * 0.0078125;
     }
-
     return true;
-}
-
-boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
-{
-    Plugin_004_DS_convertTemp(ROM);
-    delay(800); // <- Give at least 750ms to make a 12 bits conversion
-    return Plugin_004_DS_readonlyTemp(ROM, value);
 }
 
 /*********************************************************************************************\
@@ -258,19 +253,15 @@ int Plugin_004_DS_getResolution(uint8_t ROM[8])
     Plugin_004_DS_reset();
     Plugin_004_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
-    {
         Plugin_004_DS_write(ROM[i]);
-    }
 
     Plugin_004_DS_write(0xBE); // Read scratchpad
 
     for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
-    if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
-    {
+    if (!Plugin_004_DS_crc8(ScratchPad))
         return 0;
-    }
     else
     {
         switch (ScratchPad[4])
@@ -285,6 +276,7 @@ int Plugin_004_DS_getResolution(uint8_t ROM[8])
                 return 10;
 
             case 0x1F: //  9 bit
+            default:
                 return 9;
         }
     }
@@ -303,19 +295,15 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
     Plugin_004_DS_reset();
     Plugin_004_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
-    {
         Plugin_004_DS_write(ROM[i]);
-    }
 
     Plugin_004_DS_write(0xBE); // Read scratchpad
 
     for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
 
-    if (Plugin_004_DS_crc8(ScratchPad, 8) != ScratchPad[8])
-    {
+    if (!Plugin_004_DS_crc8(ScratchPad))
         return false;
-    }
     else
     {
         switch (res)
@@ -338,9 +326,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
-        {
             Plugin_004_DS_write(ROM[i]);
-        }
 
         Plugin_004_DS_write(0x4E);          // Write to EEPROM
         Plugin_004_DS_write(ScratchPad[2]); // high alarm temp
@@ -349,9 +335,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
 
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
-        {
             Plugin_004_DS_write(ROM[i]);
-        }
 
         // save the newly written values to eeprom
         Plugin_004_DS_write(0x48);
@@ -606,13 +590,17 @@ void Plugin_004_DS_write_bit(uint8_t v)
     }
 }
 
-uint8_t Plugin_004_DS_crc8(uint8_t * addr, uint8_t len)
+/*********************************************************************************************\
+*  Dallas Calculate CRC8 and compare it of addr[0-7] and compares it to addr[8]
+\*********************************************************************************************/
+boolean Plugin_004_DS_crc8(uint8_t * addr)
 {
-    uint8_t crc = 0;
+  uint8_t crc = 0;
+  uint8_t len = 8;
 
     while (len--)
     {
-        uint8_t inbyte = *addr++;
+        uint8_t inbyte = *addr++; // from 0 to 7
         for (uint8_t i = 8; i; i--)
         {
             uint8_t mix = (crc ^ inbyte) & 0x01;
@@ -621,5 +609,5 @@ uint8_t Plugin_004_DS_crc8(uint8_t * addr, uint8_t len)
             inbyte >>= 1;
         }
     }
-    return crc;
+    return crc == *addr; // addr 8
 }
