@@ -83,6 +83,16 @@ byte Plugin_028_get_control_settings()  {
   return 0;
 }
 
+String Plugin_028_getFullDeviceName() {
+  String devicename = Plugin_028_getDeviceName();
+  if (_sensorID == BMP280_DEVICE_SAMPLE1 ||
+      _sensorID == BMP280_DEVICE_SAMPLE2)
+  {
+    devicename += F(" sample");
+  }
+  return devicename;
+}
+
 String Plugin_028_getDeviceName()  {
   switch (_sensorID) {
     case BMP280_DEVICE_SAMPLE1:
@@ -188,6 +198,11 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         */
         int optionValues[2] = { 0x76, 0x77 };
         addFormSelectorI2C(string, F("plugin_028_bme280_i2c"), 2, optionValues, choice);
+        if (_sensorID != Unknown_DEVICE) {
+          String detectedString = F("Detected: ");
+          detectedString += Plugin_028_getFullDeviceName();
+          addUnit(string, detectedString);
+        }
         addFormNote(string, F("SDO Low=0x76, High=0x77"));
 
         addFormNumericBox(string, F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
@@ -195,7 +210,11 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
         addFormNumericBox(string, F("Temperature offset"), F("plugin_028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         addUnit(string, F("x 0.1C"));
-        addFormNote(string, F("Offset in units of 0.1 degree Celcius"));
+        String offsetNote = F("Offset in units of 0.1 degree Celcius");
+        if (Plugin_028_hasHumidity()) {
+          offsetNote += F(" (also correct humidity)");
+        }
+        addFormNote(string, offsetNote);
 
         success = true;
         break;
@@ -203,7 +222,9 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_028_bme280_i2c"));
+        const uint8_t deviceAddress = getFormItemInt(F("plugin_028_bme280_i2c"));
+        Plugin_028_check(deviceAddress); // Check id device is present
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = deviceAddress;
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_028_bme280_elev"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_028_bme280_tempoffset"));
         success = true;
@@ -291,6 +312,7 @@ bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
     String log;
     log.reserve(120); // Prevent re-allocation
     log = Plugin_028_getDeviceName();
+    log += F(":");
     boolean logAdded = false;
     if (Plugin_028_hasHumidity()) {
       // Apply half of the temp offset, to correct the dew point offset.
@@ -302,7 +324,7 @@ bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
     }
     if (tempOffset > 0.1 || tempOffset < -0.1) {
       // There is some offset to apply.
-      log += F(" : Apply temp offset ");
+      log += F(" Apply temp offset ");
       log += tempOffset;
       log += F("C");
       if (Plugin_028_hasHumidity()) {
@@ -352,20 +374,24 @@ bool Plugin_028_check(uint8_t a) {
         if (_sensorID != chip_id) {
           _sensorID = static_cast<BMx_ChipId>(chip_id);
           String log = F("BMx280 : Detected ");
-          log += Plugin_028_getDeviceName();
-          if (chip_id == BMP280_DEVICE_SAMPLE1 ||
-              chip_id == BMP280_DEVICE_SAMPLE2)
-          {
-            log += F(" sample");
-          }
+          log += Plugin_028_getFullDeviceName();
           addLog(LOG_LEVEL_INFO, log);
         }
+      } else {
+        _sensorID = Unknown_DEVICE;
       }
-      return wire_status;
+      break;
     }
     default:
-      return false;
+      _sensorID = Unknown_DEVICE;
+      break;
   }
+  if (_sensorID == Unknown_DEVICE) {
+    String log = F("BMx280 : Unable to detect chip ID");
+    addLog(LOG_LEVEL_INFO, log);
+    return false;
+  }
+  return wire_status;
 }
 
 //**************************************************************************/
