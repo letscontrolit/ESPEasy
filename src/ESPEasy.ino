@@ -204,6 +204,7 @@
 #define LOG_LEVEL_INFO                      2
 #define LOG_LEVEL_DEBUG                     3
 #define LOG_LEVEL_DEBUG_MORE                4
+#define LOG_LEVEL_DEBUG_DEV                 9 // use for testing/debugging only, not for regular use
 
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
