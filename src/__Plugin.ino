@@ -1160,7 +1160,8 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_READ:
-    case PLUGIN_REMOTE_CONFIG:
+    case PLUGIN_SET_CONFIG:
+    case PLUGIN_GET_CONFIG:
       for (x = 0; x < PLUGIN_MAX; x++)
       {
         if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))

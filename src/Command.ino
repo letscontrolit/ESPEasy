@@ -259,6 +259,14 @@ void ExecuteCommand(byte source, const char *Line)
   // commands for rules
   // ****************************************
 
+  if (strcasecmp_P(Command, PSTR("config")) == 0)
+  {
+    success = true;
+    struct EventStruct TempEvent;
+    String request = Line;
+    remoteConfig(&TempEvent, request);
+  }
+  
   if (strcasecmp_P(Command, PSTR("deepSleep")) == 0)
   {
     success = true;
