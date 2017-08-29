@@ -1,6 +1,6 @@
-//#######################################################################################################
-//######################## Plugin 070: Temperature and Humidity sensor HDC1080 (I2C) ####################
-//#######################################################################################################
+//######################################################################################################
+//####################### Plugin 070: Temperature and Humidity sensor HDC1080 (I2C) ####################
+//######################################################################################################
 
 #define PLUGIN_070
 #define PLUGIN_ID_070         70
@@ -63,13 +63,13 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
         Wire.write(0x00);                            // sends HDC1080_TEMPERATURE
         Wire.endTransmission();                      // end transmission
-        delay(9); 
+        delay(9);
         Wire.requestFrom(HDC1080_I2C_ADDRESS, 2);    // read 2 bytes for temperature
         hdc1080_msb = Wire.read();
         hdc1080_lsb = Wire.read();
         hdc1080_rawtemp = hdc1080_msb << 8 | hdc1080_lsb;
         hdc1080_temp = (hdc1080_rawtemp / pow(2,16)) * 165 -40;
-        
+
         Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
         Wire.write(0x01);                            // sends HDC1080_HUMIDITY
         Wire.endTransmission();                      // end transmission
@@ -79,7 +79,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         hdc1080_lsb = Wire.read();
         hdc1080_rawhum = hdc1080_msb << 8 | hdc1080_lsb;
         hdc1080_hum = (hdc1080_rawhum / pow(2,16)) * 100;
-        
+
         UserVar[event->BaseVarIndex] = hdc1080_temp;
         UserVar[event->BaseVarIndex + 1] = hdc1080_hum;
         String log = F("HDC1080: Temperature: ");
