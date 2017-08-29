@@ -242,17 +242,6 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
       else
       {
         getWebPageTemplateVar(varName, varValue);
-        /*TEST
-                String log = F("> VarName: ");
-                log += varName;
-                log += F(" ");
-                log += indexStart;
-                log += F("+");
-                log += indexEnd;
-                log += F(" : ");
-                log += varValue;
-                addLog(LOG_LEVEL_DEBUG, log);
-        */
         pageResult += varValue;
       }
     }
@@ -271,7 +260,7 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
   sendWebPageChunkedEnd(log);   //close chunked send
 
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG_DEV, log);
 }
 
 
@@ -1712,7 +1701,7 @@ void handle_devices() {
   checkRAM(F("handle_devices"));
   String log = F("DEBUG: String size:");
   log += reply.length();
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  addLog(LOG_LEVEL_DEBUG_DEV, log);
   sendWebPage(F("TmplStd"), reply);
 }
 
