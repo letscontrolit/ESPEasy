@@ -400,7 +400,9 @@ bool Plugin_028_check(uint8_t a) {
 bool Plugin_028_begin(uint8_t a) {
   if (! Plugin_028_check(a))
     return false;
-
+  // Perform soft reset
+  Plugin_028_write8(BMx280_REGISTER_SOFTRESET, 0xB6);
+  delay(2);  // Startup time is 2 ms (datasheet)
   Plugin_028_readCoefficients(_i2caddr & 0x01);
   delay(65); //May be needed here as well to fix first wrong measurement?
   return true;
