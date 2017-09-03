@@ -2826,6 +2826,7 @@ void handle_control() {
   {
     eventBuffer = webrequest.substring(6);
     WebServer.send(200, "text/html", "OK");
+    return;
   }
 
   struct EventStruct TempEvent;
@@ -3317,7 +3318,7 @@ boolean handle_custom(String path) {
   path = path.substring(1);
   String reply = "";
 
-  if (path.startsWith(F("dashboard"))) // for the dashboard page, create a default unit dropdown selector 
+  if (path.startsWith(F("dashboard"))) // for the dashboard page, create a default unit dropdown selector
   {
     reply += F("<script><!--\n"
              "function dept_onchange(frmselect) {frmselect.submit();}"
@@ -3334,7 +3335,7 @@ boolean handle_custom(String path) {
       char url[20];
       sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
       reply = F("<meta http-equiv=\"refresh\" content=\"0; URL=");
-      reply += url; 
+      reply += url;
       reply += F("\">");
       WebServer.send(200, F("text/html"), reply);
       return true;
@@ -3355,7 +3356,7 @@ boolean handle_custom(String path) {
 
       addSelector_Item(reply, name, x, choice == x, false, F(""));
       }
-    } 
+    }
     addSelector_Foot(reply);
 
     // create <> navigation buttons
@@ -3365,7 +3366,7 @@ boolean handle_custom(String path) {
       if (Nodes[x].ip[0] != 0) {prev = x; break;}
     for (byte x = Settings.Unit+1; x < UNIT_MAX; x++)
       if (Nodes[x].ip[0] != 0) {next = x; break;}
-      
+
     reply += F("<a class='button link' href=");
     reply += path;
     reply += F("?btnunit=");
