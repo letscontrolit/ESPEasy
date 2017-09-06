@@ -19,7 +19,8 @@
 #define Nlines 12				// The number of different lines which can be displayed - each line is 32 chars max
 
 #include "SSD1306.h"
-#include "images.h"
+#include "OLED_SSD1306_images.h"
+#include "Dialog_Plain_12_font.h"
 
 // Instantiate display here - does not work to do this within the INIT call
 
@@ -160,8 +161,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         //      Init the display and turn it on
         if (!display)
-          display = new SSD1306(0, 0, 0);
-        display->init(OLED_address);		// call to local override of init function
+          display = new SSD1306(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        display->init();		// call to local override of init function
         display->displayOn();
 
         //      Set the initial value of OnOff to On
@@ -413,7 +414,11 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
   if (nlines == 3)
   {
-    display->setFont(Dialog_Plain_12);
+    // ToDo: Create a proper font for 3 lines display.
+    // Dialog_Plain_12 does not work anymore in v3 of the library
+    // Sadly the fontgenerator is offline: http://oleddisplay.squix.ch/
+    display->setFont(ArialMT_Plain_10);
+//    display->setFont(Dialog_Plain_12);
     ypos[0] = 13;
     ypos[1] = 25;
     ypos[2] = 37;
