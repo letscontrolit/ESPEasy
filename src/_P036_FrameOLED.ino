@@ -24,7 +24,7 @@
 
 // Instantiate display here - does not work to do this within the INIT call
 
-SSD1306 *display=NULL;
+SSD1306Wire *display=NULL;
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -159,11 +159,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[Nlines][32];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        int OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-
         //      Init the display and turn it on
-        if (!display)
-          display = new SSD1306(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        if (!display) {
+          uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        }
         display->init();		// call to local override of init function
         display->displayOn();
 
