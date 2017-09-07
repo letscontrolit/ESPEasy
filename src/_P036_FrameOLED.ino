@@ -443,11 +443,7 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
   if (nlines == 3)
   {
-    // ToDo: Create a proper font for 3 lines display.
-    // Dialog_Plain_12 does not work anymore in v3 of the library
-    // Sadly the fontgenerator is offline: http://oleddisplay.squix.ch/
-    display->setFont(ArialMT_Plain_10);
-//    display->setFont(Dialog_Plain_12);
+    display->setFont(Dialog_plain_12);
     ypos[0] = 13;
     ypos[1] = 25;
     ypos[2] = 37;
