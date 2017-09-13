@@ -105,7 +105,7 @@ void MQTTConnect()
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = "ESPClient";
+  String clientid = Settings.Name;
   clientid += Settings.Unit;
   String subscribeTo = "";
 
