@@ -2,13 +2,15 @@
 //#################################### Plugin 070: NeoPixel ring clock #######################################
 //#######################################################################################################
 
+//This plugin is disabled, change it to PLUGIN_BUILD_NORMAL to re-enable it.
+#ifdef PLUGIN_BUILD_DISABLED
+
 //A clock that uses a strip/ring of 60 WS2812 NeoPixel LEDs as display for a classic clock.
 //The hours are RED, the minutes are GREEN, the seconds are BLUE and the hour marks are WHITE.
 //The brightness of the clock hands and the hour marks can be set in the device page,
 //or can be set by commands. The format is as follows:
 //	Clock,<Enabled 1/0>,<Hand brightness 0-255>,<Mark brightness 0-255>
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
