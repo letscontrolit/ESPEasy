@@ -2,9 +2,11 @@
 //####################### Plugin 072: Temperature and Humidity sensor HDC1080 (I2C) ####################
 //######################################################################################################
 
+#ifdef PLUGIN_BUILD_TESTING
+
 #define PLUGIN_072
 #define PLUGIN_ID_072         72
-#define PLUGIN_NAME_072       "Environment - HDC1080 (I2C)"
+#define PLUGIN_NAME_072       "Environment - HDC1080 (I2C) [TESTING]"
 #define PLUGIN_VALUENAME1_072 "Temperature"
 #define PLUGIN_VALUENAME2_072 "Humidity"
 
@@ -92,3 +94,5 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+#endif
