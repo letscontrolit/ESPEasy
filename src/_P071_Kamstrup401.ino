@@ -1,5 +1,5 @@
 //#######################################################################################################
-//############################# Plugin 070: Kamstrup Multical 401 #######################################
+//############################# Plugin 071: Kamstrup Multical 401 #######################################
 //#######################################################################################################
 
 //IR RX/TX sensor based on http://wiki.hal9k.dk/projects/kamstrup
@@ -12,17 +12,17 @@
 #ifdef PLUGIN_BUILD_TESTING
 
 #include <SoftwareSerial.h>
-#define PLUGIN_070
-#define PLUGIN_ID_070 070
-#define PLUGIN_NAME_070 "Kamstrup Multical 401"
-#define PLUGIN_VALUENAME1_070 "Heat"
-#define PLUGIN_VALUENAME2_070 "Volume"
+#define PLUGIN_071
+#define PLUGIN_ID_071 071
+#define PLUGIN_NAME_071 "Kamstrup Multical 401"
+#define PLUGIN_VALUENAME1_071 "Heat"
+#define PLUGIN_VALUENAME2_071 "Volume"
 
-boolean Plugin_070_init = false;
+boolean Plugin_071_init = false;
 byte PIN_KAMSER_RX = 0;
 byte PIN_KAMSER_TX = 0;
 
-boolean Plugin_070(byte function, struct EventStruct *event, String& string)
+boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -30,7 +30,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_070;
+        Device[++deviceCount].Number = PLUGIN_ID_071;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         Device[deviceCount].VType = SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
@@ -46,20 +46,21 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_070);
+        string = F(PLUGIN_NAME_071);
         break;
       }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_070));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_070));        
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_071));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_071));        
         break;
       }
 
     case PLUGIN_INIT:
       {
-        Plugin_070_init = true;
+        Plugin_071
+          _init = true;
 
         success = true;
         break;
