@@ -59,8 +59,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Plugin_071
-          _init = true;
+        Plugin_071_init = true;
 
         success = true;
         break;
