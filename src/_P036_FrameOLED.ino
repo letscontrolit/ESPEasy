@@ -13,18 +13,19 @@
 
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
-#define PLUGIN_NAME_036       "Display - OLED SSD1306 Framed"
+#define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
 
 #define Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 
 #include "SSD1306.h"
-#include "OLED_SSD1306_images.h"
+#include "SH1106Wire.h"
+#include "OLED_SSD1306_SH1106_images.h"
 #include "Dialog_Plain_12_font.h"
 
 // Instantiate display here - does not work to do this within the INIT call
 
-SSD1306Wire *display=NULL;
+OLEDDisplay *display=NULL;
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -71,6 +72,15 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        // Use number 5 to remain compatible with existing configurations,
+        // but the item should be one of the first choices.
+        byte choice5 = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        String options5[2];
+        options5[0] = F("SSD1306");
+        options5[1] = F("SH1106");
+        int optionValues5[2] = { 1, 2 };
+        addFormSelector(string, F("Controler"), F("plugin_036_controler"), 2, options5, optionValues5, choice5);
+
         byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*
         String options0[2];
@@ -136,6 +146,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_036_nlines"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_036_scroll"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_036_timer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_036_controler"));
 
         String argName;
 
@@ -160,9 +171,17 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         //      Init the display and turn it on
+        if (display) {
+          delete display;
+          display = NULL;
+        }
         if (!display) {
           uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] == 1) {
+            display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          } else {
+            display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          }
         }
         display->init();		// call to local override of init function
         display->displayOn();
