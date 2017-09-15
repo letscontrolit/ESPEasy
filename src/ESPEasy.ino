@@ -280,8 +280,8 @@
 #define DAT_NOTIFICATION_SIZE            1024
 
 #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
-#define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-#define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+#define DAT_OFFSET_CONTROLLER            DAT_OFFSET_TASKS + (DAT_TASKS_SIZE * TASKS_MAX)                        // each controller = 1k, 4 max
+#define DAT_OFFSET_CUSTOM_CONTROLLER     DAT_OFFSET_CONTROLLER + (DAT_CUSTOM_CONTROLLER_SIZE * CONTROLLER_MAX)  // each custom controller config = 1k, 4 max.
 
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
