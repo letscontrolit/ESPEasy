@@ -141,6 +141,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        int new_controler_value = getFormItemInt(F("plugin_036_controler"));
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] != new_controler_value) {
+          // Value is changed. Must destruct to later reinitialize.
+          if (display) {
+            delete display;
+            display = NULL;
+          }
+        }
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_036_rotate"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_036_nlines"));
@@ -171,10 +179,6 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         //      Init the display and turn it on
-        if (display) {
-          delete display;
-          display = NULL;
-        }
         if (!display) {
           uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
           if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] == 1) {
