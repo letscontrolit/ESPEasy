@@ -135,6 +135,17 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         addFormNumericBox(string, F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
 
+        byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        String options6[3];
+        options6[0] = F("Low");
+        options6[1] = F("Medium");
+        options6[2] = F("High");
+        int optionValues6[3];
+        optionValues6[0] = 64;
+        optionValues6[1] = 0xCF;
+        optionValues6[2] = 0xFF;
+        addFormSelector(string, F("Contrast"), F("plugin_066_contrast"), 3, options6, optionValues6, choice6);
+
         success = true;
         break;
       }
@@ -155,6 +166,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_036_scroll"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_036_timer"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_036_controler"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("plugin_036_contrast"));
 
         String argName;
 
@@ -189,6 +201,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         }
         display->init();		// call to local override of init function
         display->displayOn();
+
+        // Set the display contrast
+        uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        display->setContrast(OLED_contrast);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
