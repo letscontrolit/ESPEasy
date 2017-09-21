@@ -1,3 +1,55 @@
+-------------------------------------------------
+Changes in release v2.0.0-dev12 (since v2.0.0-dev11)
+-------------------------------------------------
+
+Release date: Fri Sep 22 01:25:29 CEST 2017
+
+Daniel Tedenljung (1):
+      This plugin is tested and working good. (#428)
+
+Edwin Eefting (6):
+      first set of changes for #235. added spiffs error checking and loging, and cleaner flashguarding code. next change will show feedback in web interface as well. also need to cleanup loose SPIFFS filehandling at other places in webserver.ino (create a save-function for all those things and use FLASH_GUARD)
+      missed return after setting event buffer
+      fixes bug #486 in counter-plugin
+      plugin is not generic enough, so its disabled by default
+      automaticly updated release notes for 2.0.0-dev12
+      fixed release-notes bug
+
+Gerben Meijer (1):
+      Add SENSOR_TYPE_TRIPLE support to Domoticz MQTT (#468)
+
+Gijs Noorlander (1):
+      [MH-Z19] Add 'ABC disable' option to web config (#472)
+
+Jeroen (1):
+      Create _P071_Kamstrup401.ino (#504)
+
+Jochen Krapf (4):
+      Added Plugins for SHT3x and LM75A - Issue #433 (#442)
+      Descriptive GPIO-Names (#448)
+      Rework of Plugin _P056_SDS011-Dust (#451)
+      Fixed HTML text box length for controller settings - Issue #453 (#455)
+
+Ovidiu Schiopu (1):
+      Added _P070_NeoPixel_Clock.ino (#489)
+
+SightofSilence (1):
+      Add files via upload (#493)
+
+beic (2):
+      Moving from Temperature to Environment naming (#492)
+      Moving from Temperature to Environment naming (#506)
+
+mvdbro (4):
+      Custom WEB page handler (SPIFFS)
+      Finished work on Level Control & config
+      Fixed a tasksettings load bug that was introduced with commit dcfc1e3 on july 18th.
+      Moved HTML template logging to level LOG_LEVEL_DEBUG_DEV
+
+papperone (1):
+      HDC1080 plugin (#497)
+
+
 -----------------------------
 Changes in release v2.0.0-dev11
 -----------------------------
