@@ -119,9 +119,9 @@ void MQTTConnect()
     boolean MQTTresult = false;
 
     if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
-      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[0], SecuritySettings.ControllerPassword[0], LWTTopic.c_str(), 0, 0, "Connection Lost");
+      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[0], SecuritySettings.ControllerPassword[0], LWTTopic.c_str(), 0, 1, "Connection Lost");
     else
-      MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 0, "Connection Lost");
+      MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 1, "Connection Lost");
 
     if (MQTTresult)
     {
@@ -134,7 +134,7 @@ void MQTTConnect()
       log += subscribeTo;
       addLog(LOG_LEVEL_INFO, log);
 
-      MQTTclient.publish(LWTTopic.c_str(), "Connected");
+      MQTTclient.publish(LWTTopic.c_str(), "Connected", 1);
 
       statusLED(true);
       break; // end loop if succesfull
