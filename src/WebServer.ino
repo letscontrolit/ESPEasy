@@ -44,6 +44,16 @@ static const char pgDefaultCSS[] PROGMEM = {
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
+//if there is an error-string, add it to the html code with correct formatting
+void addHtmlError(String & str, String error)
+{
+    if (error.length()>0)
+    {
+      str += F("<span style=\"color:red\">");
+      str += error;
+      str += F("</span>");
+    }
+}
 
 void WebServerInit()
 {
@@ -639,8 +649,7 @@ void handle_config() {
     espdns.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.DNS);
     Settings.Unit = unit.toInt();
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'><table>");
@@ -769,9 +778,8 @@ void handle_controllers() {
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
       }
     }
-    SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -963,9 +971,8 @@ void handle_notifications() {
         strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
-    SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings));
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -1127,8 +1134,7 @@ void handle_hardware() {
     Settings.PinBootStates[15] =  getFormItemInt(F("p15"));
     Settings.PinBootStates[16] =  getFormItemInt(F("p16"));
 
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
@@ -1371,9 +1377,10 @@ void handle_devices() {
 
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
-    SaveTaskSettings(index - 1);
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveTaskSettings(index - 1));
+
+    addHtmlError(reply, SaveSettings());
+
     if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[index - 1])
       PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
   }
@@ -2994,8 +3001,8 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+
+    addHtmlError(reply, SaveSettings());
     if (Settings.UseNTP)
       initTime();
   }
@@ -3578,7 +3585,7 @@ void handle_setup() {
 
   if (WiFi.status() == WL_CONNECTED)
   {
-    SaveSettings();
+    addHtmlError(reply, SaveSettings());
     IPAddress ip = WiFi.localIP();
     char host[20];
     sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
