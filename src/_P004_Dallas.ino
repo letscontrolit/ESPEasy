@@ -4,7 +4,7 @@
 
 #define PLUGIN_004
 #define PLUGIN_ID_004         4
-#define PLUGIN_NAME_004       "Temperature - DS18b20"
+#define PLUGIN_NAME_004       "Environment - DS18b20"
 #define PLUGIN_VALUENAME1_004 "Temperature"
 
 uint8_t Plugin_004_DallasPin;

@@ -20,6 +20,9 @@
 #define PLUGIN_READ_TIMEOUT   3000
 
 boolean Plugin_049_init = false;
+// Default of the sensor is to run ABC
+boolean Plugin_049_ABC_Disable = false;
+boolean Plugin_049_ABC_MustApply = false;
 
 #include <SoftwareSerial.h>
 SoftwareSerial *Plugin_049_SoftSerial;
@@ -35,6 +38,12 @@ byte mhzCmdMeasurementRange1000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x03,0xE8,0x
 byte mhzCmdMeasurementRange2000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x07,0xD0,0x8F};
 byte mhzCmdMeasurementRange3000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x0B,0xB8,0xA3};
 byte mhzCmdMeasurementRange5000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x13,0x88,0xCB};
+
+enum
+{
+  ABC_enabled  = 0x01,
+  ABC_disabled = 0x02
+};
 
 boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 {
@@ -73,8 +82,37 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        String options[2] = { F("Normal"), F("ABC disabled") };
+        int optionValues[2] = { ABC_enabled, ABC_disabled };
+        addFormSelector(string, F("Auto Base Calibration"), F("plugin_049_abcdisable"), 2, options, optionValues, choice);
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        const int formValue = getFormItemInt(F("plugin_049_abcdisable"));
+        boolean new_ABC_disable = (formValue == ABC_disabled);
+        if (Plugin_049_ABC_Disable != new_ABC_disable) {
+          // Setting changed in the webform.
+          Plugin_049_ABC_MustApply = true;
+          Plugin_049_ABC_Disable = new_ABC_disable;
+        }
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = formValue;
+        success = true;
+        break;
+      }
+
     case PLUGIN_INIT:
       {
+        Plugin_049_ABC_Disable = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == ABC_disabled;
+        if (Plugin_049_ABC_Disable) {
+          // No guarantee the correct state is active on the sensor after reboot.
+          Plugin_049_ABC_MustApply = true;
+        }
         Plugin_049_SoftSerial = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
         Plugin_049_SoftSerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
@@ -245,6 +283,12 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               if (u == 15000) {
 
                 log += F("Bootup detected! ");
+                if (Plugin_049_ABC_Disable) {
+                  // After bootup of the sensor the ABC will be enabled.
+                  // Thus only actively disable after bootup.
+                  Plugin_049_ABC_MustApply = true;
+                  log += F("Will disable ABC when bootup complete. ");
+                }
                 success = false;
 
               // If s = 0x40 the reading is stable; anything else should be ignored
@@ -256,11 +300,22 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               // Finally, stable readings are used for variables
               } else {
 
-                success = true;
-
                 UserVar[event->BaseVarIndex] = (float)ppm;
                 UserVar[event->BaseVarIndex + 1] = (float)temp;
                 UserVar[event->BaseVarIndex + 2] = (float)u;
+                if (Plugin_049_ABC_MustApply) {
+                  // Send ABC enable/disable command based on the desired state.
+                  if (Plugin_049_ABC_Disable) {
+                    Plugin_049_SoftSerial->write(mhzCmdABCDisable, 9);
+                    addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+                  } else {
+                    Plugin_049_SoftSerial->write(mhzCmdABCEnable, 9);
+                    addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+                  }
+                  Plugin_049_ABC_MustApply = false;
+                }
+                success = true;
+
               }
 
               // Log values in all cases
@@ -286,24 +341,11 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // log verbosely anything else that the sensor reports
           } else {
 
-              String log = F("MHZ19: Unknown response: ");
-              log += String(mhzResp[0], HEX);
-              log += F(" ");
-              log += String(mhzResp[1], HEX);
-              log += F(" ");
-              log += String(mhzResp[2], HEX);
-              log += F(" ");
-              log += String(mhzResp[3], HEX);
-              log += F(" ");
-              log += String(mhzResp[4], HEX);
-              log += F(" ");
-              log += String(mhzResp[5], HEX);
-              log += F(" ");
-              log += String(mhzResp[6], HEX);
-              log += F(" ");
-              log += String(mhzResp[7], HEX);
-              log += F(" ");
-              log += String(mhzResp[8], HEX);
+              String log = F("MHZ19: Unknown response:");
+              for (int i = 0; i < 9; ++i) {
+                log += F(" ");
+                log += String(mhzResp[i], HEX);
+              }
               addLog(LOG_LEVEL_INFO, log);
               success = false;
               break;
