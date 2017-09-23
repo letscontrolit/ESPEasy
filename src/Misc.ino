@@ -1,4 +1,3 @@
-
 // clean up tcp connections that are in TIME_WAIT status, to conserve memory
 // In future versions of WiFiClient it should be possible to call abort(), but
 // this feature is not in all upstream versions yet.
@@ -515,21 +514,41 @@ void taskClear(byte taskIndex, boolean save)
   }
 }
 
+/********************************************************************************************\
+  SPIFFS error handling
+  Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
+  \*********************************************************************************************/
+#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
+String FileError(int line, const char * fname)
+{
+   String err("FS   : Error while reading/writing ");
+   err=err+fname;
+   err=err+" in ";
+   err=err+line;
+   addLog(LOG_LEVEL_ERROR, err);
+   return(err);
+}
+
 
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
   \*********************************************************************************************/
-void BuildFixes()
+String BuildFixes()
 {
   Serial.println(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
   {
-    fs::File f = SPIFFS.open("notification.dat", "w");
+    String fname=F("notification.dat");
+    fs::File f = SPIFFS.open(fname, "w");
+    SPIFFS_CHECK(f, fname.c_str());
+
     if (f)
     {
       for (int x = 0; x < 4096; x++)
-        f.write(0);
+      {
+        SPIFFS_CHECK(f.write(0), fname.c_str());
+      }
       f.close();
     }
   }
@@ -846,20 +865,6 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 }
 
 
-/********************************************************************************************\
-  SPIFFS error handling
-  Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
-  \*********************************************************************************************/
-#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
-String FileError(int line, const char * fname)
-{
-   String err("FS   : Error while reading/writing ");
-   err=err+fname;
-   err=err+" in ";
-   err=err+line;
-   addLog(LOG_LEVEL_ERROR, err);
-   return(err);
-}
 
 
 /********************************************************************************************\
@@ -2155,14 +2160,13 @@ void rulesProcessing(String& event)
 /********************************************************************************************\
   Rules processing
   \*********************************************************************************************/
-void rulesProcessingFile(String fileName, String& event)
+String rulesProcessingFile(String fileName, String& event)
 {
   fs::File f = SPIFFS.open(fileName, "r+");
-  if (!f)
-    return;
+  SPIFFS_CHECK(f, fileName.c_str());
 
   static byte nestingLevel;
-  char data = 0;
+  int data = 0;
   String log = "";
 
   nestingLevel++;
@@ -2171,7 +2175,7 @@ void rulesProcessingFile(String fileName, String& event)
     log = F("EVENT: Error: Nesting level exceeded!");
     addLog(LOG_LEVEL_ERROR, log);
     nestingLevel--;
-    return;
+    return(log);
   }
 
 
@@ -2187,8 +2191,11 @@ void rulesProcessingFile(String fileName, String& event)
   while (f.available())
   {
     data = f.read();
+
+    SPIFFS_CHECK(data >= 0, fileName.c_str());
+
     if (data != 10)
-      line += data;
+      line += char(data);
 
     if (data == 10)    // if line complete, parse this rule
     {
@@ -2278,11 +2285,18 @@ void rulesProcessingFile(String fileName, String& event)
           // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
           if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
           {
-            int equalsPos = event.indexOf("=");
-            if (equalsPos > 0)
+            if (event.charAt(0) == '!')
             {
-              String tmpString = event.substring(equalsPos + 1);
-              action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+            }
+            else
+            {
+              int equalsPos = event.indexOf("=");
+              if (equalsPos > 0)
+              {
+                String tmpString = event.substring(equalsPos + 1);
+                action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              }
             }
             log = F("ACT  : ");
             log += action;
