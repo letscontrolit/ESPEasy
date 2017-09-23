@@ -2318,7 +2318,7 @@ String rulesProcessingFile(String fileName, String& event)
   }
 
   nestingLevel--;
-
+  return(String());
 }
 
 
