@@ -1,4 +1,3 @@
-
 // clean up tcp connections that are in TIME_WAIT status, to conserve memory
 // In future versions of WiFiClient it should be possible to call abort(), but
 // this feature is not in all upstream versions yet.
@@ -2278,11 +2277,18 @@ void rulesProcessingFile(String fileName, String& event)
           // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
           if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
           {
-            int equalsPos = event.indexOf("=");
-            if (equalsPos > 0)
+            if (event.charAt(0) == '!')
             {
-              String tmpString = event.substring(equalsPos + 1);
-              action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+            }
+            else
+            {
+              int equalsPos = event.indexOf("=");
+              if (equalsPos > 0)
+              {
+                String tmpString = event.substring(equalsPos + 1);
+                action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              }
             }
             log = F("ACT  : ");
             log += action;
