@@ -14,6 +14,8 @@
 #define PLUGIN_028_BME280_DEVICE "BME280"
 #define PLUGIN_028_BMP280_DEVICE "BMP280"
 
+// Minimal interval in msec.
+#define BMx280_MEASUREMENT_INTERVAL_MSEC 50000
 
 #define BMx280_REGISTER_DIG_T1           0x88
 #define BMx280_REGISTER_DIG_T2           0x8A
@@ -52,67 +54,6 @@
 
 #define BME280_CONTROL_SETTING_HUMIDITY  0x02 // Oversampling: 2x H
 
-
-enum BMx_ChipId {
-  Unknown_DEVICE = 0,
-  BMP280_DEVICE_SAMPLE1 = 0x56,
-  BMP280_DEVICE_SAMPLE2 = 0x57,
-  BMP280_DEVICE = 0x58,
-  BME280_DEVICE = 0x60
-};
-
-BMx_ChipId _sensorID = Unknown_DEVICE;
-
-byte Plugin_028_get_config_settings()  {
-  switch (_sensorID) {
-    case BMP280_DEVICE_SAMPLE1:
-    case BMP280_DEVICE_SAMPLE2:
-    case BMP280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
-    case BME280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
-  }
-  return 0;
-}
-
-byte Plugin_028_get_control_settings()  {
-  switch (_sensorID) {
-    case BMP280_DEVICE_SAMPLE1:
-    case BMP280_DEVICE_SAMPLE2:
-    case BMP280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
-    case BME280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
-  }
-  return 0;
-}
-
-String Plugin_028_getFullDeviceName() {
-  String devicename = Plugin_028_getDeviceName();
-  if (_sensorID == BMP280_DEVICE_SAMPLE1 ||
-      _sensorID == BMP280_DEVICE_SAMPLE2)
-  {
-    devicename += F(" sample");
-  }
-  return devicename;
-}
-
-String Plugin_028_getDeviceName()  {
-  switch (_sensorID) {
-    case BMP280_DEVICE_SAMPLE1:
-    case BMP280_DEVICE_SAMPLE2:
-    case BMP280_DEVICE:  return PLUGIN_028_BMP280_DEVICE;
-    case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
-  }
-  return F("Unknown");
-}
-
-boolean Plugin_028_hasHumidity()  {
-  switch (_sensorID) {
-    case BMP280_DEVICE_SAMPLE1:
-    case BMP280_DEVICE_SAMPLE2:
-    case BMP280_DEVICE:  return false;
-    case BME280_DEVICE:  return true;
-  }
-  return false;
-}
-
 typedef struct
 {
   uint16_t dig_T1;
@@ -138,19 +79,97 @@ typedef struct
 } bme280_calib_data;
 
 bme280_calib_data _bme280_calib[2];
+boolean Plugin_028_init[2] = {false, false};
+int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
+
 uint8_t _i2caddr;
 int32_t t_fine;
 
-static float last_hum_val = 0.0;
-static float last_press_val = 0.0;
-static float last_temp_val = 0.0;
-static float last_dew_temp_val = 0.0;
-static unsigned long last_measurement = 0;
-unsigned long measurement_interval = 50000; // Minimal interval in msec.
+static float last_hum_val[2] = {0.0, 0.0};
+static float last_press_val[2] = {0.0, 0.0};
+static float last_temp_val[2] = {0.0, 0.0};
+static float last_dew_temp_val[2] = {0.0, 0.0};
+static unsigned long last_measurement[2] = {0, 0};
+
+enum BMx_ChipId {
+  Unknown_DEVICE = 0,
+  BMP280_DEVICE_SAMPLE1 = 0x56,
+  BMP280_DEVICE_SAMPLE2 = 0x57,
+  BMP280_DEVICE = 0x58,
+  BME280_DEVICE = 0x60
+};
+
+BMx_ChipId _sensorID[2] = {Unknown_DEVICE, Unknown_DEVICE};
+
+byte Plugin_028_get_config_settings() {
+  const uint8_t idx = Plugin_028_device_index(_i2caddr);
+  switch (_sensorID[idx]) {
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
+    case BME280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
+  }
+  return 0;
+}
+
+byte Plugin_028_get_control_settings() {
+  const uint8_t idx = Plugin_028_device_index(_i2caddr);
+  switch (_sensorID[idx]) {
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
+    case BME280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
+  }
+  return 0;
+}
+
+String Plugin_028_getFullDeviceName() {
+  const uint8_t idx = Plugin_028_device_index(_i2caddr);
+  String devicename = Plugin_028_getDeviceName();
+  if (_sensorID[idx] == BMP280_DEVICE_SAMPLE1 ||
+      _sensorID[idx] == BMP280_DEVICE_SAMPLE2)
+  {
+    devicename += F(" sample");
+  }
+  return devicename;
+}
+
+String Plugin_028_getDeviceName() {
+  const uint8_t idx = Plugin_028_device_index(_i2caddr);
+  switch (_sensorID[idx]) {
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:  return PLUGIN_028_BMP280_DEVICE;
+    case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
+  }
+  return F("Unknown");
+}
+
+boolean Plugin_028_hasHumidity() {
+  const uint8_t idx = Plugin_028_device_index(_i2caddr);
+  switch (_sensorID[idx]) {
+    case BMP280_DEVICE_SAMPLE1:
+    case BMP280_DEVICE_SAMPLE2:
+    case BMP280_DEVICE:  return false;
+    case BME280_DEVICE:  return true;
+  }
+  return false;
+}
 
 uint8_t Plugin_028_read8(byte reg, bool * is_ok = NULL); // Declaration
 
-boolean Plugin_028_init[2] = {false, false};
+uint8_t Plugin_028_i2c_addr(struct EventStruct *event) {
+  _i2caddr = (uint8_t)Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+  if (_i2caddr != Plugin_28_i2c_addresses[0] && _i2caddr != Plugin_28_i2c_addresses[1]) {
+    // Set to default address
+    _i2caddr = Plugin_28_i2c_addresses[0];
+  }
+  return _i2caddr;
+}
+
+uint8_t Plugin_028_device_index(const uint8_t i2cAddress) {
+  return i2cAddress & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
+}
 
 boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 {
@@ -190,15 +209,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        /*
-        String options[2];
-        options[0] = F("0x76 - default settings (SDO Low)");
-        options[1] = F("0x77 - alternate settings (SDO HIGH)");
-        */
-        int optionValues[2] = { 0x76, 0x77 };
-        addFormSelectorI2C(string, F("plugin_028_bme280_i2c"), 2, optionValues, choice);
-        if (_sensorID != Unknown_DEVICE) {
+        const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
+        addFormSelectorI2C(string, F("plugin_028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
+        const uint8_t idx = Plugin_028_device_index(i2cAddress);
+        if (_sensorID[idx] != Unknown_DEVICE) {
           String detectedString = F("Detected: ");
           detectedString += Plugin_028_getFullDeviceName();
           addUnit(string, detectedString);
@@ -222,9 +236,9 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        const uint8_t deviceAddress = getFormItemInt(F("plugin_028_bme280_i2c"));
-        Plugin_028_check(deviceAddress); // Check id device is present
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = deviceAddress;
+        const uint8_t i2cAddress = getFormItemInt(F("plugin_028_bme280_i2c"));
+        Plugin_028_check(i2cAddress); // Check id device is present
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = i2cAddress;
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_028_bme280_elev"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_028_bme280_tempoffset"));
         success = true;
@@ -233,19 +247,20 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        const uint8_t deviceAddress = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
+        const uint8_t idx = Plugin_028_device_index(i2cAddress);
         const float tempOffset = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 10.0;
-        if (!Plugin_028_update_measurements(deviceAddress, tempOffset)) {
+        if (!Plugin_028_update_measurements(i2cAddress, tempOffset)) {
           success = false;
           break;
         }
-        UserVar[event->BaseVarIndex] = last_temp_val;
-        UserVar[event->BaseVarIndex + 1] = last_hum_val;
+        UserVar[event->BaseVarIndex] = last_temp_val[idx];
+        UserVar[event->BaseVarIndex + 1] = last_hum_val[idx];
         const int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         if (elev) {
-           UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation(last_press_val, elev);
+           UserVar[event->BaseVarIndex + 2] = Plugin_028_pressureElevation(last_press_val[idx], elev);
         } else {
-           UserVar[event->BaseVarIndex + 2] = last_press_val;
+           UserVar[event->BaseVarIndex + 2] = last_press_val[idx];
         }
         String log;
         log.reserve(40); // Prevent re-allocation
@@ -276,21 +291,22 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 }
 
 // Only perform the measurements with big interval to prevent the sensor from warming up.
-bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
+bool Plugin_028_update_measurements(uint8_t i2cAddress, float tempOffset) {
+  const uint8_t idx = Plugin_028_device_index(i2cAddress);
   const unsigned long current_time = millis();
-  if ((last_measurement > measurement_interval) &&
-      (current_time < (last_measurement + measurement_interval))) {
+  if ((last_measurement[idx] > BMx280_MEASUREMENT_INTERVAL_MSEC) &&
+      (current_time < (last_measurement[idx] + BMx280_MEASUREMENT_INTERVAL_MSEC)) &&
+      (current_time > last_measurement[idx])) {
     // Timeout has not yet been reached.
     return false;
   }
-  uint8_t idx = deviceAddress & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
-  Plugin_028_init[idx] &= Plugin_028_check(deviceAddress); // Check id device is present
+  Plugin_028_init[idx] &= Plugin_028_check(i2cAddress); // Check id device is present
   if (!Plugin_028_init[idx]) {
-    Plugin_028_init[idx] = Plugin_028_begin(deviceAddress);
+    Plugin_028_init[idx] = Plugin_028_begin(i2cAddress);
   }
 
   if (Plugin_028_init[idx]) {
-    last_measurement = current_time;
+    last_measurement[idx] = current_time;
     // Set the Sensor in sleep to be make sure that the following configs will be stored
     Plugin_028_write8(BMx280_REGISTER_CONTROL, 0x00);
     if (Plugin_028_hasHumidity()) {
@@ -302,9 +318,9 @@ bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
     // Start measurement
     delay(1000); // Wait one second to make sure the filtered values stabilize.
 
-    last_temp_val = Plugin_028_readTemperature(idx);
-    last_press_val = ((float)Plugin_028_readPressure(idx)) / 100;
-    last_hum_val = ((float)Plugin_028_readHumidity(idx));
+    last_temp_val[idx] = Plugin_028_readTemperature(i2cAddress);
+    last_press_val[idx] = ((float)Plugin_028_readPressure(i2cAddress)) / 100;
+    last_hum_val[idx] = ((float)Plugin_028_readHumidity(i2cAddress));
 
     // Set to sleep mode again to prevent the sensor from heating up.
     Plugin_028_write8(BMx280_REGISTER_CONTROL, 0x00);
@@ -317,10 +333,10 @@ bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
     if (Plugin_028_hasHumidity()) {
       // Apply half of the temp offset, to correct the dew point offset.
       // The sensor is warmer than the surrounding air, which has effect on the perceived humidity.
-      last_dew_temp_val = compute_dew_point_temp(last_temp_val + (tempOffset / 2.0), last_hum_val);
+      last_dew_temp_val[idx] = compute_dew_point_temp(last_temp_val[idx] + (tempOffset / 2.0), last_hum_val[idx]);
     } else {
       // No humidity measurement, thus set dew point equal to air temperature.
-      last_dew_temp_val = last_temp_val;
+      last_dew_temp_val[idx] = last_temp_val[idx];
     }
     if (tempOffset > 0.1 || tempOffset < -0.1) {
       // There is some offset to apply.
@@ -329,23 +345,23 @@ bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
       log += F("C");
       if (Plugin_028_hasHumidity()) {
         log += F(" humidity ");
-        log += last_hum_val;
-        last_hum_val = compute_humidity_from_dewpoint(last_temp_val + tempOffset, last_dew_temp_val);
+        log += last_hum_val[idx];
+        last_hum_val[idx] = compute_humidity_from_dewpoint(last_temp_val[idx] + tempOffset, last_dew_temp_val[idx]);
         log += F("% => ");
-        log += last_hum_val;
+        log += last_hum_val[idx];
         log += F("%");
       }
       log += F(" temperature ");
-      log += last_temp_val;
-      last_temp_val = last_temp_val + tempOffset;
+      log += last_temp_val[idx];
+      last_temp_val[idx] = last_temp_val[idx] + tempOffset;
       log += F("C => ");
-      log += last_temp_val;
+      log += last_temp_val[idx];
       log += F("C");
       logAdded = true;
     }
     if (Plugin_028_hasHumidity()) {
       log += F(" dew point ");
-      log += last_dew_temp_val;
+      log += last_dew_temp_val[idx];
       log += F("C");
       logAdded = true;
     }
@@ -362,6 +378,7 @@ bool Plugin_028_update_measurements(uint8_t deviceAddress, float tempOffset) {
 //**************************************************************************/
 bool Plugin_028_check(uint8_t a) {
   _i2caddr = a?a:0x76;
+  const uint8_t idx = Plugin_028_device_index(_i2caddr);
   bool wire_status = false;
   const uint8_t chip_id = Plugin_028_read8(BMx280_REGISTER_CHIPID, &wire_status);
   switch (chip_id) {
@@ -371,22 +388,22 @@ bool Plugin_028_check(uint8_t a) {
     case BME280_DEVICE: {
       if (wire_status) {
         // Store detected chip ID when chip found.
-        if (_sensorID != chip_id) {
-          _sensorID = static_cast<BMx_ChipId>(chip_id);
+        if (_sensorID[idx] != chip_id) {
+          _sensorID[idx] = static_cast<BMx_ChipId>(chip_id);
           String log = F("BMx280 : Detected ");
           log += Plugin_028_getFullDeviceName();
           addLog(LOG_LEVEL_INFO, log);
         }
       } else {
-        _sensorID = Unknown_DEVICE;
+        _sensorID[idx] = Unknown_DEVICE;
       }
       break;
     }
     default:
-      _sensorID = Unknown_DEVICE;
+      _sensorID[idx] = Unknown_DEVICE;
       break;
   }
-  if (_sensorID == Unknown_DEVICE) {
+  if (_sensorID[idx] == Unknown_DEVICE) {
     String log = F("BMx280 : Unable to detect chip ID");
     addLog(LOG_LEVEL_INFO, log);
     return false;
@@ -403,7 +420,7 @@ bool Plugin_028_begin(uint8_t a) {
   // Perform soft reset
   Plugin_028_write8(BMx280_REGISTER_SOFTRESET, 0xB6);
   delay(2);  // Startup time is 2 ms (datasheet)
-  Plugin_028_readCoefficients(_i2caddr & 0x01);
+  Plugin_028_readCoefficients(a);
   delay(65); //May be needed here as well to fix first wrong measurement?
   return true;
 }
@@ -497,8 +514,10 @@ int16_t Plugin_028_readS16_LE(byte reg)
 //**************************************************************************/
 // Reads the factory-set coefficients
 //**************************************************************************/
-void Plugin_028_readCoefficients(uint8_t idx)
+void Plugin_028_readCoefficients(uint8_t i2cAddress)
 {
+  const uint8_t idx = Plugin_028_device_index(i2cAddress);
+
   _bme280_calib[idx].dig_T1 = Plugin_028_read16_LE(BMx280_REGISTER_DIG_T1);
   _bme280_calib[idx].dig_T2 = Plugin_028_readS16_LE(BMx280_REGISTER_DIG_T2);
   _bme280_calib[idx].dig_T3 = Plugin_028_readS16_LE(BMx280_REGISTER_DIG_T3);
@@ -526,8 +545,9 @@ void Plugin_028_readCoefficients(uint8_t idx)
 //**************************************************************************/
 // Read temperature
 //**************************************************************************/
-float Plugin_028_readTemperature(uint8_t idx)
+float Plugin_028_readTemperature(uint8_t i2cAddress)
 {
+  const uint8_t idx = Plugin_028_device_index(i2cAddress);
   int32_t var1, var2;
 
   // wait until measurement has been completed, otherwise we would read
@@ -554,7 +574,9 @@ float Plugin_028_readTemperature(uint8_t idx)
 //**************************************************************************/
 // Read pressure
 //**************************************************************************/
-float Plugin_028_readPressure(uint8_t idx) {
+float Plugin_028_readPressure(uint8_t i2cAddress)
+{
+  const uint8_t idx = Plugin_028_device_index(i2cAddress);
   int64_t var1, var2, p;
 
   int32_t adc_P = Plugin_028_read24(BMx280_REGISTER_PRESSUREDATA);
@@ -583,7 +605,8 @@ float Plugin_028_readPressure(uint8_t idx) {
 //**************************************************************************/
 // Read humidity
 //**************************************************************************/
-float Plugin_028_readHumidity(uint8_t idx) {
+float Plugin_028_readHumidity(uint8_t i2cAddress)
+{
   if (!Plugin_028_hasHumidity()) {
     // No support for humidity
     return 0.0;
@@ -591,7 +614,8 @@ float Plugin_028_readHumidity(uint8_t idx) {
   // It takes at least 1.587 sec for valit measurements to complete.
   // The datasheet names this the "T63" moment.
   // 1 second = 63% of the time needed to perform a measurement.
-  unsigned long difTime = millis() - last_measurement;
+  const uint8_t idx = Plugin_028_device_index(i2cAddress);
+  unsigned long difTime = millis() - last_measurement[idx];
   if (difTime < 1587) {
     delay(1587 - difTime);
   }
@@ -631,7 +655,7 @@ float Plugin_028_readAltitude(float seaLevel)
   // at high altitude.  See this thread for more information:
   //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
 
-  float atmospheric = Plugin_028_readPressure(_i2caddr & 0x01) / 100.0F;
+  float atmospheric = Plugin_028_readPressure(_i2caddr) / 100.0F;
   return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
 }
 
