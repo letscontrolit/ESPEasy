@@ -126,12 +126,12 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 // FHEM HTTP request
 //********************************************************************************
 //TODO: create a generic HTTPSend function that we use in all the controllers. lots of code duplication here
-boolean FHEMHTTPsend(String & url, String & buffer, byte index)
+void FHEMHTTPsend(String & url, String & buffer, byte index)
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(index, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-  boolean success = false;
+  // boolean success = false;
 
   String authHeader = "";
   if ((SecuritySettings.ControllerUser[index][0] != 0) && (SecuritySettings.ControllerPassword[index][0] != 0)) {
@@ -160,7 +160,7 @@ boolean FHEMHTTPsend(String & url, String & buffer, byte index)
     connectionFailures++;
     // strcpy_P(log, PSTR("HTTP : connection failed"));
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-    return false;
+    return;
   }
 
   statusLED(true);
@@ -192,7 +192,7 @@ boolean FHEMHTTPsend(String & url, String & buffer, byte index)
     if (line.startsWith(F("HTTP/1.1 200 OK"))) {
       // strcpy_P(log, PSTR("HTTP : Success"));
       addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP : Success"));
-      success = true;
+      // success = true;
     }
     else if (line.startsWith(F("HTTP/1.1 4"))) {
       addLog(LOG_LEVEL_ERROR, String(F("HTTP : Error: "))+line);

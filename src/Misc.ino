@@ -217,7 +217,7 @@ int getParamStartPos(String& string, byte indexFind)
   String tmpString = string;
   byte count = 0;
   tmpString.replace(" ", ",");
-  for (int x = 0; x < tmpString.length(); x++)
+  for (unsigned int x = 0; x < tmpString.length(); x++)
   {
     if (tmpString.charAt(x) == ',')
     {
@@ -233,7 +233,7 @@ int getParamStartPos(String& string, byte indexFind)
 /*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
-boolean setPinState(byte plugin, byte index, byte mode, uint16_t value)
+void setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
   // first check if this pin is already known
@@ -362,6 +362,7 @@ boolean timeOut(unsigned long timer)
   // It limits the maximum delay to 24.9 days.
 
   unsigned long now = millis();
+  //XXX: fix me, something fishy going on here, this << operator is in the wrong place or parenthesis are wrong
   if (((now >= timer) && ((now - timer) < 1 << 31))  || ((timer >= now) && (timer - now > 1 << 31)))
     return true;
 
@@ -631,9 +632,9 @@ byte getNotificationIndex(byte Number)
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
-boolean GetArgv(const char *string, char *argv, int argc)
+boolean GetArgv(const char *string, char *argv, unsigned int argc)
 {
-  int string_pos = 0, argv_pos = 0, argc_pos = 0;
+  unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
 
@@ -697,7 +698,7 @@ boolean str2ip(char *string, byte* IP)
   byte part = 0;
   int value = 0;
 
-  for (int x = 0; x <= strlen(string); x++)
+  for (unsigned int x = 0; x <= strlen(string); x++)
   {
     c = string[x];
     if (isdigit(c))
@@ -1332,7 +1333,7 @@ unsigned long string2TimeLong(String &str)
     for (x = strlen(TmpStr1) - 1; x >= 0; x--)
     {
       w = TmpStr1[x];
-      if (w >= '0' && w <= '9' || w == '*')
+      if ( (w >= '0' && w <= '9') || w == '*')
       {
         a = 0xffffffff  ^ (0xfUL << y); // create mask to clean nibble position y
         lngTime &= a; // maak nibble leeg
@@ -1342,7 +1343,8 @@ unsigned long string2TimeLong(String &str)
           lngTime |= (w - '0') << y; // fill nibble with token
         y += 4;
       }
-      else if (w == ':');
+      else
+        if (w == ':');
       else
       {
         break;
@@ -2179,7 +2181,7 @@ String rulesProcessingFile(String fileName, String& event)
   }
 
 
-  int pos = 0;
+  // int pos = 0;
   String line = "";
   boolean match = false;
   boolean codeBlock = false;
