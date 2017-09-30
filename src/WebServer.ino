@@ -450,7 +450,7 @@ void handle_root() {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
 
     IPAddress ip = WiFi.localIP();
-    IPAddress gw = WiFi.gatewayIP();
+    // IPAddress gw = WiFi.gatewayIP();
 
     reply += printWebString;
     reply += F("<form>");
@@ -849,7 +849,7 @@ void handle_controllers() {
     addHelpButton(reply, F("EasyProtocols"));
 
 
-    char str[20];
+    // char str[20];
 
     if (Settings.Protocol[index - 1])
     {
@@ -920,7 +920,7 @@ void handle_notifications() {
   if (!isLoggedIn()) return;
 
   struct EventStruct TempEvent;
-  char tmpString[64];
+  // char tmpString[64];
 
   navMenuIndex = 6;
   String notificationindex = WebServer.arg(F("index"));
@@ -1038,7 +1038,7 @@ void handle_notifications() {
     addHelpButton(reply, F("EasyNotifications"));
 
 
-    char str[20];
+    // char str[20];
 
     if (Settings.Notification[index - 1])
     {
@@ -1777,7 +1777,7 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
   char check1;
   char check2;
 
-  int i = 0;
+  unsigned int i = 0;
   while (i < strlen(ptr_1))    // For each character in string 1, starting with the first:
   {
     check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
@@ -2868,7 +2868,7 @@ void handle_control() {
 // Web Interface JSON page (no password!)
 //********************************************************************************
 
-boolean handle_json()
+void handle_json()
 {
   String tasknr = WebServer.arg(F("tasknr"));
   String reply = "";
@@ -3009,7 +3009,7 @@ void handle_advanced() {
       initTime();
   }
 
-  char str[20];
+  // char str[20];
 
   reply += F("<form  method='post'><table>");
 
@@ -3218,7 +3218,7 @@ void handleFileUpload() {
           unsigned long PID;
           int Version;
         } Temp;
-        for (int x = 0; x < sizeof(struct TempStruct); x++)
+        for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
         {
           byte b = upload.buf[x];
           memcpy((byte*)&Temp + x, &b, 1);
@@ -3523,7 +3523,7 @@ void handle_SDfilelist() {
     if (!entry.isDirectory())
     {
       reply += F("<TR><TD>");
-      if (entry.name() != "config.dat" && entry.name() != "security.dat")
+      if (entry.name() != String(F("config.dat")).c_str() && entry.name() != String(F("security.dat")).c_str())
       {
         reply += F("<a class='button link' href=\"SDfilelist?delete=");
         reply += entry.name();

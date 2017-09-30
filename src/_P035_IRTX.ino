@@ -114,7 +114,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
             printWebString += F("Interpreted RAW Code: ");
             //Loop throught every char in RAW string
-            for(int i = 0; i < IrRaw.length(); i++)
+            for(unsigned int i = 0; i < IrRaw.length(); i++)
             {
               //Get the decimal value from base32 table
               //See: https://en.wikipedia.org/wiki/Base32#base32hex
