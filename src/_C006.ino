@@ -104,6 +104,6 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      return success;
   }
+  return success;
 }

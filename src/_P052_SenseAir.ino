@@ -201,7 +201,7 @@ void Plugin_052_buildFrame(byte slaveAddress,
   frame[5] = (byte)(numberOfRegisters);
   // CRC-calculation
   byte checkSum[2] = {0};
-  unsigned int crc = Plugin_052_ModRTU_CRC(frame, 6, checkSum);
+  Plugin_052_ModRTU_CRC(frame, 6, checkSum);
   frame[6] = checkSum[0];
   frame[7] = checkSum[1];
 }
@@ -300,7 +300,7 @@ int Plugin_052_readTemperatureAdjustment(void)
 }
 
 void Plugin_052_setRelayStatus(int status) {
-  int response;
+  // int response;
   byte frame[8] = {0};
   if (status == 0) {
     Plugin_052_buildFrame(0xFE, 0x06, 0x18, 0x0000, frame);
@@ -309,7 +309,7 @@ void Plugin_052_setRelayStatus(int status) {
   } else {
     Plugin_052_buildFrame(0xFE, 0x06, 0x18, 0x7FFF, frame);
   }
-  response = Plugin_052_sendCommand(frame);
+  Plugin_052_sendCommand(frame);
 }
 
 // Compute the MODBUS RTU CRC

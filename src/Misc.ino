@@ -363,7 +363,7 @@ boolean timeOut(unsigned long timer)
 
   unsigned long now = millis();
   //XXX: fix me, something fishy going on here, this << operator is in the wrong place or parenthesis are wrong
-  if (((now >= timer) && ((now - timer) < 1 << 31))  || ((timer >= now) && (timer - now > 1 << 31)))
+  if (((now >= timer) && ((now - timer) < 1u << 31))  || ((timer >= now) && (timer - now > 1u << 31)))
     return true;
 
   return false;
@@ -554,7 +554,7 @@ String BuildFixes()
     }
   }
   Settings.Build = BUILD;
-  SaveSettings();
+  return(SaveSettings());
 }
 
 
@@ -1653,6 +1653,8 @@ float pop()
 {
   if (sp != (globalstack - 1)) // empty
     return *(sp--);
+  else
+    return(0);
 }
 
 float apply_operator(char op, float first, float second)

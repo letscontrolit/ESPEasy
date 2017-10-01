@@ -638,7 +638,7 @@ void type_ColorFader() {
 // Convert HSC Color to RGB Color
 void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
   // hue: 0-359, sat: 0-255, val (lightness): 0-255
-  int r, g, b, base;
+  int r=0, g=0, b=0, base=0;
 
   if (sat == 0) { // Achromatic color (gray).
     colors[0]=val;
