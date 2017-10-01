@@ -57,8 +57,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String IrType;
-        unsigned long IrCode;
-        unsigned int IrBits;
+        unsigned long IrCode=0;
+        unsigned int IrBits=0;
         //char log[120];
 
         char command[120];

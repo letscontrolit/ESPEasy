@@ -158,4 +158,6 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   client.flush();
   client.stop();
+
+  return(true);
 }

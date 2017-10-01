@@ -293,8 +293,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
               }
 
               // Check if UserVar changed so we do not overload homecontroller with the same readings
-              if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
-                Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
+              if (Settings.TaskDevicePluginConfig[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
+                Settings.TaskDevicePluginConfig[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
                 success = true;
               } else {
                 success = false;

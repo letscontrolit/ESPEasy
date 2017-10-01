@@ -68,7 +68,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         // if boot state must be send, inverse default state
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
-          
+
         success = true;
         break;
       }
@@ -103,7 +103,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+
     case PLUGIN_WRITE:
       {
         String log = "";
@@ -223,4 +223,5 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
     Wire.endTransmission();
     success = true;
   }
+  return(success);
 }

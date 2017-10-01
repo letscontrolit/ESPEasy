@@ -161,7 +161,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           Plugin_057_M->ClearRowBuffer();
           while (text[seg] && seg < 8)
           {
-            uint16_t value = 0;
+            // uint16_t value = 0;
             char c = text[seg];
             Plugin_057_M->SetDigit(seg, c);
             seg++;

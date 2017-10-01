@@ -140,10 +140,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         	addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
 
-          uint16_t r, g, b, c, colorTemp;
+          uint16_t r, g, b, c;
 
           tcs.getRawData(&r, &g, &b, &c);
-          colorTemp = tcs.calculateColorTemperature(r, g, b);
+          tcs.calculateColorTemperature(r, g, b);
           tcs.calculateLux(r, g, b);
 
           UserVar[event->BaseVarIndex] = r;
