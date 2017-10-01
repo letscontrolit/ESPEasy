@@ -1,3 +1,9 @@
+#ifdef CONTINUOUS_INTEGRATION
+#pragma GCC diagnostic error "-Wall"
+#else
+#pragma GCC diagnostic warning "-Wall"
+#endif
+
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.letscontrolit.com
  *
@@ -282,6 +288,7 @@
 #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+
 
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
