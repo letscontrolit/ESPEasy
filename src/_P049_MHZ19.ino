@@ -19,6 +19,11 @@
 #define PLUGIN_VALUENAME3_049 "U" // Undocumented, minimum measurement per time period?
 #define PLUGIN_READ_TIMEOUT   3000
 
+#define PLUGIN_049_FILTER_OFF     1
+#define PLUGIN_049_FILTER_FAST    2
+#define PLUGIN_049_FILTER_MEDIUM  3
+#define PLUGIN_049_FILTER_SLOW    4
+
 boolean Plugin_049_init = false;
 // Default of the sensor is to run ABC
 boolean Plugin_049_ABC_Disable = false;
@@ -44,6 +49,44 @@ enum
   ABC_enabled  = 0x01,
   ABC_disabled = 0x02
 };
+
+boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &newVal, uint32_t s, const int filterValue) {
+  if (s == 1) {
+    // S==1 => "A" version sensor bootup, do not use values.
+    return false;
+  }
+  if (prevVal < 400 || prevVal > 5000) {
+    // Prevent unrealistic values during start-up with filtering enabled.
+    // Just assume the entered value is correct.
+    return true;
+  }
+  int32_t difference = newVal - prevVal;
+  if (s > 0 && filterValue != PLUGIN_049_FILTER_OFF) {
+    // Not the "B" version of the sensor, S value is used.
+    // S==0 => "B" version, else "A" version
+    // The S value is an indication of the stability of the reading.
+    // S == 64 represents a stable reading and any lower value indicates (unusual) fast change.
+    // Now we increase the delay filter for low values of S and increase response time when the
+    // value is more stable.
+    // This will make the reading useful in more turbulent environments,
+    // where the sensor would report more rapid change of measured values.
+    difference = difference * s;
+    difference /= 64;
+  }
+  switch (filterValue) {
+    case PLUGIN_049_FILTER_OFF: {
+      if (s != 0 && s != 64) {
+        return false;
+      }
+      break;
+    }
+    case PLUGIN_049_FILTER_FAST: break;
+    case PLUGIN_049_FILTER_MEDIUM:  difference /= 2; break;
+    case PLUGIN_049_FILTER_SLOW: difference /= 4; break;
+  }
+  newVal = static_cast<unsigned int>(prevVal + difference);
+  return true;
+}
 
 boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 {
@@ -88,6 +131,15 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         String options[2] = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(string, F("Auto Base Calibration"), F("plugin_049_abcdisable"), 2, options, optionValues, choice);
+        byte choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        String filteroptions[4] = { F("Off"), F("Fast"), F("Medium"), F("Slow") };
+        int filteroptionValues[4] = {
+          PLUGIN_049_FILTER_OFF,
+          PLUGIN_049_FILTER_FAST,
+          PLUGIN_049_FILTER_MEDIUM,
+          PLUGIN_049_FILTER_SLOW };
+        addFormSelector(string, F("Filter"), F("plugin_049_filter"), 4, filteroptions, filteroptionValues, choiceFilter);
+
         success = true;
         break;
       }
@@ -102,6 +154,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           Plugin_049_ABC_Disable = new_ABC_disable;
         }
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = formValue;
+        const int filterValue = getFormItemInt(F("plugin_049_filter"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = filterValue;
         success = true;
         break;
       }
@@ -290,32 +344,31 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                   log += F("Will disable ABC when bootup complete. ");
                 }
                 success = false;
-
-              // If s = 0x40 the reading is stable; anything else should be ignored
-              } else if (s < 64) {
-
-                log += F("Unstable reading, ignoring! ");
-                success = false;
-
               // Finally, stable readings are used for variables
               } else {
-
-                UserVar[event->BaseVarIndex] = (float)ppm;
-                UserVar[event->BaseVarIndex + 1] = (float)temp;
-                UserVar[event->BaseVarIndex + 2] = (float)u;
-                if (Plugin_049_ABC_MustApply) {
-                  // Send ABC enable/disable command based on the desired state.
-                  if (Plugin_049_ABC_Disable) {
-                    Plugin_049_SoftSerial->write(mhzCmdABCDisable, 9);
-                    addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
-                  } else {
-                    Plugin_049_SoftSerial->write(mhzCmdABCEnable, 9);
-                    addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+                const int filterValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+                if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue)) {
+                  UserVar[event->BaseVarIndex] = (float)ppm;
+                  UserVar[event->BaseVarIndex + 1] = (float)temp;
+                  UserVar[event->BaseVarIndex + 2] = (float)u;
+                  if (s==0 || s==64) {
+                    // Reading is stable.
+                    if (Plugin_049_ABC_MustApply) {
+                      // Send ABC enable/disable command based on the desired state.
+                      if (Plugin_049_ABC_Disable) {
+                        Plugin_049_SoftSerial->write(mhzCmdABCDisable, 9);
+                        addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+                      } else {
+                        Plugin_049_SoftSerial->write(mhzCmdABCEnable, 9);
+                        addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+                      }
+                      Plugin_049_ABC_MustApply = false;
+                    }
                   }
-                  Plugin_049_ABC_MustApply = false;
+                  success = true;
+                } else {
+                  success = false;
                 }
-                success = true;
-
               }
 
               // Log values in all cases
