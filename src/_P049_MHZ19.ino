@@ -19,10 +19,11 @@
 #define PLUGIN_VALUENAME3_049 "U" // Undocumented, minimum measurement per time period?
 #define PLUGIN_READ_TIMEOUT   3000
 
-#define PLUGIN_049_FILTER_OFF     1
-#define PLUGIN_049_FILTER_FAST    2
-#define PLUGIN_049_FILTER_MEDIUM  3
-#define PLUGIN_049_FILTER_SLOW    4
+#define PLUGIN_049_FILTER_OFF        1
+#define PLUGIN_049_FILTER_OFF_ALLSAMPLES 2
+#define PLUGIN_049_FILTER_FAST       3
+#define PLUGIN_049_FILTER_MEDIUM     4
+#define PLUGIN_049_FILTER_SLOW       5
 
 boolean Plugin_049_init = false;
 // Default of the sensor is to run ABC
@@ -50,7 +51,7 @@ enum
   ABC_disabled = 0x02
 };
 
-boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &newVal, uint32_t s, const int filterValue) {
+boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &newVal, uint32_t s, const int filterValue, String& log) {
   if (s == 1) {
     // S==1 => "A" version sensor bootup, do not use values.
     return false;
@@ -60,8 +61,9 @@ boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &new
     // Just assume the entered value is correct.
     return true;
   }
+  boolean filterApplied = filterValue > PLUGIN_049_FILTER_OFF_ALLSAMPLES;
   int32_t difference = newVal - prevVal;
-  if (s > 0 && filterValue != PLUGIN_049_FILTER_OFF) {
+  if (s > 0 && s < 64 && filterValue != PLUGIN_049_FILTER_OFF) {
     // Not the "B" version of the sensor, S value is used.
     // S==0 => "B" version, else "A" version
     // The S value is an indication of the stability of the reading.
@@ -72,17 +74,28 @@ boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &new
     // where the sensor would report more rapid change of measured values.
     difference = difference * s;
     difference /= 64;
+    log += F("Compensate Unstable ");
+    filterApplied = true;
   }
   switch (filterValue) {
     case PLUGIN_049_FILTER_OFF: {
       if (s != 0 && s != 64) {
+        log += F("Skip Unstable ");
         return false;
       }
+      filterApplied = false;
       break;
     }
-    case PLUGIN_049_FILTER_FAST: break;
-    case PLUGIN_049_FILTER_MEDIUM:  difference /= 2; break;
-    case PLUGIN_049_FILTER_SLOW: difference /= 4; break;
+                                                  // #Samples to reach >= 75% of step response
+    case PLUGIN_049_FILTER_OFF_ALLSAMPLES: filterApplied = false; break; // No Delay
+    case PLUGIN_049_FILTER_FAST:    difference /= 2; break; // Delay: 2 samples
+    case PLUGIN_049_FILTER_MEDIUM:  difference /= 4; break; // Delay: 5 samples
+    case PLUGIN_049_FILTER_SLOW:    difference /= 8; break; // Delay: 11 samples
+  }
+  if (filterApplied) {
+    log += F("Raw PPM: ");
+    log += newVal;
+    log += F(" Filtered ");
   }
   newVal = static_cast<unsigned int>(prevVal + difference);
   return true;
@@ -132,13 +145,14 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(string, F("Auto Base Calibration"), F("plugin_049_abcdisable"), 2, options, optionValues, choice);
         byte choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        String filteroptions[4] = { F("Off"), F("Fast"), F("Medium"), F("Slow") };
-        int filteroptionValues[4] = {
+        String filteroptions[5] = { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
+        int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,
+          PLUGIN_049_FILTER_OFF_ALLSAMPLES,
           PLUGIN_049_FILTER_FAST,
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
-        addFormSelector(string, F("Filter"), F("plugin_049_filter"), 4, filteroptions, filteroptionValues, choiceFilter);
+        addFormSelector(string, F("Filter"), F("plugin_049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
 
         success = true;
         break;
@@ -347,7 +361,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               // Finally, stable readings are used for variables
               } else {
                 const int filterValue = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-                if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue)) {
+                if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
                   UserVar[event->BaseVarIndex] = (float)ppm;
                   UserVar[event->BaseVarIndex + 1] = (float)temp;
                   UserVar[event->BaseVarIndex + 2] = (float)u;
