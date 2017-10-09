@@ -6,7 +6,7 @@
 
 #define PLUGIN_004
 #define PLUGIN_ID_004         4
-#define PLUGIN_NAME_004       "Environment - DS18B20"
+#define PLUGIN_NAME_004       "Environment - DS18b20"
 #define PLUGIN_VALUENAME1_004 "Temperature"
 
 uint8_t Plugin_004_DallasPin;
@@ -99,7 +99,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
             // save the address for selected device and store into extra tasksettings
             Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
-            byte devCount = Plugin_004_DS_scan(getFormItemInt(F("plugin_004_dev")), addr);
+            // byte devCount =
+            Plugin_004_DS_scan(getFormItemInt(F("plugin_004_dev")), addr);
             for (byte x = 0; x < 8; x++)
                 ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
@@ -280,6 +281,7 @@ int Plugin_004_DS_getResolution(uint8_t ROM[8])
                 return 9;
         }
     }
+    return(0);
 }
 
 /*********************************************************************************************\

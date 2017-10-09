@@ -19,7 +19,7 @@ uint16_t readRegister024(uint8_t i2cAddress, uint8_t reg) {
   Wire.requestFrom(i2cAddress, (uint8_t)3);
   ret = Wire.read(); // receive DATA
   ret |= Wire.read() << 8; // receive DATA
-  uint8_t pec = Wire.read();
+  Wire.read();
   return ret;
 }
 
@@ -35,7 +35,7 @@ float readTemp024(uint8_t i2c_addr, uint8_t i2c_reg)
 boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte portValue = 0;
+  // static byte portValue = 0;
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -106,8 +106,8 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
   //      noInterrupts();
-        int value;
-        value = 0;
+        // int value;
+        // value = 0;
         byte unit = Settings.TaskDevicePort[event->TaskIndex];
         uint8_t address = 0x5A + unit;
         UserVar[event->BaseVarIndex] = (float) readTemp024(address, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);

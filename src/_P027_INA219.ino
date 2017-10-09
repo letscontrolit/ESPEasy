@@ -62,11 +62,29 @@
 #define INA219_REG_CURRENT                     (0x04)
 #define INA219_REG_CALIBRATION                 (0x05)
 
-uint8_t ina219_i2caddr;
-uint32_t ina219_calValue;
-// The following multipliers are used to convert raw current and power
-// values to mA and mW, taking into account the current config settings
-uint32_t ina219_currentDivider_mA;
+typedef struct {
+  uint32_t calValue;
+  // The following multipliers are used to convert raw current and power
+  // values to mA and mW, taking into account the current config settings
+  uint32_t currentDivider_mA;
+} ina219_data;
+
+ina219_data _ina219_data[4];
+int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
+
+uint8_t Plugin_027_i2c_addr(struct EventStruct *event) {
+   return (uint8_t)Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+}
+
+uint8_t Plugin_027_device_index(const uint8_t i2caddr) {
+  switch(i2caddr) {
+    case INA219_ADDRESS:   return 0u;
+    case INA219_ADDRESS2:  return 1u;
+    case INA219_ADDRESS3:  return 2u;
+    case INA219_ADDRESS4:  return 3u;
+  }
+  return 0u; // Some default
+}
 
 boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 {
@@ -118,13 +136,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         optionValuesMode[2] = 2;
         addFormSelector(string, F("Measure range"), F("plugin_027_range"), 3, optionsMode, optionValuesMode, choiceMode);
 
-        byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        int optionValues2[4];
-        optionValues2[0] = INA219_ADDRESS;
-        optionValues2[1] = INA219_ADDRESS2;
-        optionValues2[2] = INA219_ADDRESS3;
-        optionValues2[3] = INA219_ADDRESS4;
-        addFormSelectorI2C(string, F("plugin_027_i2c"), 4, optionValues2, choice2);
+        addFormSelectorI2C(string, F("plugin_027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
 
         byte choiceMeasureType = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
@@ -145,27 +157,27 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-      	ina219_i2caddr = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-
-        ina219_currentDivider_mA = 0;
+      	const uint8_t i2caddr =  Plugin_027_i2c_addr(event);
+        const uint8_t idx = Plugin_027_device_index(i2caddr);
+        _ina219_data[idx].currentDivider_mA = 0;
         switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
         {
       		case 0:
       		{
       			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 2A"));
-      		  Plugin_027_setCalibration_32V_2A();
+      		  Plugin_027_setCalibration_32V_2A(i2caddr);
       			break;
       		}
       		case 1:
       		{
       			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 1A"));
-      			Plugin_027_setCalibration_32V_1A();
+      			Plugin_027_setCalibration_32V_1A(i2caddr);
       			break;
       		}
       		case 2:
       		{
       			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 16V, 400mA"));
-      			Plugin_027_setCalibration_16V_400mA();
+      			Plugin_027_setCalibration_16V_400mA(i2caddr);
       			break;
       		}
 
@@ -181,20 +193,18 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         // busvoltage = Plugin_027_getBusVoltage_V();
         // current_mA = Plugin_027_getCurrent_mA();
         // loadvoltage = Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000);
+        const uint8_t i2caddr =  Plugin_027_i2c_addr(event);
 
-
-				float voltage = Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000);
-
-				float current = Plugin_027_getCurrent_mA()/1000;
-
-				float power = (Plugin_027_getBusVoltage_V() + (Plugin_027_getShuntVoltage_mV() / 1000)) * Plugin_027_getCurrent_mA() / 1000;
+				float voltage = Plugin_027_getBusVoltage_V(i2caddr) + (Plugin_027_getShuntVoltage_mV(i2caddr) / 1000);
+				float current = Plugin_027_getCurrent_mA(i2caddr)/1000;
+				float power = voltage * current;
 
         UserVar[event->BaseVarIndex] = voltage;
       	UserVar[event->BaseVarIndex + 1] = current;
       	UserVar[event->BaseVarIndex + 2] = power;
 
       	String log = F("INA219 0x");
-      	log += String(ina219_i2caddr,HEX);
+      	log += String(i2caddr,HEX);
 
       	// for backward compability we allow the user to select if only one measurement should be returned
       	// or all 3 measurement at once
@@ -251,9 +261,9 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 //**************************************************************************/
 // Sends a single command byte over I2C
 //**************************************************************************/
-void Plugin_027_wireWriteRegister (uint8_t reg, uint16_t value)
+void Plugin_027_wireWriteRegister (uint8_t i2caddr, uint8_t reg, uint16_t value)
 {
-  Wire.beginTransmission(ina219_i2caddr);
+  Wire.beginTransmission(i2caddr);
   Wire.write(reg);                       // Register
   Wire.write((value >> 8) & 0xFF);       // Upper 8-bits
   Wire.write(value & 0xFF);              // Lower 8-bits
@@ -263,16 +273,16 @@ void Plugin_027_wireWriteRegister (uint8_t reg, uint16_t value)
 //**************************************************************************/
 // Reads a 16 bit values over I2C
 //**************************************************************************/
-void Plugin_027_wireReadRegister(uint8_t reg, uint16_t *value)
+void Plugin_027_wireReadRegister(uint8_t i2caddr, uint8_t reg, uint16_t *value)
 {
 
-  Wire.beginTransmission(ina219_i2caddr);
+  Wire.beginTransmission(i2caddr);
   Wire.write(reg);                       // Register
   Wire.endTransmission();
 
   delay(1); // Max 12-bit conversion time is 586us per sample
 
-  Wire.requestFrom(ina219_i2caddr, (uint8_t)2);
+  Wire.requestFrom(i2caddr, (uint8_t)2);
   // Shift values to create properly formed integer
   *value = ((Wire.read() << 8) | Wire.read());
 }
@@ -280,15 +290,15 @@ void Plugin_027_wireReadRegister(uint8_t reg, uint16_t *value)
 //**************************************************************************/
 // Configures to INA219 to be able to measure up to 32V and 2A
 /**************************************************************************/
-void Plugin_027_setCalibration_32V_2A(void)
-{
-  ina219_calValue = 4027;
+void Plugin_027_setCalibration_32V_2A(uint8_t i2caddr) {
+  const uint8_t idx = Plugin_027_device_index(i2caddr);
+  _ina219_data[idx].calValue = 4027;
 
   // Set multipliers to convert raw current/power values
-  ina219_currentDivider_mA = 10;  // Current LSB = 100uA per bit (1000/100 = 10)
+  _ina219_data[idx].currentDivider_mA = 10;  // Current LSB = 100uA per bit (1000/100 = 10)
 
   // Set Calibration register to 'Cal' calculated above
-  Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CALIBRATION, _ina219_data[idx].calValue);
 
   // Set Config register to take into account the settings above
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_32V |
@@ -296,22 +306,21 @@ void Plugin_027_setCalibration_32V_2A(void)
                     INA219_CONFIG_BADCRES_12BIT |
                     INA219_CONFIG_SADCRES_12BIT_1S_532US |
                     INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
-  Plugin_027_wireWriteRegister(INA219_REG_CONFIG, config);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CONFIG, config);
 }
 
 //**************************************************************************/
 // Configures to INA219 to be able to measure up to 32V and 1A
 //**************************************************************************/
-void Plugin_027_setCalibration_32V_1A(void)
-{
-
-  ina219_calValue = 10240;
+void Plugin_027_setCalibration_32V_1A(uint8_t i2caddr) {
+  const uint8_t idx = Plugin_027_device_index(i2caddr);
+  _ina219_data[idx].calValue = 10240;
 
   // Set multipliers to convert raw current/power values
-  ina219_currentDivider_mA = 25;      // Current LSB = 40uA per bit (1000/40 = 25)
+  _ina219_data[idx].currentDivider_mA = 25;      // Current LSB = 40uA per bit (1000/40 = 25)
 
   // Set Calibration register to 'Cal' calculated above
-  Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CALIBRATION, _ina219_data[idx].calValue);
 
   // Set Config register to take into account the settings above
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_32V |
@@ -319,21 +328,22 @@ void Plugin_027_setCalibration_32V_1A(void)
                     INA219_CONFIG_BADCRES_12BIT |
                     INA219_CONFIG_SADCRES_12BIT_1S_532US |
                     INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
-  Plugin_027_wireWriteRegister(INA219_REG_CONFIG, config);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CONFIG, config);
 }
 
 //**************************************************************************/
 // Configures to INA219 to be able to measure up to 16V and 400mA
 //**************************************************************************/
-void Plugin_027_setCalibration_16V_400mA(void) {
+void Plugin_027_setCalibration_16V_400mA(uint8_t i2caddr) {
+  const uint8_t idx = Plugin_027_device_index(i2caddr);
 
-  ina219_calValue = 8192;
+  _ina219_data[idx].calValue = 8192;
 
   // Set multipliers to convert raw current/power values
-  ina219_currentDivider_mA = 20;  // Current LSB = 50uA per bit (1000/50 = 20)
+  _ina219_data[idx].currentDivider_mA = 20;  // Current LSB = 50uA per bit (1000/50 = 20)
 
   // Set Calibration register to 'Cal' calculated above
-  Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CALIBRATION, _ina219_data[idx].calValue);
 
   // Set Config register to take into account the settings above
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_16V |
@@ -341,16 +351,16 @@ void Plugin_027_setCalibration_16V_400mA(void) {
                     INA219_CONFIG_BADCRES_12BIT |
                     INA219_CONFIG_SADCRES_12BIT_1S_532US |
                     INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
-  Plugin_027_wireWriteRegister(INA219_REG_CONFIG, config);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CONFIG, config);
 }
 
 
 //**************************************************************************/
 // Gets the raw bus voltage (16-bit signed integer, so +-32767)
 //**************************************************************************/
-int16_t Plugin_027_getBusVoltage_raw() {
+int16_t Plugin_027_getBusVoltage_raw(uint8_t i2caddr) {
   uint16_t value;
-  Plugin_027_wireReadRegister(INA219_REG_BUSVOLTAGE, &value);
+  Plugin_027_wireReadRegister(i2caddr, INA219_REG_BUSVOLTAGE, &value);
 
   // Shift to the right 3 to drop CNVR and OVF and multiply by LSB
   return (int16_t)((value >> 3) * 4);
@@ -359,26 +369,27 @@ int16_t Plugin_027_getBusVoltage_raw() {
 //**************************************************************************/
 // Gets the raw shunt voltage (16-bit signed integer, so +-32767)
 //**************************************************************************/
-int16_t Plugin_027_getShuntVoltage_raw() {
+int16_t Plugin_027_getShuntVoltage_raw(uint8_t i2caddr) {
   uint16_t value;
-  Plugin_027_wireReadRegister(INA219_REG_SHUNTVOLTAGE, &value);
+  Plugin_027_wireReadRegister(i2caddr, INA219_REG_SHUNTVOLTAGE, &value);
   return (int16_t)value;
 }
 
 //**************************************************************************/
 // Gets the raw current value (16-bit signed integer, so +-32767)
 //**************************************************************************/
-int16_t Plugin_027_getCurrent_raw() {
+int16_t Plugin_027_getCurrent_raw(uint8_t i2caddr) {
+  const uint8_t idx = Plugin_027_device_index(i2caddr);
   uint16_t value;
 
   // Sometimes a sharp load will reset the INA219, which will
   // reset the cal register, meaning CURRENT and POWER will
   // not be available ... avoid this by always setting a cal
   // value even if it's an unfortunate extra step
-  Plugin_027_wireWriteRegister(INA219_REG_CALIBRATION, ina219_calValue);
+  Plugin_027_wireWriteRegister(i2caddr, INA219_REG_CALIBRATION, _ina219_data[idx].calValue);
 
   // Now we can safely read the CURRENT register!
-  Plugin_027_wireReadRegister(INA219_REG_CURRENT, &value);
+  Plugin_027_wireReadRegister(i2caddr, INA219_REG_CURRENT, &value);
 
   return (int16_t)value;
 }
@@ -386,17 +397,17 @@ int16_t Plugin_027_getCurrent_raw() {
 //**************************************************************************/
 // Gets the shunt voltage in mV (so +-327mV)
 //**************************************************************************/
-float Plugin_027_getShuntVoltage_mV() {
+float Plugin_027_getShuntVoltage_mV(uint8_t i2caddr) {
   int16_t value;
-  value = Plugin_027_getShuntVoltage_raw();
+  value = Plugin_027_getShuntVoltage_raw(i2caddr);
   return value * 0.01;
 }
 
 //**************************************************************************/
 // Gets the shunt voltage in volts
 //**************************************************************************/
-float Plugin_027_getBusVoltage_V() {
-  int16_t value = Plugin_027_getBusVoltage_raw();
+float Plugin_027_getBusVoltage_V(uint8_t i2caddr) {
+  int16_t value = Plugin_027_getBusVoltage_raw(i2caddr);
   return value * 0.001;
 }
 
@@ -404,8 +415,9 @@ float Plugin_027_getBusVoltage_V() {
 // Gets the current value in mA, taking into account the
 //            config settings and current LSB
 //**************************************************************************/
-float Plugin_027_getCurrent_mA() {
-  float valueDec = Plugin_027_getCurrent_raw();
-  valueDec /= ina219_currentDivider_mA;
+float Plugin_027_getCurrent_mA(uint8_t i2caddr) {
+  const uint8_t idx = Plugin_027_device_index(i2caddr);
+  float valueDec = Plugin_027_getCurrent_raw(i2caddr);
+  valueDec /= _ina219_data[idx].currentDivider_mA;
   return valueDec;
 }

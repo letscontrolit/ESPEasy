@@ -25,9 +25,9 @@ install:
   - pip install -U platformio
 
 script:
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -s
   - cppcheck --enable=warning src/*.ino -q --force -I src --include=src/ESPEasy.ino --error-exitcode=1
   - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
-  - platformio run -s
 
 before_deploy:
   - ./before_deploy
