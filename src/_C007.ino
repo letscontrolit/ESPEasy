@@ -35,7 +35,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
         char log[80];
-        boolean success = false;
+        // boolean success = false;
         char host[20];
         sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 

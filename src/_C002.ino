@@ -50,7 +50,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
         if (root.success())
         {
-          long idx = root[F("idx")];
+          unsigned int idx = root[F("idx")];
           float nvalue = root[F("nvalue")];
           long nvaluealt = root[F("nvalue")];
           //const char* name = root["name"]; // Not used

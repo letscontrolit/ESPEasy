@@ -138,7 +138,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         char tmpString[128];
         String options[8];
-        int optionValues[8];
+        // int optionValues[8];
 
         options[0] = F("Off");
         options[1] = F("Static Light");
@@ -530,7 +530,7 @@ void type_Advanced_Candle() {
   }
 
   for (int j = 0; j < 4; j++) {
-    for (int i = 1; i < 6; i++){
+    for (unsigned int i = 1; i < 6; i++){
       if (i <= Candle_Temp[0]) {
         Candle_pixels->setPixelColor(j * 5 + i - 1, colorbase[0], colorbase[1], colorbase[2]);
       }
@@ -554,7 +554,7 @@ void type_Police() {
     Candle_Temp[0] = 0;
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (unsigned int i = 0; i < 4; i++) {
     if (i == Candle_Temp[0])
     {
       for (int j = 0; j < 5; j++) {
@@ -638,7 +638,7 @@ void type_ColorFader() {
 // Convert HSC Color to RGB Color
 void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
   // hue: 0-359, sat: 0-255, val (lightness): 0-255
-  int r, g, b, base;
+  int r=0, g=0, b=0, base=0;
 
   if (sat == 0) { // Achromatic color (gray).
     colors[0]=val;

@@ -2,7 +2,7 @@ char* ramtest;
 
 //Reads a string from a stream until a terminator-character.
 //We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
-bool safeReadStringUntil(Stream &input, String &str, char terminator, int maxSize=1024, int timeout=1000)
+bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize=1024, unsigned int timeout=1000)
 {
     unsigned long startMillis;
     int c;
@@ -266,7 +266,7 @@ void ExecuteCommand(byte source, const char *Line)
     String request = Line;
     remoteConfig(&TempEvent, request);
   }
-  
+
   if (strcasecmp_P(Command, PSTR("deepSleep")) == 0)
   {
     success = true;
@@ -280,7 +280,7 @@ void ExecuteCommand(byte source, const char *Line)
     if (GetArgv(Line, TmpStr1, 4))
     {
       float result = 0;
-      byte error = Calculate(TmpStr1, &result);
+      Calculate(TmpStr1, &result);
       UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
     }
   }

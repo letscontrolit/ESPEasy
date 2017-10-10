@@ -202,7 +202,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           uint16_t checksum = 0, checksum2 = 0;
           uint16_t framelength = 0;
           uint16_t data[13];
-          byte data_low, data_high;
+          // byte data_low, data_high;
           int i = 0;
 
           // Check if a packet is available in the UART FIFO.

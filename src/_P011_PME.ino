@@ -201,7 +201,7 @@ int Plugin_011_Read(byte Par1, byte Par2)
 //********************************************************************************
 // PME write
 //********************************************************************************
-boolean Plugin_011_Write(byte Par1, byte Par2)
+void Plugin_011_Write(byte Par1, byte Par2)
 {
   uint8_t address = 0x7f;
   Wire.beginTransmission(address);

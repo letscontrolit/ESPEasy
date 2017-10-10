@@ -44,6 +44,16 @@ static const char pgDefaultCSS[] PROGMEM = {
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
+//if there is an error-string, add it to the html code with correct formatting
+void addHtmlError(String & str, String error)
+{
+    if (error.length()>0)
+    {
+      str += F("<span style=\"color:red\">");
+      str += error;
+      str += F("</span>");
+    }
+}
 
 void WebServerInit()
 {
@@ -438,7 +448,7 @@ void handle_root() {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
 
     IPAddress ip = WiFi.localIP();
-    IPAddress gw = WiFi.gatewayIP();
+    // IPAddress gw = WiFi.gatewayIP();
 
     reply += printWebString;
     reply += F("<form>");
@@ -639,8 +649,7 @@ void handle_config() {
     espdns.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.DNS);
     Settings.Unit = unit.toInt();
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'><table>");
@@ -769,9 +778,8 @@ void handle_controllers() {
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
       }
     }
-    SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -839,7 +847,7 @@ void handle_controllers() {
     addHelpButton(reply, F("EasyProtocols"));
 
 
-    char str[20];
+    // char str[20];
 
     if (Settings.Protocol[index - 1])
     {
@@ -910,7 +918,7 @@ void handle_notifications() {
   if (!isLoggedIn()) return;
 
   struct EventStruct TempEvent;
-  char tmpString[64];
+  // char tmpString[64];
 
   navMenuIndex = 6;
   String notificationindex = WebServer.arg(F("index"));
@@ -963,9 +971,8 @@ void handle_notifications() {
         strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
-    SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings));
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -1029,7 +1036,7 @@ void handle_notifications() {
     addHelpButton(reply, F("EasyNotifications"));
 
 
-    char str[20];
+    // char str[20];
 
     if (Settings.Notification[index - 1])
     {
@@ -1127,8 +1134,7 @@ void handle_hardware() {
     Settings.PinBootStates[15] =  getFormItemInt(F("p15"));
     Settings.PinBootStates[16] =  getFormItemInt(F("p16"));
 
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
@@ -1371,9 +1377,10 @@ void handle_devices() {
 
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
-    SaveTaskSettings(index - 1);
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveTaskSettings(index - 1));
+
+    addHtmlError(reply, SaveSettings());
+
     if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[index - 1])
       PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
   }
@@ -1768,7 +1775,7 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
   char check1;
   char check2;
 
-  int i = 0;
+  unsigned int i = 0;
   while (i < strlen(ptr_1))    // For each character in string 1, starting with the first:
   {
     check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
@@ -2859,7 +2866,7 @@ void handle_control() {
 // Web Interface JSON page (no password!)
 //********************************************************************************
 
-boolean handle_json()
+void handle_json()
 {
   String tasknr = WebServer.arg(F("tasknr"));
   String reply = "";
@@ -2994,13 +3001,13 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+
+    addHtmlError(reply, SaveSettings());
     if (Settings.UseNTP)
       initTime();
   }
 
-  char str[20];
+  // char str[20];
 
   reply += F("<form  method='post'><table>");
 
@@ -3209,7 +3216,7 @@ void handleFileUpload() {
           unsigned long PID;
           int Version;
         } Temp;
-        for (int x = 0; x < sizeof(struct TempStruct); x++)
+        for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
         {
           byte b = upload.buf[x];
           memcpy((byte*)&Temp + x, &b, 1);
@@ -3514,7 +3521,7 @@ void handle_SDfilelist() {
     if (!entry.isDirectory())
     {
       reply += F("<TR><TD>");
-      if (entry.name() != "config.dat" && entry.name() != "security.dat")
+      if (entry.name() != String(F("config.dat")).c_str() && entry.name() != String(F("security.dat")).c_str())
       {
         reply += F("<a class='button link' href=\"SDfilelist?delete=");
         reply += entry.name();
@@ -3578,7 +3585,7 @@ void handle_setup() {
 
   if (WiFi.status() == WL_CONNECTED)
   {
-    SaveSettings();
+    addHtmlError(reply, SaveSettings());
     IPAddress ip = WiFi.localIP();
     char host[20];
     sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);

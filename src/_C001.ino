@@ -48,7 +48,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             authHeader += F(" \r\n");
           }
 
-          boolean success = false;
+          // boolean success = false;
           IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
           addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
 

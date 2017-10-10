@@ -35,7 +35,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
         char log[80];
-        boolean success = false;
+        // boolean success = false;
         char host[20];
         sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
@@ -94,7 +94,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           //   String line = client.readStringUntil('\n');
           String line;
           safeReadStringUntil(client, line, '\n');
-          
+
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))

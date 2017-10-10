@@ -69,7 +69,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         byte dht_dat[5];
         byte dht_in;
         byte i;
-        byte Retry = 0;
+        // byte Retry = 0;
         boolean error = false;
 
         byte Par3 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];

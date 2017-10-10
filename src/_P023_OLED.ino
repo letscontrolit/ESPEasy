@@ -367,18 +367,19 @@ static void Plugin_023_SendChar(unsigned char data)
 
 
 // Prints a display char (not just a byte) in coordinates X Y,
-static void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
-{
-  //if (interrupt && !doing_menu) return; // Stop printing only if interrupt is call but not in button functions
-  Plugin_023_setXY(X, Y);
-  Wire.beginTransmission(Plugin_023_OLED_address); // begin transmitting
-  Wire.write(0x40);//data mode
-
-  for (int i = 0; i < 8; i++)
-    Wire.write(pgm_read_byte(Plugin_023_myFont[data - 0x20] + i));
-
-  Wire.endTransmission();    // stop transmitting
-}
+//currently unused:
+// static void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
+// {
+//   //if (interrupt && !doing_menu) return; // Stop printing only if interrupt is call but not in button functions
+//   Plugin_023_setXY(X, Y);
+//   Wire.beginTransmission(Plugin_023_OLED_address); // begin transmitting
+//   Wire.write(0x40);//data mode
+//
+//   for (int i = 0; i < 8; i++)
+//     Wire.write(pgm_read_byte(Plugin_023_myFont[data - 0x20] + i));
+//
+//   Wire.endTransmission();    // stop transmitting
+// }
 
 
 static void Plugin_023_sendcommand(unsigned char com)
@@ -411,18 +412,19 @@ static void Plugin_023_setXY(unsigned char row, unsigned char col)
 
 
 // Prints a string regardless the cursor position.
-static void Plugin_023_sendStr(unsigned char *string)
-{
-  unsigned char i = 0;
-  while (*string)
-  {
-    for (i = 0; i < 8; i++)
-    {
-      Plugin_023_SendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
-    }
-    string++;
-  }
-}
+// unused:
+// static void Plugin_023_sendStr(unsigned char *string)
+// {
+//   unsigned char i = 0;
+//   while (*string)
+//   {
+//     for (i = 0; i < 8; i++)
+//     {
+//       Plugin_023_SendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
+//     }
+//     string++;
+//   }
+// }
 
 
 // Prints a string in coordinates X Y, being multiples of 8.
