@@ -381,7 +381,7 @@ void p073_FillBufferWithTemp(long temperature)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   char p073_digit[8];
-  sprintf(p073_digit, "%7d", temperature);
+  sprintf(p073_digit, "%7d", static_cast<int>(temperature));
   int p073_numlenght = strlen(p073_digit);
   byte p073_dispdigit;
   for (int i=0;i<p073_numlenght;i++) {
