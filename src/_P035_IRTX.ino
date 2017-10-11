@@ -57,8 +57,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String IrType;
-        unsigned long IrCode;
-        unsigned int IrBits;
+        unsigned long IrCode=0;
+        unsigned int IrBits=0;
         //char log[120];
 
         char command[120];
@@ -114,7 +114,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
             printWebString += F("Interpreted RAW Code: ");
             //Loop throught every char in RAW string
-            for(int i = 0; i < IrRaw.length(); i++)
+            for(unsigned int i = 0; i < IrRaw.length(); i++)
             {
               //Get the decimal value from base32 table
               //See: https://en.wikipedia.org/wiki/Base32#base32hex

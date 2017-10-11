@@ -1,7 +1,7 @@
 //********************************************************************************
 // Interface for Sending to Controllers
 //********************************************************************************
-boolean sendData(struct EventStruct *event)
+void sendData(struct EventStruct *event)
 {
   LoadTaskSettings(event->TaskIndex);
   if (Settings.UseRules)
@@ -157,6 +157,7 @@ void MQTTCheck()
 {
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
   if (Protocol[ProtocolIndex].usesMQTT)
+  {
     if (!MQTTclient.connected())
     {
       String log = F("MQTT : Connection lost");
@@ -168,6 +169,7 @@ void MQTTCheck()
     }
     else if (connectionFailures)
       connectionFailures--;
+  }
 }
 
 

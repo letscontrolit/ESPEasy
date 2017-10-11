@@ -21,7 +21,7 @@ static uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
 boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte portValue = 0;
+  // static byte portValue = 0;
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:

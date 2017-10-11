@@ -98,7 +98,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
             // save the address for selected device and store into extra tasksettings
             Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
-            byte devCount = Plugin_004_DS_scan(getFormItemInt(F("plugin_004_dev")), addr);
+            // byte devCount =
+            Plugin_004_DS_scan(getFormItemInt(F("plugin_004_dev")), addr);
             for (byte x = 0; x < 8; x++)
                 ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
@@ -274,6 +275,7 @@ int Plugin_004_DS_getResolution(uint8_t ROM[8])
                 return 9;
         }
     }
+    return(0);
 }
 
 /*********************************************************************************************\
