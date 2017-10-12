@@ -100,11 +100,14 @@ void ExecuteCommand(byte source, const char *Line)
     {
       if (Settings.NotificationEnabled[Par1 - 1] && Settings.Notification[Par1 - 1] != 0)
       {
-        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[Par1 - 1]);
-        struct EventStruct TempEvent;
-        TempEvent.NotificationProtocolIndex = Par1 - 1;
-        if (NPlugin_id[NotificationProtocolIndex] != 0)
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[Par1 - 1]);
+        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
+        {
+          struct EventStruct TempEvent;
+          // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
+          TempEvent.NotificationIndex=Par1-1;
           NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, message);
+        }
       }
     }
   }
