@@ -10,6 +10,8 @@ class EspEasy:
 
 
     def controller_domoticz_mqtt(self, **kwargs):
+        """config controller to use domoticz via mqtt"""
+
         self._node.http_post(
             page="controllers",
 
