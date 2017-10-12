@@ -957,8 +957,9 @@ void handle_notifications() {
     {
       if (Settings.Notification != 0)
       {
-        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[index - 1]);
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index - 1]);
+        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
+          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
         NotificationSettings.Port = port.toInt();
         NotificationSettings.Pin1 = pin1.toInt();
         NotificationSettings.Pin2 = pin2.toInt();
@@ -998,9 +999,12 @@ void handle_notifications() {
         addEnabled(reply, Settings.NotificationEnabled[x]);
 
         reply += F("<TD>");
-        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[x]);
-        String NotificationName = "";
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[x]);
+        String NotificationName = F("(plugin not found?)");
+        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
+        {
+          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+        }
         reply += NotificationName;
         reply += F("<TD>");
         reply += NotificationSettings.Server;
@@ -1043,51 +1047,53 @@ void handle_notifications() {
       NotificationSettingsStruct NotificationSettings;
       LoadNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings));
 
-      byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[index - 1]);
-
-      if (Notification[NotificationProtocolIndex].usesMessaging)
+      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index - 1]);
+      if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
       {
-        reply += F("<TR><TD>Domain:<TD><input type='text' name='domain' size=64 value='");
-        reply += NotificationSettings.Domain;
-        reply += F("'>");
 
-        reply += F("<TR><TD>Server:<TD><input type='text' name='server' size=64 value='");
-        reply += NotificationSettings.Server;
-        reply += F("'>");
+        if (Notification[NotificationProtocolIndex].usesMessaging)
+        {
+          reply += F("<TR><TD>Domain:<TD><input type='text' name='domain' size=64 value='");
+          reply += NotificationSettings.Domain;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Port:<TD><input type='text' name='port' value='");
-        reply += NotificationSettings.Port;
-        reply += F("'>");
+          reply += F("<TR><TD>Server:<TD><input type='text' name='server' size=64 value='");
+          reply += NotificationSettings.Server;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Sender:<TD><input type='text' name='sender' size=64 value='");
-        reply += NotificationSettings.Sender;
-        reply += F("'>");
+          reply += F("<TR><TD>Port:<TD><input type='text' name='port' value='");
+          reply += NotificationSettings.Port;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Receiver:<TD><input type='text' name='receiver' size=64 value='");
-        reply += NotificationSettings.Receiver;
-        reply += F("'>");
+          reply += F("<TR><TD>Sender:<TD><input type='text' name='sender' size=64 value='");
+          reply += NotificationSettings.Sender;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Subject:<TD><input type='text' name='subject' size=64 value='");
-        reply += NotificationSettings.Subject;
-        reply += F("'>");
+          reply += F("<TR><TD>Receiver:<TD><input type='text' name='receiver' size=64 value='");
+          reply += NotificationSettings.Receiver;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Body:<TD><textarea name='body' rows='5' cols='80' size=512 wrap='off'>");
-        reply += NotificationSettings.Body;
-        reply += F("</textarea>");
+          reply += F("<TR><TD>Subject:<TD><input type='text' name='subject' size=64 value='");
+          reply += NotificationSettings.Subject;
+          reply += F("'>");
+
+          reply += F("<TR><TD>Body:<TD><textarea name='body' rows='5' cols='80' size=512 wrap='off'>");
+          reply += NotificationSettings.Body;
+          reply += F("</textarea>");
+        }
+
+        if (Notification[NotificationProtocolIndex].usesGPIO > 0)
+        {
+          reply += F("<TR><TD>1st GPIO:<TD>");
+          addPinSelect(false, reply, "pin1", NotificationSettings.Pin1);
+        }
+
+        reply += F("<TR><TD>Enabled:<TD>");
+        addCheckBox(reply, F("notificationenabled"), Settings.NotificationEnabled[index - 1]);
+
+        TempEvent.NotificationIndex = index - 1;
+        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
       }
-
-      if (Notification[NotificationProtocolIndex].usesGPIO > 0)
-      {
-        reply += F("<TR><TD>1st GPIO:<TD>");
-        addPinSelect(false, reply, "pin1", NotificationSettings.Pin1);
-      }
-
-      reply += F("<TR><TD>Enabled:<TD>");
-      addCheckBox(reply, F("notificationenabled"), Settings.NotificationEnabled[index - 1]);
-
-      TempEvent.NotificationIndex = index - 1;
-      NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
-
     }
 
     addFormSeparator(reply);

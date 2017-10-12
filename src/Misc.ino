@@ -618,15 +618,16 @@ byte getProtocolIndex(byte Number)
 }
 
 /********************************************************************************************\
-  Find notification index corresponding to protocol setting
+  Get notificatoin protocol index (plugin index), by NPlugin_id
   \*********************************************************************************************/
-byte getNotificationIndex(byte Number)
+byte getNotificationProtocolIndex(byte Number)
 {
-  byte NotificationIndex = 0;
+
   for (byte x = 0; x <= notificationCount ; x++)
     if (Notification[x].Number == Number)
-      NotificationIndex = x;
-  return NotificationIndex;
+      return(x);
+
+  return(NPLUGIN_NOT_FOUND);
 }
 
 /********************************************************************************************\

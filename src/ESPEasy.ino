@@ -205,6 +205,8 @@
 #define NPLUGIN_WEBFORM_LOAD                4
 #define NPLUGIN_WRITE                       5
 #define NPLUGIN_NOTIFY                      6
+#define NPLUGIN_NOT_FOUND                 255
+
 
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
@@ -418,7 +420,7 @@ struct SettingsStruct
   boolean       MQTTRetainFlag;
   boolean       InitSPI;
   byte          Protocol[CONTROLLER_MAX];
-  byte          Notification[NOTIFICATION_MAX];
+  byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
   byte          TaskDeviceNumber[TASKS_MAX];
   unsigned int  OLD_TaskDeviceID[TASKS_MAX];
   union {
@@ -494,7 +496,8 @@ struct EventStruct
   byte ControllerIndex; // index position in Settings.Controller, 0-3
   byte ProtocolIndex; // index position in protocol array, depending on which controller plugins are loaded.
   byte NotificationIndex; // index position in Settings.Notification, 0-3
-  byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
+  //Edwin: Not needed, and wasnt used. We can determine the protocol index with getNotificationProtocolIndex(NotificationIndex)
+  // byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
   byte BaseVarIndex;
   int idx;
   byte sensorType;
