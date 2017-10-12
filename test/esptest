@@ -4,10 +4,15 @@ import argparse
 import json
 import sys
 import config
-import esp
+import node
+import espeasy
 import pydoc
+import util
 
-parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog=pydoc.render_doc(esp.Esp), formatter_class=argparse.RawDescriptionHelpFormatter)
+def get_epilog():
+    return(pydoc.render_doc(node.Node) + pydoc.render_doc(espeasy.EspEasy))
+
+parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog=get_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter)
 
 # parser.add_argument('--url', default='http://localhost:8080/rpc', help='url of rpc server to connect to. default: %(default)s')
 # parser.add_argument('--user', default=None, help='user to login.')
@@ -18,21 +23,30 @@ parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog
 # parser.add_argument('--short', action='store_true', help='return short single-line JSON output (for scripting)')
 # parser.add_argument('--verbose', action='store_true', help='request verbose mode (module help output)')
 # parser.add_argument('--insecure', action='store_true', help='dont verify SSL certificates. (use with self-signed certificates)')
-parser.add_argument('command',      nargs=1, help='Function from the Esp class to run (help below)')
-parser.add_argument('unit',         type=int,nargs=1, help='Unit number (from config)')
+parser.add_argument('--debug', action='store_true', help='enable http debugging output')
+
+parser.add_argument('module',      nargs=1, help='Module to use (node or espeasy)')
+parser.add_argument('node',         type=int,nargs=1, help='Node number (from config)')
+parser.add_argument('command',      nargs=1, help='Function from the module (help below)')
 parser.add_argument('params',  default=[], nargs='*', help='command parameters. in foo=bar form ')
 
 args = parser.parse_args()
 
 try:
-    if args.unit[0]<1:
-        raise(Exception("unit number should be 1 or higher"))
+    if args.node[0]<1:
+        raise(Exception("node number should be 1 or higher"))
+
+    if args.debug:
+        util.enable_http_debug()
 
 
-    unit=args.unit[0]-1
+    node_index=args.node[0]-1
 
-    config.units[unit]['unit']=args.unit[0]
-    e=esp.Esp(config.units[unit])
+    config.nodes[node_index]['node']=args.node[0]
+
+    #we always need a node instance
+    node_instance=node.Node(config.nodes[node_index])
+
 
     #determine rpc parameters
     params={}
@@ -40,8 +54,16 @@ try:
         (key,value)=param.split("=")
         params[key]=value
 
-    command = getattr(e, args.command[0])
-    command(**params)
+    if args.module[0]=='node':
+        command = getattr(node_instance, args.command[0])
+        command(**params)
+
+    elif args.module[0]=='espeasy':
+        espeasy_instance=espeasy.EspEasy(node_instance)
+        command = getattr(espeasy_instance, args.command[0])
+        command(**params)
+    else:
+        raise(Exception("Unknown module:"+args.module[0]))
 
     sys.exit(0)
 

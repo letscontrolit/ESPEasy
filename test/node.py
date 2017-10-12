@@ -1,3 +1,6 @@
+### Generic lowlevel ESP and espeasy per-node stuff.
+### Used for things like flashing, serial communication, resetting, wificonfig, http communication
+
 import serial
 import sys
 import time
@@ -5,16 +8,16 @@ import subprocess
 import wificonfig
 import requests
 import serial.tools.miniterm
-
+import re
 
 def log(txt):
     print(txt, end="", flush=True)
 
-class Esp():
+class Node():
 
 
     def __init__(self, config):
-        print("Using unit {unit} ({type}) with ip {ip}".format(**config))
+        print("Using node {node} ({type}) with ip {ip}".format(**config))
         self._config=config
         self._url="http://{ip}/".format(**self._config)
         self._serial_initialized=False
@@ -126,28 +129,58 @@ class Esp():
         self.serial()
 
 
-    def config_device(self):
+
+    def http_post(self, page, params,  data):
+        """http post to espeasy webinterface"""
+
+        # transform easy copy/pastable chromium data into a dict
+
+        params_dict={}
+        for line in params.split("\n"):
+            m=re.match(" *(.*?):(.*)",line)
+            if (m):
+                params_dict[m.group(1)]=m.group(2)
+
+        data_dict={}
+        for line in data.split("\n"):
+            m=re.match(" *(.*?):(.*)",line)
+            if (m):
+                data_dict[m.group(1)]=m.group(2)
+
+
 
         r=requests.post(
-            self._url+"devices",
-            params={
-                'index':1,
-                'page':1
-            },
-            data={
-                'TDNUM':1,
-                'TDN': "",
-                'TDE': 'on',
-                'taskdevicepin1': 12,
-                'plugin_001_type':1,
-                'plugin_001_button':0,
-                'TDT':0,
-                'TDSD1':'on',
-                'TDID1':1,
-                'TDVN1':'Switch',
-                'edit':1,
-                'page':1
-            }
+            self._url+page,
+            params=params_dict,
+            data=data_dict
         )
+        r.raise_for_status()
+        #
+        # return(r)
+    #
+    #
+    # def config_device(self):
+    #
+    #     r=requests.post(
+    #         self._url+"devices",
+    #         params={
+    #             'index':1,
+    #             'page':1
+    #         },
+    #         data={
+    #             'TDNUM':1,
+    #             'TDN': "",
+    #             'TDE': 'on',
+    #             'taskdevicepin1': 12,
+    #             'plugin_001_type':1,
+    #             'plugin_001_button':0,
+    #             'TDT':0,
+    #             'TDSD1':'on',
+    #             'TDID1':1,
+    #             'TDVN1':'Switch',
+    #             'edit':1,
+    #             'page':1
+    #         }
+    #     )
 
-        print(r.url)
+        # print(r.url)
