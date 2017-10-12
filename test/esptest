@@ -84,7 +84,8 @@ try:
 
 except Exception as e:
     print("Error: "+str(e), file=sys.stderr)
-    print()
-    print("Details:")
-    raise
+    if args.debug:
+        print()
+        print("Details:")
+        raise
     sys.exit(1)
