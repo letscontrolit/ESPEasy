@@ -163,29 +163,31 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       	const uint8_t i2caddr =  Plugin_027_i2c_addr(event);
         const uint8_t idx = Plugin_027_device_index(i2caddr);
         _ina219_data[idx].currentDivider_mA = 0;
+        String log = F("INA219 0x");
+        log += String(i2caddr,HEX);
+        log += F(" setting Range to: ");
         switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
         {
       		case 0:
       		{
-      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 2A"));
+            log += F("32V, 2A");
       		  Plugin_027_setCalibration_32V_2A(i2caddr);
       			break;
       		}
       		case 1:
       		{
-      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 1A"));
+            log += F("32V, 1A");
       			Plugin_027_setCalibration_32V_1A(i2caddr);
       			break;
       		}
       		case 2:
       		{
-      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 16V, 400mA"));
+            log += F("16V, 400mA");
       			Plugin_027_setCalibration_16V_400mA(i2caddr);
       			break;
       		}
-
         }
-
+        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }
