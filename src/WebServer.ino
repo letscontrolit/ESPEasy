@@ -719,6 +719,7 @@ void handle_controllers() {
   String protocol = WebServer.arg(F("protocol"));
   String controlleruser = WebServer.arg(F("controlleruser"));
   String controllerpassword = WebServer.arg(F("controllerpassword"));
+  String controlleruuid = WebServer.arg(F("controlleruuid"));
   String controllersubscribe = WebServer.arg(F("controllersubscribe"));
   String controllerpublish = WebServer.arg(F("controllerpublish"));
   String controllerenabled = WebServer.arg(F("controllerenabled"));
@@ -739,6 +740,7 @@ void handle_controllers() {
       if (Protocol[ProtocolIndex].usesTemplate)
         CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
       strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
+      strncpy(ControllerSettings.UUID, controlleruuid.c_str(), sizeof(ControllerSettings.UUID));
       strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
       TempEvent.String1 = "";
       TempEvent.String2 = "";
@@ -772,6 +774,7 @@ void handle_controllers() {
         Settings.ControllerEnabled[index - 1] = (controllerenabled == "on");
         ControllerSettings.Port = controllerport.toInt();
         strncpy(SecuritySettings.ControllerUser[index - 1], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
+        strncpy(ControllerSettings.UUID, controlleruuid.c_str(), sizeof(ControllerSettings.UUID));
         //strncpy(SecuritySettings.ControllerPassword[index - 1], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], sizeof(SecuritySettings.ControllerPassword[0]));
         strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
@@ -882,6 +885,11 @@ void handle_controllers() {
         addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], sizeof(SecuritySettings.ControllerPassword[0])-1);
       }
 
+      if (Protocol[ProtocolIndex].usesUUID)
+      {
+        addFormTextBox(reply, F("Controller UUID"), F("controlleruuid"), ControllerSettings.UUID, sizeof(ControllerSettings.UUID));
+      }
+      
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
         addFormTextBox(reply, F("Controller Subscribe"), F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
