@@ -108,6 +108,7 @@
 //   7 = EmonCMS
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
+//  12 = volkszaehler.org HTTP
 
 #define UNIT                0
 
@@ -460,6 +461,7 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+  char          UUID[37];
 };
 
 struct NotificationSettingsStruct
@@ -541,6 +543,7 @@ struct ProtocolStruct
   boolean usesMQTT;
   boolean usesAccount;
   boolean usesPassword;
+  boolean usesUUID;
   int defaultPort;
   boolean usesTemplate;
   boolean usesID;
