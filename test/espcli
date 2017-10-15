@@ -16,13 +16,13 @@ def get_epilog():
 Examples:
 
 Build, flash and connect to serial for node 2:
-    ./esptest node 2 bfs
+    ./espcli node 2 bfs
 
-Reboot a node and configure wifi:
-    ./esptest node 1 wificonfig
+Configure wifi settings for node:
+    ./espcli node 1 wificonfig
 
 Configure node 1, controller 1 as domoticz mqtt:
-    ./esptest espeasy 1 controller_domoticz_mqtt index=1 mqtt_broker=1.2.3.4
+    ./espcli espeasy 1 controller_domoticz_mqtt index=1 controllerip=1.2.3.4
 
     """
     return(docs)
@@ -57,7 +57,6 @@ try:
 
     node_index=args.node[0]-1
 
-    config.nodes[node_index]['node']=args.node[0]
 
     #we always need a node instance
     node_instance=node.Node(config.nodes[node_index])
