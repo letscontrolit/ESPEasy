@@ -183,6 +183,16 @@ String toString(float value, byte decimals)
 }
 
 /*********************************************************************************************\
+   Format a value to the set number of decimals
+  \*********************************************************************************************/
+String formatUserVar(struct EventStruct *event, byte rel_index)
+{
+  return toString(
+    UserVar[event->BaseVarIndex + rel_index],
+    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+}
+
+/*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
 String parseString(String& string, byte indexFind)
@@ -2866,8 +2876,6 @@ void htmlEscape(String & html)
   html.replace("<",  "&lt;");
   html.replace(">",  "&gt;");
 }
-
-
 
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
