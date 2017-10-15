@@ -22,12 +22,12 @@
 #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_073
-#define PLUGIN_ID_073        073
+#define PLUGIN_ID_073        73
 #define PLUGIN_NAME_073      "LED - 7-segment display [TESTING]"
 #define PLUGIN_073_DEBUG     true    //activate extra log info in the debug
 
 //---------------------------------------------------
-// Class used by plugin 
+// Class used by plugin
 //---------------------------------------------------
 class p073_7dgt
 {
@@ -55,7 +55,7 @@ byte    p073_dotpos;
 //   - pos 12   - degree symbol "°"
 const byte CharTableTM1637  [13] = {B00111111,B00000110,B01011011,B01001111,B01100110,B01101101,B01111101,B00000111,B01111111,B01101111,B00000000,B01000000,B01100011};
 const byte CharTableMAX7219 [13] = {B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,B01111111,B01111011,B00000000,B00000001,B01100011};
-                      
+
 boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -84,7 +84,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
         string = F(PLUGIN_NAME_073);
         break;
       }
-      
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormNote(string, F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
@@ -178,8 +178,8 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 
         String tmpStr = string;
         int comma1 = tmpStr.indexOf(',');
-            
-        if (tmpString.equalsIgnoreCase(F("7dn"))) {       
+
+        if (tmpString.equalsIgnoreCase(F("7dn"))) {
           if (Plugin_073_7dgt->output != 0)
             break;
           switch (Plugin_073_7dgt->type)
@@ -242,7 +242,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             }
           }
         } else {
-          bool p073_validcmd = false; 
+          bool p073_validcmd = false;
           bool p073_displayon;
           if (tmpString.equalsIgnoreCase(F("7don"))) {
             p073_displayon = true;
@@ -278,9 +278,9 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
       {
-        if (Plugin_073_7dgt->output == 0) 
+        if (Plugin_073_7dgt->output == 0)
           break;
-          
+
         if (Plugin_073_7dgt->output == 1)
           { Plugin_073_7dgt->timesep = !Plugin_073_7dgt->timesep; }
         else
@@ -290,7 +290,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
           p073_FillBufferWithDate();
         else
           p073_FillBufferWithTime();
-          
+
         switch (Plugin_073_7dgt->type)
         {
           case 0:
@@ -308,7 +308,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
           }
         }
       }
-      
+
   }
   return success;
 }
@@ -463,7 +463,7 @@ void tm1637_ClearDisplay (uint8_t clk_pin, uint8_t dio_pin)
   tm1637_i2cAck(clk_pin, dio_pin); tm1637_i2cWrite(clk_pin, dio_pin, 0);
   tm1637_i2cAck(clk_pin, dio_pin); tm1637_i2cWrite(clk_pin, dio_pin, 0);
   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin); 
+  tm1637_i2cStop(clk_pin, dio_pin);
 }
 
 void tm1637_SetPowerBrightness (uint8_t clk_pin, uint8_t dio_pin, uint8_t brightlvl, bool poweron)
@@ -476,7 +476,7 @@ void tm1637_SetPowerBrightness (uint8_t clk_pin, uint8_t dio_pin, uint8_t bright
   tm1637_i2cStart(clk_pin, dio_pin);
   tm1637_i2cWrite(clk_pin, dio_pin, brightvalue);
   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);  
+  tm1637_i2cStop(clk_pin, dio_pin);
 }
 
 void tm1637_InitDisplay(uint8_t clk_pin, uint8_t dio_pin)
@@ -500,7 +500,7 @@ void tm1637_ShowTimeTemp(uint8_t clk_pin, uint8_t dio_pin, bool sep, byte bufoff
   tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0+bufoffset]]);
   tm1637_i2cAck(clk_pin, dio_pin);
   // add bit for colon on second digit if required
-    byte p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1+bufoffset]]; 
+    byte p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1+bufoffset]];
     if (sep) p073_datashowpos1 |= 0b10000000;
   tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);
   tm1637_i2cAck(clk_pin, dio_pin);
@@ -508,7 +508,7 @@ void tm1637_ShowTimeTemp(uint8_t clk_pin, uint8_t dio_pin, bool sep, byte bufoff
   tm1637_i2cAck(clk_pin, dio_pin);
   tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[3+bufoffset]]);
   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);  
+  tm1637_i2cStop(clk_pin, dio_pin);
 }
 
 void tm1637_ShowBuffer(uint8_t clk_pin, uint8_t dio_pin)
@@ -517,14 +517,14 @@ void tm1637_ShowBuffer(uint8_t clk_pin, uint8_t dio_pin)
   tm1637_i2cWrite(clk_pin, dio_pin, 0xc0);
   tm1637_i2cAck(clk_pin, dio_pin);
   tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[4]]);
-  tm1637_i2cAck(clk_pin, dio_pin);  
+  tm1637_i2cAck(clk_pin, dio_pin);
   tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[5]]);
-  tm1637_i2cAck(clk_pin, dio_pin);  
+  tm1637_i2cAck(clk_pin, dio_pin);
   tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[6]]);
-  tm1637_i2cAck(clk_pin, dio_pin);  
+  tm1637_i2cAck(clk_pin, dio_pin);
   tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[7]]);
-  tm1637_i2cAck(clk_pin, dio_pin);  
-  tm1637_i2cStop(clk_pin, dio_pin);  
+  tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cStop(clk_pin, dio_pin);
 }
 
 //====================================
@@ -557,7 +557,7 @@ void max7219_ClearDisplay (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
 void max7219_SetPowerBrightness (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, uint8_t brightlvl, bool poweron)
 {
   max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_INTENSITY, brightlvl);
-  if (poweron)  
+  if (poweron)
     max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, 1);
   else
     max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, 0);
