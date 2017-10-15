@@ -158,32 +158,4 @@ class Node():
             data=data_dict
         )
         r.raise_for_status()
-        #
-        # return(r)
-    #
-    #
-    # def config_device(self):
-    #
-    #     r=requests.post(
-    #         self._url+"devices",
-    #         params={
-    #             'index':1,
-    #             'page':1
-    #         },
-    #         data={
-    #             'TDNUM':1,
-    #             'TDN': "",
-    #             'TDE': 'on',
-    #             'taskdevicepin1': 12,
-    #             'plugin_001_type':1,
-    #             'plugin_001_button':0,
-    #             'TDT':0,
-    #             'TDSD1':'on',
-    #             'TDID1':1,
-    #             'TDVN1':'Switch',
-    #             'edit':1,
-    #             'page':1
-    #         }
-    #     )
-
-        # print(r.url)
+    

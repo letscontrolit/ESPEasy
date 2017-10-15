@@ -61,7 +61,7 @@ class EspEasy:
                 plugin_001_type:{plugin_001_type}
                 plugin_001_button:{plugin_001_button}
                 TDSD1:on
-                TDID1:1
+                TDID1:{TDID1}
                 TDT:0
                 TDVN1:Switch
                 edit:1
