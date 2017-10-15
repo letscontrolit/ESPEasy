@@ -625,6 +625,7 @@ unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
 unsigned long lastSend;
+unsigned long lastWeb;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
