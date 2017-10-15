@@ -19,11 +19,12 @@
 #define Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 
 #include "SSD1306.h"
-#include "images.h"
+#include "OLED_SSD1306_images.h"
+#include "Dialog_Plain_12_font.h"
 
 // Instantiate display here - does not work to do this within the INIT call
 
-SSD1306 *display=NULL;
+SSD1306Wire *display=NULL;
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -158,12 +159,12 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[Nlines][32];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        int OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-
         //      Init the display and turn it on
-        if (!display)
-          display = new SSD1306(0, 0, 0);
-        display->init(OLED_address);    // call to local override of init function
+        if (!display) {
+          uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        }
+        display->init();		// call to local override of init function
         display->displayOn();
 
         //      Set the initial value of OnOff to On
@@ -363,7 +364,7 @@ void display_title(String& title) {
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-  display->fillRect(0, 0, 128, 10);
+  display->fillRect(0, 0, 128, 13); // Underscores use a extra lines, clear also.
   display->setColor(WHITE);
   display->drawString(64, 0, title);
 }
@@ -442,7 +443,7 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
   if (nlines == 3)
   {
-    display->setFont(Dialog_Plain_12);
+    display->setFont(Dialog_plain_12);
     ypos[0] = 13;
     ypos[1] = 25;
     ypos[2] = 37;
