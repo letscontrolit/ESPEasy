@@ -4,15 +4,18 @@
 
 #define PLUGIN_027
 #define PLUGIN_ID_027         27
-#define PLUGIN_NAME_027       "Voltage & Current (DC) - INA219"
+#define PLUGIN_NAME_027       "Energy (DC) - INA219"
 #define PLUGIN_VALUENAME1_027 "Voltage"
 #define PLUGIN_VALUENAME2_027 "Current"
 #define PLUGIN_VALUENAME3_027 "Power"
 
+// Many boards, like Adafruit INA219: https://learn.adafruit.com/adafruit-ina219-current-sensor-breakout/assembly
+// A0 and A1 are default connected to GND with 10k pull-down resistor.
+// To select another address, bridge either A0 and/or A1 to set to VS+ level.
 #define INA219_ADDRESS                         (0x40)    // 1000000 (A0+A1=GND)
-#define INA219_ADDRESS2                         (0x41)    // 1000000 (A0+A1=GND)
-#define INA219_ADDRESS3                         (0x44)    // 1000000 (A0+A1=GND)
-#define INA219_ADDRESS4                         (0x45)    // 1000000 (A0+A1=GND)
+#define INA219_ADDRESS2                        (0x41)    // 1000001 (A0=VS+, A1=GND)
+#define INA219_ADDRESS3                        (0x44)    // 1000100 (A0=GND, A1=VS+)
+#define INA219_ADDRESS4                        (0x45)    // 1000101 (A0=VS+, A1=VS+)
 #define INA219_READ                            (0x01)
 #define INA219_REG_CONFIG                      (0x00)
 #define INA219_CONFIG_RESET                    (0x8000)  // Reset Bit
@@ -160,29 +163,31 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       	const uint8_t i2caddr =  Plugin_027_i2c_addr(event);
         const uint8_t idx = Plugin_027_device_index(i2caddr);
         _ina219_data[idx].currentDivider_mA = 0;
+        String log = F("INA219 0x");
+        log += String(i2caddr,HEX);
+        log += F(" setting Range to: ");
         switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
         {
       		case 0:
       		{
-      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 2A"));
+            log += F("32V, 2A");
       		  Plugin_027_setCalibration_32V_2A(i2caddr);
       			break;
       		}
       		case 1:
       		{
-      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 32V, 1A"));
+            log += F("32V, 1A");
       			Plugin_027_setCalibration_32V_1A(i2caddr);
       			break;
       		}
       		case 2:
       		{
-      			addLog(LOG_LEVEL_INFO, F("INA219 setting Range to: 16V, 400mA"));
+            log += F("16V, 400mA");
       			Plugin_027_setCalibration_16V_400mA(i2caddr);
       			break;
       		}
-
         }
-
+        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }
