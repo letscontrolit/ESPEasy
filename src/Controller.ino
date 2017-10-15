@@ -109,9 +109,10 @@ void MQTTConnect()
   clientid += Settings.Unit;
   String subscribeTo = "";
 
-  String LWTTopic = ControllerSettings.Subscribe;
-  LWTTopic.replace(F("/#"), F("/status"));
-  LWTTopic.replace(F("%sysname%"), Settings.Name);
+  String LWTTopic = ControllerSettings.Publish;
+  LWTTopic.remove(LWTTopic.lastIndexOf(F("%sysname%")));
+  LWTTopic += Settings.Name;
+  LWTTopic += F("/status");
 
   for (byte x = 1; x < 3; x++)
   {
