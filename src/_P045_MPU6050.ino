@@ -77,7 +77,7 @@
 #define PLUGIN_VALUENAME1_045               ""
 
 int16_t _P045_axis[3][5][2];                // [xyz], [min/max/range,a,g], [0x68/0x69]
-long _P045_time[2];
+unsigned long _P045_time[2];
 
 boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 {
@@ -293,8 +293,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
               }
 
               // Check if UserVar changed so we do not overload homecontroller with the same readings
-              if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
-                Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
+              if (Settings.TaskDevicePluginConfig[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
+                Settings.TaskDevicePluginConfig[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
                 success = true;
               } else {
                 success = false;
