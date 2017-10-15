@@ -4,7 +4,7 @@
 
 #define HTML_SYMBOL_WARNING "&#9888;"
 
-#define TASKS_PER_PAGE 12
+#define TASKS_PER_PAGE 4
 
 static const char pgDefaultCSS[] PROGMEM = {
   //color sheme: #07D #D50 #DB0 #A0D
