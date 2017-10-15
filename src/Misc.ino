@@ -1436,6 +1436,34 @@ String getDateString(char delimiter)
   return reply;
 }
 
+String getDayString()
+{
+  String reply;
+  if (day() < 10)
+    reply += F("0");
+  reply += day();
+  return reply;
+}
+String getMonthString()
+{
+  String reply;
+  if (month() < 10)
+    reply += F("0");
+  reply += month();
+  return reply;
+}
+String getYearString()
+{
+  String reply = String(year());
+  return reply;
+}
+String getYearStringShort()
+{
+  String dummy = String(year());
+  String reply = dummy.substring(2);
+  return reply;
+}
+
 // returns the current Date without delimiter
 // date format example: 20161231 (YYYYMMDD)
 String getDateString()
@@ -1460,6 +1488,31 @@ String getTimeString(char delimiter)
   	reply += delimiter;
   if (second() < 10)
   	reply += F("0");
+  reply += second();
+  return reply;
+}
+
+String getHourString()
+{
+  String reply;
+  if (hour() < 10)
+    reply += F("0");
+  reply += String(hour());
+  return reply;
+}
+String getMinuteString()
+{
+  String reply;
+  if (minute() < 10)
+    reply += F("0");
+  reply += minute();
+  return reply;
+}
+String getSecondString()
+{
+  String reply;
+  if (second() < 10)
+    reply += F("0");
   reply += second();
   return reply;
 }
@@ -1611,6 +1664,14 @@ String parseTemplate(String &tmpString, byte lineSize)
 
   newString.replace(F("%systime%"), getTimeString(':'));
 
+  newString.replace(F("%syshour%"), getHourString());
+  newString.replace(F("%sysmin%"), getMinuteString());
+  newString.replace(F("%syssec%"), getSecondString());
+  newString.replace(F("%sysday%"), getDayString());
+  newString.replace(F("%sysmonth%"), getMonthString());
+  newString.replace(F("%sysyear%"), getYearString());
+  newString.replace(F("%sysyears%"), getYearStringShort());
+
   newString.replace(F("%uptime%"), String(wdcounter / 2));
 
 #if FEATURE_ADC_VCC
@@ -1665,7 +1726,7 @@ float pop()
   if (sp != (globalstack - 1)) // empty
     return *(sp--);
   else
-    return(0);
+    return 0.0;
 }
 
 float apply_operator(char op, float first, float second)
@@ -1699,7 +1760,7 @@ int RPNCalculate(char* token)
   if (token[0] == 0)
     return 0; // geen moeite doen voor een lege string
 
-  if (is_operator(token[0]))
+  if (is_operator(token[0]) && token[1] == 0)
   {
     float second = pop();
     float first = pop();
@@ -1770,7 +1831,7 @@ int Calculate(const char *input, float* result)
 {
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
-  char c, *TokenPos = token;
+  char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
   char     sc;          // used for record stack element
@@ -1778,15 +1839,16 @@ int Calculate(const char *input, float* result)
 
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-
+  oc=c=0;
   while (strpos < strend)
   {
     // read one token from the input stream
+    oc = c;
     c = *strpos;
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if ((c >= '0' && c <= '9') || c == '.')
+      if ((c >= '0' && c <= '9') || c == '.' || (c == '-' && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;
