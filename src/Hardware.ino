@@ -49,7 +49,7 @@ void hardwareInit()
     Wire.write(0x83);             // command to set pointer
     Wire.write(17);               // pointer value to status byte
     Wire.endTransmission();
-   
+
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
     if (Wire.available())
     {
@@ -62,7 +62,7 @@ void hardwareInit()
       }
     }
   }
-  
+
   // SPI Init
   if (Settings.InitSPI)
   {
@@ -77,7 +77,7 @@ void hardwareInit()
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.Pin_sd_cs > 0)
+  if (Settings.Pin_sd_cs >= 0)
   {
     if (SD.begin(Settings.Pin_sd_cs))
     {
