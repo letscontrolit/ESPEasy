@@ -1,7 +1,7 @@
 //********************************************************************************
 // Interface for Sending to Controllers
 //********************************************************************************
-boolean sendData(struct EventStruct *event)
+void sendData(struct EventStruct *event)
 {
   LoadTaskSettings(event->TaskIndex);
   if (Settings.UseRules)
@@ -105,10 +105,12 @@ void MQTTConnect()
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = "ESPClient";
-  clientid += Settings.Unit;
+  String clientid = Settings.Name; // clientid = %sysname%
+  if (Settings.Unit != 0) // set unit number to zero if don't want to add to clientid
+  {
+    clientid += Settings.Unit;
+  }
   String subscribeTo = "";
-
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
   LWTTopic.replace(F("%sysname%"), Settings.Name);
@@ -125,7 +127,9 @@ void MQTTConnect()
 
     if (MQTTresult)
     {
-      log = F("MQTT : Connected to broker");
+      log = F("MQTT : ClientID ");
+      log += clientid;
+      log += " connected to broker";
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = ControllerSettings.Subscribe;
       subscribeTo.replace(F("%sysname%"), Settings.Name);
@@ -141,7 +145,9 @@ void MQTTConnect()
     }
     else
     {
-      log = F("MQTT : Failed to connected to broker");
+      log = F("MQTT : ClientID ");
+      log += clientid;
+      log +=" failed to connected to broker";
       addLog(LOG_LEVEL_ERROR, log);
     }
 
@@ -157,6 +163,7 @@ void MQTTCheck()
 {
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
   if (Protocol[ProtocolIndex].usesMQTT)
+  {
     if (!MQTTclient.connected())
     {
       String log = F("MQTT : Connection lost");
@@ -168,6 +175,7 @@ void MQTTCheck()
     }
     else if (connectionFailures)
       connectionFailures--;
+  }
 }
 
 

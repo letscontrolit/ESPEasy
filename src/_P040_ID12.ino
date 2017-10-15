@@ -83,7 +83,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
                 }
 
                 // Every two hex-digits, add byte to code:
-                if (bytesread & 1 == 1) {
+                if ( (bytesread & 1) == 1) {
                   // make some space for this hex-digit by
                   // shifting the previous hex-digit with 4 bits to the left:
                   code[bytesread >> 1] = (val | (tempbyte << 4));
@@ -133,4 +133,3 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

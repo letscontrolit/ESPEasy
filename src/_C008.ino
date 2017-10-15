@@ -83,7 +83,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   }
 
   // char log[80];
-  boolean success = false;
+  // boolean success = false;
   // char host[20];
   // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 
@@ -148,7 +148,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
       // strcpy_P(log, PSTR("HTTP : Succes!"));
       // addLog(LOG_LEVEL_DEBUG, log);
       addLog(LOG_LEVEL_DEBUG, F("HTTP : Success!"));
-      success = true;
+      // success = true;
     }
     delay(1);
   }
@@ -158,4 +158,6 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   client.flush();
   client.stop();
+
+  return(true);
 }

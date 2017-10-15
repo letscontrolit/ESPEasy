@@ -1,3 +1,9 @@
+#ifdef CONTINUOUS_INTEGRATION
+#pragma GCC diagnostic error "-Wall"
+#else
+#pragma GCC diagnostic warning "-Wall"
+#endif
+
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.letscontrolit.com
  *
@@ -130,8 +136,8 @@
 //If you dont select any, a version with a minimal number of plugins will be biult for 512k versions.
 //(512k is NOT finsihed or tested yet as of v2.0.0-dev6)
 
-//build all the normal stable plugins
-//#define PLUGIN_BUILD_NORMAL
+//build all the normal stable plugins (on by default)
+#define PLUGIN_BUILD_NORMAL
 
 //build all plugins that are in test stadium
 //#define PLUGIN_BUILD_TESTING
@@ -199,6 +205,8 @@
 #define NPLUGIN_WEBFORM_LOAD                4
 #define NPLUGIN_WRITE                       5
 #define NPLUGIN_NOTIFY                      6
+#define NPLUGIN_NOT_FOUND                 255
+
 
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
@@ -282,6 +290,7 @@
 #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+
 
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
@@ -411,7 +420,7 @@ struct SettingsStruct
   boolean       MQTTRetainFlag;
   boolean       InitSPI;
   byte          Protocol[CONTROLLER_MAX];
-  byte          Notification[NOTIFICATION_MAX];
+  byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
   byte          TaskDeviceNumber[TASKS_MAX];
   unsigned int  OLD_TaskDeviceID[TASKS_MAX];
   union {
@@ -487,7 +496,8 @@ struct EventStruct
   byte ControllerIndex; // index position in Settings.Controller, 0-3
   byte ProtocolIndex; // index position in protocol array, depending on which controller plugins are loaded.
   byte NotificationIndex; // index position in Settings.Notification, 0-3
-  byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
+  //Edwin: Not needed, and wasnt used. We can determine the protocol index with getNotificationProtocolIndex(NotificationIndex)
+  // byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
   byte BaseVarIndex;
   int idx;
   byte sensorType;
@@ -615,6 +625,7 @@ unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
 unsigned long lastSend;
+unsigned long lastWeb;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
@@ -1131,7 +1142,7 @@ void SensorSendTask(byte TaskIndex)
 /*********************************************************************************************\
  * set global system timer
 \*********************************************************************************************/
-boolean setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3)
+void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // first check if a timer is not already running for this request
@@ -1164,10 +1175,11 @@ boolean setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, b
 }
 
 
+//EDWIN: this function seems to be unused?
 /*********************************************************************************************\
  * set global system command timer
 \*********************************************************************************************/
-boolean setSystemCMDTimer(unsigned long timer, String& action)
+void setSystemCMDTimer(unsigned long timer, String& action)
 {
   for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
     if (systemCMDTimers[x].timer == 0)
@@ -1182,7 +1194,7 @@ boolean setSystemCMDTimer(unsigned long timer, String& action)
 /*********************************************************************************************\
  * check global system timers
 \*********************************************************************************************/
-boolean checkSystemTimers()
+void checkSystemTimers()
 {
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
     if (systemTimers[x].timer != 0)

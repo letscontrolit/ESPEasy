@@ -44,6 +44,16 @@ static const char pgDefaultCSS[] PROGMEM = {
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
+//if there is an error-string, add it to the html code with correct formatting
+void addHtmlError(String & str, String error)
+{
+    if (error.length()>0)
+    {
+      str += F("<span style=\"color:red\">");
+      str += error;
+      str += F("</span>");
+    }
+}
 
 void WebServerInit()
 {
@@ -110,6 +120,9 @@ void sendWebPage(const String& tmplName, String& pageContent)
 
   pageTemplate = F("");
   pageContent = F("");
+
+  //web activity timer
+  lastWeb = millis();
 }
 
 
@@ -438,7 +451,7 @@ void handle_root() {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
 
     IPAddress ip = WiFi.localIP();
-    IPAddress gw = WiFi.gatewayIP();
+    // IPAddress gw = WiFi.gatewayIP();
 
     reply += printWebString;
     reply += F("<form>");
@@ -639,8 +652,7 @@ void handle_config() {
     espdns.toCharArray(tmpString, 26);
     str2ip(tmpString, Settings.DNS);
     Settings.Unit = unit.toInt();
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'><table>");
@@ -769,9 +781,8 @@ void handle_controllers() {
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
       }
     }
-    SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -839,7 +850,7 @@ void handle_controllers() {
     addHelpButton(reply, F("EasyProtocols"));
 
 
-    char str[20];
+    // char str[20];
 
     if (Settings.Protocol[index - 1])
     {
@@ -910,7 +921,7 @@ void handle_notifications() {
   if (!isLoggedIn()) return;
 
   struct EventStruct TempEvent;
-  char tmpString[64];
+  // char tmpString[64];
 
   navMenuIndex = 6;
   String notificationindex = WebServer.arg(F("index"));
@@ -949,8 +960,9 @@ void handle_notifications() {
     {
       if (Settings.Notification != 0)
       {
-        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[index - 1]);
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index - 1]);
+        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
+          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
         NotificationSettings.Port = port.toInt();
         NotificationSettings.Pin1 = pin1.toInt();
         NotificationSettings.Pin2 = pin2.toInt();
@@ -963,9 +975,8 @@ void handle_notifications() {
         strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
-    SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings));
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -991,9 +1002,12 @@ void handle_notifications() {
         addEnabled(reply, Settings.NotificationEnabled[x]);
 
         reply += F("<TD>");
-        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[x]);
-        String NotificationName = "";
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[x]);
+        String NotificationName = F("(plugin not found?)");
+        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
+        {
+          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+        }
         reply += NotificationName;
         reply += F("<TD>");
         reply += NotificationSettings.Server;
@@ -1029,58 +1043,60 @@ void handle_notifications() {
     addHelpButton(reply, F("EasyNotifications"));
 
 
-    char str[20];
+    // char str[20];
 
     if (Settings.Notification[index - 1])
     {
       NotificationSettingsStruct NotificationSettings;
       LoadNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings));
 
-      byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[index - 1]);
-
-      if (Notification[NotificationProtocolIndex].usesMessaging)
+      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index - 1]);
+      if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
       {
-        reply += F("<TR><TD>Domain:<TD><input type='text' name='domain' size=64 value='");
-        reply += NotificationSettings.Domain;
-        reply += F("'>");
 
-        reply += F("<TR><TD>Server:<TD><input type='text' name='server' size=64 value='");
-        reply += NotificationSettings.Server;
-        reply += F("'>");
+        if (Notification[NotificationProtocolIndex].usesMessaging)
+        {
+          reply += F("<TR><TD>Domain:<TD><input type='text' name='domain' size=64 value='");
+          reply += NotificationSettings.Domain;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Port:<TD><input type='text' name='port' value='");
-        reply += NotificationSettings.Port;
-        reply += F("'>");
+          reply += F("<TR><TD>Server:<TD><input type='text' name='server' size=64 value='");
+          reply += NotificationSettings.Server;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Sender:<TD><input type='text' name='sender' size=64 value='");
-        reply += NotificationSettings.Sender;
-        reply += F("'>");
+          reply += F("<TR><TD>Port:<TD><input type='text' name='port' value='");
+          reply += NotificationSettings.Port;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Receiver:<TD><input type='text' name='receiver' size=64 value='");
-        reply += NotificationSettings.Receiver;
-        reply += F("'>");
+          reply += F("<TR><TD>Sender:<TD><input type='text' name='sender' size=64 value='");
+          reply += NotificationSettings.Sender;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Subject:<TD><input type='text' name='subject' size=64 value='");
-        reply += NotificationSettings.Subject;
-        reply += F("'>");
+          reply += F("<TR><TD>Receiver:<TD><input type='text' name='receiver' size=64 value='");
+          reply += NotificationSettings.Receiver;
+          reply += F("'>");
 
-        reply += F("<TR><TD>Body:<TD><textarea name='body' rows='5' cols='80' size=512 wrap='off'>");
-        reply += NotificationSettings.Body;
-        reply += F("</textarea>");
+          reply += F("<TR><TD>Subject:<TD><input type='text' name='subject' size=64 value='");
+          reply += NotificationSettings.Subject;
+          reply += F("'>");
+
+          reply += F("<TR><TD>Body:<TD><textarea name='body' rows='5' cols='80' size=512 wrap='off'>");
+          reply += NotificationSettings.Body;
+          reply += F("</textarea>");
+        }
+
+        if (Notification[NotificationProtocolIndex].usesGPIO > 0)
+        {
+          reply += F("<TR><TD>1st GPIO:<TD>");
+          addPinSelect(false, reply, "pin1", NotificationSettings.Pin1);
+        }
+
+        reply += F("<TR><TD>Enabled:<TD>");
+        addCheckBox(reply, F("notificationenabled"), Settings.NotificationEnabled[index - 1]);
+
+        TempEvent.NotificationIndex = index - 1;
+        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
       }
-
-      if (Notification[NotificationProtocolIndex].usesGPIO > 0)
-      {
-        reply += F("<TR><TD>1st GPIO:<TD>");
-        addPinSelect(false, reply, "pin1", NotificationSettings.Pin1);
-      }
-
-      reply += F("<TR><TD>Enabled:<TD>");
-      addCheckBox(reply, F("notificationenabled"), Settings.NotificationEnabled[index - 1]);
-
-      TempEvent.NotificationIndex = index - 1;
-      NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
-
     }
 
     addFormSeparator(reply);
@@ -1127,8 +1143,7 @@ void handle_hardware() {
     Settings.PinBootStates[15] =  getFormItemInt(F("p15"));
     Settings.PinBootStates[16] =  getFormItemInt(F("p16"));
 
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
@@ -1371,9 +1386,10 @@ void handle_devices() {
 
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
-    SaveTaskSettings(index - 1);
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+    addHtmlError(reply, SaveTaskSettings(index - 1));
+
+    addHtmlError(reply, SaveSettings());
+
     if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[index - 1])
       PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
   }
@@ -1768,7 +1784,7 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
   char check1;
   char check2;
 
-  int i = 0;
+  unsigned int i = 0;
   while (i < strlen(ptr_1))    // For each character in string 1, starting with the first:
   {
     check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
@@ -2859,7 +2875,7 @@ void handle_control() {
 // Web Interface JSON page (no password!)
 //********************************************************************************
 
-boolean handle_json()
+void handle_json()
 {
   String tasknr = WebServer.arg(F("tasknr"));
   String reply = "";
@@ -2994,13 +3010,13 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
-    if (!SaveSettings())
-      reply += F("<span style=\"color:red\">Error saving to flash!</span>");
+
+    addHtmlError(reply, SaveSettings());
     if (Settings.UseNTP)
       initTime();
   }
 
-  char str[20];
+  // char str[20];
 
   reply += F("<form  method='post'><table>");
 
@@ -3209,7 +3225,7 @@ void handleFileUpload() {
           unsigned long PID;
           int Version;
         } Temp;
-        for (int x = 0; x < sizeof(struct TempStruct); x++)
+        for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
         {
           byte b = upload.buf[x];
           memcpy((byte*)&Temp + x, &b, 1);
@@ -3514,7 +3530,7 @@ void handle_SDfilelist() {
     if (!entry.isDirectory())
     {
       reply += F("<TR><TD>");
-      if (entry.name() != "config.dat" && entry.name() != "security.dat")
+      if (entry.name() != String(F("config.dat")).c_str() && entry.name() != String(F("security.dat")).c_str())
       {
         reply += F("<a class='button link' href=\"SDfilelist?delete=");
         reply += entry.name();
@@ -3578,7 +3594,7 @@ void handle_setup() {
 
   if (WiFi.status() == WL_CONNECTED)
   {
-    SaveSettings();
+    addHtmlError(reply, SaveSettings());
     IPAddress ip = WiFi.localIP();
     char host[20];
     sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
