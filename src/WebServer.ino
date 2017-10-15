@@ -3506,37 +3506,127 @@ void handle_filelist() {
 
 
 //********************************************************************************
-// Web Interface SD card file list
+// Web Interface SD card file and directory list
 //********************************************************************************
 void handle_SDfilelist() {
 
   navMenuIndex = 7;
-  String fdelete = WebServer.arg(F("delete"));
+  String fdelete = "";
+  String ddelete = "";
+  String change_to_dir = "";
+  String current_dir = "";
+  String parent_dir = "";
+  char SDcardDir[80];
+
+  for (uint8_t i = 0; i < WebServer.args(); i++) {
+    if (WebServer.argName(i) == "delete")
+    {
+      fdelete = WebServer.arg(i);
+    }
+    if (WebServer.argName(i) == "deletedir")
+    {
+      ddelete = WebServer.arg(i);
+    }
+    if (WebServer.argName(i) == "chgto")
+    {
+      change_to_dir = WebServer.arg(i);
+    }
+  }
 
   if (fdelete.length() > 0)
   {
     SD.remove((char*)fdelete.c_str());
   }
+  if (ddelete.length() > 0)
+  {
+    SD.rmdir((char*)ddelete.c_str());
+  }
+  if (change_to_dir.length() > 0)
+  {
+    current_dir = change_to_dir;
+  }
+  else
+  {
+    current_dir = "/";
+  }
+
+  current_dir.toCharArray(SDcardDir, current_dir.length()+1);
+  File root = SD.open(SDcardDir);
+  root.rewindDirectory();
+  File entry = root.openNextFile();
+  parent_dir = current_dir;
+  if (!current_dir.equals("/"))
+  {
+    /* calculate the position to remove
+    /
+    / current_dir = /dir1/dir2/   =>   parent_dir = /dir1/
+    /                     ^ position to remove, second last index of "/" + 1
+    /
+    / current_dir = /dir1/   =>   parent_dir = /
+    /                ^ position to remove, second last index of "/" + 1
+    */
+    parent_dir.remove(parent_dir.lastIndexOf("/", parent_dir.lastIndexOf("/") - 1) + 1);
+  }
 
   String reply = "";
   addHeader(true, reply);
-  reply += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
-
-  File root = SD.open("/");
-  root.rewindDirectory();
-  File entry = root.openNextFile();
+  String subheader = "SD Card: " + current_dir;
+  addFormSubHeader(reply, subheader);
+  reply += F("<BR>");
+  reply += F("<table border=1px frame='box' rules='all'><TH>Action<TH>Name<TH>Size");
+  reply += F("<TR><TD>");
+  reply += F("<TD><a href=\"SDfilelist?chgto=");
+  reply += parent_dir;
+  reply += F("\">..");
+  reply += F("</a>");
+  reply += F("<TD>");
   while (entry)
   {
-    if (!entry.isDirectory())
+    if (entry.isDirectory())
+    {
+      char SDcardChildDir[80];
+      reply += F("<TR><TD>");
+      // take a look in the directory for entries
+      String child_dir = current_dir + entry.name();
+      child_dir.toCharArray(SDcardChildDir, child_dir.length()+1);
+      File child = SD.open(SDcardChildDir);
+      File dir_has_entry = child.openNextFile();
+      // when the directory is empty, display the button to delete them
+      if (!dir_has_entry)
+      {
+        reply += F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir=");
+        reply += current_dir;
+        reply += entry.name();
+        reply += F("/");
+        reply += F("&chgto=");
+        reply += current_dir;
+        reply += F("\">Del</a>");
+      }
+      reply += F("<TD><a href=\"SDfilelist?chgto=");
+      reply += current_dir;
+      reply += entry.name();
+      reply += F("/");
+      reply += F("\">");
+      reply += entry.name();
+      reply += F("</a>");
+      reply += F("<TD>");
+      reply += F("dir");
+      dir_has_entry.close();
+    }
+    else
     {
       reply += F("<TR><TD>");
       if (entry.name() != String(F("config.dat")).c_str() && entry.name() != String(F("security.dat")).c_str())
       {
-        reply += F("<a class='button link' href=\"SDfilelist?delete=");
+        reply += F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete=");
+        reply += current_dir;
         reply += entry.name();
+        reply += F("&chgto=");
+        reply += current_dir;
         reply += F("\">Del</a>");
       }
       reply += F("<TD><a href=\"");
+      reply += current_dir;
       reply += entry.name();
       reply += F("\">");
       reply += entry.name();
@@ -3547,7 +3637,6 @@ void handle_SDfilelist() {
     entry.close();
     entry = root.openNextFile();
   }
-  //entry.close();
   root.close();
   reply += F("</table></form>");
   //reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
