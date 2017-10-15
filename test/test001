@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+from espeasy import *
+from node import *
+import config
+import time
+
+
+espeasy1=EspEasy(Node(config.nodes[0]))
+espeasy2=EspEasy(Node(config.nodes[1]))
+
+
+espeasy2.controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
+espeasy2.device_p001(index=1, taskdevicepin1=12, plugin_001_type=1, plugin_001_button=0)
+
+espeasy1.control(cmd="gpio,12,1")
+time.sleep(1)
+espeasy1.control(cmd="gpio,12,0")

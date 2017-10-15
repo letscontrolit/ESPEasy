@@ -9,6 +9,17 @@ class EspEasy:
         self._node=node
 
 
+    def control(self, **kwargs):
+        self._node.http_post(
+            page="control",
+
+            params="""
+                cmd:{cmd}
+            """.format(**kwargs),
+
+        )
+
+
     def controller_domoticz_mqtt(self, **kwargs):
         """config controller to use domoticz via mqtt"""
 
@@ -16,18 +27,43 @@ class EspEasy:
             page="controllers",
 
             params="""
-                index: {index}
+                index:{index}
             """.format(**kwargs),
 
             data="""
                 protocol:2
                 usedns:0
-                controllerip:{mqtt_broker}
+                controllerip:{controllerip}
                 controllerport:1883
                 controlleruser:
-                controllerpassword: http://urltje
+                controllerpassword:
                 controllersubscribe:domoticz/out
                 controllerpublish:domoticz/in
                 controllerenabled:on
+            """.format(**kwargs)
+        )
+
+
+    def device_p001(self, **kwargs):
+
+        self._node.http_post(
+            page="devices",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                TDNUM:1
+                TDN:
+                TDE:on
+                taskdevicepin1:{taskdevicepin1}
+                plugin_001_type:{plugin_001_type}
+                plugin_001_button:{plugin_001_button}
+                TDSD1:on
+                TDID1:1
+                TDT:0
+                TDVN1:Switch
+                edit:1
             """.format(**kwargs)
         )
