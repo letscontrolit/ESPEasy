@@ -120,6 +120,9 @@ void sendWebPage(const String& tmplName, String& pageContent)
 
   pageTemplate = F("");
   pageContent = F("");
+
+  //web activity timer
+  lastWeb = millis();
 }
 
 
