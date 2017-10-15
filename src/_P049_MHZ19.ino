@@ -292,7 +292,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                 success = false;
 
               // If s = 0x40 the reading is stable; anything else should be ignored
-              } else if (s < 64) {
+              } else if (s > 0 && s < 64) {
 
                 log += F("Unstable reading, ignoring! ");
                 success = false;
