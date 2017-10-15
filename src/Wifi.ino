@@ -221,7 +221,7 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
 //********************************************************************************
 // Disconnect from Wifi AP
 //********************************************************************************
-boolean WifiDisconnect()
+void WifiDisconnect()
 {
   WiFi.disconnect();
 }

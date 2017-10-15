@@ -4,13 +4,13 @@ NEW="$1"
 
 [ "$NEW" != "" ] || exit 1
 
-PREV=`git tag|tail -1`
+PREV=`git tag --sort=creatordate|tail -1`
 
 ############## update Release_notes.txt
 NOTES="dist/Release_notes.txt"
-echo "-----------------------------" > "$NOTES.new"
-echo "Changes in release $NEW" >> "$NOTES.new"
-echo "-----------------------------" >> "$NOTES.new"
+echo "-------------------------------------------------" > "$NOTES.new"
+echo "Changes in release $NEW (since $PREV)" >> "$NOTES.new"
+echo "-------------------------------------------------" >> "$NOTES.new"
 echo -e "\nRelease date: `date`\n" >> "$NOTES.new"
 
 git shortlog --no-merges $PREV..HEAD >> "$NOTES.new"

@@ -216,6 +216,8 @@ boolean HTTPSend011(struct EventStruct *event)
 
   client.flush();
   client.stop();
+
+  return(success);
 }
 
 // parses the string and returns only the the number of name/values we want

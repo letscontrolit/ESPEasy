@@ -97,7 +97,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         pubname.replace(F("%id%"), String(event->idx));
 
         String value = "";
-        byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
@@ -116,6 +116,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      return success;
   }
+
+  return success;
 }
