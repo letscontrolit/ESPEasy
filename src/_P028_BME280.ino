@@ -108,8 +108,8 @@ byte Plugin_028_get_config_settings() {
     case BMP280_DEVICE_SAMPLE2:
     case BMP280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
     case BME280_DEVICE:  return 0x28; // Tstandby 62.5ms, filter 4, 3-wire SPI Disable
+    default: return 0;
   }
-  return 0;
 }
 
 byte Plugin_028_get_control_settings() {
@@ -119,8 +119,8 @@ byte Plugin_028_get_control_settings() {
     case BMP280_DEVICE_SAMPLE2:
     case BMP280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
     case BME280_DEVICE:  return 0x93; // Oversampling: 8x P, 8x T, normal mode
+    default: return 0;
   }
-  return 0;
 }
 
 String Plugin_028_getFullDeviceName() {
@@ -141,8 +141,9 @@ String Plugin_028_getDeviceName() {
     case BMP280_DEVICE_SAMPLE2:
     case BMP280_DEVICE:  return PLUGIN_028_BMP280_DEVICE;
     case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
+    default: return F("Unknown");
   }
-  return F("Unknown");
+
 }
 
 boolean Plugin_028_hasHumidity() {
@@ -152,8 +153,9 @@ boolean Plugin_028_hasHumidity() {
     case BMP280_DEVICE_SAMPLE2:
     case BMP280_DEVICE:  return false;
     case BME280_DEVICE:  return true;
+    default: return false;
   }
-  return false;
+
 }
 
 uint8_t Plugin_028_read8(byte reg, bool * is_ok = NULL); // Declaration
