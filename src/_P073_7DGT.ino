@@ -23,7 +23,7 @@
 
 #define PLUGIN_073
 #define PLUGIN_ID_073        73
-#define PLUGIN_NAME_073      "LED - 7-segment display [TESTING]"
+#define PLUGIN_NAME_073      "Display - 7-segment display [TESTING]"
 #define PLUGIN_073_DEBUG     true    //activate extra log info in the debug
 
 //---------------------------------------------------
