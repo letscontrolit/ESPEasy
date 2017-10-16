@@ -20,7 +20,7 @@
 
 #include "SSD1306.h"
 #include "SH1106Wire.h"
-#include "OLED_SSD1306_images.h"
+#include "OLED_SSD1306_SH1106_images.h"
 #include "Dialog_Plain_12_font.h"
 
 // Instantiate display here - does not work to do this within the INIT call
