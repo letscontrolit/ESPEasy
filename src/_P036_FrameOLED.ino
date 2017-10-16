@@ -13,18 +13,19 @@
 
 #define PLUGIN_036
 #define PLUGIN_ID_036         36
-#define PLUGIN_NAME_036       "Display - OLED SSD1306 Framed"
+#define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
 
 #define Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 
 #include "SSD1306.h"
-#include "OLED_SSD1306_images.h"
+#include "SH1106Wire.h"
+#include "OLED_SSD1306_SH1106_images.h"
 #include "Dialog_Plain_12_font.h"
 
 // Instantiate display here - does not work to do this within the INIT call
 
-SSD1306Wire *display=NULL;
+OLEDDisplay *display=NULL;
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -71,6 +72,15 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        // Use number 5 to remain compatible with existing configurations,
+        // but the item should be one of the first choices.
+        byte choice5 = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        String options5[2];
+        options5[0] = F("SSD1306");
+        options5[1] = F("SH1106");
+        int optionValues5[2] = { 1, 2 };
+        addFormSelector(string, F("Controler"), F("plugin_036_controler"), 2, options5, optionValues5, choice5);
+
         byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*
         String options0[2];
@@ -125,17 +135,38 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         addFormNumericBox(string, F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
 
+        byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        String options6[3];
+        options6[0] = F("Low");
+        options6[1] = F("Medium");
+        options6[2] = F("High");
+        int optionValues6[3];
+        optionValues6[0] = 64;
+        optionValues6[1] = 0xCF;
+        optionValues6[2] = 0xFF;
+        addFormSelector(string, F("Contrast"), F("plugin_066_contrast"), 3, options6, optionValues6, choice6);
+
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
+        int new_controler_value = getFormItemInt(F("plugin_036_controler"));
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] != new_controler_value) {
+          // Value is changed. Must destruct to later reinitialize.
+          if (display) {
+            delete display;
+            display = NULL;
+          }
+        }
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_036_rotate"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_036_nlines"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_036_scroll"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_036_timer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_036_controler"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("plugin_036_contrast"));
 
         String argName;
 
@@ -162,10 +193,18 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         //      Init the display and turn it on
         if (!display) {
           uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] == 1) {
+            display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          } else {
+            display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+          }
         }
         display->init();		// call to local override of init function
         display->displayOn();
+
+        // Set the display contrast
+        uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        display->setContrast(OLED_contrast);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
