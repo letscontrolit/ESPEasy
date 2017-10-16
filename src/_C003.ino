@@ -59,7 +59,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         String url = F("variableset ");
         url += event->idx;
         url += ",";
-        url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+        url += formatUserVar(event, 0);
         url += "\n";
 
         strcpy_P(log, PSTR("TELNT: Sending enter"));

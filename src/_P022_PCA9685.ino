@@ -17,7 +17,7 @@ boolean Plugin_022_init = false;
 boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
+  // static byte switchstate[TASKS_MAX];
 
   switch (function)
   {
@@ -94,9 +94,9 @@ void Plugin_022_writeRegister(int regAddress, byte data) {
 //********************************************************************************
 // PCA9685 write
 //********************************************************************************
-boolean Plugin_022_Write(byte Par1, int Par2)
+void Plugin_022_Write(byte Par1, int Par2)
 {
-  boolean success = false;
+  // boolean success = false;
   uint16_t LED_ON = 0;
   uint16_t LED_OFF = Par2;
   Wire.beginTransmission(PCA9685_ADDRESS);

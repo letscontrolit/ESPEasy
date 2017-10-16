@@ -112,8 +112,8 @@ class OLEDDisplay : public Print {
   public:
 
     virtual ~OLEDDisplay() {}
-    
-    // Initialize the display
+
+  // Initialize the display
     bool init();
 
     // Free the memory used by the display
