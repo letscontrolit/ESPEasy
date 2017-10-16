@@ -37,7 +37,7 @@
 
 #define PLUGIN_039
 #define PLUGIN_ID_039         39
-#define PLUGIN_NAME_039       "Temperature - Thermocouple"
+#define PLUGIN_NAME_039       "Environment - Thermocouple"
 #define PLUGIN_VALUENAME1_039 "Temperature"
 
 uint8_t Plugin_039_SPI_CS_Pin = 15;  // D8

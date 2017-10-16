@@ -3,7 +3,7 @@
 //#######################################################################################################
 #define PLUGIN_043
 #define PLUGIN_ID_043         43
-#define PLUGIN_NAME_043       "Clock - Output"
+#define PLUGIN_NAME_043       "Output - Clock"
 #define PLUGIN_VALUENAME1_043 "Output"
 #define PLUGIN_043_MAX_SETTINGS 8
 

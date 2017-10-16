@@ -4,7 +4,7 @@
 
 #define PLUGIN_003
 #define PLUGIN_ID_003         3
-#define PLUGIN_NAME_003       "Pulse Counter"
+#define PLUGIN_NAME_003       "Generic - Pulse counter"
 #define PLUGIN_VALUENAME1_003 "Count"
 #define PLUGIN_VALUENAME2_003 "Total"
 #define PLUGIN_VALUENAME3_003 "Time"

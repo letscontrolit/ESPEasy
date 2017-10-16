@@ -4,7 +4,7 @@
 
 #define PLUGIN_020
 #define PLUGIN_ID_020         20
-#define PLUGIN_NAME_020       "Serial Server"
+#define PLUGIN_NAME_020       "Communication - Serial Server"
 #define PLUGIN_VALUENAME1_020 "Ser2Net"
 
 #define P020_BUFFER_SIZE 128

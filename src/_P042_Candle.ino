@@ -90,7 +90,7 @@ Adafruit_NeoPixel *Candle_pixels;
 
 #define PLUGIN_042
 #define PLUGIN_ID_042         42
-#define PLUGIN_NAME_042       "NeoPixel - Candle"
+#define PLUGIN_NAME_042       "Output - NeoPixel (Candle)"
 #define PLUGIN_VALUENAME1_042 "Color"
 #define PLUGIN_VALUENAME2_042 "Brightness"
 #define PLUGIN_VALUENAME3_042 "Type"

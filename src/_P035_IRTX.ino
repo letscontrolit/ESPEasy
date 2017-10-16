@@ -8,7 +8,7 @@ IRsend *Plugin_035_irSender;
 
 #define PLUGIN_035
 #define PLUGIN_ID_035         35
-#define PLUGIN_NAME_035       "Infrared Transmit"
+#define PLUGIN_NAME_035       "Communication - IR Transmit"
 
 boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 {

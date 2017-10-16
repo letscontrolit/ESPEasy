@@ -13,7 +13,7 @@ Adafruit_NeoPixel *Plugin_041_pixels;
 
 #define PLUGIN_041
 #define PLUGIN_ID_041         41
-#define PLUGIN_NAME_041       "NeoPixel - WordClock"
+#define PLUGIN_NAME_041       "Output - NeoPixel (Word Clock)"
 #define PLUGIN_VALUENAME1_041 "Clock"
 boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 {
@@ -101,7 +101,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
-      
+
     case PLUGIN_WRITE:
       {
         String tmpString  = string;
@@ -429,4 +429,3 @@ void pushHOURE() {
   pushToStrip(103);
   pushToStrip(104);
 }
-

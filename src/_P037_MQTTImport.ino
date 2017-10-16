@@ -8,7 +8,7 @@
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
-#define PLUGIN_NAME_037       "MQTT Import"
+#define PLUGIN_NAME_037       "Generic - MQTT Import"
 
 #define PLUGIN_VALUENAME1_037 "Value1"
 #define PLUGIN_VALUENAME2_037 "Value2"

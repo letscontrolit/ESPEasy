@@ -73,7 +73,7 @@
 
 #define PLUGIN_045
 #define PLUGIN_ID_045                       45
-#define PLUGIN_NAME_045                     "MPU 6050 [TESTING]"
+#define PLUGIN_NAME_045                     "Gyro - MPU 6050 [TESTING]"
 #define PLUGIN_VALUENAME1_045               ""
 
 int16_t _P045_axis[3][5][2];                // [xyz], [min/max/range,a,g], [0x68/0x69]
