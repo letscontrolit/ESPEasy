@@ -1,5 +1,5 @@
 //#######################################################################################################
-//#################################### Plugin 026: Analog ###############################################
+//#################################### Plugin 026: System Info ##########################################
 //#######################################################################################################
 
 #define PLUGIN_026
@@ -40,31 +40,17 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[5];
+        String options[9];
         options[0] = F("Uptime");
         options[1] = F("Free RAM");
         options[2] = F("Wifi RSSI");
         options[3] = F("Input VCC");
         options[4] = F("System load");
-        int optionValues[5];
-        optionValues[0] = 0;
-        optionValues[1] = 1;
-        optionValues[2] = 2;
-        optionValues[3] = 3;
-        optionValues[4] = 4;
-        string += F("<TR><TD>Indicator:<TD><select name='plugin_026'>");
-        for (byte x = 0; x < 5; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        options[5] = F("IP 1.Octet");
+        options[6] = F("IP 2.Octet");
+        options[7] = F("IP 3.Octet");
+        options[8] = F("IP 4.Octet");
+        addFormSelector(string, F("Indicator"), F("plugin_026"), 9, options, NULL, choice);
 
         success = true;
         break;
@@ -72,12 +58,11 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_026"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_026"));
         success = true;
         break;
       }
-      
+
     case PLUGIN_READ:
       {
         float value = 0;
@@ -111,7 +96,27 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           {
             value = (100 - (100 * loopCounterLast / loopCounterMax));
             break;
-          }          
+          }
+          case 5:
+          {
+            value = WiFi.localIP()[0];
+            break;
+          }
+          case 6:
+          {
+            value = WiFi.localIP()[1];
+            break;
+          }
+          case 7:
+          {
+            value = WiFi.localIP()[2];
+            break;
+          }
+          case 8:
+          {
+            value = WiFi.localIP()[3];
+            break;
+          }
         }
         UserVar[event->BaseVarIndex] = value;
         String log = F("SYS  : ");

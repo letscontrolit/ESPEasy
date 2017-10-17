@@ -45,13 +45,9 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>TCP Port:<TD><input type='text' name='plugin_020_port' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Baud Rate:<TD><input type='text' name='plugin_020_baud' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("<TR><TD>Data bits:<TD><input type='text' name='plugin_020_data' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
-        string += tmpString;
+      	addFormNumericBox(string, F("TCP Port"), F("plugin_020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(string, F("Baud Rate"), F("plugin_020_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(string, F("Data bits"), F("plugin_020_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -62,51 +58,21 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         optionValues[0] = 0;
         optionValues[1] = 2;
         optionValues[2] = 3;
-        string += F("<TR><TD>Parity:<TD><select name='plugin_020_parity'>");
-        for (byte x = 0; x < 3; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Parity"), F("plugin_020_parity"), 3, options, optionValues, choice);
 
-        sprintf_P(tmpString, PSTR("<TR><TD>Stop bits:<TD><input type='text' name='plugin_020_stop' value='%u'>"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
-        string += tmpString;
+      	addFormNumericBox(string, F("Stop bits"), F("plugin_020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-        string += F("<TR><TD>Reset target after boot:<TD>");
-        addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(string, F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-        sprintf_P(tmpString, PSTR("<TR><TD>RX Receive Timeout (mSec):<TD><input type='text' name='plugin_020_rxwait' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
+      	addFormNumericBox(string, F("RX Receive Timeout (mSec)"), F("plugin_020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[3];
         options2[0] = F("None");
         options2[1] = F("Generic");
         options2[2] = F("RFLink");
-        int optionValues2[3];
-        optionValues2[0] = 0;
-        optionValues2[1] = 1;
-        optionValues2[2] = 2;
-        string += F("<TR><TD>Event processing:<TD><select name='plugin_020_events'>");
-        for (byte x = 0; x < 3; x++)
-      {
-        string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Event processing"), F("plugin_020_events"), 3, options2, NULL, choice2);
 
         success = true;
         break;
@@ -114,20 +80,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_020_port"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_020_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_020_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("plugin_020_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = plugin4.toInt();
-        String plugin5 = WebServer.arg(F("plugin_020_stop"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = plugin5.toInt();
-        String plugin6 = WebServer.arg(F("plugin_020_rxwait"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin6.toInt();
-        String plugin7 = WebServer.arg(F("plugin_020_events"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin7.toInt();
+        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("plugin_020_port"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("plugin_020_baud"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("plugin_020_data"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("plugin_020_parity"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("plugin_020_stop"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_020_rxwait"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_020_events"));
         success = true;
         break;
       }

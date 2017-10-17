@@ -102,30 +102,16 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        string += F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)");
+        addFormNote(string, F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
+        //string += F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)");
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2];
         options[0] = F("MAX 6675");
         options[1] = F("MAX 31855");
         //options[2] = F("MAX 31865");
-        int optionValues[2];
-        optionValues[0] = 1;
-        optionValues[1] = 2;
-        //optionValues[2] = 3;
-        string += F("<TR><TD>Adapter IC:<TD><select name='plugin_039_maxtype'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues[2] = { 1, 2 };
+        addFormSelector(string, F("Adapter IC"), F("plugin_039_maxtype"), 2, options, optionValues, choice);
 
         success = true;
         break;
@@ -133,8 +119,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg("plugin_039_maxtype");
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_039_maxtype"));
         success = true;
         break;
       }
@@ -256,7 +241,7 @@ double readMax31855()
     rawvalue >>= 18;
 
     // Check for negative Values
-    //  +25.00    0000 0001 1001 00 
+    //  +25.00    0000 0001 1001 00
     //    0.00    0000 0000 0000 00
     //   -0.25    1111 1111 1111 11
     //   -1.00    1111 1111 1111 00
@@ -264,11 +249,11 @@ double readMax31855()
     if (rawvalue & 0x2000) // Bit 31=1 -> neg Values
     {
       // Negate all Bits
-      rawvalue = ~rawvalue; 
-      // Add 1 and make negative 
+      rawvalue = ~rawvalue;
+      // Add 1 and make negative
       rawvalue = (rawvalue + 1) * -1;
     }
-    
+
     // Calculate Celsius
     return rawvalue * 0.25;
   }

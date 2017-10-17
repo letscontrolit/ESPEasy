@@ -70,29 +70,11 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
-        options[0] = F("0x77 - default I2C address");
-        options[1] = F("0x76 - alternate I2C address");
-        int optionValues[2];
-        optionValues[0] = 0x77;
-        optionValues[1] = 0x76;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_032_ms5611_i2c'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
-        string += F("plugin_032_ms5611_elev' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        string += F("'>");
+        /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
+        int optionValues[2] = { 0x77, 0x76 };
+        addFormSelectorI2C(string, F("plugin_032_ms5611_i2c"), 2, optionValues, choice);
+
+        addFormNumericBox(string, F("Altitude [m]"), F("plugin_032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         success = true;
         break;
@@ -100,10 +82,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_032_ms5611_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String elev = WebServer.arg(F("plugin_032_ms5611_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_032_ms5611_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_032_ms5611_elev"));
         success = true;
         break;
       }
@@ -112,13 +92,13 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_032_init)
         {
-          Plugin_032_init = Plugin_032_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);          
+          Plugin_032_init = Plugin_032_begin(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
         }
 
         if (Plugin_032_init) {
           Plugin_032_read_prom();
           Plugin_032_readout();
-          
+
           UserVar[event->BaseVarIndex] = ms5611_temperature / 100;
           int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
           if (elev)
@@ -167,9 +147,9 @@ byte Plugin_032_send_cmd(byte aCMD)
 
 //**************************************************************************/
 // Reads the PROM of MS5611
-// There are in total 8 addresses resulting in a total memory of 128 bit. 
-// Address 0 contains factory data and the setup, addresses 1-6 calibration 
-// coefficients and address 7 contains the serial code and CRC. 
+// There are in total 8 addresses resulting in a total memory of 128 bit.
+// Address 0 contains factory data and the setup, addresses 1-6 calibration
+// coefficients and address 7 contains the serial code and CRC.
 // The command sequence is 8 bits long with a 16 bit result which is
 // clocked with the MSB first.
 //**************************************************************************/
@@ -177,7 +157,7 @@ void Plugin_032_read_prom() {
   Plugin_032_send_cmd(MS5xxx_CMD_RESET);
   delay(3);
 
-  for(uint8_t i=0;i<8;i++) 
+  for(uint8_t i=0;i<8;i++)
   {
       ms5611_prom[i]=0x0000;
       Plugin_032_send_cmd(MS5xxx_CMD_PROM_RD+2*i);
@@ -188,7 +168,7 @@ void Plugin_032_read_prom() {
       c = Wire.read();
       ms5611_prom[i] += c;
       Wire.endTransmission(true);
-  }  
+  }
 }
 
 //**************************************************************************/
@@ -198,7 +178,7 @@ unsigned long Plugin_032_read_adc(unsigned char aCMD)
 {
   unsigned long value=0;
   unsigned long c=0;
-  
+
   Plugin_032_send_cmd(MS5xxx_CMD_ADC_CONV+aCMD); // start DAQ and conversion of ADC data
   switch (aCMD & 0x0f)
   {
@@ -222,7 +202,7 @@ unsigned long Plugin_032_read_adc(unsigned char aCMD)
   c = Wire.read();
   value += c;
   Wire.endTransmission(true);
- 
+
   return value;
 }
 
@@ -233,7 +213,7 @@ unsigned long Plugin_032_read_adc(unsigned char aCMD)
 void Plugin_032_readout() {
 
   unsigned long D1=0, D2=0;
-  
+
   double dT;
   double OFF;
   double SENS;
@@ -247,7 +227,7 @@ void Plugin_032_readout() {
   SENS=ms5611_prom[1]*pow(2,15)+dT*ms5611_prom[3]/pow(2,8);
   ms5611_temperature=(2000+(dT*ms5611_prom[6])/pow(2,23));
   ms5611_pressure=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));
-   
+
   // perform higher order corrections
   double T2=0., OFF2=0., SENS2=0.;
   if(ms5611_temperature<2000) {
@@ -259,11 +239,11 @@ void Plugin_032_readout() {
       SENS2+=11*(ms5611_temperature+1500)*(ms5611_temperature+1500)/pow(2,1);
     }
   }
-    
+
   ms5611_temperature-=T2;
   OFF-=OFF2;
   SENS-=SENS2;
-  ms5611_pressure=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));  
+  ms5611_pressure=(((D1*SENS)/pow(2,21)-OFF)/pow(2,15));
 }
 
 //**************************************************************************/
@@ -272,4 +252,3 @@ void Plugin_032_readout() {
 double Plugin_032_pressureElevation(double atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
-

@@ -103,29 +103,13 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[2];
-        options[0] = F("0x76 - default settings (SDO Low)");
-        options[1] = F("0x77 - alternate settings (SDO HIGH)");
-        int optionValues[2];
-        optionValues[0] = 0x76;
-        optionValues[1] = 0x77;
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_030_bmp280_i2c'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
-        string += F("<TR><TD>Altitude [m]:<TD><input type='text' title='Set Altitude to 0 to get measurement without altitude adjustment' name='");
-        string += F("plugin_030_bmp280_elev' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        string += F("'>");
+        /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
+        int optionValues[2] = { 0x76, 0x77 };
+        addFormSelectorI2C(string, F("plugin_030_bmp280_i2c"), 2, optionValues, choice);
+        addFormNote(string, F("SDO Low=0x76, High=0x77"));
+
+        addFormNumericBox(string, F("Altitude"), F("plugin_030_bmp280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(string, F("m"));
 
         success = true;
         break;
@@ -133,10 +117,8 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_030_bmp280_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String elev = WebServer.arg(F("plugin_030_bmp280_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = elev.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_030_bmp280_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_030_bmp280_elev"));
         success = true;
         break;
       }
@@ -412,4 +394,3 @@ float Plugin_030_readAltitude(float seaLevel)
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
-

@@ -78,12 +78,12 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
     // The MTA Exchange
     while (true) {
 
-      if (NPlugin_001_MTA(client, "",                                                         PSTR("220 ")) == false) break;
-      if (NPlugin_001_MTA(client, PSTR("EHLO ") + aDomain,                                    PSTR("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, PSTR("MAIL FROM:") + aFrom + "",                            PSTR("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, PSTR("RCPT TO:") + aTo + "",                                PSTR("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, PSTR("DATA"),                                               PSTR("354 ")) == false) break;
-      if (NPlugin_001_MTA(client, PSTR("Subject:") + aSub + PSTR("\r\n\r\n") + aMesg + PSTR("\r\n.\r\n"), PSTR("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, "",                                                         F("220 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("EHLO ")) + aDomain,                                    F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("MAIL FROM:")) + aFrom + "",                            F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("RCPT TO:")) + aTo + "",                                F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, F("DATA"),                                               F("354 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("Subject:")) + aSub + F("\r\n\r\n") + aMesg + F("\r\n.\r\n"), F("250 ")) == false) break;
 
       myStatus = true;
       break;

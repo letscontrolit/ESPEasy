@@ -58,13 +58,13 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-    	addFormTextBox(string, F("I2C Address (Hex):"), F("plugin_048_adr"), String(F("0x")) +
+    	addFormTextBox(string, F("I2C Address (Hex)"), F("plugin_048_adr"), String(F("0x")) +
     			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
-    	addFormNumericBox(string, F("Stepper: steps per revolution:"), F("plugin_048_MotorStepsPerRevolution")
+    	addFormNumericBox(string, F("Stepper: steps per revolution"), F("plugin_048_MotorStepsPerRevolution")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-    	addFormNumericBox(string, F("Stepper speed (rpm):"), F("plugin_048_StepperSpeed")
+    	addFormNumericBox(string, F("Stepper speed (rpm)"), F("plugin_048_StepperSpeed")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
 			success = true;
@@ -74,10 +74,10 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		case PLUGIN_WEBFORM_SAVE: {
 			String plugin1 = WebServer.arg(F("plugin_048_adr"));
 			Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
-			String plugin2 = WebServer.arg(F("plugin_048_MotorStepsPerRevolution"));
-			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-			String plugin3 = WebServer.arg(F("plugin_048_StepperSpeed"));
-			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+
+			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_048_MotorStepsPerRevolution"));
+
+			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_048_StepperSpeed"));
 			success = true;
 			break;
 		}

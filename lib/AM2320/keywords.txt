@@ -1,7 +1,4 @@
-AM2320  KEYWORD1
-begin   KEYWORD2
-measure KEYWORD2
-measureTemperature  KEYWORD2
-measureHumidity KEYWORD2
-getTemperature  KEYWORD2
-getHumidity KEYWORD2
+AM2320          KEYWORD1
+getTemperature	KEYWORD2
+getHumidity     KEYWORD2
+CRCCheck        KEYWORD2

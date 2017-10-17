@@ -9,32 +9,32 @@
 // INCLUDE jscolor (http://jscolor.com/)
 //   * Download the lib from here: http://jscolor.com/release/latest.zip
 //   * Extract jscolor.min.js
-//   * Now open the Web UI of your ESPEasy with this URL: 
+//   * Now open the Web UI of your ESPEasy with this URL:
 //     http://<IP-ESPEasy>/upload
 //   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... verion !!)
-//   * Press Upload und you are done. 
+//   * Press Upload und you are done.
 
-// Add the Adafruit Neopixel Library to your library path. You will find it here: 
+// Add the Adafruit Neopixel Library to your library path. You will find it here:
 // https://github.com/adafruit/Adafruit_NeoPixel
-// That´s all :-) Now ESPEasy has a new 25ms "Timer loop" and Neopixel Support.  
+// That´s all :-) Now ESPEasy has a new 25ms "Timer loop" and Neopixel Support.
 
 // NOTES
-// Please keep in mind that you can add tasks which produce a very large delay while reading the sensor. 
-// For example the DS18B20 is very slow in reading the values. This can slow down the simulation and you 
-// will notice that the candle did not run smooth. So keep an eye on your tasks and donßt add to much other tasks. 
+// Please keep in mind that you can add tasks which produce a very large delay while reading the sensor.
+// For example the DS18B20 is very slow in reading the values. This can slow down the simulation and you
+// will notice that the candle did not run smooth. So keep an eye on your tasks and donßt add to much other tasks.
 
 // HARDWARE
-// The Wifi Candle uses 20 WS2812 RGB pixels. They are all connected in one row. 
+// The Wifi Candle uses 20 WS2812 RGB pixels. They are all connected in one row.
 // I build a wooden wick with 5 pixels on each side. (A picture is here : http://www.esp8266.nu/forum/viewtopic.php?f=2&t=2147)
-// The pixels are connected to 5V and the data pin I use is GPIO13 (but you can choose another one). 
-// Please ensure that you use a strong power supply because the pixels consume a lot of power when they 
+// The pixels are connected to 5V and the data pin I use is GPIO13 (but you can choose another one).
+// Please ensure that you use a strong power supply because the pixels consume a lot of power when they
 // shine in white with high brigthness!
-// I also placed a 100µF capacitor at the end of the WS2812 chain on +5/GND just to ensure a good power stability. 
-// btw ... My Testboard was a NodeMCU V3. 
+// I also placed a 100µF capacitor at the end of the WS2812 chain on +5/GND just to ensure a good power stability.
+// btw ... My Testboard was a NodeMCU V3.
 
-// QUESTIONS 
-// Send me an email at dominik@logview.info 
-// or place a comment in the Forum: 
+// QUESTIONS
+// Send me an email at dominik@logview.info
+// or place a comment in the Forum:
 // http://www.esp8266.nu/forum/viewtopic.php?f=2&t=2147
 
 // Candle Infos
@@ -149,11 +149,6 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         options[6] = F("Strobe");
         options[7] = F("Color Fader");
 
-        for (byte x = 0; x < 8; x++)
-        {
-          optionValues[x] = x;
-        }
-
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
         if (choice > sizeof(options) - 1)
         {
@@ -161,19 +156,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         }
 
         // Candle Type Selection
-        string += F("<TR><TD>Flame Type:<TD><select name='web_Candle_Type'>");
-        for (byte x = 0; x < 8; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
 
         // Advanced Color options
         Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];
@@ -194,7 +177,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         string += F("<label for='web_Color_Selected'> Use selected color</label><br>");
 
         // Color Selection
-        char hexvalue[6] = {0};
+        char hexvalue[7] = {0};
         sprintf(hexvalue, "%02X%02X%02X",     // Create Hex value for color
                 Settings.TaskDevicePluginConfig[event->TaskIndex][0],
                 Settings.TaskDevicePluginConfig[event->TaskIndex][1],
@@ -204,12 +187,9 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         string += F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='");
         string += hexvalue;
         string += F("'>");
-        sprintf_P(tmpString, PSTR("<TR><TD>RGB Color:<TD><input type='text' name='web_RGB_Red' id='web_RGB_Red' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("&nbsp;&nbsp;<input type='text' name='web_RGB_Green' id='web_RGB_Green' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        string += tmpString;
-        sprintf_P(tmpString, PSTR("&nbsp;&nbsp;<input type='text' name='web_RGB_Blue' id='web_RGB_Blue' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        string += tmpString;
+        addFormNumericBox(string, F("RGB Color"), F("web_RGB_Red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+        addNumericBox(string, F("web_RGB_Green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+        addNumericBox(string, F("web_RGB_Blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
 
         // Brightness Selection
         string += F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='");
@@ -241,18 +221,12 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("web_RGB_Red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("web_RGB_Green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("web_RGB_Blue"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
-        String plugin4 = WebServer.arg(F("web_Bright_Text"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = plugin4.toInt();
-        String plugin5 = WebServer.arg(F("web_Candle_Type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = plugin5.toInt();
-        String plugin6 = WebServer.arg(F("web_Color_Type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = plugin6.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("web_RGB_Red"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("web_RGB_Green"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("web_RGB_Blue"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("web_Bright_Text"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("web_Candle_Type"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("web_Color_Type"));
 
         Candle_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Candle_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -389,8 +363,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String tmpString  = string;
-        
-        // Test 
+
+        // Test
         // MQTT   : mosquitto_pub -d -t sensors/espeasy/ESP_Candle/cmd  -m "CANDLE_OFF"
         // HTTP   : http://192.168.30.183/tools?cmd=CANDLE%3A5%3AFF0000%3A200
         //          http://192.168.30.183/tools?cmd=CANDLE:4:FF0000:200
@@ -401,19 +375,19 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         //    <FlameType>  : 1 Static Light, 2 Simple Candle, 3 Advanced Candle, 4 Police, 5 Blink, 6 Strobe, 7 Color Fader
         //    <Color>      : n.def.  Use the default color
         //                   RRGGBB  Use color in RRGGBB style (red, green blue) as HEX
-        //    <Brightness> : 0-255 
+        //    <Brightness> : 0-255
         // Samples:   CANDLE:2::100           Simple Candle with Default color and Brigthness at 100
         //            CANDLE:5:FF0000:200     Blink with RED Color and Brigthness at 200
         //            CANDLE:0::              Candle OFF
         //            CANDLE:1::255           Candle ON - White and full brigthness
-        
+
         if (tmpString.startsWith("CANDLE:")){
           int idx1 = tmpString.indexOf(':');
           int idx2 = tmpString.indexOf(':', idx1+1);
           int idx3 = tmpString.indexOf(':', idx2+1);
           int idx4 = tmpString.indexOf(':', idx3+1);
           String val_Type = tmpString.substring(idx1+1, idx2);
-          String val_Color = tmpString.substring(idx2+1, idx3);  
+          String val_Color = tmpString.substring(idx2+1, idx3);
           String val_Bright = tmpString.substring(idx3+1, idx4);
 
           if (val_Type != "") {
@@ -467,7 +441,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           //SaveTaskSettings(event->TaskIndex);
           //SaveSettings();
-          
+
           success = true;
         }
 
@@ -530,18 +504,18 @@ void type_Advanced_Candle() {
   Candle_Temp[1] = random(1, 4) + Candle_Temp[0]; // 1..3  LEDs in Yellow / Orange
   Candle_Temp[2] = random(0, 2); // 0..1  Choose Yellow = 0 / Orange = 1
 
-  int colorbase[3];  
-  int color1[3];    
-  int color2[3];   
-  int color3[3];   
+  int colorbase[3];
+  int color1[3];
+  int color2[3];
+  int color3[3];
 
   if (Candle_color == ColorDefault) {
-    colorbase[0] = 255; colorbase[1] = 120; colorbase[2] = 0;   // Light Orange #FF7800 
+    colorbase[0] = 255; colorbase[1] = 120; colorbase[2] = 0;   // Light Orange #FF7800
     color1[0] = 115; color1[1] = 50; color1[2] = 0;             // Brown      #733200
-    color2[0] = 180; color2[1] = 80; color2[2] = 0;             // Orange     #B45000 
+    color2[0] = 180; color2[1] = 80; color2[2] = 0;             // Orange     #B45000
     color3[0] =  70; color3[1] = 30; color3[2] = 0;              // Dark brown #4A2000
   } else {
-    colorbase[0] = Candle_red; colorbase[1] = Candle_green; colorbase[2] = Candle_blue; 
+    colorbase[0] = Candle_red; colorbase[1] = Candle_green; colorbase[2] = Candle_blue;
     double hsv[3];
     // Calc HSV
     RGBtoHSV(Candle_red, Candle_green, Candle_blue, hsv);
@@ -551,20 +525,20 @@ void type_Advanced_Candle() {
     double newV2 = hsv[2] / 4;
     // Calc new RGBs
     HSVtoRGB(newH, hsv[1], hsv[2], color1);
-    HSVtoRGB(hsv[0], hsv[1], newV, color2);    
-    HSVtoRGB(newH, hsv[1], newV2, color3);  
+    HSVtoRGB(hsv[0], hsv[1], newV, color2);
+    HSVtoRGB(newH, hsv[1], newV2, color3);
   }
 
   for (int j = 0; j < 4; j++) {
     for (int i = 1; i < 6; i++){
       if (i <= Candle_Temp[0]) {
-        Candle_pixels->setPixelColor(j * 5 + i - 1, colorbase[0], colorbase[1], colorbase[2]); 
+        Candle_pixels->setPixelColor(j * 5 + i - 1, colorbase[0], colorbase[1], colorbase[2]);
       }
       if (i > Candle_Temp[0] && i <= Candle_Temp[1]) {
         if (Candle_Temp[2] == 0){
-          Candle_pixels->setPixelColor(j * 5 + i - 1, color1[0], color1[1], color1[2]); 
+          Candle_pixels->setPixelColor(j * 5 + i - 1, color1[0], color1[1], color1[2]);
         } else {
-          Candle_pixels->setPixelColor(j * 5 + i - 1, color2[0], color2[1], color2[2]); 
+          Candle_pixels->setPixelColor(j * 5 + i - 1, color2[0], color2[1], color2[2]);
         }
       }
       if (i > Candle_Temp[1]) {
@@ -635,14 +609,14 @@ void type_ColorFader() {
     }
 
     // Calc HSV
-    // void RGBtoHSV(byte r, byte g, byte b, double hsv[3]) 
+    // void RGBtoHSV(byte r, byte g, byte b, double hsv[3])
     RGBtoHSV(Candle_red, Candle_green, Candle_blue, hsv);
 
-    // Calc RGB with new V 
-    // HSVtoRGB(int hue, int sat, int val, int colors[3]) 
+    // Calc RGB with new V
+    // HSVtoRGB(int hue, int sat, int val, int colors[3])
     // hue: 0-359, sat: 0-255, val (lightness): 0-255
     HSVtoRGB(hsv[0], hsv[1], Candle_Temp[0], colors);
-    
+
     for (int i = 0; i < NUM_PIXEL; i++) {
       Candle_pixels->setPixelColor(i, colors[0], colors[1], colors[2]);
     }
@@ -651,10 +625,10 @@ void type_ColorFader() {
     if (Candle_Temp[0] > 359) {
       Candle_Temp[0] = 0;
     }
-    
+
     // hue: 0-359, sat: 0-255, val (lightness): 0-255
     HSVtoRGB(Candle_Temp[0], 255, 255, colors);
-  
+
     for (int i = 0; i < NUM_PIXEL; i++) {
       Candle_pixels->setPixelColor(i, colors[0], colors[1], colors[2]);
     }
@@ -670,7 +644,7 @@ void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
     colors[0]=val;
     colors[1]=val;
     colors[2]=val;
-  } 
+  }
   else  {
     base = ((255 - sat) * val)>>8;
     switch(hue/60) {
@@ -722,12 +696,12 @@ void RGBtoHSV(byte r, byte g, byte b, double hsv[3]) {
     double minval = rd;
     if (gd < minval) { minval = gd; }
     if (bd < minval) { minval = bd; }
-    double h, s, v = maxval;
+    double h = 0, s, v = maxval;
     double d = maxval - minval;
 
     s = maxval == 0 ? 0 : d / maxval;
 
-    if (maxval == minval) { 
+    if (maxval == minval) {
         h = 0; // achromatic
     } else {
         if (maxval == rd) {

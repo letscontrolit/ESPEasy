@@ -46,11 +46,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        string += F("<TR><TD>Send Boot state:<TD>");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
-          string += F("<input type=checkbox name=plugin_009_boot checked>");
-        else
-          string += F("<input type=checkbox name=plugin_009_boot>");
+        addFormCheckBox(string, F("Send Boot state") ,F("plugin_009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -58,9 +54,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-
-        String plugin1 = WebServer.arg(F("plugin_009_boot"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (plugin1 == "on");
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("plugin_009_boot"));
 
         success = true;
         break;

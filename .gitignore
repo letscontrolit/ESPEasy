@@ -2,3 +2,5 @@
 .clang_complete
 .gcc-flags.json
 .piolibdeps
+
+lib/readme.txt

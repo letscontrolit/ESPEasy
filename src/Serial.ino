@@ -25,8 +25,10 @@ void serial()
         InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
     }
 
-    if (SerialInByte == '\n')
+    if (SerialInByte == '\r' || SerialInByte == '\n')
     {
+      if (SerialInByteCounter == 0)   //empty command?
+        break;
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       Serial.write('>');
       Serial.println(InputBuffer_Serial);
@@ -41,4 +43,3 @@ void serial()
     }
   }
 }
-

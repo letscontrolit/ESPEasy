@@ -23,14 +23,14 @@ bool isDeepSleepEnabled()
   //                    short 2-3 to cancel sleep loop for modifying settings
   pinMode(16,INPUT_PULLUP);
   if (!digitalRead(16))
+  {
     return false;
-
+  }
   return true;
 }
 
 void deepSleep(int delay)
 {
-  String log;
 
   if (!isDeepSleepEnabled())
   {
@@ -41,28 +41,33 @@ void deepSleep(int delay)
   //first time deep sleep? offer a way to escape
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
-    log = F("Entering deep sleep in 30 seconds.");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
-      log = F("Deep sleep disabled.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
       return;
     }
   }
 
-  log = F("Entering deep sleep...");
-  addLog(LOG_LEVEL_INFO, log);
+  deepSleepStart(delay); // Call deepSleepStart function after these checks
+}
+
+void deepSleepStart(int delay)
+{
+  // separate function that is called from above function or directly from rules, usign deepSleep as a one-shot
+  String event = F("System#Sleep");
+  rulesProcessing(event);
+
 
   RTC.deepSleepState = 1;
   saveToRTC();
 
-  String event = F("System#Sleep");
-  rulesProcessing(event);
   if (delay > 4294 || delay < 0)
     delay = 4294;   //max sleep time ~1.2h
+
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
 }
 
@@ -381,15 +386,8 @@ void statusLED(boolean traffic)
   }
   else
   {
-    if (AP_Mode) //apmode is active
-    {
-      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
-    }
-    else if (WiFi.status() != WL_CONNECTED)
-    {
-      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
-    }
-    else //connected
+
+    if (WiFi.status() == WL_CONNECTED)
     {
       long int delta=millis()-gnLastUpdate;
       if (delta>0 || delta<0 )
@@ -398,6 +396,16 @@ void statusLED(boolean traffic)
         nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
         gnLastUpdate=millis();
       }
+    }
+    //AP mode is active
+    else if (WifiIsAP())
+    {
+      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+    }
+    //Disconnected
+    else
+    {
+      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
     }
   }
 
@@ -442,10 +450,14 @@ void parseCommandString(struct EventStruct *event, String& string)
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
+  event->Par4 = 0;
+  event->Par5 = 0;
 
   if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
   if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
 }
 
 /********************************************************************************************\
@@ -521,10 +533,18 @@ void BuildFixes()
   \*********************************************************************************************/
 void fileSystemCheck()
 {
+  addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
-    String log = F("FS   : Mount successful");
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+
+    String log = F("FS   : Mount successful, used ");
+    log=log+fs_info.usedBytes;
+    log=log+F(" bytes of ");
+    log=log+fs_info.totalBytes;
     addLog(LOG_LEVEL_INFO, log);
+
     fs::File f = SPIFFS.open("config.dat", "r");
     if (!f)
     {
@@ -536,6 +556,7 @@ void fileSystemCheck()
     String log = F("FS   : Mount failed");
     Serial.println(log);
     addLog(LOG_LEVEL_ERROR, log);
+    ResetFactory();
   }
 }
 
@@ -810,7 +831,7 @@ boolean SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
-    String log = F("FS   : Daily flash write rate exceeded!");
+    String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
     addLog(LOG_LEVEL_ERROR, log);
     return false;
   }
@@ -873,33 +894,35 @@ void ResetFactory(void)
 {
 
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.println(F("Resetting factory defaults..."));
+  Serial.println(F("RESET: Resetting factory defaults..."));
   delay(1000);
   if (readFromRTC())
   {
-    Serial.print(F("RESET: Reboot count: "));
+    Serial.print(F("RESET: Warm boot, reset count: "));
     Serial.println(RTC.factoryResetCounter);
     if (RTC.factoryResetCounter > 3)
     {
-      Serial.println(F("RESET: To many reset attempts"));
+      Serial.println(F("RESET: Too many resets, protecting your flash memory (powercycle to solve this)"));
       return;
     }
   }
   else
+  {
     Serial.println(F("RESET: Cold boot"));
+    initRTC();
+  }
 
   RTC.factoryResetCounter++;
-  RTC.flashDayCounter = 0;
   saveToRTC();
 
   //always format on factory reset, in case of corrupt SPIFFS
   SPIFFS.end();
-  Serial.println(F("FS   : formatting..."));
+  Serial.println(F("RESET: formatting..."));
   SPIFFS.format();
-  Serial.println(F("FS   : formatting done..."));
+  Serial.println(F("RESET: formatting done..."));
   if (!SPIFFS.begin())
   {
-    Serial.println(F("FS   : FORMATTING SPIFFS FAILED!"));
+    Serial.println(F("RESET: FORMAT SPIFFS FAILED!"));
     return;
   }
 
@@ -940,11 +963,6 @@ void ResetFactory(void)
   str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
 #endif
 
-#if DEFAULT_MQTT_TEMPLATE
-  strcpy_P(Settings.MQTTsubscribe, PSTR(DEFAULT_MQTT_SUB));
-  strcpy_P(Settings.MQTTpublish, PSTR(DEFAULT_MQTT_PUB));
-#endif
-
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
   Settings.Unit            = UNIT;
@@ -952,8 +970,6 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
-  //str2ip((char*)DEFAULT_SERVER, Settings.Controller_IP[0]);
-  //Settings.ControllerPort[0]      = DEFAULT_PORT;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
@@ -983,7 +999,19 @@ void ResetFactory(void)
   Settings.Build = BUILD;
   Settings.UseSerial = true;
   SaveSettings();
-  Serial.println("Factory reset succesful, rebooting...");
+
+#if DEFAULT_CONTROLLER
+  ControllerSettingsStruct ControllerSettings;
+  strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
+  strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
+  str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+  ControllerSettings.HostName[0]=0;
+  ControllerSettings.Port = DEFAULT_PORT;
+  SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+#endif
+
+  Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
+  //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
@@ -1043,6 +1071,7 @@ float ul2float(unsigned long ul)
   return f;
 }
 
+
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
   \*********************************************************************************************/
@@ -1054,7 +1083,7 @@ void initLog()
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
-  for (int l; l<9; l++)
+  for (int l=0; l<10; l++)
   {
     Logging[l].Message=0;
   }
@@ -1126,16 +1155,33 @@ void delayedReboot(int rebootDelay)
 /********************************************************************************************\
   Save RTC struct to RTC memory
   \*********************************************************************************************/
-//user-area of the esp starts at block 64 (bytes = block * 4)
-#define RTC_BASE_STRUCT 64
 boolean saveToRTC()
 {
-  RTC.ID1 = 0xAA;
-  RTC.ID2 = 0x55;
-  RTC.valid = true;
-  return(system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)));
+  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
+  {
+    addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+    return(false);
+  }
+  else
+  {
+    return(true);
+  }
 }
 
+
+/********************************************************************************************\
+  Initialize RTC memory
+  \*********************************************************************************************/
+void initRTC()
+{
+  memset(&RTC, 0, sizeof(RTC));
+  RTC.ID1 = 0xAA;
+  RTC.ID2 = 0x55;
+  saveToRTC();
+
+  memset(&UserVar, 0, sizeof(UserVar));
+  saveUserVarToRTC();
+}
 
 /********************************************************************************************\
   Read RTC struct from RTC memory
@@ -1146,30 +1192,54 @@ boolean readFromRTC()
     return(false);
 
   if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-  {
-    RTC.valid = false;
     return true;
-  }
-  return false;
+  else
+    return false;
 }
 
 
 /********************************************************************************************\
   Save values to RTC memory
-  \*********************************************************************************************/
-#define RTC_BASE_USERVAR 74
+\*********************************************************************************************/
 boolean saveUserVarToRTC()
 {
-  return(system_rtc_mem_write(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar)));
+  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
+  byte* buffer = (byte*)&UserVar;
+  size_t size = sizeof(UserVar);
+  uint32 sum = getChecksum(buffer, size);
+  boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+  ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  return ret;
 }
 
 
 /********************************************************************************************\
   Read RTC struct from RTC memory
-  \*********************************************************************************************/
+\*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  return(system_rtc_mem_read(RTC_BASE_USERVAR, (byte*)&UserVar, sizeof(UserVar)));
+  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
+  byte* buffer = (byte*)&UserVar;
+  size_t size = sizeof(UserVar);
+  boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+  uint32 sumRAM = getChecksum(buffer, size);
+  uint32 sumRTC = 0;
+  ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
+  if (!ret || sumRTC != sumRAM)
+  {
+    addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+    memset(buffer, 0, size);
+  }
+  return ret;
+}
+
+
+uint32 getChecksum(byte* buffer, size_t size)
+{
+  uint32 sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
+  for (size_t i=0; i<size; i++)
+    sum += buffer[i];
+  return sum;
 }
 
 
@@ -1278,6 +1348,70 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
+// returns the current Date separated by the given delimiter
+// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
+String getDateString(char delimiter)
+{
+  String reply = String(year());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (month() < 10)
+    reply += "0";
+  reply += month();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (day() < 10)
+  	reply += F("0");
+  reply += day();
+  return reply;
+}
+
+// returns the current Date without delimiter
+// date format example: 20161231 (YYYYMMDD)
+String getDateString()
+{
+	return getDateString('\0');
+}
+
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+String getTimeString(char delimiter)
+{
+	String reply;
+	if (hour() < 10)
+		reply += F("0");
+  reply += String(hour());
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (minute() < 10)
+    reply += F("0");
+  reply += minute();
+  if (delimiter != '\0')
+  	reply += delimiter;
+  if (second() < 10)
+  	reply += F("0");
+  reply += second();
+  return reply;
+}
+
+// returns the current Time without delimiter
+// time format example: 235959 (HHMMSS)
+String getTimeString()
+{
+	return getTimeString('\0');
+}
+
+// returns the current Date and Time separated by the given delimiter
+// if called like this: getDateTimeString('\0', '\0', '\0');
+// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
+String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+{
+	String ret = getDateString(dateDelimiter);
+	if (dateTimeDelimiter != '\0')
+		ret += dateTimeDelimiter;
+	ret += getTimeString(timeDelimiter);
+	return ret;
+}
 
 /********************************************************************************************\
   Match clock event
@@ -1395,15 +1529,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   // replace other system variables like %sysname%, %systime%, %ip%
   newString.replace(F("%sysname%"), Settings.Name);
 
-  String strTime = "";
-  if (hour() < 10)
-    strTime += " ";
-  strTime += hour();
-  strTime += ":";
-  if (minute() < 10)
-    strTime += "0";
-  strTime += minute();
-  newString.replace(F("%systime%"), strTime);
+  newString.replace(F("%systime%"), getTimeString(':'));
 
   newString.replace(F("%uptime%"), String(wdcounter / 2));
 
@@ -1825,6 +1951,11 @@ byte hour()
 byte minute()
 {
   return tm.Minute;
+}
+
+byte second()
+{
+	return tm.Second;
 }
 
 int weekday()
@@ -2343,14 +2474,14 @@ void createRuleEvents(byte TaskIndex)
   }
 }
 
-void checkRAM(byte id)
+void checkRAM( const __FlashStringHelper* flashString)
 {
   uint16_t freeRAM = FreeMem();
 
   if (freeRAM < lowestRAM)
   {
     lowestRAM = freeRAM;
-    lowestRAMid = id;
+    lowestRAMfunction = flashString;
   }
 }
 

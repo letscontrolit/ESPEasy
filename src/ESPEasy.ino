@@ -76,8 +76,6 @@
 #define DEFAULT_NAME        "newdevice"         // Enter your device friendly name
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
-#define DEFAULT_SERVER      "192.168.0.8"       // Enter your Domoticz Server IP address
-#define DEFAULT_PORT        8080                // Enter your Domoticz Server port value
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
@@ -87,9 +85,12 @@
 #define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
 
-#define DEFAULT_MQTT_TEMPLATE false              // true or false enabled or disabled set mqqt sub and pub
-#define DEFAULT_MQTT_PUB    "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
-#define DEFAULT_MQTT_SUB    "sensors/espeasy/%sysname%/#" // Enter your sub
+#define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
+// using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
+#define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
+#define DEFAULT_SUB         "sensors/espeasy/%sysname%/#" // Enter your sub
+#define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
+#define DEFAULT_PORT        8080                // Enter your Server port value
 
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
 //   1 = Domoticz HTTP
@@ -201,12 +202,16 @@
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
-#define DEVICES_MAX                        64
+#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+  #define DEVICES_MAX                      72
+#else
+  #define DEVICES_MAX                      64
+#endif
 #define TASKS_MAX                          12 // max 12!
 #define CONTROLLER_MAX                      3 // max 4!
 #define NOTIFICATION_MAX                    3 // max 4!
 #define VARS_PER_TASK                       4
-#define PLUGIN_MAX                         64
+#define PLUGIN_MAX                DEVICES_MAX
 #define PLUGIN_CONFIGVAR_MAX                8
 #define PLUGIN_CONFIGFLOATVAR_MAX           4
 #define PLUGIN_CONFIGLONGVAR_MAX            4
@@ -298,6 +303,7 @@ ADC_MODE(ADC_VCC);
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
 #include "include/UdpContext.h"
+#include "limits.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -347,6 +353,7 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
+  //its safe to extend this struct, up to 512 bytes, default values in config are 0
 } SecuritySettings;
 
 struct SettingsStruct
@@ -418,6 +425,8 @@ struct SettingsStruct
   unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
+  boolean       deepSleepOnFail;
+  //its safe to extend this struct, up to 65535 bytes, default values in config are 0
 } Settings;
 
 struct ControllerSettingsStruct
@@ -441,6 +450,7 @@ struct NotificationSettingsStruct
   char          Body[513];
   byte          Pin1;
   byte          Pin2;
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
 struct ExtraTaskSettingsStruct
@@ -468,6 +478,8 @@ struct EventStruct
   int Par1;
   int Par2;
   int Par3;
+  int Par4;
+  int Par5;
   byte OriginTaskIndex;
   String String1;
   String String2;
@@ -549,17 +561,25 @@ struct pinStatesStruct
   uint16_t value;
 } pinStates[PINSTATE_TABLE_MAX];
 
+
+// this offsets are in blocks, bytes = blocks * 4
+#define RTC_BASE_STRUCT 64
+#define RTC_BASE_USERVAR 74
+
+//max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
   byte ID1;
   byte ID2;
-  boolean valid; // not used?
+  boolean unused1;
   byte factoryResetCounter;
   byte deepSleepState;
-  byte rebootCounter; //not used yet?
+  byte unused2;
   byte flashDayCounter;
   unsigned long flashCounter;
+  unsigned long bootCounter;
 } RTC;
+
 
 int deviceCount = -1;
 int protocolCount = -1;
@@ -580,10 +600,10 @@ unsigned long timerwd;
 unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
-boolean AP_Mode = false;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
+unsigned long timerAPoff = 0;
 
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
@@ -619,24 +639,14 @@ unsigned long dailyResetCounter = 0;
 String eventBuffer = "";
 
 uint16_t lowestRAM = 0;
-byte lowestRAMid=0;
-/*
-1 savetoflash - obsolete
-2 loadfrom flash - obsolete
-3 zerofillflash - obsolete
-4 rulesprocessing
-5 handle_download
-6 handle_css
-7 handlefileupload
-8 handle_rules
-9 handle_devices
-*/
+String lowestRAMfunction = "";
 
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
 {
+
   lowestRAM = FreeMem();
 
   Serial.begin(115200);
@@ -657,6 +667,43 @@ void setup()
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
   addLog(LOG_LEVEL_INFO, log);
+
+
+  //warm boot
+  if (readFromRTC())
+  {
+    RTC.bootCounter++;
+    readUserVarFromRTC();
+
+    if (RTC.deepSleepState == 1)
+    {
+      log = F("INIT : Rebooted from deepsleep #");
+      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
+    }
+    else
+      log = F("INIT : Warm boot #");
+
+    log += RTC.bootCounter;
+
+  }
+  //cold boot (RTC memory empty)
+  else
+  {
+    initRTC();
+
+    // cold boot situation
+    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
+      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    log = F("INIT : Cold Boot");
+  }
+
+  RTC.deepSleepState=0;
+  saveToRTC();
+
+  addLog(LOG_LEVEL_INFO, log);
+
+
+
 
   fileSystemCheck();
   LoadSettings();
@@ -698,8 +745,22 @@ void setup()
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
-  if (!WifiConnect(true,3))
-    WifiConnect(false,3);
+
+  if (Settings.deepSleep)
+  {
+    //only one attempt in deepsleep, to conserve battery
+    if (!WifiConnect(1))
+    {
+        if (Settings.deepSleepOnFail)
+        {
+          addLog(LOG_LEVEL_ERROR, F("SLEEP: Connection failed, going back to sleep."));
+          deepSleep(Settings.Delay);
+        }
+    }
+  }
+  else
+    // 3 connect attempts
+    WifiConnect(3);
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -732,41 +793,10 @@ void setup()
 
   // Setup MQTT Client
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
-  if (Protocol[ProtocolIndex].usesMQTT)
+  if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[0])
     MQTTConnect();
 
   sendSysInfoUDP(3);
-
-  //warm boot
-  if (readFromRTC())
-  {
-    readUserVarFromRTC();
-    if (RTC.deepSleepState == 1)
-    {
-      log = F("INIT : Rebooted from deepsleep");
-      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
-    }
-    else
-      log = F("INIT : Normal boot");
-  }
-  //cold boot (RTC memory empty)
-  else
-  {
-    RTC.factoryResetCounter=0;
-    RTC.deepSleepState=0;
-    RTC.rebootCounter=0;
-    RTC.flashDayCounter=0;
-    RTC.flashCounter=0;
-    saveToRTC();
-
-    // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
-      lastBootCause = BOOT_CAUSE_COLD_BOOT;
-    log = F("INIT : Cold Boot");
-  }
-
-  addLog(LOG_LEVEL_INFO, log);
-
 
   if (Settings.UseNTP)
     initTime();
@@ -787,8 +817,7 @@ void setup()
     rulesProcessing(event);
   }
 
-  RTC.deepSleepState=0;
-  saveToRTC();
+  writeDefaultCSS();
 
 }
 
@@ -803,7 +832,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WifiConnect(true,1);
+    WifiConnect(1);
     wifiSetupConnect = false;
   }
 
@@ -946,6 +975,12 @@ void runOncePerSecond()
     Serial.print(F(" uS  1 ps:"));
     Serial.println(timer);
   }
+
+  if (timerAPoff != 0 && millis() > timerAPoff)
+  {
+    timerAPoff = 0;
+    WifiAPMode(false);
+  }
 }
 
 /*********************************************************************************************\
@@ -963,7 +998,8 @@ void runEach30Seconds()
   addLog(LOG_LEVEL_INFO, log);
   sendSysInfoUDP(1);
   refreshNodeList();
-  MQTTCheck();
+  if(Settings.ControllerEnabled[0])
+    MQTTCheck();
   if (Settings.UseSSDP)
     SSDP_update();
 #if FEATURE_ADC_VCC
@@ -1160,8 +1196,17 @@ boolean checkSystemTimers()
 /*********************************************************************************************\
  * run background tasks
 \*********************************************************************************************/
+bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //prevent recursion!
+  if (runningBackgroundTasks)
+  {
+    yield();
+    return;
+  }
+  runningBackgroundTasks=true;
+
   tcpCleanup();
 
   if (Settings.UseSerial)
@@ -1174,7 +1219,8 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   WebServer.handleClient();
-  MQTTclient.loop();
+  if(Settings.ControllerEnabled[0])
+    MQTTclient.loop();
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
@@ -1192,4 +1238,6 @@ void backgroundtasks()
   yield();
 
   statusLED(false);
+
+  runningBackgroundTasks=false;
 }

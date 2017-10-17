@@ -55,47 +55,25 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        //String options[16];
         int optionValues[16];
-        for (byte x = 0; x < 17; x++)
+        for (byte x = 0; x < 16; x++)
+        {
           if (x < 8)
             optionValues[x] = 0x20 + x;
           else
             optionValues[x] = 0x30 + x;
-
-        string += F("<TR><TD>I2C Address:<TD><select name='plugin_012_adr'>");
-        for (byte x = 0; x < 16; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += String(optionValues[x], HEX);
-          string += F("</option>");
+          //options[x] = F("0x");
+          //options[x] += String(optionValues[x], HEX);
         }
-        string += F("</select>");
+        addFormSelectorI2C(string, F("plugin_012_adr"), 16, optionValues, choice);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[2];
         options2[0] = F("2 x 16");
         options2[1] = F("4 x 20");
-        int optionValues2[2];
-        optionValues2[0] = 1;
-        optionValues2[1] = 2;
-        string += F("<TR><TD>Display Size:<TD><select name='plugin_012_size'>");
-        for (byte x = 0; x < 2; x++)
-        {
-          string += F("<option value='");
-          string += optionValues2[x];
-          string += "'";
-          if (choice2 == optionValues2[x])
-            string += F(" selected");
-          string += ">";
-          string += options2[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        int optionValues2[2] = { 1, 2 };
+        addFormSelector(string, F("Display Size"), F("plugin_012_size"), 2, options2, optionValues2, choice2);
 
         char deviceTemplate[4][80];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
@@ -124,12 +102,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_012_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_012_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
-        String plugin3 = WebServer.arg(F("plugin_12_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = plugin3.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_012_adr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_012_size"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_12_timer"));
 
         char deviceTemplate[4][80];
         for (byte varNr = 0; varNr < 4; varNr++)

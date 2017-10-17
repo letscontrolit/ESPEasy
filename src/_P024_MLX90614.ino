@@ -20,7 +20,7 @@ uint16_t readRegister024(uint8_t i2cAddress, uint8_t reg) {
   ret = Wire.read(); // receive DATA
   ret |= Wire.read() << 8; // receive DATA
   uint8_t pec = Wire.read();
-  return ret;  
+  return ret;
 }
 
 float readTemp024(uint8_t i2c_addr, uint8_t i2c_reg)
@@ -72,24 +72,12 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[MLX90614_OPTION];
-        uint optionValues[MLX90614_OPTION];
+        int optionValues[MLX90614_OPTION];
         optionValues[0] = (0x07);
         options[0] = F("IR object temperature");
         optionValues[1] = (0x06);
         options[1] = F("Ambient temperature");
-        string += F("<TR><TD>Option:<TD><select name='plugin_024_option'>");
-        for (byte x = 0; x < MLX90614_OPTION; x++)
-        {
-          string += F("<option value='");
-          string += optionValues[x];
-          string += "'";
-          if (choice == optionValues[x])
-            string += F(" selected");
-          string += ">";
-          string += options[x];
-          string += F("</option>");
-        }
-        string += F("</select>");
+        addFormSelector(string, F("Option"), F("plugin_024_option"), MLX90614_OPTION, options, optionValues, choice);
 
         success = true;
         break;
@@ -97,8 +85,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_024_option"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_024_option"));
         Plugin_024_init = false; // Force device setup next time
         success = true;
         break;
