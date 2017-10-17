@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+from espeasy import *
+from node import *
+import config
+import time
+import paho.mqtt.client as mqtt
+
+### preprare
+espeasy1=EspEasy(Node(config.nodes[0]))
+espeasy2=EspEasy(Node(config.nodes[1]))
+
+client = mqtt.Client()
+client.connect(config.mqtt_broker, 1883, 60)
+client.loop_start()
+client.subscribe('#')
+
+
+def on_message(client, userdata, message):
+    print("Received message '" + str(message.payload) + "' on topic '"
+        + message.topic + "' with QoS " + str(message.qos))
+client.on_message=on_message
+
+print("config cont")
+espeasy2.controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
+print("config dev")
+espeasy2.device_p001(index=1, taskdevicepin1=12, plugin_001_type=1, plugin_001_button=0, TDID1=1415)
+
+
+
+### test
+espeasy1.control(cmd="gpio,12,1")
+time.sleep(1)
+espeasy1.control(cmd="gpio,12,0")
+time.sleep(1)

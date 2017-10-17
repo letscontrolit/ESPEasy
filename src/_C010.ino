@@ -65,13 +65,13 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic UDP message
 //********************************************************************************
-boolean C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
+void C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
   char log[80];
-  boolean success = false;
+  // boolean success = false;
   char host[20];
   sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
 

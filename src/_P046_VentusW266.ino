@@ -75,7 +75,9 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
-#ifdef PLUGIN_BUILD_TESTING
+//edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram, 
+#ifdef PLUGIN_BUILD_DISABLED
+// #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_046_DEBUG            true                        // Shows recieved frames and crc in log@INFO
 
@@ -400,7 +402,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             case (4):
             {
-              int strikes = 0;
+              // int strikes = 0;
               int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
               if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
               if (Plugin_046_laststrikectr > (wdcounter + 10))                   // 5 min interval

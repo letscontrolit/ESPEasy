@@ -97,7 +97,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         pubname.replace(F("%id%"), String(event->idx));
 
         String value = "";
-        byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
+        // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         for (byte x = 0; x < valueCount; x++)
         {
@@ -106,7 +106,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           if (event->sensorType == SENSOR_TYPE_LONG)
             value = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           else
-            value = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+            value = formatUserVar(event, x);
           MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
           String log = F("MQTT : ");
           log += tmppubname;
@@ -116,6 +116,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      return success;
   }
+
+  return success;
 }

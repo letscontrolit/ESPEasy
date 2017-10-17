@@ -1,0 +1,21 @@
+cmd: "platformio"
+name: "Build with error highlighting (dev_4096)"
+args:
+  - run --environment dev_4096
+sh: true,
+cwd: .
+# env:
+#   VARIABLE1: "VALUE1"
+#   VARIABLE2: "VALUE2"
+errorMatch:
+  - "(?<file>[\\/0-9a-zA-Z\\._]+):(?<line>\\d+):(?<col>\\d+):\\s+error:\\s+(?<message>.+)"
+
+warningMatch:
+  - "(?<file>[\\/0-9a-zA-Z\\._]+):(?<line>\\d+):(?<col>\\d+):\\s+warning:\\s+(?<message>.+)"
+# keymap: <keymap string>
+# atomCommandName: namespace:command
+# targets:
+#   extraTargetName:
+#       cmd: "<command to execute>"
+#       args:
+#       # (any previous options are viable here except `targets` itself)

@@ -10,6 +10,7 @@
 // (2) MX,<param>,<param>,<param>, ...    with hexadecimal values
 // (3) MNUM,<param>,<param>,<param>, ...    with decimal values for 7-segment displays
 // (4) MPRINT,<text>    with decimal values for 7-segment displays
+// (5) MBR,<0-15>    set display brightness, between 0 and 15
 
 // List of M* params:
 // (a) <value>
@@ -161,7 +162,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           Plugin_057_M->ClearRowBuffer();
           while (text[seg] && seg < 8)
           {
-            uint16_t value = 0;
+            // uint16_t value = 0;
             char c = text[seg];
             Plugin_057_M->SetDigit(seg, c);
             seg++;
@@ -169,7 +170,12 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           Plugin_057_M->TransmitRowBuffer();
           success = true;
         }
-
+        else if (command == F("mbr")) {
+          int paramPos = getParamStartPos(string, 2);
+          uint8_t brightness = string.substring(paramPos).toInt();
+          Plugin_057_M->SetBrightness(brightness);
+          success = true;
+        }
         else if (command == F("m") || command == F("mx") || command == F("mnum"))
         {
           String param;

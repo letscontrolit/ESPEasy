@@ -50,9 +50,9 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         byte dht_dat[5];
-        byte dht_in;
+        // byte dht_in;
         byte i;
-        byte Retry = 0;
+        // byte Retry = 0;
         boolean error = false;
 
         Wire.beginTransmission(DHT12_I2C_ADDRESS); // start transmission to device

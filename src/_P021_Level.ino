@@ -29,7 +29,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].TimerOption = false;
         break;
       }
-      
+
     case PLUGIN_GET_DEVICENAME:
       {
         string = F(PLUGIN_NAME_021);
@@ -41,10 +41,10 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_021));
         break;
       }
-      
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
+        // char tmpString[128];
 
         string += F("<TR><TD>Check Task:<TD>");
         addTaskSelect(string, "plugin_021_task", Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
@@ -79,7 +79,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         {
           String value = parseString(string, 2);
           float result=0;
-          byte error = Calculate(value.c_str(), &result);
+          Calculate(value.c_str(), &result);
           Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = result;
           SaveSettings();
           success = true;
@@ -137,4 +137,3 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-

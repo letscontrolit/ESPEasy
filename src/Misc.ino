@@ -1,4 +1,3 @@
-
 // clean up tcp connections that are in TIME_WAIT status, to conserve memory
 // In future versions of WiFiClient it should be possible to call abort(), but
 // this feature is not in all upstream versions yet.
@@ -184,6 +183,16 @@ String toString(float value, byte decimals)
 }
 
 /*********************************************************************************************\
+   Format a value to the set number of decimals
+  \*********************************************************************************************/
+String formatUserVar(struct EventStruct *event, byte rel_index)
+{
+  return toString(
+    UserVar[event->BaseVarIndex + rel_index],
+    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+}
+
+/*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
 String parseString(String& string, byte indexFind)
@@ -218,7 +227,7 @@ int getParamStartPos(String& string, byte indexFind)
   String tmpString = string;
   byte count = 0;
   tmpString.replace(" ", ",");
-  for (int x = 0; x < tmpString.length(); x++)
+  for (unsigned int x = 0; x < tmpString.length(); x++)
   {
     if (tmpString.charAt(x) == ',')
     {
@@ -234,7 +243,7 @@ int getParamStartPos(String& string, byte indexFind)
 /*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
-boolean setPinState(byte plugin, byte index, byte mode, uint16_t value)
+void setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
   // first check if this pin is already known
@@ -363,7 +372,8 @@ boolean timeOut(unsigned long timer)
   // It limits the maximum delay to 24.9 days.
 
   unsigned long now = millis();
-  if (((now >= timer) && ((now - timer) < 1 << 31))  || ((timer >= now) && (timer - now > 1 << 31)))
+  //XXX: fix me, something fishy going on here, this << operator is in the wrong place or parenthesis are wrong
+  if (((now >= timer) && ((now - timer) < 1u << 31))  || ((timer >= now) && (timer - now > 1u << 31)))
     return true;
 
   return false;
@@ -515,26 +525,46 @@ void taskClear(byte taskIndex, boolean save)
   }
 }
 
+/********************************************************************************************\
+  SPIFFS error handling
+  Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
+  \*********************************************************************************************/
+#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
+String FileError(int line, const char * fname)
+{
+   String err("FS   : Error while reading/writing ");
+   err=err+fname;
+   err=err+" in ";
+   err=err+line;
+   addLog(LOG_LEVEL_ERROR, err);
+   return(err);
+}
+
 
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
   \*********************************************************************************************/
-void BuildFixes()
+String BuildFixes()
 {
   Serial.println(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
   {
-    fs::File f = SPIFFS.open("notification.dat", "w");
+    String fname=F("notification.dat");
+    fs::File f = SPIFFS.open(fname, "w");
+    SPIFFS_CHECK(f, fname.c_str());
+
     if (f)
     {
       for (int x = 0; x < 4096; x++)
-        f.write(0);
+      {
+        SPIFFS_CHECK(f.write(0), fname.c_str());
+      }
       f.close();
     }
   }
   Settings.Build = BUILD;
-  SaveSettings();
+  return(SaveSettings());
 }
 
 
@@ -598,23 +628,24 @@ byte getProtocolIndex(byte Number)
 }
 
 /********************************************************************************************\
-  Find notification index corresponding to protocol setting
+  Get notificatoin protocol index (plugin index), by NPlugin_id
   \*********************************************************************************************/
-byte getNotificationIndex(byte Number)
+byte getNotificationProtocolIndex(byte Number)
 {
-  byte NotificationIndex = 0;
+
   for (byte x = 0; x <= notificationCount ; x++)
     if (Notification[x].Number == Number)
-      NotificationIndex = x;
-  return NotificationIndex;
+      return(x);
+
+  return(NPLUGIN_NOT_FOUND);
 }
 
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
-boolean GetArgv(const char *string, char *argv, int argc)
+boolean GetArgv(const char *string, char *argv, unsigned int argc)
 {
-  int string_pos = 0, argv_pos = 0, argc_pos = 0;
+  unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
 
@@ -678,7 +709,7 @@ boolean str2ip(char *string, byte* IP)
   byte part = 0;
   int value = 0;
 
-  for (int x = 0; x <= strlen(string); x++)
+  for (unsigned int x = 0; x <= strlen(string); x++)
   {
     c = string[x];
     if (isdigit(c))
@@ -846,20 +877,6 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 }
 
 
-/********************************************************************************************\
-  SPIFFS error handling
-  Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
-  \*********************************************************************************************/
-#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
-String FileError(int line, const char * fname)
-{
-   String err("FS   : Error while reading/writing ");
-   err=err+fname;
-   err=err+" in ";
-   err=err+line;
-   addLog(LOG_LEVEL_ERROR, err);
-   return(err);
-}
 
 
 /********************************************************************************************\
@@ -1327,7 +1344,7 @@ unsigned long string2TimeLong(String &str)
     for (x = strlen(TmpStr1) - 1; x >= 0; x--)
     {
       w = TmpStr1[x];
-      if (w >= '0' && w <= '9' || w == '*')
+      if ( (w >= '0' && w <= '9') || w == '*')
       {
         a = 0xffffffff  ^ (0xfUL << y); // create mask to clean nibble position y
         lngTime &= a; // maak nibble leeg
@@ -1337,7 +1354,8 @@ unsigned long string2TimeLong(String &str)
           lngTime |= (w - '0') << y; // fill nibble with token
         y += 4;
       }
-      else if (w == ':');
+      else
+        if (w == ':');
       else
       {
         break;
@@ -1418,6 +1436,34 @@ String getDateString(char delimiter)
   return reply;
 }
 
+String getDayString()
+{
+  String reply;
+  if (day() < 10)
+    reply += F("0");
+  reply += day();
+  return reply;
+}
+String getMonthString()
+{
+  String reply;
+  if (month() < 10)
+    reply += F("0");
+  reply += month();
+  return reply;
+}
+String getYearString()
+{
+  String reply = String(year());
+  return reply;
+}
+String getYearStringShort()
+{
+  String dummy = String(year());
+  String reply = dummy.substring(2);
+  return reply;
+}
+
 // returns the current Date without delimiter
 // date format example: 20161231 (YYYYMMDD)
 String getDateString()
@@ -1442,6 +1488,31 @@ String getTimeString(char delimiter)
   	reply += delimiter;
   if (second() < 10)
   	reply += F("0");
+  reply += second();
+  return reply;
+}
+
+String getHourString()
+{
+  String reply;
+  if (hour() < 10)
+    reply += F("0");
+  reply += String(hour());
+  return reply;
+}
+String getMinuteString()
+{
+  String reply;
+  if (minute() < 10)
+    reply += F("0");
+  reply += minute();
+  return reply;
+}
+String getSecondString()
+{
+  String reply;
+  if (second() < 10)
+    reply += F("0");
   reply += second();
   return reply;
 }
@@ -1593,6 +1664,14 @@ String parseTemplate(String &tmpString, byte lineSize)
 
   newString.replace(F("%systime%"), getTimeString(':'));
 
+  newString.replace(F("%syshour%"), getHourString());
+  newString.replace(F("%sysmin%"), getMinuteString());
+  newString.replace(F("%syssec%"), getSecondString());
+  newString.replace(F("%sysday%"), getDayString());
+  newString.replace(F("%sysmonth%"), getMonthString());
+  newString.replace(F("%sysyear%"), getYearString());
+  newString.replace(F("%sysyears%"), getYearStringShort());
+
   newString.replace(F("%uptime%"), String(wdcounter / 2));
 
 #if FEATURE_ADC_VCC
@@ -1646,6 +1725,8 @@ float pop()
 {
   if (sp != (globalstack - 1)) // empty
     return *(sp--);
+  else
+    return 0.0;
 }
 
 float apply_operator(char op, float first, float second)
@@ -1679,7 +1760,7 @@ int RPNCalculate(char* token)
   if (token[0] == 0)
     return 0; // geen moeite doen voor een lege string
 
-  if (is_operator(token[0]))
+  if (is_operator(token[0]) && token[1] == 0)
   {
     float second = pop();
     float first = pop();
@@ -1750,7 +1831,7 @@ int Calculate(const char *input, float* result)
 {
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
-  char c, *TokenPos = token;
+  char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
   char     sc;          // used for record stack element
@@ -1758,15 +1839,16 @@ int Calculate(const char *input, float* result)
 
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-
+  oc=c=0;
   while (strpos < strend)
   {
     // read one token from the input stream
+    oc = c;
     c = *strpos;
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if ((c >= '0' && c <= '9') || c == '.')
+      if ((c >= '0' && c <= '9') || c == '.' || (c == '-' && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;
@@ -2155,14 +2237,13 @@ void rulesProcessing(String& event)
 /********************************************************************************************\
   Rules processing
   \*********************************************************************************************/
-void rulesProcessingFile(String fileName, String& event)
+String rulesProcessingFile(String fileName, String& event)
 {
   fs::File f = SPIFFS.open(fileName, "r+");
-  if (!f)
-    return;
+  SPIFFS_CHECK(f, fileName.c_str());
 
   static byte nestingLevel;
-  char data = 0;
+  int data = 0;
   String log = "";
 
   nestingLevel++;
@@ -2171,11 +2252,11 @@ void rulesProcessingFile(String fileName, String& event)
     log = F("EVENT: Error: Nesting level exceeded!");
     addLog(LOG_LEVEL_ERROR, log);
     nestingLevel--;
-    return;
+    return(log);
   }
 
 
-  int pos = 0;
+  // int pos = 0;
   String line = "";
   boolean match = false;
   boolean codeBlock = false;
@@ -2187,8 +2268,11 @@ void rulesProcessingFile(String fileName, String& event)
   while (f.available())
   {
     data = f.read();
+
+    SPIFFS_CHECK(data >= 0, fileName.c_str());
+
     if (data != 10)
-      line += data;
+      line += char(data);
 
     if (data == 10)    // if line complete, parse this rule
     {
@@ -2278,11 +2362,18 @@ void rulesProcessingFile(String fileName, String& event)
           // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
           if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
           {
-            int equalsPos = event.indexOf("=");
-            if (equalsPos > 0)
+            if (event.charAt(0) == '!')
             {
-              String tmpString = event.substring(equalsPos + 1);
-              action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+            }
+            else
+            {
+              int equalsPos = event.indexOf("=");
+              if (equalsPos > 0)
+              {
+                String tmpString = event.substring(equalsPos + 1);
+                action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+              }
             }
             log = F("ACT  : ");
             log += action;
@@ -2304,7 +2395,7 @@ void rulesProcessingFile(String fileName, String& event)
   }
 
   nestingLevel--;
-
+  return(String());
 }
 
 
@@ -2846,4 +2937,21 @@ void htmlEscape(String & html)
   html.replace("'",  "&#039;");
   html.replace("<",  "&lt;");
   html.replace(">",  "&gt;");
+}
+
+
+// Compute the dew point temperature, given temperature and humidity (temp in Celcius)
+// Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
+// Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
+float compute_dew_point_temp(float temperature, float humidity_percentage) {
+  return pow(humidity_percentage / 100.0, 0.125) *
+         (112.0 + 0.9*temperature) + 0.1*temperature - 112.0;
+}
+
+// Compute the humidity given temperature and dew point temperature (temp in Celcius)
+// Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_relative_humidity.php
+// f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
+float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
+  return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
+                     (112.0 + 0.9 * temperature), 8);
 }
