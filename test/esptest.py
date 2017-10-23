@@ -11,6 +11,8 @@ from espcore import *
 
 
 ### mqtt stuff
+logging.getLogger("MQTT").debug("Connecting to {mqtt_broker}".format(mqtt_broker=config.mqtt_broker))
+
 mqtt_client = mqtt.Client()
 mqtt_client.connect(config.mqtt_broker, 1883, 60)
 mqtt_client.loop_start()

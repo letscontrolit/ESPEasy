@@ -24,3 +24,8 @@ for message in mqtt_messages:
     payload=json.loads(message.payload.decode())
     if message.topic == 'domoticz/in' and payload['idx']==1415 and payload['switchcmd']=='Off' and payload['command']=='switchlight':
         log.info("all tests ok")
+        sys.exit(0)
+        #FIXME: this need to be callable, to run a batch of tests at once
+
+
+raise(Exception("Test failed"))
