@@ -145,6 +145,8 @@
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
 
+#define FEATURE_SD
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -307,9 +309,16 @@
 // #include <ArduinoJson.h>
 // #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
+#ifdef NO_FEATURE_SD
+#undef FEATURE_SD
+#endif
+#ifdef FEATURE_SD
 #define FS_NO_GLOBALS
 #include <FS.h>
 #include <SD.h>
+#else
+#include <FS.h>
+#endif
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
 #include <base64.h>
