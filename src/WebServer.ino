@@ -77,7 +77,9 @@ void WebServerInit()
   WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
   WebServer.on("/filelist", handle_filelist);
+#ifdef FEATURE_SD
   WebServer.on("/SDfilelist", handle_SDfilelist);
+#endif
   WebServer.on("/advanced", handle_advanced);
   WebServer.on("/setup", handle_setup);
   WebServer.on("/json", handle_json);
@@ -3314,6 +3316,7 @@ bool loadFromFS(boolean spiffs, String path) {
   }
   else
   {
+#ifdef FEATURE_SD
     File dataFile = SD.open(path.c_str());
     if (!dataFile)
       return false;
@@ -3321,6 +3324,7 @@ bool loadFromFS(boolean spiffs, String path) {
       WebServer.sendHeader("Content-Disposition", "attachment;");
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
+#endif
   }
   statusLED(true);
 
@@ -3510,6 +3514,7 @@ void handle_filelist() {
 //********************************************************************************
 // Web Interface SD card file and directory list
 //********************************************************************************
+#ifdef FEATURE_SD
 void handle_SDfilelist() {
 
   navMenuIndex = 7;
@@ -3645,6 +3650,7 @@ void handle_SDfilelist() {
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
 }
+#endif
 
 
 //********************************************************************************

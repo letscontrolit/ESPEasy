@@ -145,6 +145,8 @@
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
 
+//#define FEATURE_SD
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -309,7 +311,12 @@
 #include <Servo.h>
 #define FS_NO_GLOBALS
 #include <FS.h>
+#ifdef NO_FEATURE_SD
+#undef FEATURE_SD
+#endif
+#ifdef FEATURE_SD
 #include <SD.h>
+#endif
 #include <ESP8266HTTPUpdateServer.h>
 ESP8266HTTPUpdateServer httpUpdater(true);
 #include <base64.h>
