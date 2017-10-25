@@ -292,43 +292,64 @@
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
 
-#include "lwip/tcp_impl.h"
-#include <ESP8266WiFi.h>
-#include <DNSServer.h>
+#define FS_NO_GLOBALS
+#if defined(ESP8266)
+  #define FILE_CONFIG       "config.dat"
+  #define FILE_SECURITY     "security.dat"
+  #define FILE_NOTIFICATION "notification.dat"
+  #define FILE_RULES        "rules1.dat"
+  #include "lwip/tcp_impl.h"
+  #include <ESP8266WiFi.h>
+  #include <ESP8266WebServer.h>
+  ESP8266WebServer WebServer(80);
+  #include <DNSServer.h>
+  #include <Servo.h>
+  #include <ESP8266HTTPUpdateServer.h>
+  ESP8266HTTPUpdateServer httpUpdater(true);
+  #ifndef LWIP_OPEN_SRC
+  #define LWIP_OPEN_SRC
+  #endif
+  #include "lwip/opt.h"
+  #include "lwip/udp.h"
+  #include "lwip/igmp.h"
+  #include "include/UdpContext.h"
+  #include "limits.h"
+  extern "C" {
+   #include "user_interface.h"
+  }
+  extern "C" {
+  #include "spi_flash.h"
+  }
+  extern "C" uint32_t _SPIFFS_start;
+  extern "C" uint32_t _SPIFFS_end;
+  extern "C" uint32_t _SPIFFS_page;
+  extern "C" uint32_t _SPIFFS_block;
+#endif
+#if defined(ESP32)
+  #define FILE_CONFIG       "/config.dat"
+  #define FILE_SECURITY     "/security.dat"
+  #define FILE_NOTIFICATION "/notification.dat"
+  #define FILE_RULES        "/rules1.dat"
+  #include <WiFi.h>
+  #include <ESP32WebServer.h>
+  #include "SPIFFS.h"
+  ESP32WebServer WebServer(80); 
+#endif
+
 #include <WiFiUdp.h>
-#include <ESP8266WebServer.h>
 #ifdef FEATURE_MDNS
 #include <ESP8266mDNS.h>
 #endif
-
+#include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
-// #include <ArduinoJson.h>
-// #include <LiquidCrystal_I2C.h>
-#include <Servo.h>
-#define FS_NO_GLOBALS
 #include <FS.h>
 #include <SD.h>
-#include <ESP8266HTTPUpdateServer.h>
-ESP8266HTTPUpdateServer httpUpdater(true);
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
 #endif
-#ifndef LWIP_OPEN_SRC
-#define LWIP_OPEN_SRC
-#endif
-#include "lwip/opt.h"
-#include "lwip/udp.h"
-#include "lwip/igmp.h"
-#include "include/UdpContext.h"
-#include "limits.h"
-
-extern "C" {
-#include "user_interface.h"
-}
-
 
 #ifdef FEATURE_ARDUINO_OTA
 #include <ArduinoOTA.h>
@@ -349,21 +370,8 @@ MDNSResponder mdns;
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 
-// WebServer
-ESP8266WebServer WebServer(80);
-
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
-
-
-
-extern "C" {
-#include "spi_flash.h"
-}
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
-extern "C" uint32_t _SPIFFS_page;
-extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
@@ -963,7 +971,12 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          ESP.reset();
+          #if defined(ESP8266)
+            ESP.reset();
+          #endif
+          #if defined(ESP32)
+            ESP.restart();
+          #endif
           break;
         }
     }
@@ -1032,8 +1045,10 @@ void runEach30Seconds()
   refreshNodeList();
   if(Settings.ControllerEnabled[0])
     MQTTCheck();
+  #if defined(ESP8266)
   if (Settings.UseSSDP)
     SSDP_update();
+  #endif
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
@@ -1240,7 +1255,9 @@ void backgroundtasks()
   }
   runningBackgroundTasks=true;
 
-  tcpCleanup();
+  #if defined(ESP8266)
+    tcpCleanup();
+  #endif
 
   if (Settings.UseSerial)
     if (Serial.available())

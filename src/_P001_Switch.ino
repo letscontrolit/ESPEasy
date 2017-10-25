@@ -6,8 +6,10 @@
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input"
 #define PLUGIN_VALUENAME1_001 "Switch"
-Servo servo1;
-Servo servo2;
+#if defined(ESP8266)
+  Servo servo1;
+  Servo servo2;
+#endif
 
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
@@ -214,12 +216,16 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 curr_value += step_value;
                 int16_t new_value;
                 new_value = (uint16_t)(curr_value >> 12);
-                analogWrite(event->Par1, new_value);
+                #if defined(ESP8266)
+                  analogWrite(event->Par1, new_value);
+                #endif
                 delay(1);
               }
             }
 
-            analogWrite(event->Par1, event->Par2);
+            #if defined(ESP8266)
+              analogWrite(event->Par1, event->Par2);
+            #endif
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
             addLog(LOG_LEVEL_INFO, log);
@@ -267,12 +273,16 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               case 1:
 
                 //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
-                servo1.attach(event->Par2);
-                servo1.write(event->Par3);
+                #if defined(ESP8266)
+                  servo1.attach(event->Par2);
+                  servo1.write(event->Par3);
+                #endif
                 break;
               case 2:
-                servo2.attach(event->Par2);
-                servo2.write(event->Par3);
+                #if defined(ESP8266)
+                  servo2.attach(event->Par2);
+                  servo2.write(event->Par3);
+                #endif
                 break;
             }
           setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);

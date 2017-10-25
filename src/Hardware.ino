@@ -37,7 +37,9 @@ void hardwareInit()
         String log = F("INIT : I2C custom clockstretchlimit:");
         log += Settings.WireClockStretchLimit;
         addLog(LOG_LEVEL_INFO, log);
-        Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+        #if defined(ESP8266)
+          Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+        #endif        
       }
   }
 

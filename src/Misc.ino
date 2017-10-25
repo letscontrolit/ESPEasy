@@ -3,6 +3,8 @@
 // this feature is not in all upstream versions yet.
 // See https://github.com/esp8266/Arduino/issues/1923
 // and https://github.com/letscontrolit/ESPEasy/issues/253
+
+#if defined(ESP8266)
 void tcpCleanup()
 {
   while(tcp_tw_pcbs!=NULL)
@@ -10,6 +12,7 @@ void tcpCleanup()
     tcp_abort(tcp_tw_pcbs);
   }
 }
+#endif
 
 bool isDeepSleepEnabled()
 {
@@ -67,7 +70,9 @@ void deepSleepStart(int delay)
     delay = 4294;   //max sleep time ~1.2h
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
-  ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
+  #if defined(ESP8266)
+    ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
+  #endif
 }
 
 boolean remoteConfig(struct EventStruct *event, String& string)
@@ -383,6 +388,9 @@ boolean timeOut(unsigned long timer)
 /********************************************************************************************\
   Status LED
 \*********************************************************************************************/
+#if defined(ESP32)
+  #define PWMRANGE 4096
+#endif
 #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
@@ -440,7 +448,9 @@ void statusLED(boolean traffic)
     if (Settings.Pin_status_led_Inversed)
       pwm = PWMRANGE-pwm;
 
-    analogWrite(Settings.Pin_status_led, pwm);
+    #if defined(ESP8266)
+      analogWrite(Settings.Pin_status_led, pwm);
+    #endif
   }
 }
 
@@ -550,7 +560,7 @@ String BuildFixes()
 
   if (Settings.Build < 145)
   {
-    String fname=F("notification.dat");
+    String fname=F(FILE_NOTIFICATION);
     fs::File f = SPIFFS.open(fname, "w");
     SPIFFS_CHECK(f, fname.c_str());
 
@@ -576,16 +586,18 @@ void fileSystemCheck()
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
-    fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
+    #if defined(ESP8266)
+      fs::FSInfo fs_info;
+      SPIFFS.info(fs_info);
 
-    String log = F("FS   : Mount successful, used ");
-    log=log+fs_info.usedBytes;
-    log=log+F(" bytes of ");
-    log=log+fs_info.totalBytes;
-    addLog(LOG_LEVEL_INFO, log);
+      String log = F("FS   : Mount successful, used ");
+      log=log+fs_info.usedBytes;
+      log=log+F(" bytes of ");
+      log=log+fs_info.totalBytes;
+      addLog(LOG_LEVEL_INFO, log);
+    #endif
 
-    fs::File f = SPIFFS.open("config.dat", "r");
+    fs::File f = SPIFFS.open(FILE_CONFIG, "r");
     if (!f)
     {
       ResetFactory();
@@ -743,11 +755,11 @@ boolean str2ip(char *string, byte* IP)
 String SaveSettings(void)
 {
   String err;
-  err=SaveToFile((char*)"config.dat", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
     return(err);
 
-  return(SaveToFile((char*)"security.dat", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  return(SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
 }
 
 
@@ -757,11 +769,11 @@ String SaveSettings(void)
 String LoadSettings()
 {
   String err;
-  err=LoadFromFile((char*)"config.dat", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
     return(err);
 
-  return(LoadFromFile((char*)"security.dat", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  return(LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
 }
 
 
@@ -771,7 +783,7 @@ String LoadSettings()
 String SaveTaskSettings(byte TaskIndex)
 {
   ExtraTaskSettings.TaskIndex = TaskIndex;
-  return(SaveToFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
+  return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
 }
 
 
@@ -785,7 +797,7 @@ String LoadTaskSettings(byte TaskIndex)
     return(String());
 
   String result = "";
-  result = LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  result = LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
   return result;
 }
@@ -798,7 +810,7 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   if (datasize > DAT_TASKS_SIZE)
     return F("SaveCustomTaskSettings too big");
-  return(SaveToFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
+  return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
 }
 
 
@@ -809,7 +821,7 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   if (datasize > DAT_TASKS_SIZE)
     return (String(F("LoadCustomTaskSettings too big")));
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -819,7 +831,7 @@ String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 {
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("SaveControllerSettings too big");
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
+  return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
@@ -831,7 +843,7 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("LoadControllerSettings too big");
 
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -841,7 +853,7 @@ String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 {
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return F("SaveCustomControllerSettings too big");
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
+  return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
@@ -852,7 +864,7 @@ String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 {
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return(F("LoadCustomControllerSettings too big"));
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -862,7 +874,7 @@ String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 {
   if (datasize > DAT_NOTIFICATION_SIZE)
     return F("SaveNotificationSettings too big");
-  return SaveToFile((char*)"notification.dat", NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
+  return SaveToFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
 }
 
 
@@ -873,7 +885,7 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 {
   if (datasize > DAT_NOTIFICATION_SIZE)
     return(F("LoadNotificationSettings too big"));
-  return(LoadFromFile((char*)"notification.dat", NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
+  return(LoadFromFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
 }
 
 
@@ -960,9 +972,14 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 int SpiffsSectors()
 {
-  uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  return _sectorEnd - _sectorStart;
+  #if defined(ESP8266)
+    uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    return _sectorEnd - _sectorStart;
+  #endif
+  #if defined(ESP32)
+    return 32;
+  #endif
 }
 
 
@@ -1010,16 +1027,16 @@ void ResetFactory(void)
   //pad files with extra zeros for future extensions
   String fname;
 
-  fname=F("config.dat");
+  fname=F(FILE_CONFIG);
   InitFile(fname.c_str(), 65536);
 
-  fname=F("security.dat");
+  fname=F(FILE_SECURITY);
   InitFile(fname.c_str(), 4096);
 
-  fname=F("notification.dat");
+  fname=F(FILE_NOTIFICATION);
   InitFile(fname.c_str(), 4096);
 
-  fname=F("rules1.txt");
+  fname=F(FILE_RULES);
   InitFile(fname.c_str(), 0);
 
   LoadSettings();
@@ -1085,7 +1102,13 @@ void ResetFactory(void)
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  ESP.reset();
+  #if defined(ESP8266)
+    ESP.reset();
+  #endif
+  #if defined(ESP32)
+    delay(30000); //TODO ESP32
+    ESP.restart();
+  #endif
 }
 
 
@@ -1115,7 +1138,12 @@ void emergencyReset()
   \*********************************************************************************************/
 unsigned long FreeMem(void)
 {
-  return system_get_free_heap_size();
+  #if defined(ESP8266)
+    return system_get_free_heap_size();
+  #endif
+  #if defined(ESP32)
+    return ESP.getFreeHeap();
+  #endif
 }
 
 
@@ -1217,7 +1245,12 @@ void delayedReboot(int rebootDelay)
     rebootDelay--;
     delay(1000);
   }
-  ESP.reset();
+   #if defined(ESP8266)
+     ESP.reset();
+   #endif
+   #if defined(ESP32)
+     ESP.restart();
+   #endif  
 }
 
 
@@ -1226,15 +1259,20 @@ void delayedReboot(int rebootDelay)
   \*********************************************************************************************/
 boolean saveToRTC()
 {
-  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
-  {
-    addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
-    return(false);
-  }
-  else
-  {
-    return(true);
-  }
+  #if defined(ESP8266)
+    if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
+    {
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+      return(false);
+    }
+    else
+    {
+      return(true);
+    }
+  #endif
+  #if defined(ESP32)
+    boolean ret = false;
+  #endif
 }
 
 
@@ -1257,13 +1295,18 @@ void initRTC()
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
-    return(false);
+  #if defined(ESP8266)
+    if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
+      return(false);
 
-  if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-    return true;
-  else
-    return false;
+    if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
+      return true;
+    else
+      return false;
+  #endif
+  #if defined(ESP32)
+    boolean ret = false;
+  #endif
 }
 
 
@@ -1272,12 +1315,17 @@ boolean readFromRTC()
 \*********************************************************************************************/
 boolean saveUserVarToRTC()
 {
-  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
-  byte* buffer = (byte*)&UserVar;
-  size_t size = sizeof(UserVar);
-  uint32 sum = getChecksum(buffer, size);
-  boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
-  ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  #if defined(ESP8266)
+    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
+    byte* buffer = (byte*)&UserVar;
+    size_t size = sizeof(UserVar);
+    uint32_t sum = getChecksum(buffer, size);
+    boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+    ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  #endif
+  #if defined(ESP32)
+    boolean ret = false;
+  #endif
   return ret;
 }
 
@@ -1287,25 +1335,30 @@ boolean saveUserVarToRTC()
 \*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
-  byte* buffer = (byte*)&UserVar;
-  size_t size = sizeof(UserVar);
-  boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
-  uint32 sumRAM = getChecksum(buffer, size);
-  uint32 sumRTC = 0;
-  ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
-  if (!ret || sumRTC != sumRAM)
-  {
-    addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
-    memset(buffer, 0, size);
-  }
+  #if defined(ESP8266)
+    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
+    byte* buffer = (byte*)&UserVar;
+    size_t size = sizeof(UserVar);
+    boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+    uint32_t sumRAM = getChecksum(buffer, size);
+    uint32_t sumRTC = 0;
+    ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
+    if (!ret || sumRTC != sumRAM)
+    {
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+      memset(buffer, 0, size);
+    }
+  #endif
+  #if defined(ESP32)
+    boolean ret = false;
+  #endif
   return ret;
 }
 
 
-uint32 getChecksum(byte* buffer, size_t size)
+uint32_t getChecksum(byte* buffer, size_t size)
 {
-  uint32 sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
+  uint32_t sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
   for (size_t i=0; i<size; i++)
     sum += buffer[i];
   return sum;
@@ -2877,7 +2930,12 @@ void ArduinoOTAInit()
       //so dont touch device until restart is complete
       Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
       delay(100);
-      ESP.reset();
+      #if defined(ESP8266)
+        ESP.reset();
+      #endif
+      #if defined(ESP32)
+        ESP.restart();
+      #endif      
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 
@@ -2893,7 +2951,12 @@ void ArduinoOTAInit()
       else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
 
       delay(100);
-      ESP.reset();
+      #if defined(ESP8266)
+       ESP.reset();
+      #endif
+      #if defined(ESP32)
+        ESP.restart();
+      #endif      
   });
   ArduinoOTA.begin();
 
