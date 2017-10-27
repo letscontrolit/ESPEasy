@@ -326,6 +326,7 @@
   extern "C" uint32_t _SPIFFS_block;
 #endif
 #if defined(ESP32)
+  #define ICACHE_RAM_ATTR IRAM_ATTR
   #define FILE_CONFIG       "/config.dat"
   #define FILE_SECURITY     "/security.dat"
   #define FILE_NOTIFICATION "/notification.dat"

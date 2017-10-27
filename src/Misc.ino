@@ -73,6 +73,10 @@ void deepSleepStart(int delay)
   #if defined(ESP8266)
     ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
   #endif
+  #if defined(ESP32)
+    esp_sleep_enable_timer_wakeup((uint32_t)delay * 1000000);
+    esp_deep_sleep_start();
+  #endif
 }
 
 boolean remoteConfig(struct EventStruct *event, String& string)
