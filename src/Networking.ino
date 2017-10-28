@@ -15,7 +15,9 @@ void syslog(const char *message)
     char str[256];
     str[0] = 0;
     snprintf_P(str, sizeof(str), PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
-    portUDP.write(str);
+    #if defined(ESP8266)
+      portUDP.write(str);
+    #endif
     portUDP.endPacket();
   }
 }
@@ -395,7 +397,7 @@ void sendSysInfoUDP(byte repeats)
   }
 }
 
-
+#if defined(ESP8266)
 /********************************************************************************************\
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
@@ -713,3 +715,4 @@ void SSDP_update() {
   }
 
 }
+#endif

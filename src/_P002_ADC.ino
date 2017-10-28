@@ -47,6 +47,11 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        #if defined(ESP32)
+          string += F("<TR><TD>Analog Pin:<TD>");
+          addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+        #endif
+        
         addFormCheckBox(string, F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         addFormSubHeader(string, F("Two Point Calibration"));
@@ -85,7 +90,12 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])   //Oversampling?
         {
-          Plugin_002_OversamplingValue += analogRead(A0);
+          #if defined(ESP8266)
+            Plugin_002_OversamplingValue += analogRead(A0);
+          #endif
+          #if defined(ESP32)
+            Plugin_002_OversamplingValue += analogRead(Settings.TaskDevicePin1[event->TaskIndex]);
+          #endif
           Plugin_002_OversamplingCount ++;
         }
         success = true;
@@ -106,7 +116,12 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
         }
         else
         {
-          int16_t value = analogRead(A0);
+          #if defined(ESP8266)
+            int16_t value = analogRead(A0);
+          #endif
+          #if defined(ESP32)
+            int16_t value = analogRead(Settings.TaskDevicePin1[event->TaskIndex]);
+          #endif
           UserVar[event->BaseVarIndex] = (float)value;
 
           log += value;
