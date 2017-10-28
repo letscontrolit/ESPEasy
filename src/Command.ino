@@ -128,7 +128,7 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-
+#ifdef FEATURE_SD
   if (strcasecmp_P(Command, PSTR("sdcard")) == 0)
   {
     success = true;
@@ -147,6 +147,7 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.println(fname.c_str());
     SD.remove((char*)fname.c_str());
   }
+#endif
 
   if (strcasecmp_P(Command, PSTR("lowmem")) == 0)
   {
@@ -576,6 +577,7 @@ void ExecuteCommand(byte source, const char *Line)
   yield();
 }
 
+#ifdef FEATURE_SD
 void printDirectory(File dir, int numTabs) {
   while (true) {
 
@@ -599,3 +601,4 @@ void printDirectory(File dir, int numTabs) {
     entry.close();
   }
 }
+#endif
