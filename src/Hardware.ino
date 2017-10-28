@@ -79,6 +79,7 @@ void hardwareInit()
     addLog(LOG_LEVEL_INFO, log);
   }
 
+#ifdef FEATURE_SD
   if (Settings.Pin_sd_cs >= 0)
   {
     if (SD.begin(Settings.Pin_sd_cs))
@@ -92,6 +93,7 @@ void hardwareInit()
       addLog(LOG_LEVEL_ERROR, log);
     }
   }
+#endif
 
 }
 
