@@ -182,7 +182,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (command == F("gpio"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 16)
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
@@ -196,10 +196,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (command == F("pwm"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 16)
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
-            pinMode(event->Par1, OUTPUT);
-
+            #if defined(ESP8266)
+              pinMode(event->Par1, OUTPUT);
+            #endif
             if(event->Par3 != 0)
             {
               byte prev_mode;
@@ -219,12 +220,18 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 #if defined(ESP8266)
                   analogWrite(event->Par1, new_value);
                 #endif
+                #if defined(ESP32)
+                  analogWriteESP32(event->Par1, new_value);
+                #endif
                 delay(1);
               }
             }
 
             #if defined(ESP8266)
               analogWrite(event->Par1, event->Par2);
+            #endif
+            #if defined(ESP32)
+              analogWriteESP32(event->Par1, event->Par2);
             #endif
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
@@ -236,7 +243,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (command == F("pulse"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 16)
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
@@ -252,7 +259,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (command == F("longpulse"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 16)
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
@@ -330,7 +337,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (command == F("tone"))
         {
           success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 16)
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             pinMode(event->Par1, OUTPUT);
             tone(event->Par1, event->Par2, event->Par3);
@@ -354,3 +361,30 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+#if defined(ESP32)
+void analogWriteESP32(int pin, int value)
+{
+  // find existing channel if this pin has been used before
+  int8_t ledChannel = -1;
+  for(byte x = 0; x < 16; x++)
+    if (ledChannelPin[x] == pin)
+      ledChannel = x;
+                 
+  if(ledChannel == -1) // no channel set for this pin
+    {
+      for(byte x = 0; x < 16; x++) // find free channel
+        if (ledChannelPin[x] == -1)
+          {
+            int freq = 5000;
+            ledChannelPin[x] = pin;  // store pin nr
+            ledcSetup(x, freq, 10);  // setup channel
+            ledcAttachPin(pin, x);   // attach to this pin
+            ledChannel = x;
+            break;
+          }
+    }
+  ledcWrite(ledChannel, value);
+}
+#endif
+

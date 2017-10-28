@@ -1868,7 +1868,7 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 //********************************************************************************
 // Add a GPIO pin select dropdown list for both 8266 and 8285
 //********************************************************************************
-#ifdef ESP8285
+#if defined(ESP8285)
 // Code for the ESP8285
 
 //********************************************************************************
@@ -1917,8 +1917,8 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
 }
 
-
-#else
+#endif
+#if defined(ESP8266)
 // Code for the ESP8266
 
 //********************************************************************************
@@ -1958,7 +1958,26 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   optionValues[13] = 16;
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 14);
 }
+#endif
 
+#if defined(ESP32)
+//********************************************************************************
+// Add a GPIO pin select dropdown list
+//********************************************************************************
+void addPinSelect(boolean forI2C, String& str, String name,  int choice)
+{
+  String options[PIN_D_MAX+1];
+  int optionValues[PIN_D_MAX+1];
+  options[0] = F("- None -");
+  optionValues[0] = -1;
+  for(byte x=1; x < PIN_D_MAX+1; x++)
+  {
+    options[x] = F("GPIO-");
+    options[x] += x;
+    optionValues[x] = x;
+  }
+  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, PIN_D_MAX+1);
+}
 #endif
 
 //********************************************************************************
@@ -3869,7 +3888,12 @@ void handle_rules() {
     rulesSet = set.toInt();
   }
 
-  String fileName = F("rules");
+  #if defined(ESP8266)
+    String fileName = F("rules");
+  #endif
+  #if defined(ESP32)
+    String fileName = F("/rules");
+  #endif
   fileName += rulesSet;
   fileName += F(".txt");
 
@@ -4096,6 +4120,9 @@ void handle_sysinfo() {
   reply += F("<TR><TD>Flash Size:<TD>");
   #if defined(ESP8266)
     reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    reply += ESP.getFlashChipSize() / 1024;
   #endif
   reply += F(" kB");
 

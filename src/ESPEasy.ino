@@ -164,7 +164,6 @@
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
-#define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
@@ -294,6 +293,7 @@
 
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
+  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
   #define FILE_SECURITY     "security.dat"
   #define FILE_NOTIFICATION "notification.dat"
@@ -324,8 +324,10 @@
   extern "C" uint32_t _SPIFFS_end;
   extern "C" uint32_t _SPIFFS_page;
   extern "C" uint32_t _SPIFFS_block;
+  #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
+  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
   #define ICACHE_RAM_ATTR IRAM_ATTR
   #define FILE_CONFIG       "/config.dat"
   #define FILE_SECURITY     "/security.dat"
@@ -335,6 +337,8 @@
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
   ESP32WebServer WebServer(80); 
+  #define PIN_D_MAX        39
+  int8_t ledChannelPin[16];
 #endif
 
 #include <WiFiUdp.h>
@@ -683,6 +687,10 @@ String lowestRAMfunction = "";
 \*********************************************************************************************/
 void setup()
 {
+  #if defined(ESP32)
+    for(byte x = 0; x < 16; x++)
+      ledChannelPin[x] = -1;
+  #endif
 
   lowestRAM = FreeMem();
 
@@ -739,12 +747,9 @@ void setup()
 
   addLog(LOG_LEVEL_INFO, log);
 
-
-
-
   fileSystemCheck();
   LoadSettings();
-
+        
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 

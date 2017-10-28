@@ -393,7 +393,7 @@ boolean timeOut(unsigned long timer)
   Status LED
 \*********************************************************************************************/
 #if defined(ESP32)
-  #define PWMRANGE 4096
+  #define PWMRANGE 1024
 #endif
 #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
@@ -2277,7 +2277,12 @@ void rulesProcessing(String& event)
 
   for (byte x = 1; x < RULESETS_MAX + 1; x++)
   {
-    String fileName = F("rules");
+    #if defined(ESP8266)
+      String fileName = F("rules");
+    #endif
+    #if defined(ESP32)
+      String fileName = F("/rules");
+    #endif
     fileName += x;
     fileName += F(".txt");
     if (SPIFFS.exists(fileName))
