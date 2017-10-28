@@ -145,6 +145,9 @@
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
 
+//add sd support
+//#define FEATURE_SD
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -349,8 +352,12 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
+#ifdef FEATURE_SD
 #include <FS.h>
 #include <SD.h>
+#else
+#include <FS.h>
+#endif
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);

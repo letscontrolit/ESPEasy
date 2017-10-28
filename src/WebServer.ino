@@ -77,7 +77,9 @@ void WebServerInit()
   WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
   WebServer.on("/filelist", handle_filelist);
+#ifdef FEATURE_SD
   WebServer.on("/SDfilelist", handle_SDfilelist);
+#endif
   WebServer.on("/advanced", handle_advanced);
   WebServer.on("/setup", handle_setup);
   WebServer.on("/json", handle_json);
@@ -1170,7 +1172,9 @@ void handle_hardware() {
   addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
   addFormNote(reply, F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
+#ifdef FEATURE_SD
   addFormPinSelect(reply, F("GPIO &rarr; SD Card CS"), "sd", Settings.Pin_sd_cs);
+#endif
 
   addFormSubHeader(reply, F("GPIO boot states"));
 
@@ -2549,10 +2553,12 @@ void handle_tools() {
   reply += F("<TD>");
   reply += F("Show files on internal flash");
 
+#ifdef FEATURE_SD
   reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("SDfilelist"), F("SD Card"));
   reply += F("<TD>");
   reply += F("Show files on SD-Card");
+#endif
 
   addFormSubHeader(reply, F("Command"));
   reply += F("<TR><TD HEIGHT=\"30\">");
@@ -3073,9 +3079,11 @@ void handle_advanced() {
 
   addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel, 0, 4);
   addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel, 0, 4);
+#ifdef FEATURE_SD
   addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel, 0, 4);
 
   addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
+#endif
 
 
   addFormSubHeader(reply, F("Serial Settings"));
@@ -3339,6 +3347,7 @@ bool loadFromFS(boolean spiffs, String path) {
   }
   else
   {
+#ifdef FEATURE_SD
     File dataFile = SD.open(path.c_str());
     if (!dataFile)
       return false;
@@ -3346,6 +3355,7 @@ bool loadFromFS(boolean spiffs, String path) {
       WebServer.sendHeader("Content-Disposition", "attachment;");
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
+#endif
   }
   statusLED(true);
 
@@ -3578,6 +3588,7 @@ void handle_filelist() {
 //********************************************************************************
 // Web Interface SD card file and directory list
 //********************************************************************************
+#ifdef FEATURE_SD
 void handle_SDfilelist() {
 
   navMenuIndex = 7;
@@ -3713,6 +3724,7 @@ void handle_SDfilelist() {
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
 }
+#endif
 
 
 //********************************************************************************
