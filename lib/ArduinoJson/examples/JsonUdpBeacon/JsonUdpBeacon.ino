@@ -3,11 +3,11 @@
 // You can easily test this program with netcat:
 // $ nc -ulp 8888
 //
-// by Benoit Blanchon, MIT License 2015-2016
+// by Benoit Blanchon, MIT License 2015-2017
 
-#include <SPI.h>
-#include <Ethernet.h>
 #include <ArduinoJson.h>
+#include <Ethernet.h>
+#include <SPI.h>
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress localIp(192, 168, 0, 177);
@@ -49,6 +49,8 @@ void setup() {
 void loop() {
   delay(1000);
 
+  // Use https://bblanchon.github.io/ArduinoJson/assistant/ to
+  // compute the right size for the buffer
   StaticJsonBuffer<300> jsonBuffer;
   JsonObject& json = buildJson(jsonBuffer);
   sendJson(json);

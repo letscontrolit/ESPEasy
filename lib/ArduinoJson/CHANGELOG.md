@@ -1,6 +1,213 @@
 ArduinoJson: change log
 =======================
 
+v5.11.2
+-------
+
+* Fixed `DynamicJsonBuffer::clear()` not resetting allocation size (issue #561)
+* Fixed incorrect rounding for float values (issue #588)
+
+v5.11.1
+-------
+
+* Removed dependency on `PGM_P` as Particle 0.6.2 doesn't define it (issue #546)
+* Fixed warning "dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]"
+* Fixed warning "floating constant exceeds range of 'float' [-Woverflow]" (issue #544)
+* Fixed warning "this statement may fall through" [-Wimplicit-fallthrough=] (issue #539)
+* Removed `ARDUINOJSON_DOUBLE_IS_64BITS` as it became useless.
+* Fixed too many decimals places in float serialization (issue #543)
+
+v5.11.0
+-------
+
+* Made `JsonBuffer` non-copyable (PR #524 by @luisrayas3)
+* Added `StaticJsonBuffer::clear()`
+* Added `DynamicJsonBuffer::clear()`
+
+v5.10.1
+-------
+
+* Fixed IntelliSense errors in Visual Micro (issue #483)
+* Fixed compilation in IAR Embedded Workbench (issue #515)
+* Fixed reading "true" as a float (issue #516)
+* Added `ARDUINOJSON_DOUBLE_IS_64BITS`
+* Added `ARDUINOJSON_EMBEDDED_MODE`
+
+v5.10.0
+-------
+
+* Removed configurable number of decimal places (issues #288, #427 and #506)
+* Changed exponentiation thresholds to `1e7` and `1e-5` (issues #288, #427 and #506)
+* `JsonVariant::is<double>()` now returns `true` for integers
+* Fixed error `IsBaseOf is not a member of ArduinoJson::TypeTraits` (issue #495)
+* Fixed error `forming reference to reference` (issue #495)
+
+### BREAKING CHANGES :warning:
+
+| Old syntax                      | New syntax          |
+|---------------------------------|---------------------|
+| `double_with_n_digits(3.14, 2)` | `3.14`              |
+| `float_with_n_digits(3.14, 2)`  | `3.14f`             |
+| `obj.set("key", 3.14, 2)`       | `obj["key"] = 3.14` |
+| `arr.add(3.14, 2)`              | `arr.add(3.14)`     |
+
+| Input     | Old output | New output |
+|-----------|------------|------------|
+| `3.14159` | `3.14`     | `3.14159`  |
+| `42.0`    | `42.00`    | `42`       |
+| `0.0`     | `0.00`     | `0`        |
+
+| Expression                     | Old result | New result |
+|--------------------------------|------------|------------|
+| `JsonVariant(42).is<int>()`    | `true`     | `true`     |
+| `JsonVariant(42).is<float>()`  | `false`    | `true`     |
+| `JsonVariant(42).is<double>()` | `false`    | `true`     |
+
+
+v5.9.0
+------
+
+* Added `JsonArray::remove(iterator)` (issue #479)
+* Added `JsonObject::remove(iterator)`
+* Renamed `JsonArray::removeAt(size_t)` into `remove(size_t)`
+* Renamed folder `include/` to `src/`
+* Fixed warnings `floating constant exceeds range of float`and `floating constant truncated to zero` (issue #483)
+* Removed `Print` class and converted `printTo()` to a template method (issue #276)
+* Removed example `IndentedPrintExample.ino`
+* Now compatible with Particle 0.6.1, thanks to Jacob Nite (issue #294 and PR #461 by @foodbag)
+
+v5.8.4
+------
+
+* Added custom implementation of `strtod()` (issue #453)
+* Added custom implementation of `strtol()` (issue #465)
+* `char` is now treated as an integral type (issue #337, #370)
+
+v5.8.3
+------
+
+* Fixed an access violation in `DynamicJsonBuffer` when memory allocation fails (issue #433)
+* Added operators `==` and `!=` for two `JsonVariant`s (issue #436)
+* Fixed `JsonVariant::operator[const FlashStringHelper*]` (issue #441)
+
+v5.8.2
+------
+
+* Fixed parsing of comments (issue #421)
+* Fixed ignored `Stream` timeout (issue #422)
+* Made sure we don't read more that necessary (issue #422)
+* Fixed error when the key of a `JsonObject` is a `char[]` (issue #423)
+* Reduced code size when using `const` references
+* Fixed error with string of type `unsigned char*` (issue #428)
+* Added `deprecated` attribute on `asArray()`, `asObject()` and `asString()` (issue #420)
+
+v5.8.1
+------
+
+* Fixed error when assigning a `volatile int` to a `JsonVariant` (issue #415)
+* Fixed errors with Variable Length Arrays (issue #416)
+* Fixed error when both `ARDUINOJSON_ENABLE_STD_STREAM` and `ARDUINOJSON_ENABLE_ARDUINO_STREAM` are set to `1`
+* Fixed error "Stream does not name a type" (issue #412)
+
+v5.8.0
+------
+
+* Added operator `==` to compare `JsonVariant` and strings (issue #402)
+* Added support for `Stream` (issue #300)
+* Reduced memory consumption by not duplicating spaces and comments
+
+### BREAKING CHANGES :warning:
+
+`JsonBuffer::parseObject()` and  `JsonBuffer::parseArray()` have been pulled down to the derived classes `DynamicJsonBuffer` and `StaticJsonBufferBase`.
+
+This means that if you have code like:
+
+```c++
+void myFunction(JsonBuffer& jsonBuffer);
+```
+
+you need to replace it with one of the following:
+
+```c++
+void myFunction(DynamicJsonBuffer& jsonBuffer);
+void myFunction(StaticJsonBufferBase& jsonBuffer);
+template<typename TJsonBuffer> void myFunction(TJsonBuffer& jsonBuffer);
+```
+
+
+v5.7.3
+------
+
+* Added an `printTo(char[N])` and `prettyPrintTo(char[N])` (issue #292)
+* Added ability to set a nested value like this: `root["A"]["B"] = "C"` (issue #352)
+* Renamed `*.ipp` to `*Impl.hpp` because they were ignored by Arduino IDE (issue #396)
+
+v5.7.2
+------
+
+* Made PROGMEM available on more platforms (issue #381)
+* Fixed PROGMEM causing an exception on ESP8266 (issue #383)
+
+v5.7.1
+------
+
+* Added support for PROGMEM (issue #76)
+* Fixed compilation error when index is not an `int` (issue #381)
+
+v5.7.0
+------
+
+* Templatized all functions using `String` or `std::string`
+* Removed `ArduinoJson::String`
+* Removed `JsonVariant::defaultValue<T>()`
+* Removed non-template `JsonObject::get()` and `JsonArray.get()`
+* Fixed support for `StringSumHelper` (issue #184)
+* Replaced `ARDUINOJSON_USE_ARDUINO_STRING` by `ARDUINOJSON_ENABLE_STD_STRING` and `ARDUINOJSON_ENABLE_ARDUINO_STRING` (issue #378)
+* Added example `StringExample.ino` to show where `String` can be used
+* Increased default nesting limit to 50 when compiled for a computer (issue #349)
+
+### BREAKING CHANGES :warning:
+
+The non-template functions `JsonObject::get()` and `JsonArray.get()` have been removed. This means that you need to explicitely tell the type you expect in return.
+
+Old code:
+
+```c++
+#define ARDUINOJSON_USE_ARDUINO_STRING 0
+JsonVariant value1 = myObject.get("myKey");
+JsonVariant value2 = myArray.get(0);
+```
+
+New code:
+
+```c++
+#define ARDUINOJSON_ENABLE_ARDUINO_STRING 0
+#define ARDUINOJSON_ENABLE_STD_STRING 1
+JsonVariant value1 = myObject.get<JsonVariant>("myKey");
+JsonVariant value2 = myArray.get<JsonVariant>(0);
+```
+
+
+v5.6.7
+------
+
+* Fixed `array[idx].as<JsonVariant>()` and `object[key].as<JsonVariant>()`
+* Fixed return value of `JsonObject::set()` (issue #350)
+* Fixed undefined behavior in `Prettyfier` and `Print` (issue #354)
+* Fixed parser that incorrectly rejected floats containing a `+` (issue #349)
+
+v5.6.6
+------
+
+* Fixed `-Wparentheses` warning introduced in v5.6.5 (PR #335 by @nuket)
+* Added `.mbedignore` for ARM mbdeb (PR #334 by @nuket)
+* Fixed  `JsonVariant::success()` which didn't propagate `JsonArray::success()` nor `JsonObject::success()` (issue #342).
+
+v5.6.5
+------
+
+* `as<char*>()` now returns `true` when input is `null` (issue #330)
+
 v5.6.4
 ------
 
@@ -86,7 +293,8 @@ v5.0.7
 * Made library easier to use from a CMake project: simply `add_subdirectory(ArduinoJson/src)`
 * Changed `String` to be a `typedef` of `std::string` (issues #142 and #161)
 
-**BREAKING CHANGES**:
+### BREAKING CHANGES :warning:
+
 - `JsonVariant(true).as<String>()` now returns `"true"` instead of `"1"`
 - `JsonVariant(false).as<String>()` now returns `"false"` instead of `"0"`
 
@@ -142,7 +350,8 @@ v5.0.0
 * Redesigned `JsonVariant` to leverage converting constructors instead of assignment operators (issue #66)
 * Switched to new the library layout (requires Arduino 1.0.6 or above)
 
-**BREAKING CHANGES**:
+### BREAKING CHANGES :warning:
+
 - `JsonObject::add()` was renamed to `set()`
 - `JsonArray::at()` and `JsonObject::at()` were renamed to `get()`
 - Number of digits of floating point value are now set with `double_with_n_digits()`

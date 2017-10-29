@@ -200,17 +200,25 @@ void SendStatus(byte source, String status)
   }
 }
 
-
 /*********************************************************************************************\
  * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(String& status)
 {
+  unsigned int idx;
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
 
   String pubname = ControllerSettings.Subscribe;
   pubname.replace(F("/#"), F("/status"));
   pubname.replace(F("%sysname%"), Settings.Name);
+
+  idx = status.indexOf(F("%o!o%"));
+  if (idx) {
+    pubname += status.substring(idx);
+    pubname.replace(F("%o!o%"), F("/"));
+    status.remove(idx);
+  }
+
   MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
 }

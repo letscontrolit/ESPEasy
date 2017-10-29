@@ -1,8 +1,8 @@
-// Copyright Benoit Blanchon 2014-2016
+// Copyright Benoit Blanchon 2014-2017
 // MIT License
 //
 // Arduino JSON library
-// https://github.com/bblanchon/ArduinoJson
+// https://bblanchon.github.io/ArduinoJson/
 // If you like this project, please add a star!
 
 #include <ArduinoJson.h>
@@ -17,13 +17,13 @@ void setup() {
   //
   // Inside the brackets, 200 is the size of the pool in bytes,
   // If the JSON object is more complex, you need to increase that value.
+  // See https://bblanchon.github.io/ArduinoJson/assistant/
   StaticJsonBuffer<200> jsonBuffer;
 
   // StaticJsonBuffer allocates memory on the stack, it can be
   // replaced by DynamicJsonBuffer which allocates in the heap.
-  // It's simpler but less efficient.
   //
-  // DynamicJsonBuffer  jsonBuffer;
+  // DynamicJsonBuffer  jsonBuffer(200);
 
   // JSON input string.
   //
