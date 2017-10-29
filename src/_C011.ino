@@ -338,10 +338,10 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
   if (event->sensorType == SENSOR_TYPE_LONG)
     s.replace(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)));
   else {
-    s.replace(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[0]));
-    s.replace(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]));
-    s.replace(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]));
-    s.replace(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]));
+    s.replace(F("%val1%"), formatUserVar(event, 0));
+    s.replace(F("%val2%"), formatUserVar(event, 1));
+    s.replace(F("%val3%"), formatUserVar(event, 2));
+    s.replace(F("%val4%"), formatUserVar(event, 3));
   }
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);

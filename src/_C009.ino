@@ -104,7 +104,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
             val[F("value")] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           }
           else { // All other sensor types
-            val[F("value")] = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+            val[F("value")] = formatUserVar(event, x);
           }
         }
 

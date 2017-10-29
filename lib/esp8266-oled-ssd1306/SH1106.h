@@ -25,12 +25,12 @@
  * Credits for parts of this code go to Mike Rankin. Thank you so much for sharing!
  */
 
-#ifndef SSD1306_h
-#define SSD1306_h
-#include "SSD1306Wire.h"
+#ifndef SH1106_h
+#define SH1106_h
+#include "SH1106Wire.h"
 
-// For legacy support make SSD1306 an alias for SSD1306
-typedef SSD1306Wire SSD1306;
+// For make SH1106 an alias for SH1106Wire
+typedef SH1106Wire SH1106;
 
 
 #endif

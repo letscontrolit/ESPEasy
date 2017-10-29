@@ -37,7 +37,9 @@ void hardwareInit()
         String log = F("INIT : I2C custom clockstretchlimit:");
         log += Settings.WireClockStretchLimit;
         addLog(LOG_LEVEL_INFO, log);
-        Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+        #if defined(ESP8266)
+          Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+        #endif        
       }
   }
 
@@ -49,7 +51,7 @@ void hardwareInit()
     Wire.write(0x83);             // command to set pointer
     Wire.write(17);               // pointer value to status byte
     Wire.endTransmission();
-   
+
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
     if (Wire.available())
     {
@@ -62,7 +64,7 @@ void hardwareInit()
       }
     }
   }
-  
+
   // SPI Init
   if (Settings.InitSPI)
   {
@@ -77,7 +79,7 @@ void hardwareInit()
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.Pin_sd_cs > 0)
+  if (Settings.Pin_sd_cs >= 0)
   {
     if (SD.begin(Settings.Pin_sd_cs))
     {

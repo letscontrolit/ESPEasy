@@ -44,7 +44,12 @@ void WifiAPconfig()
 
 bool WifiIsAP()
 {
-  byte wifimode = wifi_get_opmode();
+  #if defined(ESP8266)
+    byte wifimode = wifi_get_opmode();
+  #endif
+  #if defined(ESP32)
+    byte wifimode = WiFi.getMode();
+  #endif
   return(wifimode == 2 || wifimode == 3); //apmode is enabled
 }
 
@@ -82,7 +87,12 @@ boolean WifiConnect(byte connectAttempts)
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
-  wifi_station_set_hostname(hostname);
+  #if defined(ESP8266)
+    wifi_station_set_hostname(hostname);
+  #endif
+  #if defined(ESP32)
+    WiFi.setHostname(hostname);
+  #endif
 
   //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
@@ -202,9 +212,11 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
     {
       // log = F("WIFI : Disconnecting!");
       // addLog(LOG_LEVEL_INFO, log);
-      ETS_UART_INTR_DISABLE();
-      wifi_station_disconnect();
-      ETS_UART_INTR_ENABLE();
+      #if defined(ESP8266)
+        ETS_UART_INTR_DISABLE();
+        wifi_station_disconnect();
+        ETS_UART_INTR_ENABLE();
+      #endif
       for (byte x = 0; x < 20; x++)
       {
         statusLED(true);

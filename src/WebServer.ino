@@ -4,6 +4,8 @@
 
 #define HTML_SYMBOL_WARNING "&#9888;"
 
+#define TASKS_PER_PAGE 4
+
 static const char pgDefaultCSS[] PROGMEM = {
   //color sheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
@@ -83,9 +85,12 @@ void WebServerInit()
   WebServer.on("/sysinfo", handle_sysinfo);
   WebServer.on("/pinstates", handle_pinstates);
 
-  if (ESP.getFlashChipRealSize() > 524288)
-    httpUpdater.setup(&WebServer);
-
+  #if defined(ESP8266)
+    if (ESP.getFlashChipRealSize() > 524288)
+      httpUpdater.setup(&WebServer);
+  #endif
+  
+  #if defined(ESP8266)
   if (Settings.UseSSDP)
   {
     WebServer.on("/ssdp.xml", HTTP_GET, []() {
@@ -93,6 +98,7 @@ void WebServerInit()
     });
     SSDP_begin();
   }
+  #endif
 
   WebServer.begin();
 }
@@ -120,6 +126,9 @@ void sendWebPage(const String& tmplName, String& pageContent)
 
   pageTemplate = F("");
   pageContent = F("");
+
+  //web activity timer
+  lastWeb = millis();
 }
 
 
@@ -1402,7 +1411,7 @@ void handle_devices() {
       reply += page;
     reply += F("\">&lt;</a>");
     reply += F("<a class='button link' href=\"devices?setpage=");
-    if (page < (TASKS_MAX / 4))
+    if (page < (TASKS_MAX / TASKS_PER_PAGE))
       reply += page + 1;
     else
       reply += page;
@@ -1412,7 +1421,7 @@ void handle_devices() {
 
     String deviceName;
 
-    for (byte x = (page - 1) * 4; x < ((page) * 4); x++)
+    for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE); x++)
     {
       reply += F("<TR><TD>");
       reply += F("<a class='button link' href=\"devices?index=");
@@ -1859,7 +1868,7 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 //********************************************************************************
 // Add a GPIO pin select dropdown list for both 8266 and 8285
 //********************************************************************************
-#ifdef ESP8285
+#if defined(ESP8285)
 // Code for the ESP8285
 
 //********************************************************************************
@@ -1908,8 +1917,8 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
 }
 
-
-#else
+#endif
+#if defined(ESP8266)
 // Code for the ESP8266
 
 //********************************************************************************
@@ -1949,7 +1958,26 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   optionValues[13] = 16;
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 14);
 }
+#endif
 
+#if defined(ESP32)
+//********************************************************************************
+// Add a GPIO pin select dropdown list
+//********************************************************************************
+void addPinSelect(boolean forI2C, String& str, String name,  int choice)
+{
+  String options[PIN_D_MAX+1];
+  int optionValues[PIN_D_MAX+1];
+  options[0] = F("- None -");
+  optionValues[0] = -1;
+  for(byte x=1; x < PIN_D_MAX+1; x++)
+  {
+    options[x] = F("GPIO-");
+    options[x] += x;
+    optionValues[x] = x;
+  }
+  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, PIN_D_MAX+1);
+}
 #endif
 
 //********************************************************************************
@@ -2502,6 +2530,7 @@ void handle_tools() {
   reply += F("<TD>");
   reply += F("Saves a settings file");
 
+#if defined(ESP8266)
   if (ESP.getFlashChipRealSize() > 524288)
   {
     addFormSubHeader(reply, F("Firmware"));
@@ -2511,6 +2540,7 @@ void handle_tools() {
     reply += F("<TD>");
     reply += F("Load a new firmware");
   }
+#endif
 
   addFormSubHeader(reply, F("Filesystem"));
 
@@ -3114,7 +3144,7 @@ void handle_download()
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
-  fs::File dataFile = SPIFFS.open(F("config.dat"), "r");
+  fs::File dataFile = SPIFFS.open(F(FILE_CONFIG), "r");
   if (!dataFile)
     return;
 
@@ -3216,7 +3246,7 @@ void handleFileUpload() {
     // first data block, if this is the config file, check PID/Version
     if (upload.totalSize == 0)
     {
-      if (strcasecmp(upload.filename.c_str(), "config.dat") == 0)
+      if (strcasecmp(upload.filename.c_str(), FILE_CONFIG) == 0)
       {
         struct TempStruct {
           unsigned long PID;
@@ -3461,7 +3491,7 @@ boolean handle_custom(String path) {
 // Web Interface file list
 //********************************************************************************
 void handle_filelist() {
-
+#if defined(ESP8266)
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
@@ -3479,7 +3509,7 @@ void handle_filelist() {
   while (dir.next())
   {
     reply += F("<TR><TD>");
-    if (dir.fileName() != "config.dat" && dir.fileName() != "security.dat" && dir.fileName() != "notification.dat")
+    if (dir.fileName() != FILE_CONFIG && dir.fileName() != FILE_SECURITY && dir.fileName() != FILE_NOTIFICATION)
     {
       reply += F("<a class='button link' href=\"filelist?delete=");
       reply += dir.fileName();
@@ -3499,41 +3529,174 @@ void handle_filelist() {
   reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
-}
-
-
-//********************************************************************************
-// Web Interface SD card file list
-//********************************************************************************
-void handle_SDfilelist() {
-
+#endif
+#if defined(ESP32)
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
   {
-    SD.remove((char*)fdelete.c_str());
+    SPIFFS.remove(fdelete);
+    // flashCount();
   }
 
   String reply = "";
   addHeader(true, reply);
   reply += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
 
-  File root = SD.open("/");
+  File root = SPIFFS.open("/");
+  File file = root.openNextFile();
+  while (file)
+  {
+    if(!file.isDirectory()){
+      reply += F("<TR><TD>");
+      if (file.name() != "/config.dat" && file.name() != "/security.dat" && file.name() != "/notification.dat")
+      {
+        reply += F("<a class='button link' href=\"filelist?delete=");
+        reply += file.name();
+        reply += F("\">Del</a>");
+      }
+
+      reply += F("<TD><a href=\"");
+      reply += file.name();
+      reply += F("\">");
+      reply += file.name();
+      reply += F("</a>");
+      reply += F("<TD>");
+      reply += file.size();
+      file = root.openNextFile();
+    }
+  }
+  reply += F("</table></form>");
+  reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  addFooter(reply);
+  sendWebPage(F("TmplStd"), reply);
+#endif
+}
+
+
+//********************************************************************************
+// Web Interface SD card file and directory list
+//********************************************************************************
+void handle_SDfilelist() {
+
+  navMenuIndex = 7;
+  String fdelete = "";
+  String ddelete = "";
+  String change_to_dir = "";
+  String current_dir = "";
+  String parent_dir = "";
+  char SDcardDir[80];
+
+  for (uint8_t i = 0; i < WebServer.args(); i++) {
+    if (WebServer.argName(i) == "delete")
+    {
+      fdelete = WebServer.arg(i);
+    }
+    if (WebServer.argName(i) == "deletedir")
+    {
+      ddelete = WebServer.arg(i);
+    }
+    if (WebServer.argName(i) == "chgto")
+    {
+      change_to_dir = WebServer.arg(i);
+    }
+  }
+
+  if (fdelete.length() > 0)
+  {
+    SD.remove((char*)fdelete.c_str());
+  }
+  if (ddelete.length() > 0)
+  {
+    SD.rmdir((char*)ddelete.c_str());
+  }
+  if (change_to_dir.length() > 0)
+  {
+    current_dir = change_to_dir;
+  }
+  else
+  {
+    current_dir = "/";
+  }
+
+  current_dir.toCharArray(SDcardDir, current_dir.length()+1);
+  File root = SD.open(SDcardDir);
   root.rewindDirectory();
   File entry = root.openNextFile();
+  parent_dir = current_dir;
+  if (!current_dir.equals("/"))
+  {
+    /* calculate the position to remove
+    /
+    / current_dir = /dir1/dir2/   =>   parent_dir = /dir1/
+    /                     ^ position to remove, second last index of "/" + 1
+    /
+    / current_dir = /dir1/   =>   parent_dir = /
+    /                ^ position to remove, second last index of "/" + 1
+    */
+    parent_dir.remove(parent_dir.lastIndexOf("/", parent_dir.lastIndexOf("/") - 1) + 1);
+  }
+
+  String reply = "";
+  addHeader(true, reply);
+  String subheader = "SD Card: " + current_dir;
+  addFormSubHeader(reply, subheader);
+  reply += F("<BR>");
+  reply += F("<table border=1px frame='box' rules='all'><TH>Action<TH>Name<TH>Size");
+  reply += F("<TR><TD>");
+  reply += F("<TD><a href=\"SDfilelist?chgto=");
+  reply += parent_dir;
+  reply += F("\">..");
+  reply += F("</a>");
+  reply += F("<TD>");
   while (entry)
   {
-    if (!entry.isDirectory())
+    if (entry.isDirectory())
+    {
+      char SDcardChildDir[80];
+      reply += F("<TR><TD>");
+      // take a look in the directory for entries
+      String child_dir = current_dir + entry.name();
+      child_dir.toCharArray(SDcardChildDir, child_dir.length()+1);
+      File child = SD.open(SDcardChildDir);
+      File dir_has_entry = child.openNextFile();
+      // when the directory is empty, display the button to delete them
+      if (!dir_has_entry)
+      {
+        reply += F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir=");
+        reply += current_dir;
+        reply += entry.name();
+        reply += F("/");
+        reply += F("&chgto=");
+        reply += current_dir;
+        reply += F("\">Del</a>");
+      }
+      reply += F("<TD><a href=\"SDfilelist?chgto=");
+      reply += current_dir;
+      reply += entry.name();
+      reply += F("/");
+      reply += F("\">");
+      reply += entry.name();
+      reply += F("</a>");
+      reply += F("<TD>");
+      reply += F("dir");
+      dir_has_entry.close();
+    }
+    else
     {
       reply += F("<TR><TD>");
-      if (entry.name() != String(F("config.dat")).c_str() && entry.name() != String(F("security.dat")).c_str())
+      if (entry.name() != String(F(FILE_CONFIG)).c_str() && entry.name() != String(F(FILE_SECURITY)).c_str())
       {
-        reply += F("<a class='button link' href=\"SDfilelist?delete=");
+        reply += F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete=");
+        reply += current_dir;
         reply += entry.name();
+        reply += F("&chgto=");
+        reply += current_dir;
         reply += F("\">Del</a>");
       }
       reply += F("<TD><a href=\"");
+      reply += current_dir;
       reply += entry.name();
       reply += F("\">");
       reply += entry.name();
@@ -3544,7 +3707,6 @@ void handle_SDfilelist() {
     entry.close();
     entry = root.openNextFile();
   }
-  //entry.close();
   root.close();
   reply += F("</table></form>");
   //reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
@@ -3726,7 +3888,12 @@ void handle_rules() {
     rulesSet = set.toInt();
   }
 
-  String fileName = F("rules");
+  #if defined(ESP8266)
+    String fileName = F("rules");
+  #endif
+  #if defined(ESP32)
+    String fileName = F("/rules");
+  #endif
   fileName += rulesSet;
   fileName += F(".txt");
 
@@ -3891,7 +4058,12 @@ void handle_sysinfo() {
     reply += WiFi.RSSI();
     reply += F(" dB");
     reply += F("<TR><TD>Wifi Type:<TD>");
-    byte PHYmode = wifi_get_phy_mode();
+    #if defined(ESP8266)
+      byte PHYmode = wifi_get_phy_mode();
+    #endif
+    #if defined(ESP32)
+      byte PHYmode = 3; // wifi_get_phy_mode();
+    #endif    
     switch (PHYmode)
     {
       case 1:
@@ -3941,10 +4113,17 @@ void handle_sysinfo() {
   reply += deviceCount + 1;
 
   reply += F("<TR><TD>Core Version:<TD>");
-  reply += ESP.getCoreVersion();
+  #if defined(ESP8266)
+    reply += ESP.getCoreVersion();
+  #endif
 
   reply += F("<TR><TD>Flash Size:<TD>");
-  reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #if defined(ESP8266)
+    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    reply += ESP.getFlashChipSize() / 1024;
+  #endif
   reply += F(" kB");
 
   reply += F("<TR><TD>Flash Writes (daily/boot):<TD>");
@@ -3953,9 +4132,13 @@ void handle_sysinfo() {
   reply += RTC.flashCounter;
 
   reply += F("<TR><TD>Sketch Size/Free:<TD>");
-  reply += ESP.getSketchSize() / 1024;
+  #if defined(ESP8266)
+    reply += ESP.getSketchSize() / 1024;
+  #endif
   reply += F(" kB / ");
-  reply += ESP.getFreeSketchSpace() / 1024;
+  #if defined(ESP8266)
+    reply += ESP.getFreeSketchSpace() / 1024;
+  #endif
   reply += F(" kB");
 
   reply += F("<TR><TD>Boot cause:<TD>");
@@ -3991,10 +4174,14 @@ void handle_sysinfo() {
   reply += macaddress;
 
   reply += F("<TR><TD>ESP Chip ID:<TD>");
-  reply += ESP.getChipId();
+  #if defined(ESP8266)
+    reply += ESP.getChipId();
+  #endif
 
   reply += F("<TR><TD>Flash Chip ID:<TD>");
-  reply += ESP.getFlashChipId();
+  #if defined(ESP8266)
+    reply += ESP.getFlashChipId();
+  #endif
 
   reply += F("</table></form>");
   addFooter(reply);
