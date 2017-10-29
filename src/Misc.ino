@@ -1110,7 +1110,6 @@ void ResetFactory(void)
     ESP.reset();
   #endif
   #if defined(ESP32)
-    delay(30000); //TODO ESP32
     ESP.restart();
   #endif
 }
@@ -2730,7 +2729,7 @@ void SendValueLogger(byte TaskIndex)
 
 void checkRAM( const __FlashStringHelper* flashString)
 {
-  uint16_t freeRAM = FreeMem();
+  uint32_t freeRAM = FreeMem();
 
   if (freeRAM < lowestRAM)
   {

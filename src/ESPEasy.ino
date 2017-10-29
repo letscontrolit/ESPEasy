@@ -679,7 +679,7 @@ unsigned long dailyResetCounter = 0;
 
 String eventBuffer = "";
 
-uint16_t lowestRAM = 0;
+uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
 
 /*********************************************************************************************\
