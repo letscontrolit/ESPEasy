@@ -19,16 +19,18 @@
 
 //#include <*.h>   - no external lib required
 
-static float Plugin_142_hsvPrev[3] = {0,0,0};
-static float Plugin_142_hsvDest[3] = {0,0,0};
-static float Plugin_142_hsvAct[3] = {0,0,0};
+static float Plugin_142_hsvPrev[3] = {0.0,0.0,0.0};
+static float Plugin_142_hsvDest[3] = {0.0,0.0,0.0};
+static float Plugin_142_hsvAct[3] = {0.0,0.0,0.0};
 static long millisFadeBegin = 0;
 static long millisFadeEnd = 0;
-static long millisFadeTime = 1500;
+static long millisFadeTime = 3000;
 static float Plugin_142_cycle = 0;
+static float last_brightness = 0.5;
 
 static int Plugin_142_pin[4] = {-1,-1,-1,-1};
 static int Plugin_142_lowActive = false;
+static int _task_index = -1;
 
 #define PLUGIN_142
 #define PLUGIN_ID_142         142
@@ -80,8 +82,6 @@ boolean Plugin_142(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char tmpString[128];
-
         string += F("<TR><TD>GPIO:<TD>");
 
         string += F("<TR><TD>1st GPIO (R):<TD>");
@@ -118,8 +118,9 @@ boolean Plugin_142(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        analogWriteFreq(400);
+        analogWriteFreq(800);
         String log = F("RGB-S: Pin ");
+        _task_index = event->TaskIndex;
         for (byte i=0; i<4; i++)
         {
           int pin = Settings.TaskDevicePluginConfig[event->TaskIndex][i];
@@ -143,6 +144,12 @@ boolean Plugin_142(byte function, struct EventStruct *event, String& string)
         bool bNewValue = false;
 
         String command = parseString(string, 1);
+
+        if (command == F("transition"))
+        {
+          millisFadeTime = event->Par1;
+          bNewValue = true;
+        }
 
         if (command == F("rgb"))
         {
@@ -191,18 +198,25 @@ boolean Plugin_142(byte function, struct EventStruct *event, String& string)
           bNewValue = true;
         }
 
-        if (command == F("off"))
+        if (command == F("off") || command == F("none"))
         {
           Plugin_142_hsvDest[2] = 0.0;   //Value/Brightness
+          Plugin_142_cycle = 0;
           bNewValue = true;
         }
 
         if (command == F("cycle"))
         {
-          Plugin_142_cycle = event->Par1;   //seconds for a full color hue circle
+          Plugin_142_cycle = float(event->Par1);   //seconds for a full color hue circle
+          Plugin_142_cycle = Plugin_142_cycle ? : 10.0;
           if (Plugin_142_cycle > 0)
-            Plugin_142_cycle = (1.0 / 50.0) / Plugin_142_cycle;   //50Hz based increment value
+            Plugin_142_cycle = (1.0 / 10.0) / Plugin_142_cycle;   //10Hz based increment value
           success = true;
+        }
+
+        if (command == F("rgb_json"))
+        {
+          Plugin_142_jsonprocess(event, string.substring(9), &bNewValue, &success);
         }
 
         if (bNewValue)
@@ -246,15 +260,17 @@ boolean Plugin_142(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_FIFTY_PER_SECOND:
-    //case PLUGIN_TEN_PER_SECOND:
+    case PLUGIN_TEN_PER_SECOND:
       {
         if (Plugin_142_cycle > 0)   // cyclic colors
         {
           Plugin_142_hsvDest[0] += Plugin_142_cycle;
+
+          Plugin_142_hsvDest[0] = (Plugin_142_hsvDest[0] <= 1.0) ? Plugin_142_hsvDest[0] : 0.0;
+
           Plugin_142_hsvCopy(Plugin_142_hsvDest, Plugin_142_hsvPrev);
           Plugin_142_hsvCopy(Plugin_142_hsvDest, Plugin_142_hsvAct);
-          Plugin_142_Output(Plugin_142_hsvDest);
+          Plugin_142_Output(Plugin_142_hsvAct);
         }
         else if (millisFadeEnd != 0)   //fading required?
         {
@@ -285,6 +301,115 @@ boolean Plugin_142(byte function, struct EventStruct *event, String& string)
 
   }
   return success;
+}
+
+static void Plugin_142_jsonprocess(struct EventStruct *event,
+                                    String json_obj,
+                                    bool *update,
+                                    boolean *ok)
+{
+  DynamicJsonBuffer jsonBuffer;
+  String eff = "none";
+  JsonObject& root = jsonBuffer.parseObject(json_obj);
+
+  if (root.success())
+  {
+    addLog(LOG_LEVEL_DEBUG, F("json parse ok"));
+
+    if (root.containsKey(F("eff")) &&
+        root.containsKey(F("eff_time")))
+    {
+      eff = root.get<String>(F("eff"));
+      if(root[F("eff")] == F("cycle"))
+      {
+        Plugin_142_cycle = root.get<float>(F("eff_time"));
+        if (Plugin_142_cycle > 0)
+          Plugin_142_cycle = (1.0 / 10.0) / Plugin_142_cycle;   //10Hz based increment value
+      }
+
+      if(root[F("eff")] == F("none"))
+      {
+        Plugin_142_cycle = 0;
+      }
+    } else {
+      if (root.containsKey(F("state")))
+      {
+        if (root[F("state")] == F("on"))
+        {
+          if (root.containsKey(F("r")) &&
+              root.containsKey(F("g")) &&
+              root.containsKey(F("b")))
+            {
+              float rgb[3];
+              rgb[0] = root.get<float>(F("r")) / 255.0;   //R
+              rgb[1] = root.get<float>(F("g")) / 255.0;   //G
+              rgb[2] = root.get<float>(F("b")) / 255.0;   //B
+              Plugin_142_hsvClamp(rgb);
+              Plugin_142_rgb2hsv(rgb, Plugin_142_hsvDest);
+              *update = true;
+          } else {
+            Plugin_142_hsvDest[2] = last_brightness;
+          }
+
+          Plugin_142_cycle = 0;
+          *update = true;
+        }
+
+        if (root[F("state")] == F("off"))
+        {
+          last_brightness = Plugin_142_hsvDest[2] ? :last_brightness;
+          Plugin_142_hsvDest[2] = 0.0;   //Value/Brightness
+          Plugin_142_cycle = 0;
+          *update = true;
+        }
+      }
+
+      if (root.containsKey(F("brightness")))
+      {
+        Plugin_142_hsvDest[2] = root.get<float>(F("brightness")) / 255.0;
+        *update = true;
+      }
+
+      if (root.containsKey(F("transition")))
+      {
+        millisFadeTime = root.get<unsigned long>(F("transition"));
+        *update = true;
+      }
+    }
+    *ok = true;
+  } else {
+    addLog(LOG_LEVEL_DEBUG, F("json parse error:"));
+    addLog(LOG_LEVEL_DEBUG, json_obj);
+  }
+
+  Plugin_142_replay(event, eff);
+}
+
+static void Plugin_142_replay(struct EventStruct *event, String eff)
+{
+  float rgb[3];
+  String json_status = "";
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  String state = Plugin_142_hsvDest[2] ? F("on") : F("off");
+
+  Plugin_142_hsv2rgb(Plugin_142_hsvDest, rgb);
+
+  root[F("r")] = (unsigned char)(rgb[0] * 255);
+  root[F("g")] = (unsigned char)(rgb[1] * 255);
+  root[F("b")] = (unsigned char)(rgb[2] * 255);
+  root[F("brightness")] = (unsigned char)(Plugin_142_hsvDest[2] * 255);
+  root[F("state")] = state;
+  root[F("transition")] = millisFadeTime;
+  root[F("eff")] = eff;
+
+  root.printTo(json_status);
+
+  json_status += F("%o!o%");
+  LoadTaskSettings(_task_index);
+  json_status += ExtraTaskSettings.TaskDeviceName;
+
+  SendStatus(event->Source, json_status);
 }
 
 void Plugin_142_Output(float* hsvIn)
