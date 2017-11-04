@@ -3007,7 +3007,7 @@ void handle_advanced() {
   String userules = WebServer.arg(F("userules"));
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
-
+  String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
   String reply = "";
   addHeader(true, reply);
 
@@ -3037,6 +3037,7 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
+    Settings.ArduinoOTAEnable = (ArduinoOTAEnable == "on");
 
     addHtmlError(reply, SaveSettings());
     if (Settings.UseNTP)
@@ -3103,6 +3104,8 @@ void handle_advanced() {
   addFormNumericBox(reply, F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 
   addFormNumericBox(reply, F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
+
+  addFormCheckBox(reply, F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
 
   addFormSeparator(reply);
 

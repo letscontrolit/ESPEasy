@@ -479,6 +479,7 @@ struct SettingsStruct
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
+  boolean       ArduinoOTAEnable;
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
@@ -1297,7 +1298,8 @@ void backgroundtasks()
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
-  ArduinoOTA.handle();
+  if(Settings.ArduinoOTAEnable)
+    ArduinoOTA.handle();
 
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)

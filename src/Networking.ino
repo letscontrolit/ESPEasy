@@ -55,11 +55,17 @@ struct dataStruct
 /*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
   \*********************************************************************************************/
+boolean runningUPDCheck = false;
 void checkUDP()
 {
   if (Settings.UDPPort == 0)
     return;
 
+  if (runningUPDCheck)
+    return;
+
+  runningUPDCheck = true;
+    
   // UDP events
   int packetSize = portUDP.parsePacket();
   if (packetSize)
@@ -70,6 +76,7 @@ void checkUDP()
     if (portUDP.remotePort() == 123)
     {
       // unexpected NTP reply, drop for now...
+      runningUPDCheck = false;
       return;
     }
     char packetBuffer[128];
@@ -209,6 +216,10 @@ void checkUDP()
       }
     }
   }
+  #if defined(ESP32) // testing
+    portUDP.flush();
+  #endif
+  runningUPDCheck = false;
 }
 
 
