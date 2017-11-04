@@ -117,13 +117,18 @@
 #define FEATURE_ADC_VCC                  false
 
 
-//enable Arduino OTA updating.
-//Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-// #define FEATURE_ARDUINO_OTA
+#if defined(ESP8266)
+  //enable Arduino OTA updating.
+  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+  // #define FEATURE_ARDUINO_OTA
 
-//enable mDNS mode (adds about 6kb ram and some bytes IRAM)
-// #define FEATURE_MDNS
-
+  //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+  // #define FEATURE_MDNS
+#endif
+#if defined(ESP32)
+ #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_MDNS
+#endif
 
 //enable reporting status to ESPEasy developers.
 //this informs us of crashes and stability issues.
@@ -151,7 +156,12 @@
 #define ESP_PROJECT_PID           2016110801L
 #define VERSION                             2
 #define BUILD                           20000 // git version 2.0.0
-#define BUILD_NOTES                 " - Mega"
+#if defined(ESP8266)
+  #define BUILD_NOTES                 " - Mega"
+#endif
+#if defined(ESP32)
+  #define BUILD_NOTES                 " - Mega32"
+#endif
 
 #ifndef BUILD_GIT
 #define BUILD_GIT "(custom)"
@@ -324,6 +334,14 @@
   extern "C" uint32_t _SPIFFS_end;
   extern "C" uint32_t _SPIFFS_page;
   extern "C" uint32_t _SPIFFS_block;
+  #ifdef FEATURE_MDNS
+    #include <ESP8266mDNS.h>
+  #endif
+  #ifdef FEATURE_ARDUINO_OTA
+    #include <ArduinoOTA.h>
+    #include <ESP8266mDNS.h>
+    bool ArduinoOTAtriggered=false;
+  #endif
   #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
@@ -337,14 +355,19 @@
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
   ESP32WebServer WebServer(80); 
+  #ifdef FEATURE_MDNS
+    #include <ESPmDNS.h>
+  #endif
+  #ifdef FEATURE_ARDUINO_OTA
+    #include <ArduinoOTA.h>
+    #include <ESPmDNS.h>
+    bool ArduinoOTAtriggered=false;
+  #endif
   #define PIN_D_MAX        39
   int8_t ledChannelPin[16];
 #endif
 
 #include <WiFiUdp.h>
-#ifdef FEATURE_MDNS
-#include <ESP8266mDNS.h>
-#endif
 #include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -354,12 +377,6 @@
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
-#endif
-
-#ifdef FEATURE_ARDUINO_OTA
-#include <ArduinoOTA.h>
-#include <ESP8266mDNS.h>
-bool ArduinoOTAtriggered=false;
 #endif
 
 
