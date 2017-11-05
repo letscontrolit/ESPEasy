@@ -15,7 +15,9 @@ void syslog(const char *message)
     char str[256];
     str[0] = 0;
     snprintf_P(str, sizeof(str), PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
-    portUDP.write(str);
+    #if defined(ESP8266)
+      portUDP.write(str);
+    #endif
     portUDP.endPacket();
   }
 }
@@ -53,11 +55,17 @@ struct dataStruct
 /*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
   \*********************************************************************************************/
+boolean runningUPDCheck = false;
 void checkUDP()
 {
   if (Settings.UDPPort == 0)
     return;
 
+  if (runningUPDCheck)
+    return;
+
+  runningUPDCheck = true;
+    
   // UDP events
   int packetSize = portUDP.parsePacket();
   if (packetSize)
@@ -68,6 +76,7 @@ void checkUDP()
     if (portUDP.remotePort() == 123)
     {
       // unexpected NTP reply, drop for now...
+      runningUPDCheck = false;
       return;
     }
     char packetBuffer[128];
@@ -207,6 +216,10 @@ void checkUDP()
       }
     }
   }
+  #if defined(ESP32) // testing
+    portUDP.flush();
+  #endif
+  runningUPDCheck = false;
 }
 
 
@@ -395,7 +408,7 @@ void sendSysInfoUDP(byte repeats)
   }
 }
 
-
+#if defined(ESP8266)
 /********************************************************************************************\
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
@@ -713,3 +726,4 @@ void SSDP_update() {
   }
 
 }
+#endif
