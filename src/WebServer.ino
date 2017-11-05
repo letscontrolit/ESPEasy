@@ -197,7 +197,9 @@ void sendWebPageChunkedBegin(String& log)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  WebServer.sendHeader("Transfer-Encoding","chunked");
+  #if defined(ESP8266)
+    WebServer.sendHeader("Transfer-Encoding","chunked");
+  #endif
   WebServer.send(200);
 }
 
@@ -210,14 +212,18 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
-    String size;
-    size=String(data.length(), HEX)+"\r\n";
 
-    //do chunked transfer encoding ourselfs (WebServer doesnt support it)
-    WebServer.sendContent(size);
-    WebServer.sendContent(data);
-    WebServer.sendContent("\r\n");
-
+    #if defined(ESP8266)
+      String size;
+      size=String(data.length(), HEX)+"\r\n";
+      //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+      WebServer.sendContent(size);
+      WebServer.sendContent(data);
+      WebServer.sendContent("\r\n");
+    #endif
+    #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+      WebServer.sendContent(data);
+    #endif    
     data = F("");   //free RAM
   }
 }
@@ -225,7 +231,12 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  WebServer.sendContent("0\r\n\r\n");
+  #if defined(ESP8266)
+    WebServer.sendContent("0\r\n\r\n");
+  #endif
+  #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+    WebServer.sendContent("");
+  #endif
 }
 
 
