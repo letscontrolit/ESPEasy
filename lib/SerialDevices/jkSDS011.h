@@ -44,9 +44,24 @@ public:
 
   void ReadAverage(float &pm25, float &pm10);
 
+  void SetSleepMode(bool enabled);
+
+  // Set interval to get new data, 0 .. 30 minutes.
+  // Minutes = 0 => continous mode.
+  // The setting is still effective after power off(factory default is continuous measurement)
+  void SetWorkingPeriod(int minutes);
+
+  // Get the working period in minutes (0 = continuous reading)
+  // Negative return value indicates error during communication.
+  int GetWorkingPeriod();
+
 private:
+  void SendCommand(byte byte1, byte byte2, byte byte3);
+  void ParseCommandReply();
+
   SensorSerial _serial;
   CSensorSerialBuffer _data;
+  CSensorSerialBuffer _command;
   float _pm2_5;
   float _pm10_;
   float _pm2_5avr;
@@ -54,6 +69,8 @@ private:
   uint16_t _avr;
   boolean _available;
   boolean _sws;
+  int _working_period;
+  boolean _sleepmode_active;
 };
 
 #endif
