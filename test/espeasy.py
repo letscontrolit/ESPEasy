@@ -10,6 +10,7 @@ class EspEasy:
 
 
     def control(self, **kwargs):
+        self._node.log.info("Control "+str(kwargs))
         self._node.http_post(
             page="control",
 
@@ -23,6 +24,7 @@ class EspEasy:
     def controller_domoticz_mqtt(self, **kwargs):
         """config controller to use domoticz via mqtt"""
 
+        self._node.log.info("Config controller domoticz mqtt "+str(kwargs))
         self._node.http_post(
             page="controllers",
 
@@ -45,6 +47,7 @@ class EspEasy:
 
 
     def device_p001(self, **kwargs):
+        self._node.log.info("Config device plugin p001 "+str(kwargs))
 
         self._node.http_post(
             page="devices",

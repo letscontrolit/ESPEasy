@@ -10,15 +10,17 @@ import requests
 import serial.tools.miniterm
 import re
 
-def log(txt):
-    print(txt, end="", flush=True)
+from espcore import *
+
 
 class Node():
 
 
-    def __init__(self, config):
-        print("Using node {node} ({type}) with ip {ip}".format(**config))
+    def __init__(self, config, id):
+        self.log=logging.getLogger(id)
+        self.log.debug("{type} has ip {ip}".format(id=id, **config))
         self._config=config
+        self._id=id
         self._url="http://{ip}/".format(**self._config)
         self._serial_initialized=False
 
@@ -33,7 +35,7 @@ class Node():
 
         self.serial_needed()
         self._serial.reset_input_buffer();
-        log("Waiting for serial response: ")
+        self.log.debug("Waiting for serial response")
         start_time=time.time()
 
         while (time.time()-start_time)< int(timeout):
@@ -42,10 +44,10 @@ class Node():
                 while a!=b'':
                     a=self._serial.readline()
                     if a==b"Unknown command!\r\n":
-                        log("OK\n")
+                        self.log.debug("Got serial response")
                         self._serial.reset_input_buffer();
                         return
-                log(".")
+
 
         raise(Exception("Timeout!"))
 
@@ -61,13 +63,13 @@ class Node():
     def pingwifi(self, timeout=60):
         """waits until espeasy reponds via wifi"""
 
-        log("Waiting for wifi response: ")
+        self.log.debug("Waiting for ping reply")
         start_time=time.time()
 
         while (time.time()-start_time)< int(timeout):
-                log(".")
+                # log(".")
                 if not subprocess.call(["ping", "-w", "1", "-c", "1", self._config['ip']], stdout=subprocess.DEVNULL):
-                    log("OK\n")
+                    self.log.debug("Got ping reply")
                     return
 
         raise(Exception("Timeout!"))
@@ -80,6 +82,8 @@ class Node():
 
         self.reboot()
         self.pingserial(timeout=timeout)
+
+        self.log.info("Configuring wifi")
 
         serial_str="wifissid {ssid}\nwifikey {password}\nip {ip}\nsave\nreboot\n".format(ssid=wificonfig.ssid, password=wificonfig.password, ip=self._config['ip'])
         self._serial.write(bytes(serial_str, 'ascii'));
@@ -158,4 +162,3 @@ class Node():
             data=data_dict
         )
         r.raise_for_status()
-    

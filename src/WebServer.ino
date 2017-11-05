@@ -85,9 +85,12 @@ void WebServerInit()
   WebServer.on("/sysinfo", handle_sysinfo);
   WebServer.on("/pinstates", handle_pinstates);
 
-  if (ESP.getFlashChipRealSize() > 524288)
-    httpUpdater.setup(&WebServer);
-
+  #if defined(ESP8266)
+    if (ESP.getFlashChipRealSize() > 524288)
+      httpUpdater.setup(&WebServer);
+  #endif
+  
+  #if defined(ESP8266)
   if (Settings.UseSSDP)
   {
     WebServer.on("/ssdp.xml", HTTP_GET, []() {
@@ -95,6 +98,7 @@ void WebServerInit()
     });
     SSDP_begin();
   }
+  #endif
 
   WebServer.begin();
 }
@@ -193,7 +197,9 @@ void sendWebPageChunkedBegin(String& log)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  WebServer.sendHeader("Transfer-Encoding","chunked");
+  #if defined(ESP8266)
+    WebServer.sendHeader("Transfer-Encoding","chunked");
+  #endif
   WebServer.send(200);
 }
 
@@ -206,14 +212,18 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
-    String size;
-    size=String(data.length(), HEX)+"\r\n";
 
-    //do chunked transfer encoding ourselfs (WebServer doesnt support it)
-    WebServer.sendContent(size);
-    WebServer.sendContent(data);
-    WebServer.sendContent("\r\n");
-
+    #if defined(ESP8266)
+      String size;
+      size=String(data.length(), HEX)+"\r\n";
+      //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+      WebServer.sendContent(size);
+      WebServer.sendContent(data);
+      WebServer.sendContent("\r\n");
+    #endif
+    #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+      WebServer.sendContent(data);
+    #endif    
     data = F("");   //free RAM
   }
 }
@@ -221,7 +231,12 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  WebServer.sendContent("0\r\n\r\n");
+  #if defined(ESP8266)
+    WebServer.sendContent("0\r\n\r\n");
+  #endif
+  #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+    WebServer.sendContent("");
+  #endif
 }
 
 
@@ -1864,7 +1879,7 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 //********************************************************************************
 // Add a GPIO pin select dropdown list for both 8266 and 8285
 //********************************************************************************
-#ifdef ESP8285
+#if defined(ESP8285)
 // Code for the ESP8285
 
 //********************************************************************************
@@ -1913,8 +1928,8 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
 }
 
-
-#else
+#endif
+#if defined(ESP8266)
 // Code for the ESP8266
 
 //********************************************************************************
@@ -1954,7 +1969,26 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   optionValues[13] = 16;
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 14);
 }
+#endif
 
+#if defined(ESP32)
+//********************************************************************************
+// Add a GPIO pin select dropdown list
+//********************************************************************************
+void addPinSelect(boolean forI2C, String& str, String name,  int choice)
+{
+  String options[PIN_D_MAX+1];
+  int optionValues[PIN_D_MAX+1];
+  options[0] = F("- None -");
+  optionValues[0] = -1;
+  for(byte x=1; x < PIN_D_MAX+1; x++)
+  {
+    options[x] = F("GPIO-");
+    options[x] += x;
+    optionValues[x] = x;
+  }
+  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, PIN_D_MAX+1);
+}
 #endif
 
 //********************************************************************************
@@ -2507,6 +2541,7 @@ void handle_tools() {
   reply += F("<TD>");
   reply += F("Saves a settings file");
 
+#if defined(ESP8266)
   if (ESP.getFlashChipRealSize() > 524288)
   {
     addFormSubHeader(reply, F("Firmware"));
@@ -2516,6 +2551,7 @@ void handle_tools() {
     reply += F("<TD>");
     reply += F("Load a new firmware");
   }
+#endif
 
   addFormSubHeader(reply, F("Filesystem"));
 
@@ -2982,7 +3018,7 @@ void handle_advanced() {
   String userules = WebServer.arg(F("userules"));
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
-
+  String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
   String reply = "";
   addHeader(true, reply);
 
@@ -3012,6 +3048,7 @@ void handle_advanced() {
     Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
+    Settings.ArduinoOTAEnable = (ArduinoOTAEnable == "on");
 
     addHtmlError(reply, SaveSettings());
     if (Settings.UseNTP)
@@ -3079,6 +3116,8 @@ void handle_advanced() {
 
   addFormNumericBox(reply, F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
 
+  addFormCheckBox(reply, F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
+
   addFormSeparator(reply);
 
   reply += F("<TR><TD><TD>");
@@ -3119,7 +3158,7 @@ void handle_download()
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
-  fs::File dataFile = SPIFFS.open(F("config.dat"), "r");
+  fs::File dataFile = SPIFFS.open(F(FILE_CONFIG), "r");
   if (!dataFile)
     return;
 
@@ -3221,7 +3260,7 @@ void handleFileUpload() {
     // first data block, if this is the config file, check PID/Version
     if (upload.totalSize == 0)
     {
-      if (strcasecmp(upload.filename.c_str(), "config.dat") == 0)
+      if (strcasecmp(upload.filename.c_str(), FILE_CONFIG) == 0)
       {
         struct TempStruct {
           unsigned long PID;
@@ -3466,7 +3505,7 @@ boolean handle_custom(String path) {
 // Web Interface file list
 //********************************************************************************
 void handle_filelist() {
-
+#if defined(ESP8266)
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
@@ -3484,7 +3523,7 @@ void handle_filelist() {
   while (dir.next())
   {
     reply += F("<TR><TD>");
-    if (dir.fileName() != "config.dat" && dir.fileName() != "security.dat" && dir.fileName() != "notification.dat")
+    if (dir.fileName() != FILE_CONFIG && dir.fileName() != FILE_SECURITY && dir.fileName() != FILE_NOTIFICATION)
     {
       reply += F("<a class='button link' href=\"filelist?delete=");
       reply += dir.fileName();
@@ -3504,6 +3543,49 @@ void handle_filelist() {
   reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
+#endif
+#if defined(ESP32)
+  navMenuIndex = 7;
+  String fdelete = WebServer.arg(F("delete"));
+
+  if (fdelete.length() > 0)
+  {
+    SPIFFS.remove(fdelete);
+    // flashCount();
+  }
+
+  String reply = "";
+  addHeader(true, reply);
+  reply += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
+
+  File root = SPIFFS.open("/");
+  File file = root.openNextFile();
+  while (file)
+  {
+    if(!file.isDirectory()){
+      reply += F("<TR><TD>");
+      if (file.name() != "/config.dat" && file.name() != "/security.dat" && file.name() != "/notification.dat")
+      {
+        reply += F("<a class='button link' href=\"filelist?delete=");
+        reply += file.name();
+        reply += F("\">Del</a>");
+      }
+
+      reply += F("<TD><a href=\"");
+      reply += file.name();
+      reply += F("\">");
+      reply += file.name();
+      reply += F("</a>");
+      reply += F("<TD>");
+      reply += file.size();
+      file = root.openNextFile();
+    }
+  }
+  reply += F("</table></form>");
+  reply += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  addFooter(reply);
+  sendWebPage(F("TmplStd"), reply);
+#endif
 }
 
 
@@ -3618,7 +3700,7 @@ void handle_SDfilelist() {
     else
     {
       reply += F("<TR><TD>");
-      if (entry.name() != String(F("config.dat")).c_str() && entry.name() != String(F("security.dat")).c_str())
+      if (entry.name() != String(F(FILE_CONFIG)).c_str() && entry.name() != String(F(FILE_SECURITY)).c_str())
       {
         reply += F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete=");
         reply += current_dir;
@@ -3820,7 +3902,12 @@ void handle_rules() {
     rulesSet = set.toInt();
   }
 
-  String fileName = F("rules");
+  #if defined(ESP8266)
+    String fileName = F("rules");
+  #endif
+  #if defined(ESP32)
+    String fileName = F("/rules");
+  #endif
   fileName += rulesSet;
   fileName += F(".txt");
 
@@ -3985,7 +4072,12 @@ void handle_sysinfo() {
     reply += WiFi.RSSI();
     reply += F(" dB");
     reply += F("<TR><TD>Wifi Type:<TD>");
-    byte PHYmode = wifi_get_phy_mode();
+    #if defined(ESP8266)
+      byte PHYmode = wifi_get_phy_mode();
+    #endif
+    #if defined(ESP32)
+      byte PHYmode = 3; // wifi_get_phy_mode();
+    #endif    
     switch (PHYmode)
     {
       case 1:
@@ -4035,10 +4127,17 @@ void handle_sysinfo() {
   reply += deviceCount + 1;
 
   reply += F("<TR><TD>Core Version:<TD>");
-  reply += ESP.getCoreVersion();
+  #if defined(ESP8266)
+    reply += ESP.getCoreVersion();
+  #endif
 
   reply += F("<TR><TD>Flash Size:<TD>");
-  reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #if defined(ESP8266)
+    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    reply += ESP.getFlashChipSize() / 1024;
+  #endif
   reply += F(" kB");
 
   reply += F("<TR><TD>Flash Writes (daily/boot):<TD>");
@@ -4047,9 +4146,13 @@ void handle_sysinfo() {
   reply += RTC.flashCounter;
 
   reply += F("<TR><TD>Sketch Size/Free:<TD>");
-  reply += ESP.getSketchSize() / 1024;
+  #if defined(ESP8266)
+    reply += ESP.getSketchSize() / 1024;
+  #endif
   reply += F(" kB / ");
-  reply += ESP.getFreeSketchSpace() / 1024;
+  #if defined(ESP8266)
+    reply += ESP.getFreeSketchSpace() / 1024;
+  #endif
   reply += F(" kB");
 
   reply += F("<TR><TD>Boot cause:<TD>");
@@ -4085,10 +4188,14 @@ void handle_sysinfo() {
   reply += macaddress;
 
   reply += F("<TR><TD>ESP Chip ID:<TD>");
-  reply += ESP.getChipId();
+  #if defined(ESP8266)
+    reply += ESP.getChipId();
+  #endif
 
   reply += F("<TR><TD>Flash Chip ID:<TD>");
-  reply += ESP.getFlashChipId();
+  #if defined(ESP8266)
+    reply += ESP.getFlashChipId();
+  #endif
 
   reply += F("</table></form>");
   addFooter(reply);
