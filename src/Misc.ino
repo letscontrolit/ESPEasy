@@ -68,8 +68,11 @@ void deepSleepStart(int delay)
 
   if (delay > 4294 || delay < 0)
     delay = 4294;   //max sleep time ~1.2h
-
-  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
+  // Add seconds to the log, also to prevent warnings when delay is not used.
+  String log = F("SLEEP: Powering down to deepsleep, for ");
+  log += delay;
+  log += F(" seconds...");
+  addLog(LOG_LEVEL_INFO, log);
   #if defined(ESP8266)
     ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
   #endif
@@ -1253,7 +1256,7 @@ void delayedReboot(int rebootDelay)
    #endif
    #if defined(ESP32)
      ESP.restart();
-   #endif  
+   #endif
 }
 
 
@@ -2943,7 +2946,7 @@ void ArduinoOTAInit()
       #endif
       #if defined(ESP32)
         ESP.restart();
-      #endif      
+      #endif
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 
@@ -2964,7 +2967,7 @@ void ArduinoOTAInit()
       #endif
       #if defined(ESP32)
         ESP.restart();
-      #endif      
+      #endif
   });
   ArduinoOTA.begin();
 
