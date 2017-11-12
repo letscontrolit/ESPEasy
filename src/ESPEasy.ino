@@ -117,13 +117,18 @@
 #define FEATURE_ADC_VCC                  false
 
 
-//enable Arduino OTA updating.
-//Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-// #define FEATURE_ARDUINO_OTA
+#if defined(ESP8266)
+  //enable Arduino OTA updating.
+  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+  // #define FEATURE_ARDUINO_OTA
 
-//enable mDNS mode (adds about 6kb ram and some bytes IRAM)
-// #define FEATURE_MDNS
-
+  //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+  // #define FEATURE_MDNS
+#endif
+#if defined(ESP32)
+ #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_MDNS
+#endif
 
 //enable reporting status to ESPEasy developers.
 //this informs us of crashes and stability issues.
@@ -151,7 +156,12 @@
 #define ESP_PROJECT_PID           2016110801L
 #define VERSION                             2
 #define BUILD                           20000 // git version 2.0.0
-#define BUILD_NOTES                 " - Mega"
+#if defined(ESP8266)
+  #define BUILD_NOTES                 " - Mega"
+#endif
+#if defined(ESP32)
+  #define BUILD_NOTES                 " - Mega32"
+#endif
 
 #ifndef BUILD_GIT
 #define BUILD_GIT "(custom)"
@@ -164,7 +174,6 @@
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
-#define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
@@ -292,48 +301,82 @@
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
 
-#include "lwip/tcp_impl.h"
-#include <ESP8266WiFi.h>
-#include <DNSServer.h>
-#include <WiFiUdp.h>
-#include <ESP8266WebServer.h>
-#ifdef FEATURE_MDNS
-#include <ESP8266mDNS.h>
+#define FS_NO_GLOBALS
+#if defined(ESP8266)
+  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
+  #define FILE_CONFIG       "config.dat"
+  #define FILE_SECURITY     "security.dat"
+  #define FILE_NOTIFICATION "notification.dat"
+  #define FILE_RULES        "rules1.dat"
+  #include "lwip/tcp_impl.h"
+  #include <ESP8266WiFi.h>
+  #include <ESP8266WebServer.h>
+  ESP8266WebServer WebServer(80);
+  #include <DNSServer.h>
+  #include <Servo.h>
+  #include <ESP8266HTTPUpdateServer.h>
+  ESP8266HTTPUpdateServer httpUpdater(true);
+  #ifndef LWIP_OPEN_SRC
+  #define LWIP_OPEN_SRC
+  #endif
+  #include "lwip/opt.h"
+  #include "lwip/udp.h"
+  #include "lwip/igmp.h"
+  #include "include/UdpContext.h"
+  #include "limits.h"
+  extern "C" {
+   #include "user_interface.h"
+  }
+  extern "C" {
+  #include "spi_flash.h"
+  }
+  extern "C" uint32_t _SPIFFS_start;
+  extern "C" uint32_t _SPIFFS_end;
+  extern "C" uint32_t _SPIFFS_page;
+  extern "C" uint32_t _SPIFFS_block;
+  #ifdef FEATURE_MDNS
+    #include <ESP8266mDNS.h>
+  #endif
+  #ifdef FEATURE_ARDUINO_OTA
+    #include <ArduinoOTA.h>
+    #include <ESP8266mDNS.h>
+    bool ArduinoOTAtriggered=false;
+  #endif
+  #define PIN_D_MAX        16
+#endif
+#if defined(ESP32)
+  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+  #define ICACHE_RAM_ATTR IRAM_ATTR
+  #define FILE_CONFIG       "/config.dat"
+  #define FILE_SECURITY     "/security.dat"
+  #define FILE_NOTIFICATION "/notification.dat"
+  #define FILE_RULES        "/rules1.dat"
+  #include <WiFi.h>
+  #include <ESP32WebServer.h>
+  #include "SPIFFS.h"
+  ESP32WebServer WebServer(80); 
+  #ifdef FEATURE_MDNS
+    #include <ESPmDNS.h>
+  #endif
+  #ifdef FEATURE_ARDUINO_OTA
+    #include <ArduinoOTA.h>
+    #include <ESPmDNS.h>
+    bool ArduinoOTAtriggered=false;
+  #endif
+  #define PIN_D_MAX        39
+  int8_t ledChannelPin[16];
 #endif
 
+#include <WiFiUdp.h>
+#include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
-// #include <ArduinoJson.h>
-// #include <LiquidCrystal_I2C.h>
-#include <Servo.h>
-#define FS_NO_GLOBALS
 #include <FS.h>
 #include <SD.h>
-#include <ESP8266HTTPUpdateServer.h>
-ESP8266HTTPUpdateServer httpUpdater(true);
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
-#endif
-#ifndef LWIP_OPEN_SRC
-#define LWIP_OPEN_SRC
-#endif
-#include "lwip/opt.h"
-#include "lwip/udp.h"
-#include "lwip/igmp.h"
-#include "include/UdpContext.h"
-#include "limits.h"
-
-extern "C" {
-#include "user_interface.h"
-}
-
-
-#ifdef FEATURE_ARDUINO_OTA
-#include <ArduinoOTA.h>
-#include <ESP8266mDNS.h>
-bool ArduinoOTAtriggered=false;
 #endif
 
 
@@ -349,21 +392,8 @@ MDNSResponder mdns;
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 
-// WebServer
-ESP8266WebServer WebServer(80);
-
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
-
-
-
-extern "C" {
-#include "spi_flash.h"
-}
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
-extern "C" uint32_t _SPIFFS_page;
-extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
@@ -449,6 +479,7 @@ struct SettingsStruct
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
+  boolean       ArduinoOTAEnable;
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
@@ -666,7 +697,7 @@ unsigned long dailyResetCounter = 0;
 
 String eventBuffer = "";
 
-uint16_t lowestRAM = 0;
+uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
 
 /*********************************************************************************************\
@@ -674,6 +705,10 @@ String lowestRAMfunction = "";
 \*********************************************************************************************/
 void setup()
 {
+  #if defined(ESP32)
+    for(byte x = 0; x < 16; x++)
+      ledChannelPin[x] = -1;
+  #endif
 
   lowestRAM = FreeMem();
 
@@ -730,12 +765,9 @@ void setup()
 
   addLog(LOG_LEVEL_INFO, log);
 
-
-
-
   fileSystemCheck();
   LoadSettings();
-
+        
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 
@@ -963,7 +995,12 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          ESP.reset();
+          #if defined(ESP8266)
+            ESP.reset();
+          #endif
+          #if defined(ESP32)
+            ESP.restart();
+          #endif
           break;
         }
     }
@@ -1032,8 +1069,10 @@ void runEach30Seconds()
   refreshNodeList();
   if(Settings.ControllerEnabled[0])
     MQTTCheck();
+  #if defined(ESP8266)
   if (Settings.UseSSDP)
     SSDP_update();
+  #endif
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
@@ -1240,7 +1279,9 @@ void backgroundtasks()
   }
   runningBackgroundTasks=true;
 
-  tcpCleanup();
+  #if defined(ESP8266)
+    tcpCleanup();
+  #endif
 
   if (Settings.UseSerial)
     if (Serial.available())
@@ -1257,7 +1298,8 @@ void backgroundtasks()
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
-  ArduinoOTA.handle();
+  if(Settings.ArduinoOTAEnable)
+    ArduinoOTA.handle();
 
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
