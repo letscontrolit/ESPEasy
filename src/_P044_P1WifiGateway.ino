@@ -114,6 +114,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
             serialconfig += 0x20;
           Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+          if (P1GatewayServer) P1GatewayServer->close();
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           P1GatewayServer->begin();
 
@@ -144,6 +145,16 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
 
         state = WAITING;
+        success = true;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (P1GatewayServer) {
+          P1GatewayServer->close();
+          P1GatewayServer = NULL;
+        }
         success = true;
         break;
       }
