@@ -85,12 +85,12 @@ void WebServerInit()
   WebServer.on("/sysinfo", handle_sysinfo);
   WebServer.on("/pinstates", handle_pinstates);
 
-  #if defined(ESP8266)
+  #ifdef ESP8266
     if (ESP.getFlashChipRealSize() > 524288)
       httpUpdater.setup(&WebServer);
   #endif
-  
-  #if defined(ESP8266)
+
+  #ifdef ESP8266
   if (Settings.UseSSDP)
   {
     WebServer.on("/ssdp.xml", HTTP_GET, []() {
@@ -197,7 +197,7 @@ void sendWebPageChunkedBegin(String& log)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     WebServer.sendHeader("Transfer-Encoding","chunked");
   #endif
   WebServer.send(200);
@@ -213,7 +213,7 @@ void sendWebPageChunkedData(String& log, String& data)
     log += data.length();
     log += F("]");
 
-    #if defined(ESP8266)
+    #ifdef ESP8266
       String size;
       size=String(data.length(), HEX)+"\r\n";
       //do chunked transfer encoding ourselfs (WebServer doesnt support it)
@@ -221,9 +221,9 @@ void sendWebPageChunkedData(String& log, String& data)
       WebServer.sendContent(data);
       WebServer.sendContent("\r\n");
     #endif
-    #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+    #ifdef ESP32  // the ESP32 webserver supports chunked http transfer
       WebServer.sendContent(data);
-    #endif    
+    #endif
     data = F("");   //free RAM
   }
 }
@@ -231,10 +231,10 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     WebServer.sendContent("0\r\n\r\n");
   #endif
-  #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+  #ifdef ESP32  // the ESP32 webserver supports chunked http transfer
     WebServer.sendContent("");
   #endif
 }
@@ -1879,7 +1879,7 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 //********************************************************************************
 // Add a GPIO pin select dropdown list for both 8266 and 8285
 //********************************************************************************
-#if defined(ESP8285)
+#ifdef ESP8285
 // Code for the ESP8285
 
 //********************************************************************************
@@ -1928,8 +1928,7 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
 }
 
-#endif
-#if defined(ESP8266)
+#elif ESP8266
 // Code for the ESP8266
 
 //********************************************************************************
@@ -1969,9 +1968,7 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   optionValues[13] = 16;
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 14);
 }
-#endif
-
-#if defined(ESP32)
+#elif ESP32
 //********************************************************************************
 // Add a GPIO pin select dropdown list
 //********************************************************************************
@@ -2541,7 +2538,7 @@ void handle_tools() {
   reply += F("<TD>");
   reply += F("Saves a settings file");
 
-#if defined(ESP8266)
+#ifdef ESP8266
   if (ESP.getFlashChipRealSize() > 524288)
   {
     addFormSubHeader(reply, F("Firmware"));
@@ -3505,7 +3502,7 @@ boolean handle_custom(String path) {
 // Web Interface file list
 //********************************************************************************
 void handle_filelist() {
-#if defined(ESP8266)
+#ifdef ESP8266
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
@@ -3544,7 +3541,7 @@ void handle_filelist() {
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
 #endif
-#if defined(ESP32)
+#ifdef ESP32
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
@@ -3902,10 +3899,10 @@ void handle_rules() {
     rulesSet = set.toInt();
   }
 
-  #if defined(ESP8266)
+  #ifdef ESP8266
     String fileName = F("rules");
   #endif
-  #if defined(ESP32)
+  #ifdef ESP32
     String fileName = F("/rules");
   #endif
   fileName += rulesSet;
@@ -4072,12 +4069,12 @@ void handle_sysinfo() {
     reply += WiFi.RSSI();
     reply += F(" dB");
     reply += F("<TR><TD>Wifi Type:<TD>");
-    #if defined(ESP8266)
+    #ifdef ESP8266
       byte PHYmode = wifi_get_phy_mode();
     #endif
-    #if defined(ESP32)
+    #ifdef ESP32
       byte PHYmode = 3; // wifi_get_phy_mode();
-    #endif    
+    #endif
     switch (PHYmode)
     {
       case 1:
@@ -4127,15 +4124,15 @@ void handle_sysinfo() {
   reply += deviceCount + 1;
 
   reply += F("<TR><TD>Core Version:<TD>");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     reply += ESP.getCoreVersion();
   #endif
 
   reply += F("<TR><TD>Flash Size:<TD>");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
   #endif
-  #if defined(ESP32)
+  #ifdef ESP32
     reply += ESP.getFlashChipSize() / 1024;
   #endif
   reply += F(" kB");
@@ -4146,11 +4143,11 @@ void handle_sysinfo() {
   reply += RTC.flashCounter;
 
   reply += F("<TR><TD>Sketch Size/Free:<TD>");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     reply += ESP.getSketchSize() / 1024;
   #endif
   reply += F(" kB / ");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     reply += ESP.getFreeSketchSpace() / 1024;
   #endif
   reply += F(" kB");
@@ -4188,12 +4185,12 @@ void handle_sysinfo() {
   reply += macaddress;
 
   reply += F("<TR><TD>ESP Chip ID:<TD>");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     reply += ESP.getChipId();
   #endif
 
   reply += F("<TR><TD>Flash Chip ID:<TD>");
-  #if defined(ESP8266)
+  #ifdef ESP8266
     reply += ESP.getFlashChipId();
   #endif
 
