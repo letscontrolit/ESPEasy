@@ -138,7 +138,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
           CRCcheck = true;
         } else {
-          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
+          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC off"));
           CRCcheck = false;
         }
 
@@ -223,8 +223,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                       break;
                     case WAITING:
                       if (ch == '/')  {
-                        Plugin_044_serial_buf[bytes_read] = ch;
-                        bytes_read++;
+                        Plugin_044_serial_buf[0] = ch;
+                        bytes_read=1;
                         state = READING;
                       } // else ignore data
                       break;
@@ -239,6 +239,10 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                       if (validP1char(ch)) {
                         Plugin_044_serial_buf[bytes_read] = ch;
                         bytes_read++;
+                      } else if (ch=='/') {
+                        addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
+                        Plugin_044_serial_buf[0] = ch;
+                        bytes_read = 1;
                       } else {              // input is non-ascii
                         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
                         Serial.flush();
@@ -248,13 +252,12 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                       break;
                     case CHECKSUM:
                       checkI ++;
-                      if (checkI == 5) {
+                      if (checkI == 4) {
                         checkI = 0;
                         state = DONE;
-                      } else {
-                        Plugin_044_serial_buf[bytes_read] = ch;
-                        bytes_read++;
                       }
+                      Plugin_044_serial_buf[bytes_read] = ch;
+                      bytes_read++;
                       break;
                     case DONE:
                       // Plugin_044_serial_buf[bytes_read]= '\n';
@@ -278,7 +281,6 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
             if (state == DONE) {
               if (checkDatagram(bytes_read)) {
-                bytes_read++;
                 Plugin_044_serial_buf[bytes_read] = '\r';
                 bytes_read++;
                 Plugin_044_serial_buf[bytes_read] = '\n';
