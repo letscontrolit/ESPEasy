@@ -89,7 +89,7 @@ void WebServerInit()
     if (ESP.getFlashChipRealSize() > 524288)
       httpUpdater.setup(&WebServer);
   #endif
-  
+
   #if defined(ESP8266)
   if (Settings.UseSSDP)
   {
@@ -223,7 +223,7 @@ void sendWebPageChunkedData(String& log, String& data)
     #endif
     #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
       WebServer.sendContent(data);
-    #endif    
+    #endif
     data = F("");   //free RAM
   }
 }
@@ -1928,7 +1928,7 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
   renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
 }
 
-#endif
+#else
 #if defined(ESP8266)
 // Code for the ESP8266
 
@@ -1991,6 +1991,7 @@ void addPinSelect(boolean forI2C, String& str, String name,  int choice)
 }
 #endif
 
+#endif
 //********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
 //********************************************************************************
@@ -4077,7 +4078,7 @@ void handle_sysinfo() {
     #endif
     #if defined(ESP32)
       byte PHYmode = 3; // wifi_get_phy_mode();
-    #endif    
+    #endif
     switch (PHYmode)
     {
       case 1:
