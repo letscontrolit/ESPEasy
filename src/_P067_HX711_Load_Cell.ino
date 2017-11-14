@@ -15,7 +15,7 @@
 
 #define PLUGIN_067
 #define PLUGIN_ID_067         67
-#define PLUGIN_NAME_067       "HX711 Load Cell [TESTING]"
+#define PLUGIN_NAME_067       "Weight - HX711 Load Cell [TESTING]"
 #define PLUGIN_VALUENAME1_067 "Weight"
 
 // #include <*.h>   no lib required

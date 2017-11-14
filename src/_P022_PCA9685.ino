@@ -4,7 +4,7 @@
 
 #define PLUGIN_022
 #define PLUGIN_ID_022         22
-#define PLUGIN_NAME_022       "PWM - PCA9685"
+#define PLUGIN_NAME_022       "Extra IO - PCA9685"
 #define PLUGIN_VALUENAME1_022 "PWM"
 
 #define PLUGIN_022_PCA9685_MODE1   0x00  // location for Mode1 register address

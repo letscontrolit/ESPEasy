@@ -4,7 +4,7 @@
 
 #define PLUGIN_002
 #define PLUGIN_ID_002         2
-#define PLUGIN_NAME_002       "Analog input"
+#define PLUGIN_NAME_002       "Analog input - internal"
 #define PLUGIN_VALUENAME1_002 "Analog"
 
 uint32_t Plugin_002_OversamplingValue = 0;

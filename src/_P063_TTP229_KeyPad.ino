@@ -27,7 +27,7 @@
 
 #define PLUGIN_063
 #define PLUGIN_ID_063         63
-#define PLUGIN_NAME_063       "KeyPad - TTP229 Touch [TESTING]"
+#define PLUGIN_NAME_063       "Keypad - TTP229 Touch [TESTING]"
 #define PLUGIN_VALUENAME1_063 "ScanCode"
 
 // #include <*.h>   no lib required

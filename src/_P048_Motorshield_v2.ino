@@ -14,7 +14,7 @@
 
 #define PLUGIN_048
 #define PLUGIN_ID_048         48
-#define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2 [TEST]"
+#define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2 [TESTING]"
 #define PLUGIN_VALUENAME1_048 "MotorShield v2"
 
 uint8_t Plugin_048_MotorShield_address = 0x60;
