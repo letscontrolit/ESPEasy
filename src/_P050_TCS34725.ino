@@ -14,7 +14,7 @@
 
 #define PLUGIN_050
 #define PLUGIN_ID_050        50
-#define PLUGIN_NAME_050       "Luminosity & Color - TCS34725  [DEVELOPMENT]"
+#define PLUGIN_NAME_050       "Color - TCS34725  [DEVELOPMENT]"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"

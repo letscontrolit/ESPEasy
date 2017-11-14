@@ -13,7 +13,7 @@
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
-#define PLUGIN_NAME_056       "Dust Sensor - SDS011/018/198 [TESTING]"
+#define PLUGIN_NAME_056       "Dust - SDS011/018/198 [TESTING]"
 #define PLUGIN_VALUENAME1_056 "PM2.5"   // Dust <2.5µm in µg/m³   SDS198:<100µm in µg/m³
 #define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 

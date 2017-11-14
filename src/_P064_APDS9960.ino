@@ -18,7 +18,7 @@
 
 #define PLUGIN_064
 #define PLUGIN_ID_064         64
-#define PLUGIN_NAME_064       "Gesture - APDS9960 [DEV]"
+#define PLUGIN_NAME_064       "Gesture - APDS9960 [DEVELOPMENT]"
 #define PLUGIN_VALUENAME1_064 "Gesture"
 #define PLUGIN_VALUENAME2_064 "Proximity"
 #define PLUGIN_VALUENAME3_064 "Light"

@@ -6,7 +6,7 @@
 
 #define PLUGIN_024
 #define PLUGIN_ID_024 24
-#define PLUGIN_NAME_024 "Digital IR Thermometer - MLX90614"
+#define PLUGIN_NAME_024 "Environment - MLX90614"
 #define PLUGIN_VALUENAME1_024 "Temperature"
 
 boolean Plugin_024_init = false;

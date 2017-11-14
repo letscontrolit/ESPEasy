@@ -14,7 +14,7 @@
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
-#define PLUGIN_NAME_053 "Dust Sensor - PMSx003"
+#define PLUGIN_NAME_053 "Dust - PMSx003"
 #define PLUGIN_VALUENAME1_053 "pm1.0"
 #define PLUGIN_VALUENAME2_053 "pm2.5"
 #define PLUGIN_VALUENAME3_053 "pm10"

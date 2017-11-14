@@ -12,7 +12,7 @@
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47
-#define PLUGIN_NAME_047       "Moisture & Temperature & Light I2C Soil moisture sensor [TEST]"
+#define PLUGIN_NAME_047       "Environment - Soil moisture sensor [TESTING]"
 #define PLUGIN_VALUENAME1_047 "Temperature"
 #define PLUGIN_VALUENAME2_047 "Moisture"
 #define PLUGIN_VALUENAME3_047 "Light"

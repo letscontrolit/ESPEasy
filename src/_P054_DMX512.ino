@@ -53,7 +53,7 @@
 
 #define PLUGIN_054
 #define PLUGIN_ID_054         54
-#define PLUGIN_NAME_054       "DMX512 TX [TESTING]"
+#define PLUGIN_NAME_054       "Communication - DMX512 TX [TESTING]"
 
 byte* Plugin_054_DMXBuffer = 0;
 int16_t Plugin_054_DMXSize = 32;

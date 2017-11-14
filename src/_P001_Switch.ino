@@ -4,7 +4,7 @@
 
 #define PLUGIN_001
 #define PLUGIN_ID_001         1
-#define PLUGIN_NAME_001       "Switch input"
+#define PLUGIN_NAME_001       "Switch input - Switch"
 #define PLUGIN_VALUENAME1_001 "Switch"
 Servo servo1;
 Servo servo2;

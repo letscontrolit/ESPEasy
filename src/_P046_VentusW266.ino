@@ -75,7 +75,7 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
-//edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram, 
+//edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
 #ifdef PLUGIN_BUILD_DISABLED
 // #ifdef PLUGIN_BUILD_TESTING
 
@@ -83,7 +83,7 @@
 
 #define PLUGIN_046                                              // Mandatory framework constants
 #define PLUGIN_ID_046               46
-#define PLUGIN_NAME_046             "Ventus W266 [TESTING]"
+#define PLUGIN_NAME_046             "Hardware - Ventus W266 [TESTING]"
 #define PLUGIN_VALUENAME1_046       ""
 #define PLUGIN_VALUENAME2_046       ""
 #define PLUGIN_VALUENAME3_046       ""
