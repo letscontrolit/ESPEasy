@@ -42,6 +42,7 @@
 
 uint8_t Plugin_039_SPI_CS_Pin = 15;  // D8
 bool Plugin_039_SensorAttached = true;
+uint32_t Plugin_039_Sensor_fault = 0;
 double Plugin_039_Celsius = 0.0;
 
 boolean Plugin_039(byte function, struct EventStruct *event, String& string)
@@ -231,9 +232,28 @@ double readMax31855()
   log += String(rawvalue);
   addLog(LOG_LEVEL_DEBUG, log);
 
+  if (Plugin_039_Sensor_fault != (rawvalue & 0x7)) {
+    // Fault code changed, log them
+    Plugin_039_Sensor_fault = (rawvalue & 0x7);
+    log = F("P039 : MAX31855");
+    if (Plugin_039_Sensor_fault == 0) {
+      log += F("Fault resolved");
+    } else {
+      log += F("Fault code:");
+      if (rawvalue & 0x01) {
+        log += F(" Open (no connection)");
+      }
+      if (rawvalue & 0x02) {
+        log += F(" Short-circuit to GND");
+      }
+      if (rawvalue & 0x04) {
+        log += F(" Short-circuit to Vcc");
+      }
+    }
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
   // D16 - This bit reads at 1 when any of the SCV, SCG, or OC faults are active. Default value is 0.
   Plugin_039_SensorAttached = !(rawvalue & 0x00010000);
-
   if (Plugin_039_SensorAttached)
   {
     // Data is D[31:18]
@@ -246,19 +266,26 @@ double readMax31855()
     //   -0.25    1111 1111 1111 11
     //   -1.00    1111 1111 1111 00
     // -250.00    1111 0000 0110 00
-    if (rawvalue & 0x2000) // Bit 31=1 -> neg Values
-    {
-      // Negate all Bits
-      rawvalue = ~rawvalue;
-      // Add 1 and make negative
-      rawvalue = (rawvalue + 1) * -1;
-    }
-
+    // We're left with (32 - 18 =) 14 bits
+    int temperature = Plugin_039_convert_two_complement(rawvalue, 14);
     // Calculate Celsius
-    return rawvalue * 0.25;
+    return temperature * 0.25;
   }
   else
   {
+    // Fault state, thus output no value.
     return NAN;
   }
+}
+
+int Plugin_039_convert_two_complement(uint32_t value, int nr_bits) {
+  const bool negative = (value & (1 << (nr_bits - 1))) != 0;
+  int nativeInt;
+  if (negative) {
+    // Add zeroes to the left to create the proper negative native-sized integer.
+    nativeInt = value | ~((1 << nr_bits) - 1);
+  } else {
+    nativeInt = value;
+  }
+  return nativeInt;
 }
