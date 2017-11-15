@@ -10,7 +10,7 @@
 
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C *lcd;
+LiquidCrystal_I2C *lcd=NULL;
 
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
