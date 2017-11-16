@@ -134,8 +134,9 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        string.toLowerCase();
-        String command = parseString(string, 1);
+        String lowerString=string;
+        lowerString.toLowerCase();
+        String command = parseString(lowerString, 1);
 
         if (command == F("dmx"))
         {
@@ -146,11 +147,11 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           int16_t channel = 1;
           int16_t value = 0;
 
-          string.replace("  ", " ");
-          string.replace(" =", "=");
-          string.replace("= ", "=");
+          lowerString.replace("  ", " ");
+          lowerString.replace(" =", "=");
+          lowerString.replace("= ", "=");
 
-          param = parseString(string, paramIdx++);
+          param = parseString(lowerString, paramIdx++);
           if (param.length())
           {
             while (param.length())
@@ -211,7 +212,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
                 channel++;
               }
 
-              param = parseString(string, paramIdx++);
+              param = parseString(lowerString, paramIdx++);
             }
           }
           else

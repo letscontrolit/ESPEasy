@@ -1253,7 +1253,7 @@ void delayedReboot(int rebootDelay)
    #endif
    #if defined(ESP32)
      ESP.restart();
-   #endif  
+   #endif
 }
 
 
@@ -2756,10 +2756,10 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
 /********************************************************************************************\
   Play RTTTL string on specified pin
   \*********************************************************************************************/
-void play_rtttl(uint8_t _pin, char *p )
+void play_rtttl(uint8_t _pin, const char *p )
 {
   #define OCTAVE_OFFSET 0
-  // Absolutely no error checking in here
+  // FIXME: Absolutely no error checking in here
 
   int notes[] = { 0,
     262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,
@@ -2943,7 +2943,7 @@ void ArduinoOTAInit()
       #endif
       #if defined(ESP32)
         ESP.restart();
-      #endif      
+      #endif
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 
@@ -2964,7 +2964,7 @@ void ArduinoOTAInit()
       #endif
       #if defined(ESP32)
         ESP.restart();
-      #endif      
+      #endif
   });
   ArduinoOTA.begin();
 

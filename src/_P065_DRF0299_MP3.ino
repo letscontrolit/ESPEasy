@@ -121,9 +121,10 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         if (!Plugin_065_SoftSerial)
           break;
 
-        string.toLowerCase();
-        String command = parseString(string, 1);
-        String param = parseString(string, 2);
+        String lowerString=string;
+        lowerString.toLowerCase();
+        String command = parseString(lowerString, 1);
+        String param = parseString(lowerString, 2);
 
         if (command == F("play"))
         {

@@ -144,11 +144,12 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        string.toLowerCase();
-        String command = parseString(string, 1);
-        String param1 = parseString(string, 2);
-        String param2 = parseString(string, 3);
-        String param3 = parseString(string, 4);
+        String lowerString=string;
+        lowerString.toLowerCase();
+        String command = parseString(lowerString, 1);
+        String param1 = parseString(lowerString, 2);
+        String param2 = parseString(lowerString, 3);
+        String param3 = parseString(lowerString, 4);
 
         if (command == F("clock")) {
           if (param1 != "") {
