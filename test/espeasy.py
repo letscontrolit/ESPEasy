@@ -70,3 +70,32 @@ class EspEasy:
                 edit:1
             """.format(**kwargs)
         )
+
+
+    def device_p004(self, **kwargs):
+        self._node.log.info("Config device plugin p004 "+str(kwargs))
+
+        self._node.http_post(
+            page="devices",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                TDNUM:4
+                TDN:temp
+                TDE:on
+                taskdevicepin1:{taskdevicepin1}
+                plugin_004_dev:{plugin_004_dev}
+                plugin_004_res:{plugin_004_res}
+                TDT:5
+                TDVN1:Temperature
+                TDF1:
+                TDVD1:2
+                TDSD1:on
+                TDID1:{TDID1}
+                edit:1
+                page:1
+            """.format(**kwargs)
+        )

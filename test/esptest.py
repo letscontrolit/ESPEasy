@@ -27,6 +27,34 @@ def mqtt_on_message(client, userdata, message):
 mqtt_client.on_message=mqtt_on_message
 
 
+def mqtt_expect_json(topic, matches, timeout=60):
+    """wait until a specific json message is received, and return it decoded. ignores all other messages"""
+
+    start_time=time.time()
+
+    logging.getLogger("MQTT").info("Waiting for json message on topic {topic}, with values {matches}".format(topic=topic, matches=matches))
+
+    # check mqtt results
+    while time.time()-start_time<timeout:
+        while mqtt_messages:
+            message=mqtt_messages.pop()
+            try:
+                #ignore decoding exceptions
+                payload=json.loads(message.payload.decode())
+            except:
+                continue
+
+            if message.topic == topic:
+                ok=True
+                for match in matches.items():
+                    if not match[0] in payload or payload[match[0]]!=match[1]:
+                        ok=False
+                if ok:
+                    return(payload)
+        time.sleep(1)
+
+    raise(Exception("Timeout while expecting mqtt json message"))
+
 ### create node objects and espeasy objects
 node=[]
 espeasy=[]
