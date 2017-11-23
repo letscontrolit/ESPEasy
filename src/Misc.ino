@@ -1744,7 +1744,10 @@ String parseTemplate(String &tmpString, byte lineSize)
   char strIP[20];
   sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
   newString.replace(F("%ip%"), strIP);
-
+  newString.replace(F("%ip1%"), String(ip[0]));
+  newString.replace(F("%ip2%"), String(ip[1]));
+  newString.replace(F("%ip3%"), String(ip[2]));
+  newString.replace(F("%ip4%"), String(ip[3]));
   newString.replace("%sysload%", String(100 - (100 * loopCounterLast / loopCounterMax)));
 
   // padding spaces
