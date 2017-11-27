@@ -212,16 +212,14 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
-
-    #if defined(ESP8266)
+    #if defined (ARDUINO_ESP8266_RELEASE_2_3_0) // ESP 8266 core <=2.3.0 does no chunking 
       String size;
       size=String(data.length(), HEX)+"\r\n";
       //do chunked transfer encoding ourselfs (WebServer doesnt support it)
       WebServer.sendContent(size);
       WebServer.sendContent(data);
       WebServer.sendContent("\r\n");
-    #endif
-    #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+    #else // ESP32 and ESP 8266 core >=2.4.0 rc2 do chunking 
       WebServer.sendContent(data);
     #endif
     data = F("");   //free RAM
@@ -231,10 +229,9 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  #if defined(ESP8266)
+  #if defined (ARDUINO_ESP8266_RELEASE_2_3_0) // 2.4.0 rc2 does chunking 
     WebServer.sendContent("0\r\n\r\n");
-  #endif
-  #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+  #else
     WebServer.sendContent("");
   #endif
 }
