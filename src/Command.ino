@@ -4,9 +4,8 @@ char* ramtest;
 //We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
 bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize=1024, unsigned int timeout=1000)
 {
-    unsigned long startMillis;
     int c;
-    startMillis = millis();
+    const unsigned long timer = millis() + timeout;
     str="";
 
     do {
@@ -32,7 +31,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
             }
         }
         yield();
-    } while(millis() - startMillis < timeout);
+    } while(!timeOutReached(timer));
 
     addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
     return(false);
@@ -67,7 +66,7 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     unsigned long timer = millis() + Par1;
     Serial.println("start");
-    while (millis() < timer)
+    while (!timeOutReached(timer))
       backgroundtasks();
     Serial.println("end");
   }
@@ -398,7 +397,7 @@ void ExecuteCommand(byte source, const char *Line)
                    "Connection: close\r\n\r\n");
 
       unsigned long timer = millis() + 200;
-      while (!client.available() && millis() < timer)
+      while (!client.available() && !timeOutReached(timer))
         delay(1);
 
       while (client.available()) {

@@ -51,7 +51,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
           {
             delayBackground(Settings.MessageDelay);
             // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (millis() < timer)
+            // while (!timeOutReached(timer))
             //   backgroundtasks();
           }
         }
@@ -132,7 +132,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
                F("Connection: close\r\n\r\n"));
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial
