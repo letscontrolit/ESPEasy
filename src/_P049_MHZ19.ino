@@ -9,11 +9,9 @@
   DevicePin2 - is TX for ESP
 */
 
-#ifdef PLUGIN_BUILD_TESTING
-
 #define PLUGIN_049
 #define PLUGIN_ID_049         49
-#define PLUGIN_NAME_049       "Gases - CO2 MH-Z19 [TESTING]"
+#define PLUGIN_NAME_049       "Gases - CO2 MH-Z19"
 #define PLUGIN_VALUENAME1_049 "PPM"
 #define PLUGIN_VALUENAME2_049 "Temperature" // Temperature in C
 #define PLUGIN_VALUENAME3_049 "U" // Undocumented, minimum measurement per time period?
@@ -358,5 +356,3 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#endif
