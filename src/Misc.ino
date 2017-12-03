@@ -381,10 +381,10 @@ long timeDiff(unsigned long prev, unsigned long next)
 {
   long signed_diff = 0;
   // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
-  const unsigned long half_max_unsigned_long = 2147483647u;
+  const unsigned long half_max_unsigned_long = 2147483647u; // = 2^31 -1
   if (next >= prev) {
     const unsigned long diff = next - prev;
-    if (diff < half_max_unsigned_long) {
+    if (diff <= half_max_unsigned_long) {
       // Normal situation, just return the difference.
       // Difference is a positive value.
       signed_diff = static_cast<long>(diff);
@@ -396,7 +396,7 @@ long timeDiff(unsigned long prev, unsigned long next)
   } else {
     // next < prev
     const unsigned long diff = prev - next;
-    if (diff < half_max_unsigned_long) {
+    if (diff <= half_max_unsigned_long) {
       // Normal situation, return a negative difference value
       signed_diff = static_cast<long>(diff);
       signed_diff = -1 * signed_diff;
@@ -408,7 +408,7 @@ long timeDiff(unsigned long prev, unsigned long next)
   return signed_diff;
 }
 
-// Compute the numbe of milliSeconds passed since timestamp given.
+// Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.
 long timePassedSince(unsigned long timestamp) {
   return timeDiff(timestamp, millis());
@@ -417,9 +417,6 @@ long timePassedSince(unsigned long timestamp) {
 // Check if a certain timeout has been reached.
 boolean timeOutReached(unsigned long timer)
 {
-  // This routine solves the 49 day bug without the need for separate start time and duration
-  //   that would need two 32 bit variables if duration is not static
-  // It limits the maximum delay to 24.9 days.
   const long passed = timePassedSince(timer);
   return passed >= 0;
 }
