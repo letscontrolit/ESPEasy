@@ -124,7 +124,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         client.print(postDataStr);
 
         unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
+        while (!client.available() && !timeOutReached(timer))
           delay(1);
 
         // Read all the lines of the reply from server and print them to Serial

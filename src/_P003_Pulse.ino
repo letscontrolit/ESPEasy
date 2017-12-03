@@ -180,7 +180,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  unsigned long PulseTime=millis() - Plugin_003_pulseTimePrevious[Index];
+  const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
   if(PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
     {
       Plugin_003_pulseCounter[Index]++;
