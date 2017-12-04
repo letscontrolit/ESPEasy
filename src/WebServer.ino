@@ -4027,19 +4027,19 @@ void handle_sysinfo() {
 
   reply += printWebString;
   reply += F("<form>");
-  reply += F("<table><TR><TH>System Info<TH>");
+  reply += F("<table><TR><TH width=120>System Info<TH>");
 
-  reply += F("<TR><TD>Unit:<TD>");
+  reply += F("<TR><TD>Unit<TD>");
   reply += Settings.Unit;
 
   if (Settings.UseNTP)
   {
 
-    reply += F("<TR><TD>Local Time:<TD>");
+    reply += F("<TR><TD>Local Time<TD>");
     reply += getDateTimeString('-', ':', ' ');
   }
 
-  reply += F("<TR><TD>Uptime:<TD>");
+  reply += F("<TR><TD>Uptime<TD>");
   char strUpTime[40];
   int minutes = wdcounter / 2;
   int days = minutes / 1440;
@@ -4049,7 +4049,7 @@ void handle_sysinfo() {
   sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
   reply += strUpTime;
 
-  reply += F("<TR><TD>Load:<TD>");
+  reply += F("<TR><TD>Load<TD>");
   if (wdcounter > 0)
   {
     reply += 100 - (100 * loopCounterLast / loopCounterMax);
@@ -4058,7 +4058,7 @@ void handle_sysinfo() {
     reply += F(")");
   }
 
-  reply += F("<TR><TD>Free Mem:<TD>");
+  reply += F("<TR><TD>Free Mem<TD>");
   reply += freeMem;
   reply += F(" (");
   reply += lowestRAM;
@@ -4066,12 +4066,56 @@ void handle_sysinfo() {
   reply += lowestRAMfunction;
   reply += F(")");
 
+  reply += F("<TR><TD>Boot<TD>");
+  switch (lastBootCause)
+  {
+    case BOOT_CAUSE_MANUAL_REBOOT:
+      reply += F("Manual reboot");
+      break;
+    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
+      reply += F("Deep sleep");
+      break;
+    case BOOT_CAUSE_COLD_BOOT:
+      reply += F("Cold boot");
+      break;
+    case BOOT_CAUSE_EXT_WD:
+      reply += F("External Watchdog");
+      break;
+  }
+  reply += F(" (");
+  reply += RTC.bootCounter;
+  reply += F(")");
+  
+  reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
+
+  reply += F("<TR><TD>Flash Size<TD>");
+  #if defined(ESP8266)
+    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    reply += ESP.getFlashChipSize() / 1024;
+  #endif
+  reply += F(" kB");
+
+  reply += F("<TR><TD>Flash Writes<TD>");
+  reply += RTC.flashDayCounter;
+  reply += F(" daily / ");
+  reply += RTC.flashCounter;
+  reply += F(" boot");
+
+  reply += F("<TR><TD>Sketch Size<TD>");
+  #if defined(ESP8266)
+  reply += ESP.getSketchSize() / 1024;
+  reply += F(" kB (");
+  reply += ESP.getFreeSketchSpace() / 1024;
+  reply += F(" kB free)");
+  #endif
+
+  reply += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
+
   if (WiFi.status() == WL_CONNECTED)
   {
-    reply += F("<TR><TD>Wifi RSSI:<TD>");
-    reply += WiFi.RSSI();
-    reply += F(" dB");
-    reply += F("<TR><TD>Wifi Type:<TD>");
+    reply += F("<TR><TD>Wifi<TD>");
     #if defined(ESP8266)
       byte PHYmode = wifi_get_phy_mode();
     #endif
@@ -4090,109 +4134,70 @@ void handle_sysinfo() {
         reply += F("802.11N");
         break;
     }
+    reply += F(" (RSSI ");
+    reply += WiFi.RSSI();
+    reply += F(" dB)");
   }
 
   char str[20];
   sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  reply += F("<TR><TD>IP:<TD>");
+  reply += F("<TR><TD>IP<TD>");
   reply += str;
 
   sprintf_P(str, PSTR("%u.%u.%u.%u"), gw[0], gw[1], gw[2], gw[3]);
-  reply += F("<TR><TD>GW:<TD>");
+  reply += F("<TR><TD>GW<TD>");
   reply += str;
 
-  reply += F("<TR><TD>Build:<TD>");
-  reply += BUILD;
-  reply += F(" ");
-  reply += F(BUILD_NOTES);
-
-  reply += F("<TR><TD>GIT version:<TD>");
-  reply += BUILD_GIT;
-
-  reply += F("<TR><TD>Plugin sets:<TD>");
-
-#ifdef PLUGIN_BUILD_NORMAL
-  reply += F("[Normal] ");
-#endif
-
-#ifdef PLUGIN_BUILD_TESTING
-  reply += F("[Testing] ");
-#endif
-
-#ifdef PLUGIN_BUILD_DEV
-  reply += F("[Development] ");
-#endif
-
-  reply += F("<TR><TD>Number of Plugins:<TD>");
-  reply += deviceCount + 1;
-
-  reply += F("<TR><TD>Core Version:<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getCoreVersion();
-  #endif
-
-  reply += F("<TR><TD>Flash Size:<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
-  #endif
-  #if defined(ESP32)
-    reply += ESP.getFlashChipSize() / 1024;
-  #endif
-  reply += F(" kB");
-
-  reply += F("<TR><TD>Flash Writes (daily/boot):<TD>");
-  reply += RTC.flashDayCounter;
-  reply += F(" / ");
-  reply += RTC.flashCounter;
-
-  reply += F("<TR><TD>Sketch Size/Free:<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getSketchSize() / 1024;
-  #endif
-  reply += F(" kB / ");
-  #if defined(ESP8266)
-    reply += ESP.getFreeSketchSpace() / 1024;
-  #endif
-  reply += F(" kB");
-
-  reply += F("<TR><TD>Boot cause:<TD>");
-  switch (lastBootCause)
-  {
-    case BOOT_CAUSE_MANUAL_REBOOT:
-      reply += F("Manual reboot");
-      break;
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-      reply += F("Deep sleep");
-      break;
-    case BOOT_CAUSE_COLD_BOOT:
-      reply += F("Cold boot");
-      break;
-    case BOOT_CAUSE_EXT_WD:
-      reply += F("External Watchdog");
-      break;
-  }
-
-  reply += F("<TR><TD>Warm boot count:<TD>");
-  reply += RTC.bootCounter;
-
-  reply += F("<TR><TD>STA MAC:<TD>");
+  reply += F("<TR><TD>STA MAC<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
   sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
   reply += macaddress;
 
-  reply += F("<TR><TD>AP MAC:<TD>");
+  reply += F("<TR><TD>AP MAC<TD>");
   macread = WiFi.softAPmacAddress(mac);
   sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
   reply += macaddress;
+  
+  reply += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
-  reply += F("<TR><TD>ESP Chip ID:<TD>");
+  reply += F("<TR><TD>Build<TD>");
+  reply += BUILD;
+  reply += F(" ");
+  reply += F(BUILD_NOTES);
+  #if defined(ESP8266)
+    reply += F(" (core ");
+    reply += ESP.getCoreVersion();
+    reply += F(")");
+  #endif
+
+  reply += F("<TR><TD>GIT version<TD>");
+  reply += BUILD_GIT;
+
+  reply += F("<TR><TD>Plugins<TD>");
+  reply += deviceCount + 1;
+
+  #ifdef PLUGIN_BUILD_NORMAL
+    reply += F(" [Normal]");
+  #endif
+
+  #ifdef PLUGIN_BUILD_TESTING
+    reply += F(" [Testing]");
+  #endif
+
+  #ifdef PLUGIN_BUILD_DEV
+    reply += F(" [Development]");
+  #endif
+
+  reply += F("<TR><TD colspan=2><HR></TD></TR>");
+  
+  reply += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getChipId();
   #endif
 
-  reply += F("<TR><TD>Flash Chip ID:<TD>");
+  reply += F("<TR><TD>Flash Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getFlashChipId();
   #endif
