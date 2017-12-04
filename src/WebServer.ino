@@ -4195,11 +4195,17 @@ void handle_sysinfo() {
   reply += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getChipId();
+    reply += F(" (0x");
+    reply += String(ESP.getChipId(), HEX);
+    reply += F(")");
   #endif
 
   reply += F("<TR><TD>Flash Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getFlashChipId();
+    reply += F(" (0x");
+    reply += String(ESP.getFlashChipId(), HEX);
+    reply += F(")");
   #endif
 
   reply += F("</table></form>");
