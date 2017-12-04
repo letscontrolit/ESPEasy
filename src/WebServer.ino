@@ -4013,7 +4013,7 @@ void handle_rules() {
 
 
 //********************************************************************************
-// Web Interface root page
+// Web Interface sysinfo page
 //********************************************************************************
 void handle_sysinfo() {
   if (!isLoggedIn()) return;
