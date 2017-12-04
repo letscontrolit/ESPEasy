@@ -239,7 +239,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
 */
         // Run this bit every 5 seconds per deviceaddress (not per instance)
-        if ((_P045_time[dev] + 5000) < millis())
+        if (timeOutReached(_P045_time[dev] + 5000))
         {
           _P045_time[dev] = millis();
 

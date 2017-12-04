@@ -300,7 +300,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           case 2: // Random Updates for Simple Candle, Advanced Candle, Fire Simulation
           case 3:
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 if (Candle_type == 2) {
                   type_Simple_Candle();
                 }
@@ -314,7 +314,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           case 4:   // Update for Police
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 type_Police();
                 Candle_Update = millis() + 150;
               }
@@ -323,7 +323,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           case 5:   // Update for Blink
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 type_BlinkStrobe();
                 Candle_Update = millis() + 100;
               }
@@ -337,7 +337,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             }
           case 7:   // Update for ColorFader
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 type_ColorFader();
                 Candle_Update = millis() + 2000;
               }
