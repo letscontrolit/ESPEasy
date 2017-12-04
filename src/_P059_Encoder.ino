@@ -13,11 +13,10 @@
 // Note: Up to 4 encoders can be used simultaniously
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_059
 #define PLUGIN_ID_059         59
-#define PLUGIN_NAME_059       "Switch Input - Rotary Encoder [TESTING]"
+#define PLUGIN_NAME_059       "Switch Input - Rotary Encoder"
 #define PLUGIN_VALUENAME1_059 "Counter"
 
 #include <QEIx4.h>
@@ -170,5 +169,3 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#endif

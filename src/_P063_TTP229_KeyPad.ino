@@ -22,12 +22,9 @@
 // Scematics: https://www.openimpulse.com/blog/wp-content/uploads/wpsc/downloadables/TTP229B-Schematic-Diagram.pdf
 // Datasheet: http://www.datasheet4u.com/download_new.php?id=996751
 
-
-#ifdef PLUGIN_BUILD_TESTING
-
 #define PLUGIN_063
 #define PLUGIN_ID_063         63
-#define PLUGIN_NAME_063       "Keypad - TTP229 Touch [TESTING]"
+#define PLUGIN_NAME_063       "Keypad - TTP229 Touch"
 #define PLUGIN_VALUENAME1_063 "ScanCode"
 
 // #include <*.h>   no lib required
@@ -207,5 +204,3 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#endif
