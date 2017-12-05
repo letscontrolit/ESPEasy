@@ -150,6 +150,9 @@
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
 
+//add this if you want SD support (add 10k flash)
+//#define FEATURE_SD
+
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
@@ -373,7 +376,11 @@
 #include <SPI.h>
 #include <PubSubClient.h>
 #include <FS.h>
+#ifdef FEATURE_SD
 #include <SD.h>
+#else
+using namespace fs;
+#endif
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
