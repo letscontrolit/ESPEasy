@@ -5,8 +5,8 @@
 // ESPEasy Plugin to scan a 16 key touch pad chip TTP229
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-// Important: There are several types of TTP299 chips with different features available. They are namead all TTP229 but differ in the letter(s) followed.
-// On the china boards (found on eBay and AliExpress) the TTP229-B is used which has NO! I2C-interface. It uses a properitary serial protocol with clock (SCL) and bidirectional data (SDO)
+// Important: There are several types of TTP299 chips with different features available. They are named all TTP229 but differ in the letter(s) followed.
+// On the china boards (found on eBay and AliExpress) the TTP229-B is used which has NO! I2C-interface. It uses a proprietary serial protocol with clock (SCL) and bidirectional data (SDO)
 
 // ScanCode;
 // Value 1...16 for the key number
@@ -19,7 +19,7 @@
 // Electronics:
 // Connect SCL to 1st GPIO and SDO to 2nd GPIO. Use 3.3 volt for VCC.
 // Set the jumper for 16 key mode (TP2=jumper3). Additional set jumper for multi-key (TP3=jumper4, TP4=jumper5).
-// Scematics: https://www.openimpulse.com/blog/wp-content/uploads/wpsc/downloadables/TTP229B-Schematic-Diagram.pdf
+// Schematics: https://www.openimpulse.com/blog/wp-content/uploads/wpsc/downloadables/TTP229B-Schematic-Diagram.pdf
 // Datasheet: http://www.datasheet4u.com/download_new.php?id=996751
 
 #define PLUGIN_063

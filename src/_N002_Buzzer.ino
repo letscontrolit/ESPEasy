@@ -45,7 +45,7 @@ boolean NPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         NotificationSettingsStruct NotificationSettings;
         LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
-        //this reserves IRAM and uninitalized RAM
+        //this reserves IRAM and uninitialized RAM
         tone(NotificationSettings.Pin1, 500, 500);
         success = true;
       }

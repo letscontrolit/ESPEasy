@@ -5,20 +5,20 @@
 // ESPEasy Plugin to controls a MP3-player-module DFPlayer-Mini SKU:DFR0299
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-// Important! The module WTV020-SD look similar to the module DFPlayer-Mini but is NOT pin and command compatible!
+// Important! The module WTV020-SD look similar to the module DFPlayer-Mini but is NOT pin nor command compatible!
 
 // Commands:
-// play,<track>        Plays the n-th track 1...3000 on SD-card in root folder. The track number is the physical ordenr - not the order displayed in file explorer!
+// play,<track>        Plays the n-th track 1...3000 on SD-card in root folder. The track number is the physical order - not the order displayed in file explorer!
 // stop                Stops actual playing sound
 // vol,<volume>        Set volume level 1...30
 // eq,<type>           Set the equalizer type 0=Normal, 1=Pop, 2=Rock, 3=Jazz, 4=classic, 5=Base
 
 // Circuit wiring
 // 1st-GPIO -> ESP TX to module RX [Pin2]
-// 5V to module VCC [Pin1] (can be more than 100mA) Note: Use a capacitor to denoise VCC
+// 5 V to module VCC [Pin1] (can be more than 100 mA) Note: Use a blocking capacitor to stabilise VCC
 // GND to module GND [Pin7+Pin10]
 // Speaker to module SPK_1 and SPK_2 [Pin6,Pin8] (not to GND!) Note: If speaker has to low impedance, use a resistor (like 33 Ohm) in line to speaker
-// (optional) module BUSY [Pin16] to LED driver (3.3V on idle, 0V on playing)
+// (optional) module BUSY [Pin16] to LED driver (3.3 V on idle, 0 V on playing)
 // All other pins unconnected
 
 // Note: Notification sounds with Creative Commons Attribution license: https://notificationsounds.com/

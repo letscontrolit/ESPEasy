@@ -146,7 +146,7 @@ boolean WifiConnect(byte connectAttempts)
 
   addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
 
-  //everything failed, activate AP mode (will deactivate automaticly after a while if its connected again)
+  //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
   WifiAPMode(true);
 
   return(false);
@@ -286,7 +286,7 @@ void WifiCheck()
   if (WiFi.status() != WL_CONNECTED)
   {
     NC_Count++;
-    //give it time to automaticly reconnect
+    //give it time to automatically reconnect
     if (NC_Count > 2)
     {
       WifiConnect(2);

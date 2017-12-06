@@ -7,10 +7,10 @@
 
 // Connection:
 // Use 1st and 2nd GPIO for encoders A and B signal.
-// Optional use 3rd GPIO for encoders I signel to reset counter to 0 at first trigger.
+// Optional use 3rd GPIO for encoders I signal to reset counter to 0 at first trigger.
 // If counter runs in wrong direction, change A and B GPIOs in settings page
 
-// Note: Up to 4 encoders can be used simultaniously
+// Note: Up to 4 encoders can be used simultaneously
 
 
 
