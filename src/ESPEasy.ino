@@ -300,7 +300,7 @@
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
-
+#include "core_version.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
