@@ -462,6 +462,39 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+
+  IPAddress getIP() const {
+    IPAddress host(IP[0], IP[1], IP[2], IP[3]);
+    return host;
+  }
+
+  String getHost() const {
+    if (UseDNS) {
+      return HostName;
+    }
+    return getIP().toString();
+  }
+
+  boolean connectToHost(WiFiClient &client) {
+    if (UseDNS) {
+      return client.connect(HostName, Port);
+    }
+    return client.connect(getIP(), Port);
+  }
+
+  int beginPacket(WiFiUDP &client) {
+    if (UseDNS) {
+      return client.beginPacket(HostName, Port);
+    }
+    return client.beginPacket(getIP(), Port);
+  }
+
+  String getHostPortString() const {
+    String result = getHost();
+    result += ":";
+    result += Port;
+    return result;
+  }
 };
 
 struct NotificationSettingsStruct

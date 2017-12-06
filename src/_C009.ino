@@ -142,21 +142,11 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
     authHeader = String(F("Authorization: Basic ")) + encoder.encode(auth) + " \r\n";
   }
 
-  // char log[80];
-  // url.toCharArray(log, 80);
-  // addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-  // char host[20];
-  // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  // sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, ControllerSettings.Port)) {
+  if (!ControllerSettings.connectToHost(client)) {
     connectionFailures++;
     // strcpy_P(log, PSTR("HTTP : connection failed"));
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
@@ -171,7 +161,7 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
   int len = buffer.length();
   client.print(String("POST ") + url + F(" HTTP/1.1\r\n") +
               F("Content-Length: ")+ len + F("\r\n") +
-              F("Host: ") + host + F("\r\n") + authHeader +
+              F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
               F("Connection: close\r\n\r\n")
               + buffer);
 

@@ -399,7 +399,7 @@ void sendSysInfoUDP(byte repeats)
 /********************************************************************************************\
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
-void SSDP_schema(WiFiClient client) {
+void SSDP_schema(WiFiClient &client) {
 
   IPAddress ip = WiFi.localIP();
   char str[20];
