@@ -5,7 +5,7 @@
   Plugin originally written by: Daniel Tedenljung info__AT__tedenljungconsulting.com
   Rewritten by: Mikael Trieb mikael__AT__triebconsulting.se
 
-  This plugin reads availble values of Senseair Co2 Sensors.
+  This plugin reads available values of Senseair Co2 Sensors.
   Datasheet can be found here:
   S8: http://www.senseair.com/products/oem-modules/senseair-s8/
   K30: http://www.senseair.com/products/oem-modules/k30/

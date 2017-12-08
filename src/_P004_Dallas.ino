@@ -2,7 +2,7 @@
 // #################################### Plugin 004: TempSensor Dallas DS18B20  ###########################
 // #######################################################################################################
 
-// Maxime Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
+// Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 #define PLUGIN_004
 #define PLUGIN_ID_004         4

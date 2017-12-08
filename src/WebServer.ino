@@ -7,7 +7,7 @@
 #define TASKS_PER_PAGE 4
 
 static const char pgDefaultCSS[] PROGMEM = {
-  //color sheme: #07D #D50 #DB0 #A0D
+  //color scheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
   "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
   "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
@@ -217,7 +217,7 @@ void sendWebPageChunkedData(String& log, String& data)
     #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
      String size;
       size=String(data.length(), HEX)+"\r\n";
-      //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+      //do chunked transfer encoding ourselves (WebServer doesn't support it)
       WebServer.sendContent(size);
       WebServer.sendContent(data);
       WebServer.sendContent("\r\n");
@@ -1665,7 +1665,7 @@ void handle_devices() {
 
       if (Device[DeviceIndex].TimerOption)
       {
-        //FIXME: shoudnt the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
+        //FIXME: shouldn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
         addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
         addUnit(reply, F("sec"));
         if (Device[DeviceIndex].TimerOptional)

@@ -1,5 +1,5 @@
 /********************************************************************************************\
-* Initialize specific hardware setings (only global ones, others are set through devices)
+* Initialize specific hardware settings (only global ones, others are set through devices)
 \*********************************************************************************************/
 
 void hardwareInit()

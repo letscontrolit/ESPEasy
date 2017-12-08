@@ -41,7 +41,7 @@
 
 //   Simple Arduino sketch for ESP module, supporting:
 //   =================================================================================
-//   Simple switch inputs and direct GPIO output control to drive relais, mosfets, etc
+//   Simple switch inputs and direct GPIO output control to drive relays, mosfets, etc
 //   Analog input (ESP-7/12 only)
 //   Pulse counters
 //   Dallas OneWire DS18b20 temperature sensors

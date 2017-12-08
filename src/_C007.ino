@@ -137,7 +137,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           {
-            strcpy_P(log, PSTR("HTTP : Succes!"));
+            strcpy_P(log, PSTR("HTTP : Success!"));
             addLog(LOG_LEVEL_DEBUG, log);
             success = true;
           }

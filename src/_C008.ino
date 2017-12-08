@@ -145,7 +145,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     addLog(LOG_LEVEL_DEBUG_MORE, line);
     if (line.startsWith(F("HTTP/1.1 200 OK")))
     {
-      // strcpy_P(log, PSTR("HTTP : Succes!"));
+      // strcpy_P(log, PSTR("HTTP : Success!"));
       // addLog(LOG_LEVEL_DEBUG, log);
       addLog(LOG_LEVEL_DEBUG, F("HTTP : Success!"));
       // success = true;
