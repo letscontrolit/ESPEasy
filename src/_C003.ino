@@ -34,17 +34,12 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-        char log[80];
         boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "TELNT: connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
+        char log[80];
+        addLog(LOG_LEVEL_DEBUG, String(F("TELNT : connecting to ")) + ControllerSettings.getHostPortString());
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
+        if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("TELNT: connection failed"));
