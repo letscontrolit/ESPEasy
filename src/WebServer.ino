@@ -2621,7 +2621,7 @@ void handle_pinstates() {
 
   reply += F("<table border=1px frame='box' rules='all'><TH>Plugin");
   addHelpButton(reply, F("Official_plugin_list"));
-  reply += F("<TH>Index/Pin<TH>Mode<TH>Value/State");
+  reply += F("<TH>GPIO<TH>Mode<TH>Value/State");
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if (pinStates[x].plugin != 0)
     {
