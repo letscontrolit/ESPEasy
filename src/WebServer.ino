@@ -2617,14 +2617,23 @@ void handle_pinstates() {
 
   String reply = "";
   addHeader(true, reply);
-  addFormHeader(reply, F("Pin state table"));
+  //addFormSubHeader(reply, F("Pin state table<TR>"));
 
-  reply += F("<table border=1px frame='box' rules='all'><TH>Plugin<TH>Index/Pin<TH>Mode<TH>Value/State");
-
+  reply += F("<table border=1px frame='box' rules='all'><TH>Plugin");
+  addHelpButton(reply, F("Official_plugin_list"));
+  reply += F("<TH>Index/Pin<TH>Mode<TH>Value/State");
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-    if ( pinStates[x].plugin != 0)
+    if (pinStates[x].plugin != 0)
     {
-      reply += F("<TR><TD>");
+      reply += F("<TR><TD>P");
+      if (pinStates[x].plugin < 100)
+      {
+        reply += F("0");
+      }
+      if (pinStates[x].plugin < 10)
+      {
+        reply += F("0");
+      }
       reply += pinStates[x].plugin;
       reply += F("<TD>");
       reply += pinStates[x].index;
