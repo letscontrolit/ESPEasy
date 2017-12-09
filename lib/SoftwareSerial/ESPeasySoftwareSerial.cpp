@@ -66,8 +66,6 @@ ESPeasySoftwareSerial::ESPeasySoftwareSerial(int receivePin, int transmitPin, bo
    m_rxValid = m_txValid = m_txEnableValid = false;
    m_buffer = NULL;
    m_invert = inverse_logic;
-   m_overflow = false;
-   m_rxEnabled = false;
    if (isValidGPIOpin(receivePin)) {
       m_rxPin = receivePin;
       m_buffSize = buffSize;
@@ -80,7 +78,7 @@ ESPeasySoftwareSerial::ESPeasySoftwareSerial(int receivePin, int transmitPin, bo
          enableRx(true);
       }
    }
-   if (isValidGPIOpin(transmitPin) || transmitPin == 16) {
+   if (isValidGPIOpin(transmitPin)) {
       m_txValid = true;
       m_txPin = transmitPin;
       pinMode(m_txPin, OUTPUT);
@@ -99,7 +97,7 @@ ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
 }
 
 bool ESPeasySoftwareSerial::isValidGPIOpin(int pin) {
-   return pinToIndex(pin) >= 0;
+  return pinToIndex(pin) >= 0;
 }
 
 int ESPeasySoftwareSerial::pinToIndex(int pin) {
@@ -115,14 +113,6 @@ int ESPeasySoftwareSerial::pinToIndex(int pin) {
 void ESPeasySoftwareSerial::begin(long speed) {
    // Use getCycleCount() loop to get as exact timing as possible
    m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
-   m_highSpeed = speed >= 9600;
-
-   if (!m_rxEnabled)
-     enableRx(true);
-}
-
-long ESPeasySoftwareSerial::baudRate() {
-   return ESP.getCpuFreqMHz()*1000000/m_bitTime;
 }
 
 void ESPeasySoftwareSerial::setTransmitEnablePin(int transmitEnablePin) {
@@ -143,7 +133,6 @@ void ESPeasySoftwareSerial::enableRx(bool on) {
       } else {
          detachInterrupt(m_rxPin);
       }
-      m_rxEnabled = on;
    }
 }
 
@@ -161,15 +150,14 @@ int ESPeasySoftwareSerial::available() {
    return avail;
 }
 
-#define WAIT { while (ESP.getCycleCount()-start < wait) if (!m_highSpeed) optimistic_yield(1); wait += m_bitTime; }
+#define WAIT { while (ESP.getCycleCount()-start < wait); wait += m_bitTime; }
 
 size_t ESPeasySoftwareSerial::write(uint8_t b) {
    if (!m_txValid) return 0;
 
    if (m_invert) b = ~b;
-   if (m_highSpeed)
-     // Disable interrupts in order to get a clean transmit
-     cli();
+   // Disable interrupts in order to get a clean transmit
+   cli();
    if (m_txEnableValid) digitalWrite(m_txEnablePin, HIGH);
    unsigned long wait = m_bitTime;
    digitalWrite(m_txPin, HIGH);
@@ -186,19 +174,12 @@ size_t ESPeasySoftwareSerial::write(uint8_t b) {
    digitalWrite(m_txPin, HIGH);
    WAIT;
    if (m_txEnableValid) digitalWrite(m_txEnablePin, LOW);
-   if (m_highSpeed)
-    sei();
+   sei();
    return 1;
 }
 
 void ESPeasySoftwareSerial::flush() {
    m_inPos = m_outPos = 0;
-}
-
-bool ESPeasySoftwareSerial::overflow() {
-   bool res = m_overflow;
-   m_overflow = false;
-   return res;
 }
 
 int ESPeasySoftwareSerial::peek() {
@@ -223,11 +204,9 @@ void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
    WAIT;
    // Store the received value in the buffer unless we have an overflow
    int next = (m_inPos+1) % m_buffSize;
-   if (next != m_outPos) {
+   if (next != m_inPos) {
       m_buffer[m_inPos] = rec;
       m_inPos = next;
-   } else {
-      m_overflow = true;
    }
    // Must clear this bit in the interrupt register,
    // it gets set even when interrupts are disabled
