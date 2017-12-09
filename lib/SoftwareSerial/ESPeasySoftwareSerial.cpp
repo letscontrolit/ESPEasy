@@ -34,7 +34,7 @@ extern "C" {
 
 // As the Arduino attachInterrupt has no parameter, lists of objects
 // and callbacks corresponding to each possible GPIO pins have to be defined
-ESPeasySoftwareSerial *ObjList[USABLE_PINS];
+static ESPeasySoftwareSerial *ObjList[USABLE_PINS];
 
 void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
@@ -138,10 +138,11 @@ void ESPeasySoftwareSerial::setTransmitEnablePin(int transmitEnablePin) {
 
 void ESPeasySoftwareSerial::enableRx(bool on) {
    if (m_rxValid) {
-      if (on)
+      if (on) {
          attachInterrupt(m_rxPin, ISRList[pinToIndex(m_rxPin)], m_invert ? RISING : FALLING);
-      else
+      } else {
          detachInterrupt(m_rxPin);
+      }
       m_rxEnabled = on;
    }
 }
