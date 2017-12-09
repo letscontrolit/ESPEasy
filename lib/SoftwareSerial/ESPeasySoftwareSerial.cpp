@@ -43,10 +43,10 @@ void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_4() { ObjList[4]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_5() { ObjList[5]->rxRead(); };
 // Pin 6 to 11 can not be used
-void ICACHE_RAM_ATTR sws_isr_12() { ObjList[12]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_13() { ObjList[13]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_14() { ObjList[14]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_15() { ObjList[15]->rxRead(); };
+void ICACHE_RAM_ATTR sws_isr_12() { ObjList[6]->rxRead(); };
+void ICACHE_RAM_ATTR sws_isr_13() { ObjList[7]->rxRead(); };
+void ICACHE_RAM_ATTR sws_isr_14() { ObjList[8]->rxRead(); };
+void ICACHE_RAM_ATTR sws_isr_15() { ObjList[9]->rxRead(); };
 
 static void (*ISRList[USABLE_PINS])() = {
       sws_isr_0,
