@@ -24,8 +24,8 @@
 
 boolean Plugin_052_init = false;
 
-#include <SoftwareSerial.h>
-SoftwareSerial *Plugin_052_SoftSerial;
+#include <ESPeasySoftwareSerial.h>
+ESPeasySoftwareSerial *Plugin_052_SoftSerial;
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 {
@@ -103,7 +103,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_052_init = true;
-        Plugin_052_SoftSerial = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
+        Plugin_052_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
                                                    Settings.TaskDevicePin2[event->TaskIndex]);
         success = true;
         break;

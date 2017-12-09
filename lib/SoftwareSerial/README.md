@@ -1,4 +1,4 @@
-# EspSoftwareSerial
+# EspESPeasySoftwareSerial
 
 Implementation of the Arduino software serial library for the ESP8266
 

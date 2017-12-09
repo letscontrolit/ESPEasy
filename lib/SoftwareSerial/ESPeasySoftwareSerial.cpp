@@ -1,6 +1,6 @@
 /*
 
-SoftwareSerial.cpp - Implementation of the Arduino software serial for ESP8266.
+ESPeasySoftwareSerial.cpp - Implementation of the Arduino software serial for ESP8266.
 Copyright (c) 2015-2016 Peter Lerup. All rights reserved.
 
 This library is free software; you can redistribute it and/or
@@ -30,10 +30,11 @@ extern "C" {
 #include <ESPeasySoftwareSerial.h>
 
 #define MAX_PIN 15
+#define USABLE_PINS 10
 
 // As the Arduino attachInterrupt has no parameter, lists of objects
 // and callbacks corresponding to each possible GPIO pins have to be defined
-SoftwareSerial *ObjList[MAX_PIN+1];
+ESPeasySoftwareSerial *ObjList[USABLE_PINS];
 
 void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
@@ -47,26 +48,21 @@ void ICACHE_RAM_ATTR sws_isr_13() { ObjList[13]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_14() { ObjList[14]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_15() { ObjList[15]->rxRead(); };
 
-static void (*ISRList[MAX_PIN+1])() = {
+static void (*ISRList[USABLE_PINS])() = {
       sws_isr_0,
       sws_isr_1,
       sws_isr_2,
       sws_isr_3,
       sws_isr_4,
       sws_isr_5,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
+      // Pin 6 to 11 can not be used
       sws_isr_12,
       sws_isr_13,
       sws_isr_14,
       sws_isr_15
 };
 
-SoftwareSerial::SoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) {
+ESPeasySoftwareSerial::ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) {
    m_rxValid = m_txValid = m_txEnableValid = false;
    m_buffer = NULL;
    m_invert = inverse_logic;
@@ -80,7 +76,7 @@ SoftwareSerial::SoftwareSerial(int receivePin, int transmitPin, bool inverse_log
          m_rxValid = true;
          m_inPos = m_outPos = 0;
          pinMode(m_rxPin, INPUT);
-         ObjList[m_rxPin] = this;
+         ObjList[pinToIndex(m_rxPin)] = this;
          enableRx(true);
       }
    }
@@ -94,19 +90,29 @@ SoftwareSerial::SoftwareSerial(int receivePin, int transmitPin, bool inverse_log
    begin(9600);
 }
 
-SoftwareSerial::~SoftwareSerial() {
+ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
    enableRx(false);
    if (m_rxValid)
-      ObjList[m_rxPin] = NULL;
+      ObjList[pinToIndex(m_rxPin)] = NULL;
    if (m_buffer)
       free(m_buffer);
 }
 
-bool SoftwareSerial::isValidGPIOpin(int pin) {
-   return (pin >= 0 && pin <= 5) || (pin >= 12 && pin <= MAX_PIN);
+bool ESPeasySoftwareSerial::isValidGPIOpin(int pin) {
+   return pinToIndex(pin) >= 0;
 }
 
-void SoftwareSerial::begin(long speed) {
+int ESPeasySoftwareSerial::pinToIndex(int pin) {
+  if (pin >= 0 && pin <= 5) {
+    return pin;
+  }
+  if (pin >= 12 && pin <= MAX_PIN) {
+    return (pin - 6);
+  }
+  return -1;
+}
+
+void ESPeasySoftwareSerial::begin(long speed) {
    // Use getCycleCount() loop to get as exact timing as possible
    m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
    m_highSpeed = speed > 9600;
@@ -115,11 +121,11 @@ void SoftwareSerial::begin(long speed) {
      enableRx(true);
 }
 
-long SoftwareSerial::baudRate() {
+long ESPeasySoftwareSerial::baudRate() {
    return ESP.getCpuFreqMHz()*1000000/m_bitTime;
 }
 
-void SoftwareSerial::setTransmitEnablePin(int transmitEnablePin) {
+void ESPeasySoftwareSerial::setTransmitEnablePin(int transmitEnablePin) {
   if (isValidGPIOpin(transmitEnablePin)) {
      m_txEnableValid = true;
      m_txEnablePin = transmitEnablePin;
@@ -130,24 +136,24 @@ void SoftwareSerial::setTransmitEnablePin(int transmitEnablePin) {
   }
 }
 
-void SoftwareSerial::enableRx(bool on) {
+void ESPeasySoftwareSerial::enableRx(bool on) {
    if (m_rxValid) {
       if (on)
-         attachInterrupt(m_rxPin, ISRList[m_rxPin], m_invert ? RISING : FALLING);
+         attachInterrupt(m_rxPin, ISRList[pinToIndex(m_rxPin)], m_invert ? RISING : FALLING);
       else
          detachInterrupt(m_rxPin);
       m_rxEnabled = on;
    }
 }
 
-int SoftwareSerial::read() {
+int ESPeasySoftwareSerial::read() {
    if (!m_rxValid || (m_inPos == m_outPos)) return -1;
    uint8_t ch = m_buffer[m_outPos];
    m_outPos = (m_outPos+1) % m_buffSize;
    return ch;
 }
 
-int SoftwareSerial::available() {
+int ESPeasySoftwareSerial::available() {
    if (!m_rxValid) return 0;
    int avail = m_inPos - m_outPos;
    if (avail < 0) avail += m_buffSize;
@@ -156,7 +162,7 @@ int SoftwareSerial::available() {
 
 #define WAIT { while (ESP.getCycleCount()-start < wait) if (!m_highSpeed) optimistic_yield(1); wait += m_bitTime; }
 
-size_t SoftwareSerial::write(uint8_t b) {
+size_t ESPeasySoftwareSerial::write(uint8_t b) {
    if (!m_txValid) return 0;
 
    if (m_invert) b = ~b;
@@ -184,22 +190,22 @@ size_t SoftwareSerial::write(uint8_t b) {
    return 1;
 }
 
-void SoftwareSerial::flush() {
+void ESPeasySoftwareSerial::flush() {
    m_inPos = m_outPos = 0;
 }
 
-bool SoftwareSerial::overflow() {
+bool ESPeasySoftwareSerial::overflow() {
    bool res = m_overflow;
    m_overflow = false;
    return res;
 }
 
-int SoftwareSerial::peek() {
+int ESPeasySoftwareSerial::peek() {
    if (!m_rxValid || (m_inPos == m_outPos)) return -1;
    return m_buffer[m_outPos];
 }
 
-void ICACHE_RAM_ATTR SoftwareSerial::rxRead() {
+void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
    // Advance the starting point for the samples but compensate for the
    // initial delay which occurs before the interrupt is delivered
    unsigned long wait = m_bitTime + m_bitTime/3 - 500;

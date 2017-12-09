@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map for SoftwareSerial
+# Syntax Coloring Map for ESPeasySoftwareSerial
 # (esp8266)
 #######################################
 
@@ -7,7 +7,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-SoftwareSerial	KEYWORD1
+ESPeasySoftwareSerial	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)

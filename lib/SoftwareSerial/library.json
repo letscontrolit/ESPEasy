@@ -1,10 +1,10 @@
 {
-    "name": "EspSoftwareSerial",
+    "name": "EspESPeasySoftwareSerial",
     "version": "3.3.1",
     "keywords": [
       "serial", "io", "softwareserial"
     ],
-    "description": "Implementation of the Arduino software serial for ESP8266.",
+    "description": "Implementation of the Arduino software serial for ESP8266. Adjusted to reduce memory footprint for ESPeasy",
     "repository":
     {
         "type": "git",
