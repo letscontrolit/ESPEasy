@@ -30,14 +30,14 @@ extern "C" {
 #include <ESPeasySoftwareSerial.h>
 
 #define MAX_PIN 15
-#define USABLE_PINS 10
+#define USABLE_PINS 1
 
 // As the Arduino attachInterrupt has no parameter, lists of objects
 // and callbacks corresponding to each possible GPIO pins have to be defined
 static ESPeasySoftwareSerial *ObjList[USABLE_PINS];
 
 void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
+/*void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_2() { ObjList[2]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_4() { ObjList[4]->rxRead(); };
@@ -47,9 +47,10 @@ void ICACHE_RAM_ATTR sws_isr_12() { ObjList[6]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_13() { ObjList[7]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_14() { ObjList[8]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_15() { ObjList[9]->rxRead(); };
+*/
 
 static void (*ISRList[USABLE_PINS])() = {
-      sws_isr_0,
+      sws_isr_0 /*,
       sws_isr_1,
       sws_isr_2,
       sws_isr_3,
@@ -60,6 +61,7 @@ static void (*ISRList[USABLE_PINS])() = {
       sws_isr_13,
       sws_isr_14,
       sws_isr_15
+      */
 };
 
 ESPeasySoftwareSerial::ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) {
@@ -101,6 +103,7 @@ bool ESPeasySoftwareSerial::isValidGPIOpin(int pin) {
 }
 
 int ESPeasySoftwareSerial::pinToIndex(int pin) {
+  return 0;
   if (pin >= 0 && pin <= 5) {
     return pin;
   }
