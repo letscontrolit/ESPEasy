@@ -115,7 +115,7 @@ int ESPeasySoftwareSerial::pinToIndex(int pin) {
 void ESPeasySoftwareSerial::begin(long speed) {
    // Use getCycleCount() loop to get as exact timing as possible
    m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
-   m_highSpeed = speed > 9600;
+   m_highSpeed = speed >= 9600;
 
    if (!m_rxEnabled)
      enableRx(true);
