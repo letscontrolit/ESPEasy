@@ -73,7 +73,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_038_pixels)
         {
-          Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+//m00n
+//          Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+          Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRBW + NEO_KHZ800);
           Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
         }
         MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
@@ -98,7 +100,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             // string.toCharArray(Line, 80);
             // int Par4 = 0;
             // if (GetArgv(Line, TmpStr1, 5)) Par4 = str2int(TmpStr1);
-            Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4));
+            //m00n
+            //Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4));
+            Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4, event->Par5));
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
             success = true;
           }
@@ -111,7 +115,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 					  // string.toCharArray(Line, 80);
 					  for (int i = 0; i < MaxPixels; i++)
 					  {
-						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
+//m00n
+//						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
+                Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3, event->Par4));
 					  }
 					  Plugin_038_pixels->show();
 					  success = true;
