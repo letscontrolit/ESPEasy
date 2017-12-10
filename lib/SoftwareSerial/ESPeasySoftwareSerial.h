@@ -35,11 +35,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 class ESPeasySoftwareSerial : public Stream
 {
 public:
-   ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
+   ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic = false, uint16_t buffSize = 64);
    virtual ~ESPeasySoftwareSerial();
 
    void begin(long speed);
-   void setTransmitEnablePin(int transmitEnablePin);
+   void setTransmitEnablePin(uint8_t transmitEnablePin);
 
    int peek();
 
@@ -57,16 +57,16 @@ public:
    using Print::write;
 
 private:
-   bool isValidGPIOpin(int pin);
-   int pinToIndex(int pin);
+   bool isValidGPIOpin(uint8_t pin);
+   uint8_t pinToIndex(uint8_t pin);
 
    // Member variables
-   int m_rxPin, m_txPin, m_txEnablePin;
+   uint8_t m_rxPin, m_txPin, m_txEnablePin;
    bool m_rxValid, m_txValid, m_txEnableValid;
    bool m_invert;
    unsigned long m_bitTime;
-   unsigned int m_inPos, m_outPos;
-   int m_buffSize;
+   uint16_t m_inPos, m_outPos;
+   uint16_t m_buffSize;
    uint8_t *m_buffer;
 
 };

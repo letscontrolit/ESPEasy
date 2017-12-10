@@ -30,14 +30,14 @@ extern "C" {
 #include <ESPeasySoftwareSerial.h>
 
 #define MAX_PIN 15
-#define USABLE_PINS 1
+#define USABLE_PINS 10
 
 // As the Arduino attachInterrupt has no parameter, lists of objects
 // and callbacks corresponding to each possible GPIO pins have to be defined
 static ESPeasySoftwareSerial *ObjList[USABLE_PINS];
 
 void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
-/*void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
+void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_2() { ObjList[2]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_4() { ObjList[4]->rxRead(); };
@@ -47,10 +47,9 @@ void ICACHE_RAM_ATTR sws_isr_12() { ObjList[6]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_13() { ObjList[7]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_14() { ObjList[8]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_15() { ObjList[9]->rxRead(); };
-*/
 
 static void (*ISRList[USABLE_PINS])() = {
-      sws_isr_0 /*,
+      sws_isr_0,
       sws_isr_1,
       sws_isr_2,
       sws_isr_3,
@@ -61,10 +60,9 @@ static void (*ISRList[USABLE_PINS])() = {
       sws_isr_13,
       sws_isr_14,
       sws_isr_15
-      */
 };
 
-ESPeasySoftwareSerial::ESPeasySoftwareSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) {
+ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic, uint16_t buffSize) {
    m_rxValid = m_txValid = m_txEnableValid = false;
    m_buffer = NULL;
    m_invert = inverse_logic;
@@ -98,19 +96,18 @@ ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
       free(m_buffer);
 }
 
-bool ESPeasySoftwareSerial::isValidGPIOpin(int pin) {
-  return pinToIndex(pin) >= 0;
+bool ESPeasySoftwareSerial::isValidGPIOpin(uint8_t pin) {
+  return pinToIndex(pin) <= USABLE_PINS;
 }
 
-int ESPeasySoftwareSerial::pinToIndex(int pin) {
-  return 0;
+uint8_t ESPeasySoftwareSerial::pinToIndex(uint8_t pin) {
   if (pin >= 0 && pin <= 5) {
     return pin;
   }
   if (pin >= 12 && pin <= MAX_PIN) {
     return (pin - 6);
   }
-  return -1;
+  return USABLE_PINS+1;
 }
 
 void ESPeasySoftwareSerial::begin(long speed) {
@@ -118,7 +115,7 @@ void ESPeasySoftwareSerial::begin(long speed) {
    m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
 }
 
-void ESPeasySoftwareSerial::setTransmitEnablePin(int transmitEnablePin) {
+void ESPeasySoftwareSerial::setTransmitEnablePin(uint8_t transmitEnablePin) {
   if (isValidGPIOpin(transmitEnablePin)) {
      m_txEnableValid = true;
      m_txEnablePin = transmitEnablePin;
@@ -196,7 +193,7 @@ void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
    unsigned long wait = m_bitTime + m_bitTime/3 - 500;
    unsigned long start = ESP.getCycleCount();
    uint8_t rec = 0;
-   for (int i = 0; i < 8; i++) {
+   for (uint8_t i = 0; i < 8; i++) {
      WAIT;
      rec >>= 1;
      if (digitalRead(m_rxPin))
@@ -206,7 +203,7 @@ void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
    // Stop bit
    WAIT;
    // Store the received value in the buffer unless we have an overflow
-   int next = (m_inPos+1) % m_buffSize;
+   uint16_t next = (m_inPos+1) % m_buffSize;
    if (next != m_inPos) {
       m_buffer[m_inPos] = rec;
       m_inPos = next;
