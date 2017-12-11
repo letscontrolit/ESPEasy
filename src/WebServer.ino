@@ -17,7 +17,7 @@ static const char pgDefaultCSS[] PROGMEM = {
   ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
   ".button.link {}"
   ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
-   ".button:hover {background:#369;}"
+  ".button:hover {background:#369;}"
   //tables
   "th {padding:6px; background-color:#444; color:#FFF; border-color:#888; font-weight:bold;}"
   "td {padding:4px;}"
