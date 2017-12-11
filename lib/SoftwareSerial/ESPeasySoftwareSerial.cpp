@@ -31,15 +31,17 @@ extern "C" {
 
 #define MAX_PIN 15
 #define USABLE_PINS 10
+#define NR_CONCURRENT_SOFT_SERIALS 3
 
 // As the Arduino attachInterrupt has no parameter, lists of objects
 // and callbacks corresponding to each possible GPIO pins have to be defined
-static ESPeasySoftwareSerial *ObjList[USABLE_PINS];
+static ESPeasySoftwareSerial *ObjList[NR_CONCURRENT_SOFT_SERIALS];
+static uint8_t PinControllerMap[NR_CONCURRENT_SOFT_SERIALS]={}; // Zero all elements
 
 void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_2() { ObjList[2]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
+/*void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_4() { ObjList[4]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_5() { ObjList[5]->rxRead(); };
 // Pin 6 to 11 can not be used
@@ -47,11 +49,12 @@ void ICACHE_RAM_ATTR sws_isr_12() { ObjList[6]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_13() { ObjList[7]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_14() { ObjList[8]->rxRead(); };
 void ICACHE_RAM_ATTR sws_isr_15() { ObjList[9]->rxRead(); };
+*/
 
-static void (*ISRList[USABLE_PINS])() = {
+static void (*ISRList[NR_CONCURRENT_SOFT_SERIALS])() = {
       sws_isr_0,
       sws_isr_1,
-      sws_isr_2,
+      sws_isr_2 /*,
       sws_isr_3,
       sws_isr_4,
       sws_isr_5,
@@ -60,6 +63,7 @@ static void (*ISRList[USABLE_PINS])() = {
       sws_isr_13,
       sws_isr_14,
       sws_isr_15
+      */
 };
 
 ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic, uint16_t buffSize) {
@@ -74,7 +78,11 @@ ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmi
          m_rxValid = true;
          m_inPos = m_outPos = 0;
          pinMode(m_rxPin, INPUT);
-         ObjList[pinToIndex(m_rxPin)] = this;
+         const uint8_t index = pinToIndex(m_rxPin);
+         if (index == NR_CONCURRENT_SOFT_SERIALS) {
+           return; // Not possible to add software Serial.
+         }
+         ObjList[index] = this;
          enableRx(true);
       }
    }
@@ -90,24 +98,43 @@ ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmi
 
 ESPeasySoftwareSerial::~ESPeasySoftwareSerial() {
    enableRx(false);
-   if (m_rxValid)
-      ObjList[pinToIndex(m_rxPin)] = NULL;
+   if (m_rxValid) {
+     const uint8_t index = pinToIndex(m_rxPin);
+     if (index < NR_CONCURRENT_SOFT_SERIALS) {
+       PinControllerMap[index] = 0;
+       ObjList[index] = NULL;
+     }
+   }
    if (m_buffer)
       free(m_buffer);
 }
 
 bool ESPeasySoftwareSerial::isValidGPIOpin(uint8_t pin) {
-  return pinToIndex(pin) <= USABLE_PINS;
+  if (pin >= 0 && pin <= 5) {
+    return true;
+  }
+  if (pin >= 12 && pin <= MAX_PIN) {
+    return true;
+  }
+  return false;
 }
 
 uint8_t ESPeasySoftwareSerial::pinToIndex(uint8_t pin) {
-  if (pin >= 0 && pin <= 5) {
-    return pin;
+  // Pin will be stored in the map, only "1" will be added,
+  // to allow simple initialize to 0 and still use GPIO-0.
+  const uint8_t stored_pin = pin + 1;
+  for (unsigned i = 0; i < NR_CONCURRENT_SOFT_SERIALS; ++i) {
+    if (PinControllerMap[i] == stored_pin) return i;
   }
-  if (pin >= 12 && pin <= MAX_PIN) {
-    return (pin - 6);
+  // Not found, add as first free option.
+  for (unsigned i = 0; i < NR_CONCURRENT_SOFT_SERIALS; ++i) {
+    if (PinControllerMap[i] == 0) {
+      PinControllerMap[i] = stored_pin;
+      return i;
+    }
   }
-  return USABLE_PINS+1;
+  // No more controllers available.
+  return NR_CONCURRENT_SOFT_SERIALS;
 }
 
 void ESPeasySoftwareSerial::begin(long speed) {
