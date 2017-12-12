@@ -15,6 +15,11 @@
 //		If you use 'NeoPixelAll' this will off all LED (like NeoPixelAll,0,0,0)
 // (3): Set color LED between <start led nr> and <stop led nr> to specified color (eg. NeoPixelLine,1,6,255,255,255)
 
+//RGBW note:
+// for RGBW strips append the additional <brightness> to the commands
+// eg: NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>,<brightness 0-255>
+// The NeoPixelLine command does not work for RGBW, cause espeasy currently only allows max. 5 parameters
+
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel *Plugin_038_pixels;
 
