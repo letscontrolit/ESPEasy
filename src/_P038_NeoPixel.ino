@@ -55,8 +55,13 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        const String options[] = { F("GRB"), F("GRBW") };
+        int indices[] = { 1, 2 };
+
       	addFormNumericBox(string, F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
       	addFormPinSelect(string, F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+        addFormSelector(string, F("Strip Type"), F("plugin_038_strip"), 2, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][1] );
+
       	success = true;
         break;
       }
@@ -65,6 +70,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_038_leds"));
         MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_038_strip"));
         success = true;
         break;
       }
@@ -75,7 +81,14 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
         {
 //m00n
 //          Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
-          Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRBW + NEO_KHZ800);
+          byte striptype = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          if (striptype == 1)
+            Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+          else if (striptype == 2)
+            Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRBW + NEO_KHZ800);
+          else
+            Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+
           Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
         }
         MaxPixels = Settings.TaskDevicePluginConfig[event->TaskIndex][0];

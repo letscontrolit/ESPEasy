@@ -67,11 +67,11 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           if (!Plugin_022_init) Plugin_022_initialize();
           success = true;
-          Plugin_022_Write(event->Par1, event->Par2);
-          setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
-          log = String(F("PCA  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+          Plugin_022_Frequency(event->Par1);
+          setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
+          log = String(F("PCA  : FREQ ")) + String(event->Par1);
           addLog(LOG_LEVEL_INFO, log);
-          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
         }
 
         if (command == F("status"))
