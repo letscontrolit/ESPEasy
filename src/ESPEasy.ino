@@ -476,6 +476,9 @@ struct ControllerSettingsStruct
   }
 
   boolean connectToHost(WiFiClient &client) {
+    if (WiFi.status() != WL_CONNECTED) {
+      return false; // Not connected, so no use in wasting time to connect to a host.
+    }
     if (UseDNS) {
       return client.connect(HostName, Port);
     }
@@ -483,6 +486,9 @@ struct ControllerSettingsStruct
   }
 
   int beginPacket(WiFiUDP &client) {
+    if (WiFi.status() != WL_CONNECTED) {
+      return 0; // Not connected, so no use in wasting time to connect to a host.
+    }
     if (UseDNS) {
       return client.beginPacket(HostName, Port);
     }
@@ -899,7 +905,6 @@ void loop()
     WifiConnect(1);
     wifiSetupConnect = false;
   }
-
 
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
   if (isDeepSleepEnabled())

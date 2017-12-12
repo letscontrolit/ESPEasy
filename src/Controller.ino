@@ -161,7 +161,7 @@ void MQTTCheck()
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (!MQTTclient.connected())
+    if (!MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
     {
       String log = F("MQTT : Connection lost");
       addLog(LOG_LEVEL_ERROR, log);

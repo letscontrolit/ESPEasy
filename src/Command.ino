@@ -349,8 +349,7 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-
-  if (strcasecmp_P(Command, PSTR("Publish")) == 0)
+  if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String event = Line;
@@ -364,7 +363,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -380,7 +379,7 @@ void ExecuteCommand(byte source, const char *Line)
     portUDP.endPacket();
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;

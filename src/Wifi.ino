@@ -269,8 +269,6 @@ void WifiCheck()
   if(wifiSetup)
     return;
 
-  String log = "";
-
   if (WiFi.status() != WL_CONNECTED)
   {
     NC_Count++;
