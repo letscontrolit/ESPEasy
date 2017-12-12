@@ -79,8 +79,6 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_038_pixels)
         {
-//m00n
-//          Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
           byte striptype = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
           if (striptype == 1)
             Plugin_038_pixels = new Adafruit_NeoPixel(Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
@@ -113,8 +111,6 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
             // string.toCharArray(Line, 80);
             // int Par4 = 0;
             // if (GetArgv(Line, TmpStr1, 5)) Par4 = str2int(TmpStr1);
-            //m00n
-            //Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4));
             Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4, event->Par5));
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
             success = true;
@@ -128,8 +124,6 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 					  // string.toCharArray(Line, 80);
 					  for (int i = 0; i < MaxPixels; i++)
 					  {
-//m00n
-//						  Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3));
                 Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3, event->Par4));
 					  }
 					  Plugin_038_pixels->show();
