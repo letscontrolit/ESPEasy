@@ -185,6 +185,9 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
 
     if (WiFi.status() == WL_CONNECTED)
     {
+      if (Settings.UseNTP) {
+        initTime();
+      }
       log = F("WIFI : Connected! IP: ");
       IPAddress ip = WiFi.localIP();
       char str[20];

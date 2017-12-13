@@ -97,6 +97,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 void MQTTConnect()
 {
+  if (WiFi.status() != WL_CONNECTED) return;
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
 
@@ -144,7 +145,7 @@ void MQTTConnect()
     }
     else
     {
-      log = F("MQTT : Failed to connected to broker");
+      log = F("MQTT : Failed to connect to broker");
       addLog(LOG_LEVEL_ERROR, log);
     }
 
@@ -163,12 +164,13 @@ void MQTTCheck()
   {
     if (!MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
     {
-      String log = F("MQTT : Connection lost");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
       connectionFailures += 2;
       MQTTclient.disconnect();
-      delay(1000);
-      MQTTConnect();
+      if (WiFi.status() == WL_CONNECTED) {
+        delay(1000);
+        MQTTConnect();
+      }
     }
     else if (connectionFailures)
       connectionFailures--;

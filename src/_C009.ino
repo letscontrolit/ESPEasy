@@ -56,7 +56,10 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-
+        if (WiFi.status() != WL_CONNECTED) {
+          success = false;
+          break;
+        }
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 

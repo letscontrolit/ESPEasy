@@ -130,6 +130,10 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
+          if (WiFi.status() != WL_CONNECTED) {
+            success = false;
+            break;
+          }
 
           ControllerSettingsStruct ControllerSettings;
           LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
