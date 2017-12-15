@@ -31,7 +31,7 @@
 // DMX,5=123,8=44"   Set channel 5 to value 123, channel 8 to 44
 // DMX,OFF"   Pitch Black
 
-// Transeiver:
+// Transceiver:
 // SN75176 or MAX485 or LT1785 or ...
 // Pin 5: GND
 // Pin 2, 3, 5: +5V

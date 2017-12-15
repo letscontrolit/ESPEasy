@@ -1225,6 +1225,7 @@ void addLog(byte loglevel, const char *line)
 
   }
 
+#ifdef FEATURE_SD
   if (loglevel <= Settings.SDLogLevel)
   {
     File logFile = SD.open("log.dat", FILE_WRITE);
@@ -1232,6 +1233,7 @@ void addLog(byte loglevel, const char *line)
       logFile.println(line);
     logFile.close();
   }
+#endif
 }
 
 
@@ -2728,11 +2730,13 @@ void SendValueLogger(byte TaskIndex)
 
   addLog(LOG_LEVEL_DEBUG, logger);
 
+#ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
   File logFile = SD.open(filename, FILE_WRITE);
   if (logFile)
     logFile.print(logger);
   logFile.close();
+#endif
 }
 
 

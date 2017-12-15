@@ -2,7 +2,7 @@
 //#################################### Plugin 055: Chiming Mechanism ####################################
 //#######################################################################################################
 
-// ESPEasy plugin to strike up to 4 pysical bells and gongs with chiming sequences.
+// ESPEasy plugin to strike up to 4 physical bells and gongs with chiming sequences.
 // You also can use an antique door bell as a single strikes (not ringing) notification.
 // Optional you can use it as hourly chiming clock
 // written by Jochen Krapf (jk@nerd2nerd.org)
@@ -37,8 +37,8 @@
 // save tokens with name "<HH><MM>" and enable NTP (advanced settings)
 //
 // examples:
-// CHIMESAVE,0815,1111!           Dayly Alarm at 8:15am
-// CHIMESAVE,2015,11121           Dayly Alarm at 8:15pm
+// CHIMESAVE,0815,1111!           Daily Alarm at 8:15am
+// CHIMESAVE,2015,11121           Daily Alarm at 8:15pm
 // CHIMESAVE,2015                 Delete Alarm at 8:15pm
 
 // Electronics:
