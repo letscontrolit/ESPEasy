@@ -11,7 +11,7 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <SoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 #define PLUGIN_071
 #define PLUGIN_ID_071 071
 #define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401 [TESTING]"
@@ -71,7 +71,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         PIN_KAMSER_RX = Settings.TaskDevicePin1[event->TaskIndex];
         PIN_KAMSER_TX = Settings.TaskDevicePin2[event->TaskIndex];
 
-        SoftwareSerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
+        ESPeasySoftwareSerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
 
         pinMode(PIN_KAMSER_RX,INPUT);
         pinMode(PIN_KAMSER_TX,OUTPUT);

@@ -27,9 +27,9 @@
 #define _SENSORSERIAL_H_
 
 #include "Arduino.h"
-#include <SoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
-class SensorSerial : public SoftwareSerial
+class SensorSerial : public ESPeasySoftwareSerial
 {
 public:
   SensorSerial(int receivePin, int transmitPin = -1, bool inverse_logic = false, unsigned int buffSize = 64);
