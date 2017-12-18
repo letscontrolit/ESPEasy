@@ -96,7 +96,8 @@ void WebServerInit()
   if (Settings.UseSSDP)
   {
     WebServer.on("/ssdp.xml", HTTP_GET, []() {
-      SSDP_schema(WebServer.client());
+      WiFiClient client(WebServer.client());
+      SSDP_schema(client);
     });
     SSDP_begin();
   }
@@ -831,10 +832,8 @@ void handle_controllers() {
         CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
         reply += ProtocolName;
 
-        char str[20];
         reply += F("<TD>");
-        sprintf_P(str, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-        reply += str;
+        reply += ControllerSettings.getIP().toString();
         reply += F("<TD>");
         reply += ControllerSettings.Port;
       }
@@ -4249,7 +4248,9 @@ String URLEncode(const char* msg)
   while (*msg != '\0') {
     if ( ('a' <= *msg && *msg <= 'z')
          || ('A' <= *msg && *msg <= 'Z')
-         || ('0' <= *msg && *msg <= '9') ) {
+         || ('0' <= *msg && *msg <= '9')
+         || ('-' == *msg) || ('_' == *msg)
+         || ('.' == *msg) || ('~' == *msg) ) {
       encodedMsg += *msg;
     } else {
       encodedMsg += '%';

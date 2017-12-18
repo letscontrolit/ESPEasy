@@ -82,19 +82,12 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     authHeader += encoder.encode(auth) + " \r\n";
   }
 
-  // char log[80];
   // boolean success = false;
-  // char host[20];
-  // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  // sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, ControllerSettings.Port);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, ControllerSettings.Port))
+  if (!ControllerSettings.connectToHost(client))
   {
     connectionFailures++;
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
@@ -122,13 +115,9 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   // url.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, url);
 
-  String hostName = host.toString();
-  if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName;
-
   // This will send the request to the server
   client.print(String(F("GET ")) + url + F(" HTTP/1.1\r\n") +
-               F("Host: ") + hostName + "\r\n" + authHeader +
+               F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
                F("Connection: close\r\n\r\n"));
 
   unsigned long timer = millis() + 200;

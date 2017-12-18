@@ -34,17 +34,12 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-        char log[80];
         // boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
+        addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
+        char log[80];
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
+        if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));

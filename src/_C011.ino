@@ -139,15 +139,12 @@ boolean HTTPSend011(struct EventStruct *event)
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
   boolean success = false;
-
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
   addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
-  		(ControllerSettings.UseDNS ? ControllerSettings.HostName : host.toString() ) +":"+ControllerSettings.Port);
+      ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-   if (ControllerSettings.UseDNS ? !client.connect(ControllerSettings.HostName, ControllerSettings.Port) : !client.connect(host, ControllerSettings.Port))
+  if (!ControllerSettings.connectToHost(client))
   {
     connectionFailures++;
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
@@ -160,15 +157,11 @@ boolean HTTPSend011(struct EventStruct *event)
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-  String hostName = host.toString();
-  if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName;
-
   String payload = String(customConfig.HttpMethod) + " /";
   payload += customConfig.HttpUri;
   payload += F(" HTTP/1.1\r\n");
   payload += F("Host: ");
-  payload += hostName + ":" + ControllerSettings.Port;
+  payload += ControllerSettings.getHostPortString();
   payload += F("\r\n");
   payload += authHeader;
   payload += F("Connection: close\r\n");
