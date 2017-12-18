@@ -4012,7 +4012,9 @@ String URLEncode(const char* msg)
   while (*msg != '\0') {
     if ( ('a' <= *msg && *msg <= 'z')
          || ('A' <= *msg && *msg <= 'Z')
-         || ('0' <= *msg && *msg <= '9') ) {
+         || ('0' <= *msg && *msg <= '9')
+         || ('-' == *msg) || ('_' == *msg)
+         || ('.' == *msg) || ('~' == *msg) ) {
       encodedMsg += *msg;
     } else {
       encodedMsg += '%';
