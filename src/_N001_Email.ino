@@ -122,9 +122,9 @@ boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForP
   yield();
 
   // Wait For Response
-  unsigned long ts = millis();
+  unsigned long timer = millis() + NPLUGIN_001_TIMEOUT;
   while (true) {
-    if ( ts + NPLUGIN_001_TIMEOUT < millis() ) {
+    if (timeOutReached(timer)) {
       myStatus = false;
       break;
     }

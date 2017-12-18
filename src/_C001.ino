@@ -177,7 +177,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           client.print(request);
 
           unsigned long timer = millis() + 200;
-          while (!client.available() && millis() < timer)
+          while (!client.available() && !timeOutReached(timer)) 
             yield();
 
           // Read all the lines of the reply from server and log them

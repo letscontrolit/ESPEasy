@@ -62,11 +62,11 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         client.print(" \n");
 
         unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
+        while (!client.available() && !timeOutReached(timer))
           delay(1);
 
         timer = millis() + 1000;
-        while (client.available() && millis() < timer && !success)
+        while (client.available() && !timeOutReached(timer) && !success)
         {
 
           //   String line = client.readStringUntil('\n');

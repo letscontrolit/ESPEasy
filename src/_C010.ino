@@ -50,7 +50,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
           {
             delayBackground(Settings.MessageDelay);
             // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (millis() < timer)
+            // while (!timeOutReached(timer))
             //   backgroundtasks();
           }
         }

@@ -18,8 +18,8 @@ void sendData(struct EventStruct *event)
 
   if (Settings.MessageDelay != 0)
   {
-    uint16_t dif = millis() - lastSend;
-    if (dif < Settings.MessageDelay)
+    const long dif = timePassedSince(lastSend);
+    if (dif > 0 && dif < static_cast<long>(Settings.MessageDelay))
     {
       uint16_t delayms = Settings.MessageDelay - dif;
       //this is logged nowhere else, so might as well disable it here also:
@@ -27,7 +27,7 @@ void sendData(struct EventStruct *event)
       delayBackground(delayms);
 
       // unsigned long timer = millis() + delayms;
-      // while (millis() < timer)
+      // while (!timeOutReached(timer))
       //   backgroundtasks();
     }
   }
