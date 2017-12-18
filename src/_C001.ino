@@ -95,12 +95,12 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += F(";");
               url += humStat(UserVar[event->BaseVarIndex + 1]);
               break;
-            case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+            case SENSOR_TYPE_TEMP_BARO:                      // temp + bar used for BMP085 and BMP280
               url += F("&svalue=");
               url += formatUserVar(event, 0);
-              url += F(";0;0;");
+              url += F(";");
               url += formatUserVar(event, 1);
-              url += F(";0");
+              url += F(";0;0;");
               break;
             case SENSOR_TYPE_TRIPLE:
               url += F("&svalue=");
