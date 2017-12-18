@@ -2476,6 +2476,35 @@ void handle_tools() {
 
   addFormHeader(reply, F("Tools"));
 
+  addFormSubHeader(reply, F("Command"));
+    reply += F("<TR><TD HEIGHT=\"30\">");
+    reply += F("<input type='text' name='cmd' value='");
+    reply += webrequest;
+    reply += F("'>");
+    addHelpButton(reply, F("ESPEasy_Command_Reference"));
+    reply += F("<TD>");
+    addSubmitButton(reply);
+    reply += F("<TR><TD>");
+
+    printToWeb = true;
+    printWebString = "";
+
+    if (webrequest.length() > 0)
+    {
+      struct EventStruct TempEvent;
+      parseCommandString(&TempEvent, webrequest);
+      TempEvent.Source = VALUE_SOURCE_HTTP;
+      if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
+        ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+    }
+
+    if (printWebString.length() > 0)
+    {
+      reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
+      reply += printWebString;
+      reply += F("</textarea>");
+    }
+
   addFormSubHeader(reply, F("System"));
 
   reply += F("<TR><TD HEIGHT=\"30\">");
@@ -2571,32 +2600,6 @@ void handle_tools() {
   reply += F("Show files on SD-Card");
 #endif
 
-  addFormSubHeader(reply, F("Command"));
-  reply += F("<TR><TD HEIGHT=\"30\">");
-  reply += F("<input type='text' name='cmd' value='");
-  reply += webrequest;
-  reply += F("'><TD>");
-  addSubmitButton(reply);
-  reply += F("<TR><TD>");
-
-  printToWeb = true;
-  printWebString = "";
-
-  if (webrequest.length() > 0)
-  {
-    struct EventStruct TempEvent;
-    parseCommandString(&TempEvent, webrequest);
-    TempEvent.Source = VALUE_SOURCE_HTTP;
-    if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
-      ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
-  }
-
-  if (printWebString.length() > 0)
-  {
-    reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
-    reply += printWebString;
-    reply += F("</textarea>");
-  }
   reply += F("</table></form>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
@@ -2616,14 +2619,23 @@ void handle_pinstates() {
 
   String reply = "";
   addHeader(true, reply);
-  addFormHeader(reply, F("Pin state table"));
+  //addFormSubHeader(reply, F("Pin state table<TR>"));
 
-  reply += F("<table border=1px frame='box' rules='all'><TH>Plugin<TH>Index/Pin<TH>Mode<TH>Value/State");
-
+  reply += F("<table border=1px frame='box' rules='all'><TH>Plugin");
+  addHelpButton(reply, F("Official_plugin_list"));
+  reply += F("<TH>GPIO<TH>Mode<TH>Value/State");
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-    if ( pinStates[x].plugin != 0)
+    if (pinStates[x].plugin != 0)
     {
-      reply += F("<TR><TD>");
+      reply += F("<TR><TD>P");
+      if (pinStates[x].plugin < 100)
+      {
+        reply += F("0");
+      }
+      if (pinStates[x].plugin < 10)
+      {
+        reply += F("0");
+      }
       reply += pinStates[x].plugin;
       reply += F("<TD>");
       reply += pinStates[x].index;
@@ -4097,7 +4109,7 @@ void handle_sysinfo() {
   reply += F(" (");
   reply += RTC.bootCounter;
   reply += F(")");
-  
+
   reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 
   reply += F("<TR><TD>Flash Size<TD>");
@@ -4171,7 +4183,7 @@ void handle_sysinfo() {
   macread = WiFi.softAPmacAddress(mac);
   sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
   reply += macaddress;
-  
+
   reply += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
   reply += F("<TR><TD>Build<TD>");
@@ -4203,7 +4215,7 @@ void handle_sysinfo() {
   #endif
 
   reply += F("<TR><TD colspan=2><HR></TD></TR>");
-  
+
   reply += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getChipId();
