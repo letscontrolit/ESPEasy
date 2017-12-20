@@ -1,7 +1,7 @@
 //********************************************************************************
 // Web Interface init
 //********************************************************************************
-
+#include "core_version.h"
 #define HTML_SYMBOL_WARNING "&#9888;"
 
 #define TASKS_PER_PAGE 4
@@ -197,7 +197,7 @@ void sendWebPageChunkedBegin(String& log)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  #if defined(ESP8266)
+  #if defined(ESP8266)& defined(ARDUINO_ESP8266_RELEASE_2_3_0)
     WebServer.sendHeader("Transfer-Encoding","chunked");
   #endif
   WebServer.send(200);
@@ -213,15 +213,14 @@ void sendWebPageChunkedData(String& log, String& data)
     log += data.length();
     log += F("]");
 
-    #if defined(ESP8266)
+    #if defined(ESP8266) & defined(ARDUINO_ESP8266_RELEASE_2_3_0)
       String size;
       size=String(data.length(), HEX)+"\r\n";
       //do chunked transfer encoding ourselfs (WebServer doesnt support it)
       WebServer.sendContent(size);
       WebServer.sendContent(data);
       WebServer.sendContent("\r\n");
-    #endif
-    #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+    #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
       WebServer.sendContent(data);
     #endif
     data = F("");   //free RAM
@@ -231,10 +230,9 @@ void sendWebPageChunkedData(String& log, String& data)
 void sendWebPageChunkedEnd(String& log)
 {
   log += F(" [0]");
-  #if defined(ESP8266)
+  #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
     WebServer.sendContent("0\r\n\r\n");
-  #endif
-  #if defined(ESP32)  // the ESP32 webserver supports chunked http transfer
+  #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
     WebServer.sendContent("");
   #endif
 }
