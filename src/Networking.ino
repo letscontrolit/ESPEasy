@@ -65,7 +65,7 @@ void checkUDP()
     return;
 
   runningUPDCheck = true;
-    
+
   // UDP events
   int packetSize = portUDP.parsePacket();
   if (packetSize)
@@ -138,9 +138,9 @@ void checkUDP()
             }
 
             char macaddress[20];
-            sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            char ipaddress[16];
-            sprintf_P(ipaddress, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+            formatMAC(mac, macaddress);
+            char ipaddress[20];
+            formatIP(ip, ipaddress);
             char log[80];
             sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
             addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -416,7 +416,7 @@ void SSDP_schema(WiFiClient &client) {
 
   IPAddress ip = WiFi.localIP();
   char str[20];
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+  formatIP(ip, str);
   uint32_t chipId = ESP.getChipId();
   char uuid[64];
   sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),

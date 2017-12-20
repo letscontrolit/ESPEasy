@@ -97,10 +97,8 @@ boolean WifiConnect(byte connectAttempts)
   //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
   {
-    char str[20];
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
     log = F("IP   : Static IP :");
-    log += str;
+    log += formatIP(Settings.IP);
     addLog(LOG_LEVEL_INFO, log);
     IPAddress ip = Settings.IP;
     IPAddress gw = Settings.Gateway;
@@ -197,9 +195,7 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
     {
       log = F("WIFI : Connected! IP: ");
       IPAddress ip = WiFi.localIP();
-      char str[20];
-      sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-      log += str;
+      log += formatIP(ip);
       log += F(" (");
       log += WifiGetHostname();
       log += F(")");

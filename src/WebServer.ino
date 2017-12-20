@@ -108,14 +108,13 @@ void WebServerInit()
 
 void sendWebPage(const String& tmplName, String& pageContent)
 {
-  String pageTemplate;
-
   String fileName = tmplName;
   fileName += F(".htm");
-
   fs::File f = SPIFFS.open(fileName, "r+");
+  String pageTemplate;
   if (f)
   {
+    pageTemplate.reserve(f.size());
     while (f.available())
       pageTemplate += (char)f.read();
     f.close();
@@ -518,7 +517,7 @@ void handle_root() {
     reply += F(")");
 
     char str[20];
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+    formatIP(ip, str);
     reply += F("<TR><TD>IP:<TD>");
     reply += str;
 
@@ -2301,8 +2300,9 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
   char strip[20];
   if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
     strip[0] = 0;
-  else
-    sprintf_P(strip, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+  else {
+    formatIP(ip, strip);
+  }
 
   addRowLabel(str, label);
   str += F("<input type='text' name='");
@@ -3478,6 +3478,7 @@ boolean handle_custom(String path) {
   if (dataFile)
   {
     String page = "";
+    page.reserve(dataFile.size());
     while (dataFile.available())
       page += ((char)dataFile.read());
 
@@ -3793,7 +3794,7 @@ void handle_setup() {
     addHtmlError(reply, SaveSettings());
     IPAddress ip = WiFi.localIP();
     char host[20];
-    sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+    formatIP(ip, host);
     reply += F("<BR>ESP is connected and using IP Address: <BR><h1>");
     reply += host;
     reply += F("</h1><BR><BR>Connect your laptop / tablet / phone<BR>back to your main Wifi network and<BR><BR>");
@@ -4043,11 +4044,8 @@ void handle_sysinfo() {
 
   int freeMem = ESP.getFreeHeap();
   String reply = "";
+  reply.reserve(4096);
   addHeader(true, reply);
-
-  IPAddress ip = WiFi.localIP();
-  IPAddress gw = WiFi.gatewayIP();
-
   reply += printWebString;
   reply += F("<form>");
   reply += F("<table><TR><TH width=120>System Info<TH>");
@@ -4162,25 +4160,31 @@ void handle_sysinfo() {
     reply += F(" dB)");
   }
 
-  char str[20];
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  reply += F("<TR><TD>IP<TD>");
-  reply += str;
+  {
+    char str[20];
+    formatIP(WiFi.localIP(), str);
+    reply += F("<TR><TD>IP<TD>");
+    reply += str;
 
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), gw[0], gw[1], gw[2], gw[3]);
-  reply += F("<TR><TD>GW<TD>");
-  reply += str;
+    formatIP(WiFi.gatewayIP(), str);
+    reply += F("<TR><TD>GW<TD>");
+    reply += str;
+
+    formatIP(WebServer.client().remoteIP(), str);
+    reply += F("<TR><TD>Client IP<TD>");
+    reply += str;
+  }
 
   reply += F("<TR><TD>STA MAC<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
-  sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+  formatMAC(macread, macaddress);
   reply += macaddress;
 
   reply += F("<TR><TD>AP MAC<TD>");
   macread = WiFi.softAPmacAddress(mac);
-  sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+  formatMAC(macread, macaddress);
   reply += macaddress;
 
   reply += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
