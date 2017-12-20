@@ -213,7 +213,7 @@ void sendWebPageChunkedData(String& log, String& data)
     log += data.length();
     log += F("]");
 
-    #if defined(ESP8266) & defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
       String size;
       size=String(data.length(), HEX)+"\r\n";
       //do chunked transfer encoding ourselfs (WebServer doesnt support it)
