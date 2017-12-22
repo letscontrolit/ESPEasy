@@ -9,11 +9,9 @@
   DevicePin2 - is TX for ESP
 */
 
-#ifdef PLUGIN_BUILD_TESTING
-
 #define PLUGIN_049
 #define PLUGIN_ID_049         49
-#define PLUGIN_NAME_049       "Gases - CO2 MH-Z19 [TESTING]"
+#define PLUGIN_NAME_049       "Gases - CO2 MH-Z19"
 #define PLUGIN_VALUENAME1_049 "PPM"
 #define PLUGIN_VALUENAME2_049 "Temperature" // Temperature in C
 #define PLUGIN_VALUENAME3_049 "U" // Undocumented, minimum measurement per time period?
@@ -30,8 +28,8 @@ boolean Plugin_049_init = false;
 boolean Plugin_049_ABC_Disable = false;
 boolean Plugin_049_ABC_MustApply = false;
 
-#include <SoftwareSerial.h>
-SoftwareSerial *Plugin_049_SoftSerial;
+#include <ESPeasySoftwareSerial.h>
+ESPeasySoftwareSerial *Plugin_049_SoftSerial;
 
 // 9-bytes CMD PPM read command
 byte mhzCmdReadPPM[9] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
@@ -181,7 +179,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // No guarantee the correct state is active on the sensor after reboot.
           Plugin_049_ABC_MustApply = true;
         }
-        Plugin_049_SoftSerial = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+        Plugin_049_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], false, 18);
         Plugin_049_SoftSerial->begin(9600);
         addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
@@ -425,5 +423,3 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#endif

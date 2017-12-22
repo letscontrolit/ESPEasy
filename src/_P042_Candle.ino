@@ -11,7 +11,7 @@
 //   * Extract jscolor.min.js
 //   * Now open the Web UI of your ESPEasy with this URL:
 //     http://<IP-ESPEasy>/upload
-//   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... verion !!)
+//   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... version !!)
 //   * Press Upload und you are done.
 
 // Add the Adafruit Neopixel Library to your library path. You will find it here:
@@ -21,14 +21,14 @@
 // NOTES
 // Please keep in mind that you can add tasks which produce a very large delay while reading the sensor.
 // For example the DS18B20 is very slow in reading the values. This can slow down the simulation and you
-// will notice that the candle did not run smooth. So keep an eye on your tasks and donßt add to much other tasks.
+// will notice that the candle did not run smooth. So keep an eye on your tasks and don't add to much other tasks.
 
 // HARDWARE
 // The Wifi Candle uses 20 WS2812 RGB pixels. They are all connected in one row.
 // I build a wooden wick with 5 pixels on each side. (A picture is here : http://www.esp8266.nu/forum/viewtopic.php?f=2&t=2147)
 // The pixels are connected to 5V and the data pin I use is GPIO13 (but you can choose another one).
 // Please ensure that you use a strong power supply because the pixels consume a lot of power when they
-// shine in white with high brigthness!
+// shine in white with high brightness!
 // I also placed a 100µF capacitor at the end of the WS2812 chain on +5/GND just to ensure a good power stability.
 // btw ... My Testboard was a NodeMCU V3.
 
@@ -80,7 +80,7 @@ byte Candle_bright = 128;
 SimType Candle_type = TypeSimpleCandle;
 ColorType Candle_color = ColorDefault;
 
-// gloable Variables
+// global variables
 unsigned long Candle_Update = 0;
 word Candle_Temp[4] = { 0, 0, 0 };     // Temp variables
 int Candle_Temp4 = 0;

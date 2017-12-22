@@ -5,7 +5,7 @@
   Plugin originally written by: Daniel Tedenljung info__AT__tedenljungconsulting.com
   Rewritten by: Mikael Trieb mikael__AT__triebconsulting.se
 
-  This plugin reads availble values of Senseair Co2 Sensors.
+  This plugin reads available values of Senseair Co2 Sensors.
   Datasheet can be found here:
   S8: http://www.senseair.com/products/oem-modules/senseair-s8/
   K30: http://www.senseair.com/products/oem-modules/k30/
@@ -24,8 +24,8 @@
 
 boolean Plugin_052_init = false;
 
-#include <SoftwareSerial.h>
-SoftwareSerial *Plugin_052_SoftSerial;
+#include <ESPeasySoftwareSerial.h>
+ESPeasySoftwareSerial *Plugin_052_SoftSerial;
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 {
@@ -103,7 +103,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_052_init = true;
-        Plugin_052_SoftSerial = new SoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
+        Plugin_052_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
                                                    Settings.TaskDevicePin2[event->TaskIndex]);
         success = true;
         break;

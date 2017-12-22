@@ -41,7 +41,7 @@
 
 //   Simple Arduino sketch for ESP module, supporting:
 //   =================================================================================
-//   Simple switch inputs and direct GPIO output control to drive relais, mosfets, etc
+//   Simple switch inputs and direct GPIO output control to drive relays, mosfets, etc
 //   Analog input (ESP-7/12 only)
 //   Pulse counters
 //   Dallas OneWire DS18b20 temperature sensors
@@ -149,6 +149,9 @@
 
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
+
+//add this if you want SD support (add 10k flash)
+//#define FEATURE_SD
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
@@ -300,7 +303,7 @@
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
-
+#include "core_version.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
@@ -373,7 +376,11 @@
 #include <SPI.h>
 #include <PubSubClient.h>
 #include <FS.h>
+#ifdef FEATURE_SD
 #include <SD.h>
+#else
+using namespace fs;
+#endif
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -493,6 +500,39 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+
+  IPAddress getIP() const {
+    IPAddress host(IP[0], IP[1], IP[2], IP[3]);
+    return host;
+  }
+
+  String getHost() const {
+    if (UseDNS) {
+      return HostName;
+    }
+    return getIP().toString();
+  }
+
+  boolean connectToHost(WiFiClient &client) {
+    if (UseDNS) {
+      return client.connect(HostName, Port);
+    }
+    return client.connect(getIP(), Port);
+  }
+
+  int beginPacket(WiFiUDP &client) {
+    if (UseDNS) {
+      return client.beginPacket(HostName, Port);
+    }
+    return client.beginPacket(getIP(), Port);
+  }
+
+  String getHostPortString() const {
+    String result = getHost();
+    result += ":";
+    result += Port;
+    return result;
+  }
 };
 
 struct NotificationSettingsStruct

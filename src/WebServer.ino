@@ -7,7 +7,7 @@
 #define TASKS_PER_PAGE 4
 
 static const char pgDefaultCSS[] PROGMEM = {
-  //color sheme: #07D #D50 #DB0 #A0D
+  //color scheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
   "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
   "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
@@ -77,7 +77,9 @@ void WebServerInit()
   WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
   WebServer.on("/filelist", handle_filelist);
+#ifdef FEATURE_SD
   WebServer.on("/SDfilelist", handle_SDfilelist);
+#endif
   WebServer.on("/advanced", handle_advanced);
   WebServer.on("/setup", handle_setup);
   WebServer.on("/json", handle_json);
@@ -94,7 +96,8 @@ void WebServerInit()
   if (Settings.UseSSDP)
   {
     WebServer.on("/ssdp.xml", HTTP_GET, []() {
-      SSDP_schema(WebServer.client());
+      WiFiClient client(WebServer.client());
+      SSDP_schema(client);
     });
     SSDP_begin();
   }
@@ -197,8 +200,8 @@ void sendWebPageChunkedBegin(String& log)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   // WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
-  #if defined(ESP8266)& defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-    WebServer.sendHeader("Transfer-Encoding","chunked");
+  #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  WebServer.sendHeader("Transfer-Encoding","chunked");
   #endif
   WebServer.send(200);
 }
@@ -216,7 +219,7 @@ void sendWebPageChunkedData(String& log, String& data)
     #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
       String size;
       size=String(data.length(), HEX)+"\r\n";
-      //do chunked transfer encoding ourselfs (WebServer doesnt support it)
+      //do chunked transfer encoding ourselves (WebServer doesn't support it)
       WebServer.sendContent(size);
       WebServer.sendContent(data);
       WebServer.sendContent("\r\n");
@@ -828,10 +831,8 @@ void handle_controllers() {
         CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
         reply += ProtocolName;
 
-        char str[20];
         reply += F("<TD>");
-        sprintf_P(str, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-        reply += str;
+        reply += ControllerSettings.getIP().toString();
         reply += F("<TD>");
         reply += ControllerSettings.Port;
       }
@@ -1179,7 +1180,9 @@ void handle_hardware() {
   addFormCheckBox(reply, F("Init SPI"), F("initspi"), Settings.InitSPI);
   addFormNote(reply, F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(reply, F("Chip Select (CS) config must be done in the plugin"));
+#ifdef FEATURE_SD
   addFormPinSelect(reply, F("GPIO &rarr; SD Card CS"), "sd", Settings.Pin_sd_cs);
+#endif
 
   addFormSubHeader(reply, F("GPIO boot states"));
 
@@ -1660,7 +1663,7 @@ void handle_devices() {
 
       if (Device[DeviceIndex].TimerOption)
       {
-        //FIXME: shoudnt the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
+        //FIXME: shouldn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
         addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
         addUnit(reply, F("sec"));
         if (Device[DeviceIndex].TimerOptional)
@@ -2471,6 +2474,35 @@ void handle_tools() {
 
   addFormHeader(reply, F("Tools"));
 
+  addFormSubHeader(reply, F("Command"));
+    reply += F("<TR><TD HEIGHT=\"30\">");
+    reply += F("<input type='text' name='cmd' value='");
+    reply += webrequest;
+    reply += F("'>");
+    addHelpButton(reply, F("ESPEasy_Command_Reference"));
+    reply += F("<TD>");
+    addSubmitButton(reply);
+    reply += F("<TR><TD>");
+
+    printToWeb = true;
+    printWebString = "";
+
+    if (webrequest.length() > 0)
+    {
+      struct EventStruct TempEvent;
+      parseCommandString(&TempEvent, webrequest);
+      TempEvent.Source = VALUE_SOURCE_HTTP;
+      if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
+        ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+    }
+
+    if (printWebString.length() > 0)
+    {
+      reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
+      reply += printWebString;
+      reply += F("</textarea>");
+    }
+
   addFormSubHeader(reply, F("System"));
 
   reply += F("<TR><TD HEIGHT=\"30\">");
@@ -2559,37 +2591,13 @@ void handle_tools() {
   reply += F("<TD>");
   reply += F("Show files on internal flash");
 
+#ifdef FEATURE_SD
   reply += F("<TR><TD HEIGHT=\"30\">");
   addButton(reply, F("SDfilelist"), F("SD Card"));
   reply += F("<TD>");
   reply += F("Show files on SD-Card");
+#endif
 
-  addFormSubHeader(reply, F("Command"));
-  reply += F("<TR><TD HEIGHT=\"30\">");
-  reply += F("<input type='text' name='cmd' value='");
-  reply += webrequest;
-  reply += F("'><TD>");
-  addSubmitButton(reply);
-  reply += F("<TR><TD>");
-
-  printToWeb = true;
-  printWebString = "";
-
-  if (webrequest.length() > 0)
-  {
-    struct EventStruct TempEvent;
-    parseCommandString(&TempEvent, webrequest);
-    TempEvent.Source = VALUE_SOURCE_HTTP;
-    if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
-      ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
-  }
-
-  if (printWebString.length() > 0)
-  {
-    reply += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
-    reply += printWebString;
-    reply += F("</textarea>");
-  }
   reply += F("</table></form>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
@@ -2609,14 +2617,23 @@ void handle_pinstates() {
 
   String reply = "";
   addHeader(true, reply);
-  addFormHeader(reply, F("Pin state table"));
+  //addFormSubHeader(reply, F("Pin state table<TR>"));
 
-  reply += F("<table border=1px frame='box' rules='all'><TH>Plugin<TH>Index/Pin<TH>Mode<TH>Value/State");
-
+  reply += F("<table border=1px frame='box' rules='all'><TH>Plugin");
+  addHelpButton(reply, F("Official_plugin_list"));
+  reply += F("<TH>GPIO<TH>Mode<TH>Value/State");
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-    if ( pinStates[x].plugin != 0)
+    if (pinStates[x].plugin != 0)
     {
-      reply += F("<TR><TD>");
+      reply += F("<TR><TD>P");
+      if (pinStates[x].plugin < 100)
+      {
+        reply += F("0");
+      }
+      if (pinStates[x].plugin < 10)
+      {
+        reply += F("0");
+      }
       reply += pinStates[x].plugin;
       reply += F("<TD>");
       reply += pinStates[x].index;
@@ -3084,9 +3101,11 @@ void handle_advanced() {
 
   addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel, 0, 4);
   addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel, 0, 4);
+#ifdef FEATURE_SD
   addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel, 0, 4);
 
   addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
+#endif
 
 
   addFormSubHeader(reply, F("Serial Settings"));
@@ -3352,6 +3371,7 @@ bool loadFromFS(boolean spiffs, String path) {
   }
   else
   {
+#ifdef FEATURE_SD
     File dataFile = SD.open(path.c_str());
     if (!dataFile)
       return false;
@@ -3359,6 +3379,7 @@ bool loadFromFS(boolean spiffs, String path) {
       WebServer.sendHeader("Content-Disposition", "attachment;");
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
+#endif
   }
   statusLED(true);
 
@@ -3591,6 +3612,7 @@ void handle_filelist() {
 //********************************************************************************
 // Web Interface SD card file and directory list
 //********************************************************************************
+#ifdef FEATURE_SD
 void handle_SDfilelist() {
 
   navMenuIndex = 7;
@@ -3726,6 +3748,7 @@ void handle_SDfilelist() {
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
 }
+#endif
 
 
 //********************************************************************************
@@ -4012,7 +4035,7 @@ void handle_rules() {
 
 
 //********************************************************************************
-// Web Interface root page
+// Web Interface sysinfo page
 //********************************************************************************
 void handle_sysinfo() {
   if (!isLoggedIn()) return;
@@ -4026,19 +4049,19 @@ void handle_sysinfo() {
 
   reply += printWebString;
   reply += F("<form>");
-  reply += F("<table><TR><TH>System Info<TH>");
+  reply += F("<table><TR><TH width=120>System Info<TH>");
 
-  reply += F("<TR><TD>Unit:<TD>");
+  reply += F("<TR><TD>Unit<TD>");
   reply += Settings.Unit;
 
   if (Settings.UseNTP)
   {
 
-    reply += F("<TR><TD>Local Time:<TD>");
+    reply += F("<TR><TD>Local Time<TD>");
     reply += getDateTimeString('-', ':', ' ');
   }
 
-  reply += F("<TR><TD>Uptime:<TD>");
+  reply += F("<TR><TD>Uptime<TD>");
   char strUpTime[40];
   int minutes = wdcounter / 2;
   int days = minutes / 1440;
@@ -4048,7 +4071,7 @@ void handle_sysinfo() {
   sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
   reply += strUpTime;
 
-  reply += F("<TR><TD>Load:<TD>");
+  reply += F("<TR><TD>Load<TD>");
   if (wdcounter > 0)
   {
     reply += 100 - (100 * loopCounterLast / loopCounterMax);
@@ -4057,7 +4080,7 @@ void handle_sysinfo() {
     reply += F(")");
   }
 
-  reply += F("<TR><TD>Free Mem:<TD>");
+  reply += F("<TR><TD>Free Mem<TD>");
   reply += freeMem;
   reply += F(" (");
   reply += lowestRAM;
@@ -4065,12 +4088,56 @@ void handle_sysinfo() {
   reply += lowestRAMfunction;
   reply += F(")");
 
+  reply += F("<TR><TD>Boot<TD>");
+  switch (lastBootCause)
+  {
+    case BOOT_CAUSE_MANUAL_REBOOT:
+      reply += F("Manual reboot");
+      break;
+    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
+      reply += F("Deep sleep");
+      break;
+    case BOOT_CAUSE_COLD_BOOT:
+      reply += F("Cold boot");
+      break;
+    case BOOT_CAUSE_EXT_WD:
+      reply += F("External Watchdog");
+      break;
+  }
+  reply += F(" (");
+  reply += RTC.bootCounter;
+  reply += F(")");
+
+  reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
+
+  reply += F("<TR><TD>Flash Size<TD>");
+  #if defined(ESP8266)
+    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    reply += ESP.getFlashChipSize() / 1024;
+  #endif
+  reply += F(" kB");
+
+  reply += F("<TR><TD>Flash Writes<TD>");
+  reply += RTC.flashDayCounter;
+  reply += F(" daily / ");
+  reply += RTC.flashCounter;
+  reply += F(" boot");
+
+  reply += F("<TR><TD>Sketch Size<TD>");
+  #if defined(ESP8266)
+  reply += ESP.getSketchSize() / 1024;
+  reply += F(" kB (");
+  reply += ESP.getFreeSketchSpace() / 1024;
+  reply += F(" kB free)");
+  #endif
+
+  reply += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
+
   if (WiFi.status() == WL_CONNECTED)
   {
-    reply += F("<TR><TD>Wifi RSSI:<TD>");
-    reply += WiFi.RSSI();
-    reply += F(" dB");
-    reply += F("<TR><TD>Wifi Type:<TD>");
+    reply += F("<TR><TD>Wifi<TD>");
     #if defined(ESP8266)
       byte PHYmode = wifi_get_phy_mode();
     #endif
@@ -4089,111 +4156,78 @@ void handle_sysinfo() {
         reply += F("802.11N");
         break;
     }
+    reply += F(" (RSSI ");
+    reply += WiFi.RSSI();
+    reply += F(" dB)");
   }
 
   char str[20];
   sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  reply += F("<TR><TD>IP:<TD>");
+  reply += F("<TR><TD>IP<TD>");
   reply += str;
 
   sprintf_P(str, PSTR("%u.%u.%u.%u"), gw[0], gw[1], gw[2], gw[3]);
-  reply += F("<TR><TD>GW:<TD>");
+  reply += F("<TR><TD>GW<TD>");
   reply += str;
 
-  reply += F("<TR><TD>Build:<TD>");
-  reply += BUILD;
-  reply += F(" ");
-  reply += F(BUILD_NOTES);
-
-  reply += F("<TR><TD>GIT version:<TD>");
-  reply += BUILD_GIT;
-
-  reply += F("<TR><TD>Plugin sets:<TD>");
-
-#ifdef PLUGIN_BUILD_NORMAL
-  reply += F("[Normal] ");
-#endif
-
-#ifdef PLUGIN_BUILD_TESTING
-  reply += F("[Testing] ");
-#endif
-
-#ifdef PLUGIN_BUILD_DEV
-  reply += F("[Development] ");
-#endif
-
-  reply += F("<TR><TD>Number of Plugins:<TD>");
-  reply += deviceCount + 1;
-
-  reply += F("<TR><TD>Core Version:<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getCoreVersion();
-  #endif
-
-  reply += F("<TR><TD>Flash Size:<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
-  #endif
-  #if defined(ESP32)
-    reply += ESP.getFlashChipSize() / 1024;
-  #endif
-  reply += F(" kB");
-
-  reply += F("<TR><TD>Flash Writes (daily/boot):<TD>");
-  reply += RTC.flashDayCounter;
-  reply += F(" / ");
-  reply += RTC.flashCounter;
-
-  reply += F("<TR><TD>Sketch Size/Free:<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getSketchSize() / 1024;
-  #endif
-  reply += F(" kB / ");
-  #if defined(ESP8266)
-    reply += ESP.getFreeSketchSpace() / 1024;
-  #endif
-  reply += F(" kB");
-
-  reply += F("<TR><TD>Boot cause:<TD>");
-  switch (lastBootCause)
-  {
-    case BOOT_CAUSE_MANUAL_REBOOT:
-      reply += F("Manual reboot");
-      break;
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-      reply += F("Deep sleep");
-      break;
-    case BOOT_CAUSE_COLD_BOOT:
-      reply += F("Cold boot");
-      break;
-    case BOOT_CAUSE_EXT_WD:
-      reply += F("External Watchdog");
-      break;
-  }
-
-  reply += F("<TR><TD>Warm boot count:<TD>");
-  reply += RTC.bootCounter;
-
-  reply += F("<TR><TD>STA MAC:<TD>");
+  reply += F("<TR><TD>STA MAC<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
   sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
   reply += macaddress;
 
-  reply += F("<TR><TD>AP MAC:<TD>");
+  reply += F("<TR><TD>AP MAC<TD>");
   macread = WiFi.softAPmacAddress(mac);
   sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
   reply += macaddress;
 
-  reply += F("<TR><TD>ESP Chip ID:<TD>");
+  reply += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
+
+  reply += F("<TR><TD>Build<TD>");
+  reply += BUILD;
+  reply += F(" ");
+  reply += F(BUILD_NOTES);
   #if defined(ESP8266)
-    reply += ESP.getChipId();
+    reply += F(" (core ");
+    reply += ESP.getCoreVersion();
+    reply += F(")");
   #endif
 
-  reply += F("<TR><TD>Flash Chip ID:<TD>");
+  reply += F("<TR><TD>GIT version<TD>");
+  reply += BUILD_GIT;
+
+  reply += F("<TR><TD>Plugins<TD>");
+  reply += deviceCount + 1;
+
+  #ifdef PLUGIN_BUILD_NORMAL
+    reply += F(" [Normal]");
+  #endif
+
+  #ifdef PLUGIN_BUILD_TESTING
+    reply += F(" [Testing]");
+  #endif
+
+  #ifdef PLUGIN_BUILD_DEV
+    reply += F(" [Development]");
+  #endif
+
+  reply += F("<TR><TD colspan=2><HR></TD></TR>");
+
+  reply += F("<TR><TD>ESP Chip ID<TD>");
+  #if defined(ESP8266)
+    reply += ESP.getChipId();
+    reply += F(" (0x");
+    reply += String(ESP.getChipId(), HEX);
+    reply += F(")");
+  #endif
+
+  reply += F("<TR><TD>Flash Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getFlashChipId();
+    reply += F(" (0x");
+    reply += String(ESP.getFlashChipId(), HEX);
+    reply += F(")");
   #endif
 
   reply += F("</table></form>");
@@ -4213,7 +4247,9 @@ String URLEncode(const char* msg)
   while (*msg != '\0') {
     if ( ('a' <= *msg && *msg <= 'z')
          || ('A' <= *msg && *msg <= 'Z')
-         || ('0' <= *msg && *msg <= '9') ) {
+         || ('0' <= *msg && *msg <= '9')
+         || ('-' == *msg) || ('_' == *msg)
+         || ('.' == *msg) || ('~' == *msg) ) {
       encodedMsg += *msg;
     } else {
       encodedMsg += '%';

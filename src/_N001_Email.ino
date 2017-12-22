@@ -110,7 +110,7 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
 }
 
 
-boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
+boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForPattern)
 {
 
   boolean myStatus = false;

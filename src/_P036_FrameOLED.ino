@@ -4,8 +4,8 @@
 // This is a modification to Plugin_023 with graphics library provided from squix78 github
 // https://github.com/squix78/esp8266-oled-ssd1306
 //
-// The OLED can display up to 12 strings in four frames - ie 12 frames with 1 line, 6 with 2 lines or 3 with 4 lines.
-// The font size is adjsted according to the number of lines required per frame.
+// The OLED can display up to 12 strings in four frames - i.e. 12 frames with 1 line, 6 with 2 lines or 3 with 4 lines.
+// The font size is adjusted according to the number of lines required per frame.
 //
 // Major work on this plugin has been done by 'Namirda'
 // Added to the main repository with some optimizations and some limitations.

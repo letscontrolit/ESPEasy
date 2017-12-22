@@ -17,23 +17,23 @@
 // included in all copies or substantial portions of the Software.
 
 
-// This plugin enables the use of a MPU6050 sensor as e.g. used in the breakoutboard GY-521.
+// This plugin enables the use of a MPU6050 sensor as e.g. used in the breakout-board GY-521.
 // Using the webform you can set thresholds for the x-y-z axis and timeout values. If the thresholds are
 // exceeded the sensor is on, if the thresholds are not met during the timeout period the sensor is off.
 
-// Using this plugin you can get a notification from your home automationsystem when the monitored machine or
-// device is no longer vibrating and thus this can be used as a signaling device for the end of a (dish)washer
+// Using this plugin you can get a notification from your home automation system when the monitored machine or
+// device is no longer vibrating and thus this can be used as a signalling device for the end of a (dish)washer
 // or dryer cycle.
 
-// You can also use the plugin to read raw sensorvalues. You can use more then one instance of the plugin and
+// You can also use the plugin to read raw sensor values. You can use more then one instance of the plugin and
 // you can set multiple movement alarms by giving each instance other threshold values if needed.
 
-// Best practise: Create three custom sensors in your homecontroller (like domoticz) and let it plot the x, y and
-// z range. Plot the sensorvalues while you use the washingmachine and/or dryer. Also keep monitoring when they
+// Best practise: Create three custom sensors in your home controller (like domoticz) and let it plot the x, y and
+// z range. Plot the sensor values while you use the washing machine and/or dryer. Also keep monitoring when they
 // are not in use so you can determine the needed thresholds. When you have these you can select the movement
 // detection function to setup the plugin for further use.
 
-// The plugin can simultanious be used with two MPU6050 devices by adding multiple instances.
+// The plugin can be used simultaneously with two MPU6050 devices by adding multiple instances.
 // Originally released in the PlayGround as Plugin 118.
 
 // Plugin var usage:
