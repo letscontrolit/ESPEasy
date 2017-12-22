@@ -97,13 +97,13 @@ boolean WifiConnect(byte connectAttempts)
   //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
   {
+    const IPAddress ip = Settings.IP;
     log = F("IP   : Static IP :");
-    log += formatIP(Settings.IP);
+    log += ip;
     addLog(LOG_LEVEL_INFO, log);
-    IPAddress ip = Settings.IP;
-    IPAddress gw = Settings.Gateway;
-    IPAddress subnet = Settings.Subnet;
-    IPAddress dns = Settings.DNS;
+    const IPAddress gw = Settings.Gateway;
+    const IPAddress subnet = Settings.Subnet;
+    const IPAddress dns = Settings.DNS;
     WiFi.config(ip, gw, subnet, dns);
   }
 
@@ -194,8 +194,7 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
     if (WiFi.status() == WL_CONNECTED)
     {
       log = F("WIFI : Connected! IP: ");
-      IPAddress ip = WiFi.localIP();
-      log += formatIP(ip);
+      log += WiFi.localIP();
       log += F(" (");
       log += WifiGetHostname();
       log += F(")");

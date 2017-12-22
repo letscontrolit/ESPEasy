@@ -1759,10 +1759,8 @@ String parseTemplate(String &tmpString, byte lineSize)
   newString.replace(F("%vcc%"), String(vcc));
 #endif
 
-  IPAddress ip = WiFi.localIP();
-  char strIP[20];
-  formatIP(ip, strIP);
-  newString.replace(F("%ip%"), strIP);
+  const IPAddress ip = WiFi.localIP();
+  newString.replace(F("%ip%"), formatIP(ip));
   newString.replace(F("%ip1%"), String(ip[0]));
   newString.replace(F("%ip2%"), String(ip[1]));
   newString.replace(F("%ip3%"), String(ip[2]));
@@ -2244,10 +2242,8 @@ unsigned long getNtpTime()
     else
       WiFi.hostByName(ntpServerName, timeServerIP);
 
-    char host[20];
-    formatIP(timeServerIP, host);
     log = F("NTP  : NTP send to ");
-    log += host;
+    log += formatIP(timeServerIP);
     addLog(LOG_LEVEL_DEBUG_MORE, log);
 
     while (udp.parsePacket() > 0) ; // discard any previously received packets

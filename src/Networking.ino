@@ -414,10 +414,8 @@ void sendSysInfoUDP(byte repeats)
   \*********************************************************************************************/
 void SSDP_schema(WiFiClient &client) {
 
-  IPAddress ip = WiFi.localIP();
-  char str[20];
-  formatIP(ip, str);
-  uint32_t chipId = ESP.getChipId();
+  const IPAddress ip = WiFi.localIP();
+  const uint32_t chipId = ESP.getChipId();
   char uuid[64];
   sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
             (uint16_t) ((chipId >> 16) & 0xff),
@@ -437,7 +435,7 @@ void SSDP_schema(WiFiClient &client) {
                          "<minor>0</minor>"
                          "</specVersion>"
                          "<URLBase>http://");
-  ssdp_schema += str;
+  ssdp_schema += formatIP(ip);
   ssdp_schema += F(":80/</URLBase>"
                    "<device>"
                    "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"

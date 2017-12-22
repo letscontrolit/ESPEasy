@@ -516,10 +516,8 @@ void handle_root() {
     reply += lowestRAMfunction;
     reply += F(")");
 
-    char str[20];
-    formatIP(ip, str);
     reply += F("<TR><TD>IP:<TD>");
-    reply += str;
+    reply += formatIP(ip);
 
     reply += F("<TD><TD>Wifi RSSI:<TD>");
     if (WiFi.status() == WL_CONNECTED)
@@ -3792,7 +3790,7 @@ void handle_setup() {
   if (WiFi.status() == WL_CONNECTED)
   {
     addHtmlError(reply, SaveSettings());
-    IPAddress ip = WiFi.localIP();
+    const IPAddress ip = WiFi.localIP();
     char host[20];
     formatIP(ip, host);
     reply += F("<BR>ESP is connected and using IP Address: <BR><h1>");
@@ -4161,18 +4159,15 @@ void handle_sysinfo() {
   }
 
   {
-    char str[20];
-    formatIP(WiFi.localIP(), str);
     reply += F("<TR><TD>IP<TD>");
-    reply += str;
+    reply += formatIP(WiFi.localIP());
 
-    formatIP(WiFi.gatewayIP(), str);
     reply += F("<TR><TD>GW<TD>");
-    reply += str;
+    reply += formatIP(WiFi.gatewayIP());
 
-    formatIP(WebServer.client().remoteIP(), str);
     reply += F("<TR><TD>Client IP<TD>");
-    reply += str;
+    WiFiClient client(WebServer.client());
+    reply += formatIP(client.remoteIP());
   }
 
   reply += F("<TR><TD>STA MAC<TD>");
