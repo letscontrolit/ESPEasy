@@ -1,4 +1,87 @@
 //********************************************************************************
+// Allowed IP range check
+//********************************************************************************
+#define ALL_ALLOWED            0
+#define LOCAL_SUBNET_ALLOWED   1
+#define ONLY_IP_RANGE_ALLOWED  2
+
+boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
+{
+  for (byte i = 0; i < 4; ++i) {
+    if (ip[i] > high[i]) return false;
+  }
+  return true;
+}
+
+boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high)
+{
+  return (ipLessEqual(low, ip) && ipLessEqual(ip, high));
+}
+
+String describeAllowedIPrange() {
+  String reply;
+  switch (SecuritySettings.IPblockLevel) {
+    case ALL_ALLOWED:
+      reply += F("All Allowed");
+      break;
+    default:
+    {
+      IPAddress low, high;
+      getIPallowedRange(low, high);
+      reply += formatIP(low);
+      reply += F(" - ");
+      reply += formatIP(high);
+    }
+  }
+  return reply;
+}
+
+bool getIPallowedRange(IPAddress& low, IPAddress& high)
+{
+  switch (SecuritySettings.IPblockLevel) {
+    case LOCAL_SUBNET_ALLOWED:
+      return getSubnetRange(low, high);
+    case ONLY_IP_RANGE_ALLOWED:
+      low = SecuritySettings.AllowedIPrangeLow;
+      high = SecuritySettings.AllowedIPrangeHigh;
+      break;
+    default:
+      low = IPAddress(0,0,0,0);
+      high = IPAddress(255,255,255,255);
+      return false;
+  }
+  return true;
+}
+
+boolean clientIPallowed()
+{
+  // TD-er Must implement "safe time after boot"
+  IPAddress low, high;
+  if (!getIPallowedRange(low, high))
+  {
+    // No subnet range determined, cannot filter on IP
+    return true;
+  }
+  WiFiClient client(WebServer.client());
+  if (ipInRange(client.remoteIP(), low, high))
+    return true;
+  String response = F("IP blocked: ");
+  response += formatIP(client.remoteIP());
+  WebServer.send(403, "text/html", response);
+  response += F(" Allowed: ");
+  response += formatIP(low);
+  response += F(" - ");
+  response += formatIP(high);
+  addLog(LOG_LEVEL_ERROR, response);
+  return false;
+}
+
+void clearAccessBlock()
+{
+  SecuritySettings.IPblockLevel = ALL_ALLOWED;
+}
+
+//********************************************************************************
 // Web Interface init
 //********************************************************************************
 
@@ -465,8 +548,9 @@ void handle_root() {
 
     printToWeb = true;
     printWebString = "";
-    if (sCommand.length() > 0)
+    if (sCommand.length() > 0) {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
+    }
 
     IPAddress ip = WiFi.localIP();
     // IPAddress gw = WiFi.gatewayIP();
@@ -629,6 +713,9 @@ void handle_config() {
   //String key = WebServer.arg(F("key"));
   String ssid2 = WebServer.arg(F("ssid2"));
   //String key2 = WebServer.arg(F("key2"));
+  String iprangelow = WebServer.arg(F("iprangelow"));
+  String iprangehigh = WebServer.arg(F("iprangehigh"));
+
   String sensordelay = WebServer.arg(F("delay"));
   String deepsleep = WebServer.arg(F("deepsleep"));
   String deepsleeponfail = WebServer.arg(F("deepsleeponfail"));
@@ -655,6 +742,28 @@ void handle_config() {
     copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
     //strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
+
+    // TD-er Read access control from form.
+    SecuritySettings.IPblockLevel = getFormItemInt(F("ipblocklevel"));
+    switch (SecuritySettings.IPblockLevel) {
+      case LOCAL_SUBNET_ALLOWED:
+      {
+        IPAddress low, high;
+        getSubnetRange(low, high);
+        for (byte i=0; i < 4; ++i) {
+          SecuritySettings.AllowedIPrangeLow[i] = low[i];
+          SecuritySettings.AllowedIPrangeHigh[i] = high[i];
+        }
+        break;
+      }
+      case ONLY_IP_RANGE_ALLOWED:
+      case ALL_ALLOWED:
+        iprangelow.toCharArray(tmpString, 26);
+        str2ip(tmpString, SecuritySettings.AllowedIPrangeLow);
+        iprangehigh.toCharArray(tmpString, 26);
+        str2ip(tmpString, SecuritySettings.AllowedIPrangeHigh);
+        break;
+    }
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
@@ -690,6 +799,21 @@ void handle_config() {
   addFormSeparator(reply);
   addFormPasswordBox(reply, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
+  // TD-er add IP access box F("ipblocklevel")
+  addFormSubHeader(reply, F("Client IP filtering"));
+  {
+    IPAddress low, high;
+    getIPallowedRange(low, high);
+    byte iplow[4];
+    byte iphigh[4];
+    for (byte i = 0; i < 4; ++i) {
+      iplow[i] = low[i];
+      iphigh[i] = high[i];
+    }
+    addFormIPaccessControlSelect(reply, F("Client IP block level"), F("ipblocklevel"), SecuritySettings.IPblockLevel);
+    addFormIPBox(reply, F("Access IP lower range"), F("iprangelow"), iplow);
+    addFormIPBox(reply, F("Access IP upper range"), F("iprangehigh"), iphigh);
+  }
 
   addFormSubHeader(reply, F("IP Settings"));
 
@@ -1221,6 +1345,21 @@ void addPinStateSelect(String& str, String name, int choice)
 {
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
   addSelector(str, name, 4, options, NULL, NULL, choice, false);
+}
+
+//********************************************************************************
+// Add a IP Access Control select dropdown list
+//********************************************************************************
+void addFormIPaccessControlSelect(String& str, const String& label, const String& id, int choice)
+{
+  addRowLabel(str, label);
+  addIPaccessControlSelect(str, id, choice);
+}
+
+void addIPaccessControlSelect(String& str, String name, int choice)
+{
+  String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
+  addSelector(str, name, 3, options, NULL, NULL, choice, false);
 }
 
 
@@ -2845,6 +2984,7 @@ void handle_wifiscanner() {
 // Web Interface login page
 //********************************************************************************
 void handle_login() {
+  if (!clientIPallowed()) return;
 
   String webrequest = WebServer.arg(F("password"));
   char command[80];
@@ -2886,6 +3026,7 @@ void handle_login() {
 // Web Interface control page (no password!)
 //********************************************************************************
 void handle_control() {
+  if (!clientIPallowed()) return;
 
   String webrequest = WebServer.arg(F("cmd"));
 
@@ -2930,6 +3071,7 @@ void handle_control() {
 
 void handle_json()
 {
+  // ToDo TD-er: Must check for allowed client IP??????
   String tasknr = WebServer.arg(F("tasknr"));
   String reply = "";
 
@@ -3151,6 +3293,7 @@ void handle_advanced() {
 //********************************************************************************
 boolean isLoggedIn()
 {
+  if (!clientIPallowed()) return false;
   if (SecuritySettings.Password[0] == 0)
     WebLoggedIn = true;
 
@@ -3391,6 +3534,7 @@ bool loadFromFS(boolean spiffs, String path) {
 // Web Interface custom page handler
 //********************************************************************************
 boolean handle_custom(String path) {
+  if (!clientIPallowed()) return false;
   path = path.substring(1);
   String reply = "";
 
@@ -3457,7 +3601,7 @@ boolean handle_custom(String path) {
 
   // handle commands from a custom page
   String webrequest = WebServer.arg(F("cmd"));
-  if (webrequest.length() > 0){
+  if (webrequest.length() > 0 ){
     struct EventStruct TempEvent;
     parseCommandString(&TempEvent, webrequest);
     TempEvent.Source = VALUE_SOURCE_HTTP;
@@ -3525,6 +3669,7 @@ boolean handle_custom(String path) {
 // Web Interface file list
 //********************************************************************************
 void handle_filelist() {
+  if (!clientIPallowed()) return;
 #if defined(ESP8266)
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
@@ -3614,6 +3759,7 @@ void handle_filelist() {
 //********************************************************************************
 #ifdef FEATURE_SD
 void handle_SDfilelist() {
+  if (!clientIPallowed()) return;
 
   navMenuIndex = 7;
   String fdelete = "";
@@ -3783,7 +3929,7 @@ void handleNotFound() {
 // Web Interface Setup Wizard
 //********************************************************************************
 void handle_setup() {
-
+  // Do not check client IP range allowed.
   String reply = "";
   addHeader(false, reply);
 
@@ -4158,17 +4304,22 @@ void handle_sysinfo() {
     reply += F(" dB)");
   }
 
+  reply += F("<TR><TD>IP / subnet<TD>");
+  reply += formatIP(WiFi.localIP());
+  reply += F(" / ");
+  reply += formatIP(WiFi.subnetMask());
+
+  reply += F("<TR><TD>GW<TD>");
+  reply += formatIP(WiFi.gatewayIP());
+
   {
-    reply += F("<TR><TD>IP<TD>");
-    reply += formatIP(WiFi.localIP());
-
-    reply += F("<TR><TD>GW<TD>");
-    reply += formatIP(WiFi.gatewayIP());
-
     reply += F("<TR><TD>Client IP<TD>");
     WiFiClient client(WebServer.client());
     reply += formatIP(client.remoteIP());
   }
+
+  reply += F("<TR><TD>Allowed IP Range<TD>");
+  reply += describeAllowedIPrange();
 
   reply += F("<TR><TD>STA MAC<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};

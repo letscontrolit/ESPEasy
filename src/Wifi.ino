@@ -194,7 +194,7 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
     if (WiFi.status() == WL_CONNECTED)
     {
       log = F("WIFI : Connected! IP: ");
-      log += WiFi.localIP();
+      log += formatIP(WiFi.localIP());
       log += F(" (");
       log += WifiGetHostname();
       log += F(")");
@@ -300,4 +300,30 @@ void WifiCheck()
       WifiAPMode(false);
     }
   }
+}
+
+//********************************************************************************
+// Return subnet range of WiFi.
+//********************************************************************************
+bool getSubnetRange(IPAddress& low, IPAddress& high)
+{
+  if (WifiIsAP()) {
+    // WiFi is active as accesspoint, do not check.
+    return false;
+  }
+  if (WiFi.status() != WL_CONNECTED) {
+    return false;
+  }
+  const IPAddress ip = WiFi.localIP();
+  const IPAddress subnet = WiFi.subnetMask();
+  low = ip;
+  high = ip;
+  // Compute subnet range.
+  for (byte i=0; i < 4; ++i) {
+    if (subnet[i] != 255) {
+      low[i] = low[i] & subnet[i];
+      high[i] = high[i] | ~subnet[i];
+    }
+  }
+  return true;
 }

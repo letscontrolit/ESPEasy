@@ -90,6 +90,9 @@
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
 #define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
+#define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
+#define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
+#define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
@@ -357,7 +360,7 @@
   #include <WiFi.h>
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
-  ESP32WebServer WebServer(80); 
+  ESP32WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
   #endif
@@ -412,6 +415,9 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
+  byte          AllowedIPrangeLow[4]; // TD-er: Use these
+  byte          AllowedIPrangeHigh[4];
+  byte          IPblockLevel;
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 } SecuritySettings;
 
@@ -807,7 +813,7 @@ void setup()
 
   fileSystemCheck();
   LoadSettings();
-        
+
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 

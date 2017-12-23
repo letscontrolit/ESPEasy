@@ -180,6 +180,21 @@ void ExecuteCommand(byte source, const char *Line)
     delay(60000);
   }
 
+  if (strcasecmp_P(Command, PSTR("accessinfo")) == 0)
+  {
+    success = true;
+    Serial.print(F("Allowed IP range : "));
+    Serial.println(describeAllowedIPrange());
+  }
+
+  if (strcasecmp_P(Command, PSTR("clearaccessblock")) == 0)
+  {
+    success = true;
+    clearAccessBlock();
+    Serial.print(F("Allowed IP range : "));
+    Serial.println(describeAllowedIPrange());
+  }
+
   if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
   {
     success = true;
