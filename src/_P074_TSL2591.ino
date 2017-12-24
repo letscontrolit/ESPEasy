@@ -12,6 +12,9 @@
 #define PLUGIN_ID_074        74
 #define PLUGIN_NAME_074       "Light/Lux - TSL2591 [TESTING]"
 #define PLUGIN_VALUENAME1_074 "Lux"
+#define PLUGIN_VALUENAME2_074 "Full"
+#define PLUGIN_VALUENAME3_074 "Visible"
+#define PLUGIN_VALUENAME4_074 "IR"
 
 
 #include <Adafruit_Sensor.h>
@@ -34,11 +37,11 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_074;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].ValueCount = 4;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].TimerOptional = false;
@@ -55,6 +58,9 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_074));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_074));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_074));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_074));
         break;
       }
 
@@ -105,16 +111,13 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
       {
       	tsl = Adafruit_TSL2591(2591); // pass in a number for the sensor identifier (for your use later)
 
-        Serial.println(F("Starting Adafruit TSL2591 Test!"));
-
         if (tsl.begin())
         {
-          Serial.println(F("Found a TSL2591 sensor"));
+        	addLog(LOG_LEVEL_DEBUG,F("TSL2591: Found a sensor"));
         }
         else
         {
-          Serial.println(F("No sensor found ... check your wiring?"));
-          while (1);
+        	addLog(LOG_LEVEL_ERROR,F("TSL2591: No sensor found ... check your wiring?"));
         }
 
         String log = F("TSL2591: Address: 0x");
@@ -160,7 +163,8 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
         log += F(": Integration Time: ");
         log += String((tsl.getTiming() + 1) * 100, DEC);
-        addLog(LOG_LEVEL_INFO,log);
+        log += F(" ms");
+
 
 				// You can change the gain on the fly, to adapt to brighter/dimmer light situations
 				switch (CONFIG(2))
@@ -191,29 +195,25 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
 
         /* Display the gain and integration time for reference sake */
-        Serial.println(F("------------------------------------"));
-        Serial.print  (F("Gain:         "));
+				log += (F(" Gain: "));
         tsl2591Gain_t gain = tsl.getGain();
         switch(gain)
         {
           case TSL2591_GAIN_LOW:
-            Serial.println(F("1x (Low)"));
+          	log += F("1x (Low)");
             break;
           case TSL2591_GAIN_MED:
-            Serial.println(F("25x (Medium)"));
+          	log += F("25x (Medium)");
             break;
           case TSL2591_GAIN_HIGH:
-            Serial.println(F("428x (High)"));
+          	log += F("428x (High)");
             break;
           case TSL2591_GAIN_MAX:
-            Serial.println(F("9876x (Max)"));
+          	log += F("9876x (Max)");
             break;
         }
-        Serial.print  (F("Timing:       "));
-        Serial.print((tsl.getTiming() + 1) * 100, DEC);
-        Serial.println(F(" ms"));
-        Serial.println(F("------------------------------------"));
-        Serial.println(F(""));
+
+        addLog(LOG_LEVEL_INFO,log);
 
         success = true;
         break;
@@ -224,13 +224,27 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
         // Simple data read example. Just read the infrared, fullspecrtrum diode
         // or 'visible' (difference between the two) channels.
         // This can take 100-600 milliseconds! Uncomment whichever of the following you want to read
-      	UserVar[event->BaseVarIndex + 0] = tsl.getLuminosity(TSL2591_VISIBLE);
-        //uint16_t x = tsl.getLuminosity(TSL2591_FULLSPECTRUM);
-        //uint16_t x = tsl.getLuminosity(TSL2591_INFRARED);
+      	float lux, full, visible, ir;
+      	visible = tsl.getLuminosity(TSL2591_VISIBLE);
+      	ir = tsl.getLuminosity(TSL2591_INFRARED);
+      	full = tsl.getLuminosity(TSL2591_FULLSPECTRUM);
+      	lux = tsl.calculateLux(full, ir); // get LUX
 
-        Serial.print(F("[ ")); Serial.print(millis()); Serial.print(F(" ms ] "));
-        Serial.print(F("Luminosity: "));
-        Serial.println(UserVar[event->BaseVarIndex + 0], DEC);
+      	UserVar[event->BaseVarIndex + 0] = lux;
+      	UserVar[event->BaseVarIndex + 1] = full;
+      	UserVar[event->BaseVarIndex + 2] = visible;
+      	UserVar[event->BaseVarIndex + 3] = ir;
+
+        String log = F("TSL2591: Lux: ");
+        log += String(lux);
+        log += F(" Full: ");
+        log += String(full);
+        log += F(" Visible: ");
+        log += String(visible);
+        log += F(" IR: ");
+        log += String(ir);
+        addLog(LOG_LEVEL_INFO,log);
+
       }
 
   }
