@@ -117,8 +117,8 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
     if (!connected()) {
         int result = 0;
 
-        if (domain != NULL) {
-            result = _client->connect(this->domain, this->port);
+        if (domain.length() != 0) {
+            result = _client->connect(this->domain.c_str(), this->port);
         } else {
             result = _client->connect(this->ip, this->port);
         }
@@ -560,7 +560,7 @@ PubSubClient& PubSubClient::setServer(uint8_t * ip, uint16_t port) {
 PubSubClient& PubSubClient::setServer(IPAddress ip, uint16_t port) {
     this->ip = ip;
     this->port = port;
-    this->domain = NULL;
+    this->domain = "";
     return *this;
 }
 
