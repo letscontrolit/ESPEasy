@@ -113,107 +113,107 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
         if (tsl.begin())
         {
-        	addLog(LOG_LEVEL_DEBUG,F("TSL2591: Found a sensor"));
+          String log = F("TSL2591: Address: 0x");
+          log += String(TSL2591_ADDR,HEX);
+
+
+          // Changing the integration time gives you a longer time over which to sense light
+          // longer timelines are slower, but are good in very low light situtations!
+          switch (CONFIG(1))
+          {
+            default:
+            case 0:
+            {
+            	tsl.setTiming(TSL2591_INTEGRATIONTIME_100MS);
+              break;
+            }
+            case 1:
+            {
+            	tsl.setTiming(TSL2591_INTEGRATIONTIME_200MS);
+              break;
+            }
+            case 2:
+            {
+            	tsl.setTiming(TSL2591_INTEGRATIONTIME_300MS);
+              break;
+            }
+            case 3:
+            {
+            	tsl.setTiming(TSL2591_INTEGRATIONTIME_400MS);
+              break;
+            }
+            case 4:
+            {
+            	tsl.setTiming(TSL2591_INTEGRATIONTIME_500MS);
+              break;
+            }
+            case 5:
+            {
+            	tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS);
+              break;
+            }
+          }
+
+          log += F(": Integration Time: ");
+          log += String((tsl.getTiming() + 1) * 100, DEC);
+          log += F(" ms");
+
+
+  				// You can change the gain on the fly, to adapt to brighter/dimmer light situations
+  				switch (CONFIG(2))
+  				{
+  					default:
+  					case 0:
+  					{
+  						tsl.setGain(TSL2591_GAIN_LOW);    // 1x gain (bright light)
+  						break;
+  					}
+  					case 1:
+  					{
+  						tsl.setGain(TSL2591_GAIN_MED);      // 25x gain
+  						break;
+  					}
+  					case 2:
+  					{
+  						tsl.setGain(TSL2591_GAIN_HIGH);   // 428x gain
+  						break;
+  					}
+  					case 3:
+  					{
+  						tsl.setGain(TSL2591_GAIN_MAX);   // 9876x gain
+  						break;
+  					}
+  				}
+
+
+
+          /* Display the gain and integration time for reference sake */
+  				log += (F(" Gain: "));
+          tsl2591Gain_t gain = tsl.getGain();
+          switch(gain)
+          {
+            case TSL2591_GAIN_LOW:
+            	log += F("1x (Low)");
+              break;
+            case TSL2591_GAIN_MED:
+            	log += F("25x (Medium)");
+              break;
+            case TSL2591_GAIN_HIGH:
+            	log += F("428x (High)");
+              break;
+            case TSL2591_GAIN_MAX:
+            	log += F("9876x (Max)");
+              break;
+          }
+
+          addLog(LOG_LEVEL_INFO,log);
+
         }
         else
         {
         	addLog(LOG_LEVEL_ERROR,F("TSL2591: No sensor found ... check your wiring?"));
         }
 
-        String log = F("TSL2591: Address: 0x");
-        log += String(TSL2591_ADDR,HEX);
-
-
-        // Changing the integration time gives you a longer time over which to sense light
-        // longer timelines are slower, but are good in very low light situtations!
-        switch (CONFIG(1))
-        {
-          default:
-          case 0:
-          {
-          	tsl.setTiming(TSL2591_INTEGRATIONTIME_100MS);
-            break;
-          }
-          case 1:
-          {
-          	tsl.setTiming(TSL2591_INTEGRATIONTIME_200MS);
-            break;
-          }
-          case 2:
-          {
-          	tsl.setTiming(TSL2591_INTEGRATIONTIME_300MS);
-            break;
-          }
-          case 3:
-          {
-          	tsl.setTiming(TSL2591_INTEGRATIONTIME_400MS);
-            break;
-          }
-          case 4:
-          {
-          	tsl.setTiming(TSL2591_INTEGRATIONTIME_500MS);
-            break;
-          }
-          case 5:
-          {
-          	tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS);
-            break;
-          }
-        }
-
-        log += F(": Integration Time: ");
-        log += String((tsl.getTiming() + 1) * 100, DEC);
-        log += F(" ms");
-
-
-				// You can change the gain on the fly, to adapt to brighter/dimmer light situations
-				switch (CONFIG(2))
-				{
-					default:
-					case 0:
-					{
-						tsl.setGain(TSL2591_GAIN_LOW);    // 1x gain (bright light)
-						break;
-					}
-					case 1:
-					{
-						tsl.setGain(TSL2591_GAIN_MED);      // 25x gain
-						break;
-					}
-					case 2:
-					{
-						tsl.setGain(TSL2591_GAIN_HIGH);   // 428x gain
-						break;
-					}
-					case 3:
-					{
-						tsl.setGain(TSL2591_GAIN_MAX);   // 9876x gain
-						break;
-					}
-				}
-
-
-
-        /* Display the gain and integration time for reference sake */
-				log += (F(" Gain: "));
-        tsl2591Gain_t gain = tsl.getGain();
-        switch(gain)
-        {
-          case TSL2591_GAIN_LOW:
-          	log += F("1x (Low)");
-            break;
-          case TSL2591_GAIN_MED:
-          	log += F("25x (Medium)");
-            break;
-          case TSL2591_GAIN_HIGH:
-          	log += F("428x (High)");
-            break;
-          case TSL2591_GAIN_MAX:
-          	log += F("9876x (Max)");
-            break;
-        }
-
-        addLog(LOG_LEVEL_INFO,log);
 
         success = true;
         break;
