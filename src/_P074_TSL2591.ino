@@ -25,6 +25,7 @@
 #endif
 
 Adafruit_TSL2591 tsl;
+boolean TSL2591_initialized = false;
 
 boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 {
@@ -206,11 +207,13 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
               break;
           }
 
+          TSL2591_initialized = true;
           addLog(LOG_LEVEL_INFO,log);
 
         }
         else
         {
+        	TSL2591_initialized = false;
         	addLog(LOG_LEVEL_ERROR,F("TSL2591: No sensor found ... check your wiring?"));
         }
 
@@ -221,29 +224,35 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        // Simple data read example. Just read the infrared, fullspecrtrum diode
-        // or 'visible' (difference between the two) channels.
-        // This can take 100-600 milliseconds! Uncomment whichever of the following you want to read
-      	float lux, full, visible, ir;
-      	visible = tsl.getLuminosity(TSL2591_VISIBLE);
-      	ir = tsl.getLuminosity(TSL2591_INFRARED);
-      	full = tsl.getLuminosity(TSL2591_FULLSPECTRUM);
-      	lux = tsl.calculateLux(full, ir); // get LUX
+      	if (TSL2591_initialized)
+      	{
+					// Simple data read example. Just read the infrared, fullspecrtrum diode
+					// or 'visible' (difference between the two) channels.
+					// This can take 100-600 milliseconds! Uncomment whichever of the following you want to read
+					float lux, full, visible, ir;
+					visible = tsl.getLuminosity(TSL2591_VISIBLE);
+					ir = tsl.getLuminosity(TSL2591_INFRARED);
+					full = tsl.getLuminosity(TSL2591_FULLSPECTRUM);
+					lux = tsl.calculateLux(full, ir); // get LUX
 
-      	UserVar[event->BaseVarIndex + 0] = lux;
-      	UserVar[event->BaseVarIndex + 1] = full;
-      	UserVar[event->BaseVarIndex + 2] = visible;
-      	UserVar[event->BaseVarIndex + 3] = ir;
+					UserVar[event->BaseVarIndex + 0] = lux;
+					UserVar[event->BaseVarIndex + 1] = full;
+					UserVar[event->BaseVarIndex + 2] = visible;
+					UserVar[event->BaseVarIndex + 3] = ir;
 
-        String log = F("TSL2591: Lux: ");
-        log += String(lux);
-        log += F(" Full: ");
-        log += String(full);
-        log += F(" Visible: ");
-        log += String(visible);
-        log += F(" IR: ");
-        log += String(ir);
-        addLog(LOG_LEVEL_INFO,log);
+					String log = F("TSL2591: Lux: ");
+					log += String(lux);
+					log += F(" Full: ");
+					log += String(full);
+					log += F(" Visible: ");
+					log += String(visible);
+					log += F(" IR: ");
+					log += String(ir);
+					addLog(LOG_LEVEL_INFO,log);
+      	}
+      	else {
+      		addLog(LOG_LEVEL_ERROR,F("TSL2591: Sensor not initialized!?"));
+      	}
 
       }
 
