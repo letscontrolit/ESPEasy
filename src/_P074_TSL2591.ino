@@ -1,10 +1,13 @@
 //#######################################################################################################
-//######################## Plugin 074 TSL2591 I2C Lux Sensor ############################################
+//######################## Plugin 074 TSL2591 I2C Lux/IR Sensor #########################################
 //#######################################################################################################
 //
 // by: https://github.com/krikk
-// this plugin is based on the sparkfun library
+// this plugin is based on the adafruit library
 // written based on version 1.0.2 from https://github.com/adafruit/Adafruit_TSL2591_Library
+// does need Adafruit Sensors Library
+// added lux calculation improvement https://github.com/adafruit/Adafruit_TSL2591_Library/issues/14
+// addes fix for issue https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
 #ifdef PLUGIN_BUILD_TESTING
 
@@ -233,7 +236,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 					visible = tsl.getLuminosity(TSL2591_VISIBLE);
 					ir = tsl.getLuminosity(TSL2591_INFRARED);
 					full = tsl.getLuminosity(TSL2591_FULLSPECTRUM);
-					lux = tsl.calculateLux(full, ir); // get LUX
+					lux = tsl.calculateLuxf(full, ir); // get LUX
 
 					UserVar[event->BaseVarIndex + 0] = lux;
 					UserVar[event->BaseVarIndex + 1] = full;

@@ -171,7 +171,7 @@ tsl2591IntegrationTime_t Adafruit_TSL2591::getTiming()
   return _integration;
 }
 
-uint32_t Adafruit_TSL2591::calculateLux(uint16_t ch0, uint16_t ch1)
+float Adafruit_TSL2591::calculateLuxf(uint16_t ch0, uint16_t ch1)
 {
   float    atime, again;
   float    cpl, lux1, lux2, lux;
@@ -234,15 +234,20 @@ uint32_t Adafruit_TSL2591::calculateLux(uint16_t ch0, uint16_t ch1)
   // cpl = (ATIME * AGAIN) / DF
   cpl = (atime * again) / TSL2591_LUX_DF;
 
-  lux1 = ( (float)ch0 - (TSL2591_LUX_COEFB * (float)ch1) ) / cpl;
-  lux2 = ( ( TSL2591_LUX_COEFC * (float)ch0 ) - ( TSL2591_LUX_COEFD * (float)ch1 ) ) / cpl;
+  lux1 =  (((float) ch0 - (float) ch1)) * (1.0F - ((float) ch1 / (float) ch0)) / cpl;//( (float)ch0 - (TSL2591_LUX_COEFB * (float)ch1) ) / cpl;
+  lux2 = ((TSL2591_LUX_COEFC * (float) ch0) - (TSL2591_LUX_COEFD * (float) ch1)) / cpl;
   lux = lux1 > lux2 ? lux1 : lux2;
 
   // Alternate lux calculation
   //lux = ( (float)ch0 - ( 1.7F * (float)ch1 ) ) / cpl;
 
   // Signal I2C had no errors
-  return (uint32_t)lux;
+  return lux;
+}
+
+uint32_t Adafruit_TSL2591::calculateLux(uint16_t ch0, uint16_t ch1)
+{
+  return (uint32_t) calculateLuxf(ch0, ch1);
 }
 
 uint32_t Adafruit_TSL2591::getFullLuminosity (void)
@@ -265,9 +270,11 @@ uint32_t Adafruit_TSL2591::getFullLuminosity (void)
   }
 
   uint32_t x;
+  uint16_t y;
+  y |= read16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
   x = read16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
   x <<= 16;
-  x |= read16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
+  x |= y;
 
   disable();
 
