@@ -7,7 +7,7 @@
 // written based on version 1.0.2 from https://github.com/adafruit/Adafruit_TSL2591_Library
 // does need Adafruit Sensors Library
 // added lux calculation improvement https://github.com/adafruit/Adafruit_TSL2591_Library/issues/14
-// addes fix for issue https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
+// added fix for issue https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
 #ifdef PLUGIN_BUILD_TESTING
 
