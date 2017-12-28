@@ -8,7 +8,7 @@
   \*********************************************************************************************/
 void syslog(const char *message)
 {
-  if (Settings.Syslog_IP[0] != 0)
+  if (Settings.Syslog_IP[0] != 0 && WiFi.status() == WL_CONNECTED)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
@@ -228,6 +228,9 @@ void checkUDP()
   \*********************************************************************************************/
 void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
   struct infoStruct infoReply;
   infoReply.sourcelUnit = Settings.Unit;
   infoReply.sourceTaskIndex = sourceTaskIndex;
@@ -260,6 +263,9 @@ void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   \*********************************************************************************************/
 void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
   struct dataStruct dataReply;
   dataReply.sourcelUnit = Settings.Unit;
   dataReply.sourceTaskIndex = sourceTaskIndex;
@@ -289,6 +295,9 @@ void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   \*********************************************************************************************/
 void SendUDPCommand(byte destUnit, char* data, byte dataLength)
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
   byte firstUnit = 1;
   byte lastUnit = UNIT_MAX - 1;
   if (destUnit != 0)
@@ -310,6 +319,9 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
   if (unit != 255)
     if (Nodes[unit].ip[0] == 0)
       return;
@@ -353,7 +365,7 @@ void refreshNodeList()
 void sendSysInfoUDP(byte repeats)
 {
   char log[80];
-  if (Settings.UDPPort == 0)
+  if (Settings.UDPPort == 0 || WiFi.status() != WL_CONNECTED)
     return;
 
   // TODO: make a nice struct of it and clean up
@@ -413,6 +425,9 @@ void sendSysInfoUDP(byte repeats)
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
 void SSDP_schema(WiFiClient &client) {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
 
   IPAddress ip = WiFi.localIP();
   char str[20];
@@ -712,10 +727,10 @@ void SSDP_update() {
     }
   }
 
-  if (_pending && (millis() - _process_time) > _delay) {
+  if (_pending && timeOutReached(_process_time + _delay)) {
     _pending = false; _delay = 0;
     SSDP_send(NONE);
-  } else if (_notify_time == 0 || (millis() - _notify_time) > (SSDP_INTERVAL * 1000L)) {
+  } else if (_notify_time == 0 || timeOutReached(_notify_time + (SSDP_INTERVAL * 1000L))) {
     _notify_time = millis();
     SSDP_send(NOTIFY);
   }

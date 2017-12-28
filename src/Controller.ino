@@ -18,8 +18,8 @@ void sendData(struct EventStruct *event)
 
   if (Settings.MessageDelay != 0)
   {
-    uint16_t dif = millis() - lastSend;
-    if (dif < Settings.MessageDelay)
+    const long dif = timePassedSince(lastSend);
+    if (dif > 0 && dif < static_cast<long>(Settings.MessageDelay))
     {
       uint16_t delayms = Settings.MessageDelay - dif;
       //this is logged nowhere else, so might as well disable it here also:
@@ -27,7 +27,7 @@ void sendData(struct EventStruct *event)
       delayBackground(delayms);
 
       // unsigned long timer = millis() + delayms;
-      // while (millis() < timer)
+      // while (!timeOutReached(timer))
       //   backgroundtasks();
     }
   }
@@ -97,6 +97,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 void MQTTConnect()
 {
+  if (WiFi.status() != WL_CONNECTED) return;
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
 
@@ -167,14 +168,15 @@ void MQTTCheck()
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (!MQTTclient.connected())
+    if (!MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
     {
-      String log = F("MQTT : Connection lost");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
       connectionFailures += 2;
       MQTTclient.disconnect();
-      delay(1000);
-      MQTTConnect();
+      if (WiFi.status() == WL_CONNECTED) {
+        delay(1000);
+        MQTTConnect();
+      }
     }
     else if (connectionFailures)
       connectionFailures--;

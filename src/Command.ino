@@ -4,9 +4,8 @@ char* ramtest;
 //We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
 bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize=1024, unsigned int timeout=1000)
 {
-    unsigned long startMillis;
     int c;
-    startMillis = millis();
+    const unsigned long timer = millis() + timeout;
     str="";
 
     do {
@@ -32,7 +31,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
             }
         }
         yield();
-    } while(millis() - startMillis < timeout);
+    } while(!timeOutReached(timer));
 
     addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
     return(false);
@@ -67,7 +66,7 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     unsigned long timer = millis() + Par1;
     Serial.println("start");
-    while (millis() < timer)
+    while (!timeOutReached(timer))
       backgroundtasks();
     Serial.println("end");
   }
@@ -350,8 +349,7 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-
-  if (strcasecmp_P(Command, PSTR("Publish")) == 0)
+  if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String event = Line;
@@ -365,7 +363,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -383,7 +381,7 @@ void ExecuteCommand(byte source, const char *Line)
     portUDP.endPacket();
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -399,7 +397,7 @@ void ExecuteCommand(byte source, const char *Line)
                    "Connection: close\r\n\r\n");
 
       unsigned long timer = millis() + 200;
-      while (!client.available() && millis() < timer)
+      while (!client.available() && !timeOutReached(timer))
         delay(1);
 
       while (client.available()) {

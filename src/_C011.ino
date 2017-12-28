@@ -120,6 +120,9 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend011(struct EventStruct *event)
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return false;
+  }
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
@@ -186,7 +189,7 @@ boolean HTTPSend011(struct EventStruct *event)
   addLog(LOG_LEVEL_DEBUG_MORE, payload);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial

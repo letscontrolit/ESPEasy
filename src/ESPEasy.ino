@@ -514,6 +514,9 @@ struct ControllerSettingsStruct
   }
 
   boolean connectToHost(WiFiClient &client) {
+    if (WiFi.status() != WL_CONNECTED) {
+      return false; // Not connected, so no use in wasting time to connect to a host.
+    }
     if (UseDNS) {
       return client.connect(HostName, Port);
     }
@@ -521,6 +524,9 @@ struct ControllerSettingsStruct
   }
 
   int beginPacket(WiFiUDP &client) {
+    if (WiFi.status() != WL_CONNECTED) {
+      return 0; // Not connected, so no use in wasting time to connect to a host.
+    }
     if (UseDNS) {
       return client.beginPacket(HostName, Port);
     }
@@ -940,7 +946,6 @@ void loop()
     wifiSetupConnect = false;
   }
 
-
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
   if (isDeepSleepEnabled())
   {
@@ -955,16 +960,16 @@ void loop()
   else
   {
 
-    if (millis() > timer20ms)
+    if (timeOutReached(timer20ms))
       run50TimesPerSecond();
 
-    if (millis() > timer100ms)
+    if (timeOutReached(timer100ms))
       run10TimesPerSecond();
 
-    if (millis() > timerwd)
+    if (timeOutReached(timerwd))
       runEach30Seconds();
 
-    if (millis() > timer1s)
+    if (timeOutReached(timer1s))
       runOncePerSecond();
   }
   backgroundtasks();
@@ -1085,7 +1090,7 @@ void runOncePerSecond()
     Serial.println(timer);
   }
 
-  if (timerAPoff != 0 && millis() > timerAPoff)
+  if (timerAPoff != 0 && timeOutReached(timerAPoff))
   {
     timerAPoff = 0;
     WifiAPMode(false);
@@ -1141,7 +1146,7 @@ void checkSensors()
   {
     if (
         (Settings.TaskDeviceTimer[x] != 0) &&
-        (isDeepSleep || (millis() > timerSensor[x]))
+        (isDeepSleep || timeOutReached(timerSensor[x]))
     )
     {
       timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
@@ -1278,7 +1283,7 @@ void checkSystemTimers()
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
     if (systemTimers[x].timer != 0)
     {
-      if (timeOut(systemTimers[x].timer))
+      if (timeOutReached(systemTimers[x].timer))
       {
         struct EventStruct TempEvent;
         TempEvent.Par1 = systemTimers[x].Par1;
@@ -1293,7 +1298,7 @@ void checkSystemTimers()
 
   for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
     if (systemCMDTimers[x].timer != 0)
-      if (timeOut(systemCMDTimers[x].timer))
+      if (timeOutReached(systemCMDTimers[x].timer))
       {
         struct EventStruct TempEvent;
         parseCommandString(&TempEvent, systemCMDTimers[x].action);

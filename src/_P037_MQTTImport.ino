@@ -336,6 +336,9 @@ boolean MQTTConnect_037(String clientid)
   if (MQTTclient_037->connected())return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
+  if (WiFi.status() != WL_CONNECTED) {
+    return false; // Not connected, so no use in wasting time to connect to a host.
+  }
   if (ControllerSettings.UseDNS) {
     MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {

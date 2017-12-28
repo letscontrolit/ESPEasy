@@ -56,7 +56,10 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-
+        if (WiFi.status() != WL_CONNECTED) {
+          success = false;
+          break;
+        }
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
@@ -166,7 +169,7 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
               + buffer);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial

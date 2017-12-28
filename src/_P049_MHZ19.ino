@@ -271,9 +271,9 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           // get response
           memset(mhzResp, 0, sizeof(mhzResp));
 
-          long start = millis();
+          long timer = millis() + PLUGIN_READ_TIMEOUT;
           int counter = 0;
-          while (((millis() - start) < PLUGIN_READ_TIMEOUT) && (counter < 9)) {
+          while (!timeOutReached(timer) && (counter < 9)) {
             if (Plugin_049_SoftSerial->available() > 0) {
               mhzResp[counter++] = Plugin_049_SoftSerial->read();
             } else {

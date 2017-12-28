@@ -34,6 +34,10 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
+          if (WiFi.status() != WL_CONNECTED) {
+            success = false;
+            break;
+          }
           ControllerSettingsStruct ControllerSettings;
           LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof (ControllerSettings));
 
@@ -178,7 +182,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           client.print(request);
 
           unsigned long timer = millis() + 200;
-          while (!client.available() && millis() < timer)
+          while (!client.available() && !timeOutReached(timer)) 
             yield();
 
           // Read all the lines of the reply from server and log them
