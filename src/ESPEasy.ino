@@ -409,7 +409,7 @@ struct SecurityStruct
   char          WifiSSID2[32];
   char          WifiKey2[64];
   char          WifiAPKey[64];
-  char          ControllerUser[CONTROLLER_MAX][26];
+  char          ControllerUser[CONTROLLER_MAX][36];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
