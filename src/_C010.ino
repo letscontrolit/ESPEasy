@@ -89,9 +89,11 @@ void C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned l
   else
     msg.replace(F("%value%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
 
-  ControllerSettings.beginPacket(portUDP);
-  portUDP.write(msg.c_str());
-  portUDP.endPacket();
+  if (WiFi.status() == WL_CONNECTED) {
+    ControllerSettings.beginPacket(portUDP);
+    portUDP.write(msg.c_str());
+    portUDP.endPacket();
+  }
 
   msg.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, log);

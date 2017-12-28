@@ -2107,6 +2107,9 @@ void checkTime()
 
 unsigned long getNtpTime()
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    return 0;
+  }
   WiFiUDP udp;
   udp.begin(123);
   for (byte x = 1; x < 4; x++)
