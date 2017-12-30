@@ -25,7 +25,7 @@
 
 #include "jkSDS011.h"
 
-CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX) : _serial(pinRX, pinTX)
+CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
 {
   _sws = ! ( pinRX < 0 || pinRX == 3 );
   _pm2_5 = NAN;
@@ -38,8 +38,12 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX) : _serial(pinRX, pinTX)
   _command.SetPacketLength(19);
   _working_period = -1;
   _sleepmode_active = false;
+  _serial = new ESPeasySoftwareSerial(pinRX, pinTX);
+  _serial->begin(9600);
+}
 
-  _serial.begin(9600);
+CjkSDS011::~CjkSDS011() {
+  delete _serial;
 }
 
 void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
@@ -69,7 +73,7 @@ void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
   _command[18] = 0xAB; // Tail
 
   for (int i = 0; i < 19; ++i) {
-    _serial.write(_command[i]);
+    _serial->write(_command[i]);
   }
 }
 
@@ -119,9 +123,9 @@ void CjkSDS011::ParseCommandReply() {
 
 void CjkSDS011::Process()
 {
-  while (_serial.available())
+  while (_serial->available())
   {
-  	_data.AddData(_serial.read());
+  	_data.AddData(_serial->read());
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
     {
@@ -165,7 +169,7 @@ boolean CjkSDS011::available()
   return ret;
 }
 
-void CjkSDS011::ReadAverage(float &pm25, float &pm10)
+boolean CjkSDS011::ReadAverage(float &pm25, float &pm10)
 {
   if (_avr)
   {
@@ -174,10 +178,9 @@ void CjkSDS011::ReadAverage(float &pm25, float &pm10)
     _pm2_5avr = 0;
     _pm10_avr = 0;
     _avr = 0;
+    return true;
   }
-  else
-  {
-    pm25 = NAN;
-    pm10 = NAN;
-  }
+  pm25 = NAN;
+  pm10 = NAN;
+  return false;
 }

@@ -42,7 +42,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 2;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
-        Device[deviceCount].TimerOptional = true;
+        Device[deviceCount].TimerOptional = false;
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
@@ -95,16 +95,18 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_056_SDS->available())
         {
+          const float pm2_5 = Plugin_056_SDS->GetPM2_5();
+          const float pm10 = Plugin_056_SDS->GetPM10_();
           String log = F("SDS  : act ");
-          log += Plugin_056_SDS->GetPM2_5();
+          log += pm2_5;
           log += F(" ");
-          log += Plugin_056_SDS->GetPM10_();
+          log += pm10;
           addLog(LOG_LEVEL_DEBUG, log);
 
           if (Settings.TaskDeviceTimer[event->TaskIndex] == 0)
           {
-            UserVar[event->BaseVarIndex + 0] = Plugin_056_SDS->GetPM2_5();
-            UserVar[event->BaseVarIndex + 1] = Plugin_056_SDS->GetPM10_();
+            UserVar[event->BaseVarIndex + 0] = pm2_5;
+            UserVar[event->BaseVarIndex + 1] = pm10;
             event->sensorType = SENSOR_TYPE_DUAL;
             sendData(event);
           }
@@ -120,11 +122,11 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           break;
 
         float pm25, pm10;
-        Plugin_056_SDS->ReadAverage(pm25, pm10);
-
-        UserVar[event->BaseVarIndex + 0] = pm25;
-        UserVar[event->BaseVarIndex + 1] = pm10;
-        success = true;
+        if (Plugin_056_SDS->ReadAverage(pm25, pm10)) {
+          UserVar[event->BaseVarIndex + 0] = pm25;
+          UserVar[event->BaseVarIndex + 1] = pm10;
+          success = true;
+        }
         break;
       }
   }

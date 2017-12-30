@@ -27,13 +27,15 @@
 #define _jkSDS011_H_
 
 #include "Arduino.h"
-#include "SensorSerial.h"
+//#include "SensorSerial.h"
 #include "SensorSerialBuffer.h"
+#include "ESPeasySoftwareSerial.h"
 
 class CjkSDS011
 {
 public:
   CjkSDS011(int16_t pinRX, int16_t pinTX);
+  virtual ~CjkSDS011();
 
   void Process();
 
@@ -42,7 +44,8 @@ public:
   float GetPM2_5() { return _pm2_5; };
   float GetPM10_() { return _pm10_; };
 
-  void ReadAverage(float &pm25, float &pm10);
+  // Return true when there are valid samples.
+  boolean ReadAverage(float &pm25, float &pm10);
 
   void SetSleepMode(bool enabled);
 
@@ -59,7 +62,8 @@ private:
   void SendCommand(byte byte1, byte byte2, byte byte3);
   void ParseCommandReply();
 
-  SensorSerial _serial;
+//  SensorSerial _serial;
+  ESPeasySoftwareSerial *_serial;
   CSensorSerialBuffer _data;
   CSensorSerialBuffer _command;
   float _pm2_5;
