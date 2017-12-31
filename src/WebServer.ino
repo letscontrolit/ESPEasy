@@ -1,4 +1,87 @@
 //********************************************************************************
+// Allowed IP range check
+//********************************************************************************
+#define ALL_ALLOWED            0
+#define LOCAL_SUBNET_ALLOWED   1
+#define ONLY_IP_RANGE_ALLOWED  2
+
+boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
+{
+  for (byte i = 0; i < 4; ++i) {
+    if (ip[i] > high[i]) return false;
+  }
+  return true;
+}
+
+boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high)
+{
+  return (ipLessEqual(low, ip) && ipLessEqual(ip, high));
+}
+
+String describeAllowedIPrange() {
+  String reply;
+  switch (SecuritySettings.IPblockLevel) {
+    case ALL_ALLOWED:
+      reply += F("All Allowed");
+      break;
+    default:
+    {
+      IPAddress low, high;
+      getIPallowedRange(low, high);
+      reply += formatIP(low);
+      reply += F(" - ");
+      reply += formatIP(high);
+    }
+  }
+  return reply;
+}
+
+bool getIPallowedRange(IPAddress& low, IPAddress& high)
+{
+  switch (SecuritySettings.IPblockLevel) {
+    case LOCAL_SUBNET_ALLOWED:
+      return getSubnetRange(low, high);
+    case ONLY_IP_RANGE_ALLOWED:
+      low = SecuritySettings.AllowedIPrangeLow;
+      high = SecuritySettings.AllowedIPrangeHigh;
+      break;
+    default:
+      low = IPAddress(0,0,0,0);
+      high = IPAddress(255,255,255,255);
+      return false;
+  }
+  return true;
+}
+
+boolean clientIPallowed()
+{
+  // TD-er Must implement "safe time after boot"
+  IPAddress low, high;
+  if (!getIPallowedRange(low, high))
+  {
+    // No subnet range determined, cannot filter on IP
+    return true;
+  }
+  WiFiClient client(WebServer.client());
+  if (ipInRange(client.remoteIP(), low, high))
+    return true;
+  String response = F("IP blocked: ");
+  response += formatIP(client.remoteIP());
+  WebServer.send(403, "text/html", response);
+  response += F(" Allowed: ");
+  response += formatIP(low);
+  response += F(" - ");
+  response += formatIP(high);
+  addLog(LOG_LEVEL_ERROR, response);
+  return false;
+}
+
+void clearAccessBlock()
+{
+  SecuritySettings.IPblockLevel = ALL_ALLOWED;
+}
+
+//********************************************************************************
 // Web Interface init
 //********************************************************************************
 #include "core_version.h"
@@ -108,14 +191,13 @@ void WebServerInit()
 
 void sendWebPage(const String& tmplName, String& pageContent)
 {
-  String pageTemplate;
-
   String fileName = tmplName;
   fileName += F(".htm");
-
   fs::File f = SPIFFS.open(fileName, "r+");
+  String pageTemplate;
   if (f)
   {
+    pageTemplate.reserve(f.size());
     while (f.available())
       pageTemplate += (char)f.read();
     f.close();
@@ -465,8 +547,9 @@ void handle_root() {
 
     printToWeb = true;
     printWebString = "";
-    if (sCommand.length() > 0)
+    if (sCommand.length() > 0) {
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
+    }
 
     IPAddress ip = WiFi.localIP();
     // IPAddress gw = WiFi.gatewayIP();
@@ -516,10 +599,8 @@ void handle_root() {
     reply += lowestRAMfunction;
     reply += F(")");
 
-    char str[20];
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
     reply += F("<TR><TD>IP:<TD>");
-    reply += str;
+    reply += formatIP(ip);
 
     reply += F("<TD><TD>Wifi RSSI:<TD>");
     if (WiFi.status() == WL_CONNECTED)
@@ -631,6 +712,9 @@ void handle_config() {
   //String key = WebServer.arg(F("key"));
   String ssid2 = WebServer.arg(F("ssid2"));
   //String key2 = WebServer.arg(F("key2"));
+  String iprangelow = WebServer.arg(F("iprangelow"));
+  String iprangehigh = WebServer.arg(F("iprangehigh"));
+
   String sensordelay = WebServer.arg(F("delay"));
   String deepsleep = WebServer.arg(F("deepsleep"));
   String deepsleeponfail = WebServer.arg(F("deepsleeponfail"));
@@ -657,6 +741,28 @@ void handle_config() {
     copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
     //strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
+
+    // TD-er Read access control from form.
+    SecuritySettings.IPblockLevel = getFormItemInt(F("ipblocklevel"));
+    switch (SecuritySettings.IPblockLevel) {
+      case LOCAL_SUBNET_ALLOWED:
+      {
+        IPAddress low, high;
+        getSubnetRange(low, high);
+        for (byte i=0; i < 4; ++i) {
+          SecuritySettings.AllowedIPrangeLow[i] = low[i];
+          SecuritySettings.AllowedIPrangeHigh[i] = high[i];
+        }
+        break;
+      }
+      case ONLY_IP_RANGE_ALLOWED:
+      case ALL_ALLOWED:
+        iprangelow.toCharArray(tmpString, 26);
+        str2ip(tmpString, SecuritySettings.AllowedIPrangeLow);
+        iprangehigh.toCharArray(tmpString, 26);
+        str2ip(tmpString, SecuritySettings.AllowedIPrangeHigh);
+        break;
+    }
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
@@ -692,6 +798,21 @@ void handle_config() {
   addFormSeparator(reply);
   addFormPasswordBox(reply, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
+  // TD-er add IP access box F("ipblocklevel")
+  addFormSubHeader(reply, F("Client IP filtering"));
+  {
+    IPAddress low, high;
+    getIPallowedRange(low, high);
+    byte iplow[4];
+    byte iphigh[4];
+    for (byte i = 0; i < 4; ++i) {
+      iplow[i] = low[i];
+      iphigh[i] = high[i];
+    }
+    addFormIPaccessControlSelect(reply, F("Client IP block level"), F("ipblocklevel"), SecuritySettings.IPblockLevel);
+    addFormIPBox(reply, F("Access IP lower range"), F("iprangelow"), iplow);
+    addFormIPBox(reply, F("Access IP upper range"), F("iprangehigh"), iphigh);
+  }
 
   addFormSubHeader(reply, F("IP Settings"));
 
@@ -1223,6 +1344,21 @@ void addPinStateSelect(String& str, String name, int choice)
 {
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
   addSelector(str, name, 4, options, NULL, NULL, choice, false);
+}
+
+//********************************************************************************
+// Add a IP Access Control select dropdown list
+//********************************************************************************
+void addFormIPaccessControlSelect(String& str, const String& label, const String& id, int choice)
+{
+  addRowLabel(str, label);
+  addIPaccessControlSelect(str, id, choice);
+}
+
+void addIPaccessControlSelect(String& str, String name, int choice)
+{
+  String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
+  addSelector(str, name, 3, options, NULL, NULL, choice, false);
 }
 
 
@@ -2300,8 +2436,9 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
   char strip[20];
   if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
     strip[0] = 0;
-  else
-    sprintf_P(strip, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+  else {
+    formatIP(ip, strip);
+  }
 
   addRowLabel(str, label);
   str += F("<input type='text' name='");
@@ -2846,6 +2983,7 @@ void handle_wifiscanner() {
 // Web Interface login page
 //********************************************************************************
 void handle_login() {
+  if (!clientIPallowed()) return;
 
   String webrequest = WebServer.arg(F("password"));
   char command[80];
@@ -2887,6 +3025,7 @@ void handle_login() {
 // Web Interface control page (no password!)
 //********************************************************************************
 void handle_control() {
+  if (!clientIPallowed()) return;
 
   String webrequest = WebServer.arg(F("cmd"));
 
@@ -2931,6 +3070,7 @@ void handle_control() {
 
 void handle_json()
 {
+  // ToDo TD-er: Must check for allowed client IP??????
   String tasknr = WebServer.arg(F("tasknr"));
   String reply = "";
 
@@ -3152,6 +3292,7 @@ void handle_advanced() {
 //********************************************************************************
 boolean isLoggedIn()
 {
+  if (!clientIPallowed()) return false;
   if (SecuritySettings.Password[0] == 0)
     WebLoggedIn = true;
 
@@ -3392,6 +3533,7 @@ bool loadFromFS(boolean spiffs, String path) {
 // Web Interface custom page handler
 //********************************************************************************
 boolean handle_custom(String path) {
+  if (!clientIPallowed()) return false;
   path = path.substring(1);
   String reply = "";
 
@@ -3458,7 +3600,7 @@ boolean handle_custom(String path) {
 
   // handle commands from a custom page
   String webrequest = WebServer.arg(F("cmd"));
-  if (webrequest.length() > 0){
+  if (webrequest.length() > 0 ){
     struct EventStruct TempEvent;
     parseCommandString(&TempEvent, webrequest);
     TempEvent.Source = VALUE_SOURCE_HTTP;
@@ -3477,6 +3619,7 @@ boolean handle_custom(String path) {
   if (dataFile)
   {
     String page = "";
+    page.reserve(dataFile.size());
     while (dataFile.available())
       page += ((char)dataFile.read());
 
@@ -3525,6 +3668,7 @@ boolean handle_custom(String path) {
 // Web Interface file list
 //********************************************************************************
 void handle_filelist() {
+  if (!clientIPallowed()) return;
 #if defined(ESP8266)
   navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
@@ -3614,6 +3758,7 @@ void handle_filelist() {
 //********************************************************************************
 #ifdef FEATURE_SD
 void handle_SDfilelist() {
+  if (!clientIPallowed()) return;
 
   navMenuIndex = 7;
   String fdelete = "";
@@ -3783,16 +3928,16 @@ void handleNotFound() {
 // Web Interface Setup Wizard
 //********************************************************************************
 void handle_setup() {
-
+  // Do not check client IP range allowed.
   String reply = "";
   addHeader(false, reply);
 
   if (WiFi.status() == WL_CONNECTED)
   {
     addHtmlError(reply, SaveSettings());
-    IPAddress ip = WiFi.localIP();
+    const IPAddress ip = WiFi.localIP();
     char host[20];
-    sprintf_P(host, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+    formatIP(ip, host);
     reply += F("<BR>ESP is connected and using IP Address: <BR><h1>");
     reply += host;
     reply += F("</h1><BR><BR>Connect your laptop / tablet / phone<BR>back to your main Wifi network and<BR><BR>");
@@ -4042,11 +4187,8 @@ void handle_sysinfo() {
 
   int freeMem = ESP.getFreeHeap();
   String reply = "";
+  reply.reserve(4096);
   addHeader(true, reply);
-
-  IPAddress ip = WiFi.localIP();
-  IPAddress gw = WiFi.gatewayIP();
-
   reply += printWebString;
   reply += F("<form>");
   reply += F("<table><TR><TH width=120>System Info<TH>");
@@ -4161,25 +4303,33 @@ void handle_sysinfo() {
     reply += F(" dB)");
   }
 
-  char str[20];
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  reply += F("<TR><TD>IP<TD>");
-  reply += str;
+  reply += F("<TR><TD>IP / subnet<TD>");
+  reply += formatIP(WiFi.localIP());
+  reply += F(" / ");
+  reply += formatIP(WiFi.subnetMask());
 
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), gw[0], gw[1], gw[2], gw[3]);
   reply += F("<TR><TD>GW<TD>");
-  reply += str;
+  reply += formatIP(WiFi.gatewayIP());
+
+  {
+    reply += F("<TR><TD>Client IP<TD>");
+    WiFiClient client(WebServer.client());
+    reply += formatIP(client.remoteIP());
+  }
+
+  reply += F("<TR><TD>Allowed IP Range<TD>");
+  reply += describeAllowedIPrange();
 
   reply += F("<TR><TD>STA MAC<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
-  sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+  formatMAC(macread, macaddress);
   reply += macaddress;
 
   reply += F("<TR><TD>AP MAC<TD>");
   macread = WiFi.softAPmacAddress(mac);
-  sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+  formatMAC(macread, macaddress);
   reply += macaddress;
 
   reply += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
