@@ -90,7 +90,8 @@ void CjkSDS011::SetWorkingPeriod(int minutes) {
   //              1-30minute：work 30 seconds and sleep n*60-30 seconds
   if (minutes < 0 || minutes > 30) return;
   // Working period is stored in the flash of the sensor. Only write to change.
-  if (minutes != GetWorkingPeriod())
+  const int currentWorkingPeriod = GetWorkingPeriod();
+  if (minutes != currentWorkingPeriod)
     SendCommand(8, 1, minutes);
 }
 
@@ -156,6 +157,7 @@ void CjkSDS011::Process()
         _pm2_5avr += _pm2_5;
         _pm10_avr += _pm10_;
         _avr++;
+        _data.Clear();
         return;
       }
     }
