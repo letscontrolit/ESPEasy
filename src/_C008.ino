@@ -21,7 +21,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = false;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
