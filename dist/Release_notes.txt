@@ -2,9 +2,9 @@
 Changes in release v2.0.0-dev13 (since v2.0.0-dev12)
 -------------------------------------------------
 
-Release date: Tue Jan  2 13:25:28 CET 2018
+Release date: Tue Jan  2 14:24:08 CET 2018
 
-Edwin Eefting (23):
+Edwin Eefting (25):
       more fixes for #235
       final fixes for #235, untested. all spiffs errors should be handled now and also show up in logs and webinterface
       fixed obscure crash caused by not returning a value in #235. we need to adjust compiler flags to detect these kinds of issues.
@@ -28,6 +28,8 @@ Edwin Eefting (23):
       Simple fix for MH-Z19 B version. #529
       set lcd to NULL by default. #584
       fix #588. parseTemplate() now only checks enabled taskes for [] macros
+      automaticly updated release notes for v2.0.0-dev13
+      release all binaries by doing the full compile step as last
 
 Gijs Noorlander (9):
       [INA219] Allow for multiple instances on the same controller (#519)
