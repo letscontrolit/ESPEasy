@@ -1,4 +1,57 @@
 -------------------------------------------------
+Changes in release v2.0.0-dev13 (since v2.0.0-dev12)
+-------------------------------------------------
+
+Release date: Tue Jan  2 13:25:28 CET 2018
+
+Edwin Eefting (23):
+      more fixes for #235
+      final fixes for #235, untested. all spiffs errors should be handled now and also show up in logs and webinterface
+      fixed obscure crash caused by not returning a value in #235. we need to adjust compiler flags to detect these kinds of issues.
+      always define PLUGIN_BUILD_NORMAL so normal plugins are compiled
+      cleaned up buildflags and created common build variable
+      solution for better error and warning highlighting when compiling with platformio
+      enabled warnings and started fixing all the warnings to reduce the noise. (because warnings where disabled wasted about 3 hours debugging a simple no-return bug)
+      cleaned up more warnings and fixed a few real bug along the way. #235
+      now using PRAGMA to enable warnings, so that we dont get warnings from core libraries. also warnings will be treated as errors in Travis, this makes approving pull requests less work for me.
+      travis fix
+      worked around error caused by upstream libraries
+      fixes
+      cleaned up notification stuff. fixed #502
+      warnings are treated as errors now, by travis
+      refactored and added automated test stuff
+      examples for the lone wanderer
+      cleaner errors
+      working on test stuff
+      update branching info
+      test library stuff
+      Simple fix for MH-Z19 B version. #529
+      set lcd to NULL by default. #584
+      fix #588. parseTemplate() now only checks enabled taskes for [] macros
+
+Gijs Noorlander (9):
+      [INA219] Allow for multiple instances on the same controller (#519)
+      [INA219_v2.0] Improve logs for multiple devices (#546)
+      [LCD plugin] Added check of LCD object before dereferencing it (#584)
+      Move CO2 MH-Z19 plugin from "testing" to "normal" (#618)
+      [DNS/IP] Obey UseDNS setting for all controllers (#629)
+      [v2.0] Add more characters to the list not to escape in URLs (#635)
+      [>49.7 days uptime overflow] Use separate function to compute time differences (#621)
+      [WiFi] Avoid timeouts when not connected to WiFi (#639)
+      [PubSubClient] Bug in handling domainname (#660)
+
+Grovkillen (2):
+      Added categories... (#552)
+      Changed bin file names to be more descriptive. (#597)
+
+Neo (1):
+      [HT16K33_LED] Brightness control (#523)
+
+mvdbro (1):
+      Bugfix: %eventvalue% parsing on literal strings
+
+
+-------------------------------------------------
 Changes in release v2.0.0-dev12 (since v2.0.0-dev11)
 -------------------------------------------------
 
