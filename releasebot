@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Call this from a cronjob every day to trigger a nightly build via travis.
+
+git pull
+
+#new commits since last tag?
+if ! git describe --exact-match 2>/dev/null; then
+    BRANCH=`git rev-parse --abbrev-ref HEAD`
+    TAG="$BRANCH-`date +%m%d%Y`"
+    ./release "$TAG"
+fi
+
