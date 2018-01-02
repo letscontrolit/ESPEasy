@@ -1,6 +1,6 @@
 # ESPEasy (mega branch)
 
-Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy)
+Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=v2.0)](https://travis-ci.org/letscontrolit/ESPEasy)
 
 Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction
 
