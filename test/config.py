@@ -16,12 +16,14 @@ nodes=[
     },
 
     {
+        'node'      : 3,
         'type'      : 'wemos d1 mini v2.2.0',
         'port'      : '/dev/ttyUSB0',
-        'ip'        : '192.168.13.93',
+        'ip'        : '192.168.13.91',
         'flash_cmd' : 'esptool.py --port {port} -b 1500000  write_flash 0x0 .pioenvs/dev_ESP8266_4096/firmware.bin --flash_size=32m -p',
         'build_cmd' : 'platformio run --environment dev_ESP8266_4096'
     },
+
 ]
 
 
