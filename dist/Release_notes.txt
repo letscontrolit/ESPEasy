@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-01032018 (since mega-01022018)
+-------------------------------------------------
+
+Release date: Wed Jan  3 04:00:06 UTC 2018
+
+Edwin Eefting (4):
+      updated readme to reflect new binary names
+      updated travis link to reflect v2.0
+      updated travis link to reflect v2.0
+      changed readme to reflect mega branch and automated builds
+
+
+-------------------------------------------------
 Changes in release mega-01022018 (since v2.0.0-dev13)
 -------------------------------------------------
 
