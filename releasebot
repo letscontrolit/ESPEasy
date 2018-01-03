@@ -7,7 +7,7 @@ git pull
 #new commits since last tag?
 if ! git describe --exact-match 2>/dev/null; then
     BRANCH=`git rev-parse --abbrev-ref HEAD`
-    TAG="$BRANCH-`date +%m%d%Y`"
+    TAG="$BRANCH-`date +%Y%m%d`"
     ./release "$TAG"
 fi
 
