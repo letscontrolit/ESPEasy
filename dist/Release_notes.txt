@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180104 (since mega-01032018)
+-------------------------------------------------
+
+Release date: Thu Jan  4 03:13:01 UTC 2018
+
+ESPEasy release bot (1):
+      changed date format of nightly builds
+
+
+-------------------------------------------------
 Changes in release mega-01032018 (since mega-01022018)
 -------------------------------------------------
 
