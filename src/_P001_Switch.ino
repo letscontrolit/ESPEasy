@@ -11,11 +11,22 @@
   Servo servo2;
 #endif
 
+// Make sure the initial default is a switch (value 0)
+#define PLUGIN_001_TYPE_SWITCH 0
+#define PLUGIN_001_TYPE_DIMMER 1
+#define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH 0
+#define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
+#define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
+
+boolean Plugin_001_read_switch_state(struct EventStruct *event) {
+  return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
+}
+
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
-  static byte outputstate[TASKS_MAX];
+  static boolean switchstate[TASKS_MAX];
+  static boolean outputstate[TASKS_MAX];
 
   switch (function)
   {
@@ -51,13 +62,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        if (choice != PLUGIN_001_TYPE_SWITCH && choice != PLUGIN_001_TYPE_DIMMER)
+          choice = PLUGIN_001_TYPE_SWITCH;
         String options[2];
         options[0] = F("Switch");
         options[1] = F("Dimmer");
-        int optionValues[2] = { 1, 2 };
+        int optionValues[2] = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, choice);
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER)
         {
           char tmpString[128];
           sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
@@ -69,7 +82,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[0] = F("Normal Switch");
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
-        addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, NULL, choice);
+        int buttonOptionValues[3] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH};
+        addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
         addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
@@ -81,7 +95,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_001_type"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER)
         {
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_001_dimvalue"));
         }
@@ -103,7 +117,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, 0);
 
-        switchstate[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
+        switchstate[event->TaskIndex] = Plugin_001_read_switch_state(event);
         outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
 
         // if boot state must be send, inverse default state
@@ -118,43 +132,48 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        byte state = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
+        const boolean state = Plugin_001_read_switch_state(event);
         if (state != switchstate[event->TaskIndex])
         {
           switchstate[event->TaskIndex] = state;
-          byte currentOutputState = outputstate[event->TaskIndex];
-
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 0) //normal switch
-            outputstate[event->TaskIndex] = state;
-          else
-          {
-            if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 1)  // active low push button
-            {
-              if (state == 0)
-                outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
-            }
-            else  // active high push button
-            {
-              if (state == 1)
-                outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
-            }
+          const boolean currentOutputState = outputstate[event->TaskIndex];
+          boolean new_outputState = currentOutputState;
+          switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+            case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
+                new_outputState = state;
+              break;
+            case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+              if (!state)
+                new_outputState = !currentOutputState;
+              break;
+            case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+              if (state)
+                new_outputState = !currentOutputState;
+              break;
           }
 
           // send if output needs to be changed
-          if (currentOutputState != outputstate[event->TaskIndex])
+          if (currentOutputState != new_outputState)
           {
-            byte sendState = outputstate[event->TaskIndex];
+            outputstate[event->TaskIndex] = new_outputState;
+            boolean sendState = new_outputState;
             if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-              sendState = !outputstate[event->TaskIndex];
-            UserVar[event->BaseVarIndex] = sendState;
+              sendState = !sendState;
+
+            byte output_value = sendState ? 1 : 0;
             event->sensorType = SENSOR_TYPE_SWITCH;
-            if ((sendState == 1) && (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2))
-            {
-              event->sensorType = SENSOR_TYPE_DIMMER;
-              UserVar[event->BaseVarIndex] = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+            if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER) {
+              if (sendState) {
+                output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+                // Only set type to being dimmer when setting a value else it is "switched off".
+                event->sensorType = SENSOR_TYPE_DIMMER;
+              }
             }
-            String log = F("SW   : State ");
-            log += sendState;
+            UserVar[event->BaseVarIndex] = output_value;
+            String log = F("SW   : Switch state ");
+            log += state ? F("1") : F("0");
+            log += F(" Output value ");
+            log += output_value;
             addLog(LOG_LEVEL_INFO, log);
             sendData(event);
           }
