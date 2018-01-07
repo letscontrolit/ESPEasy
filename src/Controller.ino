@@ -17,6 +17,7 @@ void sendData(struct EventStruct *event)
 //    return false;
 
   delay(1); // Make sure the yield() is called even when flooded with messages.
+  /*
   if (Settings.MessageDelay != 0)
   {
     const long dif = timePassedSince(lastSend);
@@ -36,6 +37,7 @@ void sendData(struct EventStruct *event)
       //   backgroundtasks();
     }
   }
+  */
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
