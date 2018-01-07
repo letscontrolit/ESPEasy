@@ -411,7 +411,7 @@ struct SettingsStruct
           TaskDevicePluginConfigFloat[task][cv] = 0.0;
         }
         for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
-          TaskDevicePluginConfigLong[task][PLUGIN_CONFIGLONGVAR_MAX] = 0;
+          TaskDevicePluginConfigLong[task][cv] = 0;
         }
         OLD_TaskDeviceSendData[task] = false;
         TaskDeviceGlobalSync[task] = false;
