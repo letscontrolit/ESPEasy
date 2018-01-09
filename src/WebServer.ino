@@ -3992,8 +3992,49 @@ void handle_sysinfo() {
   reply += F("<TR><TD>ESP Chip ID:<TD>");
   reply += ESP.getChipId();
 
+  reply += F("<TR><TD>ESP Chip Freq:<TD>");
+  reply += ESP.getCpuFreqMHz();
+  reply += F(" MHz");
+
   reply += F("<TR><TD>Flash Chip ID:<TD>");
-  reply += ESP.getFlashChipId();
+  uint32_t flashChipId = ESP.getFlashChipId();
+  // Set to HEX may be something like 0x1640E0.
+  // Where manufacturer is 0xE0 and device is 0x4016.
+  reply += F("Vendor: 0x");
+  String flashVendor(flashChipId & 0xFF, HEX);
+  flashVendor.toUpperCase();
+  reply += flashVendor;
+  reply += F(" Device: 0x");
+  uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+  String flashDeviceString(flashDevice, HEX);
+  flashDeviceString.toUpperCase();
+  reply += flashDeviceString;
+  uint32_t realSize = ESP.getFlashChipRealSize();
+  uint32_t ideSize = ESP.getFlashChipSize();
+
+  reply += F("<TR><TD>Flash Chip Real Size:<TD>");
+  reply += realSize / 1024;
+  reply += F(" kB");
+
+  reply += F("<TR><TD>Flash IDE Size:<TD>");
+  reply += ideSize / 1024;
+  reply += F(" kB");
+
+  reply += F("<TR><TD>Flash IDE speed:<TD>");
+  reply += ESP.getFlashChipSpeed() / 1000000;
+  reply += F(" MHz");
+
+  FlashMode_t ideMode = ESP.getFlashChipMode();
+  reply += F("<TR><TD>Flash IDE mode:<TD>");
+  switch (ideMode) {
+    case FM_QIO:  reply += F("QIO");  break;
+    case FM_QOUT: reply += F("QOUT"); break;
+    case FM_DIO:  reply += F("DIO");  break;
+    case FM_DOUT: reply += F("DOUT"); break;
+    default:
+       reply += F("Unknown"); break;
+  }
+
 
   reply += F("</table></form>");
   addFooter(reply);
