@@ -79,14 +79,28 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
               success = true;
             }
 
+            if (cmd.equalsIgnoreCase(F("senseair_setABCperiod")))
+            {
+              if (param1.toInt() >= 0) {
+                Plugin_052_setABCperiod(param1.toInt());
+                addLog(LOG_LEVEL_INFO, String(F("Senseair command: ABCperiod=")) + param1);
+              }
+              success = true;
+            }
+
             break;
           }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          String options[6] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment") };
-          addFormSelector(string, F("Sensor"), F("plugin_052"), 6, options, NULL, choice);
+          byte choiceSensor = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          byte choiceABCperiod = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          
+          String optionsSensor[7] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment"), F("ABC period") };
+          addFormSelector(string, F("Sensor"), F("plugin_052_sensor"), 7, optionsSensor, NULL, choiceSensor);
+          
+          String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1 day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
+          addFormSelector(string, F("ABC period"), F("plugin_052_ABC_period"), 9, optionsABCperiod, NULL, choiceABCperiod);
 
           success = true;
           break;
@@ -94,17 +108,24 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          String plugin1 = WebServer.arg(F("plugin_052"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-          success = true;
-          break;
-      }
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_052_sensor"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_052_ABC_period"));          
+        
+        success = true;
+        break;
+      }      
 
     case PLUGIN_INIT:
       {
         Plugin_052_init = true;
         Plugin_052_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex],
                                                    Settings.TaskDevicePin2[event->TaskIndex]);
+
+        const int periodInHours[9] = {0, 1, 12, (24*1), (24*2), (24*4), (24*7), (24*14), (24*30) };
+        byte choiceABCperiod = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        
+        Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
+        
         success = true;
         break;
       }
@@ -173,6 +194,14 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
                   UserVar[event->BaseVarIndex] = temperatureAdjustment;
                   log += F("temperature adjustment = ");
                   log += temperatureAdjustment;
+                  break;
+              }
+              case 6:
+              {
+                  int period = Plugin_052_readABCperiod();
+                  UserVar[event->BaseVarIndex] = period;
+                  log += F("ABC period = ");
+                  log += period;
                   break;
               }
           }
@@ -309,6 +338,25 @@ void Plugin_052_setRelayStatus(int status) {
   } else {
     Plugin_052_buildFrame(0xFE, 0x06, 0x18, 0x7FFF, frame);
   }
+  Plugin_052_sendCommand(frame);
+}
+
+int Plugin_052_readABCperiod(void)
+{
+  int period = 0;
+  byte frame[8] = {0};
+  
+  Plugin_052_buildFrame(0xFE, 0x03, 0x001F, 0x0001, frame);
+  period = Plugin_052_sendCommand(frame);
+  
+  return period;
+}
+
+void Plugin_052_setABCperiod(int period)
+{
+  byte frame[8] = {0};
+
+  Plugin_052_buildFrame(0xFE, 0x06, 0x001F, period, frame);
   Plugin_052_sendCommand(frame);
 }
 

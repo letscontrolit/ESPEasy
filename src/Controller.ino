@@ -24,7 +24,8 @@ void sendData(struct EventStruct *event)
       uint16_t delayms = Settings.MessageDelay - dif;
       //this is logged nowhere else, so might as well disable it here also:
       // addLog(LOG_LEVEL_DEBUG_MORE, String(F("CTRL : Message delay (ms): "))+delayms);
-      delayBackground(delayms);
+
+     delayBackground(delayms);
 
       // unsigned long timer = millis() + delayms;
       // while (!timeOutReached(timer))
@@ -64,6 +65,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   if (length>sizeof(c_payload)-1)
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
+    return;
   }
 
   //convert payload to string, and 0 terminate

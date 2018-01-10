@@ -423,6 +423,47 @@ struct SecurityStruct
 
 struct SettingsStruct
 {
+  SettingsStruct() :
+    PID(0), Version(0), Build(0), IP_Octet(0), Unit(0), Delay(0),
+    Pin_i2c_sda(-1), Pin_i2c_scl(-1), Pin_status_led(-1), Pin_sd_cs(-1),
+    UDPPort(0), SyslogLevel(0), SerialLogLevel(0), WebLogLevel(0), SDLogLevel(0),
+    BaudRate(0), MessageDelay(0), deepSleep(0),
+    CustomCSS(false), DST(false), WDI2CAddress(0),
+    UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
+    WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
+    TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
+    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false)
+    {
+      for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+        Protocol[i] = 0;
+        ControllerEnabled[i] = false;
+        for (byte task = 0; task < TASKS_MAX; ++task) {
+          TaskDeviceID[i][task] = 0;
+          TaskDeviceSendData[i][task] = false;
+        }
+      }
+      for (byte task = 0; task < TASKS_MAX; ++task) {
+        TaskDeviceNumber[task] = 0;
+        OLD_TaskDeviceID[task] = 0;
+        TaskDevicePin1PullUp[task] = false;
+        for (byte cv = 0; cv < PLUGIN_CONFIGVAR_MAX; ++cv) {
+          TaskDevicePluginConfig[task][cv] = 0;
+        }
+        TaskDevicePin1Inversed[task] = false;
+        for (byte cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
+          TaskDevicePluginConfigFloat[task][cv] = 0.0;
+        }
+        for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
+          TaskDevicePluginConfigLong[task][cv] = 0;
+        }
+        OLD_TaskDeviceSendData[task] = false;
+        TaskDeviceGlobalSync[task] = false;
+        TaskDeviceDataFeed[task] = 0;
+        TaskDeviceTimer[task] = 0;
+        TaskDeviceEnabled[task] = false;
+      }
+    }
+
   unsigned long PID;
   int           Version;
   int16_t       Build;
@@ -500,6 +541,11 @@ struct SettingsStruct
 
 struct ControllerSettingsStruct
 {
+  ControllerSettingsStruct() : UseDNS(false), Port(0) {
+    memset(HostName, 0, sizeof(HostName));
+    memset(Publish, 0, sizeof(Publish));
+    memset(Subscribe, 0, sizeof(Subscribe));
+  }
   boolean       UseDNS;
   byte          IP[4];
   unsigned int  Port;
@@ -563,6 +609,21 @@ struct NotificationSettingsStruct
 
 struct ExtraTaskSettingsStruct
 {
+  ExtraTaskSettingsStruct() : TaskIndex(0) {
+    TaskDeviceName[0] = 0;
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (byte j = 0; j < 41; ++j) {
+        TaskDeviceFormula[i][j] = 0;
+        TaskDeviceValueNames[i][j] = 0;
+        TaskDeviceValueDecimals[i] = 0;
+      }
+    }
+    for (byte i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
+      TaskDevicePluginConfigLong[i] = 0;
+      TaskDevicePluginConfig[i] = 0;
+    }
+  }
+
   byte    TaskIndex;
   char    TaskDeviceName[41];
   char    TaskDeviceFormula[VARS_PER_TASK][41];
@@ -574,6 +635,10 @@ struct ExtraTaskSettingsStruct
 
 struct EventStruct
 {
+  EventStruct() :
+    Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
+    BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
+    OriginTaskIndex(0), Data(NULL) {}
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
   byte ControllerIndex; // index position in Settings.Controller, 0-3
@@ -598,6 +663,7 @@ struct EventStruct
 
 struct LogStruct
 {
+  LogStruct() : timeStamp(0), Message(NULL) {}
   unsigned long timeStamp;
   char* Message;
 } Logging[10];
@@ -605,6 +671,11 @@ int logcount = -1;
 
 struct DeviceStruct
 {
+  DeviceStruct() :
+    Number(0), Type(0), VType(0), Ports(0),
+    PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
+    ValueCount(0), Custom(false), SendDataOption(false), GlobalSyncOption(false),
+    TimerOption(false), TimerOptional(false), DecimalsOnly(false) {}
   byte Number;
   byte Type;
   byte VType;
@@ -623,6 +694,9 @@ struct DeviceStruct
 
 struct ProtocolStruct
 {
+  ProtocolStruct() :
+    Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
+    defaultPort(0), usesTemplate(false), usesID(false) {}
   byte Number;
   boolean usesMQTT;
   boolean usesAccount;
@@ -634,6 +708,8 @@ struct ProtocolStruct
 
 struct NotificationStruct
 {
+  NotificationStruct() :
+    Number(0), usesMessaging(false), usesGPIO(0) {}
   byte Number;
   boolean usesMessaging;
   byte usesGPIO;
@@ -641,6 +717,11 @@ struct NotificationStruct
 
 struct NodeStruct
 {
+  NodeStruct() :
+    age(0), build(0), nodeName(NULL), nodeType(0)
+    {
+      for (byte i = 0; i < 4; ++i) ip[i] = 0;
+    }
   byte ip[4];
   byte age;
   uint16_t build;
@@ -650,6 +731,9 @@ struct NodeStruct
 
 struct systemTimerStruct
 {
+  systemTimerStruct() :
+    timer(0), plugin(0), Par1(0), Par2(0), Par3(0) {}
+
   unsigned long timer;
   byte plugin;
   byte Par1;
@@ -659,6 +743,7 @@ struct systemTimerStruct
 
 struct systemCMDTimerStruct
 {
+  systemCMDTimerStruct() : timer(0) {}
   unsigned long timer;
   String action;
 } systemCMDTimers[SYSTEM_CMD_TIMER_MAX];
@@ -978,6 +1063,11 @@ void loop()
     if (timeOutReached(timer1s))
       runOncePerSecond();
   }
+
+  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+  if(Settings.ControllerEnabled[0])
+    MQTTclient.loop();
+
   backgroundtasks();
 
 }
@@ -1322,10 +1412,12 @@ void checkSystemTimers()
 bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //always start with a yield
+  yield();
+
   //prevent recursion!
   if (runningBackgroundTasks)
   {
-    yield();
     return;
   }
   runningBackgroundTasks=true;
@@ -1344,8 +1436,7 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   WebServer.handleClient();
-  if(Settings.ControllerEnabled[0])
-    MQTTclient.loop();
+
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA

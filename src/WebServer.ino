@@ -1374,7 +1374,14 @@ void handle_devices() {
   struct EventStruct TempEvent;
 
   // String taskindex = WebServer.arg(F("index"));
-  byte taskdevicenumber = WebServer.arg(F("TDNUM")).toInt();
+
+  byte taskdevicenumber;
+  if (WebServer.hasArg(F("del")))
+    taskdevicenumber=0;
+  else
+    taskdevicenumber = WebServer.arg(F("TDNUM")).toInt();
+
+
   unsigned long taskdevicetimer = WebServer.arg(F("TDT")).toInt();
   // String taskdeviceid[CONTROLLER_MAX];
   // String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
@@ -1425,6 +1432,9 @@ void handle_devices() {
   // }
 
   String edit = WebServer.arg(F("edit"));
+
+
+
   byte page = WebServer.arg(F("page")).toInt();
   if (page == 0)
     page = 1;
@@ -1460,7 +1470,7 @@ void handle_devices() {
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
       }
     }
-    else if (taskdevicenumber != 0)
+    else if (taskdevicenumber != 0) //save settings
     {
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
       DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
@@ -1710,11 +1720,30 @@ void handle_devices() {
     reply += F("<form name='frmselect' method='post'><table>");
     addFormHeader(reply, F("Task Settings"));
 
-    reply += F("<TR><TD>Device:<TD>");
-    addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[index - 1]);   //="taskdevicenumber"
 
-    if (Settings.TaskDeviceNumber[index - 1] != 0 )   //any device selected?
+    reply += F("<TR><TD>Device:<TD>");
+
+    //no device selected
+    if (Settings.TaskDeviceNumber[index - 1] == 0 )
     {
+      //takes lots of memory/time so call this only when needed.
+      addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[index - 1]);   //="taskdevicenumber"
+
+    }
+    // device selected
+    else
+    {
+      //remember selected device number
+      reply += F("<input type='hidden' name='TDNUM' value='");
+      reply += Settings.TaskDeviceNumber[index - 1];
+      reply += F("'>");
+
+      //show selected device name and delete button
+      String deviceName;
+      Plugin_ptr[Settings.TaskDeviceNumber[index - 1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
+      reply += deviceName;
+
+
       addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
 
       addFormTextBox(reply, F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
@@ -1864,6 +1893,13 @@ void handle_devices() {
     addSubmitButton(reply);
     reply += F("<input type='hidden' name='edit' value='1'>");
     reply += F("<input type='hidden' name='page' value='1'>");
+
+    //if user selected a device, add the delete button
+    if (Settings.TaskDeviceNumber[index - 1] != 0 )
+      addSubmitButton(reply, F("Delete"), F("del"));
+
+
+
     reply += F("</table></form>");
   }
 
@@ -2276,6 +2312,18 @@ void addSubmitButton(String& str)
 {
   str += F("<input class='button link' type='submit' value='Submit'>");
 }
+
+//add submit button with different label and name
+void addSubmitButton(String& str, const String &value, const String &name)
+{
+  str += F("<input class='button link' type='submit' value='");
+  str += value;
+  str += F("' name='");
+  str += name;
+  str += F("'>");
+}
+
+
 
 //********************************************************************************
 // Add a header
@@ -4250,31 +4298,6 @@ void handle_sysinfo() {
   reply += RTC.bootCounter;
   reply += F(")");
 
-  reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
-
-  reply += F("<TR><TD>Flash Size<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
-  #endif
-  #if defined(ESP32)
-    reply += ESP.getFlashChipSize() / 1024;
-  #endif
-  reply += F(" kB");
-
-  reply += F("<TR><TD>Flash Writes<TD>");
-  reply += RTC.flashDayCounter;
-  reply += F(" daily / ");
-  reply += RTC.flashCounter;
-  reply += F(" boot");
-
-  reply += F("<TR><TD>Sketch Size<TD>");
-  #if defined(ESP8266)
-  reply += ESP.getSketchSize() / 1024;
-  reply += F(" kB (");
-  reply += ESP.getFreeSketchSpace() / 1024;
-  reply += F(" kB free)");
-  #endif
-
   reply += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
 
   if (WiFi.status() == WL_CONNECTED)
@@ -4362,22 +4385,86 @@ void handle_sysinfo() {
     reply += F(" [Development]");
   #endif
 
-  reply += F("<TR><TD colspan=2><HR></TD></TR>");
+  reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
   reply += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getChipId();
     reply += F(" (0x");
-    reply += String(ESP.getChipId(), HEX);
+    String espChipId(ESP.getChipId(), HEX);
+    espChipId.toUpperCase();
+    reply += espChipId;
     reply += F(")");
+
+    reply += F("<TR><TD>ESP Chip Freq:<TD>");
+    reply += ESP.getCpuFreqMHz();
+    reply += F(" MHz");
   #endif
+
+  reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 
   reply += F("<TR><TD>Flash Chip ID<TD>");
   #if defined(ESP8266)
-    reply += ESP.getFlashChipId();
-    reply += F(" (0x");
-    reply += String(ESP.getFlashChipId(), HEX);
-    reply += F(")");
+    uint32_t flashChipId = ESP.getFlashChipId();
+    // Set to HEX may be something like 0x1640E0.
+    // Where manufacturer is 0xE0 and device is 0x4016.
+    reply += F("Vendor: 0x");
+    String flashVendor(flashChipId & 0xFF, HEX);
+    flashVendor.toUpperCase();
+    reply += flashVendor;
+    reply += F(" Device: 0x");
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    String flashDeviceString(flashDevice, HEX);
+    flashDeviceString.toUpperCase();
+    reply += flashDeviceString;
+  #endif
+  uint32_t realSize = 0;
+  #if defined(ESP8266)
+    realSize = ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    realSize = ESP.getFlashChipSize();
+  #endif
+  uint32_t ideSize = ESP.getFlashChipSize();
+
+  reply += F("<TR><TD>Flash Chip Real Size:<TD>");
+  reply += realSize / 1024;
+  reply += F(" kB");
+
+  reply += F("<TR><TD>Flash IDE Size:<TD>");
+  reply += ideSize / 1024;
+  reply += F(" kB");
+
+  // Please check what is supported for the ESP32
+  #if defined(ESP8266)
+    reply += F("<TR><TD>Flash IDE speed:<TD>");
+    reply += ESP.getFlashChipSpeed() / 1000000;
+    reply += F(" MHz");
+
+    FlashMode_t ideMode = ESP.getFlashChipMode();
+    reply += F("<TR><TD>Flash IDE mode:<TD>");
+    switch (ideMode) {
+      case FM_QIO:  reply += F("QIO");  break;
+      case FM_QOUT: reply += F("QOUT"); break;
+      case FM_DIO:  reply += F("DIO");  break;
+      case FM_DOUT: reply += F("DOUT"); break;
+      default:
+         reply += F("Unknown"); break;
+    }
+  #endif
+
+  reply += F("<TR><TD>Flash Writes<TD>");
+  reply += RTC.flashDayCounter;
+  reply += F(" daily / ");
+  reply += RTC.flashCounter;
+  reply += F(" boot");
+
+  reply += F("<TR><TD>Sketch Size<TD>");
+  #if defined(ESP8266)
+  reply += ESP.getSketchSize() / 1024;
+  reply += F(" kB (");
+  reply += ESP.getFreeSketchSpace() / 1024;
+  reply += F(" kB free)");
   #endif
 
   reply += F("</table></form>");
