@@ -715,6 +715,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
 /********************************************************************************************\
   Convert a char string to integer
   \*********************************************************************************************/
+//FIXME: change original code so it uses String and String.toInt()
 unsigned long str2int(char *string)
 {
   unsigned long temp = atof(string);
@@ -725,6 +726,7 @@ unsigned long str2int(char *string)
 /********************************************************************************************\
   Convert a char string to IP byte array
   \*********************************************************************************************/
+//FIXME: change original code so it uses IPAddress and IPAddress.fromString()
 boolean str2ip(char *string, byte* IP)
 {
   byte c;

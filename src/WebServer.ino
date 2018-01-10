@@ -729,11 +729,15 @@ void handle_controllers() {
 
   byte index = controllerindex.toInt();
 
+  //submitted data
   if (protocol.length() != 0)
   {
     ControllerSettingsStruct ControllerSettings;
+    //submitted changed protocol
     if (Settings.Protocol[index - 1] != protocol.toInt())
     {
+
+      //reset (some) default-settings
       Settings.Protocol[index - 1] = protocol.toInt();
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
       ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
@@ -743,11 +747,21 @@ void handle_controllers() {
       strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
       TempEvent.String1 = "";
       TempEvent.String2 = "";
+      //NOTE: do not enable controller by default, give user a change to enter sensible values first
+
+      //not resetted to default (for convenience)
+      //SecuritySettings.ControllerUser[index - 1]
+      //SecuritySettings.ControllerPassword[index - 1]
+
     }
+
+    //subitted same protocol
     else
     {
+      //there is a protocol selected
       if (Settings.Protocol != 0)
       {
+        //copy all settings to conroller settings struct
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
         TempEvent.ControllerIndex = index - 1;
         TempEvent.ProtocolIndex = ProtocolIndex;
@@ -761,6 +775,7 @@ void handle_controllers() {
           for (byte x = 0; x < 4; x++)
             ControllerSettings.IP[x] = IP[x];
         }
+        //no protocol selected
         else
         {
           if (controllerip.length() != 0)
@@ -769,7 +784,7 @@ void handle_controllers() {
             str2ip(tmpString, ControllerSettings.IP);
           }
         }
-
+        //copy settings to struct
         Settings.ControllerEnabled[index - 1] = (controllerenabled == "on");
         ControllerSettings.Port = controllerport.toInt();
         strncpy(SecuritySettings.ControllerUser[index - 1], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
@@ -1290,7 +1305,6 @@ void handle_devices() {
   }
 
   String reply = "";
-  //reply.reserve(8192);
   addHeader(true, reply);
 
   byte index = WebServer.arg(F("index")).toInt();
@@ -1299,17 +1313,19 @@ void handle_devices() {
 
   if (edit.toInt() != 0) // when form submitted
   {
-    if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber) // change of device, clear all other values
+    if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber) // change of device: cleanup old device and reset default settings
     {
+      //let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
       TempEvent.TaskIndex = index - 1;
       PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
 
       taskClear(index - 1, false); // clear settings, but do not save
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
-      if (taskdevicenumber != 0) // preload valuenames
+      if (taskdevicenumber != 0) // set default values if a new device has been selected
       {
+        //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString); //the plugin should populate ExtraTaskSettings with its default values.
       }
     }
     else if (taskdevicenumber != 0) //save settings
@@ -1390,6 +1406,7 @@ void handle_devices() {
       if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
         PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
 
+      //allow the plugin to save plugin-specific form settings.
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
     addHtmlError(reply, SaveTaskSettings(index - 1));
