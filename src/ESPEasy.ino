@@ -497,7 +497,11 @@ struct SettingsStruct
 
 struct ControllerSettingsStruct
 {
-  ControllerSettingsStruct() : UseDNS(false), Port(0) {}
+  ControllerSettingsStruct() : UseDNS(false), Port(0) {
+    memset(HostName, 0, sizeof(HostName));
+    memset(Publish, 0, sizeof(Publish));
+    memset(Subscribe, 0, sizeof(Subscribe));
+  }
   boolean       UseDNS;
   byte          IP[4];
   unsigned int  Port;
