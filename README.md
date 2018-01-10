@@ -1,4 +1,4 @@
-# ESPEasy (mega branch)
+# ESPEasy (v2.0 stable branch)
 
 Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy)
 
