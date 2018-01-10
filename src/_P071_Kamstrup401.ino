@@ -65,6 +65,11 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        success = true;
+        break;
+      }
 
     case PLUGIN_READ:
       {
