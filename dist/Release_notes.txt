@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release v2.0-20180110 (since mega-20180104)
+-------------------------------------------------
+
+Release date: Wed Jan 10 16:14:23 CET 2018
+
+ESPEasy release bot (1):
+      added releasebot to v2.0 branch
+
+Edwin Eefting (5):
+      changed readme title
+      readme updates
+      actually ignore MQTT messages that are too big.
+      moved mqtt stuff outside of backgroundtasks(). fixes #683 in my test scenario
+      fixed plugin id of "Communication - Kamstrup Multical 401". (accidental octal notation)
+
+Gijs Noorlander (4):
+      [switch] Fixed switch behavior and default settings. (#675)
+      [Flash info] Detailed flash information (#678)
+      Bugfix/v2.0 crash switch (#682)
+      [Adafruit MPR121] Change deprecated name setThreshholds to setThresholds (#685)
+
+chunter1 (1):
+      ABC calibration feature added (#606)
+
+
+-------------------------------------------------
 Changes in release v2.0.0-dev13 (since v2.0.0-dev12)
 -------------------------------------------------
 
