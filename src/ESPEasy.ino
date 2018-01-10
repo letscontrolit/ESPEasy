@@ -1059,6 +1059,11 @@ void loop()
     if (timeOutReached(timer1s))
       runOncePerSecond();
   }
+
+  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+  if(Settings.ControllerEnabled[0])
+    MQTTclient.loop();
+
   backgroundtasks();
 
 }
@@ -1403,10 +1408,12 @@ void checkSystemTimers()
 bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //always start with a yield
+  yield();
+
   //prevent recursion!
   if (runningBackgroundTasks)
   {
-    yield();
     return;
   }
   runningBackgroundTasks=true;
@@ -1425,8 +1432,7 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   WebServer.handleClient();
-  if(Settings.ControllerEnabled[0])
-    MQTTclient.loop();
+
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA

@@ -16,8 +16,6 @@ void sendData(struct EventStruct *event)
 //  if (!Settings.TaskDeviceSendData[event->TaskIndex])
 //    return false;
 
-  delay(1); // Make sure the yield() is called even when flooded with messages.
-  /*
   if (Settings.MessageDelay != 0)
   {
     const long dif = timePassedSince(lastSend);
@@ -27,17 +25,13 @@ void sendData(struct EventStruct *event)
       //this is logged nowhere else, so might as well disable it here also:
       // addLog(LOG_LEVEL_DEBUG_MORE, String(F("CTRL : Message delay (ms): "))+delayms);
 
-      // Something really fishy is going on with the delayBackground function,
-      // which will result in crashes.
-      // Disabled for now and delay(1) added outside this if-scope.
-//      delayBackground(delayms);
+     delayBackground(delayms);
 
       // unsigned long timer = millis() + delayms;
       // while (!timeOutReached(timer))
       //   backgroundtasks();
     }
   }
-  */
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
