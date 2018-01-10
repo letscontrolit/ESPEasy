@@ -1216,7 +1216,14 @@ void handle_devices() {
   struct EventStruct TempEvent;
 
   // String taskindex = WebServer.arg(F("index"));
-  byte taskdevicenumber = WebServer.arg(F("TDNUM")).toInt();
+
+  byte taskdevicenumber;
+  if (WebServer.hasArg(F("del")))
+    taskdevicenumber=0;
+  else
+    taskdevicenumber = WebServer.arg(F("TDNUM")).toInt();
+
+
   unsigned long taskdevicetimer = WebServer.arg(F("TDT")).toInt();
   // String taskdeviceid[CONTROLLER_MAX];
   // String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
@@ -1267,6 +1274,9 @@ void handle_devices() {
   // }
 
   String edit = WebServer.arg(F("edit"));
+
+
+
   byte page = WebServer.arg(F("page")).toInt();
   if (page == 0)
     page = 1;
@@ -1302,7 +1312,7 @@ void handle_devices() {
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
       }
     }
-    else if (taskdevicenumber != 0)
+    else if (taskdevicenumber != 0) //save settings
     {
       Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
       DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
@@ -1552,11 +1562,30 @@ void handle_devices() {
     reply += F("<form name='frmselect' method='post'><table>");
     addFormHeader(reply, F("Task Settings"));
 
-    reply += F("<TR><TD>Device:<TD>");
-    addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[index - 1]);   //="taskdevicenumber"
 
-    if (Settings.TaskDeviceNumber[index - 1] != 0 )   //any device selected?
+    reply += F("<TR><TD>Device:<TD>");
+
+    //no device selected
+    if (Settings.TaskDeviceNumber[index - 1] == 0 )
     {
+      //takes lots of memory/time so call this only when needed.
+      addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[index - 1]);   //="taskdevicenumber"
+
+    }
+    // device selected
+    else
+    {
+      //remember selected device number
+      reply += F("<input type='hidden' name='TDNUM' value='");
+      reply += Settings.TaskDeviceNumber[index - 1];
+      reply += F("'>");
+
+      //show selected device name and delete button
+      String deviceName;
+      Plugin_ptr[Settings.TaskDeviceNumber[index - 1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
+      reply += deviceName;
+
+
       addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
 
       addFormTextBox(reply, F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
@@ -1706,6 +1735,13 @@ void handle_devices() {
     addSubmitButton(reply);
     reply += F("<input type='hidden' name='edit' value='1'>");
     reply += F("<input type='hidden' name='page' value='1'>");
+
+    //if user selected a device, add the delete button
+    if (Settings.TaskDeviceNumber[index - 1] != 0 )
+      addSubmitButton(reply, F("Delete"), F("del"));
+
+
+
     reply += F("</table></form>");
   }
 
@@ -2098,6 +2134,18 @@ void addSubmitButton(String& str)
 {
   str += F("<input class='button link' type='submit' value='Submit'>");
 }
+
+//add submit button with different label and name
+void addSubmitButton(String& str, const String &value, const String &name)
+{
+  str += F("<input class='button link' type='submit' value='");
+  str += value;
+  str += F("' name='");
+  str += name;
+  str += F("'>");
+}
+
+
 
 //********************************************************************************
 // Add a header

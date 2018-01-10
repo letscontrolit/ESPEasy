@@ -1,7 +1,7 @@
 cmd: "platformio"
-name: "Build with error highlighting (dev_4096)"
+name: "Build with error highlighting (dev_ESP8266_4096)"
 args:
-  - run --environment dev_4096
+  - run --environment dev_ESP8266_4096
 sh: true,
 cwd: .
 # env:
