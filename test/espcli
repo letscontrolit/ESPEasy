@@ -8,6 +8,8 @@ import node
 import espeasy
 import pydoc
 import util
+from espcore import *
+
 
 def get_epilog():
     docs=pydoc.render_doc(node.Node) + pydoc.render_doc(espeasy.EspEasy)
@@ -15,14 +17,14 @@ def get_epilog():
     docs=docs+"""
 Examples:
 
-Build, flash and connect to serial for node 2:
-    ./espcli node 2 bfs
+Build, flash and connect to serial for node 1:
+    ./espcli node 1 bfs
 
 Configure wifi settings for node:
-    ./espcli node 1 wificonfig
+    ./espcli node 0 wificonfig
 
-Configure node 1, controller 1 as domoticz mqtt:
-    ./espcli espeasy 1 controller_domoticz_mqtt index=1 controllerip=1.2.3.4
+Configure node 0, controller 1 as domoticz mqtt:
+    ./espcli espeasy 0 controller_domoticz_mqtt index=1 controllerip=1.2.3.4
 
     """
     return(docs)
@@ -48,18 +50,18 @@ parser.add_argument('params',  default=[], nargs='*', help='command parameters. 
 args = parser.parse_args()
 
 try:
-    if args.node[0]<1:
-        raise(Exception("node number should be 1 or higher"))
+    if args.node[0]<0:
+        raise(Exception("node number should be 0 or higher"))
 
     if args.debug:
         util.enable_http_debug()
 
 
-    node_index=args.node[0]-1
+    node_index=args.node[0]
 
 
     #we always need a node instance
-    node_instance=node.Node(config.nodes[node_index])
+    node_instance=node.Node(config.nodes[node_index], "node"+str(node_index))
 
 
     #determine rpc parameters
@@ -82,7 +84,7 @@ try:
     sys.exit(0)
 
 except Exception as e:
-    print("Error: "+str(e), file=sys.stderr)
+    log.error(str(e))
     if args.debug:
         print()
         print("Details:")

@@ -10,6 +10,7 @@ class EspEasy:
 
 
     def control(self, **kwargs):
+        self._node.log.info("Control "+str(kwargs))
         self._node.http_post(
             page="control",
 
@@ -23,6 +24,7 @@ class EspEasy:
     def controller_domoticz_mqtt(self, **kwargs):
         """config controller to use domoticz via mqtt"""
 
+        self._node.log.info("Config controller domoticz mqtt "+str(kwargs))
         self._node.http_post(
             page="controllers",
 
@@ -45,6 +47,7 @@ class EspEasy:
 
 
     def device_p001(self, **kwargs):
+        self._node.log.info("Config device plugin p001 "+str(kwargs))
 
         self._node.http_post(
             page="devices",
@@ -65,5 +68,34 @@ class EspEasy:
                 TDT:0
                 TDVN1:Switch
                 edit:1
+            """.format(**kwargs)
+        )
+
+
+    def device_p004(self, **kwargs):
+        self._node.log.info("Config device plugin p004 "+str(kwargs))
+
+        self._node.http_post(
+            page="devices",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                TDNUM:4
+                TDN:temp
+                TDE:on
+                taskdevicepin1:{taskdevicepin1}
+                plugin_004_dev:{plugin_004_dev}
+                plugin_004_res:{plugin_004_res}
+                TDT:5
+                TDVN1:Temperature
+                TDF1:
+                TDVD1:2
+                TDSD1:on
+                TDID1:{TDID1}
+                edit:1
+                page:1
             """.format(**kwargs)
         )
