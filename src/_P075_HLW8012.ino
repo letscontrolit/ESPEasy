@@ -20,7 +20,7 @@ HLW8012 *Plugin_075_hlw;
 #define PLUGIN_075
 #define PLUGIN_ID_075        075
 #define PLUGIN_075_DEBUG     true    //activate extra log info in the debug
-#define PLUGIN_NAME_075       "Voltage & Current (AC) - HLW8012 [TESTING]"
+#define PLUGIN_NAME_075       "Energy (AC) - HLW8012 [TESTING]"
 #define PLUGIN_VALUENAME1_075 "Voltage (V)"
 #define PLUGIN_VALUENAME2_075 "Current (A)"
 #define PLUGIN_VALUENAME3_075 "Active Power (W)"
