@@ -22,17 +22,6 @@ boolean Plugin_001_read_switch_state(struct EventStruct *event) {
   return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
 }
 
-// Make sure the initial default is a switch (value 0)
-#define PLUGIN_001_TYPE_SWITCH 0
-#define PLUGIN_001_TYPE_DIMMER 1
-#define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH 0
-#define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
-#define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
-
-boolean Plugin_001_read_switch_state(struct EventStruct *event) {
-  return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
-}
-
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
