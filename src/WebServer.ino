@@ -4250,31 +4250,6 @@ void handle_sysinfo() {
   reply += RTC.bootCounter;
   reply += F(")");
 
-  reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
-
-  reply += F("<TR><TD>Flash Size<TD>");
-  #if defined(ESP8266)
-    reply += ESP.getFlashChipRealSize() / 1024; //ESP.getFlashChipSize();
-  #endif
-  #if defined(ESP32)
-    reply += ESP.getFlashChipSize() / 1024;
-  #endif
-  reply += F(" kB");
-
-  reply += F("<TR><TD>Flash Writes<TD>");
-  reply += RTC.flashDayCounter;
-  reply += F(" daily / ");
-  reply += RTC.flashCounter;
-  reply += F(" boot");
-
-  reply += F("<TR><TD>Sketch Size<TD>");
-  #if defined(ESP8266)
-  reply += ESP.getSketchSize() / 1024;
-  reply += F(" kB (");
-  reply += ESP.getFreeSketchSpace() / 1024;
-  reply += F(" kB free)");
-  #endif
-
   reply += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
 
   if (WiFi.status() == WL_CONNECTED)
@@ -4362,22 +4337,86 @@ void handle_sysinfo() {
     reply += F(" [Development]");
   #endif
 
-  reply += F("<TR><TD colspan=2><HR></TD></TR>");
+  reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
   reply += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
     reply += ESP.getChipId();
     reply += F(" (0x");
-    reply += String(ESP.getChipId(), HEX);
+    String espChipId(ESP.getChipId(), HEX);
+    espChipId.toUpperCase();
+    reply += espChipId;
     reply += F(")");
+
+    reply += F("<TR><TD>ESP Chip Freq:<TD>");
+    reply += ESP.getCpuFreqMHz();
+    reply += F(" MHz");
   #endif
+
+  reply += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 
   reply += F("<TR><TD>Flash Chip ID<TD>");
   #if defined(ESP8266)
-    reply += ESP.getFlashChipId();
-    reply += F(" (0x");
-    reply += String(ESP.getFlashChipId(), HEX);
-    reply += F(")");
+    uint32_t flashChipId = ESP.getFlashChipId();
+    // Set to HEX may be something like 0x1640E0.
+    // Where manufacturer is 0xE0 and device is 0x4016.
+    reply += F("Vendor: 0x");
+    String flashVendor(flashChipId & 0xFF, HEX);
+    flashVendor.toUpperCase();
+    reply += flashVendor;
+    reply += F(" Device: 0x");
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    String flashDeviceString(flashDevice, HEX);
+    flashDeviceString.toUpperCase();
+    reply += flashDeviceString;
+  #endif
+  uint32_t realSize = 0;
+  #if defined(ESP8266)
+    realSize = ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+  #endif
+  #if defined(ESP32)
+    realSize = ESP.getFlashChipSize();
+  #endif
+  uint32_t ideSize = ESP.getFlashChipSize();
+
+  reply += F("<TR><TD>Flash Chip Real Size:<TD>");
+  reply += realSize / 1024;
+  reply += F(" kB");
+
+  reply += F("<TR><TD>Flash IDE Size:<TD>");
+  reply += ideSize / 1024;
+  reply += F(" kB");
+
+  // Please check what is supported for the ESP32
+  #if defined(ESP8266)
+    reply += F("<TR><TD>Flash IDE speed:<TD>");
+    reply += ESP.getFlashChipSpeed() / 1000000;
+    reply += F(" MHz");
+
+    FlashMode_t ideMode = ESP.getFlashChipMode();
+    reply += F("<TR><TD>Flash IDE mode:<TD>");
+    switch (ideMode) {
+      case FM_QIO:  reply += F("QIO");  break;
+      case FM_QOUT: reply += F("QOUT"); break;
+      case FM_DIO:  reply += F("DIO");  break;
+      case FM_DOUT: reply += F("DOUT"); break;
+      default:
+         reply += F("Unknown"); break;
+    }
+  #endif
+
+  reply += F("<TR><TD>Flash Writes<TD>");
+  reply += RTC.flashDayCounter;
+  reply += F(" daily / ");
+  reply += RTC.flashCounter;
+  reply += F(" boot");
+
+  reply += F("<TR><TD>Sketch Size<TD>");
+  #if defined(ESP8266)
+  reply += ESP.getSketchSize() / 1024;
+  reply += F(" kB (");
+  reply += ESP.getFreeSketchSpace() / 1024;
+  reply += F(" kB free)");
   #endif
 
   reply += F("</table></form>");
