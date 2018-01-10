@@ -13,21 +13,21 @@ Check here to learn how to use this branch and help us improving ESPEasy: http:/
 
 Every night our build-bot will build a new binary release: https://github.com/letscontrolit/ESPEasy/releases
 
-The releases are named something like 'mega-01022018' (last number is the build date)
+The releases are named something like 'mega-20180102' (last number is the build date)
 
 Depending on your needs, we release different types of files:
 
 Firmware name                                 | Hardware                | Included plugins            |
 ----------------------------------------------|-------------------------|-----------------------------|
-ESPEasy_mega-01022018_normal_ESP8266_1024.bin  | ESP8266 with 1Mb flash  | Stable                      |
-ESPEasy_mega-01022018_test_ESP8266_1024.bin    | ESP8266 with 1Mb flash  | Stable + Test               |
-ESPEasy_mega-01022018_dev_ESP8266_1024.bin     | ESP8266 with 1Mb flash  | Stable + Test + Development |
-ESPEasy_mega-01022018_normal_ESP8266_4096.bin  | ESP8266 with 4Mb flash  | Stable                      |
-ESPEasy_mega-01022018_test_ESP8266_4096.bin    | ESP8266 with 4Mb flash  | Stable + Test               |
-ESPEasy_mega-01022018_dev_ESP8266_4096.bin     | ESP8266 with 4Mb flash  | Stable + Test + Development |
-ESPEasy_mega-01022018_normal_ESP8285_1024.bin  | ESP8285 with 1Mb flash  | Stable                      |
-ESPEasy_mega-01022018_test_ESP8285_1024.bin    | ESP8285 with 1Mb flash  | Stable + Test               |
-ESPEasy_mega-01022018_dev_ESP8285_1024.bin     | ESP8285 with 1Mb flash  | Stable + Test + Development |
+ESPEasy_mega-20180102_normal_ESP8266_1024.bin  | ESP8266 with 1Mb flash  | Stable                      |
+ESPEasy_mega-20180102_test_ESP8266_1024.bin    | ESP8266 with 1Mb flash  | Stable + Test               |
+ESPEasy_mega-20180102_dev_ESP8266_1024.bin     | ESP8266 with 1Mb flash  | Stable + Test + Development |
+ESPEasy_mega-20180102_normal_ESP8266_4096.bin  | ESP8266 with 4Mb flash  | Stable                      |
+ESPEasy_mega-20180102_test_ESP8266_4096.bin    | ESP8266 with 4Mb flash  | Stable + Test               |
+ESPEasy_mega-20180102_dev_ESP8266_4096.bin     | ESP8266 with 4Mb flash  | Stable + Test + Development |
+ESPEasy_mega-20180102_normal_ESP8285_1024.bin  | ESP8285 with 1Mb flash  | Stable                      |
+ESPEasy_mega-20180102_test_ESP8285_1024.bin    | ESP8285 with 1Mb flash  | Stable + Test               |
+ESPEasy_mega-20180102_dev_ESP8285_1024.bin     | ESP8285 with 1Mb flash  | Stable + Test + Development |
 
 ## More info
 
