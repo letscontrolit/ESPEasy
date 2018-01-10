@@ -71,6 +71,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   if (length>sizeof(c_payload)-1)
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
+    return;
   }
 
   //convert payload to string, and 0 terminate
