@@ -26,6 +26,7 @@ class EspEasy:
 
         self._node.log.info("Config controller domoticz mqtt "+str(kwargs))
         self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
             page="controllers",
 
             params="""
@@ -50,6 +51,7 @@ class EspEasy:
         self._node.log.info("Config device plugin p001 "+str(kwargs))
 
         self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
             page="devices",
 
             params="""
@@ -76,6 +78,7 @@ class EspEasy:
         self._node.log.info("Config device plugin p004 "+str(kwargs))
 
         self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
             page="devices",
 
             params="""

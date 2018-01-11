@@ -10,13 +10,12 @@ espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_r
 
 
 # check mqtt results
-temp1=mqtt_expect_json("domoticz/in", {  'idx': 1417 }, timeout=5)
-temp2=mqtt_expect_json("domoticz/in", {  'idx': 1418 }, timeout=5)
+temp1=mqtt_expect_json("domoticz/in", {  'idx': 1417 }, timeout=10)
+temp2=mqtt_expect_json("domoticz/in", {  'idx': 1418 }, timeout=10)
 
-if int(temp1.svalue)>0 and int(temp1.svalue)<40:
-    if int(temp1.svalue)>0 and int(temp1.svalue)<40:
+if float(temp1['svalue'])>0 and float(temp1['svalue'])<40 and float(temp2['svalue'])>0 and float(temp2['svalue'])<40:
 
-        #FIXME:
-        log.info("passed")
-
-raise(Exception("Test failed"))
+    #FIXME:
+    log.info("passed")
+else:
+    raise(Exception("Test failed"))
