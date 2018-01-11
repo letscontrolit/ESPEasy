@@ -853,7 +853,10 @@ void handle_controllers() {
   char tmpString[64];
 
   navMenuIndex = 2;
-  String controllerindex = WebServer.arg(F("index"));
+  byte controllerindex = WebServer.arg(F("index")).toInt();
+  boolean controllerNotSet = controllerindex == 0;
+  --controllerindex;
+
   String usedns = WebServer.arg(F("usedns"));
   String controllerip = WebServer.arg(F("controllerip"));
   String controllerhostname = WebServer.arg(F("controllerhostname"));
@@ -868,19 +871,17 @@ void handle_controllers() {
   String reply = "";
   addHeader(true, reply);
 
-  byte index = controllerindex.toInt();
-
   //submitted data
-  if (protocol.length() != 0)
+  if (protocol.length() != 0 && !controllerNotSet)
   {
     ControllerSettingsStruct ControllerSettings;
     //submitted changed protocol
-    if (Settings.Protocol[index - 1] != protocol.toInt())
+    if (Settings.Protocol[controllerindex] != protocol.toInt())
     {
 
       //reset (some) default-settings
-      Settings.Protocol[index - 1] = protocol.toInt();
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
+      Settings.Protocol[controllerindex] = protocol.toInt();
+      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
       if (Protocol[ProtocolIndex].usesTemplate)
         CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
@@ -891,8 +892,8 @@ void handle_controllers() {
       //NOTE: do not enable controller by default, give user a change to enter sensible values first
 
       //not resetted to default (for convenience)
-      //SecuritySettings.ControllerUser[index - 1]
-      //SecuritySettings.ControllerPassword[index - 1]
+      //SecuritySettings.ControllerUser[controllerindex]
+      //SecuritySettings.ControllerPassword[controllerindex]
 
     }
 
@@ -903,8 +904,8 @@ void handle_controllers() {
       if (Settings.Protocol != 0)
       {
         //copy all settings to conroller settings struct
-        byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
-        TempEvent.ControllerIndex = index - 1;
+        byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+        TempEvent.ControllerIndex = controllerindex;
         TempEvent.ProtocolIndex = ProtocolIndex;
         CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
         ControllerSettings.UseDNS = usedns.toInt();
@@ -926,22 +927,22 @@ void handle_controllers() {
           }
         }
         //copy settings to struct
-        Settings.ControllerEnabled[index - 1] = (controllerenabled == "on");
+        Settings.ControllerEnabled[controllerindex] = (controllerenabled == "on");
         ControllerSettings.Port = controllerport.toInt();
-        strncpy(SecuritySettings.ControllerUser[index - 1], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
-        //strncpy(SecuritySettings.ControllerPassword[index - 1], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
-        copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], sizeof(SecuritySettings.ControllerPassword[0]));
+        strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
+        //strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
+        copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
         strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
       }
     }
-    addHtmlError(reply, SaveControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
+    addHtmlError(reply, SaveControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
     addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
 
-  if (index == 0)
+  if (controllerNotSet)
   {
     reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
     reply += F("<TH>Nr<TH>Enabled<TH>Protocol<TH>IP<TH>Port");
@@ -981,7 +982,7 @@ void handle_controllers() {
   {
     reply += F("<table><TR><TH>Controller Settings<TH>");
     reply += F("<TR><TD>Protocol:");
-    byte choice = Settings.Protocol[index - 1];
+    byte choice = Settings.Protocol[controllerindex];
     reply += F("<TD>");
     addSelector_Head(reply, F("protocol"), true);
     addSelector_Item(reply, F("- Standalone -"), 0, false, false, F(""));
@@ -994,7 +995,7 @@ void handle_controllers() {
                        ProtocolName,
                        Protocol[x].Number,
                        choice == Protocol[x].Number,
-                       !((index == 1) || !Protocol[x].usesMQTT),
+                       !((controllerindex == 0) || !Protocol[x].usesMQTT),
                        F(""));
     }
     addSelector_Foot(reply);
@@ -1004,10 +1005,10 @@ void handle_controllers() {
 
     // char str[20];
 
-    if (Settings.Protocol[index - 1])
+    if (Settings.Protocol[controllerindex])
     {
       ControllerSettingsStruct ControllerSettings;
-      LoadControllerSettings(index - 1, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+      LoadControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
       byte choice = ControllerSettings.UseDNS;
       String options[2];
       options[0] = F("Use IP address");
@@ -1026,15 +1027,15 @@ void handle_controllers() {
 
       addFormNumericBox(reply, F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
 
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[index - 1]);
+      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (Protocol[ProtocolIndex].usesAccount)
       {
-        addFormTextBox(reply, F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[index - 1], sizeof(SecuritySettings.ControllerUser[0])-1);
+        addFormTextBox(reply, F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
       }
 
       if (Protocol[ProtocolIndex].usesPassword)
       {
-        addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[index - 1], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
@@ -1047,9 +1048,9 @@ void handle_controllers() {
         addFormTextBox(reply, F("Controller Publish"), F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
       }
 
-      addFormCheckBox(reply, F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[index - 1]);
+      addFormCheckBox(reply, F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
 
-      TempEvent.ControllerIndex = index - 1;
+      TempEvent.ControllerIndex = controllerindex;
       TempEvent.ProtocolIndex = ProtocolIndex;
       CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
@@ -1076,7 +1077,10 @@ void handle_notifications() {
   // char tmpString[64];
 
   navMenuIndex = 6;
-  String notificationindex = WebServer.arg(F("index"));
+  byte notificationindex = WebServer.arg(F("index")).toInt();
+  boolean notificationindexNotSet = notificationindex == 0;
+  --notificationindex;
+
   String notification = WebServer.arg(F("notification"));
   String domain = WebServer.arg(F("domain"));
   String server = WebServer.arg(F("server"));
@@ -1092,14 +1096,12 @@ void handle_notifications() {
   String reply = "";
   addHeader(true, reply);
 
-  byte index = notificationindex.toInt();
-
-  if (notification.length() != 0)
+  if (notification.length() != 0 && !notificationindexNotSet)
   {
     NotificationSettingsStruct NotificationSettings;
-    if (Settings.Notification[index - 1] != notification.toInt())
+    if (Settings.Notification[notificationindex] != notification.toInt())
     {
-      Settings.Notification[index - 1] = notification.toInt();
+      Settings.Notification[notificationindex] = notification.toInt();
       NotificationSettings.Domain[0] = 0;
       NotificationSettings.Server[0] = 0;
       NotificationSettings.Port = 0;
@@ -1112,13 +1114,13 @@ void handle_notifications() {
     {
       if (Settings.Notification != 0)
       {
-        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index - 1]);
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
         if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
           NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
         NotificationSettings.Port = port.toInt();
         NotificationSettings.Pin1 = pin1.toInt();
         NotificationSettings.Pin2 = pin2.toInt();
-        Settings.NotificationEnabled[index - 1] = (notificationenabled == "on");
+        Settings.NotificationEnabled[notificationindex] = (notificationenabled == "on");
         strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
         strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
         strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
@@ -1127,13 +1129,13 @@ void handle_notifications() {
         strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
-    addHtmlError(reply, SaveNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
+    addHtmlError(reply, SaveNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
     addHtmlError(reply, SaveSettings());
   }
 
   reply += F("<form name='frmselect' method='post'>");
 
-  if (index == 0)
+  if (notificationindexNotSet)
   {
     reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
     reply += F("<TH>Nr<TH>Enabled<TH>Service<TH>Server<TH>Port");
@@ -1175,7 +1177,7 @@ void handle_notifications() {
   {
     reply += F("<table><TR><TH>Notification Settings<TH>");
     reply += F("<TR><TD>Notification:");
-    byte choice = Settings.Notification[index - 1];
+    byte choice = Settings.Notification[notificationindex];
     reply += F("<TD>");
     addSelector_Head(reply, F("notification"), true);
     addSelector_Item(reply, F("- None -"), 0, false, false, F(""));
@@ -1197,12 +1199,12 @@ void handle_notifications() {
 
     // char str[20];
 
-    if (Settings.Notification[index - 1])
+    if (Settings.Notification[notificationindex])
     {
       NotificationSettingsStruct NotificationSettings;
-      LoadNotificationSettings(index - 1, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+      LoadNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
 
-      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index - 1]);
+      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
       if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
       {
 
@@ -1244,9 +1246,9 @@ void handle_notifications() {
         }
 
         reply += F("<TR><TD>Enabled:<TD>");
-        addCheckBox(reply, F("notificationenabled"), Settings.NotificationEnabled[index - 1]);
+        addCheckBox(reply, F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
 
-        TempEvent.NotificationIndex = index - 1;
+        TempEvent.NotificationIndex = notificationindex;
         NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, reply);
       }
     }
@@ -1465,20 +1467,22 @@ void handle_devices() {
   String reply = "";
   addHeader(true, reply);
 
-  byte index = WebServer.arg(F("index")).toInt();
+  byte taskIndex = WebServer.arg(F("index")).toInt();
+  boolean taskIndexNotSet = taskIndex == 0;
+  --taskIndex;
 
   byte DeviceIndex = 0;
 
-  if (edit.toInt() != 0) // when form submitted
+  if (edit.toInt() != 0  && !taskIndexNotSet) // when form submitted
   {
-    if (Settings.TaskDeviceNumber[index - 1] != taskdevicenumber) // change of device: cleanup old device and reset default settings
+    if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber) // change of device: cleanup old device and reset default settings
     {
       //let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
-      TempEvent.TaskIndex = index - 1;
+      TempEvent.TaskIndex = taskIndex;
       PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
 
-      taskClear(index - 1, false); // clear settings, but do not save
-      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
+      taskClear(taskIndex, false); // clear settings, but do not save
+      Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
       if (taskdevicenumber != 0) // set default values if a new device has been selected
       {
         //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
@@ -1488,54 +1492,54 @@ void handle_devices() {
     }
     else if (taskdevicenumber != 0) //save settings
     {
-      Settings.TaskDeviceNumber[index - 1] = taskdevicenumber;
-      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
+      Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
 
       if (taskdevicetimer > 0)
-        Settings.TaskDeviceTimer[index - 1] = taskdevicetimer;
+        Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
       else
       {
         if (!Device[DeviceIndex].TimerOptional) // Set default delay, unless it's optional...
-          Settings.TaskDeviceTimer[index - 1] = Settings.Delay;
+          Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
         else
-          Settings.TaskDeviceTimer[index - 1] = 0;
+          Settings.TaskDeviceTimer[taskIndex] = 0;
       }
 
-      Settings.TaskDeviceEnabled[index - 1] = (WebServer.arg(F("TDE")) == F("on"));
+      Settings.TaskDeviceEnabled[taskIndex] = (WebServer.arg(F("TDE")) == F("on"));
       strcpy(ExtraTaskSettings.TaskDeviceName, WebServer.arg(F("TDN")).c_str());
-      Settings.TaskDevicePort[index - 1] =  WebServer.arg(F("TDP")).toInt();
+      Settings.TaskDevicePort[taskIndex] =  WebServer.arg(F("TDP")).toInt();
 
       for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
       {
 
-        Settings.TaskDeviceID[controllerNr][index - 1] = WebServer.arg(String(F("TDID")) + (controllerNr + 1)).toInt();
-        Settings.TaskDeviceSendData[controllerNr][index - 1] = (WebServer.arg(String(F("TDSD")) + (controllerNr + 1)) == F("on"));
+        Settings.TaskDeviceID[controllerNr][taskIndex] = WebServer.arg(String(F("TDID")) + (controllerNr + 1)).toInt();
+        Settings.TaskDeviceSendData[controllerNr][taskIndex] = (WebServer.arg(String(F("TDSD")) + (controllerNr + 1)) == F("on"));
       }
 
       if (WebServer.arg(F("taskdevicepin1")).length() != 0)
-        Settings.TaskDevicePin1[index - 1] = WebServer.arg(F("taskdevicepin1")).toInt();
+        Settings.TaskDevicePin1[taskIndex] = WebServer.arg(F("taskdevicepin1")).toInt();
 
       if (WebServer.arg(F("taskdevicepin2")).length() != 0)
-        Settings.TaskDevicePin2[index - 1] = WebServer.arg(F("taskdevicepin2")).toInt();
+        Settings.TaskDevicePin2[taskIndex] = WebServer.arg(F("taskdevicepin2")).toInt();
 
       if (WebServer.arg(F("taskdevicepin3")).length() != 0)
-        Settings.TaskDevicePin3[index - 1] = WebServer.arg(F("taskdevicepin3")).toInt();
+        Settings.TaskDevicePin3[taskIndex] = WebServer.arg(F("taskdevicepin3")).toInt();
 
       if (Device[DeviceIndex].PullUpOption)
-        Settings.TaskDevicePin1PullUp[index - 1] = (WebServer.arg(F("TDPPU")) == F("on"));
+        Settings.TaskDevicePin1PullUp[taskIndex] = (WebServer.arg(F("TDPPU")) == F("on"));
 
       if (Device[DeviceIndex].InverseLogicOption)
-        Settings.TaskDevicePin1Inversed[index - 1] = (WebServer.arg(F("TDPI")) == F("on"));
+        Settings.TaskDevicePin1Inversed[taskIndex] = (WebServer.arg(F("TDPI")) == F("on"));
 
       if (Settings.GlobalSync)
       {
         if (Device[DeviceIndex].GlobalSyncOption)
-          Settings.TaskDeviceGlobalSync[index - 1] = (WebServer.arg(F("TDGS")) == F("on"));
+          Settings.TaskDeviceGlobalSync[taskIndex] = (WebServer.arg(F("TDGS")) == F("on"));
 
         // Send task info if set global
-        if (Settings.TaskDeviceGlobalSync[index - 1])
+        if (Settings.TaskDeviceGlobalSync[taskIndex])
         {
-          SendUDPTaskInfo(0, index - 1, index - 1);
+          SendUDPTaskInfo(0, taskIndex, taskIndex);
         }
       }
 
@@ -1560,23 +1564,23 @@ void handle_devices() {
       //   strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
       // }
 
-      TempEvent.TaskIndex = index - 1;
+      TempEvent.TaskIndex = taskIndex;
       if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
         PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
 
       //allow the plugin to save plugin-specific form settings.
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
     }
-    addHtmlError(reply, SaveTaskSettings(index - 1));
+    addHtmlError(reply, SaveTaskSettings(taskIndex));
 
     addHtmlError(reply, SaveSettings());
 
-    if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[index - 1])
+    if (taskdevicenumber != 0 && Settings.TaskDeviceEnabled[taskIndex])
       PluginCall(PLUGIN_INIT, &TempEvent, dummyString);
   }
 
   // show all tasks as table
-  if (index == 0)
+  if (taskIndexNotSet)
   {
     reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
     reply += F("<a class='button link' href=\"devices?setpage=");
@@ -1613,14 +1617,10 @@ void handle_devices() {
         LoadTaskSettings(x);
         DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
         TempEvent.TaskIndex = x;
-
-        deviceName = "";
-        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
-
         addEnabled(reply, Settings.TaskDeviceEnabled[x]);
 
         reply += F("<TD>");
-        reply += deviceName;
+        reply += getPluginNameFromDeviceIndex(DeviceIndex);
         reply += F("<TD>");
         reply += ExtraTaskSettings.TaskDeviceName;
         reply += F("<TD>");
@@ -1730,9 +1730,9 @@ void handle_devices() {
   // Show edit form if a specific entry is chosen with the edit button
   else
   {
-    LoadTaskSettings(index - 1);
-    DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[index - 1]);
-    TempEvent.TaskIndex = index - 1;
+    LoadTaskSettings(taskIndex);
+    DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
+    TempEvent.TaskIndex = taskIndex;
 
     reply += F("<form name='frmselect' method='post'><table>");
     addFormHeader(reply, F("Task Settings"));
@@ -1741,10 +1741,10 @@ void handle_devices() {
     reply += F("<TR><TD>Device:<TD>");
 
     //no device selected
-    if (Settings.TaskDeviceNumber[index - 1] == 0 )
+    if (Settings.TaskDeviceNumber[taskIndex] == 0 )
     {
       //takes lots of memory/time so call this only when needed.
-      addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[index - 1]);   //="taskdevicenumber"
+      addDeviceSelect(reply, "TDNUM", Settings.TaskDeviceNumber[taskIndex]);   //="taskdevicenumber"
 
     }
     // device selected
@@ -1752,45 +1752,42 @@ void handle_devices() {
     {
       //remember selected device number
       reply += F("<input type='hidden' name='TDNUM' value='");
-      reply += Settings.TaskDeviceNumber[index - 1];
+      reply += Settings.TaskDeviceNumber[taskIndex];
       reply += F("'>");
 
       //show selected device name and delete button
-      String deviceName;
-      Plugin_ptr[Settings.TaskDeviceNumber[index - 1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
-      reply += deviceName;
+      reply += getPluginNameFromDeviceIndex(DeviceIndex);
 
-
-      addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[index - 1]);
+      addHelpButton(reply, String(F("Plugin")) + Settings.TaskDeviceNumber[taskIndex]);
 
       addFormTextBox(reply, F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
 
-      addFormCheckBox(reply, F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[index - 1]);   //="taskdeviceenabled"
+      addFormCheckBox(reply, F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);   //="taskdeviceenabled"
 
-      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[index - 1] == 0 && Settings.UDPPort != 0)
+      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[taskIndex] == 0 && Settings.UDPPort != 0)
       {
-        addFormCheckBox(reply, F("Global Sync"), F("TDGS"), Settings.TaskDeviceGlobalSync[index - 1]);   //="taskdeviceglobalsync"
+        addFormCheckBox(reply, F("Global Sync"), F("TDGS"), Settings.TaskDeviceGlobalSync[taskIndex]);   //="taskdeviceglobalsync"
       }
 
       // section: Sensor / Actuator
-      if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[index - 1] == 0 &&
+      if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[taskIndex] == 0 &&
           ((Device[DeviceIndex].Ports != 0) || (Device[DeviceIndex].PullUpOption) || (Device[DeviceIndex].InverseLogicOption) || (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)) )
       {
         addFormSubHeader(reply, (Device[DeviceIndex].SendDataOption) ? F("Sensor") : F("Actuator"));
 
         if (Device[DeviceIndex].Ports != 0)
-          addFormNumericBox(reply, F("Port"), F("TDP"), Settings.TaskDevicePort[index - 1]);   //="taskdeviceport"
+          addFormNumericBox(reply, F("Port"), F("TDP"), Settings.TaskDevicePort[taskIndex]);   //="taskdeviceport"
 
         if (Device[DeviceIndex].PullUpOption)
         {
-          addFormCheckBox(reply, F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[index - 1]);   //="taskdevicepin1pullup"
-          if ((Settings.TaskDevicePin1[index - 1] == 16) || (Settings.TaskDevicePin2[index - 1] == 16) || (Settings.TaskDevicePin3[index - 1] == 16))
+          addFormCheckBox(reply, F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex]);   //="taskdevicepin1pullup"
+          if ((Settings.TaskDevicePin1[taskIndex] == 16) || (Settings.TaskDevicePin2[taskIndex] == 16) || (Settings.TaskDevicePin3[taskIndex] == 16))
             addFormNote(reply, F("GPIO-16 (D0) does not support PullUp"));
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
         {
-          addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[index - 1]);   //="taskdevicepin1inversed"
+          addFormCheckBox(reply, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[taskIndex]);   //="taskdevicepin1inversed"
           addFormNote(reply, F("Will go into effect on next input change."));
         }
 
@@ -1801,15 +1798,15 @@ void handle_devices() {
         PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummyString);
 
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[index - 1]);
+          addFormPinSelect(reply, TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
         if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[index - 1]);
+          addFormPinSelect(reply, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
         if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(reply, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[index - 1]);
+          addFormPinSelect(reply, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
       }
 
       //add plugins content
-      if (Settings.TaskDeviceDataFeed[index - 1] == 0) // only show additional config for local connected sensors
+      if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // only show additional config for local connected sensors
         PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, reply);
 
       //section: Data Acquisition
@@ -1827,7 +1824,7 @@ void handle_devices() {
             reply += F("<TR><TD>Send to Controller ");
             reply += getControllerSymbol(controllerNr);
             reply += F("<TD>");
-            addCheckBox(reply, id, Settings.TaskDeviceSendData[controllerNr][index - 1]);
+            addCheckBox(reply, id, Settings.TaskDeviceSendData[controllerNr][taskIndex]);
 
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
@@ -1835,7 +1832,7 @@ void handle_devices() {
               reply += F(" &nbsp; IDX: ");
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
-              addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][index - 1], 0, 9999);
+              addNumericBox(reply, id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, 9999);
             }
           }
         }
@@ -1845,8 +1842,8 @@ void handle_devices() {
 
       if (Device[DeviceIndex].TimerOption)
       {
-        //FIXME: shouldn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
-        addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[index - 1], 0, 65535);   //="taskdevicetimer"
+        //FIXME: shoudn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
+        addFormNumericBox(reply, F("Delay"), F("TDT"), Settings.TaskDeviceTimer[taskIndex], 0, 65535);   //="taskdevicetimer"
         addUnit(reply, F("sec"));
         if (Device[DeviceIndex].TimerOptional)
           reply += F(" (Optional for this Device)");
@@ -1912,7 +1909,7 @@ void handle_devices() {
     reply += F("<input type='hidden' name='page' value='1'>");
 
     //if user selected a device, add the delete button
-    if (Settings.TaskDeviceNumber[index - 1] != 0 )
+    if (Settings.TaskDeviceNumber[taskIndex] != 0 )
       addSubmitButton(reply, F("Delete"), F("del"));
 
 
@@ -1946,12 +1943,12 @@ void addDeviceSelect(String& str, String name,  int choice)
   addSelector_Item(str, F("- None -"), 0, false, false, F(""));
   for (byte x = 0; x <= deviceCount; x++)
   {
-    byte index = sortedIndex[x];
-    if (Plugin_id[index] != 0)
-      Plugin_ptr[index](PLUGIN_GET_DEVICENAME, 0, deviceName);
+    byte deviceIndex = sortedIndex[x];
+    if (Plugin_id[deviceIndex] != 0)
+      deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 #ifdef PLUGIN_BUILD_DEV
-    int num = index + 1;
+    int num = deviceIndex + 1;
     String plugin = F("P");
     if (num < 10) plugin += F("0");
     if (num < 100) plugin += F("0");
@@ -1962,8 +1959,8 @@ void addDeviceSelect(String& str, String name,  int choice)
 
     addSelector_Item(str,
                      deviceName,
-                     Device[index].Number,
-                     choice == Device[index].Number,
+                     Device[deviceIndex].Number,
+                     choice == Device[deviceIndex].Number,
                      false,
                      F(""));
   }
@@ -1986,38 +1983,28 @@ void switchArray(byte value)
 //********************************************************************************
 // Device Sort routine, compare two array entries
 //********************************************************************************
-byte arrayLessThan(char *ptr_1, char *ptr_2)
+boolean arrayLessThan(const String& ptr_1, const String& ptr_2)
 {
-  char check1;
-  char check2;
-
   unsigned int i = 0;
-  while (i < strlen(ptr_1))    // For each character in string 1, starting with the first:
+  while (i < ptr_1.length())    // For each character in string 1, starting with the first:
   {
-    check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
-
-    if (strlen(ptr_2) < i)    // If string 2 is shorter, then switch them
+    if (ptr_2.length() < i)    // If string 2 is shorter, then switch them
     {
-      return 1;
+      return true;
     }
     else
     {
-      check2 = (char)ptr_2[i];
-
-      if (check2 > check1)
-      {
-        return 1;       // String 2 is greater; so switch them
+      const char check1 = (char)ptr_1[i];  // get the same char from string 1 and string 2
+      const char check2 = (char)ptr_2[i];
+      if (check1 == check2) {
+        // they're equal so far; check the next char !!
+        i++;
+      } else {
+        return (check2 > check1);
       }
-      if (check2 < check1)
-      {
-        return 0;       // String 2 is LESS; so DONT switch them
-      }
-      // OTHERWISE they're equal so far; check the next char !!
-      i++;
     }
   }
-
-  return 0;
+  return false;
 }
 
 
@@ -2026,23 +2013,16 @@ byte arrayLessThan(char *ptr_1, char *ptr_2)
 //********************************************************************************
 void sortDeviceArray()
 {
-  String deviceName;
-  char deviceName1[41];
-  char deviceName2[41];
   int innerLoop ;
   int mainLoop ;
-
   for ( mainLoop = 1; mainLoop <= deviceCount; mainLoop++)
   {
     innerLoop = mainLoop;
     while (innerLoop  >= 1)
     {
-      Plugin_ptr[sortedIndex[innerLoop]](PLUGIN_GET_DEVICENAME, 0, deviceName);
-      deviceName.toCharArray(deviceName1, 26);
-      Plugin_ptr[sortedIndex[innerLoop - 1]](PLUGIN_GET_DEVICENAME, 0, deviceName);
-      deviceName.toCharArray(deviceName2, 26);
-
-      if (arrayLessThan(deviceName1, deviceName2) == 1)
+      if (arrayLessThan(
+        getPluginNameFromDeviceIndex(sortedIndex[innerLoop]),
+        getPluginNameFromDeviceIndex(sortedIndex[innerLoop - 1])))
       {
         switchArray(innerLoop);
       }
@@ -2551,7 +2531,7 @@ void addTaskSelect(String& str, String name,  int choice)
       byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[x]);
 
       if (Plugin_id[DeviceIndex] != 0)
-        Plugin_ptr[DeviceIndex](PLUGIN_GET_DEVICENAME, &TempEvent, deviceName);
+        deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
     }
     LoadTaskSettings(x);
     str += F("<option value='");
