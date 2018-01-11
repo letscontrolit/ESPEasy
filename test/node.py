@@ -134,7 +134,7 @@ class Node():
 
 
 
-    def http_post(self, page, params,  data=None):
+    def http_post(self, page, params,  data=None, twice=False):
         """http post to espeasy webinterface. (GET if data is None)"""
 
         # transform easy copy/pastable chromium data into a dict
@@ -162,3 +162,11 @@ class Node():
             data=data_dict
         )
         r.raise_for_status()
+
+        if twice:
+            r=requests.post(
+                self._url+page,
+                params=params_dict,
+                data=data_dict
+            )
+            r.raise_for_status()

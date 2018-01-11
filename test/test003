@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+
+from esptest import *
+
+#node0 has a framed OLED display (p036)
+#no verification is done yet.
+
+espeasy[0].device_p036(index=1)

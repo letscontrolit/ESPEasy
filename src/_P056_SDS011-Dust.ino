@@ -109,6 +109,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
+        //FIXME: if this plugin is used more than once at the same time, things go horribly wrong :)
+        
         if (Plugin_056_SDS)
           delete Plugin_056_SDS;
         addLog(LOG_LEVEL_INFO, F("SDS  : Exit"));

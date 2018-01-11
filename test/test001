@@ -2,7 +2,9 @@
 
 from esptest import *
 
-#node0 sends a pulse on a pin, and p001 on node on should pick it up and send it to domoticz
+#node0 sends a pulse on a pin
+#p001 on node on picks it up
+#send it to domoticz via mqtt
 
 espeasy[1].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
 espeasy[1].device_p001(index=1, taskdevicepin1=12, plugin_001_type=1, plugin_001_button=0, TDID1=1415)
