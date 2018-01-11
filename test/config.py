@@ -29,6 +29,6 @@ nodes=[
 
 mqtt_broker="192.168.13.236"
 
-#make sure this command is running on the http_pretender:
-# python -m pretenders.server.server --host 0.0.0.0 --port 8000
-http_pretender="192.168.13.236"
+#ip of the server running this script
+http_server="192.168.13.236"
+http_port=8080
