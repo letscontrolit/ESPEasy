@@ -1,8 +1,21 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 from esptest import *
 
-#node0 has 2x ds18b20. values are send to domoticz mqtt
+#node0 has 2x ds18b20
+#values are send to domoticz via mqtt
+
+
+# mock.when("GET /test").reply(
+#         '{"account": "10000", "outstanding": "10.00"}',
+#         status=200,
+#         times=FOREVER)
+
+mock.reply("kutje")
+print(mock.pretend_url)
+
+import time
+time.sleep(100)
 
 espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
 espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)

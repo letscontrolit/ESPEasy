@@ -9,7 +9,6 @@ import json
 from espcore import *
 
 
-
 ### mqtt stuff
 logging.getLogger("MQTT").debug("Connecting to {mqtt_broker}".format(mqtt_broker=config.mqtt_broker))
 
@@ -55,6 +54,7 @@ def mqtt_expect_json(topic, matches, timeout=60):
 
     raise(Exception("Timeout while expecting mqtt json message"))
 
+
 ### create node objects and espeasy objects
 node=[]
 espeasy=[]
@@ -62,3 +62,10 @@ espeasy=[]
 for n in config.nodes:
     node.append(Node(n, "node"+str(len(node))))
     espeasy.append(EspEasy(node[-1]))
+
+
+### http pretender
+from pretenders.client.http import HTTPMock
+from pretenders.common.constants import FOREVER
+mock = HTTPMock(config.http_pretender, 8000, timeout=20, name='esptest')
+mock.reset()
