@@ -1,4 +1,137 @@
 -------------------------------------------------
+Changes in release mega-20180111 (since v2.0-20180110)
+-------------------------------------------------
+
+Release date: Thu Jan 11 05:00:08 CET 2018
+
+Alexander Schulz (1):
+      improvement: Configurable number of tasks for "Devices" page (TASKS_P…
+
+BadWolf42 (1):
+      Dallas Plugin enhanced : no more "delay()" (#488)
+
+Bartłomiej Zimoń (1):
+      Update _C002.ino (#645)
+
+DaM (1):
+      [Domoticz HTTP] Compatibility fix for BMP280 (#636)
+
+ESPEasy release bot (5):
+      created releasebot script
+      automaticly updated release notes for mega-01022018
+      automaticly updated release notes for mega-01032018
+      changed date format of nightly builds
+      automaticly updated release notes for mega-20180104
+
+Edwin Eefting (22):
+      keep TASKS_PER_PAGE at default value of 4
+      fix plugin id (starting with a 0 makes it octal in c++ :( )
+      fix warnings
+      fixed bug in oled upstream lib
+      test fixes
+      smooth out testing code
+      esptest stuff
+      fix travis build errors. disable cpp checking for now
+      set lcd to NULL by default. #584
+      fix illegal string manipulations in PLUGIN_WRITE for some plugins. fixes #347 and #460
+      fix #588. parseTemplate() now only checks enabled taskes for [] macros
+      testing for ds18b20
+      updated travis link to reflect v2.0
+      changed readme to reflect mega branch and automated builds
+      updates version numbering documentation
+      changed devicecombobox handling to save a lot of memory on device page. fixes #654 #676 and could be triggered by #683 in some cases.
+      oops...somehow git did made some changes :(
+      copied test-stuff from mega to v2.0 to do some testing
+      analysed some code and added comments
+      test suite fixes
+      added frame oled test
+      working on http mocker for test suite
+
+GHolli (1):
+      Cosmetics: fixing typos. (#628)
+
+Gijs Noorlander (14):
+      P028 to support both BME280 and BMP280 to reduce resource usage (#481)
+      Single function for format to user defined number decimals (#482)
+      OLED framed improve header footer (#495)
+      [SSD1306] Feature/oled 1306 library upgrade (#501)
+      [MH-Z19] Allow for B-version and add filtering (#525)
+      Support both SSD1306 and SH1106 OLED in OLED_Framed plugin (#509)
+      [LCD plugin] Added check of LCD object before dereferencing it (#584)
+      [P039 Thermocouple] Handling negative values and proper error logging (#586)
+      Reduce iRAM usage for plugins using SoftwareSerial (#631)
+      [Security] Add IP-based filtering to web interface and http-commands. (#653)
+      [SDS011] Allow the sensor to sleep to extend sensor lifetime (#668)
+      [CPPcheck] v2.0 ControllerSettingsStruct some variables not initialized (#692)
+      Merge/v2.0 dev13 to mega (#695)
+      [v2.0_kamstrup] Plugin configuration does not load (#697)
+
+Grovkillen (6):
+      Added categories... (#552)
+      Changed bin file names to be more descriptive. (#597)
+      Move "TTP229 keypad" and "Encoder" plugin from "testing" to "normal"  (#619)
+      Updated ESPTOOLS.exe from 0.4.6 to 0.4.12 (#627)
+      Updated "/pinstates" page: Made the plugin number column display "P001" instead of "1" and "P012" instead of "12".
+      Update README.md
+
+M0ebiu5 (1):
+      P022_PCA9685 added change frequency - P038_NeoPixel added RGBW strips (SK6812) (#638)
+
+Michael (2):
+      WebServer.ino: enhance handle_SDfilelist() (#507)
+      src/Hardware.ino: make it possible to use GPIO-0 (D3) as Pin_sd_cs (#508)
+
+Sen Haerens (1):
+      Enhanced system info layout (#624)
+
+SightofSilence (1):
+      Add System Variable for day, month and year / Fix for "Calculate" function to recognize minus-sign (#485)
+
+SloMusti (1):
+      implemewnted web activity timer tracker (#462)
+
+Tomasz Torcz (1):
+      retain MQTT LWT messages (#516)
+
+denisfrench (1):
+      Set MQTT clientid to %sysname% +/- Settings.Unit (#431) (#436)
+
+fensoft (1):
+      added #define FEATURE_SD (permit a flash size reduction of ~10k) (#568)
+
+hatzlhoffer (1):
+      added new display size 128x32 (#545)
+
+krikk (1):
+      added support for the TSL2591 Sensor based on Adafruit Library (#661)
+
+mvdbro (8):
+      First preparations for ESP32
+      ESP32 IRAM/Deepsleep
+      ESP32 Rules/ADC/PWM
+      ESP32 fix FreeRAM reporting
+      ESP32 Enabled OTA
+      ESP32 fix UDP instability
+      ESP32 fixed chunked HTTP transfer
+      Fix #599
+
+papperone (3):
+      Plugin 073 - 7-segment display plugin TM1637/MAX7219
+      Update _P073_7DGT.ino (#553)
+      deleted GPIO notes referring to 75HC595 not supported (#591)
+
+paulv888 (1):
+      usesID = true (#666)
+
+s0170071 (2):
+      split IP addrress (#605)
+      fix chunking (#649)
+
+sakinit (1):
+      Fix p1 wifi gateway module (#587)
+
+
+-------------------------------------------------
 Changes in release mega-20180104 (since mega-01032018)
 -------------------------------------------------
 
