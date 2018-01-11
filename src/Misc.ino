@@ -629,11 +629,21 @@ void fileSystemCheck()
   \*********************************************************************************************/
 byte getDeviceIndex(byte Number)
 {
-  byte DeviceIndex = 0;
-  for (byte x = 0; x <= deviceCount ; x++)
-    if (Device[x].Number == Number)
-      DeviceIndex = x;
-  return DeviceIndex;
+  for (byte x = 0; x <= deviceCount ; x++) {
+    if (Device[x].Number == Number) {
+      return x;
+    }
+  }
+  return 0;
+}
+
+/********************************************************************************************\
+  Find name of plugin given the plugin device index..
+  \*********************************************************************************************/
+String getPluginNameFromDeviceIndex(byte deviceIndex) {
+  String deviceName = "";
+  Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
+  return deviceName;
 }
 
 
@@ -642,11 +652,12 @@ byte getDeviceIndex(byte Number)
   \*********************************************************************************************/
 byte getProtocolIndex(byte Number)
 {
-  byte ProtocolIndex = 0;
-  for (byte x = 0; x <= protocolCount ; x++)
-    if (Protocol[x].Number == Number)
-      ProtocolIndex = x;
-  return ProtocolIndex;
+  for (byte x = 0; x <= protocolCount ; x++) {
+    if (Protocol[x].Number == Number) {
+      return x;
+    }
+  }
+  return 0;
 }
 
 /********************************************************************************************\
@@ -654,11 +665,11 @@ byte getProtocolIndex(byte Number)
   \*********************************************************************************************/
 byte getNotificationProtocolIndex(byte Number)
 {
-
-  for (byte x = 0; x <= notificationCount ; x++)
-    if (Notification[x].Number == Number)
+  for (byte x = 0; x <= notificationCount ; x++) {
+    if (Notification[x].Number == Number) {
       return(x);
-
+    }
+  }
   return(NPLUGIN_NOT_FOUND);
 }
 
