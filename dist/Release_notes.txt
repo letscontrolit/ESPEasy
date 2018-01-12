@@ -1,3 +1,407 @@
+-------------------------------------------------
+Changes in release mega-20180112 (since mega-20180111)
+-------------------------------------------------
+
+Release date: Fri Jan 12 02:05:49 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180111
+
+Edwin Eefting (8):
+      added http server emulation and domotics http to testsuite
+      first http domoticz test works
+      testsuite requirements
+      fixed releasebot issues with multiple branches
+      automaticly updated release notes for v2.0-20180112
+      release bot fixes
+      dont make same release twice
+      dont make same release twice
+
+Gijs Noorlander (2):
+      [Issue 699] Incorrect shown device name (#700)
+      [v2.0 #470] Do not send invalid values to a controller (#701)
+
+
+-------------------------------------------------
+Changes in release mega-20180111 (since v2.0-20180110)
+-------------------------------------------------
+
+Release date: Thu Jan 11 05:00:08 CET 2018
+
+Alexander Schulz (1):
+      improvement: Configurable number of tasks for "Devices" page (TASKS_P…
+
+BadWolf42 (1):
+      Dallas Plugin enhanced : no more "delay()" (#488)
+
+Bartłomiej Zimoń (1):
+      Update _C002.ino (#645)
+
+DaM (1):
+      [Domoticz HTTP] Compatibility fix for BMP280 (#636)
+
+ESPEasy release bot (5):
+      created releasebot script
+      automaticly updated release notes for mega-01022018
+      automaticly updated release notes for mega-01032018
+      changed date format of nightly builds
+      automaticly updated release notes for mega-20180104
+
+Edwin Eefting (22):
+      keep TASKS_PER_PAGE at default value of 4
+      fix plugin id (starting with a 0 makes it octal in c++ :( )
+      fix warnings
+      fixed bug in oled upstream lib
+      test fixes
+      smooth out testing code
+      esptest stuff
+      fix travis build errors. disable cpp checking for now
+      set lcd to NULL by default. #584
+      fix illegal string manipulations in PLUGIN_WRITE for some plugins. fixes #347 and #460
+      fix #588. parseTemplate() now only checks enabled taskes for [] macros
+      testing for ds18b20
+      updated travis link to reflect v2.0
+      changed readme to reflect mega branch and automated builds
+      updates version numbering documentation
+      changed devicecombobox handling to save a lot of memory on device page. fixes #654 #676 and could be triggered by #683 in some cases.
+      oops...somehow git did made some changes :(
+      copied test-stuff from mega to v2.0 to do some testing
+      analysed some code and added comments
+      test suite fixes
+      added frame oled test
+      working on http mocker for test suite
+
+GHolli (1):
+      Cosmetics: fixing typos. (#628)
+
+Gijs Noorlander (14):
+      P028 to support both BME280 and BMP280 to reduce resource usage (#481)
+      Single function for format to user defined number decimals (#482)
+      OLED framed improve header footer (#495)
+      [SSD1306] Feature/oled 1306 library upgrade (#501)
+      [MH-Z19] Allow for B-version and add filtering (#525)
+      Support both SSD1306 and SH1106 OLED in OLED_Framed plugin (#509)
+      [LCD plugin] Added check of LCD object before dereferencing it (#584)
+      [P039 Thermocouple] Handling negative values and proper error logging (#586)
+      Reduce iRAM usage for plugins using SoftwareSerial (#631)
+      [Security] Add IP-based filtering to web interface and http-commands. (#653)
+      [SDS011] Allow the sensor to sleep to extend sensor lifetime (#668)
+      [CPPcheck] v2.0 ControllerSettingsStruct some variables not initialized (#692)
+      Merge/v2.0 dev13 to mega (#695)
+      [v2.0_kamstrup] Plugin configuration does not load (#697)
+
+Grovkillen (6):
+      Added categories... (#552)
+      Changed bin file names to be more descriptive. (#597)
+      Move "TTP229 keypad" and "Encoder" plugin from "testing" to "normal"  (#619)
+      Updated ESPTOOLS.exe from 0.4.6 to 0.4.12 (#627)
+      Updated "/pinstates" page: Made the plugin number column display "P001" instead of "1" and "P012" instead of "12".
+      Update README.md
+
+M0ebiu5 (1):
+      P022_PCA9685 added change frequency - P038_NeoPixel added RGBW strips (SK6812) (#638)
+
+Michael (2):
+      WebServer.ino: enhance handle_SDfilelist() (#507)
+      src/Hardware.ino: make it possible to use GPIO-0 (D3) as Pin_sd_cs (#508)
+
+Sen Haerens (1):
+      Enhanced system info layout (#624)
+
+SightofSilence (1):
+      Add System Variable for day, month and year / Fix for "Calculate" function to recognize minus-sign (#485)
+
+SloMusti (1):
+      implemewnted web activity timer tracker (#462)
+
+Tomasz Torcz (1):
+      retain MQTT LWT messages (#516)
+
+denisfrench (1):
+      Set MQTT clientid to %sysname% +/- Settings.Unit (#431) (#436)
+
+fensoft (1):
+      added #define FEATURE_SD (permit a flash size reduction of ~10k) (#568)
+
+hatzlhoffer (1):
+      added new display size 128x32 (#545)
+
+krikk (1):
+      added support for the TSL2591 Sensor based on Adafruit Library (#661)
+
+mvdbro (8):
+      First preparations for ESP32
+      ESP32 IRAM/Deepsleep
+      ESP32 Rules/ADC/PWM
+      ESP32 fix FreeRAM reporting
+      ESP32 Enabled OTA
+      ESP32 fix UDP instability
+      ESP32 fixed chunked HTTP transfer
+      Fix #599
+
+papperone (3):
+      Plugin 073 - 7-segment display plugin TM1637/MAX7219
+      Update _P073_7DGT.ino (#553)
+      deleted GPIO notes referring to 75HC595 not supported (#591)
+
+paulv888 (1):
+      usesID = true (#666)
+
+s0170071 (2):
+      split IP addrress (#605)
+      fix chunking (#649)
+
+sakinit (1):
+      Fix p1 wifi gateway module (#587)
+
+
+-------------------------------------------------
+Changes in release mega-20180104 (since mega-01032018)
+-------------------------------------------------
+
+Release date: Thu Jan  4 03:13:01 UTC 2018
+
+ESPEasy release bot (1):
+      changed date format of nightly builds
+
+
+-------------------------------------------------
+Changes in release mega-01032018 (since mega-01022018)
+-------------------------------------------------
+
+Release date: Wed Jan  3 04:00:06 UTC 2018
+
+Edwin Eefting (4):
+      updated readme to reflect new binary names
+      updated travis link to reflect v2.0
+      updated travis link to reflect v2.0
+      changed readme to reflect mega branch and automated builds
+
+
+-------------------------------------------------
+Changes in release mega-01022018 (since v2.0.0-dev13)
+-------------------------------------------------
+
+Release date: Tue Jan  2 23:32:50 UTC 2018
+
+Alexander Schulz (1):
+      improvement: Configurable number of tasks for "Devices" page (TASKS_P…
+
+BadWolf42 (1):
+      Dallas Plugin enhanced : no more "delay()" (#488)
+
+Bartłomiej Zimoń (1):
+      Update _C002.ino (#645)
+
+DaM (1):
+      [Domoticz HTTP] Compatibility fix for BMP280 (#636)
+
+ESPEasy release bot (1):
+      created releasebot script
+
+Edwin Eefting (12):
+      keep TASKS_PER_PAGE at default value of 4
+      fix plugin id (starting with a 0 makes it octal in c++ :( )
+      fix warnings
+      fixed bug in oled upstream lib
+      test fixes
+      smooth out testing code
+      esptest stuff
+      fix travis build errors. disable cpp checking for now
+      set lcd to NULL by default. #584
+      fix illegal string manipulations in PLUGIN_WRITE for some plugins. fixes #347 and #460
+      fix #588. parseTemplate() now only checks enabled taskes for [] macros
+      testing for ds18b20
+
+GHolli (1):
+      Cosmetics: fixing typos. (#628)
+
+Gijs Noorlander (11):
+      P028 to support both BME280 and BMP280 to reduce resource usage (#481)
+      Single function for format to user defined number decimals (#482)
+      OLED framed improve header footer (#495)
+      [SSD1306] Feature/oled 1306 library upgrade (#501)
+      [MH-Z19] Allow for B-version and add filtering (#525)
+      Support both SSD1306 and SH1106 OLED in OLED_Framed plugin (#509)
+      [LCD plugin] Added check of LCD object before dereferencing it (#584)
+      [P039 Thermocouple] Handling negative values and proper error logging (#586)
+      Reduce iRAM usage for plugins using SoftwareSerial (#631)
+      [Security] Add IP-based filtering to web interface and http-commands. (#653)
+      [SDS011] Allow the sensor to sleep to extend sensor lifetime (#668)
+
+Grovkillen (5):
+      Added categories... (#552)
+      Changed bin file names to be more descriptive. (#597)
+      Move "TTP229 keypad" and "Encoder" plugin from "testing" to "normal"  (#619)
+      Updated ESPTOOLS.exe from 0.4.6 to 0.4.12 (#627)
+      Updated "/pinstates" page: Made the plugin number column display "P001" instead of "1" and "P012" instead of "12".
+
+M0ebiu5 (1):
+      P022_PCA9685 added change frequency - P038_NeoPixel added RGBW strips (SK6812) (#638)
+
+Michael (2):
+      WebServer.ino: enhance handle_SDfilelist() (#507)
+      src/Hardware.ino: make it possible to use GPIO-0 (D3) as Pin_sd_cs (#508)
+
+Sen Haerens (1):
+      Enhanced system info layout (#624)
+
+SightofSilence (1):
+      Add System Variable for day, month and year / Fix for "Calculate" function to recognize minus-sign (#485)
+
+SloMusti (1):
+      implemewnted web activity timer tracker (#462)
+
+Tomasz Torcz (1):
+      retain MQTT LWT messages (#516)
+
+denisfrench (1):
+      Set MQTT clientid to %sysname% +/- Settings.Unit (#431) (#436)
+
+fensoft (1):
+      added #define FEATURE_SD (permit a flash size reduction of ~10k) (#568)
+
+hatzlhoffer (1):
+      added new display size 128x32 (#545)
+
+krikk (1):
+      added support for the TSL2591 Sensor based on Adafruit Library (#661)
+
+mvdbro (8):
+      First preparations for ESP32
+      ESP32 IRAM/Deepsleep
+      ESP32 Rules/ADC/PWM
+      ESP32 fix FreeRAM reporting
+      ESP32 Enabled OTA
+      ESP32 fix UDP instability
+      ESP32 fixed chunked HTTP transfer
+      Fix #599
+
+papperone (3):
+      Plugin 073 - 7-segment display plugin TM1637/MAX7219
+      Update _P073_7DGT.ino (#553)
+      deleted GPIO notes referring to 75HC595 not supported (#591)
+
+paulv888 (1):
+      usesID = true (#666)
+
+s0170071 (2):
+      split IP addrress (#605)
+      fix chunking (#649)
+
+sakinit (1):
+      Fix p1 wifi gateway module (#587)
+
+
+-------------------------------------------------
+Changes in release v2.0.0-dev13 (since v2.0.0-dev12)
+-------------------------------------------------
+
+Release date: Tue Jan  2 17:41:19 CET 2018
+
+Edwin Eefting (27):
+      more fixes for #235
+      final fixes for #235, untested. all spiffs errors should be handled now and also show up in logs and webinterface
+      fixed obscure crash caused by not returning a value in #235. we need to adjust compiler flags to detect these kinds of issues.
+      always define PLUGIN_BUILD_NORMAL so normal plugins are compiled
+      cleaned up buildflags and created common build variable
+      solution for better error and warning highlighting when compiling with platformio
+      enabled warnings and started fixing all the warnings to reduce the noise. (because warnings where disabled wasted about 3 hours debugging a simple no-return bug)
+      cleaned up more warnings and fixed a few real bug along the way. #235
+      now using PRAGMA to enable warnings, so that we dont get warnings from core libraries. also warnings will be treated as errors in Travis, this makes approving pull requests less work for me.
+      travis fix
+      worked around error caused by upstream libraries
+      fixes
+      cleaned up notification stuff. fixed #502
+      warnings are treated as errors now, by travis
+      refactored and added automated test stuff
+      examples for the lone wanderer
+      cleaner errors
+      working on test stuff
+      update branching info
+      test library stuff
+      Simple fix for MH-Z19 B version. #529
+      set lcd to NULL by default. #584
+      fix #588. parseTemplate() now only checks enabled taskes for [] macros
+      automaticly updated release notes for v2.0.0-dev13
+      release all binaries by doing the full compile step as last
+      automaticly updated release notes for v2.0.0-dev13
+      still trying to fix travis release scripts..
+
+Gijs Noorlander (9):
+      [INA219] Allow for multiple instances on the same controller (#519)
+      [INA219_v2.0] Improve logs for multiple devices (#546)
+      [LCD plugin] Added check of LCD object before dereferencing it (#584)
+      Move CO2 MH-Z19 plugin from "testing" to "normal" (#618)
+      [DNS/IP] Obey UseDNS setting for all controllers (#629)
+      [v2.0] Add more characters to the list not to escape in URLs (#635)
+      [>49.7 days uptime overflow] Use separate function to compute time differences (#621)
+      [WiFi] Avoid timeouts when not connected to WiFi (#639)
+      [PubSubClient] Bug in handling domainname (#660)
+
+Grovkillen (2):
+      Added categories... (#552)
+      Changed bin file names to be more descriptive. (#597)
+
+Neo (1):
+      [HT16K33_LED] Brightness control (#523)
+
+mvdbro (1):
+      Bugfix: %eventvalue% parsing on literal strings
+
+
+-------------------------------------------------
+Changes in release v2.0.0-dev12 (since v2.0.0-dev11)
+-------------------------------------------------
+
+Release date: Fri Sep 22 01:25:29 CEST 2017
+
+Daniel Tedenljung (1):
+      This plugin is tested and working good. (#428)
+
+Edwin Eefting (6):
+      first set of changes for #235. added spiffs error checking and loging, and cleaner flashguarding code. next change will show feedback in web interface as well. also need to cleanup loose SPIFFS filehandling at other places in webserver.ino (create a save-function for all those things and use FLASH_GUARD)
+      missed return after setting event buffer
+      fixes bug #486 in counter-plugin
+      plugin is not generic enough, so its disabled by default
+      automaticly updated release notes for 2.0.0-dev12
+      fixed release-notes bug
+
+Gerben Meijer (1):
+      Add SENSOR_TYPE_TRIPLE support to Domoticz MQTT (#468)
+
+Gijs Noorlander (1):
+      [MH-Z19] Add 'ABC disable' option to web config (#472)
+
+Jeroen (1):
+      Create _P071_Kamstrup401.ino (#504)
+
+Jochen Krapf (4):
+      Added Plugins for SHT3x and LM75A - Issue #433 (#442)
+      Descriptive GPIO-Names (#448)
+      Rework of Plugin _P056_SDS011-Dust (#451)
+      Fixed HTML text box length for controller settings - Issue #453 (#455)
+
+Ovidiu Schiopu (1):
+      Added _P070_NeoPixel_Clock.ino (#489)
+
+SightofSilence (1):
+      Add files via upload (#493)
+
+beic (2):
+      Moving from Temperature to Environment naming (#492)
+      Moving from Temperature to Environment naming (#506)
+
+mvdbro (4):
+      Custom WEB page handler (SPIFFS)
+      Finished work on Level Control & config
+      Fixed a tasksettings load bug that was introduced with commit dcfc1e3 on july 18th.
+      Moved HTML template logging to level LOG_LEVEL_DEBUG_DEV
+
+papperone (1):
+      HDC1080 plugin (#497)
+
+
 -----------------------------
 Changes in release v2.0.0-dev11
 -----------------------------
@@ -11,14 +415,12 @@ Daniel Tedenljung (5):
       Added relay control from commands (#395)
       Renamed command to be unique. (#427)
 
-DatuX (4):
-      Update README.md
+DatuX (3):
       Update README.md
       Update issue_template.md
       Update issue_template.md
 
 Edwin Eefting (27):
-      automaticly updated release notes for v2.0.0-dev10
       cleaned up RTC initialisation. fixed some fuzzy issues after flashing/factory reset. improved flash-counter messages and added powercycle tips
       started working on regression testing scripts for The Rig
       large changes to wifi handling. code cleanup, more efficent connecting, only one connect retry in deepsleep. better serial logging for connections and APmode. always enable ap mode when wifi is disconnected
@@ -45,6 +447,7 @@ Edwin Eefting (27):
       gave some html logging debug-level
       imlemented setting name, unit and password via serial. implements #317
       added note to inverse logic to fix #318
+      automaticly updated release notes for v2.0.0-dev11
 
 Gustavo Spadari (1):
       Adding comments on RAW code (#386) (#393)
@@ -58,8 +461,7 @@ JK (7):
       Fine tuning of CSS and menu
       Reenabled javascript for device-selector
 
-Jochen Krapf (26):
-      Rework of plugin ADC (#319)
+Jochen Krapf (25):
       Added _P054_DMX512 (#322)
       Added _P055_Chiming (#323)
       Added _P056_SDS011-Dust (#324)
@@ -100,8 +502,7 @@ elucas2uy (1):
 imthemichi (1):
       Plugin_008-RFID extended with wiegand 34-bits and key-pad (#387)
 
-krikk (6):
-      reverted change, this fix seems to have exactly opposite outcome than expected... with the fix applied i get errors, without is i get no errors... (#320)
+krikk (5):
       changed the ina219 plugin so that is always sends 3 values, voltage, current, power... like a normal plugin should do... (#325)
       delay option should be displayed even if the SendDataOption is false, because the delay option also controls the refresh rate of the oled display... fixes issue #336 (#339)
       seconds were displayed without leading zero issue #337 (#338)

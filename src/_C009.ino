@@ -20,7 +20,7 @@
  - moved on/off translation for SENSOR_TYPE_SWITCH/DIMMER to FHEM module
  - v1.03
  - changed http request from GET to POST (RFC conform)
- - removed obsolet http get url code
+ - removed obsolete http get url code
  - v1.04
  - added build options and node_type_id to JSON/device
  /******************************************************************************/
@@ -56,7 +56,10 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-
+        if (WiFi.status() != WL_CONNECTED) {
+          success = false;
+          break;
+        }
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
@@ -104,7 +107,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
             val[F("value")] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           }
           else { // All other sensor types
-            val[F("value")] = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+            val[F("value")] = formatUserVar(event, x);
           }
         }
 
@@ -126,12 +129,12 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 // FHEM HTTP request
 //********************************************************************************
 //TODO: create a generic HTTPSend function that we use in all the controllers. lots of code duplication here
-boolean FHEMHTTPsend(String & url, String & buffer, byte index)
+void FHEMHTTPsend(String & url, String & buffer, byte index)
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(index, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-  boolean success = false;
+  // boolean success = false;
 
   String authHeader = "";
   if ((SecuritySettings.ControllerUser[index][0] != 0) && (SecuritySettings.ControllerPassword[index][0] != 0)) {
@@ -142,25 +145,15 @@ boolean FHEMHTTPsend(String & url, String & buffer, byte index)
     authHeader = String(F("Authorization: Basic ")) + encoder.encode(auth) + " \r\n";
   }
 
-  // char log[80];
-  // url.toCharArray(log, 80);
-  // addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-  // char host[20];
-  // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  // sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, ControllerSettings.Port)) {
+  if (!ControllerSettings.connectToHost(client)) {
     connectionFailures++;
     // strcpy_P(log, PSTR("HTTP : connection failed"));
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-    return false;
+    return;
   }
 
   statusLED(true);
@@ -171,12 +164,12 @@ boolean FHEMHTTPsend(String & url, String & buffer, byte index)
   int len = buffer.length();
   client.print(String("POST ") + url + F(" HTTP/1.1\r\n") +
               F("Content-Length: ")+ len + F("\r\n") +
-              F("Host: ") + host + F("\r\n") + authHeader +
+              F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
               F("Connection: close\r\n\r\n")
               + buffer);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial
@@ -192,7 +185,7 @@ boolean FHEMHTTPsend(String & url, String & buffer, byte index)
     if (line.startsWith(F("HTTP/1.1 200 OK"))) {
       // strcpy_P(log, PSTR("HTTP : Success"));
       addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP : Success"));
-      success = true;
+      // success = true;
     }
     else if (line.startsWith(F("HTTP/1.1 4"))) {
       addLog(LOG_LEVEL_ERROR, String(F("HTTP : Error: "))+line);

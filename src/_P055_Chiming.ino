@@ -2,7 +2,7 @@
 //#################################### Plugin 055: Chiming Mechanism ####################################
 //#######################################################################################################
 
-// ESPEasy plugin to strike up to 4 pysical bells and gongs with chiming sequences.
+// ESPEasy plugin to strike up to 4 physical bells and gongs with chiming sequences.
 // You also can use an antique door bell as a single strikes (not ringing) notification.
 // Optional you can use it as hourly chiming clock
 // written by Jochen Krapf (jk@nerd2nerd.org)
@@ -37,8 +37,8 @@
 // save tokens with name "<HH><MM>" and enable NTP (advanced settings)
 //
 // examples:
-// CHIMESAVE,0815,1111!           Dayly Alarm at 8:15am
-// CHIMESAVE,2015,11121           Dayly Alarm at 8:15pm
+// CHIMESAVE,0815,1111!           Daily Alarm at 8:15am
+// CHIMESAVE,2015,11121           Daily Alarm at 8:15pm
 // CHIMESAVE,2015                 Delete Alarm at 8:15pm
 
 // Electronics:
@@ -51,7 +51,7 @@
 
 #define PLUGIN_055
 #define PLUGIN_ID_055         55
-#define PLUGIN_NAME_055       "Chiming Mechanism [TESTING]"
+#define PLUGIN_NAME_055       "Notify - Chiming [TESTING]"
 
 #define PLUGIN_055_FIFO_SIZE 64   // must be power of 2
 #define PLUGIN_055_FIFO_MASK (PLUGIN_055_FIFO_SIZE-1)
@@ -290,7 +290,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_055_Data->millisStateEnd > 0)   // just striking?
         {
-          if (Plugin_055_Data->millisStateEnd <= millisAct)   // end reached?
+          if (timeDiff(millisAct, Plugin_055_Data->millisStateEnd) <= 0)   // end reached?
           {
             for (byte i=0; i<4; i++)
             {

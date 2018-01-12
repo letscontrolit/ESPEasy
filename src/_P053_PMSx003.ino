@@ -4,17 +4,17 @@
 //
 // http://www.aqmd.gov/docs/default-source/aq-spec/resources-page/plantower-pms5003-manual_v2-3.pdf?sfvrsn=2
 //
-// The PMSx003 are particle sensors. Particles are measured by blowing air though the enclosue and,
-// togther with a laser, count the amount of particles. These sensors have an integrated microcontroller
+// The PMSx003 are particle sensors. Particles are measured by blowing air through the enclosure and,
+// together with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <SoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
-#define PLUGIN_NAME_053 "Dust Sensor - PMSx003"
+#define PLUGIN_NAME_053 "Dust - PMSx003"
 #define PLUGIN_VALUENAME1_053 "pm1.0"
 #define PLUGIN_VALUENAME2_053 "pm2.5"
 #define PLUGIN_VALUENAME3_053 "pm10"
@@ -22,7 +22,7 @@
 #define PMSx003_SIG2 0X4d
 #define PMSx003_SIZE 32
 
-SoftwareSerial *swSerial = NULL;
+ESPeasySoftwareSerial *swSerial = NULL;
 boolean Plugin_053_init = false;
 boolean values_received = false;
 
@@ -171,7 +171,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         {
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
-          swSerial = new SoftwareSerial(rxPin, txPin);
+          swSerial = new ESPeasySoftwareSerial(rxPin, txPin);
           swSerial->begin(9600);
           swSerial->flush();
         }
@@ -202,7 +202,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           uint16_t checksum = 0, checksum2 = 0;
           uint16_t framelength = 0;
           uint16_t data[13];
-          byte data_low, data_high;
+          // byte data_low, data_high;
           int i = 0;
 
           // Check if a packet is available in the UART FIFO.

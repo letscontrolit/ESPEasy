@@ -5,26 +5,26 @@
 // Purpose: Sniff the data received by the Ventus W266 display unit and send it to Domoticz
 // Status : "Initial release"
 
-// This plugin can be used on a esp8266 connected to the recievermodule inside a Ventus W266 or
-// Renkforce W205GU display unit. The plugin then reads the data send from the remote sensorunit and
+// This plugin can be used on a esp8266 connected to the receiver module inside a Ventus W266 or
+// Renkforce W205GU display unit. The plugin then reads the data send from the remote sensor unit and
 // can send the data to Domoticz or an other controller. The plugin does not read the data of the
-// sensors in the display unit such as indoor temperature and airpressure.
+// sensors in the display unit such as indoor temperature and air pressure.
 
-// The displaynit has a RFM31 reciever but the pinout of this receiver is identical to the pinout
-// of a RFM01 reciever. We need to connect 4 wires to read the SPI exchange between the host and the
-// reciever. Because we need to read both MOSI and MISO signals the hardware SPI is unusable and we
-// use bitbanging to achive the same result.
+// The display unit has a RFM31 receiver but the pinout of this receiver is identical to the pinout
+// of a RFM01 receiver. We need to connect 4 wires to read the SPI exchange between the host and the
+// receiver. Because we need to read both MOSI and MISO signals the hardware SPI is unusable and we
+// use bit-banging to achieve the same result.
 
-// Connect pins 5-8 from the "RFM31BJ-S1" to the pins you defined in de webgui.
+// Connect pins 5-8 from the "RFM31BJ-S1" to the pins you defined in the webgui.
 // Pinout of the RFM31: 5-MOSI, 6-SCLK, 7-nSEL (active low CS), 8-MISO, 14-GND.
 // In my original setup these were connected to 4, 12, 14 and 5.
 // Try to avoid GPIO 15 as nSEL line because if the line is high during a reboot, and it is mostly high,
 // the boot will fail!
 
 // The Ventus W266 remote has the following sensor outputs:
-// Humidity, Temperature, Wind direction, Wind avarage, Wind gust, Rainfall, UV and Lightning. That is
+// Humidity, Temperature, Wind direction, Wind average, Wind gust, Rainfall, UV and Lightning. That is
 // more than te maximum of 4 values per device for espeasy. The plugins functionality is therefore
-// devided per sensorgroup. To read all the sensor data you need to run 6 instances of the plugin.
+// divided per sensor group. To read all the sensor data you need to run 6 instances of the plugin.
 
 // The plugin can (and should) be used more then one time, however only one plugin instance can be
 // the main plugin. The plugin function can be selected by a dropdown and only the main plugin has
@@ -32,25 +32,25 @@
 
 // The plugin uses two buffers, ine for the ISR routines and one for the other plugin instances.
 
-// This plugin was originally released into th eplayground as Plugin 186, it is assimilated into the core as 046.
+// This plugin was originally released into the playground as Plugin 186, it is assimilated into the core as 046.
 // Why plugin nr 186? Well 266 is not possible, 206 (id on the back of the unit) is nit within the
-// playground range and the W186 is an additinal external thermometer for the Ventus W266.
+// playground range and the W186 is an additional external thermometer for the Ventus W266.
 // The Ventus W266 is also known as the Renkforce W205GU.
 
 // TaskDevicePluginConfig[x][0] = Instance function
-// TaskDevicePluginConfig[x][1] = MOSI (eg. GPOI pin 4)
-// TaskDevicePluginConfig[x][2] = SCLK (eg. GPIO pin 12)
-// TaskDevicePluginConfig[x][3] = nSEL (eg. GPIO pin 14)
-// TaskDevicePluginConfig[x][4] = MISO (eg. GPIO pin 5)
+// TaskDevicePluginConfig[x][1] = MOSI (e.g. GPOI pin 4)
+// TaskDevicePluginConfig[x][2] = SCLK (e.g. GPIO pin 12)
+// TaskDevicePluginConfig[x][3] = nSEL (e.g. GPIO pin 14)
+// TaskDevicePluginConfig[x][4] = MISO (e.g. GPIO pin 5)
 // If you use GPIO 4&5, please disable the I2C/SPI option in the hardware tab.
 
 // The buffers contain the following data:
 // hhIDhh 1A tlth ?b tlth wb alahglgh rlrh?? uv ld?? lllhcrc
 // 7F9827 1A B100 00 B100 06 00000000 1E0000 00 3F8A 2A0017
 //  0 1 2  3  4 5  6  7 8  9  0 1 2 3  4 5 6  7  8 9  0 1 2
-// hh=header > This is actualy not part of the real payload but a wanted artifact of the sniffing method.
+// hh=header > This is actually not part of the real payload but a wanted artifact of the sniffing method.
 // hh=humidity (bcd) > Humidity is bcd encoded
-// tlth=temperature-low/temphigh (*10) > Temperature is stored as a 16bit integer holding the temperature in Celcius * 10 but low byte first.
+// tlth=temperature-low/temphigh (*10) > Temperature is stored as a 16bit integer holding the temperature in Celsius * 10 but low byte first.
 // b=battery (1=low) > This byte is 00 but 01 when the battery of the transmitter runs low
 // wb=bearing (cw0-15) > The windbearing in 16 clockwise steps (0 = north, 4 = east, 8 = south and C = west)
 // alah=windaverage-low/high (m/s/2) > A 16 bit int holding the wind avarage in m/s * 2, low byte first
@@ -75,13 +75,15 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
-#ifdef PLUGIN_BUILD_TESTING
+//edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
+#ifdef PLUGIN_BUILD_DISABLED
+// #ifdef PLUGIN_BUILD_TESTING
 
-#define PLUGIN_046_DEBUG            true                        // Shows recieved frames and crc in log@INFO
+#define PLUGIN_046_DEBUG            true                        // Shows received frames and crc in log@INFO
 
 #define PLUGIN_046                                              // Mandatory framework constants
 #define PLUGIN_ID_046               46
-#define PLUGIN_NAME_046             "Ventus W266 [TESTING]"
+#define PLUGIN_NAME_046             "Hardware - Ventus W266 [TESTING]"
 #define PLUGIN_VALUENAME1_046       ""
 #define PLUGIN_VALUENAME2_046       ""
 #define PLUGIN_VALUENAME3_046       ""
@@ -98,12 +100,12 @@ int8_t Plugin_046_MISOpin = -1;
 byte Plugin_046_ISR_Buffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used in ISR routine
 //Test data: volatile byte Plugin_046_databuffer[] = {0x7F, 0x98, 0x33, 0x1A, 0xB0, 0x00, 0x00, 0xB0, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x3F, 0x8A, 0x25, 0x00, 0x49, 0x00}; // Buffer used by other instances
 byte Plugin_046_databuffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used by other instances
-boolean Plugin_046_RecieveActive = false;                       // Active session in progress
+boolean Plugin_046_ReceiveActive = false;                       // Active session in progress
 boolean Plugin_046_MasterSlave = false;                         // Which pin o read? false=MOSI, true=MISO
 boolean Plugin_046_newData = false;                             // "Valid" data ready, please process
-byte Plugin_046_bitpointer;                                     // Pointer for recieved bit
-byte Plugin_046_bytepointer;                                    // Pointe for ISR recieve buffer
-byte Plugin_046_recievedData;                                   // Byte to store recieved bits
+byte Plugin_046_bitpointer;                                     // Pointer for received bit
+byte Plugin_046_bytepointer;                                    // Pointer for ISR receive buffer
+byte Plugin_046_receivedData;                                   // Byte to store received bits
 
                                                                 // Vars used for interpreting the data:
 volatile unsigned long Plugin_046_lastrainctr;                  // Keep track of wdcounter (1/2 min tick)
@@ -292,7 +294,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
           if (Plugin_046_newData) {
             uint8_t crc = 0xff;                                             // init = 0xff
             char data; // CRC = MAXIM with modified init: poly 0x31, init 0xff, refin 1; refout 1, xorout 0x00
-            // Copy recieved data to buffer and check CRC
+            // Copy received data to buffer and check CRC
             Plugin_046_databuffer[0] = Plugin_046_ISR_Buffer[0];
             for (int i = 1; i < Plugin_046_bytepointer; i++) {
               data = Plugin_046_ISR_Buffer[i];
@@ -400,7 +402,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             case (4):
             {
-              int strikes = 0;
+              // int strikes = 0;
               int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
               if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
               if (Plugin_046_laststrikectr > (wdcounter + 10))                   // 5 min interval
@@ -456,39 +458,39 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 void Plugin_046_ISR_nSEL()                                      // Interrupt on nSEL change
   {
     if (digitalRead(Plugin_046_nSELpin)) {
-      Plugin_046_RecieveActive = false;                         // nSEL high? Recieve done.
-      if (Plugin_046_MasterSlave) {                             // If MISO not active, no data recieved
+      Plugin_046_ReceiveActive = false;                         // nSEL high? Receive done.
+      if (Plugin_046_MasterSlave) {                             // If MISO not active, no data received
         if (Plugin_046_bytepointer == Plugin_046_Payload) {     // If not 23 then bad datapacket
           Plugin_046_newData = true;                            // We have new data!
         }
       }
-    } else {                                                    // nSEL low? Start recieve
+    } else {                                                    // nSEL low? Start receive
       if (!Plugin_046_newData) {                                // Only accept new data if the old is processed
         Plugin_046_bitpointer = 7;                              // reset pointer (MSB first)
         Plugin_046_bytepointer = 0;                             // reset pointers & flags
         Plugin_046_MasterSlave = false;
-        Plugin_046_RecieveActive = true;                        // We are now recieving data
+        Plugin_046_ReceiveActive = true;                        // We are now receiving data
       }
     }
   }
 
 void Plugin_046_ISR_SCLK()                                      // Interrupt on SCLK rising
   {
-    if (Plugin_046_RecieveActive) {                             // Are we recieving or glitch?
+    if (Plugin_046_ReceiveActive) {                             // Are we receiving or glitch?
       if (Plugin_046_MasterSlave) {                             // Read MISO or MOSI?
-        bitWrite(Plugin_046_recievedData, Plugin_046_bitpointer, digitalRead(Plugin_046_MISOpin));
+        bitWrite(Plugin_046_receivedData, Plugin_046_bitpointer, digitalRead(Plugin_046_MISOpin));
       } else {
-        bitWrite(Plugin_046_recievedData, Plugin_046_bitpointer, digitalRead(Plugin_046_MOSIpin));
+        bitWrite(Plugin_046_receivedData, Plugin_046_bitpointer, digitalRead(Plugin_046_MOSIpin));
       }
       if (Plugin_046_bitpointer == 0) {                         // 8 bits done?
         Plugin_046_bitpointer = 7;
-        if (Plugin_046_recievedData==Plugin_046_MagicByte) {    // Switch data pins?
+        if (Plugin_046_receivedData==Plugin_046_MagicByte) {    // Switch data pins?
           Plugin_046_MasterSlave = true;
         }
-        Plugin_046_ISR_Buffer[Plugin_046_bytepointer] = Plugin_046_recievedData;
+        Plugin_046_ISR_Buffer[Plugin_046_bytepointer] = Plugin_046_receivedData;
         Plugin_046_bytepointer++;                               // TReady for the next byte ...
         if (Plugin_046_bytepointer > Plugin_046_RAW_BUFFER_SIZE) {
-          Plugin_046_RecieveActive = false;                     // We don't want a bufferoverflow, so abort
+          Plugin_046_ReceiveActive = false;                     // We don't want a bufferoverflow, so abort
           Plugin_046_MasterSlave = false;
         }
       } else {

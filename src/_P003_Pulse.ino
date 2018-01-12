@@ -4,7 +4,7 @@
 
 #define PLUGIN_003
 #define PLUGIN_ID_003         3
-#define PLUGIN_NAME_003       "Pulse Counter"
+#define PLUGIN_NAME_003       "Generic - Pulse counter"
 #define PLUGIN_VALUENAME1_003 "Count"
 #define PLUGIN_VALUENAME2_003 "Total"
 #define PLUGIN_VALUENAME3_003 "Time"
@@ -161,7 +161,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           case 3:
           {
             event->sensorType = SENSOR_TYPE_DUAL;
-            UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
+            UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
             UserVar[event->BaseVarIndex+1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
             break;
           }
@@ -180,8 +180,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 void Plugin_003_pulsecheck(byte Index)
 {
-  unsigned long PulseTime=millis() - Plugin_003_pulseTimePrevious[Index];
-  if(PulseTime > Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
+  const unsigned long PulseTime=timePassedSince(Plugin_003_pulseTimePrevious[Index]);
+  if(PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
     {
       Plugin_003_pulseCounter[Index]++;
       Plugin_003_pulseTotalCounter[Index]++;

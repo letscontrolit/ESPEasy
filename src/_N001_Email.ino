@@ -28,20 +28,21 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case NPLUGIN_WRITE:
-      {
-        String log = "";
-        String command = parseString(string, 1);
-
-        if (command == F("email"))
-        {
-          NotificationSettingsStruct NotificationSettings;
-          LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
-          NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
-          success = true;
-        }
-        break;
-      }
+    // Edwin: NPLUGIN_WRITE seems to be not implemented/not used yet? Disabled because its confusing now.
+    // case NPLUGIN_WRITE:
+    //   {
+    //     String log = "";
+    //     String command = parseString(string, 1);
+    //
+    //     if (command == F("email"))
+    //     {
+    //       NotificationSettingsStruct NotificationSettings;
+    //       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+    //       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
+    //       success = true;
+    //     }
+    //     break;
+    //   }
 
     case NPLUGIN_NOTIFY:
       {
@@ -69,7 +70,9 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
+  addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to "))+aHost);
   if (!client.connect(aHost.c_str(), aPort)) {
+    addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to "))+aHost);
     myStatus = false;
   }
   else {
@@ -107,7 +110,7 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
 }
 
 
-boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
+boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForPattern)
 {
 
   boolean myStatus = false;
@@ -119,9 +122,9 @@ boolean NPlugin_001_MTA(WiFiClient client, String aStr, String aWaitForPattern)
   yield();
 
   // Wait For Response
-  unsigned long ts = millis();
+  unsigned long timer = millis() + NPLUGIN_001_TIMEOUT;
   while (true) {
-    if ( ts + NPLUGIN_001_TIMEOUT < millis() ) {
+    if (timeOutReached(timer)) {
       myStatus = false;
       break;
     }

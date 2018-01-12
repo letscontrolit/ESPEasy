@@ -2,11 +2,10 @@ char* ramtest;
 
 //Reads a string from a stream until a terminator-character.
 //We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
-bool safeReadStringUntil(Stream &input, String &str, char terminator, int maxSize=1024, int timeout=1000)
+bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize=1024, unsigned int timeout=1000)
 {
-    unsigned long startMillis;
     int c;
-    startMillis = millis();
+    const unsigned long timer = millis() + timeout;
     str="";
 
     do {
@@ -32,7 +31,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, int maxSiz
             }
         }
         yield();
-    } while(millis() - startMillis < timeout);
+    } while(!timeOutReached(timer));
 
     addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
     return(false);
@@ -67,7 +66,7 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     unsigned long timer = millis() + Par1;
     Serial.println("start");
-    while (millis() < timer)
+    while (!timeOutReached(timer))
       backgroundtasks();
     Serial.println("end");
   }
@@ -100,11 +99,14 @@ void ExecuteCommand(byte source, const char *Line)
     {
       if (Settings.NotificationEnabled[Par1 - 1] && Settings.Notification[Par1 - 1] != 0)
       {
-        byte NotificationProtocolIndex = getNotificationIndex(Settings.Notification[Par1 - 1]);
-        struct EventStruct TempEvent;
-        TempEvent.NotificationProtocolIndex = Par1 - 1;
-        if (NPlugin_id[NotificationProtocolIndex] != 0)
+        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[Par1 - 1]);
+        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
+        {
+          struct EventStruct TempEvent;
+          // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
+          TempEvent.NotificationIndex=Par1-1;
           NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, message);
+        }
       }
     }
   }
@@ -125,7 +127,7 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-
+#ifdef FEATURE_SD
   if (strcasecmp_P(Command, PSTR("sdcard")) == 0)
   {
     success = true;
@@ -144,6 +146,7 @@ void ExecuteCommand(byte source, const char *Line)
     Serial.println(fname.c_str());
     SD.remove((char*)fname.c_str());
   }
+#endif
 
   if (strcasecmp_P(Command, PSTR("lowmem")) == 0)
   {
@@ -174,6 +177,21 @@ void ExecuteCommand(byte source, const char *Line)
     pinMode(1, INPUT);
     pinMode(3, INPUT);
     delay(60000);
+  }
+
+  if (strcasecmp_P(Command, PSTR("accessinfo")) == 0)
+  {
+    success = true;
+    Serial.print(F("Allowed IP range : "));
+    Serial.println(describeAllowedIPrange());
+  }
+
+  if (strcasecmp_P(Command, PSTR("clearaccessblock")) == 0)
+  {
+    success = true;
+    clearAccessBlock();
+    Serial.print(F("Allowed IP range : "));
+    Serial.println(describeAllowedIPrange());
   }
 
   if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
@@ -266,7 +284,7 @@ void ExecuteCommand(byte source, const char *Line)
     String request = Line;
     remoteConfig(&TempEvent, request);
   }
-  
+
   if (strcasecmp_P(Command, PSTR("deepSleep")) == 0)
   {
     success = true;
@@ -280,7 +298,7 @@ void ExecuteCommand(byte source, const char *Line)
     if (GetArgv(Line, TmpStr1, 4))
     {
       float result = 0;
-      byte error = Calculate(TmpStr1, &result);
+      Calculate(TmpStr1, &result);
       UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
     }
   }
@@ -346,8 +364,7 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-
-  if (strcasecmp_P(Command, PSTR("Publish")) == 0)
+  if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String event = Line;
@@ -361,7 +378,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -373,11 +390,13 @@ void ExecuteCommand(byte source, const char *Line)
     str2ip((char*)ip.c_str(), ipaddress);
     IPAddress UDP_IP(ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3]);
     portUDP.beginPacket(UDP_IP, port.toInt());
-    portUDP.write(message.c_str(), message.length());
+    #if defined(ESP8266)
+      portUDP.write(message.c_str(), message.length());
+    #endif
     portUDP.endPacket();
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -393,7 +412,7 @@ void ExecuteCommand(byte source, const char *Line)
                    "Connection: close\r\n\r\n");
 
       unsigned long timer = millis() + 200;
-      while (!client.available() && millis() < timer)
+      while (!client.available() && !timeOutReached(timer))
         delay(1);
 
       while (client.available()) {
@@ -488,7 +507,12 @@ void ExecuteCommand(byte source, const char *Line)
     pinMode(0, INPUT);
     pinMode(2, INPUT);
     pinMode(15, INPUT);
-    ESP.reset();
+    #if defined(ESP8266)
+      ESP.reset();
+    #endif
+    #if defined(ESP32)
+      ESP.restart();
+    #endif
   }
 
   if (strcasecmp_P(Command, PSTR("Restart")) == 0)
@@ -566,6 +590,7 @@ void ExecuteCommand(byte source, const char *Line)
   yield();
 }
 
+#ifdef FEATURE_SD
 void printDirectory(File dir, int numTabs) {
   while (true) {
 
@@ -589,3 +614,4 @@ void printDirectory(File dir, int numTabs) {
     entry.close();
   }
 }
+#endif

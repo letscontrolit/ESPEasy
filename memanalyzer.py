@@ -23,7 +23,7 @@ import os
 TOTAL_IRAM = 32786;
 TOTAL_DRAM = 81920;
 
-env="dev_4096"
+env="dev_ESP8266_4096"
 
 sections = OrderedDict([
     ("data", "Initialized Data (RAM)"),
@@ -185,8 +185,8 @@ try:
     # results={}
     # for lib in libs:
     #     enable_lib(lib)
-    #     subprocess.check_call("platformio run --silent --environment dev_4096", shell=True)
-    #     results[lib]=analyse_memory(".pioenvs/dev_4096/firmware.elf")
+    #     subprocess.check_call("platformio run --silent --environment dev_ESP8266_4096", shell=True)
+    #     results[lib]=analyse_memory(".pioenvs/dev_ESP8266_4096/firmware.elf")
     #     disable_lib(lib)
     #
     #     print(output_format.format(

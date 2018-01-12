@@ -7,17 +7,16 @@
 
 // Connection:
 // Use 1st and 2nd GPIO for encoders A and B signal.
-// Optional use 3rd GPIO for encoders I signel to reset counter to 0 at first trigger.
+// Optional use 3rd GPIO for encoders I signal to reset counter to 0 at first trigger.
 // If counter runs in wrong direction, change A and B GPIOs in settings page
 
-// Note: Up to 4 encoders can be used simultaniously
+// Note: Up to 4 encoders can be used simultaneously
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_059
 #define PLUGIN_ID_059         59
-#define PLUGIN_NAME_059       "Switch Input - Rotary Encoder [TESTING]"
+#define PLUGIN_NAME_059       "Switch Input - Rotary Encoder"
 #define PLUGIN_VALUENAME1_059 "Counter"
 
 #include <QEIx4.h>
@@ -170,5 +169,3 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#endif

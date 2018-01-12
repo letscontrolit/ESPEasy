@@ -6,7 +6,7 @@
 
 #define PLUGIN_010
 #define PLUGIN_ID_010         10
-#define PLUGIN_NAME_010       "Luminosity - BH1750"
+#define PLUGIN_NAME_010       "Light/Lux - BH1750"
 #define PLUGIN_VALUENAME1_010 "Lux"
 
 
@@ -70,7 +70,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         optionValuesMode[1] = RESOLUTION_NORMAL;
         optionValuesMode[2] = RESOLUTION_HIGH;
         optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
-        addFormSelector(string, F("Measurment mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(string, F("Measurement mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
 
         addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 

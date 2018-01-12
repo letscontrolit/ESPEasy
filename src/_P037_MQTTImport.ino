@@ -8,7 +8,7 @@
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
-#define PLUGIN_NAME_037       "MQTT Import"
+#define PLUGIN_NAME_037       "Generic - MQTT Import"
 
 #define PLUGIN_VALUENAME1_037 "Value1"
 #define PLUGIN_VALUENAME2_037 "Value2"
@@ -335,11 +335,15 @@ boolean MQTTConnect_037(String clientid)
 
   if (MQTTclient_037->connected())return true;
 
-  IPAddress MQTTBrokerIP(ControllerSettings.IP);
-
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
-
-  MQTTclient_037->setServer(MQTTBrokerIP, ControllerSettings.Port);
+  if (WiFi.status() != WL_CONNECTED) {
+    return false; // Not connected, so no use in wasting time to connect to a host.
+  }
+  if (ControllerSettings.UseDNS) {
+    MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
+  } else {
+    MQTTclient_037->setServer(ControllerSettings.getIP(), ControllerSettings.Port);
+  }
   MQTTclient_037->setCallback(mqttcallback_037);
 
   //  Try three times for a connection

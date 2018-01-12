@@ -4,7 +4,7 @@
 
 #define PLUGIN_008
 #define PLUGIN_ID_008         8
-#define PLUGIN_NAME_008       "RFID Reader - Wiegand"
+#define PLUGIN_NAME_008       "RFID - Wiegand"
 #define PLUGIN_VALUENAME1_008 "Tag"
 
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;

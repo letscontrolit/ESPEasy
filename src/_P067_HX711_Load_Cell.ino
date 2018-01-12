@@ -15,7 +15,7 @@
 
 #define PLUGIN_067
 #define PLUGIN_ID_067         67
-#define PLUGIN_NAME_067       "HX711 Load Cell [TESTING]"
+#define PLUGIN_NAME_067       "Weight - HX711 Load Cell [TESTING]"
 #define PLUGIN_VALUENAME1_067 "Weight"
 
 // #include <*.h>   no lib required
@@ -266,8 +266,9 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        string.toLowerCase();
-        String command = parseString(string, 1);
+        String lowerString=string;
+        lowerString.toLowerCase();
+        String command = parseString(lowerString, 1);
 
         if (command == F("tare"))
         {

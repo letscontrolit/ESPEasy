@@ -34,17 +34,12 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
+        // boolean success = false;
+        addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
         char log[80];
-        boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
+        if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));
@@ -64,7 +59,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           postDataStr += F("&field");
           postDataStr += event->idx + x;
           postDataStr += "=";
-          postDataStr += toString(UserVar[event->BaseVarIndex + x],ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+          postDataStr += formatUserVar(event, x);
         }
         String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
         if (ControllerSettings.UseDNS)
@@ -86,7 +81,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         client.print(postStr);
 
         unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
+        while (!client.available() && !timeOutReached(timer))
           delay(1);
 
         // Read all the lines of the reply from server and print them to Serial
@@ -94,12 +89,12 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           //   String line = client.readStringUntil('\n');
           String line;
           safeReadStringUntil(client, line, '\n');
-          
+
           line.toCharArray(log, 80);
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           {
-            strcpy_P(log, PSTR("HTTP : Succes!"));
+            strcpy_P(log, PSTR("HTTP : Success!"));
             addLog(LOG_LEVEL_DEBUG, log);
             success = true;
           }

@@ -4,7 +4,7 @@
 
 #define PLUGIN_011
 #define PLUGIN_ID_011         11
-#define PLUGIN_NAME_011       "ProMini Extender"
+#define PLUGIN_NAME_011       "Extra IO - ProMini Extender"
 #define PLUGIN_VALUENAME1_011 "Value"
 
 #define PLUGIN_011_I2C_ADDRESS 0x7f
@@ -201,7 +201,7 @@ int Plugin_011_Read(byte Par1, byte Par2)
 //********************************************************************************
 // PME write
 //********************************************************************************
-boolean Plugin_011_Write(byte Par1, byte Par2)
+void Plugin_011_Write(byte Par1, byte Par2)
 {
   uint8_t address = 0x7f;
   Wire.beginTransmission(address);

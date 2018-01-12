@@ -34,17 +34,12 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-        char log[80];
         boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "TELNT: connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
+        char log[80];
+        addLog(LOG_LEVEL_DEBUG, String(F("TELNT : connecting to ")) + ControllerSettings.getHostPortString());
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
+        if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("TELNT: connection failed"));
@@ -59,7 +54,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         String url = F("variableset ");
         url += event->idx;
         url += ",";
-        url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+        url += formatUserVar(event, 0);
         url += "\n";
 
         strcpy_P(log, PSTR("TELNT: Sending enter"));
@@ -67,11 +62,11 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         client.print(" \n");
 
         unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
+        while (!client.available() && !timeOutReached(timer))
           delay(1);
 
         timer = millis() + 1000;
-        while (client.available() && millis() < timer && !success)
+        while (client.available() && !timeOutReached(timer) && !success)
         {
 
           //   String line = client.readStringUntil('\n');

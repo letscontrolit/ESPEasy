@@ -55,7 +55,7 @@
 
 #define PLUGIN_061
 #define PLUGIN_ID_061         61
-#define PLUGIN_NAME_061       "KeyPad - PCF8574 / MCP23017 [TESTING]"
+#define PLUGIN_NAME_061       "Keypad - PCF8574 / MCP23017 [TESTING]"
 #define PLUGIN_VALUENAME1_061 "ScanCode"
 
 // #include <*.h>   // no include needed

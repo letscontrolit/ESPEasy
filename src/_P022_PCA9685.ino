@@ -4,11 +4,11 @@
 
 #define PLUGIN_022
 #define PLUGIN_ID_022         22
-#define PLUGIN_NAME_022       "PWM - PCA9685"
+#define PLUGIN_NAME_022       "Extra IO - PCA9685"
 #define PLUGIN_VALUENAME1_022 "PWM"
 
 #define PLUGIN_022_PCA9685_MODE1   0x00  // location for Mode1 register address
-#define PCA9685_MODE2   0x01  // location for Mode2 reigster address
+#define PCA9685_MODE2   0x01  // location for Mode2 register address
 #define PCA9685_LED0    0x06  // location for start of LED0 registers
 #define PCA9685_ADDRESS 0x40  // I2C address
 
@@ -17,7 +17,7 @@ boolean Plugin_022_init = false;
 boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
+  // static byte switchstate[TASKS_MAX];
 
   switch (function)
   {
@@ -63,6 +63,16 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
         }
+        if (command == F("pcafrq"))
+        {
+          if (!Plugin_022_init) Plugin_022_initialize();
+          success = true;
+          Plugin_022_Frequency(event->Par1);
+          setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
+          log = String(F("PCA  : FREQ ")) + String(event->Par1);
+          addLog(LOG_LEVEL_INFO, log);
+          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+        }
 
         if (command == F("status"))
         {
@@ -90,13 +100,22 @@ void Plugin_022_writeRegister(int regAddress, byte data) {
   Wire.endTransmission();
 }
 
+uint8_t Plugin_022_readRegister(int regAddress) {
+  uint8_t res = 0;
+  Wire.requestFrom(PCA9685_ADDRESS,1,1);
+  while (Wire.available()) {
+    res = Wire.read();
+  }
+  return res;
+}
+
 
 //********************************************************************************
 // PCA9685 write
 //********************************************************************************
-boolean Plugin_022_Write(byte Par1, int Par2)
+void Plugin_022_Write(byte Par1, int Par2)
 {
-  boolean success = false;
+  // boolean success = false;
   uint16_t LED_ON = 0;
   uint16_t LED_OFF = Par2;
   Wire.beginTransmission(PCA9685_ADDRESS);
@@ -107,10 +126,26 @@ boolean Plugin_022_Write(byte Par1, int Par2)
   Wire.write(highByte(LED_OFF));
   Wire.endTransmission();
 }
+void Plugin_022_Frequency(uint16_t freq)
+{
+  Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)0x0);
+  freq *= 0.9;
+  //  prescale = 25000000 / 4096;
+  uint16_t prescale = 6103;
+  prescale /=  freq;
+  prescale -= 1;
+  uint8_t oldmode = Plugin_022_readRegister(0);
+  uint8_t newmode = (oldmode&0x7f) | 0x10;
+  Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)newmode);
+  Plugin_022_writeRegister(0xfe, (byte)prescale);  //prescale register
+  Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)oldmode);
+  delayMicroseconds(5000);
+  Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)oldmode | 0xa1);
+}
 
 void Plugin_022_initialize()
 {
-  // default mode is open drain ouput, drive leds connected to VCC
+  // default mode is open drain output, drive leds connected to VCC
   Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)0x01); // reset the device
   delay(1);
   Plugin_022_writeRegister(PLUGIN_022_PCA9685_MODE1, (byte)B10100000);  // set up for auto increment

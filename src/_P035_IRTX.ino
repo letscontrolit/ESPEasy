@@ -8,7 +8,7 @@ IRsend *Plugin_035_irSender;
 
 #define PLUGIN_035
 #define PLUGIN_ID_035         35
-#define PLUGIN_NAME_035       "Infrared Transmit"
+#define PLUGIN_NAME_035       "Communication - IR Transmit"
 
 boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 {
@@ -57,8 +57,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String IrType;
-        unsigned long IrCode;
-        unsigned int IrBits;
+        unsigned long IrCode=0;
+        unsigned int IrBits=0;
         //char log[120];
 
         char command[120];
@@ -114,7 +114,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
             printWebString += F("Interpreted RAW Code: ");
             //Loop throught every char in RAW string
-            for(int i = 0; i < IrRaw.length(); i++)
+            for(unsigned int i = 0; i < IrRaw.length(); i++)
             {
               //Get the decimal value from base32 table
               //See: https://en.wikipedia.org/wiki/Base32#base32hex
@@ -137,14 +137,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                     for (uint t = 0; t < c0; t++)
                       printWebString += F("0");
                   }
-                  //So, as we recieve a "1", and processed the counted 0s
+                  //So, as we receive a "1", and processed the counted 0s
                   //sending them as a ms timing into the buffer, we clear
                   //the 0s counter
                   c0 = 0;
                 } else {
                   //So, bit is 0
 
-                  //On first call, ignore 0s (supress left-most 0s)
+                  //On first call, ignore 0s (suppress left-most 0s)
                   if (c0+c1 != 0) {
                     //add 1 to counter c0
                     c0++;
@@ -154,11 +154,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                       //add the total ms into the buffer (number of 1s
                       //multiplied by defined pulse length ms)
                       buf[idx++] = c1 * IrPLen;
-                      //print the number of 1s just for debuging/info purpouses
+                      //print the number of 1s just for debugging/info purposes
                       for (uint t = 0; t < c1; t++)
                         printWebString += F("1");
                     }
-                    //So, as we recieve a "0", and processed the counted 1s
+                    //So, as we receive a "0", and processed the counted 1s
                     //sending them as a ms timing into the buffer, we clear
                     //the 1s counter
                     c1 = 0;

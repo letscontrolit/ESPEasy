@@ -31,7 +31,7 @@
 // DMX,5=123,8=44"   Set channel 5 to value 123, channel 8 to 44
 // DMX,OFF"   Pitch Black
 
-// Transeiver:
+// Transceiver:
 // SN75176 or MAX485 or LT1785 or ...
 // Pin 5: GND
 // Pin 2, 3, 5: +5V
@@ -53,7 +53,7 @@
 
 #define PLUGIN_054
 #define PLUGIN_ID_054         54
-#define PLUGIN_NAME_054       "DMX512 TX [TESTING]"
+#define PLUGIN_NAME_054       "Communication - DMX512 TX [TESTING]"
 
 byte* Plugin_054_DMXBuffer = 0;
 int16_t Plugin_054_DMXSize = 32;
@@ -134,8 +134,9 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        string.toLowerCase();
-        String command = parseString(string, 1);
+        String lowerString=string;
+        lowerString.toLowerCase();
+        String command = parseString(lowerString, 1);
 
         if (command == F("dmx"))
         {
@@ -146,11 +147,11 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           int16_t channel = 1;
           int16_t value = 0;
 
-          string.replace("  ", " ");
-          string.replace(" =", "=");
-          string.replace("= ", "=");
+          lowerString.replace("  ", " ");
+          lowerString.replace(" =", "=");
+          lowerString.replace("= ", "=");
 
-          param = parseString(string, paramIdx++);
+          param = parseString(lowerString, paramIdx++);
           if (param.length())
           {
             while (param.length())
@@ -211,7 +212,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
                 channel++;
               }
 
-              param = parseString(string, paramIdx++);
+              param = parseString(lowerString, paramIdx++);
             }
           }
           else

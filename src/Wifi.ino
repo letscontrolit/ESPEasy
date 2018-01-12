@@ -44,7 +44,12 @@ void WifiAPconfig()
 
 bool WifiIsAP()
 {
-  byte wifimode = wifi_get_opmode();
+  #if defined(ESP8266)
+    byte wifimode = wifi_get_opmode();
+  #endif
+  #if defined(ESP32)
+    byte wifimode = WiFi.getMode();
+  #endif
   return(wifimode == 2 || wifimode == 3); //apmode is enabled
 }
 
@@ -82,20 +87,23 @@ boolean WifiConnect(byte connectAttempts)
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
-  wifi_station_set_hostname(hostname);
+  #if defined(ESP8266)
+    wifi_station_set_hostname(hostname);
+  #endif
+  #if defined(ESP32)
+    WiFi.setHostname(hostname);
+  #endif
 
   //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
   {
-    char str[20];
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
+    const IPAddress ip = Settings.IP;
     log = F("IP   : Static IP :");
-    log += str;
+    log += ip;
     addLog(LOG_LEVEL_INFO, log);
-    IPAddress ip = Settings.IP;
-    IPAddress gw = Settings.Gateway;
-    IPAddress subnet = Settings.Subnet;
-    IPAddress dns = Settings.DNS;
+    const IPAddress gw = Settings.Gateway;
+    const IPAddress subnet = Settings.Subnet;
+    const IPAddress dns = Settings.DNS;
     WiFi.config(ip, gw, subnet, dns);
   }
 
@@ -136,7 +144,7 @@ boolean WifiConnect(byte connectAttempts)
 
   addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
 
-  //everything failed, activate AP mode (will deactivate automaticly after a while if its connected again)
+  //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
   WifiAPMode(true);
 
   return(false);
@@ -185,11 +193,11 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
 
     if (WiFi.status() == WL_CONNECTED)
     {
+      if (Settings.UseNTP) {
+        initTime();
+      }
       log = F("WIFI : Connected! IP: ");
-      IPAddress ip = WiFi.localIP();
-      char str[20];
-      sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-      log += str;
+      log += formatIP(WiFi.localIP());
       log += F(" (");
       log += WifiGetHostname();
       log += F(")");
@@ -202,9 +210,11 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
     {
       // log = F("WIFI : Disconnecting!");
       // addLog(LOG_LEVEL_INFO, log);
-      ETS_UART_INTR_DISABLE();
-      wifi_station_disconnect();
-      ETS_UART_INTR_ENABLE();
+      #if defined(ESP8266)
+        ETS_UART_INTR_DISABLE();
+        wifi_station_disconnect();
+        ETS_UART_INTR_ENABLE();
+      #endif
       for (byte x = 0; x < 20; x++)
       {
         statusLED(true);
@@ -221,7 +231,7 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
 //********************************************************************************
 // Disconnect from Wifi AP
 //********************************************************************************
-boolean WifiDisconnect()
+void WifiDisconnect()
 {
   WiFi.disconnect();
 }
@@ -269,12 +279,10 @@ void WifiCheck()
   if(wifiSetup)
     return;
 
-  String log = "";
-
   if (WiFi.status() != WL_CONNECTED)
   {
     NC_Count++;
-    //give it time to automaticly reconnect
+    //give it time to automatically reconnect
     if (NC_Count > 2)
     {
       WifiConnect(2);
@@ -293,4 +301,30 @@ void WifiCheck()
       WifiAPMode(false);
     }
   }
+}
+
+//********************************************************************************
+// Return subnet range of WiFi.
+//********************************************************************************
+bool getSubnetRange(IPAddress& low, IPAddress& high)
+{
+  if (WifiIsAP()) {
+    // WiFi is active as accesspoint, do not check.
+    return false;
+  }
+  if (WiFi.status() != WL_CONNECTED) {
+    return false;
+  }
+  const IPAddress ip = WiFi.localIP();
+  const IPAddress subnet = WiFi.subnetMask();
+  low = ip;
+  high = ip;
+  // Compute subnet range.
+  for (byte i=0; i < 4; ++i) {
+    if (subnet[i] != 255) {
+      low[i] = low[i] & subnet[i];
+      high[i] = high[i] | ~subnet[i];
+    }
+  }
+  return true;
 }

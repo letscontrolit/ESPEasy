@@ -31,20 +31,19 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
+        if (WiFi.status() != WL_CONNECTED) {
+          success = false;
+          break;
+        }
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
+        // boolean success = false;
+        addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
         char log[80];
-        boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
+        if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));
@@ -66,7 +65,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
-            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            postDataStr += formatUserVar(event, 0);
             postDataStr += "}";
             break;
           case SENSOR_TYPE_TEMP_HUM:                      // dual value
@@ -75,11 +74,11 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
-            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            postDataStr += formatUserVar(event, 0);
             postDataStr += F(",field");
             postDataStr += event->idx + 1;
             postDataStr += ":";
-            postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            postDataStr += formatUserVar(event, 1);
             postDataStr += "}";
             break;
           case SENSOR_TYPE_TEMP_HUM_BARO:
@@ -87,15 +86,15 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
             postDataStr += F("{field");
             postDataStr += event->idx;
             postDataStr += ":";
-            postDataStr += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+            postDataStr += formatUserVar(event, 0);
             postDataStr += F(",field");
             postDataStr += event->idx + 1;
             postDataStr += ":";
-            postDataStr += toString(UserVar[event->BaseVarIndex + 1],ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+            postDataStr += formatUserVar(event, 1);
             postDataStr += F(",field");
             postDataStr += event->idx + 2;
             postDataStr += ":";
-            postDataStr += toString(UserVar[event->BaseVarIndex + 2],ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+            postDataStr += formatUserVar(event, 2);
             postDataStr += "}";
             break;
           case SENSOR_TYPE_SWITCH:
@@ -104,13 +103,9 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         postDataStr += F("&apikey=");
         postDataStr += SecuritySettings.ControllerPassword[event->ControllerIndex]; // "0UDNN17RW6XAS2E5" // api key
 
-        String hostName = host;
-        if (ControllerSettings.UseDNS)
-          hostName = ControllerSettings.HostName;
-
         String postStr = F(" HTTP/1.1\r\n");
         postStr += F("Host: ");
-        postStr += hostName;
+        postStr += ControllerSettings.getHost();
         postStr += F("\r\n");
         postStr += F("Connection: close\r\n");
         postStr += F("\r\n");
@@ -124,7 +119,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         client.print(postDataStr);
 
         unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
+        while (!client.available() && !timeOutReached(timer))
           delay(1);
 
         // Read all the lines of the reply from server and print them to Serial
@@ -137,7 +132,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG_MORE, log);
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           {
-            strcpy_P(log, PSTR("HTTP : Succes!"));
+            strcpy_P(log, PSTR("HTTP : Success!"));
             addLog(LOG_LEVEL_DEBUG, log);
             success = true;
           }

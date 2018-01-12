@@ -17,23 +17,23 @@
 // included in all copies or substantial portions of the Software.
 
 
-// This plugin enables the use of a MPU6050 sensor as e.g. used in the breakoutboard GY-521.
+// This plugin enables the use of a MPU6050 sensor as e.g. used in the breakout-board GY-521.
 // Using the webform you can set thresholds for the x-y-z axis and timeout values. If the thresholds are
 // exceeded the sensor is on, if the thresholds are not met during the timeout period the sensor is off.
 
-// Using this plugin you can get a notification from your home automationsystem when the monitored machine or
-// device is no longer vibrating and thus this can be used as a signaling device for the end of a (dish)washer
+// Using this plugin you can get a notification from your home automation system when the monitored machine or
+// device is no longer vibrating and thus this can be used as a signalling device for the end of a (dish)washer
 // or dryer cycle.
 
-// You can also use the plugin to read raw sensorvalues. You can use more then one instance of the plugin and
+// You can also use the plugin to read raw sensor values. You can use more then one instance of the plugin and
 // you can set multiple movement alarms by giving each instance other threshold values if needed.
 
-// Best practise: Create three custom sensors in your homecontroller (like domoticz) and let it plot the x, y and
-// z range. Plot the sensorvalues while you use the washingmachine and/or dryer. Also keep monitoring when they
+// Best practise: Create three custom sensors in your home controller (like domoticz) and let it plot the x, y and
+// z range. Plot the sensor values while you use the washing machine and/or dryer. Also keep monitoring when they
 // are not in use so you can determine the needed thresholds. When you have these you can select the movement
 // detection function to setup the plugin for further use.
 
-// The plugin can simultanious be used with two MPU6050 devices by adding multiple instances.
+// The plugin can be used simultaneously with two MPU6050 devices by adding multiple instances.
 // Originally released in the PlayGround as Plugin 118.
 
 // Plugin var usage:
@@ -73,11 +73,11 @@
 
 #define PLUGIN_045
 #define PLUGIN_ID_045                       45
-#define PLUGIN_NAME_045                     "MPU 6050 [TESTING]"
+#define PLUGIN_NAME_045                     "Gyro - MPU 6050 [TESTING]"
 #define PLUGIN_VALUENAME1_045               ""
 
 int16_t _P045_axis[3][5][2];                // [xyz], [min/max/range,a,g], [0x68/0x69]
-long _P045_time[2];
+unsigned long _P045_time[2];
 
 boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 {
@@ -239,7 +239,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
 */
         // Run this bit every 5 seconds per deviceaddress (not per instance)
-        if ((_P045_time[dev] + 5000) < millis())
+        if (timeOutReached(_P045_time[dev] + 5000))
         {
           _P045_time[dev] = millis();
 
@@ -293,8 +293,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
               }
 
               // Check if UserVar changed so we do not overload homecontroller with the same readings
-              if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
-                Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
+              if (Settings.TaskDevicePluginConfig[event->TaskIndex][7] != UserVar[event->BaseVarIndex]) {
+                Settings.TaskDevicePluginConfig[event->TaskIndex][7] = UserVar[event->BaseVarIndex];
                 success = true;
               } else {
                 success = false;

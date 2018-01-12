@@ -10,7 +10,7 @@
 
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C *lcd;
+LiquidCrystal_I2C *lcd=NULL;
 
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
@@ -152,7 +152,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         {
           if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
           {
-            lcd->backlight();
+            if (lcd) {
+              lcd->backlight();
+            }
             displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
           }
         }
@@ -164,7 +166,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         if ( displayTimer > 0)
         {
           displayTimer--;
-          if (displayTimer == 0)
+          if (lcd && displayTimer == 0)
             lcd->noBacklight();
         }
         break;
@@ -186,7 +188,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < row; x++)
         {
           String tmpString = deviceTemplate[x];
-          if (tmpString.length())
+          if (lcd && tmpString.length())
           {
             String newString = parseTemplate(tmpString, col);
             lcd->setCursor(0, x);
@@ -203,7 +205,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("LCD")))
+        if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
@@ -211,7 +213,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           lcd->setCursor(event->Par2 - 1, event->Par1 - 1);
           lcd->print(tmpString.c_str());
         }
-        if (tmpString.equalsIgnoreCase(F("LCDCMD")))
+        if (lcd && tmpString.equalsIgnoreCase(F("LCDCMD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');

@@ -11,7 +11,7 @@
 //   * Extract jscolor.min.js
 //   * Now open the Web UI of your ESPEasy with this URL:
 //     http://<IP-ESPEasy>/upload
-//   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... verion !!)
+//   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... version !!)
 //   * Press Upload und you are done.
 
 // Add the Adafruit Neopixel Library to your library path. You will find it here:
@@ -21,14 +21,14 @@
 // NOTES
 // Please keep in mind that you can add tasks which produce a very large delay while reading the sensor.
 // For example the DS18B20 is very slow in reading the values. This can slow down the simulation and you
-// will notice that the candle did not run smooth. So keep an eye on your tasks and donßt add to much other tasks.
+// will notice that the candle did not run smooth. So keep an eye on your tasks and don't add to much other tasks.
 
 // HARDWARE
 // The Wifi Candle uses 20 WS2812 RGB pixels. They are all connected in one row.
 // I build a wooden wick with 5 pixels on each side. (A picture is here : http://www.esp8266.nu/forum/viewtopic.php?f=2&t=2147)
 // The pixels are connected to 5V and the data pin I use is GPIO13 (but you can choose another one).
 // Please ensure that you use a strong power supply because the pixels consume a lot of power when they
-// shine in white with high brigthness!
+// shine in white with high brightness!
 // I also placed a 100µF capacitor at the end of the WS2812 chain on +5/GND just to ensure a good power stability.
 // btw ... My Testboard was a NodeMCU V3.
 
@@ -80,7 +80,7 @@ byte Candle_bright = 128;
 SimType Candle_type = TypeSimpleCandle;
 ColorType Candle_color = ColorDefault;
 
-// gloable Variables
+// global variables
 unsigned long Candle_Update = 0;
 word Candle_Temp[4] = { 0, 0, 0 };     // Temp variables
 int Candle_Temp4 = 0;
@@ -90,7 +90,7 @@ Adafruit_NeoPixel *Candle_pixels;
 
 #define PLUGIN_042
 #define PLUGIN_ID_042         42
-#define PLUGIN_NAME_042       "NeoPixel - Candle"
+#define PLUGIN_NAME_042       "Output - NeoPixel (Candle)"
 #define PLUGIN_VALUENAME1_042 "Color"
 #define PLUGIN_VALUENAME2_042 "Brightness"
 #define PLUGIN_VALUENAME3_042 "Type"
@@ -138,7 +138,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         char tmpString[128];
         String options[8];
-        int optionValues[8];
+        // int optionValues[8];
 
         options[0] = F("Off");
         options[1] = F("Static Light");
@@ -300,7 +300,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           case 2: // Random Updates for Simple Candle, Advanced Candle, Fire Simulation
           case 3:
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 if (Candle_type == 2) {
                   type_Simple_Candle();
                 }
@@ -314,7 +314,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           case 4:   // Update for Police
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 type_Police();
                 Candle_Update = millis() + 150;
               }
@@ -323,7 +323,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           case 5:   // Update for Blink
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 type_BlinkStrobe();
                 Candle_Update = millis() + 100;
               }
@@ -337,7 +337,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             }
           case 7:   // Update for ColorFader
             {
-              if (millis() > Candle_Update) {
+              if (timeOutReached(Candle_Update)) {
                 type_ColorFader();
                 Candle_Update = millis() + 2000;
               }
@@ -530,7 +530,7 @@ void type_Advanced_Candle() {
   }
 
   for (int j = 0; j < 4; j++) {
-    for (int i = 1; i < 6; i++){
+    for (unsigned int i = 1; i < 6; i++){
       if (i <= Candle_Temp[0]) {
         Candle_pixels->setPixelColor(j * 5 + i - 1, colorbase[0], colorbase[1], colorbase[2]);
       }
@@ -554,7 +554,7 @@ void type_Police() {
     Candle_Temp[0] = 0;
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (unsigned int i = 0; i < 4; i++) {
     if (i == Candle_Temp[0])
     {
       for (int j = 0; j < 5; j++) {
@@ -638,7 +638,7 @@ void type_ColorFader() {
 // Convert HSC Color to RGB Color
 void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
   // hue: 0-359, sat: 0-255, val (lightness): 0-255
-  int r, g, b, base;
+  int r=0, g=0, b=0, base=0;
 
   if (sat == 0) { // Achromatic color (gray).
     colors[0]=val;

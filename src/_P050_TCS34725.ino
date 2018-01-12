@@ -14,7 +14,7 @@
 
 #define PLUGIN_050
 #define PLUGIN_ID_050        50
-#define PLUGIN_NAME_050       "Luminosity & Color - TCS34725  [DEVELOPMENT]"
+#define PLUGIN_NAME_050       "Color - TCS34725  [DEVELOPMENT]"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
@@ -140,11 +140,11 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
         	addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
 
-          uint16_t r, g, b, c, colorTemp, lux;
+          uint16_t r, g, b, c;
 
           tcs.getRawData(&r, &g, &b, &c);
-          colorTemp = tcs.calculateColorTemperature(r, g, b);
-          lux = tcs.calculateLux(r, g, b);
+          tcs.calculateColorTemperature(r, g, b);
+          tcs.calculateLux(r, g, b);
 
           UserVar[event->BaseVarIndex] = r;
           UserVar[event->BaseVarIndex + 1] = g;
