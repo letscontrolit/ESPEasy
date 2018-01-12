@@ -7,10 +7,14 @@
 #if defined(ESP8266)
 void tcpCleanup()
 {
-  while(tcp_tw_pcbs!=NULL)
-  {
-    tcp_abort(tcp_tw_pcbs);
-  }
+  #if LWIP_VERSION_MAJOR == 2
+    // is it still needed ? 
+  #else
+    while(tcp_tw_pcbs!=NULL)
+    {
+      tcp_abort(tcp_tw_pcbs);
+    }
+  #endif  
 }
 #endif
 
