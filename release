@@ -4,7 +4,10 @@ NEW="$1"
 
 [ "$NEW" != "" ] || exit 1
 
-PREV=`git tag --sort=creatordate|tail -1`
+echo "Creating release $NEW"
+
+NEWBASE=`echo "$NEW"|cut -f1 -d'-'`
+PREV=`git tag --sort=creatordate|grep "^$NEWBASE"|tail -1`
 
 ############## update Release_notes.txt
 NOTES="dist/Release_notes.txt"
