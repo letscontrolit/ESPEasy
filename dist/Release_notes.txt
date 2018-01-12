@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release v2.0-20180112 (since v2.0-20180111)
+-------------------------------------------------
+
+Release date: Fri Jan 12 01:56:54 CET 2018
+
+Edwin Eefting (4):
+      added http server emulation and domotics http to testsuite
+      first http domoticz test works
+      testsuite requirements
+      fixed releasebot issues with multiple branches
+
+Gijs Noorlander (2):
+      [Issue 699] Incorrect shown device name (#700)
+      [v2.0 #470] Do not send invalid values to a controller (#701)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180111 (since mega-20180111)
 -------------------------------------------------
 
