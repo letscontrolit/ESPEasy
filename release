@@ -37,5 +37,5 @@ git tag -a "$NEW" -m "`cat /tmp/tagmessage`"
 
 
 ################ push everything
-git push
+git push origin HEAD
 git push --tags
