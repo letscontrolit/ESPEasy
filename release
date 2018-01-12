@@ -6,6 +6,13 @@ NEW="$1"
 
 echo "Creating release $NEW"
 
+
+if git describe "$NEW" &>/dev/null; then
+  echo "Release already exists"
+  exit 1
+fi
+
+exit
 NEWBASE=`echo "$NEW"|cut -f1 -d'-'`
 PREV=`git tag --sort=creatordate|grep "^$NEWBASE"|tail -1`
 
