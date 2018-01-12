@@ -1,4 +1,28 @@
 -------------------------------------------------
+Changes in release mega-20180112 (since mega-20180111)
+-------------------------------------------------
+
+Release date: Fri Jan 12 02:05:49 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180111
+
+Edwin Eefting (8):
+      added http server emulation and domotics http to testsuite
+      first http domoticz test works
+      testsuite requirements
+      fixed releasebot issues with multiple branches
+      automaticly updated release notes for v2.0-20180112
+      release bot fixes
+      dont make same release twice
+      dont make same release twice
+
+Gijs Noorlander (2):
+      [Issue 699] Incorrect shown device name (#700)
+      [v2.0 #470] Do not send invalid values to a controller (#701)
+
+
+-------------------------------------------------
 Changes in release mega-20180111 (since v2.0-20180110)
 -------------------------------------------------
 
