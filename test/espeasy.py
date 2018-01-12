@@ -47,6 +47,29 @@ class EspEasy:
         )
 
 
+    def controller_domoticz_http(self, **kwargs):
+        """config controller to use domoticz via http"""
+
+        self._node.log.info("Config controller domoticz http "+str(kwargs))
+        self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
+            page="controllers",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                protocol:1
+                usedns:0
+                controllerip:{controllerip}
+                controllerport:{controllerport}
+                controlleruser:
+                controllerpassword:
+                controllerenabled:on
+            """.format(**kwargs)
+        )
+
     def device_p001(self, **kwargs):
         self._node.log.info("Config device plugin p001 "+str(kwargs))
 

@@ -2,7 +2,11 @@
 
 from esptest import *
 
-#node0 has a framed OLED display (p036)
-#no verification is done yet.
+# hardware requirements:
+# - node 0
+# - framed oled display connected to default I2C
+
+# tests:
+# - only configures it, nothing is verfied yet
 
 espeasy[0].device_p036(index=1)
