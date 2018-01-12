@@ -90,9 +90,8 @@ def http_expect_request(path, matches, timeout=60):
 
     # check http results
     while time.time()-start_time<timeout:
-        while http_requests.full():
-            request=http_requests.pop()
-
+        while not http_requests.empty():
+            request=http_requests.get()
             if request.path == path:
                 ok=True
                 for match in matches.items():

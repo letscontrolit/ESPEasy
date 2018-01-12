@@ -13,8 +13,8 @@ espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_r
 espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
 
 #wait for request
-temp1=http_expect_request("/json.html", {  'idx': 1417 }, timeout=10)
-temp2=http_expect_request("/json.html", {  'idx': 1418 }, timeout=10)
+temp1=http_expect_request("/json.htm", {  'idx': '1417' }, timeout=10)
+temp2=http_expect_request("/json.htm", {  'idx': '1418' }, timeout=10)
 
 if not ( float(temp1.params['svalue'])>0 and float(temp1.params['svalue'])<40 and float(temp2.params['svalue'])>0 and float(temp2.params['svalue'])<40):
     raise(Exception("Wrong results"))
