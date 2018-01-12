@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 import json
 import bottle
 import threading
-from Queue import Queue, Empty
+from queue import Queue, Empty
 from espcore import *
 
 
