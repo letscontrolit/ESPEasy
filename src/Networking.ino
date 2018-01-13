@@ -2,6 +2,11 @@
 // Syslog
 // UDP system messaging
 // SSDP
+  #if LWIP_VERSION_MAJOR == 2
+   #define IP2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+  #endif  
+ 
+ 
 
 /*********************************************************************************************\
    Syslog client

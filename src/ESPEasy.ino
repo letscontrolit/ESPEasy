@@ -314,7 +314,15 @@
   #define FILE_SECURITY     "security.dat"
   #define FILE_NOTIFICATION "notification.dat"
   #define FILE_RULES        "rules1.dat"
-  #include "lwip/tcp_impl.h"
+  #include <lwip/init.h>
+  #ifndef LWIP_VERSION_MAJOR
+    #error
+  #endif
+  #if LWIP_VERSION_MAJOR == 2
+  //  #include <lwip/priv/tcp_priv.h>
+  #else
+    #include <lwip/tcp_impl.h>
+  #endif  
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
