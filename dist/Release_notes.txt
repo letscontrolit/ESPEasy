@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180113 (since mega-20180112)
+-------------------------------------------------
+
+Release date: Sat Jan 13 05:00:10 CET 2018
+
+Edwin Eefting (2):
+      ESPEasy v2.0 only supports compiling under arduino core 2.3.0 to prevent issues like #705 when people use Arduino IDE to compile with arduino core 2.4.0
+      fix version number
+
+
+-------------------------------------------------
 Changes in release mega-20180112 (since mega-20180111)
 -------------------------------------------------
 
