@@ -148,6 +148,11 @@
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
+#include "core_version.h"
+#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#error ESPEasy v2.0 only support Arduino core 2.3.0. (Use the ESPEasy development branch to fix this)
+#endif
+
 #define ESP_PROJECT_PID           2016110801L
 #define VERSION                             2 // config file version (not ESPEasy version). increase if you make incompatible changes to config system.
 #define BUILD                           20000 // git version 2.0.0
