@@ -426,7 +426,8 @@ struct SecurityStruct
   byte          AllowedIPrangeLow[4]; // TD-er: Use these
   byte          AllowedIPrangeHigh[4];
   byte          IPblockLevel;
-  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
+  uint32_t      crc;
 } SecuritySettings;
 
 struct SettingsStruct
@@ -545,6 +546,8 @@ struct SettingsStruct
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
+  // make sure crc is the last value in the struct
+  uint32_t crc;
 } Settings;
 
 struct ControllerSettingsStruct
