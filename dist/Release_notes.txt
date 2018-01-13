@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release v2.0-20180113 (since v2.0-20180112)
+-------------------------------------------------
+
+Release date: Sat Jan 13 05:00:20 CET 2018
+
+Edwin Eefting (5):
+      release bot fixes
+      dont make same release twice
+      dont make same release twice
+      ESPEasy v2.0 only supports compiling under arduino core 2.3.0 to prevent issues like #705 when people use Arduino IDE to compile with arduino core 2.4.0
+      testsuite: working on generic http/mqtt controller emulatior receiving
+
+
+-------------------------------------------------
 Changes in release v2.0-20180112 (since v2.0-20180111)
 -------------------------------------------------
 
