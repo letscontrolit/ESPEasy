@@ -941,12 +941,14 @@ unsigned int getSPIFlashCRC(){
   \*********************************************************************************************/
 String SaveSettings(void)
 {
+  Settings.ProgmemCrc= thisBinaryCrc;
   Settings.crc = CRC32::calculate((char *)&Settings,  sizeof(struct SettingsStruct)-4);
   String err;
   err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
     return(err);
-
+    
+  SecuritySettings.ProgmemCrc= thisBinaryCrc;
   SecuritySettings.crc = CRC32::calculate((char *)&SecuritySettings,  sizeof(struct SecurityStruct)-4);
   err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
   return (err);
@@ -977,7 +979,7 @@ String LoadSettings()
   err=LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof( SecurityStruct));
   calculatedCRC= CRC32::calculate((char *)&SecuritySettings,  sizeof( SecurityStruct)-4);
   if (calculatedCRC==SecuritySettings.crc){
-    addLog(LOG_LEVEL_INFO, F("SecuritySettings CRC OK"));
+    addLog(LOG_LEVEL_INFO, F("SecuritySettings CRC OK "));
   }
   else{
     addLog(LOG_LEVEL_ERROR, F("SecuritySettings CRC FAIL"));

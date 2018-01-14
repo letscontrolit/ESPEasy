@@ -427,6 +427,7 @@ struct SecurityStruct
   byte          AllowedIPrangeHigh[4];
   byte          IPblockLevel;
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
+  uint32_t      ProgmemCrc; // crc of the binary that last saved the struct to file.
   uint32_t      crc;
 } SecuritySettings;
 
@@ -547,7 +548,8 @@ struct SettingsStruct
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
   // make sure crc is the last value in the struct
-  uint32_t crc;
+  uint32_t      ProgmemCrc; // crc of the binary that last saved the struct to file.
+  uint32_t      crc;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -847,6 +849,7 @@ String eventBuffer = "";
 
 uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
+uint32_t thisBinaryCrc=0;
 
 /*********************************************************************************************\
  * SETUP
@@ -915,8 +918,9 @@ void setup()
 
   fileSystemCheck();
   LoadSettings();
-  getSPIFlashCRC(); // display checksum of SPI flash
-
+  thisBinaryCrc = getSPIFlashCRC(); // display checksum of SPI flash
+  if (Settings.ProgmemCrc != thisBinaryCrc) addLog(LOG_LEVEL_INFO, F("binary has changed since last save of Settings"));
+  if (SecuritySettings.ProgmemCrc != thisBinaryCrc) addLog(LOG_LEVEL_INFO, F("binary has changed since last save of SecuritySettings"));
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 
