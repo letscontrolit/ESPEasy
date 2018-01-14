@@ -325,6 +325,8 @@ ADC_MODE(ADC_VCC);
 #include "include/UdpContext.h"
 #include "limits.h"
 
+#include "ESPEasyTimeTypes.h"
+
 extern "C" {
 #include "user_interface.h"
 }

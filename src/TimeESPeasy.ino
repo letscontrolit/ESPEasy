@@ -3,8 +3,6 @@
   Time stuff
   \*********************************************************************************************/
 
-//#include <Timezone.h>    //https://github.com/JChristensen/Timezone
-
 #define SECS_PER_MIN  (60UL)
 #define SECS_PER_HOUR (3600UL)
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
@@ -14,16 +12,7 @@
 #define SECS_YR_2000  (946684800UL) // the time at the start of y2k
 #define LEAP_YEAR(Y)     ( ((1970+Y)>0) && !((1970+Y)%4) && ( ((1970+Y)%100) || !((1970+Y)%400) ) )
 
-struct  timeStruct {
-  uint8_t Second;
-  uint8_t Minute;
-  uint8_t Hour;
-  uint8_t Wday;   // day of week, sunday is day 1
-  uint8_t Day;
-  uint8_t Month;
-  uint8_t Year;   // offset from 1970;
-} tm;
-
+timeStruct tm;
 uint32_t syncInterval = 3600;  // time sync will be attempted after this many seconds
 uint32_t sysTime = 0;
 uint32_t prevMillis = 0;
@@ -97,16 +86,30 @@ unsigned long now() {
     // nextSyncTime & sysTime are in seconds
     unsigned long  t = getNtpTime();
     if (t != 0) {
-      if (Settings.DST)
-        t += SECS_PER_HOUR; // add one hour if DST active
       setTime(t);
+      applyTimeZone(t);
     } else {
       nextSyncTime = sysTime + syncInterval;
     }
   }
-  breakTime(sysTime, tm);
-  return (unsigned long)sysTime;
+  uint32 localSystime = toLocal(sysTime);
+  breakTime(localSystime, tm);
+  return (unsigned long)localSystime;
 }
+
+int year(unsigned long t) {
+  timeStruct tmp;
+  breakTime(t, tmp);
+  return 1970 + tmp.Year;
+}
+
+int weekday(unsigned long t) {
+  timeStruct tmp;
+  breakTime(t, tmp);
+  return tmp.Wday;
+}
+
+
 
 int year()
 {
@@ -178,7 +181,7 @@ void checkTime()
 
 unsigned long getNtpTime()
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED || !Settings.UseNTP) {
     return 0;
   }
   WiFiUDP udp;
@@ -236,7 +239,7 @@ unsigned long getNtpTime()
         log += timePassedSince(beginWait);
         log += F(" mSec");
         addLog(LOG_LEVEL_DEBUG_MORE, log);
-        return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_MIN;
+        return secsSince1900 - 2208988800UL;
       }
     }
     log = F("NTP  : No reply");
@@ -244,7 +247,6 @@ unsigned long getNtpTime()
   }
   return 0;
 }
-
 
 
 
@@ -356,20 +358,16 @@ String timeLong2String(unsigned long lngTime)
 
 // returns the current Date separated by the given delimiter
 // date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
+String getDateString(const timeStruct& ts, char delimiter) {
+  char DateString[20]; //19 digits plus the null char
+  const int year = 1970 + ts.Year;
+  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.Month, delimiter, ts.Day);
+  return DateString;
+}
+
 String getDateString(char delimiter)
 {
-  String reply = String(year());
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (month() < 10)
-    reply += "0";
-  reply += month();
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (day() < 10)
-  	reply += F("0");
-  reply += day();
-  return reply;
+  return getDateString(tm, delimiter);
 }
 
 // returns the current Date without delimiter
@@ -381,23 +379,16 @@ String getDateString()
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+String getTimeString(const timeStruct& ts, char delimiter)
+{
+  char TimeString[20]; //19 digits plus the null char
+  sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"), ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+  return TimeString;
+}
+
 String getTimeString(char delimiter)
 {
-	String reply;
-	if (hour() < 10)
-		reply += F("0");
-  reply += String(hour());
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (minute() < 10)
-    reply += F("0");
-  reply += minute();
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (second() < 10)
-  	reply += F("0");
-  reply += second();
-  return reply;
+  return getTimeString(tm, delimiter);
 }
 
 // returns the current Time without delimiter
@@ -410,13 +401,17 @@ String getTimeString()
 // returns the current Date and Time separated by the given delimiter
 // if called like this: getDateTimeString('\0', '\0', '\0');
 // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
 {
-	String ret = getDateString(dateDelimiter);
+	String ret = getDateString(ts, dateDelimiter);
 	if (dateTimeDelimiter != '\0')
 		ret += dateTimeDelimiter;
-	ret += getTimeString(timeDelimiter);
+	ret += getTimeString(ts, timeDelimiter);
 	return ret;
+}
+
+String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
+  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter);
 }
 
 
