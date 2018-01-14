@@ -912,8 +912,30 @@ uint32_t CRC32::finalize() const
     return ~_state;
 }
 
- //CRC32 crc;
  
+
+unsigned int getSPIFlashCRC(){
+  // how to read flash http://arduino-esp8266.readthedocs.io/en/latest/PROGMEM.html
+  uint32_t calculatedCrc = 0; 
+  #ifdef ESP8266
+    #define SPIFlashStart 0x40200000
+    #define SPIFlashEnd   0x40300000-1
+  #else
+    // todo: add flash for ESP32
+  #endif
+ 
+ CRC32 crc; 
+  for (int i = SPIFlashStart; i<SPIFlashEnd; i++) 
+  {
+    crc.update(pgm_read_byte(i));
+  }
+  calculatedCrc=crc.finalize();;
+  String l=F("SPIFlash CRC: ");
+  l=l+ String(calculatedCrc,HEX);
+  addLog(LOG_LEVEL_INFO, l);
+  return calculatedCrc; 
+}
+  
 /********************************************************************************************\
   Save settings to SPIFFS
   \*********************************************************************************************/

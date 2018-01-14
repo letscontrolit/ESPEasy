@@ -915,6 +915,7 @@ void setup()
 
   fileSystemCheck();
   LoadSettings();
+  getSPIFlashCRC(); // display checksum of SPI flash
 
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
