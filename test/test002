@@ -10,13 +10,20 @@ from esptest import *
 # - correct values are send to domoticz via http
 # - correct values are send to domoticz via mqtt
 
+# espeasy[0].controller_thingspeak(index=1, controllerip=config.http_server, controllerport=config.http_port)
 
 ### config mqtt and the 2 devices
-espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
-espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)
-espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
+# espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
+# espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)
+# espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
 
+print(espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE))
+
+
+exit
+#
 #wait for request
+temp1=http_expect_request("/update",{ 'apikey': 'thingspeakkey1234'}, timeout=10)
 temp1=http_expect_request("/json.htm", {  'idx': '1417' }, timeout=10)
 temp2=http_expect_request("/json.htm", {  'idx': '1418' }, timeout=10)
 
