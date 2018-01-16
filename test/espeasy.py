@@ -2,6 +2,22 @@
 ### Things like configging a controller or device via http
 ### I've created it in way that you can just copy/past form parameters from Chromium's header view
 
+from espcore import *
+
+import time
+
+
+SENSOR_TYPE_SINGLE               =   1
+SENSOR_TYPE_TEMP_HUM             =   2
+SENSOR_TYPE_TEMP_BARO            =   3
+SENSOR_TYPE_TEMP_HUM_BARO        =   4
+SENSOR_TYPE_DUAL                 =   5
+SENSOR_TYPE_TRIPLE               =   6
+SENSOR_TYPE_QUAD                 =   7
+SENSOR_TYPE_SWITCH               =  10
+SENSOR_TYPE_DIMMER               =  11
+SENSOR_TYPE_LONG                 =  20
+SENSOR_TYPE_WIND                 =  21
 
 class EspEasy:
 
@@ -24,7 +40,7 @@ class EspEasy:
     def controller_domoticz_mqtt(self, **kwargs):
         """config controller to use domoticz via mqtt"""
 
-        self._node.log.info("Config controller domoticz mqtt "+str(kwargs))
+        self._node.log.info("Configuring controller domoticz mqtt "+str(kwargs))
         self._node.http_post(
             twice=True, # needed for controllers and devices because of the way its implemented
             page="controllers",
@@ -50,7 +66,7 @@ class EspEasy:
     def controller_domoticz_http(self, **kwargs):
         """config controller to use domoticz via http"""
 
-        self._node.log.info("Config controller domoticz http "+str(kwargs))
+        self._node.log.info("Configuring controller domoticz http "+str(kwargs))
         self._node.http_post(
             twice=True, # needed for controllers and devices because of the way its implemented
             page="controllers",
@@ -69,6 +85,71 @@ class EspEasy:
                 controllerenabled:on
             """.format(**kwargs)
         )
+
+    def recv_domoticz_http(self, sensor_type, timeout=60):
+        """recv a domoticz http request from espeasy, and convert back to espeasy values"""
+
+        start_time=time.time()
+        logging.getLogger("domoticz http").info("Waiting for request with sensortype {sensor_type}".format(sensor_type=sensor_type))
+
+        # read and parse http requests
+        while time.time()-start_time<timeout:
+            request=http_requests.get(block=True, timeout=timeout)
+            if request.path == "/json.html":
+                if reuqest.params.get('param')=='udevice':
+                    svalues=request.params.get('svalue').split(";")
+                    if sensor_type==SENSOR_TYPE_SINGLE and len(svalues)==1:
+                        return svalues
+                    elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
+                        return svalues
+                    elif sensor_type==SENSOR_TYPE_HUM and len(svalues)==3:
+                        return svalues
+                    elif sensor_type==SENSOR_TYPE_BARO and len(svalues)==5:
+                        return [svalues[0], svalues[3]]
+                    elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
+                        return svalues
+                    elif sensor_type==SENSOR_TYPE_HUM_BARO and len(svalues)==5:
+                        return [svalues[0],svalues[2], svalues[3]]
+                    elif sensor_type==SENSOR_TYPE_QUAD and len(svalues)==4:
+                        return svalues
+                    elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==5:
+                        return [svalues[0], svalues[2], svalues[3]]
+
+                elif request.params.get('param')=='switchlight':
+                    if sensor_type==SENSOR_TYPE_DIMMER or sensor_type == SENSOR_TYPE_SWITCH:
+                        if request.params.get('switchcmd') == 'Off':
+                            return [0]
+                        elif request.params.get('switchcmd') == 'On':
+                            return [1]
+                        elif request.params.get('switchcmd') == 'Set Level':
+                            return [request.params.get('level')]
+
+        raise(Exception("Timeout"))
+
+
+
+    def controller_thingspeak(self, **kwargs):
+
+        self._node.log.info("Configuring controller thingspeak "+str(kwargs))
+        self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
+            page="controllers",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                protocol:4
+                usedns:0
+                controllerip:{controllerip}
+                controllerport:{controllerport}
+                controlleruser:
+                controllerpassword:thingspeakkey1234
+                controllerenabled:on
+            """.format(**kwargs)
+        )
+
 
     def device_p001(self, **kwargs):
         self._node.log.info("Config device plugin p001 "+str(kwargs))

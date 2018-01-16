@@ -1,4 +1,42 @@
 -------------------------------------------------
+Changes in release mega-20180116 (since mega-20180114)
+-------------------------------------------------
+
+Release date: Tue Jan 16 05:00:11 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180113
+
+Edwin Eefting (2):
+      testsuite: working on generic http/mqtt controller emulatior receiving
+      fixed custom build path
+
+Gijs Noorlander (1):
+      [AutoDST] Added Auto DST (Bugfix/v2.0 issue569) (#726)
+
+
+-------------------------------------------------
+Changes in release mega-20180114 (since mega-20180113)
+-------------------------------------------------
+
+Release date: Sun Jan 14 05:00:08 CET 2018
+
+s0170071 (1):
+      preparations for lwip2 (#707)
+
+
+-------------------------------------------------
+Changes in release mega-20180113 (since mega-20180112)
+-------------------------------------------------
+
+Release date: Sat Jan 13 05:00:10 CET 2018
+
+Edwin Eefting (2):
+      ESPEasy v2.0 only supports compiling under arduino core 2.3.0 to prevent issues like #705 when people use Arduino IDE to compile with arduino core 2.4.0
+      fix version number
+
+
+-------------------------------------------------
 Changes in release mega-20180112 (since mega-20180111)
 -------------------------------------------------
 

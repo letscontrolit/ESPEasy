@@ -161,7 +161,7 @@
 // ********************************************************************************
 #define ESP_PROJECT_PID           2016110801L
 #define VERSION                             2 // config file version (not ESPEasy version). increase if you make incompatible changes to config system.
-#define BUILD                           20000 // git version 2.0.0
+#define BUILD                           20100 // git version 2.1.0
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif
@@ -314,7 +314,15 @@
   #define FILE_SECURITY     "security.dat"
   #define FILE_NOTIFICATION "notification.dat"
   #define FILE_RULES        "rules1.dat"
-  #include "lwip/tcp_impl.h"
+  #include <lwip/init.h>
+  #ifndef LWIP_VERSION_MAJOR
+    #error
+  #endif
+  #if LWIP_VERSION_MAJOR == 2
+  //  #include <lwip/priv/tcp_priv.h>
+  #else
+    #include <lwip/tcp_impl.h>
+  #endif
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
@@ -330,6 +338,7 @@
   #include "lwip/igmp.h"
   #include "include/UdpContext.h"
   #include "limits.h"
+  #include "ESPEasyTimeTypes.h"
   extern "C" {
    #include "user_interface.h"
   }
