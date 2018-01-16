@@ -117,8 +117,18 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             {
                 if (x != 0)
                     string += "-";
-                string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
+            success = true;
+            break;
+        }
+        case PLUGIN_INIT:
+        {
+            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
+            uint8_t addr[8];
+            Plugin_004_get_addr(addr, event->TaskIndex);
+            Plugin_004_DS_startConvertion(addr);
+            delay(800); //give it time to do intial conversion
             success = true;
             break;
         }
@@ -127,10 +137,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
         {
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0){
                 uint8_t addr[8];
-                // Load ROM address from tasksettings
-                LoadTaskSettings(event->TaskIndex);
-                for (byte x = 0; x < 8; x++)
-                    addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+                Plugin_004_get_addr(addr, event->TaskIndex);
 
                 Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
                 float value = 0;
@@ -165,6 +172,15 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
     }
     return success;
 }
+
+void Plugin_004_get_addr(uint8_t addr[], byte TaskIndex)
+{
+  // Load ROM address from tasksettings
+  LoadTaskSettings(TaskIndex);
+  for (byte x = 0; x < 8; x++)
+      addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+}
+
 
 /*********************************************************************************************\
    Dallas Scan bus
