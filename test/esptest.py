@@ -77,4 +77,4 @@ def run():
 def test_in_range(value, min, max):
 
     if value < min or value > max:
-        raise("Value {value} should be between {min} and {max}".format(value=value, min=min, max=max))
+        raise(Exception("Value {value} should be between {min} and {max}".format(value=value, min=min, max=max)))

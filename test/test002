@@ -13,9 +13,12 @@ from esptest import *
 
 # espeasy[0].controller_thingspeak(index=1, controllerip=config.http_server, controllerport=config.http_port)
 
+
 @step
 def prepare():
     """configure devices and controller"""
+    node[0].reboot()
+    node[0].pingserial()
     espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
     espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)
     espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
@@ -29,6 +32,14 @@ def recv():
     results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
     test_in_range(results[0], -5,40)
 
+@step
+def powercycle():
+    """test result on poweron"""
+    node[0].powercycle()
+    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
+    test_in_range(results[0], -5,40)
+    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
+    test_in_range(results[0], -5,40)
 
 
 # @step

@@ -93,6 +93,9 @@ class EspEasy:
         logging.getLogger("domoticz http").info("Waiting for request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
         # read and parse http requests
+        while not http_requests.empty():
+            http_requests.get()
+
         while time.time()-start_time<timeout:
             request=http_requests.get(block=True, timeout=timeout)
             if request.path == "/json.htm" and int(request.params.get('idx'))==idx:
