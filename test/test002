@@ -9,32 +9,42 @@ from esptest import *
 # tests:
 # - correct values are send to domoticz via http
 # - correct values are send to domoticz via mqtt
+# - test if powercycle value is valid (https://github.com/letscontrolit/ESPEasy/issues/719)
 
 # espeasy[0].controller_thingspeak(index=1, controllerip=config.http_server, controllerport=config.http_port)
 
-### config mqtt and the 2 devices
-# espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
-# espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)
-# espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
+@step
+def prepare():
+    """configure devices and controller"""
+    espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
+    espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)
+    espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
 
-print(espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE))
+
+@step
+def recv():
+    """wait for result"""
+    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
+    test_in_range(results[0], -5,40)
+    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
+    test_in_range(results[0], -5,40)
 
 
-exit
+
+# @step
+# def prepare_mqtt():
+#     """switch to mqtt"""
+#     espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
 #
-#wait for request
-temp1=http_expect_request("/update",{ 'apikey': 'thingspeakkey1234'}, timeout=10)
-temp1=http_expect_request("/json.htm", {  'idx': '1417' }, timeout=10)
-temp2=http_expect_request("/json.htm", {  'idx': '1418' }, timeout=10)
+#
+# @step
+# def recv():
+#     """wait for mqtt result"""
+#     results=espeasy[0].recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1417)
+#     test_in_range(results[0], -5,40)
+#     results=espeasy[0].recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
+#     test_in_range(results[0], -5,40)
 
-if not ( float(temp1.params['svalue'])>0 and float(temp1.params['svalue'])<40 and float(temp2.params['svalue'])>0 and float(temp2.params['svalue'])<40):
-    raise(Exception("Wrong results"))
 
 
-### reconfig for mqtt and expect results
-espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
-temp1=mqtt_expect_json("domoticz/in", {  'idx': 1417 }, timeout=10)
-temp2=mqtt_expect_json("domoticz/in", {  'idx': 1418 }, timeout=10)
-
-if not ( float(temp1['svalue'])>0 and float(temp1['svalue'])<40 and float(temp2['svalue'])>0 and float(temp2['svalue'])<40):
-    raise(Exception("Wrong results"))
+run()

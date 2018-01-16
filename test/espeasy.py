@@ -86,18 +86,22 @@ class EspEasy:
             """.format(**kwargs)
         )
 
-    def recv_domoticz_http(self, sensor_type, timeout=60):
+    def recv_domoticz_http(self, sensor_type, idx, timeout=60):
         """recv a domoticz http request from espeasy, and convert back to espeasy values"""
 
         start_time=time.time()
-        logging.getLogger("domoticz http").info("Waiting for request with sensortype {sensor_type}".format(sensor_type=sensor_type))
+        logging.getLogger("domoticz http").info("Waiting for request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
         # read and parse http requests
         while time.time()-start_time<timeout:
             request=http_requests.get(block=True, timeout=timeout)
-            if request.path == "/json.html":
-                if reuqest.params.get('param')=='udevice':
-                    svalues=request.params.get('svalue').split(";")
+            if request.path == "/json.htm" and int(request.params.get('idx'))==idx:
+                if request.params.get('param')=='udevice':
+                    svalues_str=request.params.get('svalue').split(";")
+                    svalues=[]
+                    for svalue in svalues_str:
+                        svalues.append(float(svalue))
+
                     if sensor_type==SENSOR_TYPE_SINGLE and len(svalues)==1:
                         return svalues
                     elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
@@ -122,7 +126,7 @@ class EspEasy:
                         elif request.params.get('switchcmd') == 'On':
                             return [1]
                         elif request.params.get('switchcmd') == 'Set Level':
-                            return [request.params.get('level')]
+                            return [int(request.params.get('level'))]
 
         raise(Exception("Timeout"))
 
