@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release v2.0-20180116 (since v2.0-20180113)
+-------------------------------------------------
+
+Release date: Tue Jan 16 05:00:21 CET 2018
+
+Edwin Eefting (3):
+      fixed custom build path
+      made test resumable and importable
+      now supports powercycle to test for bugs like #719
+
+Gijs Noorlander (1):
+      [AutoDST] Added Auto DST (Bugfix/v2.0 issue569) (#726)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180113 (since v2.0-20180112)
 -------------------------------------------------
 
