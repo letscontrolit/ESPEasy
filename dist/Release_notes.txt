@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180117 (since mega-20180116)
+-------------------------------------------------
+
+Release date: Wed Jan 17 05:00:08 CET 2018
+
+Edwin Eefting (1):
+      fix #719 (initial ds18b20 value after power on 85 degrees)
+
+papperone (1):
+      merge with main branch (#648)
+
+
+-------------------------------------------------
 Changes in release mega-20180116 (since mega-20180114)
 -------------------------------------------------
 
