@@ -453,20 +453,19 @@ float string2float(String myString) {
   len = myString.length();
   char tmp[(len + 1)];       // one extra for the zero termination
   byte start = 0;
-
   //  Look for decimal point - they can be anywhere but no more than one of them!
-
-  int dotIndex = myString.indexOf(".");
+  int dotIndex = myString.indexOf('.');
   //Serial.println(dotIndex);
 
   if (dotIndex != -1)
   {
-    int dotIndex2 = (myString.substring(dotIndex + 1)).indexOf(".");
+    int dotIndex2 = (myString.substring(dotIndex + 1)).indexOf('.');
     //Serial.println(dotIndex2);
     if (dotIndex2 != -1)return -999.00;    // Give error if there is more than one dot
   }
 
-  if (myString.substring(0, 1) == "-") {
+  if (myString.charAt(0) == '-') {
+    tmp[0] = '-';
     start = 1;   //allow a minus in front of string
   }
 
