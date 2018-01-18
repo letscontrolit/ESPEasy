@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20180118 (since mega-20180117)
+-------------------------------------------------
+
+Release date: Thu Jan 18 05:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180116
+
+Edwin Eefting (3):
+      made test resumable and importable
+      now supports powercycle to test for bugs like #719
+      added fixme
+
+Gijs Noorlander (2):
+      [issue 733] Fix for negative values on MQTT import (#735)
+      [issue 728] Proper reconnect for MQTT controllers (#737)
+
+
+-------------------------------------------------
 Changes in release mega-20180117 (since mega-20180116)
 -------------------------------------------------
 
