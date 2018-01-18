@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release v2.0-20180118 (since v2.0-20180116)
+-------------------------------------------------
+
+Release date: Thu Jan 18 05:00:19 CET 2018
+
+Edwin Eefting (1):
+      refactoring test suite controller stuff
+
+Gijs Noorlander (2):
+      [issue 733] Fix for negative values on MQTT import (#735)
+      [issue 728] Proper reconnect for MQTT controllers (#737)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180116 (since v2.0-20180113)
 -------------------------------------------------
 
