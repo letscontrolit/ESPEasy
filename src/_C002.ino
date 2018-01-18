@@ -254,11 +254,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           pubname.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
           pubname.replace(F("%id%"), String(event->idx));
 
-          if (!MQTTclient.publish(pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
+          if (!MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
           {
-            log = F("MQTT : publish failed");
-            addLog(LOG_LEVEL_DEBUG, log);
-            MQTTConnect();
             connectionFailures++;
           }
           else if (connectionFailures)

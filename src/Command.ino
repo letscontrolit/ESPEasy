@@ -350,15 +350,19 @@ void ExecuteCommand(byte source, const char *Line)
   }
   if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
   {
-    success = true;
-    String event = Line;
-    event = event.substring(8);
-    int index = event.indexOf(',');
-    if (index > 0)
-    {
-      String topic = event.substring(0, index);
-      String value = event.substring(index + 1);
-      MQTTclient.publish(topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+    // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
+    int enabledMqttController = firstEnabledMQTTController();
+    if (enabledMqttController >= 0) {
+      success = true;
+      String event = Line;
+      event = event.substring(8);
+      int index = event.indexOf(',');
+      if (index > 0)
+      {
+        String topic = event.substring(0, index);
+        String value = event.substring(index + 1);
+        MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+      }
     }
   }
 
