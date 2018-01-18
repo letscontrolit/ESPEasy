@@ -153,6 +153,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (P1GatewayServer) {
           P1GatewayServer->close();
+          //FIXME: shouldnt P1P1GatewayServer be deleted?
           P1GatewayServer = NULL;
         }
         success = true;
