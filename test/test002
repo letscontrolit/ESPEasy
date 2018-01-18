@@ -15,7 +15,7 @@ from esptest import *
 
 
 @step
-def prepare():
+def prepare_http():
     """configure devices and controller"""
     node[0].reboot()
     node[0].pingserial()
@@ -25,36 +25,39 @@ def prepare():
 
 
 @step
-def recv():
-    """wait for result"""
-    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
+def recv_http():
+    """wait for http result"""
+    results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
     test_in_range(results[0], -5,40)
-    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
+    results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
     test_in_range(results[0], -5,40)
+
+
+
+
+# @step
+# def powercycle():
+#     """test result on poweron"""
+#     node[0].powercycle()
+#     results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
+#     test_in_range(results[0], -5,40)
+#     results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
+#     test_in_range(results[0], -5,40)
+
 
 @step
-def powercycle():
-    """test result on poweron"""
-    node[0].powercycle()
-    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
-    test_in_range(results[0], -5,40)
-    results=espeasy[0].recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
-    test_in_range(results[0], -5,40)
+def prepare_mqtt():
+    """switch to mqtt"""
+    espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
 
 
-# @step
-# def prepare_mqtt():
-#     """switch to mqtt"""
-#     espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
-#
-#
-# @step
-# def recv():
-#     """wait for mqtt result"""
-#     results=espeasy[0].recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1417)
-#     test_in_range(results[0], -5,40)
-#     results=espeasy[0].recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
-#     test_in_range(results[0], -5,40)
+@step
+def recv_mqtt():
+    """wait for mqtt result"""
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1417)
+    test_in_range(results[0], -5,40)
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
+    test_in_range(results[0], -5,40)
 
 
 

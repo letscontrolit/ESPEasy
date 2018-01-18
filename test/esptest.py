@@ -7,15 +7,17 @@
 # from espeasy import *
 from node import *
 from espeasy import *
+from controlleremu import *
 
 import config
-import time
 import shelve
 import os
 from espcore import *
 
 
+
 ### create node objects and espeasy objects
+
 node=[]
 espeasy=[]
 
@@ -25,6 +27,12 @@ for n in config.nodes:
 
 
 steps=[]
+
+log=logging.getLogger("esptest")
+
+
+## controller emulators
+controller=ControllerEmu()
 
 ### keep test state, so we can skip tests.
 state={
