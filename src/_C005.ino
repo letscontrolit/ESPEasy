@@ -111,7 +111,8 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
             value = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           else
             value = formatUserVar(event, x);
-          MQTTclient.publish(tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+
+          MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
           String log = F("MQTT : ");
           log += tmppubname;
           log += " ";

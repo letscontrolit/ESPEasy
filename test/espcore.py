@@ -1,5 +1,7 @@
 ### low level logging and protocol handling
 
+# normally you shouldnt need to look into this file too much
+
 import logging
 import colorlog
 import config
@@ -17,6 +19,9 @@ logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.E
 
 ### mqtt stuff
 logging.getLogger("MQTT").debug("Connecting to {mqtt_broker}".format(mqtt_broker=config.mqtt_broker))
+
+
+log=logging.getLogger("testcore")
 
 mqtt_client = mqtt.Client()
 mqtt_client.connect(config.mqtt_broker, 1883, 60)

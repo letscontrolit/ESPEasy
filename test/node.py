@@ -54,11 +54,52 @@ class Node():
 
     def reboot(self):
         '''reboot the esp via the serial DTR line'''
+        self.log.debug("Rebooting")
+
         self.serial_needed()
         self._serial.setDTR(0)
         time.sleep(0.1)
         self._serial.setDTR(1)
 
+    def powercycle(self):
+        """powercycle the device"""
+        self.poweroff()
+        self.poweron()
+
+    def poweroff(self):
+        """power off device"""
+
+
+        #cant yet be done automaticly unfortunatly
+        self.log.info("Please power off node "+self._id)
+
+        done=False
+        while not done:
+            try:
+                self.serial_needed()
+                self._serial.readline()
+            except serial.SerialException:
+                done=True
+                if hasattr(self, '_serial'):
+                    del self._serial
+
+        self.log.debug("Detected power off")
+
+    def poweron(self):
+        """power on device"""
+
+        self.log.info("Please power on node "+self._id)
+
+        done=False
+        while not done:
+            try:
+                self.serial_needed()
+                self._serial.readline()
+                done=True
+            except serial.SerialException:
+                time.sleep(0.1)
+
+        self.log.debug("Detected power on")
 
     def pingwifi(self, timeout=60):
         """waits until espeasy reponds via wifi"""

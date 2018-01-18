@@ -80,8 +80,12 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   char c_payload[384];
 
   statusLED(true);
-
-  if (length>sizeof(c_payload)-1)
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController < 0) {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : No enabled MQTT controller"));
+    return;
+  }
+  if ((length + 1) > sizeof(c_payload))
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
     return;
@@ -108,7 +112,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   struct EventStruct TempEvent;
   TempEvent.String1 = c_topic;
   TempEvent.String2 = c_payload;
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[enabledMqttController]);
   CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent, dummyString);
 }
 
@@ -116,11 +120,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 /*********************************************************************************************\
  * Connect to MQTT message broker
 \*********************************************************************************************/
-void MQTTConnect()
+void MQTTConnect(int controller_idx)
 {
   if (WiFi.status() != WL_CONNECTED) return;
   ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
+  LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
@@ -145,8 +149,8 @@ void MQTTConnect()
     String log = "";
     boolean MQTTresult = false;
 
-    if ((SecuritySettings.ControllerUser[0] != 0) && (SecuritySettings.ControllerPassword[0] != 0))
-      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[0], SecuritySettings.ControllerPassword[0], LWTTopic.c_str(), 0, 1, "Connection Lost");
+    if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0))
+      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx], LWTTopic.c_str(), 0, 0, "Connection Lost");
     else
       MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 1, "Connection Lost");
 
@@ -184,9 +188,9 @@ void MQTTConnect()
 /*********************************************************************************************\
  * Check connection MQTT message broker
 \*********************************************************************************************/
-void MQTTCheck()
+void MQTTCheck(int controller_idx)
 {
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
+  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
     if (!MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
@@ -196,7 +200,7 @@ void MQTTCheck()
       MQTTclient.disconnect();
       if (WiFi.status() == WL_CONNECTED) {
         delay(1000);
-        MQTTConnect();
+        MQTTConnect(controller_idx);
       }
     }
     else if (connectionFailures)
@@ -226,6 +230,14 @@ void SendStatus(byte source, String status)
   }
 }
 
+boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
+{
+  if (MQTTclient.publish(topic, payload, retained))
+    return true;
+  addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
+  MQTTConnect(controller_idx);
+  return false;
+}
 
 /*********************************************************************************************\
  * Send status info back to channel where request came from
@@ -233,10 +245,12 @@ void SendStatus(byte source, String status)
 void MQTTStatus(String& status)
 {
   ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
-
-  String pubname = ControllerSettings.Subscribe;
-  pubname.replace(F("/#"), F("/status"));
-  pubname.replace(F("%sysname%"), Settings.Name);
-  MQTTclient.publish(pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+    String pubname = ControllerSettings.Subscribe;
+    pubname.replace(F("/#"), F("/status"));
+    pubname.replace(F("%sysname%"), Settings.Name);
+    MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
+  }
 }

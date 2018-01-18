@@ -324,21 +324,23 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 // It would be nice to understand this....
 
 boolean MQTTConnect_037(String clientid)
-
 {
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
-
   boolean result = false;
-
+  // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController < 0) {
+    // No enabled MQTT controller
+    return false;
+  }
   // Do nothing if already connected
-
-  if (MQTTclient_037->connected())return true;
+  if (MQTTclient_037->connected()) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
   if (WiFi.status() != WL_CONNECTED) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
+  ControllerSettingsStruct ControllerSettings;
+  LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (ControllerSettings.UseDNS) {
     MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -352,8 +354,8 @@ boolean MQTTConnect_037(String clientid)
   {
     String log = "";
 
-    if ((SecuritySettings.ControllerUser[0][0] != 0) && (SecuritySettings.ControllerPassword[0][0] != 0)) //
-      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[0], SecuritySettings.ControllerPassword[0]); // todo
+    if ((SecuritySettings.ControllerUser[enabledMqttController][0] != 0) && (SecuritySettings.ControllerPassword[enabledMqttController][0] != 0))
+      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[enabledMqttController], SecuritySettings.ControllerPassword[enabledMqttController]);
     else
       result = MQTTclient_037->connect(clientid.c_str());
 
@@ -453,20 +455,19 @@ float string2float(String myString) {
   len = myString.length();
   char tmp[(len + 1)];       // one extra for the zero termination
   byte start = 0;
-
   //  Look for decimal point - they can be anywhere but no more than one of them!
-
-  int dotIndex = myString.indexOf(".");
+  int dotIndex = myString.indexOf('.');
   //Serial.println(dotIndex);
 
   if (dotIndex != -1)
   {
-    int dotIndex2 = (myString.substring(dotIndex + 1)).indexOf(".");
+    int dotIndex2 = (myString.substring(dotIndex + 1)).indexOf('.');
     //Serial.println(dotIndex2);
     if (dotIndex2 != -1)return -999.00;    // Give error if there is more than one dot
   }
 
-  if (myString.substring(0, 1) == "-") {
+  if (myString.charAt(0) == '-') {
+    tmp[0] = '-';
     start = 1;   //allow a minus in front of string
   }
 
