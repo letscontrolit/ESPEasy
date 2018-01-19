@@ -132,6 +132,15 @@ class Node():
         self.pingwifi(timeout=timeout)
 
 
+    def serialcmd(self, command):
+        """send command via serial"""
+
+        self.serial_needed()
+        self.log.debug("Send serial command: "+command)
+        serial_str=command+"\n"
+        self._serial.write(bytes(serial_str, 'ascii'));
+
+
     def build(self):
         """compile binary"""
 

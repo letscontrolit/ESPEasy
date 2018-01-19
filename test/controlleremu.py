@@ -97,7 +97,11 @@ class ControllerEmu:
                         svalues_str=request.params.get('svalue').split(";")
                         svalues=[]
                         for svalue in svalues_str:
-                            svalues.append(float(svalue))
+                            try:
+                                f=float(svalue)
+                            except:
+                                f=0
+                            svalues.append(f)
 
                         if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_LONG ) and len(svalues)==1:
                             return svalues
@@ -113,8 +117,8 @@ class ControllerEmu:
                             return [svalues[0],svalues[2], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_QUAD and len(svalues)==4:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==5:
-                            return [svalues[0], svalues[2], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==6:
+                            return [svalues[0], svalues[2]/10, svalues[3]/10]
 
                     elif request.params.get('param')=='switchlight':
                         if sensor_type==SENSOR_TYPE_DIMMER or sensor_type == SENSOR_TYPE_SWITCH:
@@ -148,24 +152,28 @@ class ControllerEmu:
                         svalues_str=params.get('svalue').split(";")
                         svalues=[]
                         for svalue in svalues_str:
-                            svalues.append(float(svalue))
+                            try:
+                                f=float(svalue)
+                            except:
+                                f=0
+                            svalues.append(f)
 
                         if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_LONG ) and len(svalues)==1:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
-                            return svalues
+                            return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
                             return [svalues[0], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
-                            return [svalues[0],svalues[2], svalues[3]]
+                            return [svalues[0],svalues[1], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_QUAD and len(svalues)==4:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==5:
-                            return [svalues[0], svalues[2], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==6:
+                            return [svalues[0], svalues[2]/10, svalues[3]/10]
 
                     elif params.get('command')=='switchlight':
                         if sensor_type==SENSOR_TYPE_DIMMER or sensor_type == SENSOR_TYPE_SWITCH:
@@ -173,7 +181,7 @@ class ControllerEmu:
                                 return [0]
                             elif params.get('switchcmd') == 'On':
                                 return [1]
-                            elif params.get('switchcmd') == 'Set Level':
-                                return [int(params.get('level'))]
+                            elif params.get('Set%20Level'):
+                                return [int(params.get('Set%20Level'))]
 
         raise(Exception("Timeout while expecting mqtt json message"))

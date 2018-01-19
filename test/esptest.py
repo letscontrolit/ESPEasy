@@ -81,10 +81,15 @@ def run():
 
 
 ### auxillary test functions
-
 def test_in_range(value, min, max):
 
     if value < min or value > max:
         raise(Exception("Value {value} should be between {min} and {max}".format(value=value, min=min, max=max)))
 
     log.info("OK: value {value} is between {min} and {max}".format(value=value, min=min, max=max))
+
+def test_is(value, shouldbe):
+    if value!=shouldbe:
+        raise(Exception("Value {value} should be {shouldbe}".format(value=value, shouldbe=shouldbe)))
+
+    log.info("OK: Value is {value}".format(value=value, shouldbe=shouldbe))

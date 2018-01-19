@@ -192,6 +192,39 @@ class EspEasy:
         )
 
 
+    def device_p033(self, **kwargs):
+        self._node.log.info("Config dummy device "+str(kwargs))
+
+        self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
+            page="devices",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                TDNUM:33
+                TDN:
+                TDE:on
+                plugin_033_sensortype:{plugin_033_sensortype}
+                TDSD1:on
+                TDID1:{TDID1}
+                TDT:1
+                TDVN1:first
+                TDVD1:2
+                TDVN2:second
+                TDVD2:2
+                TDVN3:third
+                TDVD3:2
+                TDVN4:fourth
+                TDVD4:2
+                edit:1
+                page:1
+            """.format(**kwargs)
+        )
+
+
     def device_p036(self, **kwargs):
         self._node.log.info("Config framed oled p036 with "+str(kwargs))
 
