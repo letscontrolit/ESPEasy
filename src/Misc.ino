@@ -2384,26 +2384,29 @@ void ArduinoOTAInit()
 
 String getBearing(int degrees)
 {
-  const char* bearing[] = {
-    PSTR("N"),
-    PSTR("NNE"),
-    PSTR("NE"),
-    PSTR("ENE"),
-    PSTR("E"),
-    PSTR("ESE"),
-    PSTR("SE"),
-    PSTR("SSE"),
-    PSTR("S"),
-    PSTR("SSW"),
-    PSTR("SW"),
-    PSTR("WSW"),
-    PSTR("W"),
-    PSTR("WNW"),
-    PSTR("NW"),
-    PSTR("NNW")
+  const __FlashStringHelper* bearing[] = {
+    F("N"),
+    F("NNE"),
+    F("NE"),
+    F("ENE"),
+    F("E"),
+    F("ESE"),
+    F("SE"),
+    F("SSE"),
+    F("S"),
+    F("SSW"),
+    F("SW"),
+    F("WSW"),
+    F("W"),
+    F("WNW"),
+    F("NW"),
+    F("NNW")
   };
-
-    return(bearing[int(degrees/22.5)]);
+  int bearing_idx=int(degrees/22.5);
+  if (bearing_idx<0 || bearing_idx>=(int) (sizeof(bearing)/sizeof(bearing[0])))
+    return("");
+  else
+    return(bearing[bearing_idx]);
 
 }
 

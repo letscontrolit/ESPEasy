@@ -203,18 +203,31 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               root[F("svalue")] =  values.c_str();
               // root[F("svalue")] =  str;
               break;
-            case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
-              root[F("nvalue")] = 0;
-              values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
-              values += ";";
-              values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              values += ";0;";
-              values += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              values += ";0";
-              root[F("svalue")] =  values.c_str();
-              // values.toCharArray(str, 80);
-              // root[F("svalue")] =  str;
-              break;
+              case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
+                root[F("nvalue")] = 0;
+                values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+                values += ";";
+                values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+                values += ";0;";
+                values += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+                values += ";0";
+                root[F("svalue")] =  values.c_str();
+                // values.toCharArray(str, 80);
+                // root[F("svalue")] =  str;
+                break;
+              case SENSOR_TYPE_QUAD:
+                root[F("nvalue")] = 0;
+                values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
+                values += ";";
+                values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+                values += ";";
+                values += toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+                values += ";";
+                values += toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]);
+                root[F("svalue")] =  values.c_str();
+                // values.toCharArray(str, 80);
+                // root[F("svalue")] =  str;
+                break;
             case SENSOR_TYPE_SWITCH:
               root[F("command")] = String(F("switchlight"));
               if (UserVar[event->BaseVarIndex] == 0)
@@ -232,7 +245,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             case SENSOR_TYPE_WIND:                            // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust
               values  = toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
               values += ";";
-              values += getBearing(int(UserVar[event->BaseVarIndex] / 22.5));
+              values += getBearing(UserVar[event->BaseVarIndex]);
               values += ";";
               // Domoticz expects the wind speed in (m/s * 10)
               values += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
@@ -243,8 +256,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               // values.toCharArray(str, 80);
               // root["svalue"] =  str;
               break;
-            //FIXME: SENSOR_TYPE_QUAD missing? (like in C001)
-            
+
 
           }
 
