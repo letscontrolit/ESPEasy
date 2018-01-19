@@ -186,6 +186,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               values  = toString(UserVar[event->BaseVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[0]);
               values += ";";
               values += toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+              //FIXME: this should be the same as in C001?, instead of 0:
+              //       url += humStat(UserVar[event->BaseVarIndex + 1]);
               values += ";0";
               // values.toCharArray(str, 80);
               root[F("svalue")] =  values.c_str();
@@ -241,6 +243,9 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               // values.toCharArray(str, 80);
               // root["svalue"] =  str;
               break;
+            //FIXME: SENSOR_TYPE_QUAD missing? (like in C001)
+            
+
           }
 
           String json;

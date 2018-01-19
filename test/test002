@@ -33,18 +33,6 @@ def recv_http():
     test_in_range(results[0], -5,40)
 
 
-
-
-# @step
-# def powercycle():
-#     """test result on poweron"""
-#     node[0].powercycle()
-#     results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
-#     test_in_range(results[0], -5,40)
-#     results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
-#     test_in_range(results[0], -5,40)
-
-
 @step
 def prepare_mqtt():
     """switch to mqtt"""
@@ -59,6 +47,15 @@ def recv_mqtt():
     results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
     test_in_range(results[0], -5,40)
 
+
+@step
+def powercycle():
+    """test result on poweron"""
+    node[0].powercycle()
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1417)
+    test_in_range(results[0], -5,40)
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
+    test_in_range(results[0], -5,40)
 
 
 run()
