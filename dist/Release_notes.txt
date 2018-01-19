@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release v2.0-20180119 (since v2.0-20180118)
+-------------------------------------------------
+
+Release date: Fri Jan 19 05:00:18 CET 2018
+
+Edwin Eefting (2):
+      test suite domoticz mqtt + found few fixmes
+      test suite: added dht22
+
+
+-------------------------------------------------
 Changes in release v2.0-20180118 (since v2.0-20180116)
 -------------------------------------------------
 
