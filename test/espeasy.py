@@ -132,7 +132,7 @@ class EspEasy:
 
 
     def device_p004(self, **kwargs):
-        self._node.log.info("Config device plugin p004 "+str(kwargs))
+        self._node.log.info("Config ds18b20 with "+str(kwargs))
 
         self._node.http_post(
             twice=True, # needed for controllers and devices because of the way its implemented
@@ -160,8 +160,40 @@ class EspEasy:
             """.format(**kwargs)
         )
 
+    def device_p005(self, **kwargs):
+        self._node.log.info("Config DHT22 on D3 with "+str(kwargs))
+
+        self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
+            page="devices",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                TDNUM:5
+                TDN:
+                TDE:on
+                taskdevicepin1:0
+                plugin_005_dhttype:22
+                TDSD1:on
+                TDID1:{TDID1}
+                TDT:5
+                TDVN1:Temperature
+                TDF1:
+                TDVD1:2
+                TDVN2:Humidity
+                TDF2:
+                TDVD2:2
+                edit:1
+                page:1
+            """.format(**kwargs)
+        )
+
+
     def device_p036(self, **kwargs):
-        self._node.log.info("Config device plugin p036 "+str(kwargs))
+        self._node.log.info("Config framed oled p036 with "+str(kwargs))
 
         self._node.http_post(
             twice=True, # needed for controllers and devices because of the way its implemented

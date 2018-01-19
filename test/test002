@@ -15,36 +15,29 @@ from esptest import *
 
 
 @step
-def prepare_http():
-    """configure devices and controller"""
+def prepare_devices():
     node[0].reboot()
     node[0].pingserial()
+    espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=2001)
+    espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=2002)
+
+
+@step
+def test_domoticz_http():
     espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
-    espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=1417)
-    espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=1418)
-
-
-@step
-def recv_http():
-    """wait for http result"""
-    results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1417)
+    results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,2001)
     test_in_range(results[0], -5,40)
-    results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,1418)
+    results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,2002)
     test_in_range(results[0], -5,40)
 
 
+
 @step
-def prepare_mqtt():
-    """switch to mqtt"""
+def test_domoticz_mqtt():
     espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
-
-
-@step
-def recv_mqtt():
-    """wait for mqtt result"""
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1417)
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2001)
     test_in_range(results[0], -5,40)
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2002)
     test_in_range(results[0], -5,40)
 
 
@@ -52,9 +45,9 @@ def recv_mqtt():
 def powercycle():
     """test result on poweron"""
     node[0].powercycle()
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1417)
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2001)
     test_in_range(results[0], -5,40)
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,1418)
+    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2002)
     test_in_range(results[0], -5,40)
 
 
