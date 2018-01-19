@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180119 (since mega-20180118)
+-------------------------------------------------
+
+Release date: Fri Jan 19 05:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180118
+
+Edwin Eefting (2):
+      refactoring test suite controller stuff
+      test suite domoticz mqtt + found few fixmes
+
+jctual (1):
+      DHT plugin update (#736)
+
+
+-------------------------------------------------
 Changes in release mega-20180118 (since mega-20180117)
 -------------------------------------------------
 
