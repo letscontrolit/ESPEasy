@@ -4,20 +4,8 @@
 
 from espcore import *
 
-import time
 
 
-SENSOR_TYPE_SINGLE               =   1
-SENSOR_TYPE_TEMP_HUM             =   2
-SENSOR_TYPE_TEMP_BARO            =   3
-SENSOR_TYPE_TEMP_HUM_BARO        =   4
-SENSOR_TYPE_DUAL                 =   5
-SENSOR_TYPE_TRIPLE               =   6
-SENSOR_TYPE_QUAD                 =   7
-SENSOR_TYPE_SWITCH               =  10
-SENSOR_TYPE_DIMMER               =  11
-SENSOR_TYPE_LONG                 =  20
-SENSOR_TYPE_WIND                 =  21
 
 class EspEasy:
 
@@ -86,52 +74,10 @@ class EspEasy:
             """.format(**kwargs)
         )
 
-    def recv_domoticz_http(self, sensor_type, idx, timeout=60):
-        """recv a domoticz http request from espeasy, and convert back to espeasy values"""
 
-        start_time=time.time()
-        logging.getLogger("domoticz http").info("Waiting for request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
-        # read and parse http requests
-        while not http_requests.empty():
-            http_requests.get()
 
-        while time.time()-start_time<timeout:
-            request=http_requests.get(block=True, timeout=timeout)
-            if request.path == "/json.htm" and int(request.params.get('idx'))==idx:
-                if request.params.get('param')=='udevice':
-                    svalues_str=request.params.get('svalue').split(";")
-                    svalues=[]
-                    for svalue in svalues_str:
-                        svalues.append(float(svalue))
 
-                    if sensor_type==SENSOR_TYPE_SINGLE and len(svalues)==1:
-                        return svalues
-                    elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
-                        return svalues
-                    elif sensor_type==SENSOR_TYPE_HUM and len(svalues)==3:
-                        return svalues
-                    elif sensor_type==SENSOR_TYPE_BARO and len(svalues)==5:
-                        return [svalues[0], svalues[3]]
-                    elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
-                        return svalues
-                    elif sensor_type==SENSOR_TYPE_HUM_BARO and len(svalues)==5:
-                        return [svalues[0],svalues[2], svalues[3]]
-                    elif sensor_type==SENSOR_TYPE_QUAD and len(svalues)==4:
-                        return svalues
-                    elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==5:
-                        return [svalues[0], svalues[2], svalues[3]]
-
-                elif request.params.get('param')=='switchlight':
-                    if sensor_type==SENSOR_TYPE_DIMMER or sensor_type == SENSOR_TYPE_SWITCH:
-                        if request.params.get('switchcmd') == 'Off':
-                            return [0]
-                        elif request.params.get('switchcmd') == 'On':
-                            return [1]
-                        elif request.params.get('switchcmd') == 'Set Level':
-                            return [int(request.params.get('level'))]
-
-        raise(Exception("Timeout"))
 
 
 
