@@ -37,7 +37,8 @@ controller=ControllerEmu()
 ### keep test state, so we can skip tests.
 state={
     'module': None,
-    'name': None
+    'name': None,
+    'title':""
 }
 with shelve.open("test.state") as shelve_db:
     if 'state' in shelve_db:
@@ -45,14 +46,17 @@ with shelve.open("test.state") as shelve_db:
         state=shelve_db['state']
 
 
-def step(step):
-    """add test step. test can resume from every test-step"""
-    if state['module'] and ( state['module'] != step.__module__ or state['name'] != step.__name__):
-        log.debug("Skipping step "+step.__module__ + "." + step.__name__)
-    else:
-        steps.append(step)
-        # add the rest of the steps as well
-        state['module']=None
+def step(title=""):
+    def step_dec(step):
+        """add test step. test can resume from every test-step"""
+        if state['module'] and ( state['module'] != step.__module__ or state['name'] != step.__name__ or state['title'] != title):
+            log.debug("Skipping step "+title+": "+step.__module__ + "." + step.__name__ )
+        else:
+            step.title=title
+            steps.append(step)
+            # add the rest of the steps as well
+            state['module']=None
+    return(step_dec)
 
 
 ### run all the tests
@@ -61,11 +65,12 @@ def run():
 
     for step in steps:
         print()
-        log.info("*** Starting "+step.__module__ + "." + step.__name__ +": "+str(step.__doc__))
+        log.info("*** Starting "+step.title+": "+step.__module__ + "." + step.__name__ )
 
         # store this step so we may resume later
         state['module']=step.__module__
         state['name']=step.__name__
+        state['title']=step.title
         with shelve.open("test.state") as shelve_db:
             shelve_db['state']=state
 

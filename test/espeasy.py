@@ -25,7 +25,7 @@ class EspEasy:
         )
 
 
-    def controller_domoticz_mqtt(self, **kwargs):
+    def controller_domoticz_mqtt(self, controllerip=config.mqtt_broker, **kwargs):
         """config controller to use domoticz via mqtt"""
 
         self._node.log.info("Configuring controller domoticz mqtt "+str(kwargs))
@@ -47,7 +47,7 @@ class EspEasy:
                 controllersubscribe:domoticz/out
                 controllerpublish:domoticz/in
                 controllerenabled:on
-            """.format(**kwargs)
+            """.format(controllerip=controllerip,**kwargs)
         )
 
 

@@ -9,147 +9,134 @@ from esptest import *
 # - sending all data types for all controllers, using dummy devices
 
 
-@step
+@step()
 def prepare():
     node[0].reboot()
     node[0].pingserial()
-    espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
+    node[0].serialcmd("resetFlashWriteCounter")
+
+
+#traverse most controllers
+for ( title, controller_config, controller_recv ) in [
+        ("Domoticz HTTP", espeasy[0].controller_domoticz_http, controller.recv_domoticz_http ),
+        ("Domoticz MQTT", espeasy[0].controller_domoticz_mqtt, controller.recv_domoticz_mqtt )]:
+
+
+    @step(title)
+    def config_controller():
+        controller_config(index=1)
 
 
 
-@step
-def single():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_SINGLE)
-    node[0].serialcmd("TaskValueSet 1,1,5001")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,5000)
-    test_is(results, [ 5001 ])
+    @step(title)
+    def single():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_SINGLE)
+        node[0].serialcmd("TaskValueSet 1,1,5001")
+        results=controller_recv(SENSOR_TYPE_SINGLE,5000)
+        test_is(results, [ 5001 ])
 
 
-@step
-def long():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_LONG)
-    a=50025003
-    #long is actually quite hackish in espeasy: since uservar only supports floats, we use 2 uservars and some bitshifting. the controller will see just one value
-    node[0].serialcmd("TaskValueSet 1,1,{0}".format(a & 0xffff))
-    node[0].serialcmd("TaskValueSet 1,2,{0}".format(a>>16))
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_LONG,5000)
-    test_is(results, [ a ])
+    @step(title)
+    def long():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_LONG)
+        a=50025003
+        #long is actually quite hackish in espeasy: since uservar only supports floats, we use 2 uservars and some bitshifting. the controller will see just one value
+        node[0].serialcmd("TaskValueSet 1,1,{0}".format(a & 0xffff))
+        node[0].serialcmd("TaskValueSet 1,2,{0}".format(a>>16))
+        results=controller_recv(SENSOR_TYPE_LONG,5000)
+        test_is(results, [ a ])
 
 
-@step
-def dual():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_DUAL)
-    node[0].serialcmd("TaskValueSet 1,1,5004")
-    node[0].serialcmd("TaskValueSet 1,2,5005")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_DUAL,5000)
-    test_is(results, [ 5004, 5005 ])
+    @step(title)
+    def dual():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_DUAL)
+        node[0].serialcmd("TaskValueSet 1,1,5004")
+        node[0].serialcmd("TaskValueSet 1,2,5005")
+        results=controller_recv(SENSOR_TYPE_DUAL,5000)
+        test_is(results, [ 5004, 5005 ])
 
 
-@step
-def temp_hum():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TEMP_HUM)
-    node[0].serialcmd("TaskValueSet 1,1,5006")
-    node[0].serialcmd("TaskValueSet 1,2,5007")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_TEMP_HUM,5000)
-    test_is(results, [ 5006, 5007 ])
+    @step(title)
+    def temp_hum():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TEMP_HUM)
+        node[0].serialcmd("TaskValueSet 1,1,5006")
+        node[0].serialcmd("TaskValueSet 1,2,5007")
+        results=controller_recv(SENSOR_TYPE_TEMP_HUM,5000)
+        test_is(results, [ 5006, 5007 ])
 
 
-@step
-def temp_baro():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TEMP_BARO)
-    node[0].serialcmd("TaskValueSet 1,1,5008")
-    node[0].serialcmd("TaskValueSet 1,2,5009")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_TEMP_BARO,5000)
-    test_is(results, [ 5008, 5009 ])
+    @step(title)
+    def temp_baro():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TEMP_BARO)
+        node[0].serialcmd("TaskValueSet 1,1,5008")
+        node[0].serialcmd("TaskValueSet 1,2,5009")
+        results=controller_recv(SENSOR_TYPE_TEMP_BARO,5000)
+        test_is(results, [ 5008, 5009 ])
 
 
-@step
-def triple():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TRIPLE)
-    node[0].serialcmd("TaskValueSet 1,1,5010")
-    node[0].serialcmd("TaskValueSet 1,2,5011")
-    node[0].serialcmd("TaskValueSet 1,3,5012")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_TRIPLE,5000)
-    test_is(results, [ 5010, 5011, 5012 ])
+    @step(title)
+    def triple():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TRIPLE)
+        node[0].serialcmd("TaskValueSet 1,1,5010")
+        node[0].serialcmd("TaskValueSet 1,2,5011")
+        node[0].serialcmd("TaskValueSet 1,3,5012")
+        results=controller_recv(SENSOR_TYPE_TRIPLE,5000)
+        test_is(results, [ 5010, 5011, 5012 ])
 
 
-@step
-def temp_hum_baro():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TEMP_HUM_BARO)
-    node[0].serialcmd("TaskValueSet 1,1,5013")
-    node[0].serialcmd("TaskValueSet 1,2,5014")
-    node[0].serialcmd("TaskValueSet 1,3,5015")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_TEMP_HUM_BARO,5000)
-    test_is(results, [ 5013, 5014, 5015 ])
+    @step(title)
+    def temp_hum_baro():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_TEMP_HUM_BARO)
+        node[0].serialcmd("TaskValueSet 1,1,5013")
+        node[0].serialcmd("TaskValueSet 1,2,5014")
+        node[0].serialcmd("TaskValueSet 1,3,5015")
+        results=controller_recv(SENSOR_TYPE_TEMP_HUM_BARO,5000)
+        test_is(results, [ 5013, 5014, 5015 ])
 
 
-@step
-def quad():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_QUAD)
-    node[0].serialcmd("TaskValueSet 1,1,5016")
-    node[0].serialcmd("TaskValueSet 1,2,5017")
-    node[0].serialcmd("TaskValueSet 1,3,5018")
-    node[0].serialcmd("TaskValueSet 1,4,5019")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_QUAD,5000)
-    test_is(results, [ 5016, 5017, 5018, 5019 ])
+    @step(title)
+    def quad():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_QUAD)
+        node[0].serialcmd("TaskValueSet 1,1,5016")
+        node[0].serialcmd("TaskValueSet 1,2,5017")
+        node[0].serialcmd("TaskValueSet 1,3,5018")
+        node[0].serialcmd("TaskValueSet 1,4,5019")
+        results=controller_recv(SENSOR_TYPE_QUAD,5000)
+        test_is(results, [ 5016, 5017, 5018, 5019 ])
 
 
-@step
-def switch():
-    espeasy[0].device_p033(index=1, TDID1=5020, plugin_033_sensortype=SENSOR_TYPE_SWITCH)
-    node[0].serialcmd("TaskValueSet 1,1,0")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SWITCH,5020)
-    test_is(results, [ 0 ])
-    node[0].serialcmd("TaskValueSet 1,1,1")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SWITCH,5020)
-    test_is(results, [ 1 ])
+    @step(title)
+    def switch():
+        espeasy[0].device_p033(index=1, TDID1=5020, plugin_033_sensortype=SENSOR_TYPE_SWITCH)
+        node[0].serialcmd("TaskValueSet 1,1,0")
+        results=controller_recv(SENSOR_TYPE_SWITCH,5020)
+        test_is(results, [ 0 ])
+        node[0].serialcmd("TaskValueSet 1,1,1")
+        results=controller_recv(SENSOR_TYPE_SWITCH,5020)
+        test_is(results, [ 1 ])
 
 
-@step
-def dimmer():
-    espeasy[0].device_p033(index=1, TDID1=5021, plugin_033_sensortype=SENSOR_TYPE_DIMMER)
-    node[0].serialcmd("TaskValueSet 1,1,0")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_DIMMER,5021)
-    test_is(results, [ 0 ])
-    node[0].serialcmd("TaskValueSet 1,1,25")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_DIMMER,5021)
-    test_is(results, [ 25 ])
+    @step(title)
+    def dimmer():
+        espeasy[0].device_p033(index=1, TDID1=5021, plugin_033_sensortype=SENSOR_TYPE_DIMMER)
+        node[0].serialcmd("TaskValueSet 1,1,0")
+        results=controller_recv(SENSOR_TYPE_DIMMER,5021)
+        test_is(results, [ 0 ])
+        node[0].serialcmd("TaskValueSet 1,1,25")
+        results=controller_recv(SENSOR_TYPE_DIMMER,5021)
+        test_is(results, [ 25 ])
 
 
 
-@step
-def wind():
-    espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_WIND)
-    node[0].serialcmd("TaskValueSet 1,1,5022")
-    node[0].serialcmd("TaskValueSet 1,2,5023")
-    node[0].serialcmd("TaskValueSet 1,3,5024")
-    results=controller.recv_domoticz_mqtt(SENSOR_TYPE_WIND,5000)
-    test_is(results, [ 5022, 5023, 5024 ])
+    @step(title)
+    def wind():
+        espeasy[0].device_p033(index=1, TDID1=5000, plugin_033_sensortype=SENSOR_TYPE_WIND)
+        node[0].serialcmd("TaskValueSet 1,1,5022")
+        node[0].serialcmd("TaskValueSet 1,2,5023")
+        node[0].serialcmd("TaskValueSet 1,3,5024")
+        results=controller_recv(SENSOR_TYPE_WIND,5000)
+        test_is(results, [ 5022, 5023, 5024 ])
 
 
-# @step
-# def prepare():
-#     node[0].reboot()
-#     node[0].pingserial()
-#     espeasy[0].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
-#     espeasy[0].device_p005(index=1, TDID1=4001)
-# #
-#
-# @step
-# def test():
-#     results=controller.recv_domoticz_mqtt(SENSOR_TYPE_TEMP_HUM,4001)
-#     test_in_range(results[0], -5,40)
-#     test_in_range(results[1], 10,80)
-
-#
-# funs=[]
-# for a in range(0,5):
-#     def bla():
-#         print("bla"+str(a))
-#     bla.__name__="name"+str(a)
-#     funs.append(bla)
-#
-# for a in range(0,5):
-#     print(funs[a].__name__)
 
 run()
