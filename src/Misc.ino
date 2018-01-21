@@ -1366,29 +1366,81 @@ String parseTemplate(String &tmpString, byte lineSize)
       LoadTaskSettings(currentTaskIndex);
   }
 
-  // replace other system variables like %sysname%, %systime%, %ip%
-  newString.replace(F("%sysname%"), Settings.Name);
-
-  newString.replace(F("%systime%"), getTimeString(':'));
-
-  newString.replace(F("%uptime%"), String(wdcounter / 2));
-
-#if FEATURE_ADC_VCC
-  newString.replace(F("%vcc%"), String(vcc));
-#endif
-
-  IPAddress ip = WiFi.localIP();
-  char strIP[20];
-  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  newString.replace(F("%ip%"), strIP);
-
-  newString.replace("%sysload%", String(100 - (100 * loopCounterLast / loopCounterMax)));
+  parseSystemVariables(newString, false);
 
   // padding spaces
   while (newString.length() < lineSize)
     newString += " ";
 
   return newString;
+}
+
+
+/********************************************************************************************\
+// replace other system variables like %sysname%, %systime%, %ip%
+  \*********************************************************************************************/
+
+void repl(const String& key, const String& val, String& s, boolean useURLencode)
+{
+  if (useURLencode) {
+    s.replace(key, URLEncode(val.c_str()));
+  } else {
+    s.replace(key, val);
+  }
+}
+
+void parseSystemVariables(String& s, boolean useURLencode)
+{
+  #if FEATURE_ADC_VCC
+    repl(F("%vcc%"), String(vcc), s, useURLencode);
+  #endif
+  repl(F("%CR%"), F("\r"), s, useURLencode);
+  repl(F("%LF%"), F("\n"), s, useURLencode);
+  repl(F("%ip%"),WiFi.localIP().toString(), s, useURLencode);
+  repl(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)), s, useURLencode);
+  repl(F("%sysname%"), Settings.Name, s, useURLencode);
+  repl(F("%systime%"), getTimeString(':'), s, useURLencode);
+  char valueString[5];
+  sprintf_P(valueString, PSTR("%02d"), hour());
+  repl(F("%syshour%"), valueString, s, useURLencode);
+
+  sprintf_P(valueString, PSTR("%02d"), minute());
+  repl(F("%sysmin%"),  valueString, s, useURLencode);
+
+  sprintf_P(valueString, PSTR("%02d"), second());
+  repl(F("%syssec%"),  valueString, s, useURLencode);
+
+  sprintf_P(valueString, PSTR("%02d"), day());
+  repl(F("%sysday%"),  valueString, s, useURLencode);
+
+  sprintf_P(valueString, PSTR("%02d"), month());
+  repl(F("%sysmonth%"),valueString, s, useURLencode);
+
+  sprintf_P(valueString, PSTR("%04d"), year());
+  repl(F("%sysyear%"), valueString, s, useURLencode);
+
+  sprintf_P(valueString, PSTR("%02d"), year()%100);
+  repl(F("%sysyears%"),valueString, s, useURLencode);
+
+  repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+  repl(F("%uptime%"), String(wdcounter / 2), s, useURLencode);
+  repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
+  repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
+  repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
+  repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+}
+
+void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
+{
+  repl(F("%id%"), String(event->idx), s, useURLencode);
+  if (event->sensorType == SENSOR_TYPE_LONG)
+    repl(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)), s, useURLencode);
+  else {
+    repl(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[0]), s, useURLencode);
+    repl(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]), s, useURLencode);
+    repl(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]), s, useURLencode);
+    repl(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]), s, useURLencode);
+  }
 }
 
 
