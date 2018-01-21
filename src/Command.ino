@@ -197,6 +197,14 @@ void ExecuteCommand(byte source, const char *Line)
     taskClear(Par1 - 1, true);
   }
 
+  //quickly clear all tasks, without saving (used by test suite)
+  if (strcasecmp_P(Command, PSTR("TaskClearAll")) == 0)
+  {
+    success = true;
+    for (byte t=0; t<TASKS_MAX; t++)
+      taskClear(t, false);
+  }
+
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
     success = true;

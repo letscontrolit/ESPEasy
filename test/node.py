@@ -184,16 +184,19 @@ class Node():
 
 
 
-    def http_post(self, page, params,  data=None, twice=False):
+    def http_post(self, page, params=None,  data=None, twice=False):
         """http post to espeasy webinterface. (GET if data is None)"""
 
         # transform easy copy/pastable chromium data into a dict
 
-        params_dict={}
-        for line in params.split("\n"):
-            m=re.match(" *(.*?):(.*)",line)
-            if (m):
-                params_dict[m.group(1)]=m.group(2)
+        if params:
+            params_dict={}
+            for line in params.split("\n"):
+                m=re.match(" *(.*?):(.*)",line)
+                if (m):
+                    params_dict[m.group(1)]=m.group(2)
+        else:
+            params_dict=None
 
         if data:
             data_dict={}

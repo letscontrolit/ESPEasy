@@ -70,3 +70,7 @@ def powercycle():
     test_in_range(results[0], -5,40)
     results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2002)
     test_in_range(results[0], -5,40)
+
+
+if __name__=='__main__':
+    completed()

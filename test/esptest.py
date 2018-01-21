@@ -66,6 +66,7 @@ def step(title=""):
 
             #run the test. if there is an exception we resume this test the next time
             test()
+            log.info("Completed step")
 
 
 
@@ -117,4 +118,11 @@ def test_is(value, shouldbe):
 def pause(seconds):
     log.info("Waiting for {seconds} seconds".format(seconds=seconds))
     time.sleep(seconds)
-    
+
+
+
+def completed():
+    if os.path.exists("test.state"):
+        os.unlink("test.state")
+
+    log.info("*** All tests completed ***")

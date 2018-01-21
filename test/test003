@@ -35,3 +35,7 @@ espeasy[0].post_device(1, data="""
         edit:1
         page:1
 """)
+
+
+if __name__=='__main__':
+    completed()

@@ -136,3 +136,6 @@ for ( title, controller_config, controller_recv ) in [
         espeasy[0].device_p033(index=1, TDID1=5110, plugin_033_sensortype=SENSOR_TYPE_WIND)
         results=controller_recv(SENSOR_TYPE_WIND,5110)
         test_is(results, [ 5022, 5023, 5024 ])
+
+if __name__=='__main__':
+    completed()
