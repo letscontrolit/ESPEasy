@@ -4381,6 +4381,9 @@ void handle_sysinfo() {
   #ifdef PLUGIN_BUILD_DEV
     reply += F(" [Development]");
   #endif
+  
+  reply += F("<TR><TD>CRC<TD>");
+  reply += String(thisBinaryCrc,HEX);
 
   reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
