@@ -53,6 +53,7 @@ class ControllerEmu:
 
     def clear_mqtt(self):
         """clear queue"""
+        time.sleep(1)
         while not self.mqtt_messages.empty():
             self.mqtt_messages.get()
 
@@ -126,13 +127,20 @@ class ControllerEmu:
             self.linebased_lines.get()
 
 
+    def clear(self, sleep=0):
+        self.clear_http()
+        self.clear_mqtt()
+        self.clear_linebased()
+        time.sleep(sleep)
+
+
     def recv_domoticz_http(self, sensor_type, idx, timeout=60):
         """recv a domoticz http request from espeasy, and convert back to espeasy values"""
 
         start_time=time.time()
         self.log.info("Waiting for domoticz http request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
-        self.clear_http()
+        # self.clear_http()
 
         # read and parse http requests
         while time.time()-start_time<timeout:
@@ -188,7 +196,7 @@ class ControllerEmu:
         start_time=time.time()
         self.log.info("Waiting for domoticz mqtt request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
-        self.clear_mqtt()
+        # self.clear_mqtt()
 
         # read and parse mqtt requests
         while time.time()-start_time<timeout:

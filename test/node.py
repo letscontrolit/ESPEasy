@@ -205,9 +205,11 @@ class Node():
             data_dict=None
 
 
+        url=self._url+page
+        self.log.debug("HTTP POST {url} with params {params} and data {data}".format(url=url,params=params,data=data))
 
         r=requests.post(
-            self._url+page,
+            url,
             params=params_dict,
             data=data_dict
         )

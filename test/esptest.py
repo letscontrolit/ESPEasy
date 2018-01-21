@@ -112,3 +112,9 @@ def test_is(value, shouldbe):
         raise(Exception("Value {value} should be {shouldbe}".format(value=value, shouldbe=shouldbe)))
 
     log.info("OK: Value is {value}".format(value=value, shouldbe=shouldbe))
+
+
+def pause(seconds):
+    log.info("Waiting for {seconds} seconds".format(seconds=seconds))
+    time.sleep(seconds)
+    
