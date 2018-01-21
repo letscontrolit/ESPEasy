@@ -4381,6 +4381,9 @@ void handle_sysinfo() {
   #ifdef PLUGIN_BUILD_DEV
     reply += F(" [Development]");
   #endif
+  
+  reply += F("<TR><TD>Md5<TD>");
+  for (byte i = 0; i<16; i++)   reply += String(thisBinaryMd5[i],HEX);
 
   reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
