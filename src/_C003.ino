@@ -57,8 +57,8 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         url += toString(UserVar[event->BaseVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[0]);
         url += "\n";
 
-        strcpy_P(log, PSTR("TELNT: Sending enter"));
-        addLog(LOG_LEVEL_ERROR, log);
+        // strcpy_P(log, PSTR("TELNT: Sending enter"));
+        // addLog(LOG_LEVEL_ERROR, log);
         client.print(" \n");
 
         unsigned long timer = millis() + 200;
@@ -77,20 +77,20 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
           {
             success = true;
             strcpy_P(log, PSTR("TELNT: Password request ok"));
-            addLog(LOG_LEVEL_ERROR, log);
+            addLog(LOG_LEVEL_DEBUG, log);
           }
           delay(1);
         }
 
         strcpy_P(log, PSTR("TELNT: Sending pw"));
-        addLog(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_DEBUG, log);
         client.println(SecuritySettings.ControllerPassword[event->ControllerIndex]);
         delay(100);
         while (client.available())
           client.read();
 
         strcpy_P(log, PSTR("TELNT: Sending cmd"));
-        addLog(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_DEBUG, log);
         client.print(url);
         delay(10);
         while (client.available())
