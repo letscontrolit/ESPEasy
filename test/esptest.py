@@ -26,7 +26,7 @@ for n in config.nodes:
     espeasy.append(EspEasy(node[-1]))
 
 
-steps=[]
+# steps=[]
 
 log=logging.getLogger("esptest")
 
@@ -35,6 +35,7 @@ log=logging.getLogger("esptest")
 controller=ControllerEmu()
 
 ### keep test state, so we can skip tests.
+global state
 state={
     'module': None,
     'name': None,
@@ -42,47 +43,60 @@ state={
 }
 with shelve.open("test.state") as shelve_db:
     if 'state' in shelve_db:
-        global state
         state=shelve_db['state']
 
 
 def step(title=""):
-    def step_dec(step):
+    def step_dec(test):
         """add test step. test can resume from every test-step"""
-        if state['module'] and ( state['module'] != step.__module__ or state['name'] != step.__name__ or state['title'] != title):
-            log.debug("Skipping step "+title+": "+step.__module__ + "." + step.__name__ )
+        if state['module'] and ( state['module'] != test.__module__ or state['name'] != test.__name__ or state['title'] != title):
+            log.debug("Skipping test "+title+": "+test.__module__ + "." + test.__name__ )
         else:
-            step.title=title
-            steps.append(step)
-            # add the rest of the steps as well
             state['module']=None
+            print()
+            log.info("*** Starting "+title+": "+test.__module__ + "." + test.__name__ )
+
+            # store this test so we may resume later
+            with shelve.open("test.state") as shelve_db:
+                shelve_db['state']={
+                    'module': test.__module__,
+                    'name': test.__name__,
+                    'title': title
+                }
+
+            #run the test. if there is an exception we resume this test the next time
+            test()
+
+
+
+
     return(step_dec)
 
 
-### run all the tests
-def run():
-    """run all tests"""
-
-    for step in steps:
-        print()
-        log.info("*** Starting "+step.title+": "+step.__module__ + "." + step.__name__ )
-
-        # store this step so we may resume later
-        state['module']=step.__module__
-        state['name']=step.__name__
-        state['title']=step.title
-        with shelve.open("test.state") as shelve_db:
-            shelve_db['state']=state
-
-        #run the step. if there is an exception we resume this step the next time
-        step()
-
-
-        # log.info("Completed step")
-
-    # all Completed
-    os.unlink("test.state")
-    log.info("*** All tests complete ***")
+# ### run all the tests
+# def run():
+#     """run all tests"""
+#
+#     for step in steps:
+#         print()
+#         log.info("*** Starting "+step.title+": "+step.__module__ + "." + step.__name__ )
+#
+#         # store this step so we may resume later
+#         state['module']=step.__module__
+#         state['name']=step.__name__
+#         state['title']=step.title
+#         with shelve.open("test.state") as shelve_db:
+#             shelve_db['state']=state
+#
+#         #run the step. if there is an exception we resume this step the next time
+#         step()
+#
+#
+#         # log.info("Completed step")
+#
+#     # all Completed
+#     os.unlink("test.state")
+#     log.info("*** All tests complete ***")
 
 
 ### auxillary test functions

@@ -8,7 +8,6 @@ from esptest import *
 # tests:
 # - sending all data types for all controllers, using dummy devices
 
-
 @step()
 def prepare():
     node[0].reboot()
@@ -18,8 +17,9 @@ def prepare():
 
 #traverse most controllers
 for ( title, controller_config, controller_recv ) in [
+        ("Domoticz MQTT", espeasy[0].controller_domoticz_mqtt, controller.recv_domoticz_mqtt ),
         ("Domoticz HTTP", espeasy[0].controller_domoticz_http, controller.recv_domoticz_http ),
-        ("Domoticz MQTT", espeasy[0].controller_domoticz_mqtt, controller.recv_domoticz_mqtt )]:
+    ]:
 
 
     @step(title)
@@ -136,7 +136,3 @@ for ( title, controller_config, controller_recv ) in [
         node[0].serialcmd("TaskValueSet 1,3,5024")
         results=controller_recv(SENSOR_TYPE_WIND,5000)
         test_is(results, [ 5022, 5023, 5024 ])
-
-
-
-run()

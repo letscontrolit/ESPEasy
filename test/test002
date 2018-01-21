@@ -11,7 +11,7 @@ from esptest import *
 # - correct values are send to domoticz via mqtt
 # - test if powercycle value is valid (https://github.com/letscontrolit/ESPEasy/issues/719)
 
-# espeasy[0].controller_thingspeak(index=1, controllerip=config.http_server, controllerport=config.http_port)
+# espeasy[0].controller_thingspeak(index=1, controllerip=config.test_server, controllerport=config.http_port)
 
 
 @step
@@ -24,7 +24,7 @@ def prepare_devices():
 
 @step
 def test_domoticz_http():
-    espeasy[0].controller_domoticz_http(index=1, controllerip=config.http_server, controllerport=config.http_port)
+    espeasy[0].controller_domoticz_http(index=1, controllerip=config.test_server, controllerport=config.http_port)
     results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,2001)
     test_in_range(results[0], -5,40)
     results=controller.recv_domoticz_http(SENSOR_TYPE_SINGLE,2002)

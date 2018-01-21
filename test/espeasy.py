@@ -25,7 +25,7 @@ class EspEasy:
         )
 
 
-    def controller_domoticz_mqtt(self, controllerip=config.mqtt_broker, **kwargs):
+    def controller_domoticz_mqtt(self, controllerip=config.mqtt_broker, controllerport=config.mqtt_port, **kwargs):
         """config controller to use domoticz via mqtt"""
 
         self._node.log.info("Configuring controller domoticz mqtt "+str(kwargs))
@@ -41,17 +41,17 @@ class EspEasy:
                 protocol:2
                 usedns:0
                 controllerip:{controllerip}
-                controllerport:1883
+                controllerport:{controllerport}
                 controlleruser:
                 controllerpassword:
                 controllersubscribe:domoticz/out
                 controllerpublish:domoticz/in
                 controllerenabled:on
-            """.format(controllerip=controllerip,**kwargs)
+            """.format(controllerip=controllerip, controllerport=controllerport, **kwargs)
         )
 
 
-    def controller_domoticz_http(self, **kwargs):
+    def controller_domoticz_http(self, controllerip=config.test_server, controllerport=config.http_port, **kwargs):
         """config controller to use domoticz via http"""
 
         self._node.log.info("Configuring controller domoticz http "+str(kwargs))
@@ -71,10 +71,31 @@ class EspEasy:
                 controlleruser:
                 controllerpassword:
                 controllerenabled:on
-            """.format(**kwargs)
+            """.format(controllerip=controllerip, controllerport=controllerport, **kwargs)
         )
 
 
+    def controller_nodo(self, controllerip=config.test_server, controllerport=config.linebased_port, **kwargs):
+        """config controller to use nodo"""
+
+        self._node.log.info("Configuring controller nodo "+str(kwargs))
+        self._node.http_post(
+            twice=True, # needed for controllers and devices because of the way its implemented
+            page="controllers",
+
+            params="""
+                index:{index}
+            """.format(**kwargs),
+
+            data="""
+                protocol:3
+                usedns:0
+                controllerip:{controllerip}
+                controllerport:{controllerport}
+                controllerpassword:
+                controllerenabled:on
+            """.format(controllerip=controllerip, controllerport=controllerport,**kwargs)
+        )
 
 
 
