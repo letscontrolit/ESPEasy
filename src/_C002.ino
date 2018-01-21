@@ -44,81 +44,88 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         // char json[512];
         // json[0] = 0;
         // event->String2.toCharArray(json, 512);
+        // Find first enabled controller index with this protocol
+        byte ControllerID = CONTROLLER_MAX;
+        for (byte i=0; i < CONTROLLER_MAX; i++) {
+          if (Settings.Protocol[i] == CPLUGIN_ID_002 && Settings.ControllerEnabled[i]) {
+            ControllerID = i;
+          }
+        }
+        if (ControllerID < CONTROLLER_MAX) {
+          StaticJsonBuffer<512> jsonBuffer;
+          JsonObject& root = jsonBuffer.parseObject(event->String2.c_str());
+          if (root.success())
+          {
+            unsigned int idx = root[F("idx")];
+            float nvalue = root[F("nvalue")];
+            long nvaluealt = root[F("nvalue")];
+            //const char* name = root["name"]; // Not used
+            //const char* svalue = root["svalue"]; // Not used
+            const char* svalue1 = root[F("svalue1")];
+            //const char* svalue2 = root["svalue2"]; // Not used
+            //const char* svalue3 = root["svalue3"]; // Not used
+            const char* switchtype = root[F("switchType")]; // Expect "On/Off" or "dimmer"
+            if (nvalue == 0)
+              nvalue = nvaluealt;
+            if ((int)switchtype == 0)
+              switchtype = "?";
 
-        StaticJsonBuffer<512> jsonBuffer;
-        JsonObject& root = jsonBuffer.parseObject(event->String2.c_str());
-
-        if (root.success())
-        {
-          unsigned int idx = root[F("idx")];
-          float nvalue = root[F("nvalue")];
-          long nvaluealt = root[F("nvalue")];
-          //const char* name = root["name"]; // Not used
-          //const char* svalue = root["svalue"]; // Not used
-          const char* svalue1 = root[F("svalue1")];
-          //const char* svalue2 = root["svalue2"]; // Not used
-          //const char* svalue3 = root["svalue3"]; // Not used
-          const char* switchtype = root[F("switchType")]; // Expect "On/Off" or "dimmer"
-          if (nvalue == 0)
-            nvalue = nvaluealt;
-          if ((int)switchtype == 0)
-            switchtype = "?";
-
-          for (byte x = 0; x < TASKS_MAX; x++) {
-            // We need the index of the controller we are: 0-CONTROLLER_MAX
-            byte ControllerID = 0;
-            for (byte i=0; i < CONTROLLER_MAX; i++)
-            {
-              if (Settings.Protocol[i] == CPLUGIN_ID_002) { ControllerID = i; }
-            }
-            if (Settings.TaskDeviceID[ControllerID][x] == idx) // get idx for our controller index
-            {
-              if (Settings.TaskDeviceNumber[x] == 1) // temp solution, if input switch, update state
-              {
-                String action = F("inputSwitchState,");
-                action += x;
-                action += ",";
-                action += nvalue;
-                struct EventStruct TempEvent;
-                parseCommandString(&TempEvent, action);
-                PluginCall(PLUGIN_WRITE, &TempEvent, action);
-              }
-              if (Settings.TaskDeviceNumber[x] == 29) // temp solution, if plugin 029, set gpio
+            for (byte x = 0; x < TASKS_MAX; x++) {
+              // We need the index of the controller we are: 0-CONTROLLER_MAX
+              if (Settings.TaskDeviceEnabled[x] && Settings.TaskDeviceID[ControllerID][x] == idx) // get idx for our controller index
               {
                 String action = "";
-                int baseVar = x * VARS_PER_TASK;
-                struct EventStruct TempEvent;
-                if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
-                {
-                  int pwmValue = UserVar[baseVar];
-                  action = F("pwm,");
-                  action += Settings.TaskDevicePin1[x];
-                  action += ",";
-                  switch ((int)nvalue)
+                switch (Settings.TaskDeviceNumber[x]) {
+                  case 1: // temp solution, if input switch, update state
                   {
-                    case 0:
-                      pwmValue = 0;
-                      break;
-                    case 1:
-                      pwmValue = UserVar[baseVar];
-                      break;
-                    case 2:
-                      pwmValue = 10 * atol(svalue1);
-                      UserVar[baseVar] = pwmValue;
-                      break;
+                    String action = F("inputSwitchState,");
+                    action += x;
+                    action += ",";
+                    action += nvalue;
+                    break;
                   }
-                  action += pwmValue;
+                  case 29:  // temp solution, if plugin 029, set gpio
+                  {
+                    String action = "";
+                    int baseVar = x * VARS_PER_TASK;
+                    struct EventStruct TempEvent;
+                    if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
+                    {
+                      int pwmValue = UserVar[baseVar];
+                      action = F("pwm,");
+                      action += Settings.TaskDevicePin1[x];
+                      action += ",";
+                      switch ((int)nvalue)
+                      {
+                        case 0:
+                          pwmValue = 0;
+                          break;
+                        case 1:
+                          pwmValue = UserVar[baseVar];
+                          break;
+                        case 2:
+                          pwmValue = 10 * atol(svalue1);
+                          UserVar[baseVar] = pwmValue;
+                          break;
+                      }
+                      action += pwmValue;
+                    } else {
+                      UserVar[baseVar] = nvalue;
+                      action = F("gpio,");
+                      action += Settings.TaskDevicePin1[x];
+                      action += ",";
+                      action += nvalue;
+                    }
+                    break;
+                  }
+                  default:
+                    break;
                 }
-                else
-                {
-                  UserVar[baseVar] = nvalue;
-                  action = F("gpio,");
-                  action += Settings.TaskDevicePin1[x];
-                  action += ",";
-                  action += nvalue;
+                if (action.length() > 0) {
+                  struct EventStruct TempEvent;
+                  parseCommandString(&TempEvent, action);
+                  PluginCall(PLUGIN_WRITE, &TempEvent, action);
                 }
-                parseCommandString(&TempEvent, action);
-                PluginCall(PLUGIN_WRITE, &TempEvent, action);
               }
             }
           }

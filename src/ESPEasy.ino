@@ -374,6 +374,18 @@ extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
+  SecurityStruct() {
+    memset(WifiSSID, 0, sizeof(WifiSSID));
+    memset(WifiKey, 0, sizeof(WifiKey));
+    memset(WifiSSID2, 0, sizeof(WifiSSID2));
+    memset(WifiKey2, 0, sizeof(WifiKey2));
+    memset(WifiAPKey, 0, sizeof(WifiAPKey));
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      memset(ControllerUser[i], 0, sizeof(ControllerUser[i]));
+      memset(ControllerPassword[i], 0, sizeof(ControllerPassword[i]));
+    }
+    memset(Password, 0, sizeof(Password));
+  }
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];
