@@ -682,44 +682,24 @@ unsigned long str2int(char *string)
   return temp;
 }
 
-
 /********************************************************************************************\
   Convert a char string to IP byte array
   \*********************************************************************************************/
-//FIXME: change original code so it uses IPAddress and IPAddress.fromString()
-boolean str2ip(char *string, byte* IP)
-{
-  byte c;
-  byte part = 0;
-  int value = 0;
-
-  for (unsigned int x = 0; x <= strlen(string); x++)
-  {
-    c = string[x];
-    if (isdigit(c))
-    {
-      value *= 10;
-      value += c - '0';
-    }
-
-    else if (c == '.' || c == 0) // next octet from IP address
-    {
-      if (value <= 255)
-        IP[part++] = value;
-      else
-        return false;
-      value = 0;
-    }
-    else if (c == ' ') // ignore these
-      ;
-    else // invalid token
-      return false;
-  }
-  if (part == 4) // correct number of octets
-    return true;
-  return false;
+boolean str2ip(const String& string, byte* IP) {
+  return str2ip(string.c_str(), IP);
 }
 
+boolean str2ip(const char *string, byte* IP)
+{
+  IPAddress tmpip; // Default constructor => set to 0.0.0.0
+  if (*string == 0 || tmpip.fromString(string)) {
+    // Eiher empty string or a valid IP addres, so copy value.
+    for (byte i = 0; i < 4; ++i)
+      IP[i] = tmpip[i];
+    return true;
+  }
+  return false;
+}
 
 /********************************************************************************************\
   Save settings to SPIFFS
