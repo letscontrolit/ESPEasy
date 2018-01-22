@@ -703,8 +703,6 @@ void handle_config() {
   if (timerAPoff)
     timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
 
-  char tmpString[64];
-
   navMenuIndex = 1;
   String name = WebServer.arg(F("name"));
   //String password = WebServer.arg(F("password"));
@@ -757,24 +755,20 @@ void handle_config() {
       }
       case ONLY_IP_RANGE_ALLOWED:
       case ALL_ALLOWED:
-        iprangelow.toCharArray(tmpString, 26);
-        str2ip(tmpString, SecuritySettings.AllowedIPrangeLow);
-        iprangehigh.toCharArray(tmpString, 26);
-        str2ip(tmpString, SecuritySettings.AllowedIPrangeHigh);
+        // iprangelow.toCharArray(tmpString, 26);
+        str2ip(iprangelow, SecuritySettings.AllowedIPrangeLow);
+        // iprangehigh.toCharArray(tmpString, 26);
+        str2ip(iprangehigh, SecuritySettings.AllowedIPrangeHigh);
         break;
     }
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = (deepsleep == "on");
     Settings.deepSleepOnFail = (deepsleeponfail == "on");
-    espip.toCharArray(tmpString, 26);
-    str2ip(tmpString, Settings.IP);
-    espgateway.toCharArray(tmpString, 26);
-    str2ip(tmpString, Settings.Gateway);
-    espsubnet.toCharArray(tmpString, 26);
-    str2ip(tmpString, Settings.Subnet);
-    espdns.toCharArray(tmpString, 26);
-    str2ip(tmpString, Settings.DNS);
+    str2ip(espip, Settings.IP);
+    str2ip(espgateway, Settings.Gateway);
+    str2ip(espsubnet, Settings.Subnet);
+    str2ip(espdns, Settings.DNS);
     Settings.Unit = unit.toInt();
     addHtmlError(reply, SaveSettings());
   }
@@ -850,8 +844,6 @@ void handle_controllers() {
   if (!isLoggedIn()) return;
 
   struct EventStruct TempEvent;
-  char tmpString[64];
-
   navMenuIndex = 2;
   byte controllerindex = WebServer.arg(F("index")).toInt();
   boolean controllerNotSet = controllerindex == 0;
@@ -920,11 +912,7 @@ void handle_controllers() {
         //no protocol selected
         else
         {
-          if (controllerip.length() != 0)
-          {
-            controllerip.toCharArray(tmpString, 26);
-            str2ip(tmpString, ControllerSettings.IP);
-          }
+          str2ip(controllerip, ControllerSettings.IP);
         }
         //copy settings to struct
         Settings.ControllerEnabled[controllerindex] = (controllerenabled == "on");
@@ -3230,8 +3218,7 @@ void handle_advanced() {
     ntphost.toCharArray(tmpString, 64);
     strcpy(Settings.NTPHost, tmpString);
     Settings.TimeZone = timezone.toInt();
-    syslogip.toCharArray(tmpString, 26);
-    str2ip(tmpString, Settings.Syslog_IP);
+    str2ip(syslogip.c_str(), Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
     Settings.SyslogLevel = sysloglevel.toInt();
     Settings.UseSerial = (useserial == "on");

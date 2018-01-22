@@ -1,4 +1,96 @@
 -------------------------------------------------
+Changes in release mega-20180122 (since mega-20180119)
+-------------------------------------------------
+
+Release date: Mon Jan 22 05:00:08 CET 2018
+
+ESPEasy release bot (3):
+      automaticly updated release notes for v2.0-20180119
+      automaticly updated release notes for v2.0-20180120
+      automaticly updated release notes for v2.0-20180121
+
+Edwin Eefting (8):
+      test suite: added dht22
+      added QUAD to c002. fixed getBearing and SENSOR_TYPE_WIND.
+      test suite: started on testcase to test all sensor types via the dummy plugin
+      test suite: generelized controller testing in test005
+      cleaned up nodo logging. fixed domotics SENSOR_TYPE_WIND inconsistency
+      test suite: fixed issues, started working on nodo
+      test suite: lots of refactoring and fixing
+      test suite: fixes. testing boot gpio states
+
+Gijs Noorlander (2):
+      [issue #745] Set IPaddress to 0.0.0.0 when read from empty string (#754)
+      [#732] Only process P029 MQTT helper when enabled (#743)
+
+
+-------------------------------------------------
+Changes in release mega-20180119 (since mega-20180118)
+-------------------------------------------------
+
+Release date: Fri Jan 19 05:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180118
+
+Edwin Eefting (2):
+      refactoring test suite controller stuff
+      test suite domoticz mqtt + found few fixmes
+
+jctual (1):
+      DHT plugin update (#736)
+
+
+-------------------------------------------------
+Changes in release mega-20180118 (since mega-20180117)
+-------------------------------------------------
+
+Release date: Thu Jan 18 05:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180116
+
+Edwin Eefting (3):
+      made test resumable and importable
+      now supports powercycle to test for bugs like #719
+      added fixme
+
+Gijs Noorlander (2):
+      [issue 733] Fix for negative values on MQTT import (#735)
+      [issue 728] Proper reconnect for MQTT controllers (#737)
+
+
+-------------------------------------------------
+Changes in release mega-20180117 (since mega-20180116)
+-------------------------------------------------
+
+Release date: Wed Jan 17 05:00:08 CET 2018
+
+Edwin Eefting (1):
+      fix #719 (initial ds18b20 value after power on 85 degrees)
+
+papperone (1):
+      merge with main branch (#648)
+
+
+-------------------------------------------------
+Changes in release mega-20180116 (since mega-20180114)
+-------------------------------------------------
+
+Release date: Tue Jan 16 05:00:11 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180113
+
+Edwin Eefting (2):
+      testsuite: working on generic http/mqtt controller emulatior receiving
+      fixed custom build path
+
+Gijs Noorlander (1):
+      [AutoDST] Added Auto DST (Bugfix/v2.0 issue569) (#726)
+
+
+-------------------------------------------------
 Changes in release mega-20180114 (since mega-20180113)
 -------------------------------------------------
 

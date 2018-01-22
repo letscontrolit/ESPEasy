@@ -54,11 +54,52 @@ class Node():
 
     def reboot(self):
         '''reboot the esp via the serial DTR line'''
+        self.log.debug("Rebooting")
+
         self.serial_needed()
         self._serial.setDTR(0)
         time.sleep(0.1)
         self._serial.setDTR(1)
 
+    def powercycle(self):
+        """powercycle the device"""
+        self.poweroff()
+        self.poweron()
+
+    def poweroff(self):
+        """power off device"""
+
+
+        #cant yet be done automaticly unfortunatly
+        self.log.info("Please power off node "+self._id)
+
+        done=False
+        while not done:
+            try:
+                self.serial_needed()
+                self._serial.readline()
+            except serial.SerialException:
+                done=True
+                if hasattr(self, '_serial'):
+                    del self._serial
+
+        self.log.debug("Detected power off")
+
+    def poweron(self):
+        """power on device"""
+
+        self.log.info("Please power on node "+self._id)
+
+        done=False
+        while not done:
+            try:
+                self.serial_needed()
+                self._serial.readline()
+                done=True
+            except serial.SerialException:
+                time.sleep(0.1)
+
+        self.log.debug("Detected power on")
 
     def pingwifi(self, timeout=60):
         """waits until espeasy reponds via wifi"""
@@ -89,6 +130,15 @@ class Node():
         self._serial.write(bytes(serial_str, 'ascii'));
 
         self.pingwifi(timeout=timeout)
+
+
+    def serialcmd(self, command):
+        """send command via serial"""
+
+        self.serial_needed()
+        self.log.debug("Send serial command: "+command)
+        serial_str=command+"\n"
+        self._serial.write(bytes(serial_str, 'ascii'));
 
 
     def build(self):
@@ -134,16 +184,19 @@ class Node():
 
 
 
-    def http_post(self, page, params,  data=None, twice=False):
+    def http_post(self, page, params=None,  data=None, twice=False):
         """http post to espeasy webinterface. (GET if data is None)"""
 
         # transform easy copy/pastable chromium data into a dict
 
-        params_dict={}
-        for line in params.split("\n"):
-            m=re.match(" *(.*?):(.*)",line)
-            if (m):
-                params_dict[m.group(1)]=m.group(2)
+        if params:
+            params_dict={}
+            for line in params.split("\n"):
+                m=re.match(" *(.*?):(.*)",line)
+                if (m):
+                    params_dict[m.group(1)]=m.group(2)
+        else:
+            params_dict=None
 
         if data:
             data_dict={}
@@ -155,9 +208,11 @@ class Node():
             data_dict=None
 
 
+        url=self._url+page
+        self.log.debug("HTTP POST {url} with params {params} and data {data}".format(url=url,params=params,data=data))
 
         r=requests.post(
-            self._url+page,
+            url,
             params=params_dict,
             data=data_dict
         )

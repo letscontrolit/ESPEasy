@@ -322,7 +322,7 @@
   //  #include <lwip/priv/tcp_priv.h>
   #else
     #include <lwip/tcp_impl.h>
-  #endif  
+  #endif
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
@@ -338,6 +338,7 @@
   #include "lwip/igmp.h"
   #include "include/UdpContext.h"
   #include "limits.h"
+  #include "ESPEasyTimeTypes.h"
   extern "C" {
    #include "user_interface.h"
   }
@@ -415,6 +416,18 @@ WiFiUDP portUDP;
 
 struct SecurityStruct
 {
+  SecurityStruct() {
+    memset(WifiSSID, 0, sizeof(WifiSSID));
+    memset(WifiKey, 0, sizeof(WifiKey));
+    memset(WifiSSID2, 0, sizeof(WifiSSID2));
+    memset(WifiKey2, 0, sizeof(WifiKey2));
+    memset(WifiAPKey, 0, sizeof(WifiAPKey));
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      memset(ControllerUser[i], 0, sizeof(ControllerUser[i]));
+      memset(ControllerPassword[i], 0, sizeof(ControllerPassword[i]));
+    }
+    memset(Password, 0, sizeof(Password));
+  }
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];
@@ -1007,9 +1020,11 @@ void setup()
     portUDP.begin(Settings.UDPPort);
 
   // Setup MQTT Client
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
-  if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[0])
-    MQTTConnect();
+  // ToDo TD-er: Controller index is forced to the first enabled MQTT controller.
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    MQTTConnect(enabledMqttController);
+  }
 
   sendSysInfoUDP(3);
 
@@ -1034,6 +1049,16 @@ void setup()
 
   writeDefaultCSS();
 
+}
+
+int firstEnabledMQTTController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 
@@ -1079,8 +1104,10 @@ void loop()
   }
 
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  if(Settings.ControllerEnabled[0])
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
     MQTTclient.loop();
+  }
 
   backgroundtasks();
 
@@ -1222,8 +1249,12 @@ void runEach30Seconds()
   addLog(LOG_LEVEL_INFO, log);
   sendSysInfoUDP(1);
   refreshNodeList();
-  if(Settings.ControllerEnabled[0])
-    MQTTCheck();
+
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    MQTTCheck(enabledMqttController);
+  }
+
   #if defined(ESP8266)
   if (Settings.UseSSDP)
     SSDP_update();

@@ -213,6 +213,14 @@ void ExecuteCommand(byte source, const char *Line)
     taskClear(Par1 - 1, true);
   }
 
+  //quickly clear all tasks, without saving (used by test suite)
+  if (strcasecmp_P(Command, PSTR("TaskClearAll")) == 0)
+  {
+    success = true;
+    for (byte t=0; t<TASKS_MAX; t++)
+      taskClear(t, false);
+  }
+
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
   {
     success = true;
@@ -366,15 +374,19 @@ void ExecuteCommand(byte source, const char *Line)
   }
   if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
   {
-    success = true;
-    String event = Line;
-    event = event.substring(8);
-    int index = event.indexOf(',');
-    if (index > 0)
-    {
-      String topic = event.substring(0, index);
-      String value = event.substring(index + 1);
-      MQTTclient.publish(topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+    // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
+    int enabledMqttController = firstEnabledMQTTController();
+    if (enabledMqttController >= 0) {
+      success = true;
+      String event = Line;
+      event = event.substring(8);
+      int index = event.indexOf(',');
+      if (index > 0)
+      {
+        String topic = event.substring(0, index);
+        String value = event.substring(index + 1);
+        MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+      }
     }
   }
 
@@ -386,14 +398,12 @@ void ExecuteCommand(byte source, const char *Line)
     String port = parseString(strLine, 3);
     int msgpos = getParamStartPos(strLine, 4);
     String message = strLine.substring(msgpos);
-    byte ipaddress[4];
-    str2ip((char*)ip.c_str(), ipaddress);
-    IPAddress UDP_IP(ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3]);
-    portUDP.beginPacket(UDP_IP, port.toInt());
-    #if defined(ESP8266)
+    IPAddress UDP_IP;
+    if(UDP_IP.fromString(ip)) {
+      portUDP.beginPacket(UDP_IP, port.toInt());
       portUDP.write(message.c_str(), message.length());
-    #endif
-    portUDP.endPacket();
+      portUDP.endPacket();
+    }
   }
 
   if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && WiFi.status() == WL_CONNECTED)
@@ -555,9 +565,10 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("IP")) == 0)
   {
     success = true;
-    if (GetArgv(Line, TmpStr1, 2))
+    if (GetArgv(Line, TmpStr1, 2)) {
       if (!str2ip(TmpStr1, Settings.IP))
         Serial.println("?");
+    }
   }
 
   if (strcasecmp_P(Command, PSTR("Settings")) == 0)

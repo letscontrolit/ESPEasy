@@ -101,9 +101,9 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             case SENSOR_TYPE_TEMP_BARO:                      // temp + bar used for BMP085 and BMP280
               url += F("&svalue=");
               url += formatUserVar(event, 0);
-              url += F(";");
-              url += formatUserVar(event, 1);
               url += F(";0;0;");
+              url += formatUserVar(event, 1);
+              url += F(";0");
               break;
             case SENSOR_TYPE_TRIPLE:
               url += F("&svalue=");
@@ -165,7 +165,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
               url += ";";
               url += toString((UserVar[event->BaseVarIndex + 2] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              url += ";0";
+              url += ";0;0";
               break;
           }
 
@@ -182,7 +182,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           client.print(request);
 
           unsigned long timer = millis() + 200;
-          while (!client.available() && !timeOutReached(timer)) 
+          while (!client.available() && !timeOutReached(timer))
             yield();
 
           // Read all the lines of the reply from server and log them

@@ -10,24 +10,41 @@ from esptest import *
 # tests:
 # - pulsing the node0 pin and picking it up on node1 which sends it via domoticz mqtt
 
-espeasy[1].controller_domoticz_mqtt(index=1, controllerip=config.mqtt_broker)
-espeasy[1].device_p001(index=1, taskdevicepin1=12, plugin_001_type=1, plugin_001_button=0, TDID1=1415)
+@step()
+def prepare():
+    node[0].reboot()
+    node[0].pingserial()
+    node[0].serialcmd("resetFlashWriteCounter")
+    node[1].reboot()
+    node[1].pingserial()
+    node[1].serialcmd("resetFlashWriteCounter")
+    espeasy[1].controller_domoticz_mqtt()
+    espeasy[1].post_device(1, """
+                TDNUM:1
+                TDN:
+                TDE:on
+                taskdevicepin1:12
+                plugin_001_type:1
+                plugin_001_button:0
+                TDSD1:on
+                TDID1:1000
+                TDT:0
+                TDVN1:Switch
+                edit:1
+            """)
 
 
 
-### test
-espeasy[0].control(cmd="gpio,12,1")
-time.sleep(1)
-espeasy[0].control(cmd="gpio,12,0")
-time.sleep(1)
-
-# check mqtt results
-for message in mqtt_messages:
-    payload=json.loads(message.payload.decode())
-    if message.topic == 'domoticz/in' and payload['idx']==1415 and payload['switchcmd']=='Off' and payload['command']=='switchlight':
-        log.info("all tests ok")
-        sys.exit(0)
-        #FIXME: this need to be callable, to run a batch of tests at once
+@step()
+def test():
+    espeasy[0].control(cmd="gpio,12,1")
+    pause(5)
+    controller.clear_mqtt()
+    espeasy[0].control(cmd="gpio,12,0")
+    values=controller.recv_domoticz_mqtt(SENSOR_TYPE_SWITCH,1000)
+    test_is(values[0],0)
 
 
-raise(Exception("Test failed"))
+
+if __name__=='__main__':
+    completed()
