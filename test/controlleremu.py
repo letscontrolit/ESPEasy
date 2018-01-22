@@ -5,7 +5,7 @@ import threading
 from queue import Queue
 from logging import getLogger
 import time
-
+import re
 
 SENSOR_TYPE_SINGLE               =   1
 SENSOR_TYPE_TEMP_HUM             =   2
@@ -28,6 +28,7 @@ class ControllerEmu:
         self.log=logging.getLogger("controller")
         self.start_mqtt()
         self.start_http()
+        self.start_linebased()
 
 
     def start_mqtt(self):
@@ -52,6 +53,7 @@ class ControllerEmu:
 
     def clear_mqtt(self):
         """clear queue"""
+        time.sleep(1)
         while not self.mqtt_messages.empty():
             self.mqtt_messages.get()
 
@@ -67,6 +69,8 @@ class ControllerEmu:
             logging.getLogger("http").debug(bottle.request.method+" "+str(dict(bottle.request.params)))
             self.http_requests.put(bottle.request.copy())
 
+
+
         http_thread=threading.Thread(target=bottle.run,  kwargs=dict(host='0.0.0.0', port=config.http_port, reloader=False))
         http_thread.daemon=True
         http_thread.start()
@@ -78,6 +82,56 @@ class ControllerEmu:
             self.http_requests.get()
 
 
+    def start_linebased(self):
+        """generic linebased receiver (like telnet). for nodo plugin"""
+        import socket
+        import sys
+
+
+        self.linebased_lines=Queue()
+
+
+        def handle_connect(connection, client_address):
+            logging.getLogger("linebased").debug("Connect from "+str(client_address))
+
+            fh = connection.makefile()
+            for line in fh:
+                line=line.rstrip()
+                logging.getLogger("linebased").debug("Recv from "+str(client_address)+" :"+line)
+                self.linebased_lines.put( ( client_address, line ) )
+
+            logging.getLogger("linebased").debug("Disconnect from "+str(client_address))
+
+        def wait_accept():
+            # Create a TCP/IP socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_address = ('', config.linebased_port)
+            sock.bind(server_address)
+            sock.listen()
+
+            while True:
+                # Wait for a connection
+                connection, client_address = sock.accept()
+                connect_thread=threading.Thread(target=handle_connect, kwargs=dict(connection=connection, client_address=client_address))
+                connect_thread.daemon=True
+                connect_thread.start()
+
+        accept_thread=threading.Thread(target=wait_accept)
+        accept_thread.daemon=True
+        accept_thread.start()
+
+
+    def clear_linebased(self):
+        """clear queue"""
+        while not self.linebased_lines.empty():
+            self.linebased_lines.get()
+
+
+    def clear(self, sleep=0):
+        self.clear_http()
+        self.clear_mqtt()
+        self.clear_linebased()
+        time.sleep(sleep)
 
 
     def recv_domoticz_http(self, sensor_type, idx, timeout=60):
@@ -86,7 +140,7 @@ class ControllerEmu:
         start_time=time.time()
         self.log.info("Waiting for domoticz http request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
-        self.clear_http()
+        # self.clear_http()
 
         # read and parse http requests
         while time.time()-start_time<timeout:
@@ -94,27 +148,34 @@ class ControllerEmu:
             if request.path == "/json.htm":
                 if int(request.params.get('idx'))==idx:
                     if request.params.get('param')=='udevice':
-                        svalues_str=request.params.get('svalue').split(";")
+                        # svalues_str=request.params.get('svalue').split(";")
+                        #nooozzz..the ; isnt properly escaped so python only returns the first value. woraround:
+                        svalues_str=re.findall('svalue=([0-9.;]*)',request.query_string)[0].split(";")
+
                         svalues=[]
                         for svalue in svalues_str:
-                            svalues.append(float(svalue))
+                            try:
+                                f=float(svalue)
+                            except:
+                                f=0
+                            svalues.append(f)
 
                         if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_LONG ) and len(svalues)==1:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_HUM and len(svalues)==3:
-                            return svalues
-                        elif sensor_type==SENSOR_TYPE_BARO and len(svalues)==5:
+                        elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
+                            return [svalues[0], svalues[1]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
                             return [svalues[0], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_HUM_BARO and len(svalues)==5:
-                            return [svalues[0],svalues[2], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
+                            return [svalues[0],svalues[1], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_QUAD and len(svalues)==4:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==5:
-                            return [svalues[0], svalues[2], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==6:
+                            return [svalues[0], svalues[2]/10, svalues[3]/10]
 
                     elif request.params.get('param')=='switchlight':
                         if sensor_type==SENSOR_TYPE_DIMMER or sensor_type == SENSOR_TYPE_SWITCH:
@@ -123,7 +184,7 @@ class ControllerEmu:
                             elif request.params.get('switchcmd') == 'On':
                                 return [1]
                             elif request.params.get('switchcmd') == 'Set Level':
-                                return [int(request.params.get('level'))]
+                                return [float(request.params.get('level'))]
 
         raise(Exception("Timeout"))
 
@@ -135,7 +196,7 @@ class ControllerEmu:
         start_time=time.time()
         self.log.info("Waiting for domoticz mqtt request idx {idx} with sensortype {sensor_type}".format(sensor_type=sensor_type,idx=idx))
 
-        self.clear_mqtt()
+        # self.clear_mqtt()
 
         # read and parse mqtt requests
         while time.time()-start_time<timeout:
@@ -148,24 +209,28 @@ class ControllerEmu:
                         svalues_str=params.get('svalue').split(";")
                         svalues=[]
                         for svalue in svalues_str:
-                            svalues.append(float(svalue))
+                            try:
+                                f=float(svalue)
+                            except:
+                                f=0
+                            svalues.append(f)
 
                         if ( sensor_type==SENSOR_TYPE_SINGLE or sensor_type==SENSOR_TYPE_LONG ) and len(svalues)==1:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_DUAL and len(svalues)==2:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_HUM and len(svalues)==3:
-                            return svalues
-                        elif sensor_type==SENSOR_TYPE_BARO and len(svalues)==5:
+                        elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
+                            return [svalues[0], svalues[1]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
                             return [svalues[0], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_HUM_BARO and len(svalues)==5:
-                            return [svalues[0],svalues[2], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
+                            return [svalues[0],svalues[1], svalues[3]]
                         elif sensor_type==SENSOR_TYPE_QUAD and len(svalues)==4:
                             return svalues
-                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==5:
-                            return [svalues[0], svalues[2], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_WIND and len(svalues)==6:
+                            return [svalues[0], svalues[2]/10, svalues[3]/10]
 
                     elif params.get('command')=='switchlight':
                         if sensor_type==SENSOR_TYPE_DIMMER or sensor_type == SENSOR_TYPE_SWITCH:
@@ -173,7 +238,7 @@ class ControllerEmu:
                                 return [0]
                             elif params.get('switchcmd') == 'On':
                                 return [1]
-                            elif params.get('switchcmd') == 'Set Level':
-                                return [int(params.get('level'))]
+                            elif params.get('Set%20Level'):
+                                return [int(params.get('Set%20Level'))]
 
         raise(Exception("Timeout while expecting mqtt json message"))

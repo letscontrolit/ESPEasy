@@ -712,44 +712,24 @@ unsigned long str2int(char *string)
   return temp;
 }
 
-
 /********************************************************************************************\
   Convert a char string to IP byte array
   \*********************************************************************************************/
-//FIXME: change original code so it uses IPAddress and IPAddress.fromString()
-boolean str2ip(char *string, byte* IP)
-{
-  byte c;
-  byte part = 0;
-  int value = 0;
-
-  for (unsigned int x = 0; x <= strlen(string); x++)
-  {
-    c = string[x];
-    if (isdigit(c))
-    {
-      value *= 10;
-      value += c - '0';
-    }
-
-    else if (c == '.' || c == 0) // next octet from IP address
-    {
-      if (value <= 255)
-        IP[part++] = value;
-      else
-        return false;
-      value = 0;
-    }
-    else if (c == ' ') // ignore these
-      ;
-    else // invalid token
-      return false;
-  }
-  if (part == 4) // correct number of octets
-    return true;
-  return false;
+boolean str2ip(const String& string, byte* IP) {
+  return str2ip(string.c_str(), IP);
 }
 
+boolean str2ip(const char *string, byte* IP)
+{
+  IPAddress tmpip; // Default constructor => set to 0.0.0.0
+  if (*string == 0 || tmpip.fromString(string)) {
+    // Eiher empty string or a valid IP addres, so copy value.
+    for (byte i = 0; i < 4; ++i)
+      IP[i] = tmpip[i];
+    return true;
+  }
+  return false;
+}
 
 /********************************************************************************************\
   Save settings to SPIFFS
@@ -2561,26 +2541,29 @@ void ArduinoOTAInit()
 
 String getBearing(int degrees)
 {
-  const char* bearing[] = {
-    PSTR("N"),
-    PSTR("NNE"),
-    PSTR("NE"),
-    PSTR("ENE"),
-    PSTR("E"),
-    PSTR("ESE"),
-    PSTR("SE"),
-    PSTR("SSE"),
-    PSTR("S"),
-    PSTR("SSW"),
-    PSTR("SW"),
-    PSTR("WSW"),
-    PSTR("W"),
-    PSTR("WNW"),
-    PSTR("NW"),
-    PSTR("NNW")
+  const __FlashStringHelper* bearing[] = {
+    F("N"),
+    F("NNE"),
+    F("NE"),
+    F("ENE"),
+    F("E"),
+    F("ESE"),
+    F("SE"),
+    F("SSE"),
+    F("S"),
+    F("SSW"),
+    F("SW"),
+    F("WSW"),
+    F("W"),
+    F("WNW"),
+    F("NW"),
+    F("NNW")
   };
-
-    return(bearing[int(degrees/22.5)]);
+  int bearing_idx=int(degrees/22.5);
+  if (bearing_idx<0 || bearing_idx>=(int) (sizeof(bearing)/sizeof(bearing[0])))
+    return("");
+  else
+    return(bearing[bearing_idx]);
 
 }
 
