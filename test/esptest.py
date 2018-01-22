@@ -50,11 +50,11 @@ def step(title=""):
     def step_dec(test):
         """add test step. test can resume from every test-step"""
         if state['module'] and ( state['module'] != test.__module__ or state['name'] != test.__name__ or state['title'] != title):
-            log.debug("Skipping test "+title+": "+test.__module__ + "." + test.__name__ )
+            log.debug("Skipping step "+title+": "+test.__module__ + "." + test.__name__ )
         else:
             state['module']=None
             print()
-            log.info("*** Starting "+title+": "+test.__module__ + "." + test.__name__ )
+            log.info("*** Starting step "+title+": "+test.__module__ + "." + test.__name__ )
 
             # store this test so we may resume later
             with shelve.open("test.state") as shelve_db:
@@ -64,9 +64,10 @@ def step(title=""):
                     'title': title
                 }
 
+
             #run the test. if there is an exception we resume this test the next time
             test()
-            log.info("Completed step")
+            log.info("*** Starting step "+title+": "+test.__module__ + "." + test.__name__ )
 
 
 
