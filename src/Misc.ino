@@ -1421,6 +1421,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
   sprintf_P(valueString, PSTR("%02d"), year()%100);
   repl(F("%sysyears%"),valueString, s, useURLencode);
+  repl(F("%lcltime%"), getDateTimeString('-',':',' '), s, useURLencode);
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   repl(F("%uptime%"), String(wdcounter / 2), s, useURLencode);
