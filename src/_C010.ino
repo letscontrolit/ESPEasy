@@ -80,6 +80,8 @@ void C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned l
 
   String msg = "";
   msg += ControllerSettings.Publish;
+  parseSystemVariables(msg, false);
+  parseEventVariables(msg, event, false);
   msg.replace(F("%sysname%"), Settings.Name);
   msg.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
   msg.replace(F("%id%"), String(event->idx));

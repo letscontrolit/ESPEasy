@@ -126,7 +126,6 @@ byte day()
 	return tm.Day;
 }
 
-
 byte hour()
 {
   return tm.Hour;
@@ -203,10 +202,8 @@ unsigned long getNtpTime()
     else
       WiFi.hostByName(ntpServerName, timeServerIP);
 
-    char host[20];
-    sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
     log = F("NTP  : NTP send to ");
-    log += host;
+    log += timeServerIP.toString();
     addLog(LOG_LEVEL_DEBUG_MORE, log);
 
     while (udp.parsePacket() > 0) ; // discard any previously received packets
@@ -413,7 +410,6 @@ String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDeli
 String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
   return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter);
 }
-
 
 /********************************************************************************************\
   Convert a string like "Sun,12:30" into a 32 bit integer

@@ -105,10 +105,9 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   String url = "/";
   url += ControllerSettings.Publish;
-  //TODO: move this to a generic replacement function?
-  url.replace(F("%sysname%"), URLEncode(Settings.Name));
-  url.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
-  url.replace(F("%id%"), String(event->idx));
+  parseSystemVariables(url, true);
+  parseEventVariables(url, event, true);
+
   url.replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
   if (longValue)
     url.replace(F("%value%"), String(longValue));
