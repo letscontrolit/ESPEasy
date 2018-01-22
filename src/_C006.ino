@@ -89,9 +89,8 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         String pubname = ControllerSettings.Publish;
-        pubname.replace(F("%sysname%"), Settings.Name);
-        pubname.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
-        pubname.replace(F("%id%"), String(event->idx));
+        parseSystemVariables(pubname, false);
+        parseEventVariables(pubname, event, false);
 
         String value = "";
         // byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[event->TaskIndex]);

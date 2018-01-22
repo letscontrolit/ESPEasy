@@ -3114,6 +3114,8 @@ void handle_json()
     reply += BUILD;
     reply += F(",\n\"Unit\": ");
     reply += Settings.Unit;
+    reply += F(",\n\"Local time\": ");
+    reply += getDateTimeString('-',':',' ');
     reply += F(",\n\"Uptime\": ");
     reply += wdcounter / 2;
     reply += F(",\n\"Free RAM\": ");

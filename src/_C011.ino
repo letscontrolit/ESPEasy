@@ -306,39 +306,9 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
   //NOTE: cant we just call parseTemplate() for all the standard stuff??
+  parseSystemVariables(s, true);
+  parseEventVariables(s, event, true);
 
-  s.replace(F("%systime%"), getTimeString(':'));
-
-	#if FEATURE_ADC_VCC
-		s.replace(F("%vcc%"), String(vcc));
-	#endif
-
-  // IPAddress ip = WiFi.localIP();
-  // char strIP[20];
-  // sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  s.replace(F("%ip%"),WiFi.localIP().toString());
-
-  s.replace(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)));
-  s.replace(F("%uptime%"), String(wdcounter / 2));
-
-  s.replace(F("%CR%"), F("\r"));
-  s.replace(F("%LF%"), F("\n"));
-  s.replace(F("%sysname%"), URLEncode(Settings.Name));
-  s.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
-  s.replace(F("%id%"), String(event->idx));
-  s.replace(F("%vname1%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[0]));
-  s.replace(F("%vname2%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[1]));
-  s.replace(F("%vname3%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[2]));
-  s.replace(F("%vname4%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[3]));
-
-  if (event->sensorType == SENSOR_TYPE_LONG)
-    s.replace(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)));
-  else {
-    s.replace(F("%val1%"), formatUserVar(event, 0));
-    s.replace(F("%val2%"), formatUserVar(event, 1));
-    s.replace(F("%val3%"), formatUserVar(event, 2));
-    s.replace(F("%val4%"), formatUserVar(event, 3));
-  }
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 }
