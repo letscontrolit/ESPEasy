@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release v2.0-20180122 (since v2.0-20180121)
+-------------------------------------------------
+
+Release date: Mon Jan 22 05:00:19 CET 2018
+
+Gijs Noorlander (2):
+      [issue #745] Set IPaddress to 0.0.0.0 when read from empty string (#754)
+      [#732] Only process P029 MQTT helper when enabled (#743)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180121 (since v2.0-20180120)
 -------------------------------------------------
 
