@@ -182,6 +182,10 @@ class Node():
         self.flashserial()
         self.serial()
 
+    def bf(self):
+        """build + flashserial"""
+        self.build()
+        self.flashserial()
 
 
     def http_post(self, page, params=None,  data=None, twice=False):
