@@ -16,8 +16,8 @@ from esptest import *
 def prepare():
     node[0].reboot()
     node[0].pingserial()
-    # espeasy[0].device_p004(index=1, taskdevicepin1=2, plugin_004_dev=0, plugin_004_res=9, TDID1=2001)
-    # espeasy[0].device_p004(index=2, taskdevicepin1=2, plugin_004_dev=1, plugin_004_res=9, TDID1=2002)
+    node[0].serialcmd("resetFlashWriteCounter")
+    espeasy[0].controller_domoticz_mqtt()
     espeasy[0].post_device(index=1, data="""
         TDNUM:4
         TDN:temp
