@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release mega-20180123 (since mega-20180122)
+-------------------------------------------------
+
+Release date: Tue Jan 23 05:00:10 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180122
+
+Edwin Eefting (5):
+      test suite: now possible to run all tests at once. fixes
+      test suite: espcli can now do stuff for all configured nodes
+      clear custom task and controller settings when selecting a different device or protocol. replaces #762 . fixes #721
+      added easy reboot warning and function to work around several issues
+      request mainpage when checking if reboot is complete
+
+Gijs Noorlander (1):
+      Central function for system variable replacement (#757)
+
+s0170071 (1):
+      CRC on settings and security settings and progmem (#720)
+
+
+-------------------------------------------------
 Changes in release mega-20180122 (since mega-20180119)
 -------------------------------------------------
 
