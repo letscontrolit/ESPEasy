@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release v2.0-20180123 (since v2.0-20180122)
+-------------------------------------------------
+
+Release date: Tue Jan 23 05:00:20 CET 2018
+
+Edwin Eefting (5):
+      test suite: now possible to run all tests at once. fixes
+      test suite: espcli can now do stuff for all configured nodes
+      clear custom task and controller settings when selecting a different device or protocol. replaces #762 . fixes #721
+      added easy reboot warning and function to work around several issues
+      request mainpage when checking if reboot is complete
+
+Gijs Noorlander (1):
+      Central function for system variable replacement (#757)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180122 (since v2.0-20180121)
 -------------------------------------------------
 
