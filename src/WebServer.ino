@@ -730,21 +730,28 @@ void handle_controllers() {
     if (Settings.Protocol[controllerindex] != protocol.toInt())
     {
 
-      //reset (some) default-settings
       Settings.Protocol[controllerindex] = protocol.toInt();
-      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-      ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
-      if (Protocol[ProtocolIndex].usesTemplate)
-        CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
-      strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
-      strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
-      TempEvent.String1 = "";
-      TempEvent.String2 = "";
-      //NOTE: do not enable controller by default, give user a change to enter sensible values first
 
-      //not resetted to default (for convenience)
-      //SecuritySettings.ControllerUser[controllerindex]
-      //SecuritySettings.ControllerPassword[controllerindex]
+      //there is a protocol selected?
+      if (Settings.Protocol[controllerindex]!=0)
+      {
+        //reset (some) default-settings
+        byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
+        ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
+        if (Protocol[ProtocolIndex].usesTemplate)
+          CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
+        strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
+        strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
+        TempEvent.String1 = "";
+        TempEvent.String2 = "";
+        //NOTE: do not enable controller by default, give user a change to enter sensible values first
+
+        //not resetted to default (for convenience)
+        //SecuritySettings.ControllerUser[controllerindex]
+        //SecuritySettings.ControllerPassword[controllerindex]
+
+        ClearCustomControllerSettings(controllerindex);
+      }
 
     }
 
@@ -1312,12 +1319,15 @@ void handle_devices() {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
 
       taskClear(taskIndex, false); // clear settings, but do not save
+
       Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
       if (taskdevicenumber != 0) // set default values if a new device has been selected
       {
         //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString); //the plugin should populate ExtraTaskSettings with its default values.
+
+          ClearCustomTaskSettings(taskIndex);
       }
     }
     else if (taskdevicenumber != 0) //save settings

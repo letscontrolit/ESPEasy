@@ -767,6 +767,15 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
+  Clear custom task settings
+  \*********************************************************************************************/
+String ClearCustomTaskSettings(int TaskIndex)
+{
+  // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
+  return(ClearInFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+}
+
+/********************************************************************************************\
   Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
@@ -797,6 +806,17 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 
   return(LoadFromFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
 }
+
+
+/********************************************************************************************\
+  Clear Custom Controller settings
+  \*********************************************************************************************/
+String ClearCustomControllerSettings(int ControllerIndex)
+{
+  // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
+  return(ClearInFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
+}
+
 
 /********************************************************************************************\
   Save Custom Controller settings to SPIFFS
@@ -891,6 +911,27 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   return String();
 }
 
+/********************************************************************************************\
+  Clear a certain area in a file (set to 0)
+  \*********************************************************************************************/
+String ClearInFile(char* fname, int index, int datasize)
+{
+  FLASH_GUARD();
+
+  fs::File f = SPIFFS.open(fname, "r+");
+  SPIFFS_CHECK(f, fname);
+
+  SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+  for (int x = 0; x < datasize ; x++)
+  {
+    SPIFFS_CHECK(f.write(0), fname);
+  }
+  f.close();
+
+  //OK
+  return String();
+
+}
 
 /********************************************************************************************\
   Load data from config file on SPIFFS
