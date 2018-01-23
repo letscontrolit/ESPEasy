@@ -78,7 +78,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                 switch (Settings.TaskDeviceNumber[x]) {
                   case 1: // temp solution, if input switch, update state
                   {
-                    String action = F("inputSwitchState,");
+                    action = F("inputSwitchState,");
                     action += x;
                     action += ",";
                     action += nvalue;
@@ -86,7 +86,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                   }
                   case 29:  // temp solution, if plugin 029, set gpio
                   {
-                    String action = "";
+                    action = "";
                     int baseVar = x * VARS_PER_TASK;
                     struct EventStruct TempEvent;
                     if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
