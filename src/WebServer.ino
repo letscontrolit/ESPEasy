@@ -168,6 +168,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{css}}"
       "</head>"
       "<body class='bodymenu'>"
+        "<b style=\"color:red\" id='rbtmsg'></b>"
         "<header class='headermenu'>"
           "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
           "{{menu}}"
@@ -269,6 +270,51 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
   pageTemplate = F("");   //free mem
 
   sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
+
+  if (shouldReboot)
+  {
+    //we only add this here as a seperate chucnk to prevent using too much memory at once
+    pageResult+=F(
+      "<script>"
+        "i=document.getElementById('rbtmsg');"
+        "i.innerHTML=\"Please reboot: <input id='reboot' class='button link' value='Reboot' type='submit' onclick='r()'>\";"
+        "var x = new XMLHttpRequest();"
+
+        //done
+        "function d(){"
+          "i.innerHTML='';"
+          "clearTimeout(t);"
+        "}"
+
+
+        //keep requesting /p until no more errors
+        "function c(){"
+          "i.innerHTML+='.';"
+          "x.onload=d;"
+          "x.open('GET', window.location.origin+'/p');"
+          "x.send();"
+        "}"
+
+        //rebooting
+        "function b(){"
+          "i.innerHTML='Rebooting..';"
+          "t=setInterval(c,2000);"
+        "}"
+
+
+        //request reboot
+        "function r(){"
+          "i.innerHTML+=' (requesting)';"
+          "x.onload=b;"
+          "x.open('GET', window.location.origin+'/?cmd=reboot');"
+          "x.send();"
+        "}"
+
+      "</script>"
+    );
+    sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
+  }
+
   sendWebPageChunkedEnd(log);   //close chunked send
 
   addLog(LOG_LEVEL_DEBUG_DEV, log);
