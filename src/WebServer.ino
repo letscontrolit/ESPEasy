@@ -287,11 +287,11 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
         "}"
 
 
-        //keep requesting /p until no more errors
+        //keep requesting mainpage until no more errors
         "function c(){"
           "i.innerHTML+='.';"
           "x.onload=d;"
-          "x.open('GET', window.location.origin+'/p');"
+          "x.open('GET', window.location.origin);"
           "x.send();"
         "}"
 
