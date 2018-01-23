@@ -862,7 +862,7 @@ String LoadSettings()
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));  
  }
   else{
-    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC ...FAIL"));
+    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
 //  dump((uint32_t)SecuritySettings.md5);
 //  dump((uint32_t)SecuritySettings.ProgmemMd5);
