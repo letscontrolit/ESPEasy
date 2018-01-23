@@ -136,6 +136,19 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        char deviceTemplate[8][64];
+        for (byte varNr = 0; varNr < 8; varNr++) {
+          memset(deviceTemplate[varNr], 0, 64);
+        }
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        String log(PLUGIN_NAME_023);
+        log += F(": Exit");
+        addLog(LOG_LEVEL_INFO, log);
+        break;
+      }
+
     case PLUGIN_TEN_PER_SECOND:
       {
         if (Settings.TaskDevicePin3[event->TaskIndex] != -1)

@@ -195,6 +195,24 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        if (display)
+          delete display;
+
+        char deviceTemplate[Nlines][32];
+        for (byte varNr = 0; varNr < Nlines; varNr++) {
+          memset(deviceTemplate[varNr], 0, 32);
+        }
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        String log(PLUGIN_NAME_036);
+        log += F(": Exit");
+        addLog(LOG_LEVEL_INFO, log);
+        break;
+      }
+
+
+
     // Check frequently to see if we have a pin signal to switch on display
     case PLUGIN_TEN_PER_SECOND:
       {

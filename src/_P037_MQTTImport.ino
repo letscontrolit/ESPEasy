@@ -119,6 +119,22 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         }
       }
 
+    case PLUGIN_EXIT:
+      {
+        // Fixme: Can P037 be used more than once?
+//        if (MQTTclient_037)
+//          delete MQTTclient_037;
+
+        for (byte varNr = 0; varNr < 4; varNr++) {
+          memset(deviceTemplate[varNr], 0, 41);
+        }
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        String log(PLUGIN_NAME_037);
+        log += F(": Exit");
+        addLog(LOG_LEVEL_INFO, log);
+        break;
+      }
+
     case PLUGIN_TEN_PER_SECOND:
       {
         MQTTclient_037->loop();		// Listen out for callbacks
