@@ -33,7 +33,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
   static byte displayTimer = 0;
   static byte frameCounter = 0;       // need to keep track of framecounter from call to call
-  static boolean firstcall = true;      // This is used to clear the init graphic on the first call to read
+  // static boolean firstcall = true;      // This is used to clear the init graphic on the first call to read
   static byte nrFramesToDisplay = 0;
   static byte currentFrameToDisplay = 0;
 
@@ -152,14 +152,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        int new_controler_value = getFormItemInt(F("plugin_036_controler"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] != new_controler_value) {
-          // Value is changed. Must destruct to later reinitialize.
-          if (display) {
-            delete display;
-            display = NULL;
-          }
-        }
+        //update now
+        timerSensor[event->TaskIndex]=millis();
+        frameCounter=0;
+
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_036_rotate"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_036_nlines"));
@@ -186,18 +182,22 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        // Load the custom settings from flash
-        char deviceTemplate[Nlines][32];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        // // Load the custom settings from flash
+        // char deviceTemplate[Nlines][32];
+        // LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         //      Init the display and turn it on
-        if (!display) {
-          uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] == 1) {
-            display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
-          } else {
-            display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
-          }
+        if (display)
+        {
+          display->end();
+          delete display;
+        }
+
+        uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] == 1) {
+          display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        } else {
+          display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
         }
         display->init();		// call to local override of init function
         display->displayOn();
@@ -214,7 +214,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         //      Display the device name, logo, time and wifi
         display_header();
-        display_logo();
+        // display_logo();
         display->display();
 
         //      Set up the display timer
@@ -232,6 +232,17 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         success = true;
         break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+          if (display)
+          {
+            display->end();
+            delete display;
+            display=NULL;
+          }
+          break;
       }
 
     // Check frequently to see if we have a pin signal to switch on display
@@ -273,11 +284,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         // Clear the init screen if this is the first call
-        if (firstcall)
-        {
-          display->clear();
-          firstcall = false;
-        }
+        // if (firstcall)
+        // {
+        //   display->clear();
+        //   firstcall = false;
+        // }
 
         //      Define Scroll area layout
         linesPerFrame = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -521,8 +532,9 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
     display->display();
 
-    //delay(2);
-    backgroundtasks();
+    delay(2);
+    //NO, dont use background stuff, causes crashes in this plugin:
+    // /backgroundtasks();
   }
 }
 
