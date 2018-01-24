@@ -862,7 +862,7 @@ String LoadSettings()
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));  
  }
   else{
-    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC ...FAIL"));
+    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
 //  dump((uint32_t)SecuritySettings.md5);
 //  dump((uint32_t)SecuritySettings.ProgmemMd5);
@@ -1681,9 +1681,9 @@ String parseTemplate(String &tmpString, byte lineSize)
 }
 
 
-/********************************************************************************************\
+/********************************************************************************************/
 // replace other system variables like %sysname%, %systime%, %ip%
-  \*********************************************************************************************/
+/*********************************************************************************************/
 
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
