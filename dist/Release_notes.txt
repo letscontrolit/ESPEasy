@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release v2.0-20180124 (since v2.0-20180123)
+-------------------------------------------------
+
+Release date: Wed Jan 24 05:00:19 CET 2018
+
+Edwin Eefting (1):
+      fix #718. also update display on save and removed graphical boot logo to conserve space. also fixes #713. (web interface will be non repsonsive during scrolling now, but there is no easy fix for that)
+
+Gijs Noorlander (1):
+      [issue #758] P029 MQTT helper does not log anymore (#764)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180123 (since v2.0-20180122)
 -------------------------------------------------
 
