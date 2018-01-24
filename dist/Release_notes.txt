@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20180124 (since mega-20180123)
+-------------------------------------------------
+
+Release date: Wed Jan 24 05:00:09 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180123
+
+Edwin Eefting (1):
+      fix #718. also update display on save and removed graphical boot logo to conserve space. also fixes #713. (web interface will be non repsonsive during scrolling now, but there is no easy fix for that)
+
+Gijs Noorlander (1):
+      [issue #758] P029 MQTT helper does not log anymore (#764)
+
+s0170071 (2):
+      Broken comment (#766)
+      Space (#767)
+
+
+-------------------------------------------------
 Changes in release mega-20180123 (since mega-20180122)
 -------------------------------------------------
 
