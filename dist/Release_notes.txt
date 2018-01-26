@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release v2.0-20180126 (since v2.0-20180124)
+-------------------------------------------------
+
+Release date: Fri Jan 26 05:00:22 CET 2018
+
+Gijs Noorlander (3):
+      [issue #759] Disable Senseair ABC due to firmware issues (#771)
+      [V2.0] Allow IRremoteESP8266 to be built with core 2.4.0 (#773)
+      Update _C007.ino (#774) (#776)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180124 (since v2.0-20180123)
 -------------------------------------------------
 
