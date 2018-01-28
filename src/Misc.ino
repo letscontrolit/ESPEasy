@@ -733,7 +733,7 @@ boolean str2ip(const char *string, byte* IP)
 
 /********************************************************************************************\
   check the program memory hash
-  The const MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere... needs to remain unchanged as it will be replaced by 
+  The const MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere... needs to remain unchanged as it will be replaced by
   - 16 bytes md5 hash, followed by
   - 4 * uint32_t start of memory segment 1-4
   - 4 * uint32_t end of memory segment 1-4
@@ -741,24 +741,27 @@ boolean str2ip(const char *string, byte* IP)
   Execution time 520kb @80Mhz: 236ms
   Returns: 0 if hash compare fails, number of checked bytes otherwise.
   The reference hash is calculated by a .py file and injected into the binary.
-  Caution: currently the hash sits in an unchecked segment. If it ever moves to a checked segment, make sure 
-  it is excluded from the calculation !    
+  Caution: currently the hash sits in an unchecked segment. If it ever moves to a checked segment, make sure
+  it is excluded from the calculation !
   \*********************************************************************************************/
-void dump (uint32_t addr){
-       Serial.print (addr,HEX);
-       Serial.print(": ");
-       for (uint32_t a = addr; a<addr+16; a++)
-          {  
-          Serial.print  (  pgm_read_byte(a),HEX);
-          Serial.print (" ");
-          }
-       Serial.println("");   
-} 
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+void dump (uint32_t addr) { //Seems already included in core 2.4 ...
+  Serial.print (addr, HEX);
+  Serial.print(": ");
+  for (uint32_t a = addr; a < addr + 16; a++)
+  {
+    Serial.print ( pgm_read_byte(a), HEX);
+    Serial.print (" ");
+  }
+  Serial.println("");
+}
+#endif
+
 uint32_t progMemMD5check(){
-    #define BufSize 10     
+    #define BufSize 10
     const  char CRCdummy[16+32+1] = "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";                   // 16Bytes MD5, 32 Bytes Segment boundaries, 1Byte 0-termination. DO NOT MODIFY !
-    uint32_t calcBuffer[BufSize];         
-    uint32_t md5NoOfBytes = 0; 
+    uint32_t calcBuffer[BufSize];
+    uint32_t md5NoOfBytes = 0;
     memcpy (calcBuffer,CRCdummy,16);                                                                      // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
     if( memcmp (calcBuffer, "MD5_MD5_MD5_MD5_",16)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
         addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
@@ -767,12 +770,12 @@ uint32_t progMemMD5check(){
     MD5Builder md5;
     md5.begin();
     for (int l = 0; l<4; l++){                                                                            // check max segments,  if the pointer is not 0
-        uint32_t *ptrStart = (uint32_t *)&CRCdummy[16+l*4]; 
-        uint32_t *ptrEnd =   (uint32_t *)&CRCdummy[16+4*4+l*4]; 
+        uint32_t *ptrStart = (uint32_t *)&CRCdummy[16+l*4];
+        uint32_t *ptrEnd =   (uint32_t *)&CRCdummy[16+4*4+l*4];
         if ((*ptrStart) == 0) break;                                                                      // segment not used.
-        for (uint32_t i = *ptrStart; i< (*ptrEnd) ; i=i+sizeof(calcBuffer)){                              // "<" includes last byte 
+        for (uint32_t i = *ptrStart; i< (*ptrEnd) ; i=i+sizeof(calcBuffer)){                              // "<" includes last byte
              for (int buf = 0; buf < BufSize; buf ++){
-                calcBuffer[buf] = pgm_read_dword((void*)i+buf*4);                                         // read 4 bytes
+                calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf*4);                                         // read 4 bytes
                 md5NoOfBytes+=sizeof(calcBuffer[0]);
              }
              md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5. At the end not the whole buffer. md5 ptr to data in ram.
@@ -785,11 +788,11 @@ uint32_t progMemMD5check(){
       return md5NoOfBytes;
    }
    addLog(LOG_LEVEL_INFO, F("CRC  : program checksum     ...FAIL"));
-   return 0; 
+   return 0;
 }
 
 
-  
+
 /********************************************************************************************\
   Save settings to SPIFFS
   \*********************************************************************************************/
@@ -801,26 +804,26 @@ String SaveSettings(void)
   md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
   md5.calculate();
   md5.getBytes(Settings.md5);
-  
+
   String err;
   err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
    return(err);
 
-  
+
   memcpy( SecuritySettings.ProgmemMd5, thisBinaryMd5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
   md5.calculate();
   md5.getBytes(SecuritySettings.md5);
   err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-  
+
 //  dump((uint32_t)SecuritySettings.md5);
 //  dump((uint32_t)SecuritySettings.ProgmemMd5);
 //  dump((uint32_t)Settings.md5);
 //  dump((uint32_t)Settings.ProgmemMd5);
 //  dump((uint32_t)thisBinaryMd5);
-    
+
  return (err);
 }
 
@@ -832,7 +835,7 @@ String LoadSettings()
   String err;
   uint8_t calculatedMd5[16];
   MD5Builder md5;
-  
+
   err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof( SettingsStruct));
   if (err.length())
     return(err);
@@ -843,13 +846,13 @@ String LoadSettings()
   md5.getBytes(calculatedMd5);
   if (memcmp (calculatedMd5, Settings.md5,16)==0){
     addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
-    if (memcmp(Settings.ProgmemMd5, thisBinaryMd5, 16)!=0) 
-      addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));  
+    if (memcmp(Settings.ProgmemMd5, thisBinaryMd5, 16)!=0)
+      addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
   }
   else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
   }
-  
+
 
   err=LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof( SecurityStruct));
   md5.begin();
@@ -858,8 +861,8 @@ String LoadSettings()
   md5.getBytes(calculatedMd5);
   if (memcmp (calculatedMd5, SecuritySettings.md5, 16)==0){
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
-    if (memcmp(SecuritySettings.ProgmemMd5,thisBinaryMd5, 16)!=0) 
-      addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));  
+    if (memcmp(SecuritySettings.ProgmemMd5,thisBinaryMd5, 16)!=0)
+      addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
  }
   else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
@@ -1507,60 +1510,6 @@ uint32_t getChecksum(byte* buffer, size_t size)
   return sum;
 }
 
-
-String getDayString()
-{
-  String reply;
-  if (day() < 10)
-    reply += F("0");
-  reply += day();
-  return reply;
-}
-String getMonthString()
-{
-  String reply;
-  if (month() < 10)
-    reply += F("0");
-  reply += month();
-  return reply;
-}
-String getYearString()
-{
-  String reply = String(year());
-  return reply;
-}
-String getYearStringShort()
-{
-  String dummy = String(year());
-  String reply = dummy.substring(2);
-  return reply;
-}
-
-
-String getHourString()
-{
-  String reply;
-  if (hour() < 10)
-    reply += F("0");
-  reply += String(hour());
-  return reply;
-}
-String getMinuteString()
-{
-  String reply;
-  if (minute() < 10)
-    reply += F("0");
-  reply += minute();
-  return reply;
-}
-String getSecondString()
-{
-  String reply;
-  if (second() < 10)
-    reply += F("0");
-  reply += second();
-  return reply;
-}
 
 
 /********************************************************************************************\

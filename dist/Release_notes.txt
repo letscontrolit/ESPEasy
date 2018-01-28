@@ -1,4 +1,44 @@
 -------------------------------------------------
+Changes in release mega-20180126 (since mega-20180124)
+-------------------------------------------------
+
+Release date: Fri Jan 26 05:00:11 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180124
+
+Gijs Noorlander (5):
+      [Mega] Allow compile with 2.4.0 core library (#772)
+      [issue #759] Disable Senseair ABC due to firmware issues (#771)
+      [V2.0] Allow IRremoteESP8266 to be built with core 2.4.0 (#773)
+      [Mega] Force 2.3.0 for all builds and add an option for 2.4.0 core (#775)
+      Update _C007.ino (#774) (#776)
+
+josemariaaraujo (1):
+      Update _C007.ino (#774)
+
+
+-------------------------------------------------
+Changes in release mega-20180124 (since mega-20180123)
+-------------------------------------------------
+
+Release date: Wed Jan 24 05:00:09 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180123
+
+Edwin Eefting (1):
+      fix #718. also update display on save and removed graphical boot logo to conserve space. also fixes #713. (web interface will be non repsonsive during scrolling now, but there is no easy fix for that)
+
+Gijs Noorlander (1):
+      [issue #758] P029 MQTT helper does not log anymore (#764)
+
+s0170071 (2):
+      Broken comment (#766)
+      Space (#767)
+
+
+-------------------------------------------------
 Changes in release mega-20180123 (since mega-20180122)
 -------------------------------------------------
 
