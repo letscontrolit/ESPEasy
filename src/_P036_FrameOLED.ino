@@ -204,7 +204,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
       {
           if (display)
+          {
             delete display;
+            display=NULL;
+          }
           break;
       }
 
