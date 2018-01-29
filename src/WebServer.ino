@@ -890,12 +890,12 @@ void handle_controllers() {
     {
       String ProtocolName = "";
       CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
-
+      boolean disabled = false;// !((controllerindex == 0) || !Protocol[x].usesMQTT);
       addSelector_Item(reply,
                        ProtocolName,
                        Protocol[x].Number,
                        choice == Protocol[x].Number,
-                       !((controllerindex == 0) || !Protocol[x].usesMQTT),
+                       disabled,
                        F(""));
     }
     addSelector_Foot(reply);
