@@ -124,6 +124,12 @@ static const char pgDefaultCSS[] PROGMEM = {
   ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
   ".div_br {clear:both;}"
   //".active {text-decoration:underline;}"
+  // The alert message box
+  ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px;}"
+  // The close button
+  ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s;}"
+  // When moving the mouse over the close button
+  ".closebtn:hover {color: black;}"
   "\0"
 };
 
@@ -134,9 +140,9 @@ void addHtmlError(String & str, String error)
 {
     if (error.length()>0)
     {
-      str += F("<span style=\"color:red\">");
+      str += F("<div class=\"alert\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
       str += error;
-      str += F("</span>");
+      str += F("</div>");
     }
 }
 
@@ -222,8 +228,9 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   if (tmplName == F("TmplAP"))
   {
     tmpl += F(
-              "<!DOCTYPE html>"
+              "<!DOCTYPE html><html lang='en'>"
               "<head>"
+              "<meta charset='utf-8'/>"
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
@@ -238,8 +245,9 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   else if (tmplName == F("TmplMsg"))
   {
     tmpl += F(
-              "<!DOCTYPE html>"
+              "<!DOCTYPE html><html lang='en'>"
               "<head>"
+              "<meta charset='utf-8'/>"
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
@@ -256,6 +264,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
     tmpl += F(
       "<!DOCTYPE html><html lang='en'>"
       "<head>"
+        "<meta charset='utf-8'/>"
         "<title>{{name}}</title>"
         "{{js}}"
         "{{css}}"
@@ -323,6 +332,29 @@ void sendWebPageChunkedEnd(String& log)
   #endif
 }
 
+String getErrorNotifications() {
+  String errors;
+  // Check number of MQTT controllers active.
+  int nrMQTTenabled = 0;
+  for (byte x = 0; x < CONTROLLER_MAX; x++) {
+    if (Settings.Protocol[x] != 0) {
+      byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
+      if (Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
+        ++nrMQTTenabled;
+      }
+    }
+  }
+  if (nrMQTTenabled > 1) {
+    // Add warning, only one MQTT protocol should be used.
+    addHtmlError(errors, F("Only one MQTT controller should be active."));
+  }
+
+
+  // Check checksum of stored settings.
+
+
+  return errors;
+}
 
 void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 {
@@ -352,9 +384,11 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
       {
         sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
         sendWebPageChunkedData(log, pageContent);   //send the content - free mem - content can only added once
-      }
-      else
-      {
+      } else if (varName == F("error")) {
+        String errors(getErrorNotifications());
+        if (errors.length() > 0)
+          sendWebPageChunkedData(log, errors);
+      } else {
         getWebPageTemplateVar(varName, varValue);
         pageResult += varValue;
       }
@@ -986,7 +1020,7 @@ void handle_controllers() {
   if (controllerNotSet)
   {
     reply += F("<table border=1px frame='box' rules='all'><TR><TH>");
-    reply += F("<TH>Nr<TH>Enabled<TH>Protocol<TH>IP<TH>Port");
+    reply += F("<TH>Nr<TH>Enabled<TH>Protocol<TH>Host<TH>Port");
 
     ControllerSettingsStruct ControllerSettings;
     for (byte x = 0; x < CONTROLLER_MAX; x++)
@@ -1010,7 +1044,7 @@ void handle_controllers() {
         reply += ProtocolName;
 
         reply += F("<TD>");
-        reply += ControllerSettings.getIP().toString();
+        reply += ControllerSettings.getHost();
         reply += F("<TD>");
         reply += ControllerSettings.Port;
       }
@@ -1031,12 +1065,12 @@ void handle_controllers() {
     {
       String ProtocolName = "";
       CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
-
+      boolean disabled = false;// !((controllerindex == 0) || !Protocol[x].usesMQTT);
       addSelector_Item(reply,
                        ProtocolName,
                        Protocol[x].Number,
                        choice == Protocol[x].Number,
-                       !((controllerindex == 0) || !Protocol[x].usesMQTT),
+                       disabled,
                        F(""));
     }
     addSelector_Foot(reply);
