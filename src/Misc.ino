@@ -1439,6 +1439,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   repl(F("%LF%"), F("\n"), s, useURLencode);
   repl(F("%ip%"),WiFi.localIP().toString(), s, useURLencode);
   repl(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)), s, useURLencode);
+  repl(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0), s, useURLencode);
   repl(F("%sysname%"), Settings.Name, s, useURLencode);
   repl(F("%systime%"), getTimeString(':'), s, useURLencode);
   char valueString[5];
