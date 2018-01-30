@@ -1422,64 +1422,67 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
   }
 }
 
+// Simple macro to create the replacement string only when needed.
+#define SMART_REPL(T,S) if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode);}
 void parseSystemVariables(String& s, boolean useURLencode)
 {
+  if (s.indexOf('%') == -1)
+    return; // Nothing to replace
+
   #if FEATURE_ADC_VCC
     repl(F("%vcc%"), String(vcc), s, useURLencode);
   #endif
   repl(F("%CR%"), F("\r"), s, useURLencode);
   repl(F("%LF%"), F("\n"), s, useURLencode);
-  repl(F("%ip%"),WiFi.localIP().toString(), s, useURLencode);
-  repl(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)), s, useURLencode);
-  repl(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0), s, useURLencode);
-  repl(F("%ssid%"), (WiFi.status() == WL_CONNECTED) ? WiFi.SSID() : F("--"), s, useURLencode);
-  repl(F("%unit%"), String(Settings.Unit), s, useURLencode);
+  SMART_REPL(F("%ip%"),WiFi.localIP().toString())
+  SMART_REPL(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0))
+  SMART_REPL(F("%ssid%"), (WiFi.status() == WL_CONNECTED) ? WiFi.SSID() : F("--"))
+  SMART_REPL(F("%unit%"), String(Settings.Unit))
 
-  repl(F("%sysname%"), Settings.Name, s, useURLencode);
-  repl(F("%systime%"), getTimeString(':'), s, useURLencode);
-  char valueString[5];
-  sprintf_P(valueString, PSTR("%02d"), hour());
-  repl(F("%syshour%"), valueString, s, useURLencode);
+  if (s.indexOf(F("%sys")) != -1) {
+    SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
+    SMART_REPL(F("%systime%"), getTimeString(':'))
+    repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
-  sprintf_P(valueString, PSTR("%02d"), minute());
-  repl(F("%sysmin%"),  valueString, s, useURLencode);
-
-  sprintf_P(valueString, PSTR("%02d"), second());
-  repl(F("%syssec%"),  valueString, s, useURLencode);
-
-  sprintf_P(valueString, PSTR("%02d"), day());
-  repl(F("%sysday%"),  valueString, s, useURLencode);
-
-  sprintf_P(valueString, PSTR("%02d"), month());
-  repl(F("%sysmonth%"),valueString, s, useURLencode);
-
-  sprintf_P(valueString, PSTR("%04d"), year());
-  repl(F("%sysyear%"), valueString, s, useURLencode);
-
-  sprintf_P(valueString, PSTR("%02d"), year()%100);
-  repl(F("%sysyears%"),valueString, s, useURLencode);
-  repl(F("%lcltime%"), getDateTimeString('-',':',' '), s, useURLencode);
+    // valueString is being used by the macro.
+    char valueString[5];
+    #define SMART_REPL_TIME(T,F,V) if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T),valueString, s, useURLencode);}
+    SMART_REPL_TIME(F("%syshour%"), PSTR("%02d"), hour())
+    SMART_REPL_TIME(F("%sysmin%"), PSTR("%02d"), minute())
+    SMART_REPL_TIME(F("%syssec%"),PSTR("%02d"), second())
+    SMART_REPL_TIME(F("%sysday%"), PSTR("%02d"), day())
+    SMART_REPL_TIME(F("%sysmonth%"),PSTR("%02d"), month())
+    SMART_REPL_TIME(F("%sysyear%"), PSTR("%04d"), year())
+    SMART_REPL_TIME(F("%sysyears%"),PSTR("%02d"), year()%100)
+    #undef SMART_REPL_TIME
+  }
+  SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
+  SMART_REPL(F("%uptime%"), String(wdcounter / 2))
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
-  repl(F("%uptime%"), String(wdcounter / 2), s, useURLencode);
-  repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
-  repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
-  repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
-  repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+  if (s.indexOf("%vname") != -1) {
+    repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
+    repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
+    repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
+    repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+  }
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
 {
-  repl(F("%id%"), String(event->idx), s, useURLencode);
-  if (event->sensorType == SENSOR_TYPE_LONG)
-    repl(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)), s, useURLencode);
-  else {
-    repl(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[0]), s, useURLencode);
-    repl(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]), s, useURLencode);
-    repl(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]), s, useURLencode);
-    repl(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]), s, useURLencode);
+  SMART_REPL(F("%id%"), String(event->idx))
+  if (s.indexOf("%val") != -1) {
+    if (event->sensorType == SENSOR_TYPE_LONG) {
+      SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
+    } else {
+      SMART_REPL(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[0]))
+      SMART_REPL(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]))
+      SMART_REPL(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]))
+      SMART_REPL(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]))
+    }
   }
 }
+#undef SMART_REPL
 
 
 /********************************************************************************************\
