@@ -1157,10 +1157,6 @@ void initLog()
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
-  for (int l=0; l<10; l++)
-  {
-    Logging[l].Message=0;
-  }
 }
 
 /********************************************************************************************\
@@ -1177,29 +1173,25 @@ void addLog(byte logLevel, const __FlashStringHelper* flashString)
     addLog(logLevel, s.c_str());
 }
 
+boolean loglevelActive(byte logLevel, byte logLevelSettings) {
+  return (logLevel <= logLevelSettings);
+}
+
 void addLog(byte loglevel, const char *line)
 {
   if (Settings.UseSerial)
-    if (loglevel <= Settings.SerialLogLevel)
+    if (loglevelActive(loglevel, Settings.SerialLogLevel))
       Serial.println(line);
 
-  if (loglevel <= Settings.SyslogLevel)
+  if (loglevelActive(loglevel, Settings.SyslogLevel))
     syslog(line);
 
-  if (loglevel <= Settings.WebLogLevel)
+  if (loglevelActive(loglevel, Settings.WebLogLevel))
   {
-    logcount++;
-    if (logcount > 9)
-      logcount = 0;
-    Logging[logcount].timeStamp = millis();
-    if (Logging[logcount].Message == 0)
-      Logging[logcount].Message =  (char *)malloc(128);
-    strncpy(Logging[logcount].Message, line, 127);
-    Logging[logcount].Message[127]=0; //make sure its null terminated!
-
+    Logging.add(line);
   }
 
-  if (loglevel <= Settings.SDLogLevel)
+  if (loglevelActive(loglevel, Settings.SDLogLevel))
   {
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
