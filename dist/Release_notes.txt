@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release v2.0-20180130 (since v2.0-20180126)
+-------------------------------------------------
+
+Release date: Tue Jan 30 05:00:23 CET 2018
+
+Edwin Eefting (1):
+      forgot to commit last framed oled display fix
+
+Gijs Noorlander (3):
+      Bugfix/issue 740 allow mqtt as controller 2 3 (#785)
+      [#784] Add %rssi% as system variable (#786)
+      [Log] Clean up of log routines and more intuitive log level input (#788)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180126 (since v2.0-20180124)
 -------------------------------------------------
 
