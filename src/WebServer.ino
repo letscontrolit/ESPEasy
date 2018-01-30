@@ -2685,34 +2685,14 @@ void handle_log() {
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
-  char *TempString = (char*)malloc(80);
-
   String reply = "";
   addHeader(true, reply);
   reply += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
   reply += F("<table><TR><TH>Log<TR><TD>");
-
-  if (logcount != -1)
-  {
-    byte counter = logcount;
-    do
-    {
-      counter++;
-      if (counter > 9)
-        counter = 0;
-      if (Logging[counter].timeStamp > 0)
-      {
-        reply += Logging[counter].timeStamp;
-        reply += " : ";
-        reply += Logging[counter].Message;
-        reply += F("<BR>");
-      }
-    }  while (counter != logcount);
-  }
+  Logging.getAll(reply, F("<BR>"));
   reply += F("</table>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
-  free(TempString);
 }
 
 
@@ -3361,13 +3341,12 @@ void handle_advanced() {
   addFormSubHeader(reply, F("Log Settings"));
 
   addFormIPBox(reply, F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
-  addFormNumericBox(reply, F("Syslog Level"), F("sysloglevel"), Settings.SyslogLevel, 0, 4);
+  addFormLogLevelSelect(reply, F("Syslog Level"),      F("sysloglevel"),    Settings.SyslogLevel);
+  addFormLogLevelSelect(reply, F("Serial log Level"),  F("serialloglevel"), Settings.SerialLogLevel);
+  addFormLogLevelSelect(reply, F("Web log Level"),     F("webloglevel"),    Settings.WebLogLevel);
 
-  addFormNumericBox(reply, F("Serial log Level"), F("serialloglevel"), Settings.SerialLogLevel, 0, 4);
-  addFormNumericBox(reply, F("Web log Level"), F("webloglevel"), Settings.WebLogLevel, 0, 4);
 #ifdef FEATURE_SD
-  addFormNumericBox(reply, F("SD Card log Level"), F("sdloglevel"), Settings.SDLogLevel, 0, 4);
-
+  addFormLogLevelSelect(reply, F("SD Card log Level"), F("sdloglevel"),     Settings.SDLogLevel);
   addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 #endif
 
@@ -3410,6 +3389,18 @@ void handle_advanced() {
   sendWebPage(F("TmplStd"), reply);
 }
 
+void addFormLogLevelSelect(String& str, const String& label, const String& id, int choice)
+{
+  addRowLabel(str, label);
+  addLogLevelSelect(str, id, choice);
+}
+
+void addLogLevelSelect(String& str, String name, int choice)
+{
+  String options[6] = { F("None"), F("Error"), F("Info"), F("Debug"), F("Debug More"), F("Debug dev")};
+  int optionValues[6] = { 0 , LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG, LOG_LEVEL_DEBUG_MORE, LOG_LEVEL_DEBUG_DEV};
+  addSelector(str, name, 6, options, optionValues, NULL, choice, false);
+}
 
 //********************************************************************************
 // Login state check
@@ -4460,7 +4451,7 @@ void handle_sysinfo() {
   #ifdef PLUGIN_BUILD_DEV
     reply += F(" [Development]");
   #endif
-  
+
   reply += F("<TR><TD>Md5<TD>");
   for (byte i = 0; i<16; i++)   reply += String(thisBinaryMd5[i],HEX);
 

@@ -687,13 +687,71 @@ struct EventStruct
   byte *Data;
 };
 
-struct LogStruct
-{
-  LogStruct() : timeStamp(0), Message(NULL) {}
-  unsigned long timeStamp;
-  char* Message;
-} Logging[10];
-int logcount = -1;
+#define LOG_STRUCT_MESSAGE_SIZE 128
+#define LOG_STRUCT_MESSAGE_LINES 20
+
+struct LogStruct {
+    LogStruct() : write_idx(0), read_idx(0) {
+      for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
+        memset(Message[i], 0, LOG_STRUCT_MESSAGE_SIZE);
+        timeStamp[i] = 0;
+      }
+    }
+
+    void add(const char *line) {
+      write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+      if (write_idx == read_idx) {
+        // Buffer full, move read_idx to overwrite oldest entry.
+        read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+      }
+      timeStamp[write_idx] = millis();
+      strncpy(Message[write_idx], line, LOG_STRUCT_MESSAGE_SIZE-1);
+    }
+
+    // Read the next item and append it to the given string.
+    // Returns whether new lines are available.
+    bool get(String& output, const String& lineEnd) {
+      if (!isEmpty()) {
+        read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+        output += formatLine(read_idx, lineEnd);
+      }
+      return !isEmpty();
+    }
+
+    bool getAll(String& output, const String& lineEnd) {
+      int tmpread((write_idx + 1) % LOG_STRUCT_MESSAGE_LINES);
+      bool someAdded = false;
+      while (tmpread != write_idx) {
+        if (timeStamp[tmpread] != 0) {
+          output += formatLine(tmpread, lineEnd);
+          someAdded = true;
+        }
+        tmpread = (tmpread + 1)% LOG_STRUCT_MESSAGE_LINES;
+      }
+      return someAdded;
+    }
+
+    bool isEmpty() {
+      return (write_idx == read_idx);
+    }
+
+  private:
+    String formatLine(int index, const String& lineEnd) {
+      String output;
+      output += timeStamp[index];
+      output += " : ";
+      output += Message[index];
+      output += lineEnd;
+      return output;
+    }
+
+
+    int write_idx;
+    int read_idx;
+    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
+    char Message[LOG_STRUCT_MESSAGE_LINES][LOG_STRUCT_MESSAGE_SIZE];
+
+} Logging;
 
 struct DeviceStruct
 {
