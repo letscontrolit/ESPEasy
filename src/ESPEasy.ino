@@ -355,6 +355,7 @@ MDNSResponder mdns;
 // MQTT client
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
+bool MQTTclient_should_reconnect = true;
 
 // WebServer
 ESP8266WebServer WebServer(80);

@@ -704,6 +704,10 @@ void handle_config() {
 
   if (ssid[0] != 0)
   {
+    if (strcmp(Settings.Name, name.c_str()) != 0) {
+      addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
+      MQTTclient_should_reconnect = true;
+    }
     strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
     //strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
@@ -3144,7 +3148,7 @@ void handle_advanced() {
   addFormLogLevelSelect(reply, F("Serial log Level"),  F("serialloglevel"), Settings.SerialLogLevel);
   addFormLogLevelSelect(reply, F("Web log Level"),     F("webloglevel"),    Settings.WebLogLevel);
   addFormLogLevelSelect(reply, F("SD Card log Level"), F("sdloglevel"),     Settings.SDLogLevel);
-  
+
   addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 
 
