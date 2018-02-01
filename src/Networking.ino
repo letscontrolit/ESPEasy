@@ -14,7 +14,14 @@ void syslog(const char *message)
     portUDP.beginPacket(broadcastIP, 514);
     char str[256];
     str[0] = 0;
-    snprintf_P(str, sizeof(str), PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
+	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"	
+
+	// Using Settings.Name as the Hostname (Hostname must NOT content space)
+    snprintf_P(str, sizeof(str), PSTR("<7>%s EspEasy: %s"), Settings.Name, message);
+
+	// Using Setting.Unit to build a Hostname
+    //snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
+
     portUDP.write(str);
     portUDP.endPacket();
   }
