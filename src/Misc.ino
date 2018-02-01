@@ -775,7 +775,7 @@ uint32_t progMemMD5check(){
         if ((*ptrStart) == 0) break;                                                                      // segment not used.
         for (uint32_t i = *ptrStart; i< (*ptrEnd) ; i=i+sizeof(calcBuffer)){                              // "<" includes last byte
              for (int buf = 0; buf < BufSize; buf ++){
-                calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf*4);                                         // read 4 bytes
+                calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                         // read 4 bytes
                 md5NoOfBytes+=sizeof(calcBuffer[0]);
              }
              md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5. At the end not the whole buffer. md5 ptr to data in ram.
