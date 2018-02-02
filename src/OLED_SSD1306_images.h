@@ -48,3 +48,4 @@ const char inactiveSymbole[] PROGMEM = {
     B00000000,
     B00000000
 };
+
