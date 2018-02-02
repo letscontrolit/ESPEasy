@@ -110,7 +110,45 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
-#define UNIT                0
+#define UNIT						0		// Unit Number
+
+// Advanced Settings -----------------------------------------------------
+
+#define DEFAULT_USE_RULES			false	// (true|false) Enable Rules?
+
+#define DEFAULT_MQTT_RETAIN			false	// (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_DELAY			1000	// Time in milliseconds to retain MQTT messages
+
+#define DEFAULT_USE_NTP				false	// (true|false) Use NTP Server
+#define DEFAULT_NTP_HOST			""		// NTP Server Hostname
+#define DEFAULT_TIME_ZONE			0		// Time Offset (in minutes)
+#define DEFAULT_USE_DST				false	// (true|false) Use Daily Time Saving
+
+#define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
+#define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL		LOG_LEVEL_INFO	// Web Log Level
+#define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
+#define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
+
+
+#define DEFAULT_USE_SERIAL			true	// (true|false) Enable Logging to the Serial Port
+#define DEFAULT_SERIAL_BAUD			115200	// Serial Port Baud Rate
+
+
+/*
+// Experimental Advanced Settings (NOT ACTIVES)---------------
+
+#define DEFAULT_USE_GLOBAL_SYNC			false		// (true|false)
+#define DEFAULT_SYNC_UDP_PORT			0			//
+
+#define DEFAULT_IP_OCTET				0			//
+#define DEFAULT_WD_IC2_ADDRESS			0			//
+#define DEFAULT_USE_SSDP			false		// (true|false)
+#define DEFAULT_CON_FAIL_THRES			0			//
+#define DEFAULT_I2C_CLOCK_LIMIT			0			//
+*/
+
 
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
