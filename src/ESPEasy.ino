@@ -79,19 +79,26 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_NAME        "ESP_Easy"         // Enter your device friendly name
-#define DEFAULT_SSID        "ssid"              // Enter your network SSID
-#define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
-#define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
+// --- Basic Config Settings ------------------------------------------------------------------------
+#define DEFAULT_NAME        "ESP_Easy"			// Enter your device friendly name
+#define UNIT				0					// Unit Number
+#define DEFAULT_DELAY       60                  // Sleep Delay in seconds
+
+// --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
 #define DEFAULT_AP_IP      	192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
-#define DEFAULT_USE_STATIC_IP   false           // true or false enabled or disabled set static IP
+// --- Wifi Client Mode -----------------------------------------------------------------------------
+#define DEFAULT_SSID        "ssid"              // Enter your Wifi network SSID
+#define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
+
+#define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
-#define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
-#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
+#define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
+#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
 
+// --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
@@ -110,10 +117,8 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
-#define UNIT						0		// Unit Number
 
-// Advanced Settings -----------------------------------------------------
-
+// --- Advanced Settings ---------------------------------------------------------------------------------
 #define DEFAULT_USE_RULES			false	// (true|false) Enable Rules?
 
 #define DEFAULT_MQTT_RETAIN			false	// (true|false) Retain MQTT messages?
@@ -131,13 +136,11 @@
 #define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
 #define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
 
-
 #define DEFAULT_USE_SERIAL			true	// (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD			115200	// Serial Port Baud Rate
 
-
 /*
-// Experimental Advanced Settings (NOT ACTIVES)---------------
+// --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 
 #define DEFAULT_USE_GLOBAL_SYNC			false		// (true|false)
 #define DEFAULT_SYNC_UDP_PORT			0			//
