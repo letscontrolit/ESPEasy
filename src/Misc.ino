@@ -759,35 +759,34 @@ void dump (uint32_t addr) { //Seems already included in core 2.4 ...
 
 uint32_t progMemMD5check(){
     #define BufSize 10
-    const  char CRCdummy[16+32+1] = "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";                   // 16Bytes MD5, 32 Bytes Segment boundaries, 1Byte 0-termination. DO NOT MODIFY !
     uint32_t calcBuffer[BufSize];
-    uint32_t md5NoOfBytes = 0;
-    memcpy (calcBuffer,CRCdummy,16);                                                                      // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
-    if( memcmp (calcBuffer, "MD5_MD5_MD5_MD5_",16)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
+    CRCValues.numberOfCRCBytes = 0;
+    memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
+    if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.  
         addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
         return 0;
     }
     MD5Builder md5;
     md5.begin();
     for (int l = 0; l<4; l++){                                                                            // check max segments,  if the pointer is not 0
-        uint32_t *ptrStart = (uint32_t *)&CRCdummy[16+l*4];
-        uint32_t *ptrEnd =   (uint32_t *)&CRCdummy[16+4*4+l*4];
+        uint32_t *ptrStart = (uint32_t *)&CRCValues.compileTimeMD5[16+l*4];
+        uint32_t *ptrEnd =   (uint32_t *)&CRCValues.compileTimeMD5[16+4*4+l*4];
         if ((*ptrStart) == 0) break;                                                                      // segment not used.
         for (uint32_t i = *ptrStart; i< (*ptrEnd) ; i=i+sizeof(calcBuffer)){                              // "<" includes last byte
              for (int buf = 0; buf < BufSize; buf ++){
-                calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf*4);                                         // read 4 bytes
-                md5NoOfBytes+=sizeof(calcBuffer[0]);
+                calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
+                CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
              md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5. At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
    md5.calculate();
-   md5.getBytes(thisBinaryMd5);
-   if ( memcmp (CRCdummy, thisBinaryMd5, 16) == 0 ) {
+   md5.getBytes(CRCValues.runTimeMD5);
+   if ( CRCValues.checkPassed())  {
       addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
-      return md5NoOfBytes;
+      return CRCValues.numberOfCRCBytes;
    }
-   addLog(LOG_LEVEL_INFO, F("CRC  : program checksum     ...FAIL"));
+   addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
 
@@ -799,7 +798,7 @@ uint32_t progMemMD5check(){
 String SaveSettings(void)
 {
   MD5Builder md5;
-  memcpy( Settings.ProgmemMd5, thisBinaryMd5, 16);
+  memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
   md5.calculate();
@@ -810,19 +809,12 @@ String SaveSettings(void)
   if (err.length())
    return(err);
 
-
-  memcpy( SecuritySettings.ProgmemMd5, thisBinaryMd5, 16);
+  memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
   md5.calculate();
   md5.getBytes(SecuritySettings.md5);
   err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-
-//  dump((uint32_t)SecuritySettings.md5);
-//  dump((uint32_t)SecuritySettings.ProgmemMd5);
-//  dump((uint32_t)Settings.md5);
-//  dump((uint32_t)Settings.ProgmemMd5);
-//  dump((uint32_t)thisBinaryMd5);
 
  return (err);
 }
@@ -846,7 +838,7 @@ String LoadSettings()
   md5.getBytes(calculatedMd5);
   if (memcmp (calculatedMd5, Settings.md5,16)==0){
     addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
-    if (memcmp(Settings.ProgmemMd5, thisBinaryMd5, 16)!=0)
+    if (memcmp(Settings.ProgmemMd5, CRCValues.runTimeMD5, 16)!=0)
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
   }
   else{
@@ -861,17 +853,12 @@ String LoadSettings()
   md5.getBytes(calculatedMd5);
   if (memcmp (calculatedMd5, SecuritySettings.md5, 16)==0){
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
-    if (memcmp(SecuritySettings.ProgmemMd5,thisBinaryMd5, 16)!=0)
+    if (memcmp(SecuritySettings.ProgmemMd5,CRCValues.runTimeMD5, 16)!=0)
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
  }
   else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
-//  dump((uint32_t)SecuritySettings.md5);
-//  dump((uint32_t)SecuritySettings.ProgmemMd5);
-//  dump((uint32_t)Settings.md5);
-//  dump((uint32_t)Settings.ProgmemMd5);
-//  dump((uint32_t)thisBinaryMd5);
   return(err);
 }
 

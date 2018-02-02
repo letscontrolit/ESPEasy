@@ -414,6 +414,15 @@ PubSubClient MQTTclient(mqtt);
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
+struct CRCStruct{
+  char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
+  char compileTime[16]= __TIME__;
+  char compileDate[16]= __DATE__;
+  uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  bool checkPassed (void){ return memcmp(compileTimeMD5,runTimeMD5,16)==0 ; }
+  uint32_t numberOfCRCBytes=0;
+}CRCValues; 
+ 
 struct SecurityStruct
 {
   SecurityStruct() {
@@ -920,7 +929,6 @@ String eventBuffer = "";
 
 uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
-uint8_t thisBinaryMd5[16]={0};
 
 bool shouldReboot=false;
 
