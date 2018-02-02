@@ -298,6 +298,17 @@
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
 
+/*
+	To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'" 
+	- add a "Custom.h" file in this folder.
+	
+*/
+#ifdef USE_CUSTOM_H
+#include "Custom.h"
+#endif
+
+
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
