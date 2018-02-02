@@ -134,11 +134,8 @@ void MQTTConnect(int controller_idx)
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = Settings.Name; // clientid = %sysname%
-  if (Settings.Unit != 0) // set unit number to zero if don't want to add to clientid
-  {
-    clientid += Settings.Unit;
-  }
+  String clientid = F("ESPClient_");
+  clientid += WiFi.macAddress();
   String subscribeTo = "";
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
@@ -156,9 +153,9 @@ void MQTTConnect(int controller_idx)
 
     if (MQTTresult)
     {
-      log = F("MQTT : ClientID ");
+      MQTTclient_should_reconnect = false;
+      log = F("MQTT : Connected to broker with client ID: ");
       log += clientid;
-      log += " connected to broker";
       addLog(LOG_LEVEL_INFO, log);
       subscribeTo = ControllerSettings.Subscribe;
       subscribeTo.replace(F("%sysname%"), Settings.Name);
@@ -193,10 +190,14 @@ void MQTTCheck(int controller_idx)
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (!MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
+    if (MQTTclient_should_reconnect || !MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
     {
-      addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
-      connectionFailures += 2;
+      if (MQTTclient_should_reconnect) {
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
+      } else {
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
+        connectionFailures += 2;
+      }
       MQTTclient.disconnect();
       if (WiFi.status() == WL_CONNECTED) {
         delay(1000);

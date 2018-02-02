@@ -83,6 +83,7 @@
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
+#define DEFAULT_AP_IP      	192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
 #define DEFAULT_USE_STATIC_IP   false           // true or false enabled or disabled set static IP
@@ -306,6 +307,17 @@
 #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
 #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
 
+/*
+	To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+	- add a "Custom.h" file in this folder.
+
+*/
+#ifdef USE_CUSTOM_H
+#include "Custom.h"
+#endif
+
+
 #include "core_version.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
@@ -401,7 +413,7 @@ ADC_MODE(ADC_VCC);
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
-IPAddress apIP(192, 168, 4, 1);
+IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
 #ifdef FEATURE_MDNS
 MDNSResponder mdns;
@@ -410,6 +422,7 @@ MDNSResponder mdns;
 // MQTT client
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
+bool MQTTclient_should_reconnect = true;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
@@ -946,7 +959,7 @@ void setup()
 
   Serial.begin(115200);
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
- 
+
   initLog();
 
 

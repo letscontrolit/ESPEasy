@@ -275,16 +275,19 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (command == F("longpulse"))
+        if ((command == F("longpulse")) || (command == F("longpulse_ms")))
         {
+          boolean time_in_msec = command == F("longpulse_ms");
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            setSystemTimer(event->Par3 * 1000, PLUGIN_ID_001, event->Par1, !event->Par2, 0);
-            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
+            setSystemTimer(time_in_msec ? event->Par3 : event->Par3 * 1000,
+                           PLUGIN_ID_001, event->Par1, !event->Par2, 0);
+            log = String(F("SW   : GPIO ")) + String(event->Par1) +
+                  String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
             addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
