@@ -130,9 +130,13 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
       {
         //  Here we check that the MQTT client is alive.
 
-        if (!MQTTclient_037->connected()) {
+        if (!MQTTclient_037->connected() || MQTTclient_should_reconnect) {
+          if (MQTTclient_should_reconnect) {
+            addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Intentional reconnect"));
+          } else {
+            addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
+          }
 
-          addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
 
           MQTTclient_037->disconnect();
           delay(1000);

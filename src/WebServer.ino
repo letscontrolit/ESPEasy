@@ -808,6 +808,10 @@ void handle_config() {
 
   if (ssid[0] != 0)
   {
+    if (strcmp(Settings.Name, name.c_str()) != 0) {
+      addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
+      MQTTclient_should_reconnect = true;
+    }
     strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
     //strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
@@ -3185,7 +3189,9 @@ void handle_json()
     reply += F(",\n\"Unit\": ");
     reply += Settings.Unit;
     reply += F(",\n\"Local time\": ");
+    reply += F("\"");
     reply += getDateTimeString('-',':',' ');
+    reply += F("\"");
     reply += F(",\n\"Uptime\": ");
     reply += wdcounter / 2;
     reply += F(",\n\"Free RAM\": ");
@@ -3347,6 +3353,7 @@ void handle_advanced() {
 
 #ifdef FEATURE_SD
   addFormLogLevelSelect(reply, F("SD Card log Level"), F("sdloglevel"),     Settings.SDLogLevel);
+
   addFormCheckBox(reply, F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 #endif
 
