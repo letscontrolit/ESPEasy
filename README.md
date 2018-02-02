@@ -4,7 +4,8 @@ Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?b
 
 Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction
 
-This is the development branch of ESPEasy. All new untested features go into this branch. If you want to do a bugfix, do it on the stable branch, we will merge the fix to the development branch as well.
+**MEGA**
+:warning:This is the development branch of ESPEasy. All new untested features go into this branch. If you want to do a bugfix, do it on the stable branch, we will merge the fix to the development branch as well.:warning:
 
 Next stable branch: https://github.com/letscontrolit/ESPEasy/tree/v2.0  (bug fixes only, since oct 2017))
 
