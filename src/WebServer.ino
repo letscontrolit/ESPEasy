@@ -3184,17 +3184,19 @@ void handle_json()
   if (tasknr.length() == 0)
   {
     reply += F("{\"System\":{\n");
-    reply += F("\"Build\": ");
+    reply += F("\"Build\":");
     reply += BUILD;
-    reply += F(",\n\"Unit\": ");
+    reply += F(",\n\"Git Build\":\"");
+    reply += BUILD_GIT;
+    reply += F("\",\n\"Unit\":");
     reply += Settings.Unit;
-    reply += F(",\n\"Local time\": ");
+    reply += F(",\n\"Local time\":");
     reply += F("\"");
     reply += getDateTimeString('-',':',' ');
     reply += F("\"");
-    reply += F(",\n\"Uptime\": ");
+    reply += F(",\n\"Uptime\":");
     reply += wdcounter / 2;
-    reply += F(",\n\"Free RAM\": ");
+    reply += F(",\n\"Free RAM\":");
     reply += ESP.getFreeHeap();
     reply += F("\n},\n");
   }
@@ -3224,7 +3226,7 @@ void handle_json()
       LoadTaskSettings(TaskIndex);
       reply += F("{\n");
 
-      reply += F("\"TaskName\": \"");
+      reply += F("\"TaskName\":\"");
       reply += ExtraTaskSettings.TaskDeviceName;
       reply += F("\"");
       if (Device[DeviceIndex].ValueCount != 0)
