@@ -6,9 +6,9 @@ Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Intr
 
 This is the stable branch for the next upcoming ESPeasy release (2.0.0).
 
-If you're living on the edge and want the latest features and bugs, go to https://github.com/letscontrolit/ESPEasy .
+If you're living on the edge and want the latest features and bugs, go to the development branch: https://github.com/letscontrolit/ESPEasy/tree/mega
 
-If you're a developer: Bug fixes go in this branch, we will merge them back to the development branch.
+If you're a developer: Bug fixes go into this v2.0 branch, we will merge them back to the development branch.
 
 Check here to learn how to use this branch and help us improving ESPEasy: http://www.letscontrolit.com/wiki/index.php/ESPEasy#Source_code_development
 
