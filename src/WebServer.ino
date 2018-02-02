@@ -2985,10 +2985,10 @@ void handle_json()
   {
     reply += F("{\"System\":{\n");
 
-	reply += F("\"Build\":");							reply += BUILD;												reply += F(",");
-	reply += F("\"Git Build\":");	reply += F("\"");	reply += BUILD_GIT;						reply += F("\"");	reply += F(",");
 	reply += F("\"Name\":");		reply += F("\"");	reply += Settings.Name;					reply += F("\"");	reply += F(",");
 	reply += F("\"Unit\":");							reply += Settings.Unit;										reply += F(",");
+	reply += F("\"Build\":");							reply += BUILD;												reply += F(",");
+	reply += F("\"Git Build\":");	reply += F("\"");	reply += BUILD_GIT;						reply += F("\"");	reply += F(",");
 	reply += F("\"Local time\":");	reply += F("\"");	reply += getDateTimeString('-',':',' ');reply += F("\"");	reply += F(",");
 	reply += F("\"Uptime\":");							reply += wdcounter / 2;										reply += F(",");
     reply += F("\"Free RAM\":");						reply += ESP.getFreeHeap();									//end of array
