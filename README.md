@@ -1,6 +1,7 @@
 # ESPEasy legacy branch
 
-This is the ESPEasy legacy branch which isn't developed anymore. 
+**MASTER**
+:warning:This is the ESPEasy legacy branch which isn't developed anymore.:warning:
 
 Current development branch: https://github.com/letscontrolit/ESPEasy/tree/mega (new features + fixes from v2.0 )
 
