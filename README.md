@@ -4,7 +4,8 @@ Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?b
 
 Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction
 
-This is the stable branch for the next upcoming ESPeasy release (2.0.0).
+**v2.0**
+:warning:This is the stable branch for the next upcoming ESPeasy release (2.0.0).:warning:
 
 If you're living on the edge and want the latest features and bugs, go to the development branch: https://github.com/letscontrolit/ESPEasy/tree/mega
 
