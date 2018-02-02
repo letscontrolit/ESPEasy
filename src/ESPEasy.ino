@@ -83,6 +83,7 @@
 #define DEFAULT_SSID        "ssid"              // Enter your network SSID
 #define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
 #define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
+#define DEFAULT_AP_IP      	192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
 #define DEFAULT_USE_STATIC_IP   false           // true or false enabled or disabled set static IP
@@ -346,7 +347,7 @@ bool ArduinoOTAtriggered=false;
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
-IPAddress apIP(192, 168, 4, 1);
+IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
 #ifdef FEATURE_MDNS
 MDNSResponder mdns;
