@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release v2.0-20180202 (since v2.0-20180130)
+-------------------------------------------------
+
+Release date: Fri Feb  2 05:00:23 CET 2018
+
+DatuX (2):
+      Update README.md
+      Update README.md
+
+Gijs Noorlander (3):
+      [issue #794] Add longpulse_ms command (#796)
+      [v2.0] Resource friendly string replacement (#798)
+      [issue #739] Reconnect MQTT when Unit Name has changed. (#803)
+
+soif (5):
+      Fixes invalid '/json' page output format : DateTimeString is now correctly quoted (#802)
+      Fix Syslog : include Hosname instead of Unit Number - now RFC3164 compliant (#805)
+      Allows to define the IP address when in AP Mode (#806)
+      Custom define file (#807)
+      Json page also Shows Git Build (#808)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180130 (since v2.0-20180126)
 -------------------------------------------------
 
