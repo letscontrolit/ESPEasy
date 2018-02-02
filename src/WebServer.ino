@@ -2988,6 +2988,8 @@ void handle_json()
     reply += BUILD;
     reply += F(",\n\"Git Build\":\"");
     reply += BUILD_GIT;
+    reply += F("\",\n\"Name\":\"");
+    reply += Settings.Name;
     reply += F("\",\n\"Unit\":");
     reply += Settings.Unit;
     reply += F(",\n\"Local time\":");
