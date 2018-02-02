@@ -2986,6 +2986,8 @@ void handle_json()
     reply += F("{\"System\":{\n");
     reply += F("\"Build\":");
     reply += BUILD;
+    reply += F(",\n\"Git Build\":\"");
+    reply += BUILD_GIT;
     reply += F("\",\n\"Unit\":");
     reply += Settings.Unit;
     reply += F(",\n\"Local time\":");
