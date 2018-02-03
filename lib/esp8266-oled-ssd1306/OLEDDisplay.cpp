@@ -556,9 +556,16 @@ void OLEDDisplay::normalDisplay(void) {
   sendCommand(NORMALDISPLAY);
 }
 
-void OLEDDisplay::setContrast(char contrast) {
+void OLEDDisplay::setContrast(char contrast, char precharge, char comdetect) {
+  sendCommand(SETPRECHARGE); //0xD9
+  sendCommand(precharge); //0xF1 default, to lower the contrast, put 1-1F
   sendCommand(SETCONTRAST);
-  sendCommand(contrast);
+  sendCommand(contrast); // 0-255
+  sendCommand(SETVCOMDETECT); //0xDB, (additionally needed to lower the contrast)
+  sendCommand(comdetect);	//0x40 default, to lower the contrast, put 0
+  sendCommand(DISPLAYALLON_RESUME);
+  sendCommand(NORMALDISPLAY);
+  sendCommand(DISPLAYON);
 }
 
 void OLEDDisplay::flipScreenVertically() {

@@ -19,6 +19,11 @@
 #define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 #define P36_Nchars 32
 
+
+#define P36_CONTRAST_LOW    64
+#define P36_CONTRAST_MED  0xCF
+#define P36_CONTRAST_HIGH 0xFF
+
 #include "SSD1306.h"
 #include "SH1106Wire.h"
 #include "OLED_SSD1306_SH1106_images.h"
@@ -142,10 +147,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         options6[1] = F("Medium");
         options6[2] = F("High");
         int optionValues6[3];
-        optionValues6[0] = 64;
-        optionValues6[1] = 0xCF;
-        optionValues6[2] = 0xFF;
-        addFormSelector(string, F("Contrast"), F("plugin_066_contrast"), 3, options6, optionValues6, choice6);
+        optionValues6[0] = P36_CONTRAST_LOW;
+        optionValues6[1] = P36_CONTRAST_MED;
+        optionValues6[2] = P36_CONTRAST_HIGH;
+        addFormSelector(string, F("Contrast"), F("plugin_036_contrast"), 3, options6, optionValues6, choice6);
 
         success = true;
         break;
@@ -204,8 +209,25 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         display->displayOn();
 
         // Set the display contrast
+        // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
+        // normal brightness & contrast:  contrast = 100
+        char contrast = 100;
+        char precharge = 241;
+        char comdetect = 64;
         uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
-        display->setContrast(OLED_contrast);
+        switch (OLED_contrast) {
+          case P36_CONTRAST_LOW:
+            contrast = 10; precharge = 5; comdetect = 0;
+            break;
+          case P36_CONTRAST_MED:
+            contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
+            break;
+          case P36_CONTRAST_HIGH:
+          default:
+            contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
+            break;
+        }
+        display->setContrast(contrast, precharge, comdetect);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;

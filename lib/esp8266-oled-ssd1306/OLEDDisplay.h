@@ -214,7 +214,9 @@ class OLEDDisplay : public Print {
     void normalDisplay(void);
 
     // Set display contrast
-    void setContrast(char contrast);
+    // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
+    // normal brightness & contrast:  contrast = 100
+    void setContrast(char contrast, char precharge = 241, char comdetect = 64);
 
     // Turn the display upside down
     void flipScreenVertically();
