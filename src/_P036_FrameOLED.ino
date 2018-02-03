@@ -154,7 +154,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         //update now
-        timerSensor[event->TaskIndex]=millis();
+        timerSensor[event->TaskIndex] = millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000);
         frameCounter=0;
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
@@ -296,15 +296,16 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         NFrames = P36_Nlines / linesPerFrame;
 
         //      Now create the string for the outgoing and incoming frames
-        String tmpString[4];
+        String tmpString;
+        tmpString.reserve(P36_Nchars);
         String newString[4];
         String oldString[4];
 
         //      Construct the outgoing string
         for (byte i = 0; i < linesPerFrame; i++)
         {
-          tmpString[i] = deviceTemplate[(linesPerFrame * frameCounter) + i];
-          oldString[i] = parseTemplate(tmpString[i], 20);
+          tmpString = deviceTemplate[(linesPerFrame * frameCounter) + i];
+          oldString[i] = P36_parseTemplate(tmpString, 20);
           oldString[i].trim();
         }
 
@@ -329,8 +330,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           //        Contruct incoming strings
           for (byte i = 0; i < linesPerFrame; i++)
           {
-            tmpString[i] = deviceTemplate[(linesPerFrame * frameCounter) + i];
-            newString[i] = parseTemplate(tmpString[i], 20);
+            tmpString = deviceTemplate[(linesPerFrame * frameCounter) + i];
+            newString[i] = P36_parseTemplate(tmpString, 20);
             newString[i].trim();
             if (newString[i].length() > 0) foundText = true;
           }
@@ -378,6 +379,37 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
   }
   return success;
+}
+
+// Perform some specific changes for OLED display
+String P36_parseTemplate(String &tmpString, byte lineSize) {
+  String result = parseTemplate(tmpString, lineSize);
+  // OLED lib uses this routine to convert UTF8 to extended ASCII
+  // http://playground.arduino.cc/Main/Utf8ascii
+  // Attempt to display euro sign (FIXME)
+  /*
+  const char euro[4] = {0xe2, 0x82, 0xac, 0}; // Unicode euro symbol
+  const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
+  result.replace(euro, euro_oled);
+  */
+/*
+  if (tmpString.indexOf('{') != -1) {
+    String log = F("Gijs: '");
+    log += tmpString;
+    log += F("'  hex:");
+    for (int i = 0; i < tmpString.length(); ++i) {
+      log += F(" ");
+      log += String(tmpString[i], HEX);
+    }
+    log += F(" out hex:");
+    for (int i = 0; i < result.length(); ++i) {
+      log += F(" ");
+      log += String(result[i], HEX);
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  }
+*/
+  return result;
 }
 
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region
