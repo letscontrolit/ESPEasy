@@ -113,11 +113,17 @@ enum OLEDDISPLAY_TEXT_ALIGNMENT {
 
 
 class OLEDDisplay : public Print {
-  public:
+  private:
+    const int _width, _height;
 
+  public:
+    OLEDDisplay(const int width = DISPLAY_WIDTH, const int height = DISPLAY_HEIGHT) : _width(width), _height(height){ };
     virtual ~OLEDDisplay();
 
-  // Initialize the display
+    const int width(void) const { return _width; };
+    const int height(void) const { return _height; };
+
+    // Initialize the display
     bool init();
 
     // Free the memory used by the display
