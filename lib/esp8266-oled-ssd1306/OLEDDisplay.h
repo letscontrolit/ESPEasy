@@ -111,7 +111,7 @@ enum OLEDDISPLAY_TEXT_ALIGNMENT {
 class OLEDDisplay : public Print {
   public:
 
-    virtual ~OLEDDisplay() {}
+    virtual ~OLEDDisplay();
 
   // Initialize the display
     bool init();
@@ -229,10 +229,10 @@ class OLEDDisplay : public Print {
     size_t write(uint8_t c);
     size_t write(const char* s);
 
-    uint8_t            *buffer;
+    uint8_t            *buffer = NULL;
 
     #ifdef OLEDDISPLAY_DOUBLE_BUFFER
-    uint8_t            *buffer_back;
+    uint8_t            *buffer_back = NULL;
     #endif
 
   protected:
