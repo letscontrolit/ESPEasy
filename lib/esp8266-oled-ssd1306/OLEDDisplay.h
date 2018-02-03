@@ -44,9 +44,13 @@
 
 
 // Display settings
-#define DISPLAY_WIDTH 128
-#define DISPLAY_HEIGHT 64
-#define DISPLAY_BUFFER_SIZE 1024
+#ifndef DISPLAY_WIDTH
+  #define DISPLAY_WIDTH 128
+#endif
+#ifndef DISPLAY_HEIGHT
+  #define DISPLAY_HEIGHT 64
+#endif
+#define DISPLAY_BUFFER_SIZE DISPLAY_WIDTH * DISPLAY_HEIGHT / 8
 
 // Header Values
 #define JUMPTABLE_BYTES 4
@@ -250,7 +254,7 @@ class OLEDDisplay : public Print {
     char      *logBuffer                       = NULL;
 
     // Send a command to the display (low level function)
-    virtual void sendCommand(uint8_t com) {};
+    virtual void sendCommand(uint8_t com) {(void)com;};
 
     // Connect to the display
     virtual bool connect() { return false; };
