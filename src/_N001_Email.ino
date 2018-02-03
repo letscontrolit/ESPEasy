@@ -56,7 +56,7 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
           body = NotificationSettings.Body;
         subject = parseTemplate(subject, subject.length());
         body = parseTemplate(body, body.length());
-        NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, subject, body, NotificationSettings.Server, NotificationSettings.Port);
+        NPlugin_001_send(NotificationSettings, subject, body);
         success = true;
       }
 
@@ -64,29 +64,45 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
-{
+boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, const String& aMesg) {
+//  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
   boolean myStatus = false;
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
+  String aHost = notificationsettings.Server;
   addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to "))+aHost);
-  if (!client.connect(aHost.c_str(), aPort)) {
+  if (!client.connect(aHost.c_str(), notificationsettings.Port)) {
     addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to "))+aHost);
     myStatus = false;
   }
   else {
+    String mailheader = F(
+      "From: $nodename <$emailfrom>\r\n"
+      "To: $ato\r\n"
+      "Subject: $subject\r\n"
+      "Reply-To: $nodename <$emailfrom>\r\n"
+      "MIME-VERSION: 1.0\r\n"
+      "Content-type: text/html; charset=UTF-8\r\n"
+      "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
+    );
+
+    mailheader.replace(String(F("$nodename")), Settings.Name);
+    mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
+    mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
+    mailheader.replace(String(F("$subject")), aSub);
+    mailheader.replace(String(F("$espeasyversion")), String(BUILD));
 
     // Wait for Client to Start Sending
     // The MTA Exchange
     while (true) {
 
-      if (NPlugin_001_MTA(client, "",                                                         F("220 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("EHLO ")) + aDomain,                                    F("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("MAIL FROM:")) + aFrom + "",                            F("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("RCPT TO:")) + aTo + "",                                F("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, F("DATA"),                                               F("354 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("Subject:")) + aSub + F("\r\n\r\n") + aMesg + F("\r\n.\r\n"), F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, "",                                    F("220 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain,          F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("MAIL FROM:")) + notificationsettings.Sender + "",  F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, String(F("RCPT TO:")) + notificationsettings.Receiver + "",      F("250 ")) == false) break;
+      if (NPlugin_001_MTA(client, F("DATA"),                             F("354 ")) == false) break;
+      if (NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")),   F("250 ")) == false) break;
 
       myStatus = true;
       break;
@@ -100,7 +116,9 @@ boolean NPlugin_001_send(String aDomain , String aTo, String aFrom, String aSub,
       addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
     }
     else {
-      addLog(LOG_LEVEL_ERROR, F("EMAIL: Connection Closed With Error"));
+      String log = F("EMAIL: Connection Closed With Error. Used header: ");
+      log += mailheader;      
+      addLog(LOG_LEVEL_ERROR, log);
     }
 
   }
