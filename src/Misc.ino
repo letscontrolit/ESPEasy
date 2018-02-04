@@ -1409,11 +1409,9 @@ String parseTemplate(String &tmpString, byte lineSize)
   return newString;
 }
 
-
 /********************************************************************************************\
-// replace other system variables like %sysname%, %systime%, %ip%
+  replace other system variables like %sysname%, %systime%, %ip%
   \*********************************************************************************************/
-
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
