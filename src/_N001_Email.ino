@@ -71,9 +71,9 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
   String aHost = notificationsettings.Server;
-  addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to "))+aHost);
+  addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to "))+aHost + notificationsettings.Port);
   if (!client.connect(aHost.c_str(), notificationsettings.Port)) {
-    addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to "))+aHost);
+    addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to "))+aHost + notificationsettings.Port);
     myStatus = false;
   }
   else {
@@ -130,14 +130,12 @@ boolean NPlugin_001_Auth(WiFiClient& client, String user, String pass) {
     // No user/password given.
     return true;
   }
-  if (!NPlugin_001_MTA(client, String(F("AUTH LOGIN\r\n")), F("334 "))) return false;
+  if (!NPlugin_001_MTA(client, String(F("AUTH LOGIN")), F("334 "))) return false;
   base64 encoder;
   String auth;
   auth = encoder.encode(user);
-  auth += F("\r\n");
   if (!NPlugin_001_MTA(client, auth, F("334 "))) return false;
   auth = encoder.encode(pass);
-  auth += F("\r\n");
   if (!NPlugin_001_MTA(client, auth, F("235 "))) return false;
 
   return true;

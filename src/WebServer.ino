@@ -1059,13 +1059,24 @@ void handle_notifications() {
         strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
         strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
         strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
-        strncpy(NotificationSettings.User, subject.c_str(), sizeof(NotificationSettings.User));
-        strncpy(NotificationSettings.Pass, subject.c_str(), sizeof(NotificationSettings.Pass));
+        strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
+        strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
         strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
+    // Save the settings.
     addHtmlError(reply, SaveNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
     addHtmlError(reply, SaveSettings());
+    if (WebServer.hasArg(F("test"))) {
+      // Perform tests with the settings in the form.
+      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
+      if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND)
+      {
+        // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
+        TempEvent.NotificationIndex = notificationindex;
+        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, dummyString);
+      }
+    }
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -1200,6 +1211,7 @@ void handle_notifications() {
 
     reply += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
     addSubmitButton(reply);
+    addSubmitButton(reply, F("Test"), F("test"));
     reply += F("</table></form>");
   }
   addFooter(reply);
