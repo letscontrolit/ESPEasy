@@ -6,7 +6,7 @@
 #define NPLUGIN_ID_001         1
 #define NPLUGIN_NAME_001       "Email (SMTP)"
 
-#define NPLUGIN_001_TIMEOUT 3000
+#define NPLUGIN_001_TIMEOUT 5000
 
 boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 {
@@ -97,12 +97,13 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
     // The MTA Exchange
     while (true) {
 
-      if (NPlugin_001_MTA(client, "",                                    F("220 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain,          F("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("MAIL FROM:")) + notificationsettings.Sender + "",  F("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, String(F("RCPT TO:")) + notificationsettings.Receiver + "",      F("250 ")) == false) break;
-      if (NPlugin_001_MTA(client, F("DATA"),                             F("354 ")) == false) break;
-      if (NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")),   F("250 ")) == false) break;
+      if (!NPlugin_001_MTA(client, "",                                    F("220 "))) break;
+      if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain,          F("250 "))) break;
+      if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
+      if (!NPlugin_001_MTA(client, String(F("MAIL FROM:")) + notificationsettings.Sender + "",  F("250 "))) break;
+      if (!NPlugin_001_MTA(client, String(F("RCPT TO:")) + notificationsettings.Receiver + "",      F("250 "))) break;
+      if (!NPlugin_001_MTA(client, F("DATA"),                             F("354 "))) break;
+      if (!NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")),   F("250 "))) break;
 
       myStatus = true;
       break;
@@ -117,22 +118,33 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
     }
     else {
       String log = F("EMAIL: Connection Closed With Error. Used header: ");
-      log += mailheader;      
+      log += mailheader;
       addLog(LOG_LEVEL_ERROR, log);
     }
-
   }
-
   return myStatus;
-
 }
 
+boolean NPlugin_001_Auth(WiFiClient& client, String user, String pass) {
+  if (user.length() == 0 || pass.length() == 0) {
+    // No user/password given.
+    return true;
+  }
+  if (!NPlugin_001_MTA(client, String(F("AUTH LOGIN\r\n")), F("334 "))) return false;
+  base64 encoder;
+  String auth;
+  auth = encoder.encode(user);
+  auth += F("\r\n");
+  if (!NPlugin_001_MTA(client, auth, F("334 "))) return false;
+  auth = encoder.encode(pass);
+  auth += F("\r\n");
+  if (!NPlugin_001_MTA(client, auth, F("235 "))) return false;
+
+  return true;
+}
 
 boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForPattern)
 {
-
-  boolean myStatus = false;
-
   addLog(LOG_LEVEL_DEBUG, aStr);
 
   if (aStr.length() ) client.println(aStr);
@@ -143,8 +155,10 @@ boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForP
   unsigned long timer = millis() + NPLUGIN_001_TIMEOUT;
   while (true) {
     if (timeOutReached(timer)) {
-      myStatus = false;
-      break;
+      String log = F("Plugin_001_MTA: timeout. ");
+      log += aStr;
+      addLog(LOG_LEVEL_ERROR, log);
+      return false;
     }
 
     yield();
@@ -156,10 +170,9 @@ boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForP
     addLog(LOG_LEVEL_DEBUG, line);
 
     if (line.indexOf(aWaitForPattern) >= 0) {
-      myStatus = true;
-      break;
+      return true;
     }
   }
 
-  return myStatus;
+  return false;
 }

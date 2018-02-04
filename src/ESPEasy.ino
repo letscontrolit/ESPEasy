@@ -300,9 +300,9 @@
 
 /*
 	To modify the stock configuration without changing this repo file :
-    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'" 
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
 	- add a "Custom.h" file in this folder.
-	
+
 */
 #ifdef USE_CUSTOM_H
 #include "Custom.h"
@@ -583,6 +583,17 @@ struct ControllerSettingsStruct
 
 struct NotificationSettingsStruct
 {
+  NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
+    memset(Server,   0, sizeof(Server));
+    memset(Domain,   0, sizeof(Domain));
+    memset(Sender,   0, sizeof(Sender));
+    memset(Receiver, 0, sizeof(Receiver));
+    memset(Subject,  0, sizeof(Subject));
+    memset(Body,     0, sizeof(Body));
+    memset(User,     0, sizeof(User));
+    memset(Pass,     0, sizeof(Pass));
+  }
+
   char          Server[65];
   unsigned int  Port;
   char          Domain[65];
@@ -592,6 +603,8 @@ struct NotificationSettingsStruct
   char          Body[513];
   byte          Pin1;
   byte          Pin2;
+  char          User[49];
+  char          Pass[33];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
