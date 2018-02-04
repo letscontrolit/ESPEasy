@@ -142,6 +142,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(string, F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
 
         byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
         String options6[3];
         options6[0] = F("Low");
         options6[1] = F("Medium");
