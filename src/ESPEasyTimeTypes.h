@@ -12,7 +12,7 @@ struct  timeStruct {
 };
 
 // convenient constants for TimeChangeRules
-enum week_t {Last, First, Second, Third, Fourth};
+enum week_t {Last=0, First, Second, Third, Fourth};
 enum dow_t {Sun=1, Mon, Tue, Wed, Thu, Fri, Sat};
 enum month_t {Jan=1, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec};
 
@@ -22,15 +22,37 @@ enum month_t {Jan=1, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec};
 // - https://www.timeanddate.com/time/dst/2018.html
 // - https://en.wikipedia.org/wiki/Daylight_saving_time_by_country
 struct TimeChangeRule {
-    TimeChangeRule() :  week(0), dow(0), month(0), hour(0), offset(0) {}
-    TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, int minutesoffset) :
+    TimeChangeRule() :  week(0), dow(1), month(1), hour(0), offset(0) {}
+    TimeChangeRule(uint8_t weeknr, uint8_t downr, uint8_t m, uint8_t h, uint16_t minutesoffset) :
         week(weeknr), dow(downr), month(m), hour(h), offset(minutesoffset) {}
+
+    // Construct time change rule from stored values optimized for minimum space.
+    TimeChangeRule(uint16_t flash_stored_value, int16_t minutesoffset) : offset(minutesoffset) {
+      hour = flash_stored_value & 0x001f;
+      month = (flash_stored_value >> 5) & 0x000f;
+      dow = (flash_stored_value >> 9) & 0x0007;
+      week = (flash_stored_value >> 12) & 0x0007;
+    }
+
+    uint16_t toFlashStoredValue() const {
+      uint16_t value = hour;
+      value = value | (month << 5);
+      value = value | (dow << 9);
+      value = value | (week << 12);
+      return value;
+    }
+
+    bool isValid() const {
+      return (week <= 4) && (dow != 0) && (dow <= 7) &&
+             (month != 0) && (month <= 12) && (hour <= 23) &&
+             (offset > -720) && (offset < 900); // UTC-12h ... UTC+14h + 1h DSToffset
+    }
 
     uint8_t week;      // First, Second, Third, Fourth, or Last week of the month
     uint8_t dow;       // day of week, 1=Sun, 2=Mon, ... 7=Sat
     uint8_t month;     // 1=Jan, 2=Feb, ... 12=Dec
     uint8_t hour;      // 0-23
-    int offset;        // offset from UTC in minutes
+    int16_t offset;    // offset from UTC in minutes
 };
 
 // Forward declartions

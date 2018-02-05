@@ -349,7 +349,7 @@
 #include "Custom.h"
 #endif
 
-
+#include "ESPEasyTimeTypes.h"
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
@@ -382,8 +382,6 @@ ADC_MODE(ADC_VCC);
 #include "lwip/igmp.h"
 #include "include/UdpContext.h"
 #include "limits.h"
-
-#include "ESPEasyTimeTypes.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -462,7 +460,8 @@ struct SettingsStruct
     UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
-    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false)
+    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
+    DST_Start(0), DST_End(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -563,6 +562,8 @@ struct SettingsStruct
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
+  uint16_t      DST_Start;
+  uint16_t      DST_End;
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
