@@ -1026,6 +1026,8 @@ void handle_notifications() {
   String sender = WebServer.arg(F("sender"));
   String receiver = WebServer.arg(F("receiver"));
   String subject = WebServer.arg(F("subject"));
+  String user = WebServer.arg(F("user"));
+  String pass = WebServer.arg(F("pass"));
   String body = WebServer.arg(F("body"));
   String pin1 = WebServer.arg(F("pin1"));
   String pin2 = WebServer.arg(F("pin2"));
@@ -1040,13 +1042,6 @@ void handle_notifications() {
     if (Settings.Notification[notificationindex] != notification.toInt())
     {
       Settings.Notification[notificationindex] = notification.toInt();
-      NotificationSettings.Domain[0] = 0;
-      NotificationSettings.Server[0] = 0;
-      NotificationSettings.Port = 0;
-      NotificationSettings.Sender[0] = 0;
-      NotificationSettings.Receiver[0] = 0;
-      NotificationSettings.Subject[0] = 0;
-      NotificationSettings.Body[0] = 0;
     }
     else
     {
@@ -1064,11 +1059,24 @@ void handle_notifications() {
         strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
         strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
         strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
+        strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
+        strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
         strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
+    // Save the settings.
     addHtmlError(reply, SaveNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
     addHtmlError(reply, SaveSettings());
+    if (WebServer.hasArg(F("test"))) {
+      // Perform tests with the settings in the form.
+      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
+      if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND)
+      {
+        // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
+        TempEvent.NotificationIndex = notificationindex;
+        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, dummyString);
+      }
+    }
   }
 
   reply += F("<form name='frmselect' method='post'>");
@@ -1172,6 +1180,14 @@ void handle_notifications() {
           reply += NotificationSettings.Subject;
           reply += F("'>");
 
+          reply += F("<TR><TD>User:<TD><input type='text' name='user' size=48 value='");
+          reply += NotificationSettings.User;
+          reply += F("'>");
+
+          reply += F("<TR><TD>Pass:<TD><input type='text' name='pass' size=32 value='");
+          reply += NotificationSettings.Pass;
+          reply += F("'>");
+
           reply += F("<TR><TD>Body:<TD><textarea name='body' rows='5' cols='80' size=512 wrap='off'>");
           reply += NotificationSettings.Body;
           reply += F("</textarea>");
@@ -1195,6 +1211,7 @@ void handle_notifications() {
 
     reply += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
     addSubmitButton(reply);
+    addSubmitButton(reply, F("Test"), F("test"));
     reply += F("</table></form>");
   }
   addFooter(reply);
