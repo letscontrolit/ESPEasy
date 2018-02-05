@@ -3069,7 +3069,15 @@ void handle_advanced() {
   String ip = WebServer.arg(F("ip"));
   String syslogip = WebServer.arg(F("syslogip"));
   String ntphost = WebServer.arg(F("ntphost"));
-  String timezone = WebServer.arg(F("timezone"));
+  int timezone = WebServer.arg(F("timezone")).toInt();
+  int dststartweek = WebServer.arg(F("dststartweek")).toInt();
+  int dststartdow = WebServer.arg(F("dststartdow")).toInt();
+  int dststartmonth = WebServer.arg(F("dststartmonth")).toInt();
+  int dststarthour = WebServer.arg(F("dststarthour")).toInt();
+  int dstendweek = WebServer.arg(F("dstendweek")).toInt();
+  int dstenddow = WebServer.arg(F("dstenddow")).toInt();
+  int dstendmonth = WebServer.arg(F("dstendmonth")).toInt();
+  int dstendhour = WebServer.arg(F("dstendhour")).toInt();
   String dst = WebServer.arg(F("dst"));
   String sysloglevel = WebServer.arg(F("sysloglevel"));
   String udpport = WebServer.arg(F("udpport"));
@@ -3097,7 +3105,11 @@ void handle_advanced() {
     Settings.IP_Octet = ip.toInt();
     ntphost.toCharArray(tmpString, 64);
     strcpy(Settings.NTPHost, tmpString);
-    Settings.TimeZone = timezone.toInt();
+    Settings.TimeZone = timezone;
+    TimeChangeRule dst_start(dststartweek, dststartdow, dststartmonth, dststarthour, timezone);
+    if (dst_start.isValid()) { Settings.DST_Start = dst_start.toFlashStoredValue(); }
+    TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
+    if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     str2ip(syslogip.c_str(), Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
     Settings.SyslogLevel = sysloglevel.toInt();
@@ -3140,10 +3152,13 @@ void handle_advanced() {
 
   addFormCheckBox(reply, F("Use NTP"), F("usentp"), Settings.UseNTP);
   addFormTextBox(reply, F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
-  addFormNumericBox(reply, F("Timezone Offset"), F("timezone"), Settings.TimeZone, -43200, 43200);   // +/-12h
+
+  addFormSubHeader(reply, F("DST Settings"));
+  addFormDstSelect(reply, true, Settings.DST_Start);
+  addFormDstSelect(reply, false, Settings.DST_End);
+  addFormNumericBox(reply, F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840);   // UTC-12H ... UTC+14h
   addUnit(reply, F("minutes"));
   addFormCheckBox(reply, F("DST"), F("dst"), Settings.DST);
-
 
   addFormSubHeader(reply, F("Log Settings"));
 
@@ -3190,6 +3205,37 @@ void handle_advanced() {
   reply += F("</table></form>");
   addFooter(reply);
   sendWebPage(F("TmplStd"), reply);
+}
+
+void addFormDstSelect(String& str, bool isStart, uint16_t choice) {
+  String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
+  String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
+  String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
+  String hourid  = isStart ? F("dststarthour")  : F("dstendhour");
+
+  String weeklabel  = isStart ? F("Start (week, dow, month)")  : F("End (week, dow, month)");
+  String hourlabel  = isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)");
+
+  String week[5] = {F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th")};
+  int weekValues[5] = {0, 1, 2, 3, 4};
+  String dow[7] = {F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat")};
+  int dowValues[7] = {1, 2, 3, 4, 5, 6, 7};
+  String month[12] = {F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F("Dec")};
+  int monthValues[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+
+  uint16_t tmpstart(choice);
+  uint16_t tmpend(choice);
+  if (!TimeChangeRule(choice, 0).isValid()) {
+    getDefaultDst_flash_values(tmpstart, tmpend);
+  }
+  TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
+  addRowLabel(str, weeklabel);
+  addSelector(str, weekid, 5, week, weekValues, NULL, rule.week, false);
+  addSelector(str, dowid, 7, dow, dowValues, NULL, rule.dow, false);
+  addSelector(str, monthid, 12, month, monthValues, NULL, rule.month, false);
+
+  addFormNumericBox(str, hourlabel, hourid, rule.hour, 0, 23);
+  addUnit(str, isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
 }
 
 void addFormLogLevelSelect(String& str, const String& label, const String& id, int choice)

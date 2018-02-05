@@ -57,13 +57,28 @@ TimeChangeRule usPST = {First, dowSunday, Nov, 2, -480};
 setTimeZone(usPDT, usPST);
 */
 
-void applyTimeZone(uint32_t curTime) {
+void getDefaultDst_flash_values(uint16_t& start, uint16_t& end) {
   // DST start: Last Sunday March    2am => 3am
   // DST end: 	Last Sunday October  3am => 2am
+  TimeChangeRule CEST(Last, Sun, Mar, 2, Settings.TimeZone); // Summer Time
+  TimeChangeRule CET(Last, Sun, Oct, 3, Settings.TimeZone);  // Standard Time
+  start = CEST.toFlashStoredValue();
+  end = CET.toFlashStoredValue();
+}
+
+void applyTimeZone(uint32_t curTime) {
   int dst_offset = Settings.DST ? 60 : 0;
-  TimeChangeRule CEST(Last, Sun, Mar, 2, Settings.TimeZone + dst_offset); // Summer Time
-  TimeChangeRule CET(Last, Sun, Oct, 3, Settings.TimeZone);               // Standard Time
-  setTimeZone(CEST, CET, curTime);
+  uint16_t tmpStart(Settings.DST_Start);
+  uint16_t tmpEnd(Settings.DST_End);
+  for (int i = 0; i < 2; ++i) {
+    TimeChangeRule start(tmpStart, Settings.TimeZone + dst_offset); // Summer Time
+    TimeChangeRule end(tmpEnd, Settings.TimeZone);               // Standard Time
+    if (start.isValid() && end.isValid()) {
+      setTimeZone(start, end, curTime);
+      return;
+    }
+    getDefaultDst_flash_values(tmpStart, tmpEnd);
+  }
 }
 
 void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart, uint32_t curTime) {
