@@ -1052,10 +1052,6 @@ void ResetFactory(void)
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-  Settings.SerialLogLevel  = 2;
-  Settings.WebLogLevel     = 2;
-  Settings.BaudRate        = 115200;
-  Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
   Settings.CustomCSS = false;
   Settings.InitSPI = false;
@@ -1071,7 +1067,45 @@ void ResetFactory(void)
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
   Settings.Build = BUILD;
-  Settings.UseSerial = true;
+
+	// advanced Settings
+	Settings.UseRules 		= DEFAULT_USE_RULES;
+	
+	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
+	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
+
+    Settings.UseNTP			= DEFAULT_USE_NTP;
+	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
+	Settings.TimeZone		= DEFAULT_TIME_ZONE;
+    Settings.DST 			= DEFAULT_USE_DST;
+
+	str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
+
+	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
+	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
+	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
+	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
+	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
+
+	Settings.UseSerial		= DEFAULT_USE_SERIAL;
+	Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+
+/*
+	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
+	Settings.UDPPort						= DEFAULT_SYNC_UDP_PORT;
+
+	Settings.IP_Octet						= DEFAULT_IP_OCTET;
+	Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
+	Settings.UseSSDP						= DEFAULT_USE_SSDP;
+	Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
+	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
+*/
+
+
+
+
+
+
   SaveSettings();
 
 #if DEFAULT_CONTROLLER
