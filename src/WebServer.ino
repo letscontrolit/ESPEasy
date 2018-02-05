@@ -4461,9 +4461,19 @@ void handle_sysinfo() {
     reply += F(" [Development]");
   #endif
 
-  reply += F("<TR><TD>Md5<TD>");
-  for (byte i = 0; i<16; i++)   reply += String(thisBinaryMd5[i],HEX);
-
+  reply += F("<TR><TD>Build Md5<TD>");
+  for (byte i = 0; i<16; i++)   reply += String(CRCValues.compileTimeMD5[i],HEX);
+ 
+  reply += F("<TR><TD>Md5 check<TD>");
+  if (! CRCValues.checkPassed()) 
+    reply +="<font color = 'red'>fail !</font>";
+  else reply +="passed.";
+  
+  reply += F("<TR><TD>Build time<TD>");
+  reply += String(CRCValues.compileDate);
+  reply += " ";
+  reply += String(CRCValues.compileTime);
+ 
   reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
   reply += F("<TR><TD>ESP Chip ID<TD>");
