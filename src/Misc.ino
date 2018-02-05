@@ -1350,6 +1350,7 @@ String parseTemplate(String &tmpString, byte lineSize)
 {
   String newString = "";
   String tmpStringMid = "";
+  newString.reserve(lineSize);
 
   // replace task template variables
   int leftBracketIndex = tmpString.indexOf('[');
@@ -1442,11 +1443,9 @@ String parseTemplate(String &tmpString, byte lineSize)
   return newString;
 }
 
-
 /********************************************************************************************\
-// replace other system variables like %sysname%, %systime%, %ip%
+  replace other system variables like %sysname%, %systime%, %ip%
   \*********************************************************************************************/
-
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
@@ -1456,10 +1455,89 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
   }
 }
 
+void parseSpecialCharacters(String& s, boolean useURLencode)
+{
+  bool no_accolades = s.indexOf('{') == -1 || s.indexOf('}') == -1;
+  bool no_html_entity = s.indexOf('&') == -1 || s.indexOf(';') == -1;
+  if (no_accolades && no_html_entity)
+    return; // Nothing to replace
+
+  {
+    // Degree
+    const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+    const char degreeC[4] = {0xe2, 0x84, 0x83, 0};  // Unicode degreeC symbol
+    const char degree_C[4] = {0xc2, 0xb0, 'C', 0};  // Unicode degree symbol + captial C
+    repl(F("{D}"), degree, s, useURLencode);
+    repl(F("&deg;"), degree, s, useURLencode);
+    repl(degreeC, degree_C, s, useURLencode);
+  }
+  {
+    // Angle quotes
+    const char laquo[3]  = {0xc2, 0xab, 0}; // Unicode left angle quotes symbol
+    const char raquo[3]  = {0xc2, 0xbb, 0}; // Unicode right angle quotes symbol
+    repl(F("{<<}"), laquo, s, useURLencode);
+    repl(F("&laquo;"), laquo, s, useURLencode);
+    repl(F("{>>}"), raquo, s, useURLencode);
+    repl(F("&raquo;"), raquo, s, useURLencode);
+  }
+  {
+    // Greek letter Mu
+    const char mu[3]  = {0xc2, 0xb5, 0}; // Unicode greek letter mu
+    repl(F("{u}"), mu, s, useURLencode);
+    repl(F("&micro;"), mu, s, useURLencode);
+  }
+  {
+    // Currency
+    const char euro[4] = {0xe2, 0x82, 0xac, 0}; // Unicode euro symbol
+    const char yen[3]   = {0xc2, 0xa5, 0}; // Unicode yen symbol
+    const char pound[3] = {0xc2, 0xa3, 0}; // Unicode pound symbol
+    const char cent[3]  = {0xc2, 0xa2, 0}; // Unicode cent symbol
+    repl(F("{E}"), euro, s, useURLencode);
+    repl(F("&euro;"), euro, s, useURLencode);
+    repl(F("{Y}"), yen, s, useURLencode);
+    repl(F("&yen;"), yen, s, useURLencode);
+    repl(F("{P}"), pound, s, useURLencode);
+    repl(F("&pound;"), pound, s, useURLencode);
+    repl(F("{c}"), cent, s, useURLencode);
+    repl(F("&cent;"), cent, s, useURLencode);
+  }
+  {
+    // Math symbols
+    const char sup1[3]  = {0xc2, 0xb9, 0}; // Unicode sup1 symbol
+    const char sup2[3]  = {0xc2, 0xb2, 0}; // Unicode sup2 symbol
+    const char sup3[3]  = {0xc2, 0xb3, 0}; // Unicode sup3 symbol
+    const char frac14[3]  = {0xc2, 0xbc, 0}; // Unicode frac14 symbol
+    const char frac12[3]  = {0xc2, 0xbd, 0}; // Unicode frac12 symbol
+    const char frac34[3]  = {0xc2, 0xbe, 0}; // Unicode frac34 symbol
+    const char plusmn[3]  = {0xc2, 0xb1, 0}; // Unicode plusmn symbol
+    const char times[3]   = {0xc3, 0x97, 0}; // Unicode times symbol
+    const char divide[3]  = {0xc3, 0xb7, 0}; // Unicode divide symbol
+    repl(F("{^1}"), sup1, s, useURLencode);
+    repl(F("&sup1;"), sup1, s, useURLencode);
+    repl(F("{^2}"), sup2, s, useURLencode);
+    repl(F("&sup2;"), sup2, s, useURLencode);
+    repl(F("{^3}"), sup3, s, useURLencode);
+    repl(F("&sup3;"), sup3, s, useURLencode);
+    repl(F("{1_4}"), frac14, s, useURLencode);
+    repl(F("&frac14;"), frac14, s, useURLencode);
+    repl(F("{1_2}"), frac12, s, useURLencode);
+    repl(F("&frac12;"), frac12, s, useURLencode);
+    repl(F("{3_4}"), frac34, s, useURLencode);
+    repl(F("&frac34;"), frac34, s, useURLencode);
+    repl(F("{+-}"), plusmn, s, useURLencode);
+    repl(F("&plusmn;"), plusmn, s, useURLencode);
+    repl(F("{x}"), times, s, useURLencode);
+    repl(F("&times;"), times, s, useURLencode);
+    repl(F("{..}"), divide, s, useURLencode);
+    repl(F("&divide;"), divide, s, useURLencode);
+  }
+}
+
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T,S) if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode);}
 void parseSystemVariables(String& s, boolean useURLencode)
 {
+  parseSpecialCharacters(s, useURLencode);
   if (s.indexOf('%') == -1)
     return; // Nothing to replace
 
