@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release v2.0-20180206 (since v2.0-20180203)
+-------------------------------------------------
+
+Release date: Tue Feb  6 05:00:21 CET 2018
+
+Gijs Noorlander (3):
+      Backport OLED framed from mega + support special characters (#818)
+      [issue #817] Added mail header to SMTP (#820)
+      [issue #727] Proper user interface to set DST rules (#823)
+
+soif (1):
+      All Advanced Settings as 'DEFAULT_' Defines (#813)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180203 (since v2.0-20180202)
 -------------------------------------------------
 
