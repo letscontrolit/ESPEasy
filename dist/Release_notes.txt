@@ -1,4 +1,29 @@
 -------------------------------------------------
+Changes in release mega-20180206 (since mega-20180203)
+-------------------------------------------------
+
+Release date: Tue Feb  6 05:00:10 CET 2018
+
+ESPEasy release bot (2):
+      automaticly updated release notes for v2.0-20180202
+      automaticly updated release notes for v2.0-20180203
+
+Gijs Noorlander (3):
+      Backport OLED framed from mega + support special characters (#818)
+      [issue #817] Added mail header to SMTP (#820)
+      [issue #727] Proper user interface to set DST rules (#823)
+
+Grovkillen (1):
+      Update README.md
+
+s0170071 (1):
+      Add compile time (#811)
+
+soif (1):
+      All Advanced Settings as 'DEFAULT_' Defines (#813)
+
+
+-------------------------------------------------
 Changes in release mega-20180203 (since mega-20180202)
 -------------------------------------------------
 
