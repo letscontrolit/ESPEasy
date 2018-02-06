@@ -109,8 +109,6 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                           break;
                       }
                       action += pwmValue;
-                      // save pwmValue for rulesprocessing
-                      nvalue = pwmValue;
                     } else {
                       UserVar[baseVar] = nvalue;
                       action = F("gpio,");
@@ -128,16 +126,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                   parseCommandString(&TempEvent, action);
                   PluginCall(PLUGIN_WRITE, &TempEvent, action);
                   // trigger rulesprocessing
-                  if (Settings.UseRules) {
-                    String RuleEvent = F("");
-                    LoadTaskSettings(x);
-                    RuleEvent += ExtraTaskSettings.TaskDeviceName;
-                    RuleEvent += F("#");
-                    RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[0];
-                    RuleEvent += F("=");
-                    RuleEvent += nvalue;
-                    rulesProcessing(RuleEvent);
-                    }
+                  if (Settings.UseRules)
+                    createRuleEvents(x);
                 }
               }
             }
