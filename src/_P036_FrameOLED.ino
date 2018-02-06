@@ -16,7 +16,13 @@
 #define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 #define PLUGIN_VALUENAME1_036 "OLED"
 
-#define Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
+#define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
+#define P36_Nchars 32
+
+
+#define P36_CONTRAST_LOW    64
+#define P36_CONTRAST_MED  0xCF
+#define P36_CONTRAST_HIGH 0xFF
 
 #include "SSD1306.h"
 #include "SH1106Wire.h"
@@ -123,12 +129,12 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[4] = 32;
         addFormSelector(string, F("Scroll"), F("plugin_036_scroll"), 5, options3, optionValues3, choice3);
 
-        char deviceTemplate[Nlines][32];
+        char deviceTemplate[P36_Nlines][P36_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte varNr = 0; varNr < Nlines; varNr++)
+        for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), deviceTemplate[varNr], 32);
+          addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), deviceTemplate[varNr], P36_Nchars);
         }
 
         addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
@@ -136,15 +142,16 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(string, F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
 
         byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+        if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
         String options6[3];
         options6[0] = F("Low");
         options6[1] = F("Medium");
         options6[2] = F("High");
         int optionValues6[3];
-        optionValues6[0] = 64;
-        optionValues6[1] = 0xCF;
-        optionValues6[2] = 0xFF;
-        addFormSelector(string, F("Contrast"), F("plugin_066_contrast"), 3, options6, optionValues6, choice6);
+        optionValues6[0] = P36_CONTRAST_LOW;
+        optionValues6[1] = P36_CONTRAST_MED;
+        optionValues6[2] = P36_CONTRAST_HIGH;
+        addFormSelector(string, F("Contrast"), F("plugin_036_contrast"), 3, options6, optionValues6, choice6);
 
         success = true;
         break;
@@ -153,7 +160,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         //update now
-        timerSensor[event->TaskIndex]=millis();
+        timerSensor[event->TaskIndex] = millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000);
         frameCounter=0;
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));
@@ -166,8 +173,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         String argName;
 
-        char deviceTemplate[Nlines][32];
-        for (byte varNr = 0; varNr < Nlines; varNr++)
+        char deviceTemplate[P36_Nlines][P36_Nchars];
+        for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
           argName = F("Plugin_036_template");
           argName += varNr + 1;
@@ -183,7 +190,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         // // Load the custom settings from flash
-        // char deviceTemplate[Nlines][32];
+        // char deviceTemplate[P36_Nlines][P36_Nchars];
         // LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         //      Init the display and turn it on
@@ -203,8 +210,25 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         display->displayOn();
 
         // Set the display contrast
+        // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
+        // normal brightness & contrast:  contrast = 100
+        char contrast = 100;
+        char precharge = 241;
+        char comdetect = 64;
         uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
-        display->setContrast(OLED_contrast);
+        switch (OLED_contrast) {
+          case P36_CONTRAST_LOW:
+            contrast = 10; precharge = 5; comdetect = 0;
+            break;
+          case P36_CONTRAST_MED:
+            contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
+            break;
+          case P36_CONTRAST_HIGH:
+          default:
+            contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
+            break;
+        }
+        display->setContrast(contrast, precharge, comdetect);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
@@ -280,7 +304,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        char deviceTemplate[Nlines][32];
+        char deviceTemplate[P36_Nlines][P36_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         // Clear the init screen if this is the first call
@@ -292,18 +316,19 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         //      Define Scroll area layout
         linesPerFrame = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        NFrames = Nlines / linesPerFrame;
+        NFrames = P36_Nlines / linesPerFrame;
 
         //      Now create the string for the outgoing and incoming frames
-        String tmpString[4];
+        String tmpString;
+        tmpString.reserve(P36_Nchars);
         String newString[4];
         String oldString[4];
 
         //      Construct the outgoing string
         for (byte i = 0; i < linesPerFrame; i++)
         {
-          tmpString[i] = deviceTemplate[(linesPerFrame * frameCounter) + i];
-          oldString[i] = parseTemplate(tmpString[i], 20);
+          tmpString = deviceTemplate[(linesPerFrame * frameCounter) + i];
+          oldString[i] = P36_parseTemplate(tmpString, 20);
           oldString[i].trim();
         }
 
@@ -328,8 +353,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           //        Contruct incoming strings
           for (byte i = 0; i < linesPerFrame; i++)
           {
-            tmpString[i] = deviceTemplate[(linesPerFrame * frameCounter) + i];
-            newString[i] = parseTemplate(tmpString[i], 20);
+            tmpString = deviceTemplate[(linesPerFrame * frameCounter) + i];
+            newString[i] = P36_parseTemplate(tmpString, 20);
             newString[i].trim();
             if (newString[i].length() > 0) foundText = true;
           }
@@ -377,6 +402,37 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
   }
   return success;
+}
+
+// Perform some specific changes for OLED display
+String P36_parseTemplate(String &tmpString, byte lineSize) {
+  String result = parseTemplate(tmpString, lineSize);
+  // OLED lib uses this routine to convert UTF8 to extended ASCII
+  // http://playground.arduino.cc/Main/Utf8ascii
+  // Attempt to display euro sign (FIXME)
+  /*
+  const char euro[4] = {0xe2, 0x82, 0xac, 0}; // Unicode euro symbol
+  const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
+  result.replace(euro, euro_oled);
+  */
+/*
+  if (tmpString.indexOf('{') != -1) {
+    String log = F("Gijs: '");
+    log += tmpString;
+    log += F("'  hex:");
+    for (int i = 0; i < tmpString.length(); ++i) {
+      log += F(" ");
+      log += String(tmpString[i], HEX);
+    }
+    log += F(" out hex:");
+    for (int i = 0; i < result.length(); ++i) {
+      log += F(" ");
+      log += String(result[i], HEX);
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  }
+*/
+  return result;
 }
 
 // The screen is set up as 10 rows at the top for the header, 10 rows at the bottom for the footer and 44 rows in the middle for the scroll region

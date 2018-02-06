@@ -762,7 +762,7 @@ uint32_t progMemMD5check(){
     uint32_t calcBuffer[BufSize];
     CRCValues.numberOfCRCBytes = 0;
     memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
-    if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.  
+    if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
         addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
         return 0;
     }
@@ -1196,10 +1196,6 @@ void ResetFactory(void)
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-  Settings.SerialLogLevel  = 2;
-  Settings.WebLogLevel     = 2;
-  Settings.BaudRate        = 115200;
-  Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
   Settings.CustomCSS = false;
   Settings.InitSPI = false;
@@ -1215,7 +1211,45 @@ void ResetFactory(void)
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
   Settings.Build = BUILD;
-  Settings.UseSerial = true;
+
+	// advanced Settings
+	Settings.UseRules 		= DEFAULT_USE_RULES;
+
+	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
+	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
+
+    Settings.UseNTP			= DEFAULT_USE_NTP;
+	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
+	Settings.TimeZone		= DEFAULT_TIME_ZONE;
+    Settings.DST 			= DEFAULT_USE_DST;
+
+	str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
+
+	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
+	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
+	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
+	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
+	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
+
+	Settings.UseSerial		= DEFAULT_USE_SERIAL;
+	Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+
+/*
+	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
+	Settings.UDPPort						= DEFAULT_SYNC_UDP_PORT;
+
+	Settings.IP_Octet						= DEFAULT_IP_OCTET;
+	Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
+	Settings.UseSSDP						= DEFAULT_USE_SSDP;
+	Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
+	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
+*/
+
+
+
+
+
+
   SaveSettings();
 
 #if DEFAULT_CONTROLLER
@@ -1516,6 +1550,7 @@ String parseTemplate(String &tmpString, byte lineSize)
 {
   String newString = "";
   String tmpStringMid = "";
+  newString.reserve(lineSize);
 
   // replace task template variables
   int leftBracketIndex = tmpString.indexOf('[');
@@ -1608,11 +1643,9 @@ String parseTemplate(String &tmpString, byte lineSize)
   return newString;
 }
 
-
-/********************************************************************************************/
-// replace other system variables like %sysname%, %systime%, %ip%
-/*********************************************************************************************/
-
+/********************************************************************************************\
+  replace other system variables like %sysname%, %systime%, %ip%
+  \*********************************************************************************************/
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
@@ -1622,10 +1655,89 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
   }
 }
 
+void parseSpecialCharacters(String& s, boolean useURLencode)
+{
+  bool no_accolades = s.indexOf('{') == -1 || s.indexOf('}') == -1;
+  bool no_html_entity = s.indexOf('&') == -1 || s.indexOf(';') == -1;
+  if (no_accolades && no_html_entity)
+    return; // Nothing to replace
+
+  {
+    // Degree
+    const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+    const char degreeC[4] = {0xe2, 0x84, 0x83, 0};  // Unicode degreeC symbol
+    const char degree_C[4] = {0xc2, 0xb0, 'C', 0};  // Unicode degree symbol + captial C
+    repl(F("{D}"), degree, s, useURLencode);
+    repl(F("&deg;"), degree, s, useURLencode);
+    repl(degreeC, degree_C, s, useURLencode);
+  }
+  {
+    // Angle quotes
+    const char laquo[3]  = {0xc2, 0xab, 0}; // Unicode left angle quotes symbol
+    const char raquo[3]  = {0xc2, 0xbb, 0}; // Unicode right angle quotes symbol
+    repl(F("{<<}"), laquo, s, useURLencode);
+    repl(F("&laquo;"), laquo, s, useURLencode);
+    repl(F("{>>}"), raquo, s, useURLencode);
+    repl(F("&raquo;"), raquo, s, useURLencode);
+  }
+  {
+    // Greek letter Mu
+    const char mu[3]  = {0xc2, 0xb5, 0}; // Unicode greek letter mu
+    repl(F("{u}"), mu, s, useURLencode);
+    repl(F("&micro;"), mu, s, useURLencode);
+  }
+  {
+    // Currency
+    const char euro[4] = {0xe2, 0x82, 0xac, 0}; // Unicode euro symbol
+    const char yen[3]   = {0xc2, 0xa5, 0}; // Unicode yen symbol
+    const char pound[3] = {0xc2, 0xa3, 0}; // Unicode pound symbol
+    const char cent[3]  = {0xc2, 0xa2, 0}; // Unicode cent symbol
+    repl(F("{E}"), euro, s, useURLencode);
+    repl(F("&euro;"), euro, s, useURLencode);
+    repl(F("{Y}"), yen, s, useURLencode);
+    repl(F("&yen;"), yen, s, useURLencode);
+    repl(F("{P}"), pound, s, useURLencode);
+    repl(F("&pound;"), pound, s, useURLencode);
+    repl(F("{c}"), cent, s, useURLencode);
+    repl(F("&cent;"), cent, s, useURLencode);
+  }
+  {
+    // Math symbols
+    const char sup1[3]  = {0xc2, 0xb9, 0}; // Unicode sup1 symbol
+    const char sup2[3]  = {0xc2, 0xb2, 0}; // Unicode sup2 symbol
+    const char sup3[3]  = {0xc2, 0xb3, 0}; // Unicode sup3 symbol
+    const char frac14[3]  = {0xc2, 0xbc, 0}; // Unicode frac14 symbol
+    const char frac12[3]  = {0xc2, 0xbd, 0}; // Unicode frac12 symbol
+    const char frac34[3]  = {0xc2, 0xbe, 0}; // Unicode frac34 symbol
+    const char plusmn[3]  = {0xc2, 0xb1, 0}; // Unicode plusmn symbol
+    const char times[3]   = {0xc3, 0x97, 0}; // Unicode times symbol
+    const char divide[3]  = {0xc3, 0xb7, 0}; // Unicode divide symbol
+    repl(F("{^1}"), sup1, s, useURLencode);
+    repl(F("&sup1;"), sup1, s, useURLencode);
+    repl(F("{^2}"), sup2, s, useURLencode);
+    repl(F("&sup2;"), sup2, s, useURLencode);
+    repl(F("{^3}"), sup3, s, useURLencode);
+    repl(F("&sup3;"), sup3, s, useURLencode);
+    repl(F("{1_4}"), frac14, s, useURLencode);
+    repl(F("&frac14;"), frac14, s, useURLencode);
+    repl(F("{1_2}"), frac12, s, useURLencode);
+    repl(F("&frac12;"), frac12, s, useURLencode);
+    repl(F("{3_4}"), frac34, s, useURLencode);
+    repl(F("&frac34;"), frac34, s, useURLencode);
+    repl(F("{+-}"), plusmn, s, useURLencode);
+    repl(F("&plusmn;"), plusmn, s, useURLencode);
+    repl(F("{x}"), times, s, useURLencode);
+    repl(F("&times;"), times, s, useURLencode);
+    repl(F("{..}"), divide, s, useURLencode);
+    repl(F("&divide;"), divide, s, useURLencode);
+  }
+}
+
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T,S) if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode);}
 void parseSystemVariables(String& s, boolean useURLencode)
 {
+  parseSpecialCharacters(s, useURLencode);
   if (s.indexOf('%') == -1)
     return; // Nothing to replace
 
@@ -2710,7 +2822,6 @@ void htmlEscape(String & html)
   html.replace("<",  "&lt;");
   html.replace(">",  "&gt;");
 }
-
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php

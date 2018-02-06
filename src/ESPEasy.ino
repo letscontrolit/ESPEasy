@@ -79,22 +79,29 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_NAME        "ESP_Easy"         // Enter your device friendly name
-#define DEFAULT_SSID        "ssid"              // Enter your network SSID
-#define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
-#define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
+// --- Basic Config Settings ------------------------------------------------------------------------
+#define DEFAULT_NAME        "ESP_Easy"			// Enter your device friendly name
+#define UNIT				0					// Unit Number
+#define DEFAULT_DELAY       60                  // Sleep Delay in seconds
+
+// --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
 #define DEFAULT_AP_IP      	192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
-#define DEFAULT_USE_STATIC_IP   false           // true or false enabled or disabled set static IP
+// --- Wifi Client Mode -----------------------------------------------------------------------------
+#define DEFAULT_SSID        "ssid"              // Enter your Wifi network SSID
+#define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
+
+#define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
-#define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
-#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
+#define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
+#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
 #define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
 #define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
+// --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
@@ -113,7 +120,41 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
-#define UNIT                0
+
+// --- Advanced Settings ---------------------------------------------------------------------------------
+#define DEFAULT_USE_RULES			false	// (true|false) Enable Rules?
+
+#define DEFAULT_MQTT_RETAIN			false	// (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_DELAY			1000	// Time in milliseconds to retain MQTT messages
+
+#define DEFAULT_USE_NTP				false	// (true|false) Use NTP Server
+#define DEFAULT_NTP_HOST			""		// NTP Server Hostname
+#define DEFAULT_TIME_ZONE			0		// Time Offset (in minutes)
+#define DEFAULT_USE_DST				false	// (true|false) Use Daily Time Saving
+
+#define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
+#define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL		LOG_LEVEL_INFO	// Web Log Level
+#define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
+#define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
+
+#define DEFAULT_USE_SERIAL			true	// (true|false) Enable Logging to the Serial Port
+#define DEFAULT_SERIAL_BAUD			115200	// Serial Port Baud Rate
+
+/*
+// --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
+
+#define DEFAULT_USE_GLOBAL_SYNC			false		// (true|false)
+#define DEFAULT_SYNC_UDP_PORT			0			//
+
+#define DEFAULT_IP_OCTET				0			//
+#define DEFAULT_WD_IC2_ADDRESS			0			//
+#define DEFAULT_USE_SSDP			false		// (true|false)
+#define DEFAULT_CON_FAIL_THRES			0			//
+#define DEFAULT_I2C_CLOCK_LIMIT			0			//
+*/
+
 
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
@@ -434,8 +475,8 @@ struct CRCStruct{
   uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   bool checkPassed (void){ return memcmp(compileTimeMD5,runTimeMD5,16)==0 ; }
   uint32_t numberOfCRCBytes=0;
-}CRCValues; 
- 
+}CRCValues;
+
 struct SecurityStruct
 {
   SecurityStruct() {
@@ -477,7 +518,8 @@ struct SettingsStruct
     UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
-    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false)
+    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
+    DST_Start(0), DST_End(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -579,6 +621,9 @@ struct SettingsStruct
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
   boolean       ArduinoOTAEnable;
+  uint16_t      DST_Start;
+  uint16_t      DST_End;
+
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
@@ -643,6 +688,17 @@ struct ControllerSettingsStruct
 
 struct NotificationSettingsStruct
 {
+  NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
+    memset(Server,   0, sizeof(Server));
+    memset(Domain,   0, sizeof(Domain));
+    memset(Sender,   0, sizeof(Sender));
+    memset(Receiver, 0, sizeof(Receiver));
+    memset(Subject,  0, sizeof(Subject));
+    memset(Body,     0, sizeof(Body));
+    memset(User,     0, sizeof(User));
+    memset(Pass,     0, sizeof(Pass));
+  }
+
   char          Server[65];
   unsigned int  Port;
   char          Domain[65];
@@ -652,6 +708,8 @@ struct NotificationSettingsStruct
   char          Body[513];
   byte          Pin1;
   byte          Pin2;
+  char          User[49];
+  char          Pass[33];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
