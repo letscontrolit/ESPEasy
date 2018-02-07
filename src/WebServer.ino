@@ -300,6 +300,7 @@ void sendWebPageChunkedBegin(String& log)
 
 void sendWebPageChunkedData(String& log, String& data)
 {
+  while (ESP.getFreeHeap() < 8000) backgroundtasks(); 
   checkRAM(F("sendWebPageChunkedData"));
   if (data.length() > 0)
   {
