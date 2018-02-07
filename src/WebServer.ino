@@ -300,7 +300,10 @@ void sendWebPageChunkedBegin(String& log)
 
 void sendWebPageChunkedData(String& log, String& data)
 {
-  while (ESP.getFreeHeap() < 7000) backgroundtasks(); 
+  long timeout= millis();  
+  while ((ESP.getFreeHeap() < 7000) && ((millis()-timeout < 100)) ) {
+    backgroundtasks(); 
+  }
   checkRAM(F("sendWebPageChunkedData"));
   if (data.length() > 0)
   {
