@@ -290,7 +290,7 @@ void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  // WebServer.sendHeader("Content-Type","text/html",true);
+  WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
   #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.sendHeader("Transfer-Encoding","chunked");
