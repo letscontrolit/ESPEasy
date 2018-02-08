@@ -8,7 +8,7 @@
  
 struct tcp_pcb;
 extern struct tcp_pcb* tcp_tw_pcbs;
-extern void tcp_abort (struct tcp_pcb* pcb);
+extern "C" void tcp_abort (struct tcp_pcb* pcb);
  
 void tcpCleanup()   
 {
