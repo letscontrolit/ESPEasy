@@ -300,10 +300,12 @@ void sendWebPageChunkedBegin(String& log)
 
 void sendWebPageChunkedData(String& log, String& data)
 {
+  /*
   uint32_t beginWait = millis();
   while ((ESP.getFreeHeap() < 7000) &&  !timeOutReached(beginWait + 1000)) {
     backgroundtasks(); 
   }
+  */
   checkRAM(F("sendWebPageChunkedData"));
   if (data.length() > 0)
   {
@@ -320,8 +322,13 @@ void sendWebPageChunkedData(String& log, String& data)
       WebServer.sendContent(data);
       WebServer.sendContent("\r\n");
     #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+      uint32_t beginWait = millis();
+      uint32_t freeBeforeSend= ESP.getFreeHeap();
       WebServer.sendContent(data);
-    #endif
+      while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
+         delay(1);
+        }
+     #endif
     data = F("");   //free RAM
   }
 }
