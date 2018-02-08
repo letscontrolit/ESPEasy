@@ -6,11 +6,11 @@
 #include <md5.h>
 #if defined(ESP8266)
  
-    struct tcp_pcb;
-    extern struct tcp_pcb* tcp_tw_pcbs;
-    extern "C" void tcp_abort (struct tcp_pcb* pcb);
+struct tcp_pcb;
+extern struct tcp_pcb* tcp_tw_pcbs;
+extern void tcp_abort (struct tcp_pcb* pcb);
  
- void tcpCleanup()  // see https://github.com/esp8266/Arduino/commit/b15102ad28c5f509aa59632ca63663ad8c9e186a
+void tcpCleanup()   
 {
      while(tcp_tw_pcbs!=NULL)
     {
