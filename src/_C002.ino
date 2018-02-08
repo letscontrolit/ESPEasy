@@ -125,6 +125,9 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                   struct EventStruct TempEvent;
                   parseCommandString(&TempEvent, action);
                   PluginCall(PLUGIN_WRITE, &TempEvent, action);
+                  // trigger rulesprocessing
+                  if (Settings.UseRules)
+                    createRuleEvents(x);
                 }
               }
             }
