@@ -197,7 +197,7 @@ void WebServerInit()
 
 void sendWebPage(const String& tmplName, String& pageContent)
 {
-  String fileName = tmplName;
+   String fileName = tmplName;
   fileName += F(".htm");
   fs::File f = SPIFFS.open(fileName, "r+");
   String pageTemplate;
@@ -290,22 +290,23 @@ void sendWebPageChunkedBegin(String& log)
 {
   statusLED(true);
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  // WebServer.sendHeader("Content-Type","text/html",true);
+  WebServer.sendHeader("Content-Type","text/html",true);
   WebServer.sendHeader("Cache-Control","no-cache");
   #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.sendHeader("Transfer-Encoding","chunked");
   #endif
-  WebServer.send(200);
+
+   uint32_t beginWait = millis();
+   uint32_t freeBeforeSend= ESP.getFreeHeap();
+   WebServer.send(200);
+   while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
+       delay(1);
+   }
+
 }
 
 void sendWebPageChunkedData(String& log, String& data)
 {
-  /*
-  uint32_t beginWait = millis();
-  while ((ESP.getFreeHeap() < 7000) &&  !timeOutReached(beginWait + 1000)) {
-    backgroundtasks(); 
-  }
-  */
   checkRAM(F("sendWebPageChunkedData"));
   if (data.length() > 0)
   {
@@ -313,7 +314,6 @@ void sendWebPageChunkedData(String& log, String& data)
     log += F(" [");
     log += data.length();
     log += F("]");
-
     #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
       String size;
       size=String(data.length(), HEX)+"\r\n";
@@ -339,7 +339,13 @@ void sendWebPageChunkedEnd(String& log)
   #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
     WebServer.sendContent("0\r\n\r\n");
   #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-    WebServer.sendContent("");
+   uint32_t beginWait = millis();
+   uint32_t freeBeforeSend= ESP.getFreeHeap();
+   WebServer.sendContent("");
+   while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
+       delay(1);
+   }
+  
   #endif
 }
 
@@ -370,52 +376,46 @@ String getErrorNotifications() {
 void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 {
   int indexStart, indexEnd;
-  String pageResult, varName, varValue;
+  String pageResult, varName; //, varValue;
 
   String log = F("HTML : Template-Size=");
   log += pageTemplate.length();
   log += F(" Content-Size=");
   log += pageContent.length();
-
   sendWebPageChunkedBegin(log);   //prepare chunked send
-
   while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
   {
     pageResult += pageTemplate.substring(0, indexStart);
     pageTemplate = pageTemplate.substring(indexStart);
-
     if ((indexEnd = pageTemplate.indexOf("}}")) > 0)
     {
-      varName = pageTemplate.substring(2, indexEnd);
-      pageTemplate = pageTemplate.substring(indexEnd + 2);
-
-      varName.toLowerCase();
-
-      if (varName == F("content"))   //is var == page content?
+     varName = pageTemplate.substring(2, indexEnd);
+     pageTemplate = pageTemplate.substring(indexEnd + 2);
+     varName.toLowerCase();
+     if (varName == F("content"))   //is var == page content?
       {
-        sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
-        sendWebPageChunkedData(log, pageContent);   //send the content - free mem - content can only added once
+       sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
+       sendWebPageChunkedData(log, pageContent);   //send the content - free mem - content can only added once
       } else if (varName == F("error")) {
-        String errors(getErrorNotifications());
-        if (errors.length() > 0)
+       String errors(getErrorNotifications());
+       if (errors.length() > 0) 
           sendWebPageChunkedData(log, errors);
       } else {
-        getWebPageTemplateVar(varName, varValue);
-        pageResult += varValue;
+        getWebPageTemplateVar(varName, pageResult);
       }
     }
-    else   //no closing "}}"
+    else   {//no closing "}}"
       pageTemplate = pageTemplate.substring(2);   //eat "{{"
-
+   }
     //send the accumulated HTML if junk is 500+ bytes
     if (pageResult.length() > 500)
-    {
+    {          
       sendWebPageChunkedData(log, pageResult);
+      pageResult=  F("");
     }
   }
   pageResult += pageTemplate;   //add the rest without vars
-  pageTemplate = F("");   //free mem
-
+  pageTemplate =  F("");   //free mem -- s0170071- cannot confirm this
   sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
 
   if (shouldReboot)
@@ -459,11 +459,10 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
 
       "</script>"
     );
+    
     sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
   }
-
   sendWebPageChunkedEnd(log);   //close chunked send
-
   addLog(LOG_LEVEL_DEBUG_DEV, log);
 }
 
@@ -472,16 +471,16 @@ static byte navMenuIndex = 0;
 
 void getWebPageTemplateVar(const String& varName, String& varValue)
 {
-  varValue = F("");
+  //varValue = F("");
 
   if (varName == F("name"))
   {
-    varValue = Settings.Name;
+    varValue += Settings.Name;
   }
 
   else if (varName == F("unit"))
   {
-    varValue = Settings.Unit;
+    varValue += Settings.Unit;
   }
 
   else if (varName == F("menu"))
@@ -614,7 +613,7 @@ void addFooter(String& str)
 // Web Interface root page
 //********************************************************************************
 void handle_root() {
-
+ 
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
