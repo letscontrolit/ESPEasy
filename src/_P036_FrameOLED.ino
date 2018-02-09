@@ -19,7 +19,7 @@
 #define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 #define P36_Nchars 32
 
-
+#define P36_CONTRAST_OFF    0
 #define P36_CONTRAST_LOW    64
 #define P36_CONTRAST_MED  0xCF
 #define P36_CONTRAST_HIGH 0xFF
@@ -209,26 +209,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         display->init();		// call to local override of init function
         display->displayOn();
 
-        // Set the display contrast
-        // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
-        // normal brightness & contrast:  contrast = 100
-        char contrast = 100;
-        char precharge = 241;
-        char comdetect = 64;
         uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
-        switch (OLED_contrast) {
-          case P36_CONTRAST_LOW:
-            contrast = 10; precharge = 5; comdetect = 0;
-            break;
-          case P36_CONTRAST_MED:
-            contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
-            break;
-          case P36_CONTRAST_HIGH:
-          default:
-            contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
-            break;
-        }
-        display->setContrast(contrast, precharge, comdetect);
+        P36_setContrast(OLED_contrast);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
@@ -387,21 +369,57 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("OLEDFRAMEDCMD")))
+        if (tmpString.equalsIgnoreCase(F("OLEDFRAMEDCMD")) && display)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
           if (tmpString.equalsIgnoreCase(F("Off")))
-            display->displayOff();
+            P36_setContrast(P36_CONTRAST_OFF);
           else if (tmpString.equalsIgnoreCase(F("On")))
             display->displayOn();
+          else if (tmpString.equalsIgnoreCase(F("Low")))
+            P36_setContrast(P36_CONTRAST_LOW);
+          else if (tmpString.equalsIgnoreCase(F("Med")))
+            P36_setContrast(P36_CONTRAST_MED);
+          else if (tmpString.equalsIgnoreCase(F("High")))
+            P36_setContrast(P36_CONTRAST_HIGH);
         }
         break;
       }
 
   }
   return success;
+}
+
+// Set the display contrast
+// really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
+// normal brightness & contrast:  contrast = 100
+void P36_setContrast(uint8_t OLED_contrast) {
+  char contrast = 100;
+  char precharge = 241;
+  char comdetect = 64;
+  switch (OLED_contrast) {
+    case P36_CONTRAST_OFF:
+      if (display) {
+        display->displayOff();
+      }
+      return;
+    case P36_CONTRAST_LOW:
+      contrast = 10; precharge = 5; comdetect = 0;
+      break;
+    case P36_CONTRAST_MED:
+      contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
+      break;
+    case P36_CONTRAST_HIGH:
+    default:
+      contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
+      break;
+  }
+  if (display) {
+    display->displayOn();
+    display->setContrast(contrast, precharge, comdetect);
+  }
 }
 
 // Perform some specific changes for OLED display
