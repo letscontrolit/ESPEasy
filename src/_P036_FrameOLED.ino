@@ -19,7 +19,7 @@
 #define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 #define P36_Nchars 32
 
-#define P36_CONTRAST_OFF    0
+#define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64
 #define P36_CONTRAST_MED  0xCF
 #define P36_CONTRAST_HIGH 0xFF
