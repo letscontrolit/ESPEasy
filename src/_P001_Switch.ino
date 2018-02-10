@@ -11,7 +11,7 @@ Servo servo2;
 
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH 0
-#define PLUGIN_001_TYPE_DIMMER 1
+#define PLUGIN_001_TYPE_DIMMER 3 // Due to some changes in previous versions, do not use 2.
 #define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH 0
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
@@ -59,23 +59,21 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        if (choice != PLUGIN_001_TYPE_SWITCH && choice != PLUGIN_001_TYPE_DIMMER)
-          choice = PLUGIN_001_TYPE_SWITCH;
         String options[2];
         options[0] = F("Switch");
         options[1] = F("Dimmer");
         int optionValues[2] = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, choice);
+        const byte switchtype = P001_getSwitchType(event);
+        addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER)
+        if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
           char tmpString[128];
           sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
           string += tmpString;
         }
 
-        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String buttonOptions[3];
         buttonOptions[0] = F("Normal Switch");
         buttonOptions[1] = F("Push Button Active Low");
@@ -160,7 +158,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
             byte output_value = sendState ? 1 : 0;
             event->sensorType = SENSOR_TYPE_SWITCH;
-            if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER) {
+            if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
               if (sendState) {
                 output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
                 // Only set type to being dimmer when setting a value else it is "switched off".
@@ -365,4 +363,21 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
   }
   return success;
+}
+
+// TD-er: Needed to fix a mistake in earlier fixes.
+byte P001_getSwitchType(struct EventStruct *event) {
+  byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+  switch (choice) {
+    case 2: // Old implementation for Dimmer
+    case PLUGIN_001_TYPE_DIMMER:
+      choice = PLUGIN_001_TYPE_DIMMER;
+      break;
+    case 1: // Old implementation for switch
+    case PLUGIN_001_TYPE_SWITCH:
+    default:
+      choice = PLUGIN_001_TYPE_SWITCH;
+      break;
+  }
+  return choice;
 }
