@@ -156,3 +156,13 @@ byte CPluginCall(byte Function, struct EventStruct *event)
 
   return false;
 }
+
+// Find first enabled controller index with this protocol
+byte findFirstEnabledControllerWithId(byte cpluginid) {
+  for (byte i=0; i < CONTROLLER_MAX; i++) {
+    if (Settings.Protocol[i] == cpluginid && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return CONTROLLER_MAX;
+}
