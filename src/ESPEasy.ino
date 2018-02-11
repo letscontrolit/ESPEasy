@@ -360,6 +360,7 @@
 
 
 #include "core_version.h"
+#include "ESPEasyTimeTypes.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
@@ -391,7 +392,6 @@
   #include "lwip/igmp.h"
   #include "include/UdpContext.h"
   #include "limits.h"
-  #include "ESPEasyTimeTypes.h"
   extern "C" {
    #include "user_interface.h"
   }

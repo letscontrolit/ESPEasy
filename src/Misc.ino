@@ -3,7 +3,9 @@
 // this feature is not in all upstream versions yet.
 // See https://github.com/esp8266/Arduino/issues/1923
 // and https://github.com/letscontrolit/ESPEasy/issues/253
-#include <md5.h>
+#if defined(ESP8266)
+  #include <md5.h>
+#endif
 #if defined(ESP8266)
 void tcpCleanup()
 {
