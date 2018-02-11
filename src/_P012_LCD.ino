@@ -210,8 +210,43 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          lcd->setCursor(event->Par2 - 1, event->Par1 - 1);
-          lcd->print(tmpString.c_str());
+
+
+         // Fix Weird (native) lcd display behaviour that split long string into row 1,3,2,4, instead of 1,2,3,4
+          byte rows = 2;
+          byte cols = 16;
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2){
+              rows = 4;
+              cols = 20;
+          }
+          int colPos = event->Par2 - 1;
+          int rowPos = event->Par1 - 1;
+          boolean stillProcessing = 1;
+          byte charCount = 1;
+
+          lcd->setCursor(colPos, rowPos);
+
+          while(stillProcessing) {
+               if (++colPos > cols) {    // have we printed 20 characters yet (+1 for the logic)
+                    rowPos += 1;
+                    lcd->setCursor(0,rowPos);   // move cursor down
+                    colPos = 1;
+               }
+
+               //dont print if "lower" than the lcd
+               if(rowPos < rows  ){
+                   lcd->print(tmpString[charCount - 1]);
+               }
+
+               if (!tmpString[charCount]) {   // no more chars to process?
+                    stillProcessing = 0;
+               }
+               charCount += 1;
+          }
+          // end fix
+
+          //lcd->print(tmpString.c_str());
+
         }
         if (lcd && tmpString.equalsIgnoreCase(F("LCDCMD")))
         {
