@@ -385,7 +385,12 @@ void ExecuteCommand(byte source, const char *Line)
     IPAddress UDP_IP;
     if(UDP_IP.fromString(ip)) {
       portUDP.beginPacket(UDP_IP, port.toInt());
-      portUDP.write(message.c_str(), message.length());
+      #if defined(ESP8266)
+        portUDP.write(message.c_str(), message.length());
+      #endif       
+      #if defined(ESP32)
+        portUDP.write((uint8_t*)message.c_str(), message.length());
+      #endif        
       portUDP.endPacket();
     }
   }

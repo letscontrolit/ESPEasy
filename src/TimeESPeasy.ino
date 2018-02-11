@@ -92,7 +92,7 @@ unsigned long now() {
       nextSyncTime = sysTime + syncInterval;
     }
   }
-  uint32 localSystime = toLocal(sysTime);
+  uint32_t localSystime = toLocal(sysTime);
   breakTime(localSystime, tm);
   return (unsigned long)localSystime;
 }

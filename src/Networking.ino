@@ -21,8 +21,12 @@ void syslog(const char *message)
 
 	// Using Setting.Unit to build a Hostname
     //snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
-
-    portUDP.write(str);
+    #if defined(ESP8266)
+      portUDP.write(str);
+    #endif
+    #if defined(ESP32)
+      portUDP.write((uint8_t*)str,strlen(str));
+    #endif
     portUDP.endPacket();
   }
 }
