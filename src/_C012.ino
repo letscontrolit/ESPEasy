@@ -2,6 +2,8 @@
 //########################### Controller Plugin 012: Blynk  #############################################
 //#######################################################################################################
 
+#ifdef PLUGIN_BUILD_TESTING
+
 #define CPLUGIN_012
 #define CPLUGIN_ID_012         12
 #define CPLUGIN_NAME_012       "Blynk HTTP [TESTING]"
@@ -163,3 +165,4 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 
   return success;
 }
+#endif
