@@ -8,7 +8,8 @@
 #define _TAIL true
 #define BufferSize 400
 
-
+void sendContentBlocking(String& data);
+void sendHeaderBlocking();
 
 class StreamingBuffer{
 private: 
