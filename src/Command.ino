@@ -445,6 +445,41 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
+  // ****************************************
+  // special commands for Blynk
+  // ****************************************
+
+  if (strcasecmp_P(Command, PSTR("BlynkGet")) == 0)
+  {
+    byte first_enabled_blynk_controller = firstEnabledBlynkController();
+    if (first_enabled_blynk_controller == -1) {
+      status = F("Controller not enabled");
+    } else {
+      String strLine = Line;
+      strLine = strLine.substring(9);
+      int index = strLine.indexOf(',');
+      if (index > 0)
+      {
+        int index = strLine.lastIndexOf(',');
+        String blynkcommand = strLine.substring(index+1);
+        float value = 0;
+        if (Blynk_get(blynkcommand, first_enabled_blynk_controller, &value))
+        {
+          UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = value;
+        }
+        else
+          status = F("Error getting data");
+      }
+      else
+      {
+        if (!Blynk_get(strLine, first_enabled_blynk_controller))
+        {
+          status = F("Error getting data");
+        }
+      }
+    }
+  }
+
 
   // ****************************************
   // configure settings commands

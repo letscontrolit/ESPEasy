@@ -1003,6 +1003,19 @@ String lowestRAMfunction = "";
 
 bool shouldReboot=false;
 
+// Blynk_get prototype
+boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+
+int firstEnabledBlynkController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
