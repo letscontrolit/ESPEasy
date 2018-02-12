@@ -15,18 +15,28 @@ class StreamingBuffer{
 private: 
   
 public: 
-  uint32_t initialRam=0; 
-  uint32_t beforeTXRam=0;
-  uint32_t duringTXRam=0; 
-  uint32_t finalRam=0;
-  uint32_t maxCoreUsage=0;
-  uint32_t maxServerUsage=0;
+  uint32_t initialRam; 
+  uint32_t beforeTXRam;
+  uint32_t duringTXRam; 
+  uint32_t finalRam;
+  uint32_t maxCoreUsage;
+  uint32_t maxServerUsage;
   
 
 
   String buf; 
   unsigned int sentBytes;
-  StreamingBuffer(void) {      buf = "";  buf.reserve(BufferSize+100); }
+  StreamingBuffer(void) {     
+    buf = "";  
+    buf.reserve(BufferSize+100);
+    initialRam=0; 
+    beforeTXRam=0;
+    duringTXRam=0; 
+    finalRam=0;
+    maxCoreUsage=0;
+    maxServerUsage=0;
+
+    }
   StreamingBuffer(String &a) {     buf = a; }
   StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
   StreamingBuffer operator= (const String& a)           { this->buf= a;                     checkFull();   return *this; }
@@ -54,7 +64,9 @@ public:
   
   void startStream(bool json=false){
     maxCoreUsage=maxServerUsage=0;
-     beforeTXRam=  beforeTXRam= initialRam= ESP.getFreeHeap();
+    beforeTXRam= ESP.getFreeHeap();
+    beforeTXRam= ESP.getFreeHeap();
+    initialRam=  ESP.getFreeHeap();
     if (json){
       WebServer.send(200, "application/json");
     } else {
