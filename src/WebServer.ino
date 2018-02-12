@@ -808,6 +808,7 @@ void handle_root() {
     return;
   }
    if (!isLoggedIn()) return;
+   navMenuIndex = 0;
    TXBuffer.startStream();
    sendHeadandTail(F("TmplStd"),_HEAD); 
   
@@ -819,7 +820,7 @@ void handle_root() {
     if (timerAPoff)
       timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
 
-    navMenuIndex = 0;
+
   
     printToWeb = true;
     printWebString = "";
@@ -980,13 +981,14 @@ void handle_root() {
 void handle_config() {
       
  if (!isLoggedIn()) return;
+   navMenuIndex = 1;
    TXBuffer.startStream();
    sendHeadandTail(F("TmplStd"),_HEAD); 
 
   if (timerAPoff)
     timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
 
-  navMenuIndex = 1;
+
   String name = WebServer.arg(F("name"));
   //String password = WebServer.arg(F("password"));
   String ssid = WebServer.arg(F("ssid"));
@@ -1129,11 +1131,12 @@ void handle_config() {
 //********************************************************************************
 void handle_controllers() {
   if (!isLoggedIn()) return;
-   TXBuffer.startStream();
-   sendHeadandTail(F("TmplStd"),_HEAD); 
+  navMenuIndex = 2;
+  TXBuffer.startStream();
+  sendHeadandTail(F("TmplStd"),_HEAD); 
 
   struct EventStruct TempEvent;
-  navMenuIndex = 2;
+
   byte controllerindex = WebServer.arg(F("index")).toInt();
   boolean controllerNotSet = controllerindex == 0;
   --controllerindex;
@@ -1354,13 +1357,14 @@ void handle_controllers() {
 //********************************************************************************
 void handle_notifications() {
   if (!isLoggedIn()) return;
-   TXBuffer.startStream();
-   sendHeadandTail(F("TmplStd"),_HEAD); 
+  navMenuIndex = 6;
+  TXBuffer.startStream();
+  sendHeadandTail(F("TmplStd"),_HEAD); 
 
   struct EventStruct TempEvent;
   // char tmpString[64];
 
-  navMenuIndex = 6;
+
   byte notificationindex = WebServer.arg(F("index")).toInt();
   boolean notificationindexNotSet = notificationindex == 0;
   --notificationindex;
@@ -1581,12 +1585,12 @@ void handle_notifications() {
 //********************************************************************************
 void handle_hardware() {
   if (!isLoggedIn()) return;
-
+  navMenuIndex = 3;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD); 
   
   
-  navMenuIndex = 3;
+
  
   if (isFormItem(F("psda")))
   {
@@ -1697,10 +1701,11 @@ void addIPaccessControlSelect(String& str, String name, int choice)
 //19480 (11128)
 void handle_devices() {
   if (!isLoggedIn()) return;
-   TXBuffer.startStream();
-   sendHeadandTail(F("TmplStd"),_HEAD); 
-
   navMenuIndex = 4;
+  TXBuffer.startStream();
+  sendHeadandTail(F("TmplStd"),_HEAD); 
+
+
   // char tmpString[41];
   struct EventStruct TempEvent;
 
@@ -2962,10 +2967,11 @@ void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
 //********************************************************************************
 void handle_log() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD); 
 
-  navMenuIndex = 7;
+
  
    
   TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
@@ -2986,10 +2992,11 @@ void handle_log() {
 //********************************************************************************
 void handle_tools() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD); 
 
-  navMenuIndex = 7;
+
   String webrequest = WebServer.arg(F("cmd"));
  
   TXBuffer += F("<form>");
@@ -3134,10 +3141,10 @@ void handle_tools() {
 //********************************************************************************
 void handle_pinstates() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD); 
 
-  navMenuIndex = 7;
 
 
  
@@ -3197,10 +3204,10 @@ void handle_pinstates() {
 //********************************************************************************
 void handle_i2cscanner() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD); 
 
-  navMenuIndex = 7;
   char *TempString = (char*)malloc(80);
 
  
@@ -3339,11 +3346,11 @@ void handle_i2cscanner() {
 //********************************************************************************
 void handle_wifiscanner() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD); 
 
-  navMenuIndex = 7;
-  char *TempString = (char*)malloc(80);
+   char *TempString = (char*)malloc(80);
 
  
    
@@ -3555,10 +3562,10 @@ void handle_json()
 //********************************************************************************
 void handle_advanced() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
 
-  navMenuIndex = 7;
   char tmpString[81];
 
   String messagedelay = WebServer.arg(F("messagedelay"));
@@ -3782,10 +3789,11 @@ boolean isLoggedIn()
 void handle_download()
 {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
 
-  navMenuIndex = 7;
+
   fs::File dataFile = SPIFFS.open(F(FILE_CONFIG), "r");
   if (!dataFile)
     return;
@@ -3814,13 +3822,10 @@ void handle_download()
 byte uploadResult = 0;
 void handle_upload() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
 
- 
-   
-
-  navMenuIndex = 7;
   TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
      sendHeadandTail(F("TmplStd"),true); 
     TXBuffer.endStream();
@@ -3834,10 +3839,11 @@ void handle_upload() {
 //********************************************************************************
 void handle_upload_post() {
   if (!isLoggedIn()) return;
+
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
 
-  navMenuIndex = 7;
  
 
   if (uploadResult == 1)
@@ -4142,11 +4148,12 @@ boolean handle_custom(String path) {
 //********************************************************************************
 void handle_filelist() {
   if (!clientIPallowed()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
 
 #if defined(ESP8266)
-  navMenuIndex = 7;
+
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
@@ -4185,7 +4192,6 @@ void handle_filelist() {
     TXBuffer.endStream();
 #endif
 #if defined(ESP32)
-  navMenuIndex = 7;
   String fdelete = WebServer.arg(F("delete"));
 
   if (fdelete.length() > 0)
@@ -4235,10 +4241,11 @@ void handle_filelist() {
 #ifdef FEATURE_SD
 void handle_SDfilelist() {
   if (!clientIPallowed()) return;
+  navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
 
-  navMenuIndex = 7;
+
   String fdelete = "";
   String ddelete = "";
   String change_to_dir = "";
@@ -4540,11 +4547,12 @@ void handle_setup() {
 //********************************************************************************
 void handle_rules() {
   if (!isLoggedIn()) return;
+  navMenuIndex = 5;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd")); 
   static byte currentSet = 1;
 
-  navMenuIndex = 5;
+
   String set = WebServer.arg(F("set"));
   byte rulesSet = 1;
   if (set.length() > 0)
