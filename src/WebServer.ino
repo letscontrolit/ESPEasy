@@ -13,11 +13,20 @@ void sendHeaderBlocking();
 
 class StreamingBuffer{
 private: 
-
+  
 public: 
+  uint32_t initialRam; 
+  uint32_t beforeTXRam;
+  uint32_t duringTXRam; 
+  uint32_t finalRam;
+  uint32_t maxCoreUsage;
+  uint32_t maxServerUsage;
+  
+
+
   String buf; 
   unsigned int sentBytes;
-  StreamingBuffer(void) {      buf = "";   }
+  StreamingBuffer(void) {      buf = "";  buf.reserve(BufferSize+100); }
   StreamingBuffer(String &a) {     buf = a; }
   StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
   StreamingBuffer operator= (const String& a)           { this->buf= a;                     checkFull();   return *this; }
@@ -35,27 +44,49 @@ public:
     }
   StreamingBuffer operator+ (const StreamingBuffer& a)  { this->buf = this->buf+a.buf;      checkFull(); return *this;  }
   StreamingBuffer operator+ (const String& a)           { this->buf = this->buf+a;          checkFull(); return *this;  }
-
+  
   void checkFull(void){
-    if (this->buf.length()>BufferSize) 
+    if (this->buf.length()>BufferSize) {
+    trackTotalMem();
     sendContentBlocking(this->buf); 
+    }
   }
-
+  
   void startStream(bool json=false){
+    maxCoreUsage=maxServerUsage=0;
+     beforeTXRam=  beforeTXRam= initialRam= ESP.getFreeHeap();
     if (json){
       WebServer.send(200, "application/json");
     } else {
-      buf.reserve(BufferSize+100);
+      
       sentBytes=0;
       buf ="";
       sendHeaderBlocking();
     }
   }
   
+void trackTotalMem()
+{
+    beforeTXRam = ESP.getFreeHeap();
+    if( (initialRam-beforeTXRam)  > maxServerUsage)
+      maxServerUsage=initialRam-beforeTXRam ; 
+ }
+
+void trackCoreMem()
+{
+    duringTXRam = ESP.getFreeHeap();
+    if( (initialRam-duringTXRam)  > maxCoreUsage)
+      maxCoreUsage=(initialRam-duringTXRam) ; 
+}
   void endStream(void){
-    if (buf.length() >0) sendContentBlocking(buf); 
+ 
+   if (buf.length() >0) sendContentBlocking(buf); 
     buf =""; 
     sendContentBlocking(buf); 
+
+    finalRam= ESP.getFreeHeap();
+    String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
+    addLog(LOG_LEVEL_DEBUG, log);
   }
 
 }TXBuffer; 
@@ -67,6 +98,8 @@ void sendContentBlocking(String& data){
       String log = String("sendcontent free: ")+freeBeforeSend+" chunk size:"+ data.length();
       addLog(LOG_LEVEL_DEBUG, log);
       freeBeforeSend= ESP.getFreeHeap();
+      if (TXBuffer.beforeTXRam > freeBeforeSend)   TXBuffer.beforeTXRam = freeBeforeSend ;
+      TXBuffer.duringTXRam=freeBeforeSend;
       #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
           String size  =String(data.length(), HEX)+"\r\n";
           //do chunked transfer encoding ourselves (WebServer doesn't support it)
@@ -77,8 +110,10 @@ void sendContentBlocking(String& data){
           uint32_t beginWait = millis();
           WebServer.sendContent(data);
           while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
-             checkRAM(F("duringDataTX"));
-             delay(1);
+            if(ESP.getFreeHeap()<TXBuffer.duringTXRam) TXBuffer.duringTXRam=ESP.getFreeHeap();; 
+            TXBuffer.trackCoreMem();
+            checkRAM(F("duringDataTX"));
+            delay(1);
           } 
      #endif
   
