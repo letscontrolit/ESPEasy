@@ -166,7 +166,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail=false)
        if (errors.length() > 0) 
           TXBuffer+=(errors);
       } else {
-         getWebPageTemplateVar(varName, TXBuffer.buf);
+         getWebPageTemplateVar(varName);
          TXBuffer.checkFull();
        }
     }
@@ -623,8 +623,8 @@ void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
  */
 
 static byte navMenuIndex = 0;
-
-void getWebPageTemplateVar(const String& varName, String& varValue)
+ 
+void getWebPageTemplateVar(const String& varName )
 {
  // Serial.print(varName); Serial.print(" : free: "); Serial.print(ESP.getFreeHeap());   Serial.print("var len before:  "); Serial.print (varValue.length()) ;Serial.print("after:  ");
  //varValue = F("");
@@ -686,13 +686,13 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
     //if (0) //TODO
     {
       TXBuffer = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
-    }/*
-    else
-    {
-      TXBuffer += F("<style>");
-      TXBuffer += PGMT(pgDefaultCSS);
-      TXBuffer += F("</style>");
-    }*/
+    } 
+  // else
+  //  {
+  //    TXBuffer += F("<style>");
+  //    TXBuffer += PGMT(pgDefaultCSS);
+  //    TXBuffer += F("</style>");
+  //  } 
   }
  else if (varName == F("css1"))
   {
@@ -744,7 +744,7 @@ void getWebPageTemplateVar(const String& varName, String& varValue)
     addLog(LOG_LEVEL_ERROR, log);
     //no return string - eat var name
   }
-  // Serial.println(TXBuffer.buf.length());
+   
  }
 
 
