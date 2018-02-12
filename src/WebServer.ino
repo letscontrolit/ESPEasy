@@ -63,7 +63,6 @@ public:
 
 void sendContentBlocking(String& data){
       checkRAM(F("sendContentBlocking"));
-      uint32_t beginWait = millis();
       uint32_t freeBeforeSend= ESP.getFreeHeap();
       String log = String("sendcontent free: ")+freeBeforeSend+" chunk size:"+ data.length();
       addLog(LOG_LEVEL_DEBUG, log);
@@ -75,6 +74,7 @@ void sendContentBlocking(String& data){
           if (data.length()) WebServer.sendContent(data);
           WebServer.sendContent("\r\n");
       #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+          uint32_t beginWait = millis();
           WebServer.sendContent(data);
           while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
              checkRAM(F("duringDataTX"));
@@ -90,9 +90,12 @@ void sendContentBlocking(String& data){
 
  void sendHeaderBlocking(){
      checkRAM(F("sendHeaderBlocking"));
+    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    #else
      uint32_t beginWait = millis();
      uint32_t freeBeforeSend= ESP.getFreeHeap();
      WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    #endif
      WebServer.sendHeader("Content-Type","text/html",true);
      WebServer.sendHeader("Cache-Control","no-cache");
     #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
