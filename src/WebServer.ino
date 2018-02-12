@@ -15,12 +15,12 @@ class StreamingBuffer{
 private: 
   
 public: 
-  uint32_t initialRam; 
-  uint32_t beforeTXRam;
-  uint32_t duringTXRam; 
-  uint32_t finalRam;
-  uint32_t maxCoreUsage;
-  uint32_t maxServerUsage;
+  uint32_t initialRam=0; 
+  uint32_t beforeTXRam=0;
+  uint32_t duringTXRam=0; 
+  uint32_t finalRam=0;
+  uint32_t maxCoreUsage=0;
+  uint32_t maxServerUsage=0;
   
 
 
