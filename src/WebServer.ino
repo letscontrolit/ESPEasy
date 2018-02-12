@@ -3001,21 +3001,16 @@ void handle_json()
   if (tasknr.length() == 0)
   {
     reply += F("{\"System\":{\n");
-    reply += F("\"Build\":");
-    reply += BUILD;
-    reply += F(",\n\"Git Build\":\"");
-    reply += BUILD_GIT;
-    reply += F("\",\n\"Unit\":");
-    reply += Settings.Unit;
-    reply += F(",\n\"Local time\":");
-    reply += F("\"");
-    reply += getDateTimeString('-',':',' ');
-    reply += F("\"");
-    reply += F(",\n\"Uptime\":");
-    reply += wdcounter / 2;
-    reply += F(",\n\"Free RAM\":");
-    reply += ESP.getFreeHeap();
-    reply += F("\n},\n");
+
+	reply += F("\"Name\":");		reply += F("\"");	reply += Settings.Name;					reply += F("\"");	reply += F(",");
+	reply += F("\"Unit\":");							reply += Settings.Unit;										reply += F(",");
+	reply += F("\"Build\":");							reply += BUILD;												reply += F(",");
+	reply += F("\"Git Build\":");	reply += F("\"");	reply += BUILD_GIT;						reply += F("\"");	reply += F(",");
+	reply += F("\"Local time\":");	reply += F("\"");	reply += getDateTimeString('-',':',' ');reply += F("\"");	reply += F(",");
+	reply += F("\"Uptime\":");							reply += wdcounter / 2;										reply += F(",");
+    reply += F("\"Free RAM\":");						reply += ESP.getFreeHeap();									//end of array
+
+    reply += F("},\n");
   }
 
   byte taskNr = tasknr.toInt();
