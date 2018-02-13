@@ -403,10 +403,10 @@ void ExecuteCommand(byte source, const char *Line)
       portUDP.beginPacket(UDP_IP, port.toInt());
       #if defined(ESP8266)
         portUDP.write(message.c_str(), message.length());
-      #endif       
+      #endif
       #if defined(ESP32)
         portUDP.write((uint8_t*)message.c_str(), message.length());
-      #endif        
+      #endif
       portUDP.endPacket();
     }
   }
@@ -449,6 +449,8 @@ void ExecuteCommand(byte source, const char *Line)
   // special commands for Blynk
   // ****************************************
 
+#ifdef CPLUGIN_012
+  //FIXME: this should go to PLUGIN_WRITE in _C012.ino
   if (strcasecmp_P(Command, PSTR("BlynkGet")) == 0)
   {
     byte first_enabled_blynk_controller = firstEnabledBlynkController();
@@ -479,7 +481,7 @@ void ExecuteCommand(byte source, const char *Line)
       }
     }
   }
-
+#endif
 
   // ****************************************
   // configure settings commands
