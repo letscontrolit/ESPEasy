@@ -423,7 +423,7 @@ ESP8266WebServer WebServer(80);
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
-
+bool WiFiConnected(uint32_t timeout_ms);
 
 extern "C" {
 #include "spi_flash.h"
@@ -605,7 +605,7 @@ struct ControllerSettingsStruct
   }
 
   boolean connectToHost(WiFiClient &client) {
-    if (WiFi.status() != WL_CONNECTED) {
+    if (!WiFiConnected(100)) {
       return false; // Not connected, so no use in wasting time to connect to a host.
     }
     if (UseDNS) {
@@ -615,7 +615,7 @@ struct ControllerSettingsStruct
   }
 
   int beginPacket(WiFiUDP &client) {
-    if (WiFi.status() != WL_CONNECTED) {
+    if (!WiFiConnected(100)) {
       return 0; // Not connected, so no use in wasting time to connect to a host.
     }
     if (UseDNS) {

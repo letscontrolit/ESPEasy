@@ -340,7 +340,7 @@ boolean MQTTConnect_037(String clientid)
   if (MQTTclient_037->connected()) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(1000)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   ControllerSettingsStruct ControllerSettings;

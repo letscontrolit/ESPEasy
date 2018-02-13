@@ -14,7 +14,7 @@ void syslog(const char *message)
     portUDP.beginPacket(broadcastIP, 514);
     char str[256];
     str[0] = 0;
-	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"	
+	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
 
 	// Using Settings.Name as the Hostname (Hostname must NOT content space)
     snprintf_P(str, sizeof(str), PSTR("<7>%s EspEasy: %s"), Settings.Name, message);
@@ -226,7 +226,7 @@ void checkUDP()
   \*********************************************************************************************/
 void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(100)) {
     return;
   }
   struct infoStruct infoReply;
@@ -261,7 +261,7 @@ void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   \*********************************************************************************************/
 void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(100)) {
     return;
   }
   struct dataStruct dataReply;
@@ -293,7 +293,7 @@ void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   \*********************************************************************************************/
 void SendUDPCommand(byte destUnit, char* data, byte dataLength)
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(100)) {
     return;
   }
   byte firstUnit = 1;
@@ -317,7 +317,7 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(100)) {
     return;
   }
   if (unit != 255)
@@ -363,7 +363,7 @@ void refreshNodeList()
 void sendSysInfoUDP(byte repeats)
 {
   char log[80];
-  if (Settings.UDPPort == 0 || WiFi.status() != WL_CONNECTED)
+  if (Settings.UDPPort == 0 || !WiFiConnected(100))
     return;
 
   // TODO: make a nice struct of it and clean up
@@ -423,7 +423,7 @@ void sendSysInfoUDP(byte repeats)
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
 void SSDP_schema(WiFiClient &client) {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(100)) {
     return;
   }
 
@@ -737,5 +737,21 @@ void SSDP_update() {
     while (_server->next())
       _server->flush();
   }
+}
 
+// Check WiFi connection. Maximum timeout 2000 msec.
+bool WiFiConnected(uint32_t timeout_ms) {
+  uint32_t timer = millis() + (timeout_ms > 2000 ? 2000 : timeout_ms);
+  uint32_t min_delay = timeout_ms / 10;
+  if (min_delay < 10) {
+    yield(); // Allow at least once time for backgroundtasks
+    min_delay = 10;
+  }
+  while (WiFi.status() != WL_CONNECTED) {
+    if (timeOutReached(timer)) {
+      return false;
+    }
+    delay(min_delay); // Allow the backgroundtasks to continue procesing.
+  }
+  return true;
 }

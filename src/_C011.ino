@@ -120,7 +120,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend011(struct EventStruct *event)
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!WiFiConnected(100)) {
     return false;
   }
   ControllerSettingsStruct ControllerSettings;

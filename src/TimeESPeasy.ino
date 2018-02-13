@@ -180,7 +180,7 @@ void checkTime()
 
 unsigned long getNtpTime()
 {
-  if (WiFi.status() != WL_CONNECTED || !Settings.UseNTP) {
+  if (!Settings.UseNTP || !WiFiConnected(100)) {
     return 0;
   }
   WiFiUDP udp;
