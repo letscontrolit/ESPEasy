@@ -348,7 +348,7 @@ void clearAccessBlock()
 #include "core_version.h"
 #define HTML_SYMBOL_WARNING "&#9888;"
 
-#define TASKS_PER_PAGE 4
+#define TASKS_PER_PAGE 12
 
 static const char pgDefaultCSS[] PROGMEM = {
   //color scheme: #07D #D50 #DB0 #A0D
