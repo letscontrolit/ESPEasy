@@ -60,6 +60,14 @@
 #define NEC_RPT_SPACE	2250
 #define NEC_MIN_COMMAND_LENGTH 108000UL
 
+#define PIONEER_HDR_MARK	8000
+#define PIONEER_HDR_SPACE	4000
+#define PIONEER_BIT_MARK	500
+#define PIONEER_ONE_SPACE	1500
+#define PIONEER_ZERO_SPACE	500
+#define PIONEER_RPT_SPACE	2250
+#define PIONEER_MIN_COMMAND_LENGTH 90000UL
+
 // Timings based on http://www.sbprojects.com/knowledge/ir/sirc.php
 #define SONY_HDR_MARK	2400
 #define SONY_HDR_SPACE	600

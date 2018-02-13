@@ -168,6 +168,51 @@ void ICACHE_FLASH_ATTR IRsend::sendNEC (unsigned long data, int nbits,
   }
 }
 
+void ICACHE_FLASH_ATTR IRsend::sendPioneer (unsigned long data, int nbits,
+                                            unsigned int repeat, unsigned long secondData) {
+  // Details about timings can be found at:
+  //   http://www.sbprojects.com/knowledge/ir/nec.php
+  // More about the pioneer format:
+  //   http://www.adrian-kingston.com/IRFormatPioneer.htm
+
+  // Set IR carrier frequency
+  enableIROut(40);
+  IRtimer usecs = IRtimer();
+
+  for (unsigned int i = 0; i <= repeat; i++) {
+    usecs.reset();
+    // Header
+    mark(PIONEER_HDR_MARK);
+    space(PIONEER_HDR_SPACE);
+
+    sendData(PIONEER_BIT_MARK, PIONEER_ONE_SPACE, PIONEER_BIT_MARK, PIONEER_ZERO_SPACE,
+             data, nbits, true);
+
+    // Footer
+    mark(PIONEER_BIT_MARK);
+    space(PIONEER_ONE_SPACE);
+    // Gap till next command.
+    space(max(0ul, PIONEER_MIN_COMMAND_LENGTH - usecs.elapsed()));
+    
+    // Some Pioneer signals have two 32 bit commands
+    if (secondData) {
+      usecs.reset();
+      // Header
+      mark(PIONEER_HDR_MARK);
+      space(PIONEER_HDR_SPACE);
+
+      sendData(PIONEER_BIT_MARK, PIONEER_ONE_SPACE, PIONEER_BIT_MARK, PIONEER_ZERO_SPACE,
+               secondData, nbits, true);
+
+      // Footer
+      mark(PIONEER_BIT_MARK);
+      space(PIONEER_ONE_SPACE);
+      // Gap till next command.
+      space(max(0ul, PIONEER_MIN_COMMAND_LENGTH - usecs.elapsed()));
+    }
+  }
+}
+
 void ICACHE_FLASH_ATTR IRsend::sendLG (unsigned long data, int nbits,
                                        unsigned int repeat) {
   // Args:
