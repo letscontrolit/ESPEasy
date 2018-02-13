@@ -174,10 +174,10 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
     //wait until it connects
     for (byte x = 0; x < 200; x++)
     {
-      if (WiFi.status() != WL_CONNECTED)
+      if (!WiFiConnected(50))
       {
         statusLED(false);
-        delay(50);
+        // No delay needed, since the WiFi check has a delay
       }
       else
         break;
