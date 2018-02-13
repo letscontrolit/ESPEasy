@@ -45,12 +45,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         // json[0] = 0;
         // event->String2.toCharArray(json, 512);
         // Find first enabled controller index with this protocol
-        byte ControllerID = CONTROLLER_MAX;
-        for (byte i=0; i < CONTROLLER_MAX; i++) {
-          if (Settings.Protocol[i] == CPLUGIN_ID_002 && Settings.ControllerEnabled[i]) {
-            ControllerID = i;
-          }
-        }
+        byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_002);
         if (ControllerID < CONTROLLER_MAX) {
           StaticJsonBuffer<512> jsonBuffer;
           JsonObject& root = jsonBuffer.parseObject(event->String2.c_str());
@@ -71,7 +66,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               switchtype = "?";
 
             for (byte x = 0; x < TASKS_MAX; x++) {
-              // We need the index of the controller we are: 0-CONTROLLER_MAX
+              // We need the index of the controller we are: 0...CONTROLLER_MAX
               if (Settings.TaskDeviceEnabled[x] && Settings.TaskDeviceID[ControllerID][x] == idx) // get idx for our controller index
               {
                 String action = "";
@@ -125,6 +120,9 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                   struct EventStruct TempEvent;
                   parseCommandString(&TempEvent, action);
                   PluginCall(PLUGIN_WRITE, &TempEvent, action);
+                  // trigger rulesprocessing
+                  if (Settings.UseRules)
+                    createRuleEvents(x);
                 }
               }
             }
@@ -137,7 +135,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          if (WiFi.status() != WL_CONNECTED) {
+          if (!WiFiConnected(100)) {
             success = false;
             break;
           }
@@ -193,6 +191,8 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               values  = formatUserVar(event, 0);
               values += ";";
               values += formatUserVar(event, 1);
+              //FIXME: this should be the same as in C001?, instead of 0:
+              //       url += humStat(UserVar[event->BaseVarIndex + 1]);
               values += ";0";
               // values.toCharArray(str, 80);
               root[F("svalue")] =  values.c_str();

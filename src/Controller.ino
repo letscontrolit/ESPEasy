@@ -122,10 +122,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 void MQTTConnect(int controller_idx)
 {
-  if (WiFi.status() != WL_CONNECTED) return;
+  if (!WiFiConnected(100)) return;
+  if (MQTTclient.connected())
+    MQTTclient.disconnect();
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -149,7 +150,8 @@ void MQTTConnect(int controller_idx)
     if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0))
       MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx], LWTTopic.c_str(), 0, 0, "Connection Lost");
     else
-      MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 1, "Connection Lost");
+      MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 0, "Connection Lost");
+    yield();
 
     if (MQTTresult)
     {
@@ -167,7 +169,7 @@ void MQTTConnect(int controller_idx)
       MQTTclient.publish(LWTTopic.c_str(), "Connected", 1);
 
       statusLED(true);
-      break; // end loop if succesfull
+      return; // end loop if succesfull
     }
     else
     {
@@ -190,7 +192,7 @@ void MQTTCheck(int controller_idx)
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !MQTTclient.connected() || WiFi.status() != WL_CONNECTED)
+    if (MQTTclient_should_reconnect || !WiFiConnected(100) || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -198,11 +200,7 @@ void MQTTCheck(int controller_idx)
         addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
         connectionFailures += 2;
       }
-      MQTTclient.disconnect();
-      if (WiFi.status() == WL_CONNECTED) {
-        delay(1000);
-        MQTTConnect(controller_idx);
-      }
+      MQTTConnect(controller_idx);
     }
     else if (connectionFailures)
       connectionFailures--;

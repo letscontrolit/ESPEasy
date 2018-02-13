@@ -1214,23 +1214,40 @@ void handle_controllers() {
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (Protocol[ProtocolIndex].usesAccount)
       {
-        addFormTextBox(TXBuffer.buf,  F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
-      }
-
+         String protoDisplayName;
+        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
+          protoDisplayName = F("Controller User");
+        }
+        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
+       }
       if (Protocol[ProtocolIndex].usesPassword)
       {
-        addFormPasswordBox( TXBuffer.buf, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        String protoDisplayName;
+        if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
+          // It is not a regular password, thus use normal text field.
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        } else {
+          addFormPasswordBox(TXBuffer.buf, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        }
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addFormTextBox(TXBuffer.buf,  F("Controller Subscribe"), F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
-      }
+         String protoDisplayName;
+        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
+          protoDisplayName = F("Controller Subscribe");
+        }
+        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
+       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addFormTextBox(TXBuffer.buf,  F("Controller Publish"), F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
-      }
+         String protoDisplayName;
+        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
+          protoDisplayName = F("Controller Publish");
+        }
+        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
+       }
 
       addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
 
@@ -3383,22 +3400,17 @@ void handle_json()
 
   if (tasknr.length() == 0)
   {
-    TXBuffer += F("{\"System\":{\n");
-    TXBuffer += F("\"Build\":");
-    TXBuffer +=  BUILD;
-    TXBuffer += F(",\n\"Git Build\":\"");
-    TXBuffer +=  BUILD_GIT;
-    TXBuffer += F("\",\n\"Unit\":");
-    TXBuffer +=  Settings.Unit;
-    TXBuffer += F(",\n\"Local time\":");
-    TXBuffer += F("\"");
-    TXBuffer +=  getDateTimeString('-',':',' ');
-    TXBuffer += F("\"");
-    TXBuffer += F(",\n\"Uptime\":");
-    TXBuffer +=  wdcounter / 2;
-    TXBuffer += F(",\n\"Free RAM\":");
-    TXBuffer +=  ESP.getFreeHeap();
-    TXBuffer += F("\n},\n");
+
+    TXBuffer.buf += F("{\"System\":{\n");
+ 	  TXBuffer.buf += F("\"Name\":");		      TXBuffer.buf += F("\"");	TXBuffer.buf += Settings.Name;	TXBuffer.buf += F("\"");	TXBuffer.buf += F(",");
+	  TXBuffer.buf += F("\"Unit\":");					TXBuffer.buf += Settings.Unit;	TXBuffer.buf += F(",");
+	  TXBuffer.buf += F("\"Build\":");				TXBuffer.buf += BUILD;	TXBuffer.buf += F(",");
+	  TXBuffer.buf += F("\"Git Build\":");	  TXBuffer.buf += F("\"");	TXBuffer.buf += BUILD_GIT;	 TXBuffer.buf += F("\"");	TXBuffer.buf += F(",");
+	  TXBuffer.buf += F("\"Local time\":");	  TXBuffer.buf += F("\"");	TXBuffer.buf += getDateTimeString('-',':',' '); TXBuffer.buf += F("\"");	TXBuffer.buf += F(",");
+	  TXBuffer.buf += F("\"Uptime\":");				TXBuffer.buf += wdcounter / 2;		 TXBuffer.buf += F(",");
+    TXBuffer.buf += F("\"Free RAM\":");			TXBuffer.buf += ESP.getFreeHeap();	 	//end of array
+
+    TXBuffer.buf += F("},\n");
   }
 
   byte taskNr = tasknr.toInt();

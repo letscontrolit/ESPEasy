@@ -1,4 +1,61 @@
 -------------------------------------------------
+Changes in release mega-20180213 (since mega-20180212)
+-------------------------------------------------
+
+Release date: Tue Feb 13 04:00:09 CET 2018
+
+ESPEasy release bot (3):
+      automaticly updated release notes for v2.0-20180206
+      automaticly updated release notes for v2.0-20180209
+      automaticly updated release notes for v2.0-20180212
+
+Edwin Eefting (1):
+      make blynk stuff compile again
+
+Gijs Noorlander (10):
+      [Issue #831] Use DOUT flash mode (#834)
+      [#804] Degree symbol for non-framed OLED display (#835)
+      Blynk controler (re-implementation of PR#92) (#837)
+      [issue #839] Add command support for setting contrast for OLED Framed (#841)
+      [P001 Switch] Fix a mixup in previous fix for switch (#845)
+      [v2.0] Fix compile errors on ESP32 (#848)
+      Bugfix/oled framed less memory (#859)
+      Formatting user vars (re-do of PR#482) + enabled check OpenHabMQTT (#851)
+      [issue #825] Change labels and password form for Thingspeak controller (#849)
+      [MQTT] Allow for background tests while waiting for wifi (#860)
+
+Henri de Jong (1):
+      Added support for pioneer ir signals (#844)
+
+soif (2):
+      Add Device Name in /json page (#815)
+      P012 - Fix/handle lines exceeding LCD width + allow to clear line b4 print (#852)
+
+wdonker (1):
+      Add trigger for rulesprocessing (#826)
+
+
+-------------------------------------------------
+Changes in release mega-20180212 (since mega-20180209)
+-------------------------------------------------
+
+Release date: Mon Feb 12 04:00:09 CET 2018
+
+mvdbro (1):
+      Fix compile errors on ESP32
+
+
+-------------------------------------------------
+Changes in release mega-20180209 (since mega-20180206)
+-------------------------------------------------
+
+Release date: Fri Feb  9 04:00:15 CET 2018
+
+Andrey (1):
+      Added HIGH-Z state options for GPIO command (#833)
+
+
+-------------------------------------------------
 Changes in release mega-20180206 (since mega-20180203)
 -------------------------------------------------
 

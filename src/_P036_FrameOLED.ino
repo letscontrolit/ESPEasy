@@ -19,7 +19,7 @@
 #define P36_Nlines 12        // The number of different lines which can be displayed - each line is 32 chars max
 #define P36_Nchars 32
 
-
+#define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64
 #define P36_CONTRAST_MED  0xCF
 #define P36_CONTRAST_HIGH 0xFF
@@ -29,9 +29,16 @@
 #include "OLED_SSD1306_SH1106_images.h"
 #include "Dialog_Plain_12_font.h"
 
+#define P36_WIFI_STATE_UNSET          -2
+#define P36_WIFI_STATE_NOT_CONNECTED  -1
+
+static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
+
 // Instantiate display here - does not work to do this within the INIT call
 
 OLEDDisplay *display=NULL;
+
+char P036_deviceTemplate[P36_Nlines][P36_Nchars];
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -129,12 +136,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[4] = 32;
         addFormSelector(string, F("Scroll"), F("plugin_036_scroll"), 5, options3, optionValues3, choice3);
 
-        char deviceTemplate[P36_Nlines][P36_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
 
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), deviceTemplate[varNr], P36_Nchars);
+          addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), P036_deviceTemplate[varNr], P36_Nchars);
         }
 
         addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
@@ -173,15 +179,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         String argName;
 
-        char deviceTemplate[P36_Nlines][P36_Nchars];
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
           argName = F("Plugin_036_template");
           argName += varNr + 1;
-          strncpy(deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(deviceTemplate[varNr]));
+          strncpy(P036_deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(P036_deviceTemplate[varNr]));
         }
 
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        SaveCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
 
         success = true;
         break;
@@ -189,9 +194,9 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        // // Load the custom settings from flash
-        // char deviceTemplate[P36_Nlines][P36_Nchars];
-        // LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        lastWiFiState = P36_WIFI_STATE_UNSET;
+        // Load the custom settings from flash
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
 
         //      Init the display and turn it on
         if (display)
@@ -209,26 +214,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         display->init();		// call to local override of init function
         display->displayOn();
 
-        // Set the display contrast
-        // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
-        // normal brightness & contrast:  contrast = 100
-        char contrast = 100;
-        char precharge = 241;
-        char comdetect = 64;
         uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
-        switch (OLED_contrast) {
-          case P36_CONTRAST_LOW:
-            contrast = 10; precharge = 5; comdetect = 0;
-            break;
-          case P36_CONTRAST_MED:
-            contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
-            break;
-          case P36_CONTRAST_HIGH:
-          default:
-            contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
-            break;
-        }
-        display->setContrast(contrast, precharge, comdetect);
+        P36_setContrast(OLED_contrast);
 
         //      Set the initial value of OnOff to On
         UserVar[event->BaseVarIndex] = 1;
@@ -297,6 +284,13 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = 0;      //  Save the fact that the display is now OFF
           }
         }
+        if (UserVar[event->BaseVarIndex] == 1) {
+          // Display is on.
+          if (display && display_wifibars()) {
+            // WiFi symbol was updated.
+            display->display();
+          }
+        }
 
         success = true;
         break;
@@ -304,9 +298,6 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        char deviceTemplate[P36_Nlines][P36_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-
         // Clear the init screen if this is the first call
         // if (firstcall)
         // {
@@ -327,7 +318,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         //      Construct the outgoing string
         for (byte i = 0; i < linesPerFrame; i++)
         {
-          tmpString = deviceTemplate[(linesPerFrame * frameCounter) + i];
+          tmpString = P036_deviceTemplate[(linesPerFrame * frameCounter) + i];
           oldString[i] = P36_parseTemplate(tmpString, 20);
           oldString[i].trim();
         }
@@ -353,7 +344,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           //        Contruct incoming strings
           for (byte i = 0; i < linesPerFrame; i++)
           {
-            tmpString = deviceTemplate[(linesPerFrame * frameCounter) + i];
+            tmpString = P036_deviceTemplate[(linesPerFrame * frameCounter) + i];
             newString[i] = P36_parseTemplate(tmpString, 20);
             newString[i].trim();
             if (newString[i].length() > 0) foundText = true;
@@ -387,21 +378,57 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("OLEDFRAMEDCMD")))
+        if (tmpString.equalsIgnoreCase(F("OLEDFRAMEDCMD")) && display)
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
           if (tmpString.equalsIgnoreCase(F("Off")))
-            display->displayOff();
+            P36_setContrast(P36_CONTRAST_OFF);
           else if (tmpString.equalsIgnoreCase(F("On")))
             display->displayOn();
+          else if (tmpString.equalsIgnoreCase(F("Low")))
+            P36_setContrast(P36_CONTRAST_LOW);
+          else if (tmpString.equalsIgnoreCase(F("Med")))
+            P36_setContrast(P36_CONTRAST_MED);
+          else if (tmpString.equalsIgnoreCase(F("High")))
+            P36_setContrast(P36_CONTRAST_HIGH);
         }
         break;
       }
 
   }
   return success;
+}
+
+// Set the display contrast
+// really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
+// normal brightness & contrast:  contrast = 100
+void P36_setContrast(uint8_t OLED_contrast) {
+  char contrast = 100;
+  char precharge = 241;
+  char comdetect = 64;
+  switch (OLED_contrast) {
+    case P36_CONTRAST_OFF:
+      if (display) {
+        display->displayOff();
+      }
+      return;
+    case P36_CONTRAST_LOW:
+      contrast = 10; precharge = 5; comdetect = 0;
+      break;
+    case P36_CONTRAST_MED:
+      contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
+      break;
+    case P36_CONTRAST_HIGH:
+    default:
+      contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
+      break;
+  }
+  if (display) {
+    display->displayOn();
+    display->setContrast(contrast, precharge, comdetect);
+  }
 }
 
 // Perform some specific changes for OLED display
@@ -594,14 +621,19 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
   }
 }
 
-//Draw Signal Strength Bars
-void display_wifibars() {
+//Draw Signal Strength Bars, return true when there was an update.
+bool display_wifibars() {
+  const bool connected = WiFi.status() == WL_CONNECTED;
+  const int nbars_filled = (WiFi.RSSI() + 100) / 8;
+  const int newState = connected ? nbars_filled : P36_WIFI_STATE_UNSET;
+  if (newState == lastWiFiState)
+    return false; // nothing to do.
+
   int x = 105;
   int y = 0;
   int size_x = 15;
   int size_y = 10;
   int nbars = 5;
-  int nbars_filled = (WiFi.RSSI() + 100) / 8;
   int16_t width = (size_x / nbars);
   size_x = width * nbars - 1; // Correct for round errors.
 
@@ -627,5 +659,8 @@ void display_wifibars() {
         display->fillRect(xpos, y + size_y - 1, width - 1, 1);
       }
     }
+  } else {
+    // Draw a not connected sign.
   }
+  return true;
 }

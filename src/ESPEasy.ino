@@ -255,6 +255,15 @@
 #define CPLUGIN_GET_DEVICENAME              5
 #define CPLUGIN_WEBFORM_SAVE                6
 #define CPLUGIN_WEBFORM_LOAD                7
+#define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
+
+#define CONTROLLER_HOSTNAME                 1
+#define CONTROLLER_IP                       2
+#define CONTROLLER_PORT                     3
+#define CONTROLLER_USER                     4
+#define CONTROLLER_PASS                     5
+#define CONTROLLER_SUBSCRIBE                6
+#define CONTROLLER_PUBLISH                  7
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -360,6 +369,7 @@
 
 
 #include "core_version.h"
+#include "ESPEasyTimeTypes.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
@@ -391,7 +401,6 @@
   #include "lwip/igmp.h"
   #include "include/UdpContext.h"
   #include "limits.h"
-  #include "ESPEasyTimeTypes.h"
   extern "C" {
    #include "user_interface.h"
   }
@@ -476,6 +485,16 @@ struct CRCStruct{
   bool checkPassed (void){ return memcmp(compileTimeMD5,runTimeMD5,16)==0 ; }
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
+
+bool WiFiConnected(uint32_t timeout_ms);
+
+extern "C" {
+#include "spi_flash.h"
+}
+extern "C" uint32_t _SPIFFS_start;
+extern "C" uint32_t _SPIFFS_end;
+extern "C" uint32_t _SPIFFS_page;
+extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
@@ -659,7 +678,7 @@ struct ControllerSettingsStruct
   }
 
   boolean connectToHost(WiFiClient &client) {
-    if (WiFi.status() != WL_CONNECTED) {
+    if (!WiFiConnected(100)) {
       return false; // Not connected, so no use in wasting time to connect to a host.
     }
     if (UseDNS) {
@@ -669,7 +688,7 @@ struct ControllerSettingsStruct
   }
 
   int beginPacket(WiFiUDP &client) {
-    if (WiFi.status() != WL_CONNECTED) {
+    if (!WiFiConnected(100)) {
       return 0; // Not connected, so no use in wasting time to connect to a host.
     }
     if (UseDNS) {
@@ -1011,6 +1030,19 @@ String lowestRAMfunction = "";
 
 bool shouldReboot=false;
 
+// Blynk_get prototype
+boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+
+int firstEnabledBlynkController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -1208,6 +1240,11 @@ int firstEnabledMQTTController() {
   return -1;
 }
 
+bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, String& protoDisplayName) {
+  EventStruct tmpEvent;
+  tmpEvent.idx=parameterIdx;
+  return CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
+}
 
 /*********************************************************************************************\
  * MAIN LOOP

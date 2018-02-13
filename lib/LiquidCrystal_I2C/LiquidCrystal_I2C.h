@@ -1,4 +1,4 @@
-//DFRobot.com
+//YWROBOT
 #ifndef LiquidCrystal_I2C_h
 #define LiquidCrystal_I2C_h
 
@@ -77,6 +77,9 @@ public:
   void autoscroll();
   void noAutoscroll(); 
   void createChar(uint8_t, uint8_t[]);
+  void createChar(uint8_t location, const char *charmap);
+  // Example: 	const char bell[8] PROGMEM = {B00100,B01110,B01110,B01110,B11111,B00000,B00100,B00000};
+  
   void setCursor(uint8_t, uint8_t); 
 #if defined(ARDUINO) && ARDUINO >= 100
   virtual size_t write(uint8_t);
@@ -85,6 +88,7 @@ public:
 #endif
   void command(uint8_t);
   void init();
+  void oled_init();
 
 ////compatibility API function aliases
 void blink_on();						// alias for blink()
@@ -118,6 +122,7 @@ private:
   uint8_t _displaycontrol;
   uint8_t _displaymode;
   uint8_t _numlines;
+  bool _oled = false;
   uint8_t _cols;
   uint8_t _rows;
   uint8_t _backlightval;
