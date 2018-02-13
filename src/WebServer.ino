@@ -9,7 +9,7 @@
 #define BufferSize 400
 
 void sendContentBlocking(String& data);
-void sendHeaderBlocking();
+void sendHeaderBlocking(bool json);
 
 class StreamingBuffer{
 private: 
@@ -39,16 +39,16 @@ public:
     }
   StreamingBuffer(String &a) {     buf = a; }
   StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
-  StreamingBuffer operator= (const String& a)           { this->buf= a;                     checkFull();   return *this; }
-  StreamingBuffer operator+= (long unsigned int  a)     { this->buf = this->buf+String(a);  checkFull(); return *this;   }
-  StreamingBuffer operator+= (float a)                  { this->buf = this->buf+String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (int a)                    { this->buf = this->buf+String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (uint32_t a)               { this->buf = this->buf+String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (const StreamingBuffer& a) { this->buf = this->buf+a.buf;      checkFull(); return *this;   }
+  StreamingBuffer operator= (const String& a)           { this->buf+= a;                     checkFull();   return *this; }
+  StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull(); return *this;   }
+  StreamingBuffer operator+= (float a)                  { this->buf+=String(a);  checkFull();  return *this;  }
+  StreamingBuffer operator+= (int a)                    { this->buf+=String(a);  checkFull();  return *this;  }
+  StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
+  StreamingBuffer operator+= (const StreamingBuffer& a) { this->buf+=a.buf;      checkFull(); return *this;   }
   StreamingBuffer operator+= (const String& a)          { 
     if ((      (this->buf.length() + a.length()) >BufferSize)&&(this->buf.length()>100 )) 
       sendContentBlocking(this->buf); 
-      this->buf = this->buf+a ;      
+      this->buf+=a ;      
       checkFull();
       return *this;  
     }
@@ -65,16 +65,10 @@ public:
   void startStream(bool json=false){
     maxCoreUsage=maxServerUsage=0;
     beforeTXRam= ESP.getFreeHeap();
-    beforeTXRam= ESP.getFreeHeap();
     initialRam=  ESP.getFreeHeap();
-    if (json){
-      WebServer.send(200, "application/json");
-    } else {
-      
-      sentBytes=0;
-      buf ="";
-      sendHeaderBlocking();
-    }
+    sentBytes=0;
+    buf ="";
+    sendHeaderBlocking(json);
   }
   
 void trackTotalMem()
@@ -135,30 +129,32 @@ void sendContentBlocking(String& data){
 
 
 
- void sendHeaderBlocking(){
-     checkRAM(F("sendHeaderBlocking"));
+ void sendHeaderBlocking(bool json=false){
+    checkRAM(F("sendHeaderBlocking"));
     #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+     if (json) // "application/json"
+        WebServer.sendHeader("Content-Type","application/json",true);
+     else
+        WebServer.sendHeader("Content-Type","text/html",true);
+     WebServer.sendHeader("Cache-Control","no-cache");
+     WebServer.sendHeader("Transfer-Encoding","chunked");
+     WebServer.send(200);
     #else
      uint32_t beginWait = millis();
      uint32_t freeBeforeSend= ESP.getFreeHeap();
      WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-    #endif
-     WebServer.sendHeader("Content-Type","text/html",true);
+     if (json) // "application/json"
+        WebServer.sendHeader("Content-Type","application/json",true);
+     else
+        WebServer.sendHeader("Content-Type","text/html",true);
      WebServer.sendHeader("Cache-Control","no-cache");
-    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-         WebServer.sendHeader("Transfer-Encoding","chunked");
-    #endif
-    WebServer.send(200);
-
-    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-    #else
+     WebServer.send(200);
        // dont wait on 2.3.0. Memory returns just too slow.
-       while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
+     while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 50)) {
         checkRAM(F("duringHeaderTX"));
         delay(1);
-       }
-   #endif
- 
+     }
+    #endif
  }
  
  
@@ -354,7 +350,7 @@ void clearAccessBlock()
 
 #define TASKS_PER_PAGE 4
 
-static const char pgDefaultCSS1[] PROGMEM = {
+static const char pgDefaultCSS[] PROGMEM = {
   //color scheme: #07D #D50 #DB0 #A0D
   "* {font-family:sans-serif; font-size:12pt;}"
   "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
@@ -366,11 +362,6 @@ static const char pgDefaultCSS1[] PROGMEM = {
   ".button.link {}"
   ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
   ".button:hover {background:#369;}"
-  "\0"
-};
-
-static const char pgDefaultCSS2[] PROGMEM = {
-  
   //tables
   "th {padding:6px; background-color:#444; color:#FFF; border-color:#888; font-weight:bold;}"
   "td {padding:4px;}"
@@ -381,10 +372,6 @@ static const char pgDefaultCSS2[] PROGMEM = {
   //header with title and menu
   ".headermenu {position:fixed; top:0; left:0; right:0; height:64px; padding:8px 12px; background-color:#F8F8F8; border-bottom: 1px solid #DDD;}"
   ".bodymenu {margin-top:96px;}"
-};
-
-static const char pgDefaultCSS3[] PROGMEM = {
-  
   //menu
   ".menubar {position:inherit; top:44px;}"
   ".menu {float:left; height:20px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
@@ -393,9 +380,6 @@ static const char pgDefaultCSS3[] PROGMEM = {
   //symbols for enabled
   ".on {color:green;}"
   ".off {color:red;}"
-  "\0"
-};
-static const char pgDefaultCSS4[] PROGMEM = {
   //others
   ".div_l {float:left;}"
   ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
@@ -409,6 +393,7 @@ static const char pgDefaultCSS4[] PROGMEM = {
   ".closebtn:hover {color: black;}"
   "\0"
 };
+
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
 //if there is an error-string, add it to the html code with correct formatting
@@ -488,10 +473,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<head>"
               "<meta charset='utf-8'/>"
               "<title>{{name}}</title>"
-              "{{css1}}"
-              "{{css2}}"
-              "{{css3}}"
-              "{{css4}}"
+              "{{css}}"
               "</head>"
               "<body>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
@@ -508,11 +490,8 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<head>"
               "<meta charset='utf-8'/>"
               "<title>{{name}}</title>"
-              "{{css1}}"
-              "{{css2}}"
-              "{{css3}}"
-              "{{css4}}"
-             "</head>"
+              "{{css}}"
+              "</head>"
               "<body>"
               "<h1>ESP Easy Mega: {{name}}</h1>"
               "{{error}}"
@@ -529,10 +508,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "<meta charset='utf-8'/>"
         "<title>{{name}}</title>"
         "{{js}}"
-        "{{css1}}"
-        "{{css2}}"
-        "{{css3}}"
-        "{{css4}}"
+        "{{css}}"
       "</head>"
       "<body class='bodymenu'>"
         "<b style=\"color:red\" id='rbtmsg'></b>"
@@ -572,102 +548,7 @@ String getErrorNotifications() {
 
   return errors;
 }
- /*
-void processAndSendWebPageTemplate(String& pageTemplate, String& pageContent)
-{
-  int indexStart, indexEnd;
-  String pageResult, varName; //, varValue;
 
-  String log = F("HTML : Template-Size=");
-  log += pageTemplate.length();
-  log += F(" Content-Size=");
-  log += pageContent.length();
-  sendWebPageChunkedBegin(log);   //prepare chunked send
-  while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
-  {
-    pageResult += pageTemplate.substring(0, indexStart);
-    pageTemplate = pageTemplate.substring(indexStart);
-    if ((indexEnd = pageTemplate.indexOf("}}")) > 0)
-    {
-     varName = pageTemplate.substring(2, indexEnd);
-     pageTemplate = pageTemplate.substring(indexEnd + 2);
-     varName.toLowerCase();
-     if (varName == F("content"))   //is var == page content?
-      {
-       sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML before content
-       sendWebPageChunkedData(log, pageContent);   //send the content - free mem - content can only added once
-      } else if (varName == F("error")) {
-       String errors(getErrorNotifications());
-       if (errors.length() > 0) 
-          sendWebPageChunkedData(log, errors);
-      } else {
- 
-        getWebPageTemplateVar(varName, pageResult);
-        
-      }
-    }
-    else   {//no closing "}}"
-      pageTemplate = pageTemplate.substring(2);   //eat "{{"
-   }
-    //send the accumulated HTML if junk is 500+ bytes
-    if (pageResult.length() > 500)
-    {          
-      sendWebPageChunkedData(log, pageResult);
-      pageResult=  F("");
-    }
-  }
-  pageResult += pageTemplate;   //add the rest without vars
-  pageTemplate =  F("");   //free mem -- s0170071- cannot confirm this
-  sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
-
-  if (shouldReboot)
-  {
-    //we only add this here as a seperate chucnk to prevent using too much memory at once
-    pageResult+=F(
-      "<script>"
-        "i=document.getElementById('rbtmsg');"
-        "i.innerHTML=\"Please reboot: <input id='reboot' class='button link' value='Reboot' type='submit' onclick='r()'>\";"
-        "var x = new XMLHttpRequest();"
-
-        //done
-        "function d(){"
-          "i.innerHTML='';"
-          "clearTimeout(t);"
-        "}"
-
-
-        //keep requesting mainpage until no more errors
-        "function c(){"
-          "i.innerHTML+='.';"
-          "x.onload=d;"
-          "x.open('GET', window.location.origin);"
-          "x.send();"
-        "}"
-
-        //rebooting
-        "function b(){"
-          "i.innerHTML='Rebooting..';"
-          "t=setInterval(c,2000);"
-        "}"
-
-
-        //request reboot
-        "function r(){"
-          "i.innerHTML+=' (requesting)';"
-          "x.onload=b;"
-          "x.open('GET', window.location.origin+'/?cmd=reboot');"
-          "x.send();"
-        "}"
-
-      "</script>"
-    );
-    
-    sendWebPageChunkedData(log, pageResult);   //send the rest of the accumulated HTML
-  }
-  sendWebPageChunkedEnd(log);   //close chunked send
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
-}
- */
 
 static byte navMenuIndex = 0;
  
@@ -734,37 +615,15 @@ void getWebPageTemplateVar(const String& varName )
     {
       TXBuffer = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
     } 
-  // else
-  //  {
-  //    TXBuffer += F("<style>");
-  //    TXBuffer += PGMT(pgDefaultCSS);
-  //    TXBuffer += F("</style>");
-  //  } 
-  }
- else if (varName == F("css1"))
-  {
+   else
+    {
       TXBuffer += F("<style>");
-      TXBuffer += PGMT(pgDefaultCSS1);
+      // TXBuffer += PGMT(pgDefaultCSS);
+      for (int i = 0; i<  strlen(pgDefaultCSS); i++){   TXBuffer +=String((char)pgm_read_byte(&pgDefaultCSS[i]));      } // saves 1k of ram
       TXBuffer += F("</style>");
+    } 
   }
- else if (varName == F("css2"))
-  {
-      TXBuffer += F("<style>");
-      TXBuffer += PGMT(pgDefaultCSS2);
-      TXBuffer += F("</style>");
-  }
- else if (varName == F("css3"))
-  {
-      TXBuffer += F("<style>");
-      TXBuffer += PGMT(pgDefaultCSS3);
-      TXBuffer += F("</style>");
-  }
- else if (varName == F("css4"))
-  {
-      TXBuffer += F("<style>");
-      TXBuffer += PGMT(pgDefaultCSS4);
-      TXBuffer += F("</style>");
-  }
+
 
   else if (varName == F("js"))
   {
@@ -810,15 +669,9 @@ void writeDefaultCSS(void)
       log += defaultCSS.length();
       log += F(" bytes)");
       addLog(LOG_LEVEL_INFO, log);
-      defaultCSS= PGMT(pgDefaultCSS1);
+      defaultCSS= PGMT(pgDefaultCSS);
       f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
-      defaultCSS= PGMT(pgDefaultCSS2);
-      f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
-      defaultCSS= PGMT(pgDefaultCSS3);
-      f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
-      defaultCSS= PGMT(pgDefaultCSS4);
-      f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
-       f.close();
+      f.close();
     }
 
   }
@@ -3475,7 +3328,7 @@ void handle_login() {
 //********************************************************************************
 void handle_control() {
   if (!clientIPallowed()) return;
- // TXBuffer.startStream();
+  //TXBuffer.startStream(true); // true= json
  // sendHeadandTail(F("TmplStd"),_HEAD); 
 
   String webrequest = WebServer.arg(F("cmd"));
