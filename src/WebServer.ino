@@ -619,7 +619,7 @@ void getWebPageTemplateVar(const String& varName )
     {
       TXBuffer += F("<style>");
       // TXBuffer += PGMT(pgDefaultCSS);
-      for (int i = 0; i<  strlen(pgDefaultCSS); i++){   TXBuffer +=String((char)pgm_read_byte(&pgDefaultCSS[i]));      } // saves 1k of ram
+      for (unsigned int i = 0; i<  strlen(pgDefaultCSS); i++){   TXBuffer +=String((char)pgm_read_byte(&pgDefaultCSS[i]));      } // saves 1k of ram
       TXBuffer += F("</style>");
     } 
   }
