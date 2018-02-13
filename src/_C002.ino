@@ -135,7 +135,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          if (WiFi.status() != WL_CONNECTED) {
+          if (!WiFiConnected(100)) {
             success = false;
             break;
           }

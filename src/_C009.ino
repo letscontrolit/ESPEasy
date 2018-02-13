@@ -56,7 +56,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        if (WiFi.status() != WL_CONNECTED) {
+        if (!WiFiConnected(100)) {
           success = false;
           break;
         }
