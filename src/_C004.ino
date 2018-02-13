@@ -16,7 +16,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_004;
         Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = false;
+        Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
@@ -27,6 +27,22 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
       {
         string = F(CPLUGIN_NAME_004);
         break;
+      }
+
+    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+      {
+        success = true;
+        switch (event->idx) {
+          case CONTROLLER_USER:
+            string = F("ThingHTTP Name");
+            break;
+          case CONTROLLER_PASS:
+            string = F("API Key");
+            break;
+          default:
+            success = false;
+            break;
+        }
       }
 
     case CPLUGIN_PROTOCOL_SEND:
