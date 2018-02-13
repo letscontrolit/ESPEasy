@@ -20,7 +20,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
-        Protocol[protocolCount].defaultPort = 8080;
+        Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
         break;
       }
@@ -59,6 +59,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
             break;
 
           case SENSOR_TYPE_SWITCH:
+            success = CPlugin_012_send(event, 1);
             break;
         }
         break;
