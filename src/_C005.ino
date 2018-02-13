@@ -39,45 +39,50 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_RECV:
       {
-        // Split topic into array
-        String tmpTopic = event->String1.substring(1);
-        String topicSplit[10];
-        int SlashIndex = tmpTopic.indexOf('/');
-        byte count = 0;
-        while (SlashIndex > 0 && count < 10 - 1)
-        {
-          topicSplit[count] = tmpTopic.substring(0, SlashIndex);
-          tmpTopic = tmpTopic.substring(SlashIndex + 1);
-          SlashIndex = tmpTopic.indexOf('/');
-          count++;
-        }
-        topicSplit[count] = tmpTopic;
+        byte ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_005);
+        if (ControllerID == CONTROLLER_MAX) {
+          // Controller is not enabled.
+          break;
+        } else {
+          // Split topic into array
+          String tmpTopic = event->String1.substring(1);
+          String topicSplit[10];
+          int SlashIndex = tmpTopic.indexOf('/');
+          byte count = 0;
+          while (SlashIndex > 0 && (count < (10 - 1)))
+          {
+            topicSplit[count] = tmpTopic.substring(0, SlashIndex);
+            tmpTopic = tmpTopic.substring(SlashIndex + 1);
+            SlashIndex = tmpTopic.indexOf('/');
+            count++;
+          }
+          topicSplit[count] = tmpTopic;
 
-        String cmd = "";
-        struct EventStruct TempEvent;
+          String cmd = "";
+          struct EventStruct TempEvent;
 
-        if (topicSplit[count] == F("cmd"))
-        {
-          cmd = event->String2;
-          parseCommandString(&TempEvent, cmd);
-          TempEvent.Source = VALUE_SOURCE_MQTT;
+          if (topicSplit[count] == F("cmd"))
+          {
+            cmd = event->String2;
+            parseCommandString(&TempEvent, cmd);
+            TempEvent.Source = VALUE_SOURCE_MQTT;
+          }
+          else
+          {
+            cmd = topicSplit[count - 1];
+            TempEvent.Par1 = topicSplit[count].toInt();
+            TempEvent.Par2 = event->String2.toFloat();
+            TempEvent.Par3 = 0;
+          }
+          // in case of event, store to buffer and return...
+          String command = parseString(cmd, 1);
+          if (command == F("event"))
+            eventBuffer = cmd.substring(6);
+          else if
+            (PluginCall(PLUGIN_WRITE, &TempEvent, cmd));
+          else
+            remoteConfig(&TempEvent, cmd);
         }
-        else
-        {
-          cmd = topicSplit[count - 1];
-          TempEvent.Par1 = topicSplit[count].toInt();
-          TempEvent.Par2 = event->String2.toFloat();
-          TempEvent.Par3 = 0;
-        }
-        // in case of event, store to buffer and return...
-        String command = parseString(cmd, 1);
-        if (command == F("event"))
-          eventBuffer = cmd.substring(6);
-        else if
-          (PluginCall(PLUGIN_WRITE, &TempEvent, cmd));
-        else
-          remoteConfig(&TempEvent, cmd);
-
         break;
       }
 
@@ -109,7 +114,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           if (event->sensorType == SENSOR_TYPE_LONG)
             value = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
           else
-            value = toString(UserVar[event->BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]);
+            value = formatUserVar(event, x);
           MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
           String log = F("MQTT : ");
           log += tmppubname;

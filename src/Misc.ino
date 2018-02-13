@@ -183,6 +183,16 @@ String toString(float value, byte decimals)
 }
 
 /*********************************************************************************************\
+   Format a value to the set number of decimals
+  \*********************************************************************************************/
+String formatUserVar(struct EventStruct *event, byte rel_index)
+{
+  return toString(
+    UserVar[event->BaseVarIndex + rel_index],
+    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+}
+
+/*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
 String parseString(String& string, byte indexFind)
@@ -1070,7 +1080,7 @@ void ResetFactory(void)
 
 	// advanced Settings
 	Settings.UseRules 		= DEFAULT_USE_RULES;
-	
+
 	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
 	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
 
@@ -1587,10 +1597,10 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
     if (event->sensorType == SENSOR_TYPE_LONG) {
       SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
     } else {
-      SMART_REPL(F("%val1%"), toString(UserVar[event->BaseVarIndex + 0], ExtraTaskSettings.TaskDeviceValueDecimals[0]))
-      SMART_REPL(F("%val2%"), toString(UserVar[event->BaseVarIndex + 1], ExtraTaskSettings.TaskDeviceValueDecimals[1]))
-      SMART_REPL(F("%val3%"), toString(UserVar[event->BaseVarIndex + 2], ExtraTaskSettings.TaskDeviceValueDecimals[2]))
-      SMART_REPL(F("%val4%"), toString(UserVar[event->BaseVarIndex + 3], ExtraTaskSettings.TaskDeviceValueDecimals[3]))
+      SMART_REPL(F("%val1%"), formatUserVar(event, 0))
+      SMART_REPL(F("%val2%"), formatUserVar(event, 1))
+      SMART_REPL(F("%val3%"), formatUserVar(event, 2))
+      SMART_REPL(F("%val4%"), formatUserVar(event, 3))
     }
   }
 }
