@@ -1109,22 +1109,39 @@ void handle_controllers() {
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (Protocol[ProtocolIndex].usesAccount)
       {
-        addFormTextBox(reply, F("Controller User"), F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
+        String protoDisplayName;
+        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
+          protoDisplayName = F("Controller User");
+        }
+        addFormTextBox(reply, protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
       }
-
       if (Protocol[ProtocolIndex].usesPassword)
       {
-        addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        String protoDisplayName;
+        if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
+          // It is not a regular password, thus use normal text field.
+          addFormTextBox(reply, protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        } else {
+          addFormPasswordBox(reply, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        }
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addFormTextBox(reply, F("Controller Subscribe"), F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
+        String protoDisplayName;
+        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
+          protoDisplayName = F("Controller Subscribe");
+        }
+        addFormTextBox(reply, protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
       }
 
       if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
       {
-        addFormTextBox(reply, F("Controller Publish"), F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
+        String protoDisplayName;
+        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
+          protoDisplayName = F("Controller Publish");
+        }
+        addFormTextBox(reply, protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
       }
 
       addFormCheckBox(reply, F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
@@ -3201,21 +3218,16 @@ void handle_json()
   if (tasknr.length() == 0)
   {
     reply += F("{\"System\":{\n");
-    reply += F("\"Build\":");
-    reply += BUILD;
-    reply += F(",\n\"Git Build\":\"");
-    reply += BUILD_GIT;
-    reply += F("\",\n\"Unit\":");
-    reply += Settings.Unit;
-    reply += F(",\n\"Local time\":");
-    reply += F("\"");
-    reply += getDateTimeString('-',':',' ');
-    reply += F("\"");
-    reply += F(",\n\"Uptime\":");
-    reply += wdcounter / 2;
-    reply += F(",\n\"Free RAM\":");
-    reply += ESP.getFreeHeap();
-    reply += F("\n},\n");
+
+	reply += F("\"Name\":");		reply += F("\"");	reply += Settings.Name;					reply += F("\"");	reply += F(",");
+	reply += F("\"Unit\":");							reply += Settings.Unit;										reply += F(",");
+	reply += F("\"Build\":");							reply += BUILD;												reply += F(",");
+	reply += F("\"Git Build\":");	reply += F("\"");	reply += BUILD_GIT;						reply += F("\"");	reply += F(",");
+	reply += F("\"Local time\":");	reply += F("\"");	reply += getDateTimeString('-',':',' ');reply += F("\"");	reply += F(",");
+	reply += F("\"Uptime\":");							reply += wdcounter / 2;										reply += F(",");
+    reply += F("\"Free RAM\":");						reply += ESP.getFreeHeap();									//end of array
+
+    reply += F("},\n");
   }
 
   byte taskNr = tasknr.toInt();

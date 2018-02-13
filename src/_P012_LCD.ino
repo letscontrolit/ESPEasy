@@ -68,12 +68,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         }
         addFormSelectorI2C(string, F("plugin_012_adr"), 16, optionValues, choice);
 
+
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[2];
         options2[0] = F("2 x 16");
         options2[1] = F("4 x 20");
         int optionValues2[2] = { 1, 2 };
         addFormSelector(string, F("Display Size"), F("plugin_012_size"), 2, options2, optionValues2, choice2);
+
 
         char deviceTemplate[4][80];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
@@ -88,13 +90,22 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           string += F("'>");
         }
 
-        string += F("<TR><TD>Display button:<TD>");
+
+        addRowLabel(string, "Display button");
         addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
 
-        char tmpString[128];
 
+        char tmpString[128];
         sprintf_P(tmpString, PSTR("<TR><TD>Display Timeout:<TD><input type='text' name='plugin_12_timer' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         string += tmpString;
+
+
+        String options3[3];
+        options3[0] = F("Continue to next line (as in v1.4)");
+        options3[1] = F("Truncate exceeding message");
+        options3[2] = F("Clear then truncate exceeding message");
+        int optionValues3[3] = { 0,1,2 };
+        addFormSelector(string, F("LCD command Mode"), F("plugin_012_mode"), 3, options3, optionValues3, Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;
@@ -105,6 +116,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_012_adr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_012_size"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_12_timer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_012_mode"));
 
         char deviceTemplate[4][80];
         for (byte varNr = 0; varNr < 4; varNr++)
@@ -201,29 +213,88 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
+        byte rows = 2;
+        byte cols = 16;
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2){
+          rows = 4;
+          cols = 20;
+        }
+
         String tmpString  = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
+
         if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          lcd->setCursor(event->Par2 - 1, event->Par1 - 1);
-          lcd->print(tmpString.c_str());
+
+          int colPos = event->Par2 - 1;
+          int rowPos = event->Par1 - 1;
+
+          //clear line before writing new string
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2){
+              lcd->setCursor(colPos, rowPos);
+              for (byte i = colPos; i < cols; i++) {
+                  lcd->print(F(" "));
+              }
+          }
+
+          // truncate message exceeding cols
+          lcd->setCursor(colPos, rowPos);
+          if(Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 1 || Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2){
+              lcd->setCursor(colPos, rowPos);
+              for (byte i = 0; i < cols - colPos; i++) {
+                  if(tmpString[i]){
+                     lcd->print(tmpString[i]);
+                  }
+              }
+          }
+
+          // message exceeding cols will continue to next line
+          else{
+              // Fix Weird (native) lcd display behaviour that split long string into row 1,3,2,4, instead of 1,2,3,4
+              boolean stillProcessing = 1;
+              byte charCount = 1;
+              while(stillProcessing) {
+                   if (++colPos > cols) {    // have we printed 20 characters yet (+1 for the logic)
+                        rowPos += 1;
+                        lcd->setCursor(0,rowPos);   // move cursor down
+                        colPos = 1;
+                   }
+
+                   //dont print if "lower" than the lcd
+                   if(rowPos < rows  ){
+                       lcd->print(tmpString[charCount - 1]);
+                   }
+
+                   if (!tmpString[charCount]) {   // no more chars to process?
+                        stillProcessing = 0;
+                   }
+                   charCount += 1;
+              }
+              //lcd->print(tmpString.c_str());
+              // end fix
+          }
+
         }
+
         if (lcd && tmpString.equalsIgnoreCase(F("LCDCMD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase(F("Off")))
-            lcd->noBacklight();
-          else if (tmpString.equalsIgnoreCase(F("On")))
-            lcd->backlight();
-          else if (tmpString.equalsIgnoreCase(F("Clear")))
-            lcd->clear();
+          if (tmpString.equalsIgnoreCase(F("Off"))){
+              lcd->noBacklight();
+          }
+          else if (tmpString.equalsIgnoreCase(F("On"))){
+              lcd->backlight();
+          }
+          else if (tmpString.equalsIgnoreCase(F("Clear"))){
+              lcd->clear();
+          }
         }
         break;
       }

@@ -255,6 +255,15 @@
 #define CPLUGIN_GET_DEVICENAME              5
 #define CPLUGIN_WEBFORM_SAVE                6
 #define CPLUGIN_WEBFORM_LOAD                7
+#define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
+
+#define CONTROLLER_HOSTNAME                 1
+#define CONTROLLER_IP                       2
+#define CONTROLLER_PORT                     3
+#define CONTROLLER_USER                     4
+#define CONTROLLER_PASS                     5
+#define CONTROLLER_SUBSCRIBE                6
+#define CONTROLLER_PUBLISH                  7
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -1213,6 +1222,11 @@ int firstEnabledMQTTController() {
   return -1;
 }
 
+bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, String& protoDisplayName) {
+  EventStruct tmpEvent;
+  tmpEvent.idx=parameterIdx;
+  return CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
+}
 
 /*********************************************************************************************\
  * MAIN LOOP
