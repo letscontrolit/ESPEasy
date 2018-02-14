@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20180214 (since mega-20180213)
+-------------------------------------------------
+
+Release date: Wed Feb 14 04:00:09 CET 2018
+
+Bartłomiej Zimoń (1):
+      fix for Blynk Controller (#863)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180213
+
+Edwin Eefting (3):
+      workaround for PUYA flash chips with write issues #650
+      travis build fix for PUYA
+      updated deploy script for PUYA
+
+Gijs Noorlander (1):
+      [v2.0] Blynk controller (#865)
+
+
+-------------------------------------------------
 Changes in release mega-20180213 (since mega-20180212)
 -------------------------------------------------
 
