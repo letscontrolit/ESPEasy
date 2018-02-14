@@ -4285,8 +4285,7 @@ String getValueSymbol(byte index)
 /*********************************************************************************************\
  * ESP Easy logo Favicon.ico 16x16 8 bit
 \*********************************************************************************************/
-unsigned int favicon_8b_ico_len = 1150;
-
+// Generated using xxd:   xxd -i favicon.ico > favicon.ino
 static const char favicon_8b_ico[] PROGMEM = {
   0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 0x00, 0x00, 0x01, 0x00,
   0x20, 0x00, 0x68, 0x04, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
@@ -4385,6 +4384,7 @@ static const char favicon_8b_ico[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+unsigned int favicon_8b_ico_len = 1150;
 
 void handle_favicon() {
   WebServer.send_P(200, PSTR("image/x-icon"), favicon_8b_ico, favicon_8b_ico_len);
