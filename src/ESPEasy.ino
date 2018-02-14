@@ -1259,8 +1259,11 @@ void loop()
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
-      deepSleep(Settings.Delay);
-      //deepsleep will never return, its a special kind of reboot
+      if (Settings.UseRules)
+      {
+        String event = F("System#Sleep");
+        rulesProcessing(event);
+      }  
   }
   //normal mode, run each task when its time
   else
@@ -1287,6 +1290,10 @@ void loop()
 
   backgroundtasks();
 
+  if (isDeepSleepEnabled()){
+      deepSleep(Settings.Delay);
+      //deepsleep will never return, its a special kind of reboot
+  }
 }
 
 
