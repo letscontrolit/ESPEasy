@@ -20,6 +20,8 @@ cp .pioenvs/dev_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266_
 cp .pioenvs/dev_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266_4096.bin"
 cp .pioenvs/dev_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8285_1024.bin"
 
+cp .pioenvs/dev_ESP8266PUYA_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266PUYA_1024.bin"
+
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 rm -rf dist/Source 2>/dev/null
 mkdir dist/Source
