@@ -29,6 +29,11 @@ script:
   # - ./memanalyzer.py ~/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-objdump
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -s
 
+  # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
+  - cd patches; ./check_puya_patch
+  - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -s --environment dev_ESP8266PUYA_1024
+
+
 before_deploy:
   - ./before_deploy
   - export RELEASE_FILE=$(ls ESPEasy*.zip)
