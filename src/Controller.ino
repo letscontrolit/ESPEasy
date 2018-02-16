@@ -120,9 +120,9 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 /*********************************************************************************************\
  * Connect to MQTT message broker
 \*********************************************************************************************/
-void MQTTConnect(int controller_idx)
+bool MQTTConnect(int controller_idx)
 {
-  if (!WiFiConnected(100)) return;
+  if (!WiFiConnected(100)) return false;
   if (MQTTclient.connected())
     MQTTclient.disconnect();
   ControllerSettingsStruct ControllerSettings;
@@ -137,61 +137,56 @@ void MQTTConnect(int controller_idx)
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = F("ESPClient_");
   clientid += WiFi.macAddress();
-  String subscribeTo = "";
 
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
   LWTTopic.replace(F("%sysname%"), Settings.Name);
+  LWTTopic += F("/LWT"); // Extend the topic for status updates of connected/disconnected status.
 
-  for (byte x = 1; x < 3; x++)
-  {
-    String log = "";
-    boolean MQTTresult = false;
+  boolean MQTTresult = false;
+  uint8_t willQos = 0;
+  boolean willRetain = true;
 
-    if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0))
-      MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx], LWTTopic.c_str(), 0, 0, "Connection Lost");
-    else
-      MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), 0, 0, "Connection Lost");
-    yield();
-
-    if (MQTTresult)
-    {
-      MQTTclient_should_reconnect = false;
-      log = F("MQTT : Connected to broker with client ID: ");
-      log += clientid;
-      addLog(LOG_LEVEL_INFO, log);
-      subscribeTo = ControllerSettings.Subscribe;
-      subscribeTo.replace(F("%sysname%"), Settings.Name);
-      MQTTclient.subscribe(subscribeTo.c_str());
-      log = F("Subscribed to: ");
-      log += subscribeTo;
-      addLog(LOG_LEVEL_INFO, log);
-
-      MQTTclient.publish(LWTTopic.c_str(), "Connected");
-
-      statusLED(true);
-      return; // end loop if succesfull
-    }
-    else
-    {
-      log = F("MQTT : Failed to connect to broker");
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-
-    delay(500);
+  if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
+    MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx],
+                                    LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+  } else {
+    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
   }
+  yield();
+
+  if (!MQTTresult) {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
+    return false;
+  }
+  MQTTclient_should_reconnect = false;
+  String log = F("MQTT : Connected to broker with client ID: ");
+  log += clientid;
+  addLog(LOG_LEVEL_INFO, log);
+  String subscribeTo = ControllerSettings.Subscribe;
+  subscribeTo.replace(F("%sysname%"), Settings.Name);
+  MQTTclient.subscribe(subscribeTo.c_str());
+  log = F("Subscribed to: ");
+  log += subscribeTo;
+  addLog(LOG_LEVEL_INFO, log);
+
+  if (MQTTclient.publish(LWTTopic.c_str(), "Connected")) {
+    statusLED(true);
+    return true; // end loop if succesfull
+  }
+  return false;
 }
 
 
 /*********************************************************************************************\
  * Check connection MQTT message broker
 \*********************************************************************************************/
-void MQTTCheck(int controller_idx)
+bool MQTTCheck(int controller_idx)
 {
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !WiFiConnected(100) || !MQTTclient.connected())
+    if (MQTTclient_should_reconnect || !WiFiConnected(10) || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -199,11 +194,13 @@ void MQTTCheck(int controller_idx)
         addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
         connectionFailures += 2;
       }
-      MQTTConnect(controller_idx);
-    }
-    else if (connectionFailures)
+      return MQTTConnect(controller_idx);
+    } else if (connectionFailures) {
       connectionFailures--;
+    }
   }
+  // When no MQTT protocol is enabled, all is fine.
+  return true;
 }
 
 
