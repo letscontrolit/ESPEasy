@@ -1217,26 +1217,55 @@ void addLog(byte logLevel, const __FlashStringHelper* flashString)
     addLog(logLevel, s.c_str());
 }
 
+bool SerialAvailableForWrite() {
+  if (!Settings.UseSerial) return false;
+  if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
+  return true;
+}
+
+boolean loglevelActiveFor(byte destination, byte logLevel) {
+  byte logLevelSettings = 0;
+  switch (destination) {
+    case LOG_TO_SERIAL: {
+      if (!SerialAvailableForWrite()) return false;
+      logLevelSettings = Settings.SerialLogLevel;
+      break;
+    }
+    case LOG_TO_SYSLOG: {
+      logLevelSettings = Settings.SyslogLevel;
+      break;
+    }
+    case LOG_TO_WEBLOG: {
+      logLevelSettings = Settings.WebLogLevel;
+      break;
+    }
+    case LOG_TO_SDCARD: {
+      logLevelSettings = Settings.SDLogLevel;
+      break;
+    }
+    default:
+      return false;
+  }
+  return loglevelActive(logLevel, logLevelSettings);
+}
+
+
 boolean loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
-void addLog(byte loglevel, const char *line)
+void addLog(byte logLevel, const char *line)
 {
-  if (Settings.UseSerial)
-    if (loglevelActive(loglevel, Settings.SerialLogLevel))
-      Serial.println(line);
-
-  if (loglevelActive(loglevel, Settings.SyslogLevel))
+  if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
+    Serial.println(line);
+  }
+  if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(line);
-
-  if (loglevelActive(loglevel, Settings.WebLogLevel))
-  {
+  }
+  if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(line);
   }
-
-  if (loglevelActive(loglevel, Settings.SDLogLevel))
-  {
+  if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
       logFile.println(line);

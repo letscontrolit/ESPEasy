@@ -4173,6 +4173,14 @@ void handle_sysinfo() {
   reply += F("<TR><TD>Warm boot count:<TD>");
   reply += RTC.bootCounter;
 
+  reply += F("<TR><TD>Serial Port available:<TD>");
+  reply += String(SerialAvailableForWrite());
+  reply += F(" (");
+  reply += Serial.availableForWrite();
+  reply += F(" , ");
+  reply += Serial.available();
+  reply += F(")");
+
   reply += F("<TR><TD>STA MAC:<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);

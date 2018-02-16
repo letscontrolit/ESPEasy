@@ -129,6 +129,10 @@
 #define DEFAULT_TIME_ZONE			0		// Time Offset (in minutes)
 #define DEFAULT_USE_DST				false	// (true|false) Use Daily Time Saving
 
+#define LOG_TO_SERIAL         1
+#define LOG_TO_SYSLOG         2
+#define LOG_TO_WEBLOG         3
+#define LOG_TO_SDCARD         4
 #define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
