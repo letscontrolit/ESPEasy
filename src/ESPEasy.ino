@@ -902,6 +902,7 @@ unsigned long timer100ms;
 unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
+unsigned long timermqtt;
 unsigned long lastSend;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
@@ -1100,6 +1101,7 @@ void setup()
   timer100ms = 0; // timer for periodic actions 10 x per/sec
   timer1s = 0; // timer for periodic actions once per/sec
   timerwd = 0; // timer for watchdog once per 30 sec
+  timermqtt = 0; // Timer for the MQTT keep alive loop.
 
   PluginInit();
   CPluginInit();
@@ -1115,12 +1117,14 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
+/*
   // Setup MQTT Client
   // ToDo TD-er: Controller index is forced to the first enabled MQTT controller.
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
     MQTTConnect(enabledMqttController);
   }
+*/
 
   sendSysInfoUDP(3);
 
@@ -1202,12 +1206,21 @@ void loop()
 
     if (timeOutReached(timer1s))
       runOncePerSecond();
-  }
 
-  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    MQTTclient.loop();
+    if (timeOutReached(timermqtt)) {
+      // MQTT_KEEPALIVE = 15 seconds.
+      timermqtt = millis() + 250;
+      //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+      int enabledMqttController = firstEnabledMQTTController();
+      if (enabledMqttController >= 0) {
+        if (!MQTTclient.loop()) {
+          if (!MQTTCheck(enabledMqttController)) {
+            // Check failed, no need to retry it immediately.
+            timermqtt = millis() + 500;
+          }
+        }
+      }
+    }
   }
 
   backgroundtasks();
