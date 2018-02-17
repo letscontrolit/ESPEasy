@@ -1192,9 +1192,17 @@ float ul2float(unsigned long ul)
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
-
 boolean isFloat(const String& tBuf) {
   return isNumerical(tBuf, false);
+}
+
+boolean isValidFloat(float f) {
+  if (f == NAN)      return false; //("NaN");
+  if (f == INFINITY) return false; //("INFINITY");
+  if (-f == INFINITY)return false; //("-INFINITY");
+  if (isnan(f))      return false; //("isnan");
+  if (isinf(f))      return false; //("isinf");
+  return true;
 }
 
 boolean isInt(const String& tBuf) {

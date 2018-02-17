@@ -146,93 +146,10 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           StaticJsonBuffer<200> jsonBuffer;
 
           JsonObject& root = jsonBuffer.createObject();
-
           root[F("idx")] = event->idx;
-
           String values;
-          // char str[80];
-
           switch (event->sensorType)
           {
-            case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-              root[F("nvalue")] = 0;
-              values = formatUserVar(event, 0);
-              // values.toCharArray(str, 80);
-              root[F("svalue")] =  values.c_str();
-              break;
-            case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-              root[F("nvalue")] = 0;
-              values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-              // values.toCharArray(str, 80);
-              root[F("svalue")] =  values.c_str();
-              break;
-            case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
-              root[F("nvalue")] = 0;
-              values  = formatUserVar(event, 0);
-              values += ";";
-              values += formatUserVar(event, 1);
-              // values.toCharArray(str, 80);
-              root[F("svalue")] =  values.c_str();
-              // root[F("svalue")] =  str;
-              break;
-            case SENSOR_TYPE_TRIPLE:                       // any sensor that uses three simple values
-                root[F("nvalue")] = 0;
-                values  = formatUserVar(event, 0);
-                values += ";";
-                values += formatUserVar(event, 1);
-                values += ";";
-                values += formatUserVar(event, 2);
-                // values.toCharArray(str, 80);
-                root[F("svalue")] =  values.c_str();
-                // root[F("svalue")] =  str;
-                break;
-            case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
-              root[F("nvalue")] = 0;
-              values  = formatUserVar(event, 0);
-              values += ";";
-              values += formatUserVar(event, 1);
-              //FIXME: this should be the same as in C001?, instead of 0:
-              //       url += humStat(UserVar[event->BaseVarIndex + 1]);
-              values += ";0";
-              // values.toCharArray(str, 80);
-              root[F("svalue")] =  values.c_str();
-              // root[F("svalue")] =  str;
-              break;
-            case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
-              root[F("nvalue")] = 0;
-              values  = formatUserVar(event, 0);
-              values += ";0;0;";
-              values += formatUserVar(event, 1);
-              values += ";0";
-              // values.toCharArray(str, 80);
-              root[F("svalue")] =  values.c_str();
-              // root[F("svalue")] =  str;
-              break;
-              case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
-                root[F("nvalue")] = 0;
-                values  = formatUserVar(event, 0);
-                values += ";";
-                values += formatUserVar(event, 1);
-                values += ";0;";
-                values += formatUserVar(event, 2);
-                values += ";0";
-                root[F("svalue")] =  values.c_str();
-                // values.toCharArray(str, 80);
-                // root[F("svalue")] =  str;
-                break;
-              case SENSOR_TYPE_QUAD:
-                root[F("nvalue")] = 0;
-                values  = formatUserVar(event, 0);
-                values += ";";
-                values += formatUserVar(event, 1);
-                values += ";";
-                values += formatUserVar(event, 2);
-                values += ";";
-                values += formatUserVar(event, 3);
-                root[F("svalue")] =  values.c_str();
-                // values.toCharArray(str, 80);
-                // root[F("svalue")] =  str;
-                break;
             case SENSOR_TYPE_SWITCH:
               root[F("command")] = String(F("switchlight"));
               if (UserVar[event->BaseVarIndex] == 0)
@@ -247,22 +164,20 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
               else
                 root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
               break;
-            case SENSOR_TYPE_WIND:                            // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust
-              values  = formatUserVar(event, 0);
-              values += ";";
-              values += getBearing(UserVar[event->BaseVarIndex]);
-              values += ";";
-              // Domoticz expects the wind speed in (m/s * 10)
-              values += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              values += ";";
-              values += toString((UserVar[event->BaseVarIndex + 2] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              values += ";0;0";
-              root[F("svalue")] =  values.c_str();
-              // values.toCharArray(str, 80);
-              // root["svalue"] =  str;
+
+            case SENSOR_TYPE_SINGLE:
+            case SENSOR_TYPE_LONG:
+            case SENSOR_TYPE_DUAL:
+            case SENSOR_TYPE_TRIPLE:
+            case SENSOR_TYPE_QUAD:
+            case SENSOR_TYPE_TEMP_HUM:
+            case SENSOR_TYPE_TEMP_BARO:
+            case SENSOR_TYPE_TEMP_HUM_BARO:
+            case SENSOR_TYPE_WIND:
+            default:
+              root[F("nvalue")] = 0;
+              root[F("svalue")] = formatDomoticzSensorType(event).c_str();
               break;
-
-
           }
 
           String json;
