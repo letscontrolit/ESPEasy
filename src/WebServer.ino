@@ -4701,16 +4701,15 @@ void handle_sysinfo() {
    TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
    TXBuffer += describeAllowedIPrange();
 
-  reply += F("<TR><TD>Serial Port available:<TD>");
-  reply += String(SerialAvailableForWrite());
-  reply += F(" (");
-  reply += Serial.availableForWrite();
-  reply += F(" , ");
-  reply += Serial.available();
-  reply += F(")");
-
-  reply += F("<TR><TD>STA MAC:<TD>");
-   TXBuffer += F("<TR><TD>STA MAC<TD>");
+  TXBuffer += F("<TR><TD>Serial Port available:<TD>");
+  TXBuffer += String(SerialAvailableForWrite());
+  TXBuffer += F(" (");
+  TXBuffer += Serial.availableForWrite();
+  TXBuffer += F(" , ");
+  TXBuffer += Serial.available();
+  TXBuffer += F(")");
+ 
+  TXBuffer += F("<TR><TD>STA MAC<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
