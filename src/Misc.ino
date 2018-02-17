@@ -1206,7 +1206,7 @@ boolean isNumerical(const String& tBuf, bool mustBeInteger) {
   int firstDec = 0;
   if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
     firstDec = 1;
-  for(int x=firstDec; x < tBuf.length(); ++x) {
+  for(unsigned int x=firstDec; x < tBuf.length(); ++x) {
     if(tBuf.charAt(x) == '.') {
       if (mustBeInteger) return false;
       // Only one decimal point allowed
