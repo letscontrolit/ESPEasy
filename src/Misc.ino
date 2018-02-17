@@ -1189,6 +1189,36 @@ float ul2float(unsigned long ul)
   return f;
 }
 
+/********************************************************************************************\
+  Check if string is valid float
+  \*********************************************************************************************/
+
+boolean isFloat(const String& tBuf) {
+  return isNumerical(tBuf, false);
+}
+
+boolean isInt(const String& tBuf) {
+  return isNumerical(tBuf, true);
+}
+
+boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+  boolean decPt = false;
+  int firstDec = 0;
+  if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
+    firstDec = 1;
+  for(unsigned int x=firstDec; x < tBuf.length(); ++x) {
+    if(tBuf.charAt(x) == '.') {
+      if (mustBeInteger) return false;
+      // Only one decimal point allowed
+      if(decPt) return false;
+      else decPt = true;
+    }
+    else if(tBuf.charAt(x) < '0' || tBuf.charAt(x) > '9') return false;
+  }
+  return true;
+}
+
+
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
@@ -1944,7 +1974,7 @@ String rulesProcessingFile(String fileName, String& event)
   fs::File f = SPIFFS.open(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
-  static byte nestingLevel;
+  static byte nestingLevel = 0;
   int data = 0;
   String log = "";
 
