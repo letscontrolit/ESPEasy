@@ -20,7 +20,8 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
-        Protocol[protocolCount].defaultPort = 8443;
+        Protocol[protocolCount].defaultPort = 80;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -58,6 +59,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
             break;
 
           case SENSOR_TYPE_SWITCH:
+            success = CPlugin_012_send(event, 1);
             break;
         }
         break;
@@ -90,7 +92,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   LoadControllerSettings(controllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!ControllerSettings.connectToHost(client))
+  if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0) || !ControllerSettings.connectToHost(client))
   {
     connectionFailures++;
     addLog(LOG_LEVEL_ERROR, F("Blynk : connection failed"));
@@ -103,7 +105,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   char request[300] = {0};
   sprintf_P(request,
             PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),
-            SecuritySettings.ControllerPassword,
+            SecuritySettings.ControllerPassword[controllerIndex],
             command.c_str(),
             ControllerSettings.getHost().c_str());
   addLog(LOG_LEVEL_DEBUG, request);

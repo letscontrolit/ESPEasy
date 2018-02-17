@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DIR=~/.platformio/packages/framework-arduinoespressif8266
+PATCH=puya.patch
+
+#not applied yet? (in upstream or otherwise)
+if ! grep FLASH_QUIRK_WRITE_0_TO_1 $DIR/cores/esp8266/Esp.cpp >/dev/null; then
+  patch -p1 -d $DIR < $PATCH
+fi

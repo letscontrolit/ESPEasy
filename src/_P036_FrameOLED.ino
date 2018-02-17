@@ -225,7 +225,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         //      Display the device name, logo, time and wifi
         display_header();
-        // display_logo();
+        display_logo();
         display->display();
 
         //      Set up the display timer
@@ -503,8 +503,14 @@ void display_title(String& title) {
 }
 
 void display_logo() {
-  // draw an xbm image.
-  display->drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(ArialMT_Plain_16);
+  display->setColor(BLACK);
+  display->fillRect(0, 14, 128, 64);
+  display->setColor(WHITE);
+  display->drawString(65, 15, F("ESP"));
+  display->drawString(65, 34, F("Easy"));
+  display->drawXbm(24, 14, espeasy_logo_width, espeasy_logo_height, espeasy_logo_bits);
 }
 
 // Draw the frame position

@@ -132,6 +132,10 @@
 #define DEFAULT_TIME_ZONE			0		// Time Offset (in minutes)
 #define DEFAULT_USE_DST				false	// (true|false) Use Daily Time Saving
 
+#define LOG_TO_SERIAL         1
+#define LOG_TO_SYSLOG         2
+#define LOG_TO_WEBLOG         3
+#define LOG_TO_SDCARD         4
 #define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
@@ -983,6 +987,7 @@ unsigned long timer100ms;
 unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
+unsigned long timermqtt;
 unsigned long lastSend;
 unsigned long lastWeb;
 unsigned int NC_Count = 0;
@@ -1183,6 +1188,7 @@ void setup()
   timer100ms = 0; // timer for periodic actions 10 x per/sec
   timer1s = 0; // timer for periodic actions once per/sec
   timerwd = 0; // timer for watchdog once per 30 sec
+  timermqtt = 0; // Timer for the MQTT keep alive loop.
 
   PluginInit();
   CPluginInit();
@@ -1198,12 +1204,14 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
+/*
   // Setup MQTT Client
   // ToDo TD-er: Controller index is forced to the first enabled MQTT controller.
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
     MQTTConnect(enabledMqttController);
   }
+*/
 
   sendSysInfoUDP(3);
 
@@ -1267,8 +1275,11 @@ void loop()
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
-      deepSleep(Settings.Delay);
-      //deepsleep will never return, its a special kind of reboot
+      if (Settings.UseRules)
+      {
+        String event = F("System#Sleep");
+        rulesProcessing(event);
+      }  
   }
   //normal mode, run each task when its time
   else
@@ -1285,16 +1296,29 @@ void loop()
 
     if (timeOutReached(timer1s))
       runOncePerSecond();
-  }
 
-  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    MQTTclient.loop();
+    if (timeOutReached(timermqtt)) {
+      // MQTT_KEEPALIVE = 15 seconds.
+      timermqtt = millis() + 250;
+      //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+      int enabledMqttController = firstEnabledMQTTController();
+      if (enabledMqttController >= 0) {
+        if (!MQTTclient.loop()) {
+          if (!MQTTCheck(enabledMqttController)) {
+            // Check failed, no need to retry it immediately.
+            timermqtt = millis() + 500;
+          }
+        }
+      }
+    }
   }
 
   backgroundtasks();
 
+  if (isDeepSleepEnabled()){
+      deepSleep(Settings.Delay);
+      //deepsleep will never return, its a special kind of reboot
+  }
 }
 
 

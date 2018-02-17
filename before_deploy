@@ -15,7 +15,8 @@ for ENV in \
   test_ESP8285_1024\
   dev_ESP8266_1024\
   dev_ESP8266_4096\
-  dev_ESP8285_1024;\
+  dev_ESP8285_1024\
+  dev_ESP8266PUYA_1024;\
 do
   echo
   echo "### Deploying environment $ENV for version $VERSION"
