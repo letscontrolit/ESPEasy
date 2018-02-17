@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20180217 (since mega-20180214)
+-------------------------------------------------
+
+Release date: Sat Feb 17 04:00:07 CET 2018
+
+Bartłomiej Zimoń (1):
+      provide System@Sleep event (#875)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180214
+
+Gijs Noorlander (4):
+      [issue 866] Try to stop logging to serial when serial is not read. (#868)
+      [issue #853] Favicon.ico (#874)
+      [OLED Framed] ESP Easy logo (#876)
+      [issue #869] Added 'LWT' to last will topic and improved CPU load (#883)
+
+
+-------------------------------------------------
 Changes in release mega-20180214 (since mega-20180213)
 -------------------------------------------------
 
