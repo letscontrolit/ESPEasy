@@ -147,7 +147,6 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
           JsonObject& root = jsonBuffer.createObject();
           root[F("idx")] = event->idx;
-          String values;
           switch (event->sensorType)
           {
             case SENSOR_TYPE_SWITCH:
@@ -176,7 +175,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             case SENSOR_TYPE_WIND:
             default:
               root[F("nvalue")] = 0;
-              root[F("svalue")] = formatDomoticzSensorType(event).c_str();
+              root[F("svalue")] = formatDomoticzSensorType(event);
               break;
           }
 

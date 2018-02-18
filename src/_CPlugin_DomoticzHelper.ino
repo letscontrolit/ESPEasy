@@ -19,7 +19,8 @@ String formatUserVarDomoticz(struct EventStruct *event, byte rel_index) {
 }
 
 String formatUserVarDomoticz(int value) {
-  String text = String(value);
+  String text;
+  text += value;
   text.trim();
   text += F(";");
   return text;
@@ -30,26 +31,26 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   switch (event->sensorType)
   {
     case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-      values += formatUserVarDomoticz(event, 0);
+      values  = formatUserVarDomoticz(event, 0);
       break;
     case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-      values += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+      values  = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
       break;
     case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
-      values += formatUserVarDomoticz(event, 0);
+      values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);
       break;
     case SENSOR_TYPE_TEMP_HUM:
       // temp + hum + hum_stat, used for DHT11
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fhumidity
-      values += formatUserVarDomoticz(event, 0);           // TEMP = Temperature
+      values  = formatUserVarDomoticz(event, 0);           // TEMP = Temperature
       values += formatUserVarDomoticz(event, 1);           // HUM = Humidity
       values += humStatDomoticz(event, 1);                 // HUM_STAT = Humidity status
       break;
     case SENSOR_TYPE_TEMP_HUM_BARO:
       // temp + hum + hum_stat + bar + bar_fore, used for BME280
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fhumidity.2Fbarometer
-      values += formatUserVarDomoticz(event, 0);           // TEMP = Temperature
+      values  = formatUserVarDomoticz(event, 0);           // TEMP = Temperature
       values += formatUserVarDomoticz(event, 1);           // HUM = Humidity
       values += humStatDomoticz(event, 1);                 // HUM_STAT = Humidity status
       values += formatUserVarDomoticz(event, 2);           // BAR = Barometric pressure
@@ -58,18 +59,18 @@ String formatDomoticzSensorType(struct EventStruct *event) {
     case SENSOR_TYPE_TEMP_BARO:
       // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fbarometer
-      values += formatUserVarDomoticz(event, 0);  // TEMP = Temperature
+      values  = formatUserVarDomoticz(event, 0);  // TEMP = Temperature
       values += formatUserVarDomoticz(event, 1);  // BAR = Barometric pressure
       values += formatUserVarDomoticz(0);         // BAR_FOR = Barometer forecast
       values += formatUserVarDomoticz(0);         // ALTITUDE= Not used at the moment, can be 0
       break;
     case SENSOR_TYPE_TRIPLE:
-      values += formatUserVarDomoticz(event, 0);
+      values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);
       values += formatUserVarDomoticz(event, 2);
       break;
     case SENSOR_TYPE_QUAD:
-      values += formatUserVarDomoticz(event, 0);
+      values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);
       values += formatUserVarDomoticz(event, 2);
       values += formatUserVarDomoticz(event, 3);
@@ -77,7 +78,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
     case SENSOR_TYPE_WIND:
       // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Wind
-      values += formatUserVarDomoticz(event, 0);           // WB = Wind bearing (0-359)
+      values  = formatUserVarDomoticz(event, 0);           // WB = Wind bearing (0-359)
       values += getBearing(UserVar[event->BaseVarIndex]);  // WD = Wind direction (S, SW, NNW, etc.)
       values += ";";  // Needed after getBearing
       // Domoticz expects the wind speed in (m/s * 10)
@@ -103,9 +104,19 @@ String formatDomoticzSensorType(struct EventStruct *event) {
     }
   }
   // Now strip trailing semi colon.
-  if (values.endsWith(F(";"))) {
-    values.setCharAt(values.lastIndexOf(';'), ' ');
+  int index_last_char = values.length() -1;
+  if (index_last_char > 0 && values.charAt(index_last_char) == ';') {
+    values.setCharAt(index_last_char, ' ');
   }
   values.trim();
+  {
+    String log = F(" Domoticz: Sensortype: ");
+    log += event->sensorType;
+    log += F(" idx: ");
+    log += event->idx;
+    log += F(" values: ");
+    log += values;
+    addLog(LOG_LEVEL_INFO, log);
+  }
   return values;
 }
