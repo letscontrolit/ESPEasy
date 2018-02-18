@@ -409,8 +409,8 @@ struct SecurityStruct
   char          WifiSSID2[32];
   char          WifiKey2[64];
   char          WifiAPKey[64];
-  char          ControllerUser[CONTROLLER_MAX][36];
-  char          ControllerPassword[CONTROLLER_MAX][64];
+  char          ControllerUser[CONTROLLER_MAX][37]; // Losant access key is 36+\0=37 (incl “-”)
+  char          ControllerPassword[CONTROLLER_MAX][65];  // Losant access secret is 64+\0=65
   char          Password[26];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 } SecuritySettings;
