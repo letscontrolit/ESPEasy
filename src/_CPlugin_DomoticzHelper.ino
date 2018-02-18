@@ -11,6 +11,24 @@ String humStatDomoticz(struct EventStruct *event, byte rel_index){
   return formatUserVarDomoticz(3);
 }
 
+int mapRSSItoDomoticz() {
+  long rssi = WiFi.RSSI();
+  if (-50 < rssi) { return 10; }
+  if (rssi <= -98) { return 0;  }
+  rssi = rssi + 97; // Range 0..47 => 1..9
+  return (rssi / 5) + 1;
+}
+
+int mapVccToDomoticz() {
+  #if FEATURE_ADC_VCC
+    // Voltage range from 2.6V .. 3.6V => 0..100%
+    if (vcc < 2.6) return 0;
+    return (vcc - 2.6) * 100;
+  #else
+    return 255;
+  #endif
+}
+
 // Format including trailing semi colon
 String formatUserVarDomoticz(struct EventStruct *event, byte rel_index) {
   String text = formatUserVar(event, rel_index);

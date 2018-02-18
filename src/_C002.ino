@@ -147,6 +147,11 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
           JsonObject& root = jsonBuffer.createObject();
           root[F("idx")] = event->idx;
+          root[F("RSSI")] = mapRSSItoDomoticz();
+          #if FEATURE_ADC_VCC
+            root[F("Battery")] = mapVccToDomoticz();
+          #endif
+          
           switch (event->sensorType)
           {
             case SENSOR_TYPE_SWITCH:

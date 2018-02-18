@@ -114,6 +114,14 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               break;
           }
 
+          // Add WiFi reception quality
+          url += F("&rssi=");
+          url += mapRSSItoDomoticz();
+          #if FEATURE_ADC_VCC
+            url += F("&battery=");
+            url += mapVccToDomoticz();
+          #endif
+
           // This will send the request to the server
           String request = F("GET ");
           request += url;
