@@ -1619,6 +1619,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0))
   SMART_REPL(F("%ssid%"), (WiFi.status() == WL_CONNECTED) ? WiFi.SSID() : F("--"))
   SMART_REPL(F("%unit%"), String(Settings.Unit))
+  SMART_REPL(F("%mac%"), String(WiFi.macAddress()))
+  SMART_REPL(F("%mac_int%"), String(ESP.getChipId()))  // Last 24 bit of MAC address as integer, to be used in rules.
 
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
