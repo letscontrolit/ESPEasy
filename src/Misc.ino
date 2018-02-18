@@ -202,9 +202,16 @@ String toString(float value, byte decimals)
   \*********************************************************************************************/
 String formatUserVar(struct EventStruct *event, byte rel_index)
 {
-  return toString(
-    UserVar[event->BaseVarIndex + rel_index],
-    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  float f(UserVar[event->BaseVarIndex + rel_index]);
+  if (!isValidFloat(f)) {
+    String log = F("Invalid float value for TaskIndex: ");
+    log += event->TaskIndex;
+    log += F(" varnumber: ");
+    log += rel_index;
+    addLog(LOG_LEVEL_DEBUG, log);
+    f = 0;
+  }
+  return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
 }
 
 /*********************************************************************************************\
@@ -1335,6 +1342,44 @@ float ul2float(unsigned long ul)
   return f;
 }
 
+/********************************************************************************************\
+  Check if string is valid float
+  \*********************************************************************************************/
+boolean isFloat(const String& tBuf) {
+  return isNumerical(tBuf, false);
+}
+
+boolean isValidFloat(float f) {
+  if (f == NAN)      return false; //("NaN");
+  if (f == INFINITY) return false; //("INFINITY");
+  if (-f == INFINITY)return false; //("-INFINITY");
+  if (isnan(f))      return false; //("isnan");
+  if (isinf(f))      return false; //("isinf");
+  return true;
+}
+
+boolean isInt(const String& tBuf) {
+  return isNumerical(tBuf, true);
+}
+
+boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+  boolean decPt = false;
+  int firstDec = 0;
+  if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
+    firstDec = 1;
+  for(unsigned int x=firstDec; x < tBuf.length(); ++x) {
+    if(tBuf.charAt(x) == '.') {
+      if (mustBeInteger) return false;
+      // Only one decimal point allowed
+      if(decPt) return false;
+      else decPt = true;
+    }
+    else if(tBuf.charAt(x) < '0' || tBuf.charAt(x) > '9') return false;
+  }
+  return true;
+}
+
+
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
@@ -1782,6 +1827,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0))
   SMART_REPL(F("%ssid%"), (WiFi.status() == WL_CONNECTED) ? WiFi.SSID() : F("--"))
   SMART_REPL(F("%unit%"), String(Settings.Unit))
+  SMART_REPL(F("%mac%"), String(WiFi.macAddress()))
+  SMART_REPL(F("%mac_int%"), String(ESP.getChipId()))  // Last 24 bit of MAC address as integer, to be used in rules.
 
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
@@ -2143,7 +2190,7 @@ String rulesProcessingFile(String fileName, String& event)
   fs::File f = SPIFFS.open(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
-  static byte nestingLevel;
+  static byte nestingLevel = 0;
   int data = 0;
   String log = "";
 
