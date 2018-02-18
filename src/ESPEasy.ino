@@ -1467,8 +1467,9 @@ void SensorSendTask(byte TaskIndex)
             UserVar[varIndex + varNr] = result;
         }
       }
-      sendData(&TempEvent);
     }
+    // Call sendData regardless the success parameter.
+    sendData(&TempEvent);
   }
 }
 
