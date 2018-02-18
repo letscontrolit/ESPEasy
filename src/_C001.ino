@@ -75,64 +75,6 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
           switch (event->sensorType)
           {
-            case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              break;
-            case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-              url += F("&svalue=");
-              url += (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-              break;
-            case SENSOR_TYPE_DUAL:                       // any sensor that uses two simple values
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              url += (";");
-              url += formatUserVar(event, 1);
-              break;
-            case SENSOR_TYPE_TEMP_HUM:                      // temp + hum + hum_stat, used for DHT11
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              url += F(";");
-              url += formatUserVar(event, 1);
-              url += F(";");
-              url += humStat(UserVar[event->BaseVarIndex + 1]);
-              break;
-            case SENSOR_TYPE_TEMP_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BMP085
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              url += F(";0;0;");
-              url += formatUserVar(event, 1);
-              url += F(";0");
-              break;
-            case SENSOR_TYPE_TRIPLE:
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              url += F(";");
-              url += formatUserVar(event, 1);
-              url += F(";");
-              url += formatUserVar(event, 2);
-              break;
-            case SENSOR_TYPE_TEMP_HUM_BARO:                      // temp + hum + hum_stat + bar + bar_fore, used for BME280
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              url += F(";");
-              url += formatUserVar(event, 1);
-              url += F(";");
-              url += humStat(UserVar[event->BaseVarIndex + 1]);
-              url += F(";");
-               url += formatUserVar(event, 2);
-              url += F(";0");
-              break;
-            case SENSOR_TYPE_QUAD:
-              url += F("&svalue=");
-              url += formatUserVar(event, 0);
-              url += F(";");
-              url += formatUserVar(event, 1);
-              url += F(";");
-              url += formatUserVar(event, 2);
-              url += F(";");
-              url += formatUserVar(event, 3);
-              break;
             case SENSOR_TYPE_SWITCH:
               url = F("/json.htm?type=command&param=switchlight&idx=");
               url += event->idx;
@@ -146,28 +88,39 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
               url = F("/json.htm?type=command&param=switchlight&idx=");
               url += event->idx;
               url += F("&switchcmd=");
-              if (UserVar[event->BaseVarIndex] == 0)
+              if (UserVar[event->BaseVarIndex] == 0) {
                 url += ("Off");
-              else
-              {
+              } else {
                 url += F("Set%20Level&level=");
                 url += UserVar[event->BaseVarIndex];
               }
               break;
-            case (SENSOR_TYPE_WIND):
-              url += F("&svalue=");                   // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
-              url += formatUserVar(event, 0);
-              url += ";";
-              url += getBearing(UserVar[event->BaseVarIndex]);
-              url += ";";
-              // Domoticz expects the wind speed in (m/s * 10)
-              url += toString((UserVar[event->BaseVarIndex + 1] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-              url += ";";
-              url += toString((UserVar[event->BaseVarIndex + 2] * 10),ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-              url += ";0;0";
+
+            case SENSOR_TYPE_SINGLE:
+            case SENSOR_TYPE_LONG:
+            case SENSOR_TYPE_DUAL:
+            case SENSOR_TYPE_TRIPLE:
+            case SENSOR_TYPE_QUAD:
+            case SENSOR_TYPE_TEMP_HUM:
+            case SENSOR_TYPE_TEMP_BARO:
+            case SENSOR_TYPE_TEMP_HUM_BARO:
+            case SENSOR_TYPE_WIND:
+            default:
+              url = F("/json.htm?type=command&param=udevice&idx=");
+              url += event->idx;
+              url += F("&nvalue=0");
+              url += F("&svalue=");
+              url += formatDomoticzSensorType(event);
               break;
           }
 
+          // Add WiFi reception quality
+          url += F("&rssi=");
+          url += mapRSSItoDomoticz();
+          #if FEATURE_ADC_VCC
+            url += F("&battery=");
+            url += mapVccToDomoticz();
+          #endif
 
           // This will send the request to the server
           String request = F("GET ");
@@ -210,20 +163,4 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
       }
   }
   return success;
-}
-
-
-int humStat(int hum){
-  int lHumStat;
-  if(hum<30){
-     lHumStat = 2;
-  }else if(hum<40){
-    lHumStat = 0;
-  }else if(hum<59){
-    lHumStat = 1;
-  }else{
-    lHumStat = 3;
-
-  }
-  return lHumStat;
 }

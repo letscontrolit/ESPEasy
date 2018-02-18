@@ -62,11 +62,7 @@ void sendData(struct EventStruct *event)
 boolean validUserVar(struct EventStruct *event) {
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
-    if (f == NAN)      return false; //("NaN");
-    if (f == INFINITY) return false; //("INFINITY");
-    if (-f == INFINITY)return false; //("-INFINITY");
-    if (isnan(f))      return false; //("isnan");
-    if (isinf(f))      return false; //("isinf");
+    if (!isValidFloat(f)) return false;
   }
   return true;
 }

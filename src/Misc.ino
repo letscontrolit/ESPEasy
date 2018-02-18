@@ -187,9 +187,16 @@ String toString(float value, byte decimals)
   \*********************************************************************************************/
 String formatUserVar(struct EventStruct *event, byte rel_index)
 {
-  return toString(
-    UserVar[event->BaseVarIndex + rel_index],
-    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  float f(UserVar[event->BaseVarIndex + rel_index]);
+  if (!isValidFloat(f)) {
+    String log = F("Invalid float value for TaskIndex: ");
+    log += event->TaskIndex;
+    log += F(" varnumber: ");
+    log += rel_index;
+    addLog(LOG_LEVEL_DEBUG, log);
+    f = 0;
+  }
+  return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
 }
 
 /*********************************************************************************************\
@@ -1192,9 +1199,17 @@ float ul2float(unsigned long ul)
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
-
 boolean isFloat(const String& tBuf) {
   return isNumerical(tBuf, false);
+}
+
+boolean isValidFloat(float f) {
+  if (f == NAN)      return false; //("NaN");
+  if (f == INFINITY) return false; //("INFINITY");
+  if (-f == INFINITY)return false; //("-INFINITY");
+  if (isnan(f))      return false; //("isnan");
+  if (isinf(f))      return false; //("isinf");
+  return true;
 }
 
 boolean isInt(const String& tBuf) {
