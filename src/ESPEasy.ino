@@ -160,7 +160,9 @@
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
-#define FEATURE_ADC_VCC                  false
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  false
+#endif
 
 
 //enable Arduino OTA updating.
