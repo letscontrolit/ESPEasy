@@ -1470,6 +1470,12 @@ void SensorSendTask(byte TaskIndex)
         }
       }
       sendData(&TempEvent);
+    } else if (!anyControllerEnabled() && Settings.GlobalSync) {
+      // No other controller enabled thus need to make sure global sync is still performed.
+      if (Settings.TaskDeviceGlobalSync[TaskIndex]) {
+        LoadTaskSettings(TaskIndex);
+        SendUDPTaskData(0, TaskIndex, TaskIndex);
+      }
     }
   }
 }
