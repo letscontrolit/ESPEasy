@@ -79,8 +79,14 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         // DHT start condition, pull-down i/o pin for 18ms
         digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
         delay(18);
-        digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
-        delayMicroseconds(20); // was 40
+
+        // digitalWrite(Plugin_005_DHT_Pin, HIGH);             // Pull high
+        // delayMicroseconds(20); // was 40
+        // WEB: This is an error. DHT tries to pull the line low as soon as it came back to high.
+        // therefore the low-high transition after the start signal "low" needs to be realised by
+        // the pullup resistor only, uC pin must already be in INPUT mode.
+        // See: https://github.com/adafruit/DHT-sensor-library/issues/48
+
         pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
         delayMicroseconds(10);
 
