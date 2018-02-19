@@ -1976,7 +1976,7 @@ void rulesProcessing(String& event)
       rulesProcessingFile(fileName, event);
   }
 
-  log = F("EVENT: Processing time:");
+  log += F(" Processing time:");
   log += timePassedSince(timer);
   log += F(" milliSeconds");
   addLog(LOG_LEVEL_DEBUG, log);
