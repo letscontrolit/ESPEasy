@@ -59,7 +59,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
               // Topic has at least one separator
               if (isFloat(event->String2) && isInt(lastPartTopic)) {
                 int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
-                cmd = event->String1.substring(prevLastindex + 1, lastindex - 1);
+                cmd = event->String1.substring(prevLastindex + 1, lastindex);
                 TempEvent.Par1 = lastPartTopic.toInt();
                 TempEvent.Par2 = event->String2.toFloat();
                 TempEvent.Par3 = 0;

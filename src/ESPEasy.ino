@@ -163,7 +163,9 @@
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
-#define FEATURE_ADC_VCC                  false
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  false
+#endif
 
 
 #if defined(ESP8266)
@@ -1559,6 +1561,12 @@ void SensorSendTask(byte TaskIndex)
         }
       }
       sendData(&TempEvent);
+    } else if (!anyControllerEnabled() && Settings.GlobalSync) {
+      // No other controller enabled thus need to make sure global sync is still performed.
+      if (Settings.TaskDeviceGlobalSync[TaskIndex]) {
+        LoadTaskSettings(TaskIndex);
+        SendUDPTaskData(0, TaskIndex, TaskIndex);
+      }
     }
   }
 }
