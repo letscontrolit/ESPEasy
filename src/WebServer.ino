@@ -245,7 +245,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{content}}"
               "</section>"
               "<footer>"
-              "<h6>Powered by www.letsconTRolit.com</h6>"
+              "<h6>Powered by www.letscontrolit.com</h6>"
               "</footer>"
               "</body>"            );
   }
@@ -268,7 +268,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{content}}"
               "</section>"
               "<footer>"
-              "<h6>Powered by www.letsconTRolit.com</h6>"
+              "<h6>Powered by www.letscontrolit.com</h6>"
               "</footer>"
               "</body>"
             );
@@ -297,7 +297,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{content}}"
         "</section>"
         "<footer>"
-          "<h6>Powered by www.letsconTRolit.com</h6>"
+          "<h6>Powered by www.letscontrolit.com</h6>"
         "</footer>"
       "</body></html>"
             );
