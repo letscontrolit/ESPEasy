@@ -39,10 +39,10 @@ nodes=[
 
 
 #an mqtt broker that both ESPEasy and the test suite are connecting to
-mqtt_broker="192.168.13.236"
+mqtt_broker="192.168.13.159"
 mqtt_port=1883
 
 #ip of the server running this script
-test_server="192.168.13.236"
+test_server="192.168.13.159"
 http_port=8080
 linebased_port=8181
