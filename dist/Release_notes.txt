@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release v2.0-20180220 (since v2.0-20180219)
+-------------------------------------------------
+
+Release date: Tue Feb 20 04:00:19 CET 2018
+
+Edwin Eefting (1):
+      SENSOR_TYPE_TEMP_BARO changed, was probably implemented incorrectly before
+
+Gijs Noorlander (3):
+      [isue #877] Add VCC enable firmware file to release list (#894)
+      [Cleanup] Move String manipulating functions to single file (#895)
+      [issue #893] Fix globalSync not working when no controllers active (#896)
+
+Unknown (3):
+      [issue #847] Fix last letter of command is cut in OpenHAB MQTT
+      [Event Log] Add event name to event processing time log
+      [issue #899] DHT22 readings not received
+
+
+-------------------------------------------------
 Changes in release v2.0-20180219 (since v2.0-20180218)
 -------------------------------------------------
 
