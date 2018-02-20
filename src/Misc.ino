@@ -2638,16 +2638,6 @@ String getBearing(int degrees)
 
 }
 
-//escapes special characters in strings for use in html-forms
-void htmlEscape(String & html)
-{
-  html.replace("&",  "&amp;");
-  html.replace("\"", "&quot;");
-  html.replace("'",  "&#039;");
-  html.replace("<",  "&lt;");
-  html.replace(">",  "&gt;");
-}
-
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
 // Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
