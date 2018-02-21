@@ -1,4 +1,28 @@
 -------------------------------------------------
+Changes in release mega-20180221 (since mega-20180220)
+-------------------------------------------------
+
+Release date: Wed Feb 21 04:00:09 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180220
+
+Edwin Eefting (3):
+      SENSOR_TYPE_TEMP_BARO changed, was probably implemented incorrectly before
+      apply PUYA patch to all available frameworks
+      [test suite] corrected PUYA test. added erase/build/flash for all chips. preparations for full automatic hardware regression testing
+
+GHolli (1):
+      Optimisation: Save RAM (freeing RAM by moving static data from RAM to program memory). (#910)
+
+Gijs Noorlander (1):
+      [issue #899 ] Backport of DHT22 implementation on Mega (#913)
+
+Stanislav Mihic (1):
+      Frontend (#906)
+
+
+-------------------------------------------------
 Changes in release mega-20180220 (since mega-20180219)
 -------------------------------------------------
 
