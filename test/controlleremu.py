@@ -166,8 +166,8 @@ class ControllerEmu:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
                             return [svalues[0], svalues[1]]
-                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
-                            return [svalues[0], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==4:
+                            return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
@@ -221,8 +221,8 @@ class ControllerEmu:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
                             return [svalues[0], svalues[1]]
-                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
-                            return [svalues[0], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==4:
+                            return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
