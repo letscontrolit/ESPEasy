@@ -31,17 +31,38 @@ boolean Plugin_049_ABC_MustApply = false;
 #include <ESPeasySoftwareSerial.h>
 ESPeasySoftwareSerial *Plugin_049_SoftSerial;
 
-// 9-bytes CMD PPM read command
-const PROGMEM byte mhzCmdReadPPM[9] = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
-byte mhzResp[9];    // 9 bytes bytes response
-const PROGMEM byte mhzCmdCalibrateZero[9] = {0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78};
-const PROGMEM byte mhzCmdABCEnable[9] = {0xFF,0x01,0x79,0xA0,0x00,0x00,0x00,0x00,0xE6};
-const PROGMEM byte mhzCmdABCDisable[9] = {0xFF,0x01,0x79,0x00,0x00,0x00,0x00,0x00,0x86};
-const PROGMEM byte mhzCmdReset[9] = {0xFF,0x01,0x8d,0x00,0x00,0x00,0x00,0x00,0x72};
-const PROGMEM byte mhzCmdMeasurementRange1000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x03,0xE8,0x7B};
-const PROGMEM byte mhzCmdMeasurementRange2000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x07,0xD0,0x8F};
-const PROGMEM byte mhzCmdMeasurementRange3000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x0B,0xB8,0xA3};
-const PROGMEM byte mhzCmdMeasurementRange5000[9] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x13,0x88,0xCB};
+enum mhzCommands : byte { mhzCmdReadPPM,
+                          mhzCmdCalibrateZero,
+                          mhzCmdABCEnable,
+                          mhzCmdABCDisable,
+                          mhzCmdReset,
+                          mhzCmdMeasurementRange1000,
+                          mhzCmdMeasurementRange2000,
+                          mhzCmdMeasurementRange3000,
+                          mhzCmdMeasurementRange5000 };
+// 9 byte commands:
+// mhzCmdReadPPM[]              = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
+// mhzCmdCalibrateZero[]        = {0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78};
+// mhzCmdABCEnable[]            = {0xFF,0x01,0x79,0xA0,0x00,0x00,0x00,0x00,0xE6};
+// mhzCmdABCDisable[]           = {0xFF,0x01,0x79,0x00,0x00,0x00,0x00,0x00,0x86};
+// mhzCmdReset[]                = {0xFF,0x01,0x8d,0x00,0x00,0x00,0x00,0x00,0x72};
+// mhzCmdMeasurementRange1000[] = {0xFF,0x01,0x99,0x03,0xE8,0x00,0x00,0x00,0x7B};
+// mhzCmdMeasurementRange2000[] = {0xFF,0x01,0x99,0x07,0xD0,0x00,0x00,0x00,0x8F};
+// mhzCmdMeasurementRange3000[] = {0xFF,0x01,0x99,0x0B,0xB8,0x00,0x00,0x00,0xA3};
+// mhzCmdMeasurementRange5000[] = {0xFF,0x01,0x99,0x13,0x88,0x00,0x00,0x00,0xCB};
+// Removing redundant data, just keeping offsets [2]..[4]:
+const PROGMEM byte mhzCmdData[][3] = {
+  {0x86,0x00,0x00},
+  {0x87,0x00,0x00},
+  {0x79,0xA0,0x00},
+  {0x79,0x00,0x00},
+  {0x8d,0x00,0x00},
+  {0x99,0x03,0xE8},
+  {0x99,0x07,0xD0},
+  {0x99,0x0B,0xB8},
+  {0x99,0x13,0x88}};
+
+byte mhzResp[9];    // 9 byte response buffer
 
 enum
 {
@@ -102,7 +123,6 @@ boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &new
 boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 {
   bool success = false;
-  byte mhzCmdBuffer[9]; // Buffer for sending commands
 
   switch (function)
   {
@@ -199,64 +219,56 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
         if (command == F("mhzcalibratezero"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdCalibrateZero, sizeof(mhzCmdCalibrateZero));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdCalibrateZero));
+          _P049_send_mhzCmd(mhzCmdCalibrateZero);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Calibrated zero point!"));
           success = true;
         }
 
         if (command == F("mhzreset"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdReset, sizeof(mhzCmdReset));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdReset));
+          _P049_send_mhzCmd(mhzCmdReset);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor reset!"));
           success = true;
         }
 
         if (command == F("mhzabcenable"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdABCEnable, sizeof(mhzCmdABCEnable));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdABCEnable));
+          _P049_send_mhzCmd(mhzCmdABCEnable);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
           success = true;
         }
 
         if (command == F("mhzabcdisable"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdABCDisable, sizeof(mhzCmdABCDisable));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdABCDisable));
+          _P049_send_mhzCmd(mhzCmdABCDisable);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange1000"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdMeasurementRange1000, sizeof(mhzCmdMeasurementRange1000));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdMeasurementRange1000));
+          _P049_send_mhzCmd(mhzCmdMeasurementRange1000);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange2000"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdMeasurementRange2000, sizeof(mhzCmdMeasurementRange2000));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdMeasurementRange2000));
+          _P049_send_mhzCmd(mhzCmdMeasurementRange2000);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange3000"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdMeasurementRange3000, sizeof(mhzCmdMeasurementRange3000));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdMeasurementRange3000));
+          _P049_send_mhzCmd(mhzCmdMeasurementRange3000);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
           success = true;
         }
 
         if (command == F("mhzmeasurementrange5000"))
         {
-          memcpy_P(mhzCmdBuffer, mhzCmdMeasurementRange5000, sizeof(mhzCmdMeasurementRange5000));
-          Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdMeasurementRange5000));
+          _P049_send_mhzCmd(mhzCmdMeasurementRange5000);
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
           success = true;
         }
@@ -270,8 +282,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         if (Plugin_049_init)
         {
           //send read PPM command
-          memcpy_P(mhzCmdBuffer, mhzCmdReadPPM, sizeof(mhzCmdReadPPM));
-          int nbBytesSent = Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdReadPPM));
+          byte nbBytesSent = _P049_send_mhzCmd(mhzCmdReadPPM);
           if (nbBytesSent != 9) {
             String log = F("MHZ19: Error, nb bytes sent != 9 : ");
               log += nbBytesSent;
@@ -295,19 +306,15 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           }
 
           unsigned int ppm = 0;
-          int i;
           signed int temp = 0;
           unsigned int s = 0;
           float u = 0;
-          byte crc = 0;
-          for (i = 1; i < 8; i++) crc+=mhzResp[i];
-              crc = 255 - crc;
-              crc++;
+          byte checksum = _P049_calculateChecksum(mhzResp);
 
-          if ( !(mhzResp[8] == crc) ) {
-             String log = F("MHZ19: Read error : CRC = ");
-             log += String(crc); log += " / "; log += String(mhzResp[8]);
-             log += " bytes read  => ";for (i = 0; i < 9; i++) {log += mhzResp[i];log += "/" ;}
+          if ( !(mhzResp[8] == checksum) ) {
+             String log = F("MHZ19: Read error: checksum = ");
+             log += String(checksum); log += " / "; log += String(mhzResp[8]);
+             log += " bytes read  => ";for (byte i = 0; i < 9; i++) {log += mhzResp[i];log += "/" ;}
              addLog(LOG_LEVEL_ERROR, log);
 
              // Sometimes there is a misalignment in the serial read
@@ -315,24 +322,24 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
              // This goes on forever.
              // There must be a better way to handle this, but here
              // we're trying to shift it so that 0xFF is the next byte
-             byte crcshift;
-             for (i = 1; i < 8; i++) {
-                crcshift = Plugin_049_SoftSerial->peek();
-                if (crcshift == 0xFF) {
+             byte checksum_shift;
+             for (byte i = 1; i < 8; i++) {
+                checksum_shift = Plugin_049_SoftSerial->peek();
+                if (checksum_shift == 0xFF) {
                   String log = F("MHZ19: Shifted ");
                   log += i;
                   log += F(" bytes to attempt to fix buffer alignment");
                   addLog(LOG_LEVEL_ERROR, log);
                   break;
                 } else {
-                 crcshift = Plugin_049_SoftSerial->read();
+                 checksum_shift = Plugin_049_SoftSerial->read();
                 }
              }
              success = false;
              break;
 
           // Process responses to 0x86
-          } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x86 && mhzResp[8] == crc)  {
+          } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x86 && mhzResp[8] == checksum)  {
 
               //calculate CO2 PPM
               unsigned int mhzRespHigh = (unsigned int) mhzResp[2];
@@ -378,12 +385,10 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                     if (Plugin_049_ABC_MustApply) {
                       // Send ABC enable/disable command based on the desired state.
                       if (Plugin_049_ABC_Disable) {
-                        memcpy_P(mhzCmdBuffer, mhzCmdABCDisable, sizeof(mhzCmdABCDisable));
-                        Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdABCDisable));
+                        _P049_send_mhzCmd(mhzCmdABCDisable);
                         addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
                       } else {
-                        memcpy_P(mhzCmdBuffer, mhzCmdABCEnable, sizeof(mhzCmdABCEnable));
-                        Plugin_049_SoftSerial->write(mhzCmdBuffer, sizeof(mhzCmdABCEnable));
+                        _P049_send_mhzCmd(mhzCmdABCEnable);
                         addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
                       }
                       Plugin_049_ABC_MustApply = false;
@@ -408,7 +413,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               break;
 
           // Sensor responds with 0x99 whenever we send it a measurement range adjustment
-          } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99 && mhzResp[8] == crc)  {
+          } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99 && mhzResp[8] == checksum)  {
 
             addLog(LOG_LEVEL_INFO, F("MHZ19: Received measurement range acknowledgment! "));
             addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
@@ -434,4 +439,25 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
       }
   }
   return success;
+}
+
+byte _P049_calculateChecksum(byte *array)
+{
+  byte checksum = 0;
+  for (byte i = 1; i < 8; i++)
+    checksum+=array[i];
+  checksum = 0xFF - checksum;
+  return (checksum+1);
+}
+
+size_t _P049_send_mhzCmd(byte CommandId)
+{
+  // The receive buffer "mhzResp" is re-used to send a command here:
+  mhzResp[0] = 0xFF; // Start byte, fixed
+  mhzResp[1] = 0x01; // Sensor number, 0x01 by default
+  memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
+  mhzResp[5] = mhzResp[6] = mhzResp[7] = 0x00;
+  mhzResp[8] = _P049_calculateChecksum(mhzResp);
+
+  return Plugin_049_SoftSerial->write(mhzResp, sizeof(mhzResp));
 }
