@@ -13,7 +13,20 @@ import config
 import shelve
 import os
 from espcore import *
+import argparse
+import util
 
+### parse arguments
+
+parser = argparse.ArgumentParser(description='ESPEasy testing framework', formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('--debug', action='store_true', help='enable http debugging output')
+parser.add_argument('--no-resume', action='store_true', help='dont resume testing from where we left off last time')
+parser.add_argument('--skip-power', action='store_true', help='skip tests that require powercycling.')
+args = parser.parse_args()
+
+
+if args.debug:
+    util.enable_http_debug()
 
 
 ### create node objects and espeasy objects
@@ -22,7 +35,7 @@ node=[]
 espeasy=[]
 
 for n in config.nodes:
-    node.append(Node(n, "node"+str(len(node))))
+    node.append(Node(n, "node"+str(len(node)), skip_power=args.skip_power))
     espeasy.append(EspEasy(node[-1]))
 
 
@@ -49,7 +62,7 @@ with shelve.open("test.state") as shelve_db:
 def step(title=""):
     def step_dec(test):
         """add test step. test can resume from every test-step"""
-        if state['module'] and ( state['module'] != test.__module__ or state['name'] != test.__name__ or state['title'] != title):
+        if not args.no_resume and state['module'] and ( state['module'] != test.__module__ or state['name'] != test.__name__ or state['title'] != title):
             log.debug("Skipping step "+title+": "+test.__module__ + "." + test.__name__ )
         else:
             state['module']=None
