@@ -166,7 +166,7 @@ bool MQTTConnect(int controller_idx)
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), "Connected")) {
+  if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
     statusLED(true);
     return true; // end loop if succesfull
   }
