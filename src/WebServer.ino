@@ -320,6 +320,7 @@ void sendWebPageChunkedBegin(String& log)
 void sendWebPageChunkedData(String& log, String& data)
 {
   checkRAM(F("sendWebPageChunkedData"));
+   
   if (data.length() > 0)
   {
     statusLED(true);
@@ -4575,6 +4576,9 @@ void handle_sysinfo() {
   reply += String(CRCValues.compileDate);
   reply += " ";
   reply += String(CRCValues.compileTime);
+
+  reply += F("<TR><TD>Binary filename<TD>");
+  reply += String(CRCValues.binaryFilename);
 
   reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 

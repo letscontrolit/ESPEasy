@@ -1,10 +1,12 @@
- 
 
 import sys
 import binascii
 import struct
 import md5
-MD5DUMMY = "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere..."
+import os
+MD5DUMMY      = "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere..." #48 chars
+FILENAMEDUMMY = "ThisIsTheDummyPlaceHolderForTheBinaryFilename..." #48 chars
+
 MemorySegmentStart,MemorySegmentEnd,MemoryContent=[],[],[]
  
 ##################################################################
@@ -14,12 +16,15 @@ def showSegments (fileContent,offset):
     global MemorySegmentStart, MemorySegmentEnd, MemoryContent
     header = struct.unpack("ii", fileContent[offset:offset+8])
     herestr =""
+    herestr2 =""
     MemorySegmentStart.append(struct.pack("I",header[0]))
     MemorySegmentEnd.append(struct.pack("I",header[0]+header[1])) 
     MemoryContent.append(fileContent[offset+8:offset+8+header[1]])
     if  fileContent.find( MD5DUMMY, offset+8, offset+8+header[1]) >0 :
         herestr= " <-- CRC is here."
-    print ("SEGMENT "+ str(len(MemorySegmentStart)-1)+ ": memory position: " + hex(header[0])+" to " + hex(header[0]+header[1]) +  " length: " + hex(header[1])+herestr)
+    if  fileContent.find( FILENAMEDUMMY, offset+8, offset+8+header[1]) >0 :
+        herestr2= " <-- filename is here."
+    print ("SEGMENT "+ str(len(MemorySegmentStart)-1)+ ": memory position: " + hex(header[0])+" to " + hex(header[0]+header[1]) +  " length: " + hex(header[1])+herestr+herestr2)
     #print ("first byte positoin in file: " + hex( offset+8))
     #print ("last byte postion in file: " + hex(offset+8+header[1]-1))
     return (8+offset+ header[1]); # return start of next segment
@@ -82,6 +87,17 @@ while len(startArray) < 16 :
 if (len(endArray) + len (startArray)) != 32 :
     print("ERROR: please make sure you add / remove padding if you change the semgents.") 
 
+BinaryFileName = "";
+if  fileContent.find( FILENAMEDUMMY) < 0:
+    print("ERROR: FILENAMEDUMMY dummy not found in binary")
+else:
+	BinaryFileName=os.path.basename(FileName) +"\0"
+	if len(BinaryFileName) >48:								# check that filename is <48 chars
+		BinaryFileName=BinaryFileName[0:48]					# truncate if necessary. 49th char in ESP is zero already
+	else:
+		BinaryFileName= BinaryFileName.ljust(48,'\0');		# pad with zeros. 	
+			
+
 if  fileContent.find( MD5DUMMY) < 0:
     print("ERROR: MD5 dummy not found in binary")
 else:
@@ -91,6 +107,10 @@ else:
     md5hash = m.digest()
     print("MD5 hash: "+ m.hexdigest())
     print("\nwriting output file:\n" + FileName)
+	
+    fileContent=fileContent.replace(MD5DUMMY,md5hash+startArray+endArray)
+    fileContent=fileContent.replace(FILENAMEDUMMY,BinaryFileName)
+
     with open(FileName, mode='wb') as file: # b is important -> binary
-      file.write(fileContent.replace(MD5DUMMY,md5hash+startArray+endArray))
+      file.write(fileContent)
 #k=input("press close to exit") 
