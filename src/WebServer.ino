@@ -473,16 +473,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<!DOCTYPE html><html lang='en'>"
               "<head>"
               "<meta charset='utf-8'/>"
+              "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
               "<body>"
+              "<header class='headermenu'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
+              "</header>"
+              "<section>"
               "{{error}}"
               "{{content}}"
-              "<BR><h6>Powered by www.letscontrolit.com</h6>"
-              "</body>"
-            );
+              "</section>"
+              "<footer>"
+              "<h6>Powered by www.letscontrolit.com</h6>"
+              "</footer>"
+              "</body>"            );
   }
   else if (tmplName == F("TmplMsg"))
   {
@@ -490,14 +496,21 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<!DOCTYPE html><html lang='en'>"
               "<head>"
               "<meta charset='utf-8'/>"
+              "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
               "<body>"
+              "<header class='headermenu'>"
               "<h1>ESP Easy Mega: {{name}}</h1>"
+              "</header>"
+              "<section>"
               "{{error}}"
               "{{content}}"
-              "<BR><h6>Powered by www.letscontrolit.com</h6>"
+              "</section>"
+              "<footer>"
+              "<h6>Powered by www.letscontrolit.com</h6>"
+              "</footer>"
               "</body>"
             );
   }
@@ -508,17 +521,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<head>"
         "<meta charset='utf-8'/>"
         "<title>{{name}}</title>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
         "{{js}}"
         "{{css}}"
       "</head>"
       "<body class='bodymenu'>"
-        "<b style=\"color:red\" id='rbtmsg'></b>"
+        "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
           "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
           "{{menu}}"
         "</header>"
+        "<section>"
+        "<span class='message error'>"
         "{{error}}"
+        "</span>"
         "{{content}}"
+        "</section>"
         "<footer>"
           "<h6>Powered by www.letscontrolit.com</h6>"
         "</footer>"
@@ -527,6 +545,52 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   }
 }
 
+
+void sendWebPageChunkedBegin(String& log)
+{
+  statusLED(true);
+  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  // WebServer.sendHeader("Content-Type","text/html",true);
+  WebServer.sendHeader("Cache-Control","no-cache");
+  #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  WebServer.sendHeader("Transfer-Encoding","chunked");
+  #endif
+  WebServer.send(200);
+}
+
+void sendWebPageChunkedData(String& log, String& data)
+{
+  checkRAM(F("sendWebPageChunkedData"));
+  if (data.length() > 0)
+  {
+    statusLED(true);
+    log += F(" [");
+    log += data.length();
+    log += F("]");
+
+    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+      String size;
+      size=String(data.length(), HEX)+"\r\n";
+      //do chunked transfer encoding ourselves (WebServer doesn't support it)
+      WebServer.sendContent(size);
+      WebServer.sendContent(data);
+      WebServer.sendContent("\r\n");
+    #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+      WebServer.sendContent(data);
+    #endif
+    data = F("");   //free RAM
+  }
+}
+
+void sendWebPageChunkedEnd(String& log)
+{
+  log += F(" [0]");
+  #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    WebServer.sendContent("0\r\n\r\n");
+  #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+    WebServer.sendContent("");
+  #endif
+}
 
 String getErrorNotifications() {
   String errors;
@@ -4766,6 +4830,22 @@ void handle_sysinfo() {
  
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
+  reply += F("<TR><TD>Md5 check<TD>");
+  if (! CRCValues.checkPassed())
+    reply +="<font color = 'red'>fail !</font>";
+  else reply +="passed.";
+
+  reply += F("<TR><TD>Build time<TD>");
+  reply += String(CRCValues.compileDate);
+  reply += " ";
+  reply += String(CRCValues.compileTime);
+
+  reply += F("<TR><TD>Binary filename<TD>");
+  reply += String(CRCValues.binaryFilename);
+
+  reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
+
+  reply += F("<TR><TD>ESP Chip ID<TD>");
    TXBuffer += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
      TXBuffer += ESP.getChipId();

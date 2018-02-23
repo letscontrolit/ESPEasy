@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+#runs all test modules
+
 import glob
 import importlib
 import os

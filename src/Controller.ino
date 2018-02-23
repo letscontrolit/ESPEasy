@@ -62,11 +62,7 @@ void sendData(struct EventStruct *event)
 boolean validUserVar(struct EventStruct *event) {
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
-    if (f == NAN)      return false; //("NaN");
-    if (f == INFINITY) return false; //("INFINITY");
-    if (-f == INFINITY)return false; //("-INFINITY");
-    if (isnan(f))      return false; //("isnan");
-    if (isinf(f))      return false; //("isinf");
+    if (!isValidFloat(f)) return false;
   }
   return true;
 }
@@ -137,7 +133,7 @@ bool MQTTConnect(int controller_idx)
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = F("ESPClient_");
   clientid += WiFi.macAddress();
-  String subscribeTo = "";
+
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
   LWTTopic.replace(F("%sysname%"), Settings.Name);

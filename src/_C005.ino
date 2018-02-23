@@ -44,44 +44,38 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           // Controller is not enabled.
           break;
         } else {
-          // Split topic into array
-          String tmpTopic = event->String1.substring(1);
-          String topicSplit[10];
-          int SlashIndex = tmpTopic.indexOf('/');
-          byte count = 0;
-          while (SlashIndex > 0 && (count < (10 - 1)))
-          {
-            topicSplit[count] = tmpTopic.substring(0, SlashIndex);
-            tmpTopic = tmpTopic.substring(SlashIndex + 1);
-            SlashIndex = tmpTopic.indexOf('/');
-            count++;
-          }
-          topicSplit[count] = tmpTopic;
-
-          String cmd = "";
+          String cmd;
           struct EventStruct TempEvent;
-
-          if (topicSplit[count] == F("cmd"))
-          {
+          bool validTopic = false;
+          const int lastindex = event->String1.lastIndexOf('/');
+          const String lastPartTopic = event->String1.substring(lastindex + 1);
+          if (lastPartTopic == F("cmd")) {
             cmd = event->String2;
             parseCommandString(&TempEvent, cmd);
             TempEvent.Source = VALUE_SOURCE_MQTT;
+            validTopic = true;
+          } else {
+            if (lastindex > 0) {
+              // Topic has at least one separator
+              if (isFloat(event->String2) && isInt(lastPartTopic)) {
+                int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
+                cmd = event->String1.substring(prevLastindex + 1, lastindex);
+                TempEvent.Par1 = lastPartTopic.toInt();
+                TempEvent.Par2 = event->String2.toFloat();
+                TempEvent.Par3 = 0;
+                validTopic = true;
+              }
+            }
           }
-          else
-          {
-            cmd = topicSplit[count - 1];
-            TempEvent.Par1 = topicSplit[count].toInt();
-            TempEvent.Par2 = event->String2.toFloat();
-            TempEvent.Par3 = 0;
-          }
-          // in case of event, store to buffer and return...
-          String command = parseString(cmd, 1);
-          if (command == F("event"))
+          if (validTopic) {
+            // in case of event, store to buffer and return...
+            String command = parseString(cmd, 1);
+            if (command == F("event")) {
             eventBuffer = cmd.substring(6);
-          else if
-            (PluginCall(PLUGIN_WRITE, &TempEvent, cmd));
-          else
-            remoteConfig(&TempEvent, cmd);
+            } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
+              remoteConfig(&TempEvent, cmd);
+            }
+          }
         }
         break;
       }

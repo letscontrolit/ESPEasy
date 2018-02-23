@@ -166,13 +166,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         // This is a private option only used by the MQTT 037 callback function
 
         //      Get the payload and check it out
-
-        String Payload = event->String2;
-        float floatPayload = string2float(Payload);
-
         LoadTaskSettings(event->TaskIndex);
 
-        if (floatPayload == -999) {
+        String Payload = event->String2;
+        float floatPayload;
+        if (!string2float(Payload, floatPayload)) {
           String log = F("IMPT : Bad Import MQTT Command ");
           log += event->String1;
           addLog(LOG_LEVEL_ERROR, log);
@@ -449,42 +447,4 @@ boolean MQTTCheckSubscription_037(String Topic, String Subscription) {
     count = count + 1;
   }
   return false;
-}
-
-//	***************************************************************************
-// Convert String to float - returns -999 in case of error
-float string2float(String myString) {
-  int i, len;
-  float value;
-  len = myString.length();
-  char tmp[(len + 1)];       // one extra for the zero termination
-  byte start = 0;
-  //  Look for decimal point - they can be anywhere but no more than one of them!
-  int dotIndex = myString.indexOf('.');
-  //Serial.println(dotIndex);
-
-  if (dotIndex != -1)
-  {
-    int dotIndex2 = (myString.substring(dotIndex + 1)).indexOf('.');
-    //Serial.println(dotIndex2);
-    if (dotIndex2 != -1)return -999.00;    // Give error if there is more than one dot
-  }
-
-  if (myString.charAt(0) == '-') {
-    tmp[0] = '-';
-    start = 1;   //allow a minus in front of string
-  }
-
-  for (i = start; i < len; i++)
-  {
-    tmp[i] = myString.charAt(i);
-    if (!isdigit(tmp[i]))
-    {
-      if (tmp[i] != '.')return -999;
-    }
-  }
-
-  tmp[i] = 0;
-  value = atof(tmp);
-  return value;
 }
