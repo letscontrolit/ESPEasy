@@ -1104,8 +1104,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.BaseVarIndex = y * VARS_PER_TASK;
                 //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
                 TempEvent.sensorType = Device[DeviceIndex].VType;
-                if (Plugin_ptr[x](Function, event, str))
+                if (Plugin_ptr[x](Function, event, str)){
+                  checkRAM(F("PluginCallUDP"),x);
                   return true;
+                }
               }
             }
           }
@@ -1140,6 +1142,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               {
                 if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
                 {
+                  checkRAM(F("PluginCall_s"),x);
                   Plugin_ptr[x](Function, &TempEvent, str);
                 }
               }
@@ -1167,6 +1170,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))
         {
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+          checkRAM(F("PluginCall_init"),x);
           return Plugin_ptr[x](Function, event, str);
         }
       }

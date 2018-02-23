@@ -1043,11 +1043,15 @@ int firstEnabledBlynkController() {
   return -1;
 }
 
+//void checkRAM( const __FlashStringHelper* flashString);
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
 {
+
+ 
+  checkRAM(F("setup"));
   #if defined(ESP32)
     for(byte x = 0; x < 16; x++)
       ledChannelPin[x] = -1;
@@ -1147,7 +1151,8 @@ void setup()
 
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
-
+  
+  checkRAM(F("hardwareInit"));
   hardwareInit();
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
@@ -1184,7 +1189,7 @@ void setup()
   timer1s = 0; // timer for periodic actions once per/sec
   timerwd = 0; // timer for watchdog once per 30 sec
   timermqtt = 0; // Timer for the MQTT keep alive loop.
-
+  //checkRAM(F("PluginInit"));
   PluginInit();
   CPluginInit();
   NPluginInit();
@@ -1254,6 +1259,7 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
 \*********************************************************************************************/
 void loop()
 {
+  //checkRAM(F("loop"));
   loopCounter++;
 
   if (wifiSetupConnect)
@@ -1442,6 +1448,8 @@ void runOncePerSecond()
 \*********************************************************************************************/
 void runEach30Seconds()
 {
+   extern void checkRAMtoLog();
+  checkRAMtoLog();
   wdcounter++;
   timerwd = millis() + 30000;
   char str[60];
@@ -1484,6 +1492,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 void checkSensors()
 {
+  checkRAM(F("checkSensors"));
   bool isDeepSleep = isDeepSleepEnabled();
   //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
   for (byte x = 0; x < TASKS_MAX; x++)
@@ -1520,6 +1529,7 @@ void checkSensors()
 \*********************************************************************************************/
 void SensorSendTask(byte TaskIndex)
 {
+  checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
@@ -1666,6 +1676,7 @@ void checkSystemTimers()
 bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //checkRAM(F("backgroundtasks"));
   //always start with a yield
   yield();
 

@@ -3,7 +3,8 @@
 //********************************************************************************
 void sendData(struct EventStruct *event)
 {
-  LoadTaskSettings(event->TaskIndex);
+  checkRAM(F("sendData"));
+ LoadTaskSettings(event->TaskIndex);
   if (Settings.UseRules)
     createRuleEvents(event->TaskIndex);
 

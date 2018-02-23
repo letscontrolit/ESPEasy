@@ -623,7 +623,7 @@ void addFooter(String& str)
 // Web Interface root page
 //********************************************************************************
 void handle_root() {
-
+  checkRAM(F("handle_root"));
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
@@ -798,6 +798,7 @@ void handle_root() {
 // Web Interface config page
 //********************************************************************************
 void handle_config() {
+  checkRAM(F("handle_config"));
   if (!isLoggedIn()) return;
 
   if (timerAPoff)
@@ -945,6 +946,7 @@ void handle_config() {
 // Web Interface controller page
 //********************************************************************************
 void handle_controllers() {
+  checkRAM(F("handle_controllers"));
   if (!isLoggedIn()) return;
 
   struct EventStruct TempEvent;
@@ -1187,6 +1189,7 @@ void handle_controllers() {
 // Web Interface notifcations page
 //********************************************************************************
 void handle_notifications() {
+  checkRAM(F("handle_notifications"));
   if (!isLoggedIn()) return;
 
   struct EventStruct TempEvent;
@@ -1401,6 +1404,7 @@ void handle_notifications() {
 // Web Interface hardware page
 //********************************************************************************
 void handle_hardware() {
+  checkRAM(F("handle_hardware"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 3;
@@ -1517,6 +1521,7 @@ void addIPaccessControlSelect(String& str, String name, int choice)
 //********************************************************************************
 //19480 (11128)
 void handle_devices() {
+  checkRAM(F("handle_devices"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 4;
@@ -2908,6 +2913,7 @@ void handle_tools() {
 // Web Interface pin state list
 //********************************************************************************
 void handle_pinstates() {
+  checkRAM(F("handle_pinstates"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
@@ -2969,6 +2975,7 @@ void handle_pinstates() {
 // Web Interface I2C scanner
 //********************************************************************************
 void handle_i2cscanner() {
+  checkRAM(F("handle_i2cscanner"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
@@ -3109,6 +3116,7 @@ void handle_i2cscanner() {
 // Web Interface Wifi scanner
 //********************************************************************************
 void handle_wifiscanner() {
+  checkRAM(F("handle_wifiscanner"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
@@ -3144,6 +3152,7 @@ void handle_wifiscanner() {
 // Web Interface login page
 //********************************************************************************
 void handle_login() {
+  checkRAM(F("handle_login"));
   if (!clientIPallowed()) return;
 
   String webrequest = WebServer.arg(F("password"));
@@ -3186,6 +3195,7 @@ void handle_login() {
 // Web Interface control page (no password!)
 //********************************************************************************
 void handle_control() {
+  checkRAM(F("handle_control"));
   if (!clientIPallowed()) return;
 
   String webrequest = WebServer.arg(F("cmd"));
@@ -3231,6 +3241,7 @@ void handle_control() {
 
 void handle_json()
 {
+  checkRAM(F("handle_json"));
   // ToDo TD-er: Must check for allowed client IP??????
   String tasknr = WebServer.arg(F("tasknr"));
   String reply = "";
@@ -3309,6 +3320,7 @@ void handle_json()
 // Web Interface config page
 //********************************************************************************
 void handle_advanced() {
+  checkRAM(F("handle_advanced"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
@@ -3533,6 +3545,7 @@ boolean isLoggedIn()
 //********************************************************************************
 void handle_download()
 {
+  checkRAM(F("handle_download"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
@@ -3581,6 +3594,7 @@ void handle_upload() {
 // Web Interface upload page
 //********************************************************************************
 void handle_upload_post() {
+  checkRAM(F("handle_upload_post"));
   if (!isLoggedIn()) return;
 
   navMenuIndex = 7;
@@ -3612,6 +3626,7 @@ void handle_upload_post() {
 //********************************************************************************
 fs::File uploadFile;
 void handleFileUpload() {
+  checkRAM(F("handleFileUpload"));
   if (!isLoggedIn()) return;
 
   static boolean valid = false;
@@ -3690,6 +3705,7 @@ void handleFileUpload() {
 // Web Interface server web file from SPIFFS
 //********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
+  checkRAM(F("loadFromFS"));
   if (!isLoggedIn()) return false;
 
   statusLED(true);
@@ -3752,6 +3768,7 @@ bool loadFromFS(boolean spiffs, String path) {
 // Web Interface custom page handler
 //********************************************************************************
 boolean handle_custom(String path) {
+  checkRAM(F("handle_custom"));
   if (!clientIPallowed()) return false;
   path = path.substring(1);
   String reply = "";
@@ -3887,6 +3904,7 @@ boolean handle_custom(String path) {
 // Web Interface file list
 //********************************************************************************
 void handle_filelist() {
+  checkRAM(F("handle_filelist"));
   if (!clientIPallowed()) return;
 #if defined(ESP8266)
   navMenuIndex = 7;
@@ -3977,6 +3995,7 @@ void handle_filelist() {
 //********************************************************************************
 #ifdef FEATURE_SD
 void handle_SDfilelist() {
+  checkRAM(F("handle_SDfilelist"));
   if (!clientIPallowed()) return;
 
   navMenuIndex = 7;
@@ -4119,6 +4138,7 @@ void handle_SDfilelist() {
 // Web Interface handle other requests
 //********************************************************************************
 void handleNotFound() {
+  checkRAM(F("handleNotFound"));
 
   if (wifiSetup)
   {
@@ -4147,6 +4167,7 @@ void handleNotFound() {
 // Web Interface Setup Wizard
 //********************************************************************************
 void handle_setup() {
+  checkRAM(F("handle_setup"));
   // Do not check client IP range allowed.
   String reply = "";
   addHeader(false, reply);
@@ -4277,6 +4298,7 @@ void handle_setup() {
 // Web Interface rules page
 //********************************************************************************
 void handle_rules() {
+  checkRAM(F("handle_rules"));
   if (!isLoggedIn()) return;
   static byte currentSet = 1;
 
@@ -4402,6 +4424,7 @@ void handle_rules() {
 // Web Interface sysinfo page
 //********************************************************************************
 void handle_sysinfo() {
+  checkRAM(F("handle_sysinfo"));
   if (!isLoggedIn()) return;
 
   int freeMem = ESP.getFreeHeap();
@@ -4816,5 +4839,6 @@ static const char favicon_8b_ico[] PROGMEM = {
 unsigned int favicon_8b_ico_len = 1150;
 
 void handle_favicon() {
+  checkRAM(F("handle_favicon"));
   WebServer.send_P(200, PSTR("image/x-icon"), favicon_8b_ico, favicon_8b_ico_len);
 }
