@@ -7,17 +7,18 @@
   #include <md5.h>
 #endif
 #if defined(ESP8266)
-void tcpCleanup()
+ 
+struct tcp_pcb;
+extern struct tcp_pcb* tcp_tw_pcbs;
+extern "C" void tcp_abort (struct tcp_pcb* pcb);
+ 
+void tcpCleanup()   
 {
-  #if LWIP_VERSION_MAJOR == 2
-    // is it still needed ?
-  #else
-    while(tcp_tw_pcbs!=NULL)
+     while(tcp_tw_pcbs!=NULL)
     {
       tcp_abort(tcp_tw_pcbs);
     }
-  #endif
-}
+ }
 #endif
 
 bool isDeepSleepEnabled()
