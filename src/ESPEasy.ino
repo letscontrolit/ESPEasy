@@ -495,14 +495,6 @@ struct CRCStruct{
 
 bool WiFiConnected(uint32_t timeout_ms);
 
-extern "C" {
-#include "spi_flash.h"
-}
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
-extern "C" uint32_t _SPIFFS_page;
-extern "C" uint32_t _SPIFFS_block;
-
 struct SecurityStruct
 {
   SecurityStruct() {
@@ -1351,6 +1343,7 @@ void run10TimesPerSecond()
     eventBuffer = "";
   }
   elapsed = micros() - start;
+   WebServer.handleClient();
 }
 
 

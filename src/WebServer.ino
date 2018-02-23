@@ -6,14 +6,14 @@
 #define ONLY_IP_RANGE_ALLOWED  2
 #define _HEAD false
 #define _TAIL true
-#define BufferSize 400
+ 
 
 void sendContentBlocking(String& data);
 void sendHeaderBlocking(bool json);
 
 class StreamingBuffer{
 private: 
-  
+
 public: 
   uint32_t initialRam; 
   uint32_t beforeTXRam;
@@ -21,12 +21,13 @@ public:
   uint32_t finalRam;
   uint32_t maxCoreUsage;
   uint32_t maxServerUsage;
-  
+  unsigned int BufferSize;
 
 
   String buf; 
   unsigned int sentBytes;
-  StreamingBuffer(void) {     
+  StreamingBuffer(void) {    
+    BufferSize=500;  
     buf = "";  
     buf.reserve(BufferSize+100);
     initialRam=0; 
@@ -89,7 +90,9 @@ void trackCoreMem()
    if (buf.length() >0) sendContentBlocking(buf); 
     buf =""; 
     sendContentBlocking(buf); 
-
+    WebServer.sendHeader( "Content-Length", "0");
+    WebServer.send ( 200, "text/plain", "");
+    
     finalRam= ESP.getFreeHeap();
     String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
     addLog(LOG_LEVEL_DEBUG, log);
@@ -100,7 +103,10 @@ void trackCoreMem()
 
 void sendContentBlocking(String& data){
       checkRAM(F("sendContentBlocking"));
+      unsigned int timeout = 0; 
       uint32_t freeBeforeSend= ESP.getFreeHeap();
+      if (freeBeforeSend<5000 ) timeout = 100; 
+      if (freeBeforeSend<4000 ) timeout = 1000; 
       String log = String("sendcontent free: ")+freeBeforeSend+" chunk size:"+ data.length();
       addLog(LOG_LEVEL_DEBUG, log);
       freeBeforeSend= ESP.getFreeHeap();
@@ -115,11 +121,11 @@ void sendContentBlocking(String& data){
       #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
           uint32_t beginWait = millis();
           WebServer.sendContent(data);
-          while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 1000)) {
+          while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
             if(ESP.getFreeHeap()<TXBuffer.duringTXRam) TXBuffer.duringTXRam=ESP.getFreeHeap();; 
             TXBuffer.trackCoreMem();
             checkRAM(F("duringDataTX"));
-            delay(1);
+            //delay(1);
           } 
      #endif
   
@@ -135,13 +141,24 @@ void sendContentBlocking(String& data){
      if (json) // "application/json"
         WebServer.sendHeader("Content-Type","application/json",true);
      else
-        WebServer.sendHeader("Content-Type","text/html",true);
-     WebServer.sendHeader("Cache-Control","no-cache");
+     //   WebServer.sendHeader("Content-Type","text/html",true);
+     //WebServer.sendHeader("Cache-Control","no-cache");
      WebServer.sendHeader("Transfer-Encoding","chunked");
-     WebServer.send(200);
+     //WebServer.send(200);
     #else
+     unsigned int timeout = 0; 
+     TXBuffer.BufferSize=1760; 
      uint32_t beginWait = millis();
      uint32_t freeBeforeSend= ESP.getFreeHeap();
+     if (freeBeforeSend<5000 ){
+        timeout = 100; 
+        TXBuffer.BufferSize=700; 
+     }
+     if (freeBeforeSend<4000 ){
+        timeout = 1000;
+        TXBuffer.BufferSize=400; 
+     }
+     TXBuffer.buf.reserve(TXBuffer.BufferSize+100); 
      WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
      if (json) // "application/json"
         WebServer.sendHeader("Content-Type","application/json",true);
@@ -150,9 +167,9 @@ void sendContentBlocking(String& data){
      WebServer.sendHeader("Cache-Control","no-cache");
      WebServer.send(200);
        // dont wait on 2.3.0. Memory returns just too slow.
-     while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + 50)) {
+     while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
         checkRAM(F("duringHeaderTX"));
-        delay(1);
+        //delay(1);
      }
     #endif
  }
@@ -720,7 +737,7 @@ void addFooter(String& str)
 // Web Interface root page
 //********************************************************************************
 void handle_root() {
- 
+ Serial.println("handleroot");
   // if Wifi setup, launch setup wizard
   if (wifiSetup)
   {
@@ -865,6 +882,7 @@ void handle_root() {
     printToWeb = false;
     sendHeadandTail(F("TmplStd"),_TAIL); 
     TXBuffer.endStream();
+      Serial.println("done.");
 
   }
   else
@@ -890,7 +908,7 @@ void handle_root() {
 
     TXBuffer+= "OK";
     TXBuffer.endStream();
-    
+  
   }
 }
 
@@ -4717,6 +4735,7 @@ void handle_sysinfo() {
      TXBuffer += formatIP(client.remoteIP());
   }
 
+
    TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
    TXBuffer += describeAllowedIPrange();
 
@@ -4729,6 +4748,7 @@ void handle_sysinfo() {
   TXBuffer += F(")");
  
   TXBuffer += F("<TR><TD>STA MAC<TD>");
+
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
