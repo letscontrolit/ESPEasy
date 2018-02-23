@@ -752,6 +752,7 @@ void SSDP_update() {
       _server->flush();
   }
 }
+#endif
 
 // Check WiFi connection. Maximum timeout 2000 msec.
 bool WiFiConnected(uint32_t timeout_ms) {
@@ -769,4 +770,4 @@ bool WiFiConnected(uint32_t timeout_ms) {
   }
   return true;
 }
-#endif
+

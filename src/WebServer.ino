@@ -4717,6 +4717,7 @@ void handle_sysinfo() {
      TXBuffer += formatIP(client.remoteIP());
   }
 
+
    TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
    TXBuffer += describeAllowedIPrange();
 
@@ -4729,6 +4730,7 @@ void handle_sysinfo() {
   TXBuffer += F(")");
  
   TXBuffer += F("<TR><TD>STA MAC<TD>");
+
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
