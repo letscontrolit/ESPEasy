@@ -545,52 +545,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   }
 }
 
-
-void sendWebPageChunkedBegin(String& log)
-{
-  statusLED(true);
-  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  // WebServer.sendHeader("Content-Type","text/html",true);
-  WebServer.sendHeader("Cache-Control","no-cache");
-  #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  WebServer.sendHeader("Transfer-Encoding","chunked");
-  #endif
-  WebServer.send(200);
-}
-
-void sendWebPageChunkedData(String& log, String& data)
-{
-  checkRAM(F("sendWebPageChunkedData"));
-  if (data.length() > 0)
-  {
-    statusLED(true);
-    log += F(" [");
-    log += data.length();
-    log += F("]");
-
-    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-      String size;
-      size=String(data.length(), HEX)+"\r\n";
-      //do chunked transfer encoding ourselves (WebServer doesn't support it)
-      WebServer.sendContent(size);
-      WebServer.sendContent(data);
-      WebServer.sendContent("\r\n");
-    #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-      WebServer.sendContent(data);
-    #endif
-    data = F("");   //free RAM
-  }
-}
-
-void sendWebPageChunkedEnd(String& log)
-{
-  log += F(" [0]");
-  #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-    WebServer.sendContent("0\r\n\r\n");
-  #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-    WebServer.sendContent("");
-  #endif
-}
+ 
 
 String getErrorNotifications() {
   String errors;
@@ -4830,22 +4785,22 @@ void handle_sysinfo() {
  
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
-  reply += F("<TR><TD>Md5 check<TD>");
-  if (! CRCValues.checkPassed())
-    reply +="<font color = 'red'>fail !</font>";
-  else reply +="passed.";
+   TXBuffer += F("<TR><TD>Md5 check<TD>");
+   if (! CRCValues.checkPassed())
+     TXBuffer +="<font color = 'red'>fail !</font>";
+   else TXBuffer +="passed.";
 
-  reply += F("<TR><TD>Build time<TD>");
-  reply += String(CRCValues.compileDate);
-  reply += " ";
-  reply += String(CRCValues.compileTime);
+   TXBuffer += F("<TR><TD>Build time<TD>");
+   TXBuffer += String(CRCValues.compileDate);
+   TXBuffer += " ";
+   TXBuffer += String(CRCValues.compileTime);
 
-  reply += F("<TR><TD>Binary filename<TD>");
-  reply += String(CRCValues.binaryFilename);
+   TXBuffer += F("<TR><TD>Binary filename<TD>");
+   TXBuffer += String(CRCValues.binaryFilename);
 
-  reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
+   TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
-  reply += F("<TR><TD>ESP Chip ID<TD>");
+   TXBuffer += F("<TR><TD>ESP Chip ID<TD>");
    TXBuffer += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
      TXBuffer += ESP.getChipId();
