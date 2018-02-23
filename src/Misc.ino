@@ -2532,7 +2532,7 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   \*********************************************************************************************/
 void play_rtttl(uint8_t _pin, const char *p )
 {
-  checkRAM(F("play_rtttl");
+  checkRAM(F("play_rtttl"));
   #define OCTAVE_OFFSET 0
   // FIXME: Absolutely no error checking in here
 
