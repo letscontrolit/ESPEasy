@@ -4514,6 +4514,7 @@ void handle_sysinfo() {
   reply += F("<TR><TD>Allowed IP Range<TD>");
   reply += describeAllowedIPrange();
 
+#if defined(ESP8266)
   reply += F("<TR><TD>Serial Port available:<TD>");
   reply += String(SerialAvailableForWrite());
   reply += F(" (");
@@ -4521,6 +4522,7 @@ void handle_sysinfo() {
   reply += F(" , ");
   reply += Serial.available();
   reply += F(")");
+#endif
 
   reply += F("<TR><TD>STA MAC:<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
