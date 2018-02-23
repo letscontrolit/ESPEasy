@@ -16,13 +16,14 @@ from espcore import *
 class Node():
 
 
-    def __init__(self, config, id):
+    def __init__(self, config, id, skip_power=False):
         self.log=logging.getLogger(id)
         self.log.debug("{type} has ip {ip}".format(id=id, **config))
         self._config=config
         self._id=id
         self._url="http://{ip}/".format(**self._config)
         self._serial_initialized=False
+        self._skip_power=True
 
     def serial_needed(self):
         """call this at least once if you need serial stuff"""
@@ -63,12 +64,21 @@ class Node():
 
     def powercycle(self):
         """powercycle the device"""
+        if self._skip_power:
+            self.log.warning("Skipping power cycle "+self._id)
+            return False
+
+
         self.poweroff()
         self.poweron()
+        return True
 
     def poweroff(self):
         """power off device"""
 
+        if self._skip_power:
+            self.log.warning("Skipping power off "+self._id)
+            return False
 
         #cant yet be done automaticly unfortunatly
         self.log.info("Please power off node "+self._id)
@@ -84,9 +94,14 @@ class Node():
                     del self._serial
 
         self.log.debug("Detected power off")
+        return True
 
     def poweron(self):
         """power on device"""
+
+        if self._skip_power:
+            self.log.warning("Skipping power on"+self._id)
+            return False
 
         self.log.info("Please power on node "+self._id)
 
@@ -100,6 +115,7 @@ class Node():
                 time.sleep(0.1)
 
         self.log.debug("Detected power on")
+        return True
 
     def pingwifi(self, timeout=60):
         """waits until espeasy reponds via wifi"""
@@ -144,6 +160,7 @@ class Node():
     def build(self):
         """compile binary"""
 
+        self.log.debug("Building...")
         subprocess.check_call(self._config['build_cmd'].format(**self._config), shell=True, cwd='..')
 
 
@@ -152,6 +169,7 @@ class Node():
 
         self.serial_needed()
 
+        self.log.debug("Flashing...")
         subprocess.check_call(self._config['flash_cmd'].format(**self._config), shell=True, cwd='..')
 
         time.sleep(1)
@@ -162,6 +180,7 @@ class Node():
     def serial(self):
         """open serial terminal to esp"""
         self.serial_needed()
+        self.log.debug("Opening serial terminal")
         subprocess.check_call("platformio serialports monitor --baud 115200 --port {port} --echo".format(**self._config), shell=True, cwd='..')
         # print("JA")
         # term=serial.tools.miniterm.Miniterm(self._serial)
@@ -173,6 +192,7 @@ class Node():
     def erase(self):
         """erase flash via serial"""
         self.serial_needed()
+        self.log.debug("Erasing...")
         subprocess.check_call("esptool.py --port {port} -b 1500000  erase_flash".format(**self._config), shell=True, cwd='..')
 
 
