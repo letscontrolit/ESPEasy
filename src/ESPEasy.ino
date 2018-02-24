@@ -1343,6 +1343,7 @@ void run10TimesPerSecond()
     eventBuffer = "";
   }
   elapsed = micros() - start;
+   WebServer.handleClient();
 }
 
 
