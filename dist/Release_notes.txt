@@ -1,4 +1,28 @@
 -------------------------------------------------
+Changes in release mega-20180224 (since mega-20180223)
+-------------------------------------------------
+
+Release date: Sat Feb 24 04:00:06 CET 2018
+
+mvdbro (2):
+      Fix ESP32 compile errors
+      ESP32 fixed P020 and P044
+
+
+-------------------------------------------------
+Changes in release mega-20180223 (since mega-20180221)
+-------------------------------------------------
+
+Release date: Fri Feb 23 04:00:07 CET 2018
+
+GHolli (1):
+      * BugFix: According to the data sheet, the offset for the detection range values (command byte 0x99) is 3..4 instead of 6..7 (#921)
+
+s0170071 (1):
+      Include name of binary file in crc2.py and sysinfo (#918)
+
+
+-------------------------------------------------
 Changes in release mega-20180221 (since mega-20180220)
 -------------------------------------------------
 

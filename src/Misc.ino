@@ -1311,7 +1311,9 @@ void addLog(byte logLevel, const __FlashStringHelper* flashString)
 
 bool SerialAvailableForWrite() {
   if (!Settings.UseSerial) return false;
-  if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
+  #if defined(ESP8266)
+    if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
+  #endif
   return true;
 }
 

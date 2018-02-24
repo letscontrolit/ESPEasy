@@ -320,6 +320,7 @@ void sendWebPageChunkedBegin(String& log)
 void sendWebPageChunkedData(String& log, String& data)
 {
   checkRAM(F("sendWebPageChunkedData"));
+   
   if (data.length() > 0)
   {
     statusLED(true);
@@ -4513,6 +4514,7 @@ void handle_sysinfo() {
   reply += F("<TR><TD>Allowed IP Range<TD>");
   reply += describeAllowedIPrange();
 
+#if defined(ESP8266)
   reply += F("<TR><TD>Serial Port available:<TD>");
   reply += String(SerialAvailableForWrite());
   reply += F(" (");
@@ -4520,6 +4522,7 @@ void handle_sysinfo() {
   reply += F(" , ");
   reply += Serial.available();
   reply += F(")");
+#endif
 
   reply += F("<TR><TD>STA MAC:<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
@@ -4575,6 +4578,9 @@ void handle_sysinfo() {
   reply += String(CRCValues.compileDate);
   reply += " ";
   reply += String(CRCValues.compileTime);
+
+  reply += F("<TR><TD>Binary filename<TD>");
+  reply += String(CRCValues.binaryFilename);
 
   reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 

@@ -485,6 +485,7 @@ WiFiUDP portUDP;
 
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
+  char binaryFilename[16+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename...";
   char compileTime[16]= __TIME__;
   char compileDate[16]= __DATE__;
   uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -493,14 +494,6 @@ struct CRCStruct{
 }CRCValues;
 
 bool WiFiConnected(uint32_t timeout_ms);
-
-extern "C" {
-#include "spi_flash.h"
-}
-extern "C" uint32_t _SPIFFS_start;
-extern "C" uint32_t _SPIFFS_end;
-extern "C" uint32_t _SPIFFS_page;
-extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
