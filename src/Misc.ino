@@ -3,13 +3,25 @@
 // this feature is not in all upstream versions yet.
 // See https://github.com/esp8266/Arduino/issues/1923
 // and https://github.com/letscontrolit/ESPEasy/issues/253
+#if defined(ESP8266)
+  #include <md5.h>
+#endif
+#if defined(ESP8266)
+
+struct tcp_pcb;
+extern struct tcp_pcb* tcp_tw_pcbs;
+extern "C" void tcp_abort (struct tcp_pcb* pcb);
+
 void tcpCleanup()
 {
-  while(tcp_tw_pcbs!=NULL)
-  {
-    tcp_abort(tcp_tw_pcbs);
-  }
-}
+   /*
+     while(tcp_tw_pcbs!=NULL)
+    {
+      tcp_abort(tcp_tw_pcbs);
+    }
+    */
+ }
+#endif
 
 bool isDeepSleepEnabled()
 {
@@ -465,7 +477,7 @@ String BuildFixes()
 
   if (Settings.Build < 145)
   {
-    String fname=F("notification.dat");
+    String fname=F(FILE_NOTIFICATION);
     fs::File f = SPIFFS.open(fname, "w");
     SPIFFS_CHECK(f, fname.c_str());
 
@@ -500,7 +512,7 @@ void fileSystemCheck()
     log=log+fs_info.totalBytes;
     addLog(LOG_LEVEL_INFO, log);
 
-    fs::File f = SPIFFS.open("config.dat", "r");
+    fs::File f = SPIFFS.open(FILE_CONFIG, "r");
     if (!f)
     {
       ResetFactory();
@@ -624,11 +636,11 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
 String SaveSettings(void)
 {
   String err;
-  err=SaveToFile((char*)"config.dat", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
     return(err);
 
-  return(SaveToFile((char*)"security.dat", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  return(SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
 }
 
 
@@ -638,11 +650,11 @@ String SaveSettings(void)
 String LoadSettings()
 {
   String err;
-  err=LoadFromFile((char*)"config.dat", 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
     return(err);
 
-  return(LoadFromFile((char*)"security.dat", 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  return(LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
 }
 
 
@@ -652,7 +664,7 @@ String LoadSettings()
 String SaveTaskSettings(byte TaskIndex)
 {
   ExtraTaskSettings.TaskIndex = TaskIndex;
-  return(SaveToFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
+  return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
 }
 
 
@@ -666,7 +678,7 @@ String LoadTaskSettings(byte TaskIndex)
     return(String());
 
   String result = "";
-  result = LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  result = LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
   return result;
 }
@@ -679,7 +691,7 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   if (datasize > DAT_TASKS_SIZE)
     return F("SaveCustomTaskSettings too big");
-  return(SaveToFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
+  return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
 }
 
 
@@ -689,7 +701,7 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 String ClearCustomTaskSettings(int TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  return(ClearInFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
 }
 
 /********************************************************************************************\
@@ -699,7 +711,7 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   if (datasize > DAT_TASKS_SIZE)
     return (String(F("LoadCustomTaskSettings too big")));
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -709,7 +721,7 @@ String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 {
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("SaveControllerSettings too big");
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
+  return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
@@ -721,7 +733,7 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("LoadControllerSettings too big");
 
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
 }
 
 
@@ -731,7 +743,7 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 String ClearCustomControllerSettings(int ControllerIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
-  return(ClearInFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
 }
 
 
@@ -742,7 +754,7 @@ String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 {
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return F("SaveCustomControllerSettings too big");
-  return SaveToFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
+  return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
 }
 
 
@@ -753,7 +765,7 @@ String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 {
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return(F("LoadCustomControllerSettings too big"));
-  return(LoadFromFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -763,7 +775,7 @@ String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 {
   if (datasize > DAT_NOTIFICATION_SIZE)
     return F("SaveNotificationSettings too big");
-  return SaveToFile((char*)"notification.dat", NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
+  return SaveToFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
 }
 
 
@@ -774,7 +786,7 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 {
   if (datasize > DAT_NOTIFICATION_SIZE)
     return(F("LoadNotificationSettings too big"));
-  return(LoadFromFile((char*)"notification.dat", NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
+  return(LoadFromFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
 }
 
 
@@ -932,13 +944,13 @@ void ResetFactory(void)
   //pad files with extra zeros for future extensions
   String fname;
 
-  fname=F("config.dat");
+  fname=F(FILE_CONFIG);
   InitFile(fname.c_str(), 65536);
 
-  fname=F("security.dat");
+  fname=F(FILE_SECURITY);
   InitFile(fname.c_str(), 4096);
 
-  fname=F("notification.dat");
+  fname=F(FILE_NOTIFICATION);
   InitFile(fname.c_str(), 4096);
 
   fname=F("rules1.txt");
