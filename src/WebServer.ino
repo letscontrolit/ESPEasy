@@ -103,10 +103,7 @@ void trackCoreMem()
 
 void sendContentBlocking(String& data){
       checkRAM(F("sendContentBlocking"));
-      unsigned int timeout = 0; 
-      uint32_t freeBeforeSend= ESP.getFreeHeap();
-      if (freeBeforeSend<5000 ) timeout = 100; 
-      if (freeBeforeSend<4000 ) timeout = 1000; 
+       uint32_t freeBeforeSend= ESP.getFreeHeap();
       String log = String("sendcontent free: ")+freeBeforeSend+" chunk size:"+ data.length();
       addLog(LOG_LEVEL_DEBUG, log);
       freeBeforeSend= ESP.getFreeHeap();
@@ -119,6 +116,9 @@ void sendContentBlocking(String& data){
           if (data.length()) WebServer.sendContent(data);
           WebServer.sendContent("\r\n");
       #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+          unsigned int timeout = 0; 
+          if (freeBeforeSend<5000 ) timeout = 100; 
+          if (freeBeforeSend<4000 ) timeout = 1000; 
           uint32_t beginWait = millis();
           WebServer.sendContent(data);
           while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
@@ -151,14 +151,13 @@ void sendContentBlocking(String& data){
      if (freeBeforeSend<5000 ) timeout = 100; 
      if (freeBeforeSend<4000 ) timeout = 1000; 
      uint32_t beginWait = millis();
-     uint32_t freeBeforeSend= ESP.getFreeHeap();
      WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
      if (json) // "application/json"
         WebServer.sendHeader("Content-Type","application/json",true);
      else
-        WebServer.sendHeader("Content-Type","text/html",true);
-     WebServer.sendHeader("Cache-Control","no-cache");
-     WebServer.send(200);
+       WebServer.sendHeader("Content-Type","text/html",true);
+       WebServer.sendHeader("Cache-Control","no-cache");
+       WebServer.send(200);
        // dont wait on 2.3.0. Memory returns just too slow.
      while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
         checkRAM(F("duringHeaderTX"));
