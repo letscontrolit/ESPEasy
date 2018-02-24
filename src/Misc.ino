@@ -2228,7 +2228,6 @@ boolean conditionMatchExtended(String& check) {
 		if (condAnd > 0 || condOr > 0) { // we got AND/OR
 			if (condAnd > 0	&& ((condOr < 0 && condOr < condAnd) || (condOr > 0 && condOr > condAnd))) { //AND is first
 				check = check.substring(condAnd + 5);
-				Serial.println(check);
 				rightcond = conditionMatch(check);
 				leftcond = (leftcond && rightcond);
 			} else { //OR is first
