@@ -147,6 +147,7 @@ void sendContentBlocking(String& data){
        WebServer.send(200);
     #else
      unsigned int timeout = 0; 
+     uint32_t freeBeforeSend= ESP.getFreeHeap();
      if (freeBeforeSend<5000 ) timeout = 100; 
      if (freeBeforeSend<4000 ) timeout = 1000; 
      uint32_t beginWait = millis();
