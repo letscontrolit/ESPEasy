@@ -232,16 +232,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<!DOCTYPE html><html lang='en'>"
               "<head>"
               "<meta charset='utf-8'/>"
+              "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
               "<body>"
+              "<header class='headermenu'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
+              "</header>"
+              "<section>"
               "{{error}}"
               "{{content}}"
-              "<BR><h6>Powered by www.letscontrolit.com</h6>"
-              "</body>"
-            );
+              "</section>"
+              "<footer>"
+              "<h6>Powered by www.letscontrolit.com</h6>"
+              "</footer>"
+              "</body>"            );
   }
   else if (tmplName == F("TmplMsg"))
   {
@@ -249,14 +255,21 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<!DOCTYPE html><html lang='en'>"
               "<head>"
               "<meta charset='utf-8'/>"
+              "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
               "<body>"
+              "<header class='headermenu'>"
               "<h1>ESP Easy Mega: {{name}}</h1>"
+              "</header>"
+              "<section>"
               "{{error}}"
               "{{content}}"
-              "<BR><h6>Powered by www.letscontrolit.com</h6>"
+              "</section>"
+              "<footer>"
+              "<h6>Powered by www.letscontrolit.com</h6>"
+              "</footer>"
               "</body>"
             );
   }
@@ -267,17 +280,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<head>"
         "<meta charset='utf-8'/>"
         "<title>{{name}}</title>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
         "{{js}}"
         "{{css}}"
       "</head>"
       "<body class='bodymenu'>"
-        "<b style=\"color:red\" id='rbtmsg'></b>"
+        "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
           "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
           "{{menu}}"
         "</header>"
+        "<section>"
+        "<span class='message error'>"
         "{{error}}"
+        "</span>"
         "{{content}}"
+        "</section>"
         "<footer>"
           "<h6>Powered by www.letscontrolit.com</h6>"
         "</footer>"
@@ -302,6 +320,7 @@ void sendWebPageChunkedBegin(String& log)
 void sendWebPageChunkedData(String& log, String& data)
 {
   checkRAM(F("sendWebPageChunkedData"));
+   
   if (data.length() > 0)
   {
     statusLED(true);
@@ -4495,6 +4514,7 @@ void handle_sysinfo() {
   reply += F("<TR><TD>Allowed IP Range<TD>");
   reply += describeAllowedIPrange();
 
+#if defined(ESP8266)
   reply += F("<TR><TD>Serial Port available:<TD>");
   reply += String(SerialAvailableForWrite());
   reply += F(" (");
@@ -4502,6 +4522,7 @@ void handle_sysinfo() {
   reply += F(" , ");
   reply += Serial.available();
   reply += F(")");
+#endif
 
   reply += F("<TR><TD>STA MAC:<TD>");
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
@@ -4557,6 +4578,9 @@ void handle_sysinfo() {
   reply += String(CRCValues.compileDate);
   reply += " ";
   reply += String(CRCValues.compileTime);
+
+  reply += F("<TR><TD>Binary filename<TD>");
+  reply += String(CRCValues.binaryFilename);
 
   reply += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 

@@ -29,6 +29,7 @@ class ControllerEmu:
         self.start_mqtt()
         self.start_http()
         self.start_linebased()
+        self.log_enabled=True
 
 
     def start_mqtt(self):
@@ -44,8 +45,9 @@ class ControllerEmu:
 
         self.mqtt_messages=Queue()
         def mqtt_on_message(client, userdata, message):
-            logging.getLogger("mqtt").debug("Received message '" + str(message.payload) + "' on topic '"
-                + message.topic + "' with QoS " + str(message.qos))
+            if self.log_enabled:
+                logging.getLogger("mqtt").debug("Received message '" + str(message.payload) + "' on topic '"
+                    + message.topic + "' with QoS " + str(message.qos))
             self.mqtt_messages.put(message)
 
         mqtt_client.on_message=mqtt_on_message
@@ -66,12 +68,12 @@ class ControllerEmu:
         @bottle.post('<filename:path>')
         @bottle.get('<filename:path>')
         def urlhandler(filename):
-            logging.getLogger("http").debug(bottle.request.method+" "+str(dict(bottle.request.params)))
+            if self.log_enabled:
+                logging.getLogger("http").debug(bottle.request.method+" "+str(dict(bottle.request.params)))
             self.http_requests.put(bottle.request.copy())
 
 
-
-        http_thread=threading.Thread(target=bottle.run,  kwargs=dict(host='0.0.0.0', port=config.http_port, reloader=False))
+        http_thread=threading.Thread(target=bottle.run,  kwargs=dict(host='0.0.0.0', port=config.http_port, reloader=False, quiet=True))
         http_thread.daemon=True
         http_thread.start()
 
@@ -92,15 +94,18 @@ class ControllerEmu:
 
 
         def handle_connect(connection, client_address):
-            logging.getLogger("linebased").debug("Connect from "+str(client_address))
+            if self.log_enabled:
+                logging.getLogger("linebased").debug("Connect from "+str(client_address))
 
             fh = connection.makefile()
             for line in fh:
                 line=line.rstrip()
-                logging.getLogger("linebased").debug("Recv from "+str(client_address)+" :"+line)
+                if self.log_enabled:
+                    logging.getLogger("linebased").debug("Recv from "+str(client_address)+" :"+line)
                 self.linebased_lines.put( ( client_address, line ) )
 
-            logging.getLogger("linebased").debug("Disconnect from "+str(client_address))
+            if self.log_enabled:
+                logging.getLogger("linebased").debug("Disconnect from "+str(client_address))
 
         def wait_accept():
             # Create a TCP/IP socket
@@ -166,8 +171,8 @@ class ControllerEmu:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
                             return [svalues[0], svalues[1]]
-                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
-                            return [svalues[0], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==4:
+                            return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
@@ -221,8 +226,8 @@ class ControllerEmu:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM and len(svalues)==3:
                             return [svalues[0], svalues[1]]
-                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==5:
-                            return [svalues[0], svalues[3]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==4:
+                            return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:

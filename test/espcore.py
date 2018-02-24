@@ -8,5 +8,4 @@ import config
 
 colorlog.basicConfig(level=logging.DEBUG)
 
-
 logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.ERROR)

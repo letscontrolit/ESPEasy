@@ -65,7 +65,9 @@ def test():
 @step()
 def powercycle():
     """test result on poweron"""
-    node[0].powercycle()
+    if not node[0].powercycle():
+        return
+    
     results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2001)
     test_in_range(results[0], -5,40)
     results=controller.recv_domoticz_mqtt(SENSOR_TYPE_SINGLE,2002)
