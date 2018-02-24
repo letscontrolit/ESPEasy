@@ -4248,7 +4248,7 @@ void handle_SDfilelist() {
  
    
   String subheader = "SD Card: " + current_dir;
-  addFormSubHeader(  subheader);
+  addFormSubHeader(  subheader,TXBuffer.buf);
   TXBuffer += F("<BR>");
   TXBuffer += F("<table border=1px frame='box' rules='all'><TH>Action<TH>Name<TH>Size");
   TXBuffer += F("<TR><TD>");
