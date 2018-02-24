@@ -141,13 +141,14 @@ void sendContentBlocking(String& data){
      if (json) // "application/json"
         WebServer.sendHeader("Content-Type","application/json",true);
      else
-     //   WebServer.sendHeader("Content-Type","text/html",true);
-     //WebServer.sendHeader("Cache-Control","no-cache");
-     WebServer.sendHeader("Transfer-Encoding","chunked");
-     //WebServer.send(200);
+       WebServer.sendHeader("Content-Type","text/html",true);
+       WebServer.sendHeader("Cache-Control","no-cache");
+       WebServer.sendHeader("Transfer-Encoding","chunked");
+       WebServer.send(200);
     #else
      unsigned int timeout = 0; 
-     TXBuffer.BufferSize=1760; 
+     if (freeBeforeSend<5000 ) timeout = 100; 
+     if (freeBeforeSend<4000 ) timeout = 1000; 
      uint32_t beginWait = millis();
      uint32_t freeBeforeSend= ESP.getFreeHeap();
      WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
