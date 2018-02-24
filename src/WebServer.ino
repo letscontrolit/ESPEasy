@@ -4795,24 +4795,11 @@ void handle_sysinfo() {
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
  
-   TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
-
-   TXBuffer += F("<TR><TD>Md5 check<TD>");
-   if (! CRCValues.checkPassed())
-     TXBuffer +="<font color = 'red'>fail !</font>";
-   else TXBuffer +="passed.";
-
-   TXBuffer += F("<TR><TD>Build time<TD>");
-   TXBuffer += String(CRCValues.compileDate);
-   TXBuffer += " ";
-   TXBuffer += String(CRCValues.compileTime);
-
    TXBuffer += F("<TR><TD>Binary filename<TD>");
    TXBuffer += String(CRCValues.binaryFilename);
 
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
-   TXBuffer += F("<TR><TD>ESP Chip ID<TD>");
    TXBuffer += F("<TR><TD>ESP Chip ID<TD>");
   #if defined(ESP8266)
      TXBuffer += ESP.getChipId();
