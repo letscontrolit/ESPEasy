@@ -2074,7 +2074,7 @@ String rulesProcessingFile(String fileName, String& event)
           {
             conditional = true;
             String check = lcAction.substring(split + 3);
-            condition = conditionMatch(check);
+            condition = conditionMatchExtended(check);
             ifBranche = true;
             isCommand = false;
           }
@@ -2252,6 +2252,32 @@ boolean ruleMatch(String& event, String& rule)
 /********************************************************************************************\
   Check expression
   \*********************************************************************************************/
+
+boolean conditionMatchExtended(String& check) {
+	int condAnd = -1;
+	int condOr = -1;
+	boolean rightcond = false;
+	boolean leftcond = conditionMatch(check); // initial check
+
+	do {
+		condAnd = check.indexOf(F(" and "));
+		condOr  = check.indexOf(F(" or "));
+
+		if (condAnd > 0 || condOr > 0) { // we got AND/OR
+			if (condAnd > 0	&& ((condOr < 0 && condOr < condAnd) || (condOr > 0 && condOr > condAnd))) { //AND is first
+				check = check.substring(condAnd + 5);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond && rightcond);
+			} else { //OR is first
+				check = check.substring(condOr + 4);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond || rightcond);
+			}
+		}
+	} while (condAnd > 0 || condOr > 0);
+	return leftcond;
+}
+
 boolean conditionMatch(String& check)
 {
   boolean match = false;
