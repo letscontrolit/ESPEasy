@@ -13,7 +13,7 @@ void sendHeaderBlocking(bool json);
 
 class StreamingBuffer{
 private:
-
+  bool lowMemorySkip; 
 public:
   uint32_t initialRam;
   uint32_t beforeTXRam;
@@ -29,6 +29,7 @@ public:
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
     maxServerUsage(0), BufferSize(400), sentBytes(0)
     {
+      lowMemorySkip=false;
       buf.reserve(BufferSize+100);
       buf = "";
     }
@@ -46,6 +47,7 @@ public:
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (const StreamingBuffer& a) { this->buf+=a.buf;      checkFull(); return *this;   }
   StreamingBuffer operator+= (const String& a)          {
+    if (lowMemorySkip) return *this;
     if ((      (this->buf.length() + a.length()) >BufferSize)&&(this->buf.length()>100 ))
       sendContentBlocking(this->buf);
       this->buf+=a ;
@@ -56,6 +58,7 @@ public:
   StreamingBuffer operator+ (const String& a)           { this->buf = this->buf+a;          checkFull(); return *this;  }
 
   void checkFull(void){
+    if (lowMemorySkip) this->buf=""; 
     if (this->buf.length()>BufferSize) {
     trackTotalMem();
     sendContentBlocking(this->buf);
@@ -68,7 +71,14 @@ public:
     initialRam=  ESP.getFreeHeap();
     sentBytes=0;
     buf ="";
-    sendHeaderBlocking(json);
+    if (beforeTXRam<3000 ){ 
+       lowMemorySkip=true; 
+       WebServer.send(200,"text/plain","Low memory. Cannot display webpage :-(");
+       tcpCleanup();   
+       return;
+       } 
+     else
+   sendHeaderBlocking(json);
   }
 
 void trackTotalMem()
@@ -85,16 +95,21 @@ void trackCoreMem()
       maxCoreUsage=(initialRam-duringTXRam) ;
 }
   void endStream(void){
-
-   if (buf.length() >0) sendContentBlocking(buf);
-    buf ="";
-    sendContentBlocking(buf);
-    WebServer.sendHeader( "Content-Length", "0");
-    WebServer.send ( 200, "text/plain", "");
-
-    finalRam= ESP.getFreeHeap();
-    String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
-    addLog(LOG_LEVEL_DEBUG, log);
+  if (!lowMemorySkip){
+     if (buf.length() >0) sendContentBlocking(buf);
+        buf ="";
+        sendContentBlocking(buf);
+        WebServer.sendHeader( "Content-Length", "0");
+        WebServer.send ( 200, "text/plain", "");
+    
+        finalRam= ESP.getFreeHeap();
+        String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
+        addLog(LOG_LEVEL_DEBUG, log);
+    } else {
+        String log = String("Webpage skipped: low memory: ")+ finalRam ;
+        addLog(LOG_LEVEL_DEBUG, log);
+        lowMemorySkip=false;
+    }
   }
 
 }TXBuffer;
@@ -124,7 +139,7 @@ void sendContentBlocking(String& data){
             if(ESP.getFreeHeap()<TXBuffer.duringTXRam) TXBuffer.duringTXRam=ESP.getFreeHeap();;
             TXBuffer.trackCoreMem();
             checkRAM(F("duringDataTX"));
-            //delay(1);
+            delay(1);
           }
      #endif
 
@@ -160,7 +175,7 @@ void sendContentBlocking(String& data){
        // dont wait on 2.3.0. Memory returns just too slow.
      while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
         checkRAM(F("duringHeaderTX"));
-        //delay(1);
+        delay(1);
      }
     #endif
  }
