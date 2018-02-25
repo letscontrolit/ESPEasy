@@ -27,9 +27,8 @@ public:
 
   StreamingBuffer(void) :
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0)
+    maxServerUsage(0), BufferSize(400), sentBytes(0),lowMemorySkip(false)
     {
-      lowMemorySkip=false;
       buf.reserve(BufferSize+100);
       buf = "";
     }
