@@ -118,11 +118,12 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 bool MQTTConnect(int controller_idx)
 {
-  if (!WiFiConnected(100)) return false;
-  if (MQTTclient.connected())
-    MQTTclient.disconnect();
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  if (!ControllerSettings.checkHostReachable(true))
+    return false;
+  if (MQTTclient.connected())
+    MQTTclient.disconnect();
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -226,7 +227,6 @@ boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, 
   if (MQTTclient.publish(topic, payload, retained))
     return true;
   addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
-  MQTTConnect(controller_idx);
   return false;
 }
 
