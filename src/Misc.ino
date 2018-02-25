@@ -1582,6 +1582,16 @@ String parseTemplate(String &tmpString, byte lineSize)
                     else
                       value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
+                    int oidx;
+                    if ((oidx = valueFormat.indexOf('O'))>=0)
+                    {
+                      valueFormat.remove(oidx);
+                      float val = value.toFloat();
+                      if (val == 0) value = "OFF";
+                      else value = " ON";
+                      //valueFormat.remove(valueFormat.indexOf('O'));
+                    }
+
                     if (valueFormat == "R")
                     {
                       int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
