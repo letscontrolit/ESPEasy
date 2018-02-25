@@ -22,23 +22,22 @@ public:
   uint32_t maxCoreUsage;
   uint32_t maxServerUsage;
   unsigned int BufferSize;
-
-
   String buf;
   unsigned int sentBytes;
-  StreamingBuffer(void) {
-    BufferSize=400;
-    buf = "";
-    buf.reserve(BufferSize+100);
-    initialRam=0;
-    beforeTXRam=0;
-    duringTXRam=0;
-    finalRam=0;
-    maxCoreUsage=0;
-    maxServerUsage=0;
 
+  StreamingBuffer(void) :
+    initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
+    maxServerUsage(0), BufferSize(400), sentBytes(0)
+    {
+      buf.reserve(BufferSize+100);
+      buf = "";
     }
-  StreamingBuffer(String &a) {     buf = a; }
+  StreamingBuffer(String &a) :
+    initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
+    maxServerUsage(0), BufferSize(400), sentBytes(0) {
+      buf.reserve(BufferSize+100);
+      buf = a;
+    }
   StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
   StreamingBuffer operator= (const String& a)           { this->buf+= a;                     checkFull();   return *this; }
   StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull(); return *this;   }
@@ -1858,18 +1857,22 @@ void handle_devices() {
   if (taskIndexNotSet)
   {
     TXBuffer += F("<table border=1px frame='box' rules='all'><TR><TH>");
-    TXBuffer += F("<a class='button link' href=\"devices?setpage=");
-    if (page > 1)
-      TXBuffer +=  page - 1;
-    else
-      TXBuffer +=  page;
-    TXBuffer += F("\">&lt;</a>");
-    TXBuffer += F("<a class='button link' href=\"devices?setpage=");
-    if (page < (TASKS_MAX / TASKS_PER_PAGE))
-      TXBuffer +=  page + 1;
-    else
-      TXBuffer +=  page;
-    TXBuffer += F("\">&gt;</a>");
+
+    if (TASKS_MAX != TASKS_PER_PAGE)
+    {
+      TXBuffer += F("<a class='button link' href=\"devices?setpage=");
+      if (page > 1)
+        TXBuffer +=  page - 1;
+      else
+        TXBuffer +=  page;
+      TXBuffer += F("\">&lt;</a>");
+      TXBuffer += F("<a class='button link' href=\"devices?setpage=");
+      if (page < (TASKS_MAX / TASKS_PER_PAGE))
+        TXBuffer +=  page + 1;
+      else
+        TXBuffer +=  page;
+      TXBuffer += F("\">&gt;</a>");
+    }
 
     TXBuffer += F("<TH>Task<TH>Enabled<TH>Device<TH>Name<TH>Port<TH>Ctr (IDX)<TH>GPIO<TH>Values");
 
