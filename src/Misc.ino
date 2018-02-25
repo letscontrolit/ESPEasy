@@ -7,12 +7,12 @@
   #include <md5.h>
 #endif
 #if defined(ESP8266)
- 
+
 struct tcp_pcb;
 extern struct tcp_pcb* tcp_tw_pcbs;
 extern "C" void tcp_abort (struct tcp_pcb* pcb);
- 
-void tcpCleanup()   
+
+void tcpCleanup()
 {
    /*
      while(tcp_tw_pcbs!=NULL)
@@ -42,7 +42,7 @@ bool isDeepSleepEnabled()
 
 void deepSleep(int delay)
 {
-  
+
   checkRAM(F("deepSleep"));
   if (!isDeepSleepEnabled())
   {
@@ -90,7 +90,7 @@ void deepSleepStart(int delay)
 }
 
 boolean remoteConfig(struct EventStruct *event, String& string)
-{  
+{
   checkRAM(F("remoteConfig"));
   boolean success = false;
   String command = parseString(string, 1);
@@ -832,7 +832,7 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 String ClearCustomTaskSettings(int TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  return(ClearInFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
 }
 
 /********************************************************************************************\
@@ -878,7 +878,7 @@ String ClearCustomControllerSettings(int ControllerIndex)
 {
   checkRAM(F("ClearCustomControllerSettings"));
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
-  return(ClearInFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
 }
 
 
@@ -1539,22 +1539,7 @@ uint32_t getChecksum(byte* buffer, size_t size)
   Parse string template
   \*********************************************************************************************/
 
-// Call this by first declaring a char array of size 20, like:
-//  char strIP[20];
-//  formatIP(ip, strIP);
-void formatIP(const IPAddress& ip, char (&strIP)[20]) {
-  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-}
 
-String formatIP(const IPAddress& ip) {
-  char strIP[20];
-  formatIP(ip, strIP);
-  return String(strIP);
-}
-
-void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
-  sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
 
 String parseTemplate(String &tmpString, byte lineSize)
 {
@@ -2438,7 +2423,7 @@ class RamTracker{
     unsigned int  readPtr, writePtr;                        // pointer to cyclic buffer
     String        nextAction[TRACEENTRIES];                 // buffer to record the names of functions before they are transfered to a trace
     unsigned int  nextActionStartMemory[TRACEENTRIES];      // memory levels for the functions.
- 
+
     unsigned int  bestCaseTrace (void){                     // find highest the trace with the largest minimum memory (gets replaced by worse one)
        unsigned int lowestMemoryInTrace = 0;
        unsigned int lowestMemoryInTraceIndex=0;
@@ -2465,7 +2450,7 @@ class RamTracker{
           nextActionStartMemory[i] = ESP.getFreeHeap();     // init with best case memory values, so they get replaced if memory goes lower
           }
         };
-    
+
     void registerRamState(String &s){    // store function
        nextAction[writePtr]=s;                              // name and mem
        nextActionStartMemory[writePtr]=ESP.getFreeHeap();   // in cyclic buffer.
@@ -2502,24 +2487,24 @@ class RamTracker{
     }
 }myRamTracker;                                              // instantiate class. (is global now)
 
-void checkRAMtoLog(void){ 
+void checkRAMtoLog(void){
   myRamTracker.getTraceBuffer();
 }
 
 void checkRAM(const __FlashStringHelper* flashString, int a ) {
- String s=String(a);  
+ String s=String(a);
  checkRAM(flashString,s);
 }
 
 void checkRAM(const __FlashStringHelper* flashString, String &a ) {
-  String s = flashString; 
+  String s = flashString;
   checkRAM(s,a);
 }
 
 void checkRAM(String &flashString, String &a ) {
-  String s = flashString; 
+  String s = flashString;
   s+=" (";
-  s+=a; 
+  s+=a;
   s+=")";
   checkRAM(s);
 }
@@ -2528,7 +2513,7 @@ void checkRAM( const __FlashStringHelper* flashString)
 {
   String s = flashString;
   myRamTracker.registerRamState(s);
-   
+
   uint32_t freeRAM = FreeMem();
 
   if (freeRAM < lowestRAM)
