@@ -135,7 +135,7 @@
 #define LOG_TO_SDCARD         4
 #define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_DEBUG_DEV	// Serial Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL		LOG_LEVEL_INFO	// Web Log Level
 #define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
 #define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
