@@ -854,11 +854,7 @@ void handle_controllers() {
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
-          strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
-          IPAddress IP;
-          WiFi.hostByName(ControllerSettings.HostName, IP);
-          for (byte x = 0; x < 4; x++)
-            ControllerSettings.IP[x] = IP[x];
+          ControllerSettings.setHostname(controllerhostname);
         }
         //no protocol selected
         else
