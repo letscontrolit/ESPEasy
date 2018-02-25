@@ -815,6 +815,14 @@ struct LogStruct {
       }
       return !isEmpty();
     }
+    
+    bool get(String& output, const String& lineEnd, int line) {
+     int tmpread((write_idx + 1+line) % LOG_STRUCT_MESSAGE_LINES);
+      if (timeStamp[tmpread] != 0) {
+        output += formatLine(tmpread, lineEnd);
+      }
+      return !isEmpty();
+    }
 
     bool getAll(String& output, const String& lineEnd) {
       int tmpread((write_idx + 1) % LOG_STRUCT_MESSAGE_LINES);
@@ -1341,6 +1349,7 @@ void run10TimesPerSecond()
     eventBuffer = "";
   }
   elapsed = micros() - start;
+   WebServer.handleClient();
 }
 
 
