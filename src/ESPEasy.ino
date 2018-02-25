@@ -364,6 +364,10 @@
 #include "Custom.h"
 #endif
 
+#define FILE_CONFIG       "config.dat"
+#define FILE_SECURITY     "security.dat"
+#define FILE_NOTIFICATION "notification.dat"
+#define FILE_RULES        "rules1.dat"
 #include "ESPEasyTimeTypes.h"
 #include "lwip/tcp_impl.h"
 #include <ESP8266WiFi.h>
@@ -750,6 +754,14 @@ struct LogStruct {
       return !isEmpty();
     }
 
+    bool get(String& output, const String& lineEnd, int line) {
+      int tmpread((write_idx + 1+line) % LOG_STRUCT_MESSAGE_LINES);
+      if (timeStamp[tmpread] != 0) {
+        output += formatLine(tmpread, lineEnd);
+      }
+      return !isEmpty();
+    }
+
     bool getAll(String& output, const String& lineEnd) {
       int tmpread((write_idx + 1) % LOG_STRUCT_MESSAGE_LINES);
       bool someAdded = false;
@@ -910,6 +922,7 @@ unsigned long timer1s;
 unsigned long timerwd;
 unsigned long timermqtt;
 unsigned long lastSend;
+unsigned long lastWeb;
 unsigned int NC_Count = 0;
 unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
@@ -1267,6 +1280,7 @@ void run10TimesPerSecond()
     eventBuffer = "";
   }
   elapsed = micros() - start;
+  WebServer.handleClient();
 }
 
 
