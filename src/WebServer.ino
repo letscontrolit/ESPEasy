@@ -1732,18 +1732,22 @@ void handle_devices() {
   if (taskIndexNotSet)
   {
     TXBuffer += F("<table border=1px frame='box' rules='all'><TR><TH>");
-    TXBuffer += F("<a class='button link' href=\"devices?setpage=");
-    if (page > 1)
-      TXBuffer +=  page - 1;
-    else
-      TXBuffer +=  page;
-    TXBuffer += F("\">&lt;</a>");
-    TXBuffer += F("<a class='button link' href=\"devices?setpage=");
-    if (page < (TASKS_MAX / TASKS_PER_PAGE))
-      TXBuffer +=  page + 1;
-    else
-      TXBuffer +=  page;
-    TXBuffer += F("\">&gt;</a>");
+
+    if (TASKS_MAX != TASKS_PER_PAGE)
+    {
+      TXBuffer += F("<a class='button link' href=\"devices?setpage=");
+      if (page > 1)
+        TXBuffer +=  page - 1;
+      else
+        TXBuffer +=  page;
+      TXBuffer += F("\">&lt;</a>");
+      TXBuffer += F("<a class='button link' href=\"devices?setpage=");
+      if (page < (TASKS_MAX / TASKS_PER_PAGE))
+        TXBuffer +=  page + 1;
+      else
+        TXBuffer +=  page;
+      TXBuffer += F("\">&gt;</a>");
+    }
 
     TXBuffer += F("<TH>Task<TH>Enabled<TH>Device<TH>Name<TH>Port<TH>Ctr (IDX)<TH>GPIO<TH>Values");
 
