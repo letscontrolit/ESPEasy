@@ -76,7 +76,7 @@ public:
     buf ="";
     if (beforeTXRam<3000 ){ 
       lowMemorySkip=true; 
-      WebServer.send(200,"text/plain","low memory :-(");
+      WebServer.send(200,"text/plain","Low memory. Cannot display webpage :-(");
       tcpCleanup();   
       return;
       } 
