@@ -13,6 +13,7 @@ void sendHeaderBlocking(bool json);
 
 class StreamingBuffer{
 private:
+  bool lowMemorySkip; 
 
 public:
   uint32_t initialRam;
@@ -27,6 +28,7 @@ public:
   String buf;
   unsigned int sentBytes;
   StreamingBuffer(void) {
+    lowMemorySkip=false;
     BufferSize=400;
     buf = "";
     buf.reserve(BufferSize+100);
@@ -47,6 +49,7 @@ public:
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (const StreamingBuffer& a) { this->buf+=a.buf;      checkFull(); return *this;   }
   StreamingBuffer operator+= (const String& a)          {
+    if (lowMemorySkip) return *this;
     if ((      (this->buf.length() + a.length()) >BufferSize)&&(this->buf.length()>100 ))
       sendContentBlocking(this->buf);
       this->buf+=a ;
@@ -57,6 +60,7 @@ public:
   StreamingBuffer operator+ (const String& a)           { this->buf = this->buf+a;          checkFull(); return *this;  }
 
   void checkFull(void){
+    if (lowMemorySkip) this->buf=""; 
     if (this->buf.length()>BufferSize) {
     trackTotalMem();
     sendContentBlocking(this->buf);
@@ -64,12 +68,20 @@ public:
   }
 
   void startStream(bool json=false){
+             
     maxCoreUsage=maxServerUsage=0;
     beforeTXRam= ESP.getFreeHeap();
     initialRam=  ESP.getFreeHeap();
     sentBytes=0;
     buf ="";
-    sendHeaderBlocking(json);
+    if (beforeTXRam<3000 ){ 
+      lowMemorySkip=true; 
+      WebServer.send(200,"text/plain","Low memory. Cannot display webpage :-(");
+      tcpCleanup();   
+      return;
+      } 
+    else
+     sendHeaderBlocking(json);
   }
 
 void trackTotalMem()
@@ -86,7 +98,7 @@ void trackCoreMem()
       maxCoreUsage=(initialRam-duringTXRam) ;
 }
   void endStream(void){
-
+if (!lowMemorySkip){
    if (buf.length() >0) sendContentBlocking(buf);
     buf ="";
     sendContentBlocking(buf);
@@ -96,6 +108,12 @@ void trackCoreMem()
     finalRam= ESP.getFreeHeap();
     String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
     addLog(LOG_LEVEL_DEBUG, log);
+  } else {
+    String log = String("Webpage skipped: low memory: ")+ finalRam ;
+    addLog(LOG_LEVEL_DEBUG, log);
+    lowMemorySkip=false;
+  }
+
   }
 
 }TXBuffer;
@@ -119,13 +137,13 @@ void sendContentBlocking(String& data){
           unsigned int timeout = 0;
           if (freeBeforeSend<5000 ) timeout = 100;
           if (freeBeforeSend<4000 ) timeout = 1000;
-          uint32_t beginWait = millis();
+         uint32_t beginWait = millis();
           WebServer.sendContent(data);
           while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
             if(ESP.getFreeHeap()<TXBuffer.duringTXRam) TXBuffer.duringTXRam=ESP.getFreeHeap();;
             TXBuffer.trackCoreMem();
             checkRAM(F("duringDataTX"));
-            //delay(1);
+            delay(1);
           }
      #endif
 
@@ -136,6 +154,7 @@ void sendContentBlocking(String& data){
 
 
  void sendHeaderBlocking(bool json=false){
+  
     checkRAM(F("sendHeaderBlocking"));
     #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
      if (json) // "application/json"
@@ -161,7 +180,7 @@ void sendContentBlocking(String& data){
        // dont wait on 2.3.0. Memory returns just too slow.
      while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
         checkRAM(F("duringHeaderTX"));
-        //delay(1);
+        delay(1);
      }
     #endif
  }
