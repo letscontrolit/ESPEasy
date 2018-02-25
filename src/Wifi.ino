@@ -79,15 +79,19 @@ void WifiAPMode(boolean state)
 //********************************************************************************
 boolean WifiConnect(byte connectAttempts)
 {
+  char str[20];
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   wifi_station_set_hostname(hostname);
-
+  sprintf_P(str, PSTR("%u"), (uint8_t)Settings.TxPower);
+  log = F("WIFI : TxPower :");
+  log += str;
+  addLog(LOG_LEVEL_INFO, log);
+  WiFi.setOutputPower(Settings.TxPower);
   //use static ip?
   if (Settings.IP[0] != 0 && Settings.IP[0] != 255)
   {
-    char str[20];
     sprintf_P(str, PSTR("%u.%u.%u.%u"), Settings.IP[0], Settings.IP[1], Settings.IP[2], Settings.IP[3]);
     log = F("IP   : Static IP :");
     log += str;

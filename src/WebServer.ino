@@ -906,6 +906,7 @@ void handle_config() {
   addFormPasswordBox( TXBuffer.buf, F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(TXBuffer.buf,  F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(TXBuffer.buf,  F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+  addFormNumericBox(TXBuffer.buf, F("Tx Power (0-20.5dB)"), F("TxPower"),Settings.TxPower,0,20);
   addFormSeparator(TXBuffer.buf  );
   addFormPasswordBox( TXBuffer.buf, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
