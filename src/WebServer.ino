@@ -22,23 +22,22 @@ public:
   uint32_t maxCoreUsage;
   uint32_t maxServerUsage;
   unsigned int BufferSize;
-
-
   String buf;
   unsigned int sentBytes;
-  StreamingBuffer(void) {
-    BufferSize=400;
-    buf = "";
-    buf.reserve(BufferSize+100);
-    initialRam=0;
-    beforeTXRam=0;
-    duringTXRam=0;
-    finalRam=0;
-    maxCoreUsage=0;
-    maxServerUsage=0;
 
+  StreamingBuffer(void) :
+    initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
+    maxServerUsage(0), BufferSize(400), sentBytes(0)
+    {
+      buf.reserve(BufferSize+100);
+      buf = "";
     }
-  StreamingBuffer(String &a) {     buf = a; }
+  StreamingBuffer(String &a) :
+    initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
+    maxServerUsage(0), BufferSize(400), sentBytes(0) {
+      buf.reserve(BufferSize+100);
+      buf = a;
+    }
   StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
   StreamingBuffer operator= (const String& a)           { this->buf+= a;                     checkFull();   return *this; }
   StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull(); return *this;   }
