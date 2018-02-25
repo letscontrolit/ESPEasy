@@ -748,6 +748,7 @@ void handle_config() {
   addFormPasswordBox(reply, F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(reply, F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(reply, F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+  addFormNumericBox(reply, F("Tx Power (0-20.5dB)"), F("TxPower"),Settings.TxPower,0,20);
   addFormSeparator(reply);
   addFormPasswordBox(reply, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 

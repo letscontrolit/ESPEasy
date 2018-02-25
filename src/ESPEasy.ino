@@ -135,7 +135,7 @@
 #define LOG_TO_SDCARD         4
 #define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_DEBUG_DEV	// Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL		LOG_LEVEL_INFO	// Web Log Level
 #define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
 #define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
@@ -476,7 +476,7 @@ struct SettingsStruct
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
-    DST_Start(0), DST_End(0)
+    DST_Start(0), DST_End(0), TxPower(20)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -579,6 +579,7 @@ struct SettingsStruct
   boolean       UseValueLogger;
   uint16_t      DST_Start;
   uint16_t      DST_End;
+  float         TxPower;
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
