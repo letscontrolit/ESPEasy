@@ -169,8 +169,7 @@ void sendContentBlocking(String& data){
      uint32_t freeBeforeSend= ESP.getFreeHeap();
      if (freeBeforeSend<5000 ) timeout = 100;
      if (freeBeforeSend<4000 ) timeout = 1000;
-     if (freeBeforeSend<3000 ){ WebServer.send ( 200, "text/plain", "low memory :-(" ); tcpCleanup();   return ;}; 
-    uint32_t beginWait = millis();
+     uint32_t beginWait = millis();
      WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
      if (json) // "application/json"
         WebServer.sendHeader("Content-Type","application/json",true);
