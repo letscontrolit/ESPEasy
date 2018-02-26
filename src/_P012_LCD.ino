@@ -7,6 +7,7 @@
 //  DS Temp:[Dallas1#Temperature#R]
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
+//  Pump:[Pump#on#O] -> ON/OFF
 
 #include <LiquidCrystal_I2C.h>
 
