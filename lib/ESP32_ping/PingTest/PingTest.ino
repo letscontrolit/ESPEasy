@@ -7,7 +7,7 @@
 
 
 #include <WiFi.h>
-#include  "ping.h"
+#include  "esp32_ping.h"
 
 // the setup function runs once when you press reset or power the board
 const char ssid[] = "TP-LINK_C20B";  //  your network SSID (name)
@@ -26,7 +26,7 @@ void setup() {
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
 		Serial.print(".");
-		
+
 
 	}
 	Serial.println("Pinging address: 192.168.1.1");
@@ -37,17 +37,17 @@ void loop() {
 	int ia[4] = { 192,168,1,1 };
 	int  i = 0;
 	while (Serial.available()) {
-		
+
 		char c = Serial.read();
 		delay(100);
    	int  val = 0;
 		while (c != '.' &&  c != 10 && c!=255) {
 			if (c >= '0'&& c<='9') {
-				val = val*10+(c-'0');				
+				val = val*10+(c-'0');
 			}
 			c = Serial.read();
 		}
-	
+
 			ia[i++] =val ;
 	}
 	IPAddress adr = IPAddress(ia[0], ia[1], ia[2], ia[3]);
