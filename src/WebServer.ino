@@ -32,19 +32,14 @@ public:
       buf.reserve(BufferSize+100);
       buf = "";
     }
-  StreamingBuffer(String &a) :
-    initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0) {
-      buf.reserve(BufferSize+100);
-      buf = a;
-    }
-  StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
-  StreamingBuffer operator= (const String& a)           { this->buf+= a;                     checkFull();   return *this; }
+    
+  StreamingBuffer operator= (String& a)                 { this->buf=a;           checkFull();  return *this;  }
+  StreamingBuffer operator= (const String& a)           { this->buf=a;           checkFull();   return *this; }
+  StreamingBuffer operator+ (const String& a)           { this->buf+=a;          checkFull(); return *this;  }
   StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull(); return *this;   }
   StreamingBuffer operator+= (float a)                  { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (int a)                    { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (const StreamingBuffer& a) { this->buf+=a.buf;      checkFull(); return *this;   }
   StreamingBuffer operator+= (const String& a)          {
     if (lowMemorySkip) return *this;
     if ((      (this->buf.length() + a.length()) >BufferSize)&&(this->buf.length()>100 ))
@@ -53,8 +48,6 @@ public:
       checkFull();
       return *this;
     }
-  StreamingBuffer operator+ (const StreamingBuffer& a)  { this->buf = this->buf+a.buf;      checkFull(); return *this;  }
-  StreamingBuffer operator+ (const String& a)           { this->buf = this->buf+a;          checkFull(); return *this;  }
 
   void checkFull(void){
     if (lowMemorySkip) this->buf=""; 
