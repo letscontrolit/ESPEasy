@@ -35,7 +35,6 @@ public:
     
   StreamingBuffer operator= (String& a)                 { this->buf=a;           checkFull();  return *this;  }
   StreamingBuffer operator= (const String& a)           { this->buf=a;           checkFull();   return *this; }
-  StreamingBuffer operator+ (const String& a)           { this->buf+=a;          checkFull(); return *this;  }
   StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull(); return *this;   }
   StreamingBuffer operator+= (float a)                  { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (int a)                    { this->buf+=String(a);  checkFull();  return *this;  }
