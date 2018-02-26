@@ -1599,13 +1599,17 @@ String parseTemplate(String &tmpString, byte lineSize)
                       value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
                     int oidx;
-                    if ((oidx = valueFormat.indexOf('O'))>=0)
+                    if ((oidx = valueFormat.indexOf('O'))>=0) // Output
                     {
                       valueFormat.remove(oidx);
+                      oidx = valueFormat.indexOf('!'); // inverted or active low
                       float val = value.toFloat();
-                      if (val == 0) value = "OFF";
-                      else value = " ON";
-                      //valueFormat.remove(valueFormat.indexOf('O'));
+                      if (oidx >= 0) {
+                          valueFormat.remove(oidx);
+                    	  value = val == 0 ? " ON" : "OFF";
+                      } else {
+                    	  value = val == 0 ? "OFF" : " ON";
+                      }
                     }
 
                     if (valueFormat == "R")
