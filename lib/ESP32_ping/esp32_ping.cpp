@@ -27,7 +27,7 @@
 * Lua RTOS, ping utility
 *
 *
-* Author: Jaume Olivé (jolive@iberoxarxa.com / jolive@whitecatboard.org)
+* Author: Jaume Olivï¿½ (jolive@iberoxarxa.com / jolive@whitecatboard.org)
 *
 * --------------------------------------------------------------------------------
 *
@@ -57,6 +57,8 @@
 *
 */
 
+#ifdef ESP32
+
 #include <Arduino.h>
 
 #include <math.h>
@@ -66,7 +68,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "ping.h"
+#include "esp32_ping.h"
 
 #include "lwip/inet_chksum.h"
 #include "lwip/ip.h"
@@ -246,7 +248,7 @@ void ping(const char *name, int count, int interval, int size, int timeout) {
 	ping_start(adr, count, interval, size, timeout);
 }
 bool ping_start(struct ping_option *ping_o) {
-	
+
 
 	return ping_start(ping_o->ip,ping_o->count,0,0,0);
 
@@ -280,8 +282,8 @@ bool ping_start(IPAddress adr, int count=0, int interval=0, int size=0, int time
 	}
 
 
-	address.sin_addr.s_addr = adr; 
-	ping_target.addr = address.sin_addr.s_addr; 
+	address.sin_addr.s_addr = adr;
+	ping_target.addr = address.sin_addr.s_addr;
 
 	// Setup socket
 	struct timeval tout;
@@ -361,3 +363,4 @@ bool ping_regist_sent(struct ping_option *ping_opt, ping_sent_function ping_sent
 	ping_opt->sent_function = ping_sent;
 	return true;
 }
+#endif

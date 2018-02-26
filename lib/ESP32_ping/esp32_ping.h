@@ -3,6 +3,8 @@
 #define _PING_
 #include <Arduino.h>
 
+#ifdef ESP32
+
 typedef void(*ping_recv_function)(void* arg, void *pdata);
 typedef void(*ping_sent_function)(void* arg, void *pdata);
 
@@ -30,4 +32,5 @@ bool ping_start(struct ping_option *ping_opt);
 void ping(const char *name, int count, int interval, int size, int timeout);
 bool ping_start(IPAddress adr, int count, int interval, int size, int timeout);
 
+#endif
 #endif
