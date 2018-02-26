@@ -757,7 +757,7 @@ void handle_root() {
   int freeMem = ESP.getFreeHeap();
   String sCommand = WebServer.arg(F("cmd"));
 
-  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
+  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
     if (timerAPoff)
       timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
@@ -909,6 +909,15 @@ void handle_root() {
       String log = F("     : Rebooting...");
       addLog(LOG_LEVEL_INFO, log);
       cmd_within_mainloop = CMD_REBOOT;
+    }
+   if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+    {
+      String log = F("     : factory reset...");
+      addLog(LOG_LEVEL_INFO, log);
+      cmd_within_mainloop = CMD_REBOOT;
+      TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point. PW=configesp, URL=192.168.4.1");
+      TXBuffer.endStream();
+      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     TXBuffer+= "OK";
@@ -3071,6 +3080,11 @@ void handle_tools() {
   addButton(TXBuffer.buf,  F("download"), F("Save"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Saves a settings file");
+  
+  TXBuffer += F("<TR><TD HEIGHT=\"30\">");
+  addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
+  TXBuffer += F("<TD>");
+  TXBuffer += F("Erase all settings files");
 
 #if defined(ESP8266)
   if (ESP.getFlashChipRealSize() > 524288)
