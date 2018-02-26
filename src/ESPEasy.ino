@@ -436,6 +436,7 @@
   #define FILE_NOTIFICATION "/notification.dat"
   #define FILE_RULES        "/rules1.dat"
   #include <WiFi.h>
+  #include  "ping.h"
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
   ESP32WebServer WebServer(80);

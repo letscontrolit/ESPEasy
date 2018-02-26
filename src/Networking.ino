@@ -774,7 +774,12 @@ bool hostReachable(const IPAddress& ip) {
   // Only do 1 ping at a time to return early
   byte retry = 3;
   while (retry > 0) {
+#if defined(ESP8266)
     if (Ping.ping(ip, 1)) return true;
+#endif
+#if defined(ESP32)
+  if (ping_start(ip, 4, 0, 0, 5)) return true;
+#endif
     delay(50);
     --retry;
   }
@@ -793,3 +798,4 @@ bool hostReachable(const String& hostname) {
   addLog(LOG_LEVEL_ERROR, log);
   return false;
 }
+

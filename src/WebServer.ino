@@ -73,7 +73,9 @@ public:
     if (beforeTXRam<3000 ){ 
        lowMemorySkip=true; 
        WebServer.send(200,"text/plain","Low memory. Cannot display webpage :-(");
-       tcpCleanup();   
+       #if defined(ESP8266)
+         tcpCleanup();   
+       #endif
        return;
        } 
      else
@@ -4775,7 +4777,9 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Serial Port available:<TD>");
   TXBuffer += String(SerialAvailableForWrite());
   TXBuffer += F(" (");
-  TXBuffer += Serial.availableForWrite();
+  #if defined(ESP8266)
+    TXBuffer += Serial.availableForWrite();
+  #endif
   TXBuffer += F(" , ");
   TXBuffer += Serial.available();
   TXBuffer += F(")");
