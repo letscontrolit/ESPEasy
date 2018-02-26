@@ -585,6 +585,13 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     ResetFactory();
+    #if defined(ESP8266)
+      ESP.reset();
+    #endif
+    #if defined(ESP32)
+      ESP.restart();
+    #endif
+
   }
 
   if (strcasecmp_P(Command, PSTR("Save")) == 0)
