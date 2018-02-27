@@ -13,7 +13,7 @@ void sendHeaderBlocking(bool json);
 
 class StreamingBuffer{
 private:
-  bool lowMemorySkip; 
+  bool lowMemorySkip;
 public:
   uint32_t initialRam;
   uint32_t beforeTXRam;
@@ -22,29 +22,22 @@ public:
   uint32_t maxCoreUsage;
   uint32_t maxServerUsage;
   unsigned int BufferSize;
-  String buf;
   unsigned int sentBytes;
+  String buf;
 
-  StreamingBuffer(void) :
+  StreamingBuffer(void) : lowMemorySkip(false),
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0),lowMemorySkip(false)
+    maxServerUsage(0), BufferSize(400), sentBytes(0)
     {
       buf.reserve(BufferSize+100);
       buf = "";
     }
-  StreamingBuffer(String &a) :
-    initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0) {
-      buf.reserve(BufferSize+100);
-      buf = a;
-    }
-  StreamingBuffer operator= (String& a)                 {    this->buf= a;                  checkFull();  return *this;  }
-  StreamingBuffer operator= (const String& a)           { this->buf+= a;                     checkFull();   return *this; }
-  StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull(); return *this;   }
+  StreamingBuffer operator= (String& a)                 { this->buf=a;           checkFull();  return *this;  }
+  StreamingBuffer operator= (const String& a)           { this->buf=a;           checkFull();  return *this;  }
+  StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (float a)                  { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (int a)                    { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (const StreamingBuffer& a) { this->buf+=a.buf;      checkFull(); return *this;   }
   StreamingBuffer operator+= (const String& a)          {
     if (lowMemorySkip) return *this;
     if ((      (this->buf.length() + a.length()) >BufferSize)&&(this->buf.length()>100 ))
@@ -53,11 +46,9 @@ public:
       checkFull();
       return *this;
     }
-  StreamingBuffer operator+ (const StreamingBuffer& a)  { this->buf = this->buf+a.buf;      checkFull(); return *this;  }
-  StreamingBuffer operator+ (const String& a)           { this->buf = this->buf+a;          checkFull(); return *this;  }
 
   void checkFull(void){
-    if (lowMemorySkip) this->buf=""; 
+    if (lowMemorySkip) this->buf="";
     if (this->buf.length()>BufferSize) {
     trackTotalMem();
     sendContentBlocking(this->buf);
@@ -70,12 +61,14 @@ public:
     initialRam=  ESP.getFreeHeap();
     sentBytes=0;
     buf ="";
-    if (beforeTXRam<3000 ){ 
-       lowMemorySkip=true; 
+    if (beforeTXRam<3000 ){
+       lowMemorySkip=true;
        WebServer.send(200,"text/plain","Low memory. Cannot display webpage :-(");
-       tcpCleanup();   
+       #if defined(ESP8266)
+         tcpCleanup();
+       #endif
        return;
-       } 
+       }
      else
    sendHeaderBlocking(json);
   }
@@ -100,7 +93,7 @@ void trackCoreMem()
         sendContentBlocking(buf);
         WebServer.sendHeader( "Content-Length", "0");
         WebServer.send ( 200, "text/plain", "");
-    
+
         finalRam= ESP.getFreeHeap();
         String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
         addLog(LOG_LEVEL_DEBUG, log);
@@ -757,7 +750,7 @@ void handle_root() {
   int freeMem = ESP.getFreeHeap();
   String sCommand = WebServer.arg(F("cmd"));
 
-  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0))
+  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
     if (timerAPoff)
       timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
@@ -909,6 +902,15 @@ void handle_root() {
       String log = F("     : Rebooting...");
       addLog(LOG_LEVEL_INFO, log);
       cmd_within_mainloop = CMD_REBOOT;
+    }
+   if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+    {
+      String log = F("     : factory reset...");
+      addLog(LOG_LEVEL_INFO, log);
+      cmd_within_mainloop = CMD_REBOOT;
+      TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point. PW=configesp, URL=192.168.4.1");
+      TXBuffer.endStream();
+      ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
 
     TXBuffer+= "OK";
@@ -3072,6 +3074,11 @@ void handle_tools() {
   TXBuffer += F("<TD>");
   TXBuffer += F("Saves a settings file");
 
+  TXBuffer += F("<TR><TD HEIGHT=\"30\">");
+  addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
+  TXBuffer += F("<TD>");
+  TXBuffer += F("Erase all settings files");
+
 #if defined(ESP8266)
   if (ESP.getFlashChipRealSize() > 524288)
   {
@@ -4775,7 +4782,9 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Serial Port available:<TD>");
   TXBuffer += String(SerialAvailableForWrite());
   TXBuffer += F(" (");
-  TXBuffer += Serial.availableForWrite();
+  #if defined(ESP8266)
+    TXBuffer += Serial.availableForWrite();
+  #endif
   TXBuffer += F(" , ");
   TXBuffer += Serial.available();
   TXBuffer += F(")");
