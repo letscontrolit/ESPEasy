@@ -1,4 +1,31 @@
 -------------------------------------------------
+Changes in release mega-20180227 (since mega-20180226)
+-------------------------------------------------
+
+Release date: Tue Feb 27 04:00:11 CET 2018
+
+Bartłomiej Zimoń (1):
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180226
+
+Edwin Eefting (2):
+      [test suite] changes from mega to 2.0
+      [test suite] changes from mega to 2.0
+
+Gijs Noorlander (2):
+      [BuildError] StreamingBuffer code cleanup + fix order member initialize (#961)
+      [build conflict] Renamed ESP32 version of ping (#963)
+
+mvdbro (1):
+      Fix ESP32 compile errors
+
+s0170071 (1):
+      Add Factory Reset button to web interface (#954)
+
+
+-------------------------------------------------
 Changes in release mega-20180226 (since mega-20180224)
 -------------------------------------------------
 
