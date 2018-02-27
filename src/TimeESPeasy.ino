@@ -142,9 +142,17 @@ byte second()
 	return tm.Second;
 }
 
+// day of week, sunday is day 1
 int weekday()
 {
   return tm.Wday;
+}
+
+String weekday_str()
+{
+  const int wday(weekday() - 1); // here: Count from Sunday = 0
+  const String weekDays = F("SunMonTueWedThuFriSat");
+  return weekDays.substring(wday * 3, wday * 3 + 3);
 }
 
 void initTime()
@@ -162,9 +170,10 @@ void checkTime()
     PrevMinutes = tm.Minute;
     if (Settings.UseRules)
     {
-      String weekDays = F("AllSunMonTueWedThuFriSat");
-      String event = F("Clock#Time=");
-      event += weekDays.substring(weekday() * 3, weekday() * 3 + 3);
+      String event;
+      event.reserve(21);
+      event = F("Clock#Time=");
+      event += weekday_str();
       event += ",";
       if (hour() < 10)
         event += "0";
