@@ -265,6 +265,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
     SMART_REPL_TIME(F("%sysmonth%"),PSTR("%02d"), month())
     SMART_REPL_TIME(F("%sysyear%"), PSTR("%04d"), year())
     SMART_REPL_TIME(F("%sysyears%"),PSTR("%02d"), year()%100)
+    SMART_REPL(F("%sysweekday%"), String(weekday()))
+    SMART_REPL(F("%sysweekday_s%"), weekday_str())
     #undef SMART_REPL_TIME
   }
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
