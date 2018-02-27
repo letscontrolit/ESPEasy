@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release v2.0-20180227 (since v2.0-20180226)
+-------------------------------------------------
+
+Release date: Tue Feb 27 04:00:22 CET 2018
+
+Edwin Eefting (2):
+      [test suite] changes from mega to 2.0
+      [test suite] changes from mega to 2.0
+
+Gijs Noorlander (1):
+      [BuildError] StreamingBuffer code cleanup + fix order member initialize (#961)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180226 (since v2.0-20180221)
 -------------------------------------------------
 
