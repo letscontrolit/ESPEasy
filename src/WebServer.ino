@@ -1745,10 +1745,10 @@ void handle_devices() {
   byte setpage = WebServer.arg(F("setpage")).toInt();
   if (setpage > 0)
   {
-    if (setpage <= (TASKS_MAX / 4))
+    if (setpage <= (TASKS_MAX / TASKS_PER_PAGE))
       page = setpage;
     else
-      page = TASKS_MAX / 4;
+      page = TASKS_MAX / TASKS_PER_PAGE;
   }
 
 
