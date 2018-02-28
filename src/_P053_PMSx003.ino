@@ -103,8 +103,15 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   String log;
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength = 0;
-  uint16 dummy;
-  SerialRead16(&dummy, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
+  uint16 packet_header = 0;
+  SerialRead16(&packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
+  if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
+    // Not the start of the packet, stop reading.
+    return false;
+  }
+
+  *value = data_low;
+  *value |= (data_high << 8);
   SerialRead16(&framelength, &checksum);
   if (framelength != (PMSx003_SIZE - 4))
   {
