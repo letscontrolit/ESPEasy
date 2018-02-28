@@ -10,7 +10,7 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <SoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
@@ -22,7 +22,7 @@
 #define PMSx003_SIG2 0X4d
 #define PMSx003_SIZE 32
 
-SoftwareSerial *swSerial = NULL;
+ESPeasySoftwareSerial *swSerial = NULL;
 boolean Plugin_053_init = false;
 boolean values_received = false;
 
@@ -171,7 +171,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         {
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
-          swSerial = new SoftwareSerial(rxPin, txPin);
+          swSerial = new ESPeasySoftwareSerial(rxPin, txPin);
           swSerial->begin(9600);
           swSerial->flush();
         }

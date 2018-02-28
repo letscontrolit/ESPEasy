@@ -1,4 +1,57 @@
 -------------------------------------------------
+Changes in release v2.0-20180228 (since v2.0-20180227)
+-------------------------------------------------
+
+Release date: Wed Feb 28 04:00:19 CET 2018
+
+Gijs Noorlander (2):
+      [issue #966] Add %sysweekday% and  %sysweekday_s% (#973)
+      [issue #968] Use template parser for OLED commands (#974)
+
+
+-------------------------------------------------
+Changes in release v2.0-20180227 (since v2.0-20180226)
+-------------------------------------------------
+
+Release date: Tue Feb 27 04:00:22 CET 2018
+
+Edwin Eefting (2):
+      [test suite] changes from mega to 2.0
+      [test suite] changes from mega to 2.0
+
+Gijs Noorlander (1):
+      [BuildError] StreamingBuffer code cleanup + fix order member initialize (#961)
+
+
+-------------------------------------------------
+Changes in release v2.0-20180226 (since v2.0-20180221)
+-------------------------------------------------
+
+Release date: Mon Feb 26 04:00:21 CET 2018
+
+Bartłomiej Zimoń (1):
+      provide System@Sleep event (#875) (#931)
+
+Edwin Eefting (1):
+      device page doesnt need next/previous page buttons anymore
+
+Gijs Noorlander (6):
+      [MQTT] LWT "Connected" message doesn't have the retained flag (#925)
+      [v2.0] Added Vcc-binaries to deploy process #933 (#935)
+      [v2.0 merge] 2kwebserver_merge_to_mega #929 (#934)
+      [v2.0] Use ESPeasySoftwareSerial (#936)
+      [timeouts] Improve response when hosts are not reachable (#939)
+      [2k Webserver] Proper initialisation of StreamingBuffer members. (#941)
+
+Unknown (1):
+      [ping lib] Added ping library
+
+s0170071 (2):
+      V20 Webserver@LowMemory
+      Update WebServer.ino
+
+
+-------------------------------------------------
 Changes in release v2.0-20180221 (since v2.0-20180220)
 -------------------------------------------------
 

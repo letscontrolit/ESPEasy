@@ -32,7 +32,7 @@ Configure node 0, controller 1 as domoticz mqtt:
     """
     return(docs)
 
-parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog=get_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter)
+parser = argparse.ArgumentParser(description='ESPEasy testing CLI', epilog=get_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter)
 
 # parser.add_argument('--url', default='http://localhost:8080/rpc', help='url of rpc server to connect to. default: %(default)s')
 # parser.add_argument('--user', default=None, help='user to login.')
