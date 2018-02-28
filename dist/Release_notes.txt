@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release v2.0-20180228 (since v2.0-20180227)
+-------------------------------------------------
+
+Release date: Wed Feb 28 04:00:19 CET 2018
+
+Gijs Noorlander (2):
+      [issue #966] Add %sysweekday% and  %sysweekday_s% (#973)
+      [issue #968] Use template parser for OLED commands (#974)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180227 (since v2.0-20180226)
 -------------------------------------------------
 
