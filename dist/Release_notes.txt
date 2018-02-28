@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180228 (since mega-20180227)
+-------------------------------------------------
+
+Release date: Wed Feb 28 04:00:09 CET 2018
+
+Bartłomiej Zimoń (1):
+      fix #964, add timeStringToSeconds and use it to compare time conditions (#965)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180227
+
+Gijs Noorlander (2):
+      [issue #966] Add %sysweekday% and  %sysweekday_s% (#973)
+      [issue #968] Use template parser for OLED commands (#974)
+
+
+-------------------------------------------------
 Changes in release mega-20180227 (since mega-20180226)
 -------------------------------------------------
 
