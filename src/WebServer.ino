@@ -111,7 +111,7 @@ void sendContentBlocking(String& data){
       checkRAM(F("sendContentBlocking"));
        uint32_t freeBeforeSend= ESP.getFreeHeap();
       String log = String("sendcontent free: ")+freeBeforeSend+" chunk size:"+ data.length();
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLog(LOG_LEVEL_DEBUG_DEV, log);
       freeBeforeSend= ESP.getFreeHeap();
       if (TXBuffer.beforeTXRam > freeBeforeSend)   TXBuffer.beforeTXRam = freeBeforeSend ;
       TXBuffer.duringTXRam=freeBeforeSend;

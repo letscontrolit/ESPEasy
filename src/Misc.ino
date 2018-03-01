@@ -2163,10 +2163,20 @@ boolean ruleMatch(String& event, String& rule)
   if (event.charAt(0) == '!')
   {
     int pos = rule.indexOf('#');
-    if (pos == -1) // no # sign in rule, use 'wildcard' match...
-      tmpEvent = event.substring(0,rule.length());
-
-    if (tmpEvent.equalsIgnoreCase(rule))
+    if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
+      {
+        tmpEvent = event.substring(0,rule.length());
+        tmpRule = rule;
+      }
+      
+    pos = rule.indexOf('*');
+    if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
+      {
+        tmpEvent = event.substring(0,pos-1);
+        tmpRule = rule.substring(0,pos-1);
+      }
+     
+    if (tmpEvent.equalsIgnoreCase(tmpRule))
       return true;
     else
       return false;
