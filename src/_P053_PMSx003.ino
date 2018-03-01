@@ -110,8 +110,6 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
     return false;
   }
 
-  *value = data_low;
-  *value |= (data_high << 8);
   SerialRead16(&framelength, &checksum);
   if (framelength != (PMSx003_SIZE - 4))
   {
