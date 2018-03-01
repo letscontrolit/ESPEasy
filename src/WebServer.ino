@@ -3073,6 +3073,11 @@ void handle_tools() {
   addButton(TXBuffer.buf,  F("download"), F("Save"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Saves a settings file");
+  
+  TXBuffer += F("<TR><TD HEIGHT=\"30\">");
+  addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
+  TXBuffer += F("<TD>");
+  TXBuffer += F("Erase all settings files");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
   addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
