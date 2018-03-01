@@ -393,6 +393,7 @@
     #include <lwip/tcp_impl.h>
   #endif
   #include <ESP8266WiFi.h>
+  #include <ESP8266Ping.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
   #include <DNSServer.h>
@@ -435,6 +436,7 @@
   #define FILE_NOTIFICATION "/notification.dat"
   #define FILE_RULES        "/rules1.dat"
   #include <WiFi.h>
+  #include  "esp32_ping.h"
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
   ESP32WebServer WebServer(80);
@@ -493,7 +495,12 @@ struct CRCStruct{
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
 
+// Forward declarations.
 bool WiFiConnected(uint32_t timeout_ms);
+bool hostReachable(const IPAddress& ip);
+bool hostReachable(const String& hostname);
+void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
+void formatIP(const IPAddress& ip, char (&strIP)[20]);
 
 struct SecurityStruct
 {
@@ -676,24 +683,55 @@ struct ControllerSettingsStruct
     return getIP().toString();
   }
 
-  boolean connectToHost(WiFiClient &client) {
-    if (!WiFiConnected(100)) {
+  void setHostname(const String& controllerhostname) {
+    strncpy(HostName, controllerhostname.c_str(), sizeof(HostName));
+    updateIPcache();
+  }
+
+  boolean checkHostReachable(bool quick) {
+    if (!WiFiConnected(10)) {
       return false; // Not connected, so no use in wasting time to connect to a host.
     }
+    if (quick) return true;
     if (UseDNS) {
-      return client.connect(HostName, Port);
+      if (!updateIPcache()) {
+        return false;
+      }
     }
-    return client.connect(getIP(), Port);
+    return hostReachable(getIP());
+  }
+
+  boolean connectToHost(WiFiClient &client) {
+    if (!checkHostReachable(true)) {
+      return false; // Host not reachable
+    }
+    byte retry = 2;
+    bool connected = false;
+    while (retry > 0 && !connected) {
+      --retry;
+      connected = client.connect(getIP(), Port);
+      if (connected) return true;
+      if (!checkHostReachable(false))
+        return false;
+    }
+    return false;
   }
 
   int beginPacket(WiFiUDP &client) {
-    if (!WiFiConnected(100)) {
-      return 0; // Not connected, so no use in wasting time to connect to a host.
+    if (!checkHostReachable(true)) {
+      return 0; // Host not reachable
     }
-    if (UseDNS) {
-      return client.beginPacket(HostName, Port);
+    byte retry = 2;
+    int connected = 0;
+    while (retry > 0 && !connected) {
+      --retry;
+      connected = client.beginPacket(getIP(), Port);
+      if (connected != 0) return connected;
+      if (!checkHostReachable(false))
+        return false;
+      delay(10);
     }
-    return client.beginPacket(getIP(), Port);
+    return false;
   }
 
   String getHostPortString() const {
@@ -702,6 +740,22 @@ struct ControllerSettingsStruct
     result += Port;
     return result;
   }
+
+private:
+  bool updateIPcache() {
+    if (!UseDNS) {
+      return true;
+    }
+    IPAddress tmpIP;
+    if (WiFi.hostByName(HostName, tmpIP)) {
+      for (byte x = 0; x < 4; x++) {
+        IP[x] = tmpIP[x];
+      }
+      return true;
+    }
+    return false;
+  }
+
 };
 
 struct NotificationSettingsStruct
@@ -812,6 +866,14 @@ struct LogStruct {
       if (!isEmpty()) {
         read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
         output += formatLine(read_idx, lineEnd);
+      }
+      return !isEmpty();
+    }
+
+    bool get(String& output, const String& lineEnd, int line) {
+      int tmpread((write_idx + 1+line) % LOG_STRUCT_MESSAGE_LINES);
+      if (timeStamp[tmpread] != 0) {
+        output += formatLine(tmpread, lineEnd);
       }
       return !isEmpty();
     }
@@ -975,6 +1037,7 @@ unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
 unsigned long timermqtt;
+unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
 unsigned int NC_Count = 0;
@@ -1035,11 +1098,15 @@ int firstEnabledBlynkController() {
   return -1;
 }
 
+//void checkRAM( const __FlashStringHelper* flashString);
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
 {
+
+
+  checkRAM(F("setup"));
   #if defined(ESP32)
     for(byte x = 0; x < 16; x++)
       ledChannelPin[x] = -1;
@@ -1140,6 +1207,7 @@ void setup()
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
+  checkRAM(F("hardwareInit"));
   hardwareInit();
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
@@ -1176,6 +1244,7 @@ void setup()
   timer1s = 0; // timer for periodic actions once per/sec
   timerwd = 0; // timer for watchdog once per 30 sec
   timermqtt = 0; // Timer for the MQTT keep alive loop.
+  timermqtt_interval = 250; // Interval for checking MQTT
 
   PluginInit();
   CPluginInit();
@@ -1246,6 +1315,7 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
 \*********************************************************************************************/
 void loop()
 {
+  //checkRAM(F("loop"));
   loopCounter++;
 
   if (wifiSetupConnect)
@@ -1266,7 +1336,7 @@ void loop()
       {
         String event = F("System#Sleep");
         rulesProcessing(event);
-      }  
+      }
   }
   //normal mode, run each task when its time
   else
@@ -1286,14 +1356,17 @@ void loop()
 
     if (timeOutReached(timermqtt)) {
       // MQTT_KEEPALIVE = 15 seconds.
-      timermqtt = millis() + 250;
+      timermqtt = millis() + timermqtt_interval;
       //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
       int enabledMqttController = firstEnabledMQTTController();
       if (enabledMqttController >= 0) {
         if (!MQTTclient.loop()) {
           if (!MQTTCheck(enabledMqttController)) {
             // Check failed, no need to retry it immediately.
-            timermqtt = millis() + 500;
+            if (timermqtt_interval < 2000)
+              timermqtt_interval += 250;
+          } else {
+            timermqtt_interval = 250;
           }
         }
       }
@@ -1335,6 +1408,7 @@ void run10TimesPerSecond()
     eventBuffer = "";
   }
   elapsed = micros() - start;
+  WebServer.handleClient();
 }
 
 
@@ -1434,6 +1508,8 @@ void runOncePerSecond()
 \*********************************************************************************************/
 void runEach30Seconds()
 {
+   extern void checkRAMtoLog();
+  checkRAMtoLog();
   wdcounter++;
   timerwd = millis() + 30000;
   char str[60];
@@ -1476,6 +1552,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 void checkSensors()
 {
+  checkRAM(F("checkSensors"));
   bool isDeepSleep = isDeepSleepEnabled();
   //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
   for (byte x = 0; x < TASKS_MAX; x++)
@@ -1512,6 +1589,7 @@ void checkSensors()
 \*********************************************************************************************/
 void SensorSendTask(byte TaskIndex)
 {
+  checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
@@ -1658,6 +1736,7 @@ void checkSystemTimers()
 bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //checkRAM(F("backgroundtasks"));
   //always start with a yield
   yield();
 

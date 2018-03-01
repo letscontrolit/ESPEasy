@@ -148,8 +148,10 @@ byte CPluginCall(byte Function, struct EventStruct *event)
     // Unconditional calls to all plugins
     case CPLUGIN_PROTOCOL_ADD:
       for (x = 0; x < CPLUGIN_MAX; x++)
-        if (CPlugin_id[x] != 0)
+        if (CPlugin_id[x] != 0){
+          checkRAM(F("CPluginCallADD"),x);
           CPlugin_ptr[x](Function, event, dummyString);
+        }
       return true;
       break;
   }

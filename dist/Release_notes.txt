@@ -1,4 +1,116 @@
 -------------------------------------------------
+Changes in release mega-20180228 (since mega-20180227)
+-------------------------------------------------
+
+Release date: Wed Feb 28 04:00:09 CET 2018
+
+Bartłomiej Zimoń (1):
+      fix #964, add timeStringToSeconds and use it to compare time conditions (#965)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180227
+
+Gijs Noorlander (2):
+      [issue #966] Add %sysweekday% and  %sysweekday_s% (#973)
+      [issue #968] Use template parser for OLED commands (#974)
+
+
+-------------------------------------------------
+Changes in release mega-20180227 (since mega-20180226)
+-------------------------------------------------
+
+Release date: Tue Feb 27 04:00:11 CET 2018
+
+Bartłomiej Zimoń (1):
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180226
+
+Edwin Eefting (2):
+      [test suite] changes from mega to 2.0
+      [test suite] changes from mega to 2.0
+
+Gijs Noorlander (2):
+      [BuildError] StreamingBuffer code cleanup + fix order member initialize (#961)
+      [build conflict] Renamed ESP32 version of ping (#963)
+
+mvdbro (1):
+      Fix ESP32 compile errors
+
+s0170071 (1):
+      Add Factory Reset button to web interface (#954)
+
+
+-------------------------------------------------
+Changes in release mega-20180226 (since mega-20180224)
+-------------------------------------------------
+
+Release date: Mon Feb 26 04:00:08 CET 2018
+
+Bartłomiej Zimoń (2):
+      provide System@Sleep event (#875) (#931)
+      - extend conditions with AND/OR, now it is possible to simplify rules (#932)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180221
+
+Edwin Eefting (1):
+      device page doesnt need next/previous page buttons anymore
+
+Gijs Noorlander (7):
+      [MQTT] LWT "Connected" message doesn't have the retained flag (#925)
+      [v2.0] Added Vcc-binaries to deploy process #933 (#935)
+      [v2.0 merge] 2kwebserver_merge_to_mega #929 (#934)
+      [v2.0] Use ESPeasySoftwareSerial (#936)
+      [Mega] rename SoftwareSerial lib #930 (#937)
+      [timeouts] Improve response when hosts are not reachable (#939)
+      [2k Webserver] Proper initialisation of StreamingBuffer members. (#941)
+
+Michael Schröder (1):
+      Added Vcc-binaries to deploy process (#933)
+
+Unknown (2):
+      [ping lib] Added ping library
+      [softwareSerial] Remove duplicate with only capilization as difference
+
+s0170071 (33):
+      Webserver min memory
+      Adjusted to min 7k free
+      Timeout 100ms
+      tcp_cleanup for LWIP1 & 2
+      Adapted timeout
+      trigger travis re-compile
+      try fix travis
+      Does Travis like extern "C" ?
+      Wait for memory be like before send chunked
+      "Content-Type","text/html"
+      Optimized memory usage
+      2k Webserver
+      fix travis
+      fix travis
+      Unused variable
+      navMenuIndex
+      fix download page
+      Add Ram usage debug message
+      fix Travis
+      Travis...
+      Cleanup and +1k Ram
+      4->12 Devices per page
+      Fix travis
+      Update .gitignore
+      Merge Webserver
+      Fixed String redeclaration
+      Merge into mega
+      fix travis
+      Removed double entry on info page
+      Fix compile error when SD card is enabled
+      Memtracker (#927)
+      V20 Webserver@LowMemory
+      Update WebServer.ino
+
+
+-------------------------------------------------
 Changes in release mega-20180224 (since mega-20180223)
 -------------------------------------------------
 

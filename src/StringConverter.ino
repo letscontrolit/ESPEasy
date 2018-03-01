@@ -37,7 +37,22 @@ boolean str2ip(const char *string, byte* IP)
   return false;
 }
 
+// Call this by first declaring a char array of size 20, like:
+//  char strIP[20];
+//  formatIP(ip, strIP);
+void formatIP(const IPAddress& ip, char (&strIP)[20]) {
+  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+}
 
+String formatIP(const IPAddress& ip) {
+  char strIP[20];
+  formatIP(ip, strIP);
+  return String(strIP);
+}
+
+void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
+  sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
 
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
@@ -250,6 +265,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
     SMART_REPL_TIME(F("%sysmonth%"),PSTR("%02d"), month())
     SMART_REPL_TIME(F("%sysyear%"), PSTR("%04d"), year())
     SMART_REPL_TIME(F("%sysyears%"),PSTR("%02d"), year()%100)
+    SMART_REPL(F("%sysweekday%"), String(weekday()))
+    SMART_REPL(F("%sysweekday_s%"), weekday_str())
     #undef SMART_REPL_TIME
   }
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
