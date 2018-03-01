@@ -1146,7 +1146,25 @@ boolean isNumerical(const String& tBuf, bool mustBeInteger) {
   return true;
 }
 
-
+// convert old and new time string to nr of seconds
+float timeStringToSeconds(String tBuf) {
+	float sec = 0;
+	int split = tBuf.indexOf(':');
+	if (split < 0) { // assume only hours
+		sec += tBuf.toFloat() * 60 * 60;
+	} else {
+		sec += tBuf.substring(0, split).toFloat() * 60 * 60;
+		tBuf = tBuf.substring(split +1);
+		split = tBuf.indexOf(':');
+		if (split < 0) { //old format
+			sec += tBuf.toFloat() * 60;
+		} else { //new format
+			sec += tBuf.substring(0, split).toFloat() * 60;
+			sec += tBuf.substring(split +1).toFloat();
+		}
+	}
+	return sec;
+}
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
@@ -1398,6 +1416,20 @@ String parseTemplate(String &tmpString, byte lineSize)
                       value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
                     else
                       value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+
+                    int oidx;
+                    if ((oidx = valueFormat.indexOf('O'))>=0) // Output
+                    {
+                      valueFormat.remove(oidx);
+                      oidx = valueFormat.indexOf('!'); // inverted or active low
+                      float val = value.toFloat();
+                      if (oidx >= 0) {
+                          valueFormat.remove(oidx);
+                    	  value = val == 0 ? " ON" : "OFF";
+                      } else {
+                    	  value = val == 0 ? "OFF" : " ON";
+                      }
+                    }
 
                     if (valueFormat == "R")
                     {
@@ -2058,10 +2090,15 @@ boolean conditionMatch(String& check)
 
   if (comparePos > 0)
   {
-    String tmpCheck = check.substring(comparePos + 1);
-    Value2 = tmpCheck.toFloat();
-    tmpCheck = check.substring(0, comparePos);
-    Value1 = tmpCheck.toFloat();
+    String tmpCheck1 = check.substring(0, comparePos);
+    String tmpCheck2 = check.substring(comparePos + 1);
+    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
+        Value1 = timeStringToSeconds(tmpCheck1);
+        Value2 = timeStringToSeconds(tmpCheck2);
+    } else {
+        Value1 = tmpCheck1.toFloat();
+        Value2 = tmpCheck2.toFloat();
+    }
   }
   else
     return false;
