@@ -66,42 +66,108 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 #endif
 }
 
+void SerialFlush() {
+  if (swSerial != NULL) {
+    swSerial->flush();
+  } else {
+    Serial.flush();
+  }
+}
+
 boolean PacketAvailable(void)
 {
-  boolean success = false;
-
   if (swSerial != NULL) // Software serial
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
-    while (swSerial->available() >= PMSx003_SIZE)
-    {
-      if (swSerial->read() == PMSx003_SIG1 && swSerial->read() == PMSx003_SIG2)
-      {
-        success = true;
-        break;
-      }
+    if (!swSerial->available()) return false;
+    while ((swSerial->peek() != PMSx003_SIG1) && swSerial->available()) {
+      swSerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
     }
+    if (swSerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
   }
   else // Hardware serial
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
-    while (Serial.available() >= PMSx003_SIZE)
-    {
-      if (Serial.read() == PMSx003_SIG1 && Serial.read() == PMSx003_SIG2)
-      {
-        success = true;
-        break;
-      }
+    if (!Serial.available()) return false;
+    while ((Serial.peek() != PMSx003_SIG1) && Serial.available()) {
+      Serial.read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
     }
+    if (Serial.available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
   }
-  return success;
+  return true;
+}
+
+boolean Plugin_053_process_data(struct EventStruct *event) {
+  String log;
+  uint16_t checksum = 0, checksum2 = 0;
+  uint16_t framelength = 0;
+  uint16 packet_header = 0;
+  SerialRead16(&packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
+  if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
+    // Not the start of the packet, stop reading.
+    return false;
+  }
+
+  SerialRead16(&framelength, &checksum);
+  if (framelength != (PMSx003_SIZE - 4))
+  {
+    log = F("PMSx003 : invalid framelength - ");
+    log += framelength;
+    addLog(LOG_LEVEL_ERROR, log);
+    return false;
+  }
+
+  uint16_t data[13]; // byte data_low, data_high;
+  for (int i = 0; i < 13; i++)
+    SerialRead16(&data[i], &checksum);
+
+  log = F("PMSx003 : pm1.0=");
+  log += data[0];
+  log += F(", pm2.5=");
+  log += data[1];
+  log += F(", pm10=");
+  log += data[2];
+  log += F(", pm1.0a=");
+  log += data[3];
+  log += F(", pm2.5a=");
+  log += data[4];
+  log += F(", pm10a=");
+  log += data[5];
+  addLog(LOG_LEVEL_DEBUG, log);
+
+  log = F("PMSx003 : count/0.1L : 0.3um=");
+  log += data[6];
+  log += F(", 0.5um=");
+  log += data[7];
+  log += F(", 1.0um=");
+  log += data[8];
+  log += F(", 2.5um=");
+  log += data[9];
+  log += F(", 5.0um=");
+  log += data[10];
+  log += F(", 10um=");
+  log += data[11];
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
+
+  // Compare checksums
+  SerialRead16(&checksum2, NULL);
+  SerialFlush(); // Make sure no data is lost due to full buffer.
+  if (checksum == checksum2)
+  {
+    // Data is checked and good, fill in output
+    UserVar[event->BaseVarIndex]     = data[3];
+    UserVar[event->BaseVarIndex + 1] = data[4];
+    UserVar[event->BaseVarIndex + 2] = data[5];
+    values_received = true;
+    return true;
+  }
+  return false;
 }
 
 boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 {
-  String log;
   boolean success = false;
 
   switch (function)
@@ -153,11 +219,17 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         int txPin = Settings.TaskDevicePin2[event->TaskIndex];
         int resetPin = Settings.TaskDevicePin3[event->TaskIndex];
 
-        log = F("PMSx003 : config ");
+        String log = F("PMSx003 : config ");
         log += rxPin;
         log += txPin;
         log += resetPin;
         addLog(LOG_LEVEL_DEBUG, log);
+
+        if (swSerial != NULL) {
+          // Regardless the set pins, the software serial must be deleted.
+          delete swSerial;
+          swSerial = NULL;
+        }
 
         // Hardware serial is RX on 3 and TX on 1
         if (rxPin == 3 && txPin == 1)
@@ -171,7 +243,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         {
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
-          swSerial = new ESPeasySoftwareSerial(rxPin, txPin);
+          swSerial = new ESPeasySoftwareSerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
           swSerial->begin(9600);
           swSerial->flush();
         }
@@ -192,6 +264,17 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+
+    case PLUGIN_EXIT:
+      {
+          if (swSerial)
+          {
+            delete swSerial;
+            swSerial=NULL;
+          }
+          break;
+      }
+
     // The update rate from the module is 200ms .. multiple seconds. Practise
     // shows that we need to read the buffer many times per seconds to stay in
     // sync.
@@ -199,69 +282,11 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_053_init)
         {
-          uint16_t checksum = 0, checksum2 = 0;
-          uint16_t framelength = 0;
-          uint16_t data[13];
-          // byte data_low, data_high;
-          int i = 0;
-
-          // Check if a packet is available in the UART FIFO.
+          // Check if a complete packet is available in the UART FIFO.
           if (PacketAvailable())
           {
-            log = F("PMSx003 : Packet available");
-            addLog(LOG_LEVEL_DEBUG_MORE, log);
-            checksum += PMSx003_SIG1 + PMSx003_SIG2;
-            SerialRead16(&framelength, &checksum);
-            if (framelength != (PMSx003_SIZE - 4))
-            {
-              log = F("PMSx003 : invalid framelength - ");
-              log += framelength;
-              addLog(LOG_LEVEL_ERROR, log);
-              break;
-            }
-
-            for (i = 0; i < 13; i++)
-              SerialRead16(&data[i], &checksum);
-
-            log = F("PMSx003 : pm1.0=");
-            log += data[0];
-            log += F(", pm2.5=");
-            log += data[1];
-            log += F(", pm10=");
-            log += data[2];
-            log += F(", pm1.0a=");
-            log += data[3];
-            log += F(", pm2.5a=");
-            log += data[4];
-            log += F(", pm10a=");
-            log += data[5];
-            addLog(LOG_LEVEL_DEBUG, log);
-
-            log = F("PMSx003 : count/0.1L : 0.3um=");
-            log += data[6];
-            log += F(", 0.5um=");
-            log += data[7];
-            log += F(", 1.0um=");
-            log += data[8];
-            log += F(", 2.5um=");
-            log += data[9];
-            log += F(", 5.0um=");
-            log += data[10];
-            log += F(", 10um=");
-            log += data[11];
-            addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-            // Compare checksums
-            SerialRead16(&checksum2, NULL);
-            if (checksum == checksum2)
-            {
-              // Data is checked and good, fill in output
-              UserVar[event->BaseVarIndex]     = data[3];
-              UserVar[event->BaseVarIndex + 1] = data[4];
-              UserVar[event->BaseVarIndex + 2] = data[5];
-              values_received = true;
-              success = true;
-            }
+            addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
+            success = Plugin_053_process_data(event);
           }
         }
         break;
