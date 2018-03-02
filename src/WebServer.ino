@@ -88,7 +88,7 @@ public:
       if (buf.length() > 0) sendContentBlocking(buf);
       buf = "";
       sendContentBlocking(buf);
- 
+
       finalRam = ESP.getFreeHeap();
       String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                    " including Core: " + maxCoreUsage;
@@ -3276,30 +3276,27 @@ void handle_control() {
 //********************************************************************************
 // Web Interface JSON page (no password!)
 //********************************************************************************
- 
 void handle_json()
 {
   String tasknr = WebServer.arg("tasknr");
-  String reply = "";
- 
+  String reply;
   if (tasknr.length() == 0)
   {
     reply += F("{\"System\":{\n");
-    reply += F("\"Build\": ");
-    reply += BUILD;
-    reply += F(",\n\"Git Build\":\"");    
-    reply += BUILD_GIT; 
-    reply += F("\",\n\"Local time\":\"");   
-    reply += getDateTimeString('-',':',' ');
-    reply += F("\",\n\"Unit\": ");
-    reply += Settings.Unit;
-    reply += F(",\n\"Uptime\": ");
-    reply += wdcounter / 2;
-    reply += F(",\n\"Free RAM\": ");
-    reply += ESP.getFreeHeap();
+    reply += to_json_object_value(F("Build"), String(BUILD));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Git Build"), String(BUILD_GIT));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Unit"), String(Settings.Unit));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
     reply += F("\n},\n");
   }
- 
+
   byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
@@ -3312,7 +3309,7 @@ void handle_json()
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
- 
+
   if (taskNr == 0 )
     reply += F("\"Sensors\":[\n");
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
@@ -3323,20 +3320,18 @@ void handle_json()
       byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
       LoadTaskSettings(TaskIndex);
       reply += F("{\n");
- 
-      reply += F("\"TaskName\": \"");
-      reply += ExtraTaskSettings.TaskDeviceName;
-      reply += F("\"");
+
+      reply += to_json_object_value(F("tasknr"), String(TaskIndex + 1));
+      reply += F(",\n");
+      reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
       if (Device[DeviceIndex].ValueCount != 0)
         reply += F(",");
       reply += F("\n");
- 
+
       for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
       {
-        reply += F("\"");
-        reply += ExtraTaskSettings.TaskDeviceValueNames[x];
-        reply += F("\": ");
-        reply += UserVar[BaseVarIndex + x];
+        reply += to_json_object_value(ExtraTaskSettings.TaskDeviceValueNames[x],
+                             toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
         if (x < (Device[DeviceIndex].ValueCount - 1))
           reply += F(",");
         reply += F("\n");
@@ -3349,7 +3344,7 @@ void handle_json()
   }
   if (taskNr == 0 )
     reply += F("]}\n");
- 
+
   WebServer.send(200, "application/json", reply);
 }
 
