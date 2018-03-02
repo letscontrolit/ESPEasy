@@ -3418,7 +3418,7 @@ void handle_control() {
 // Web Interface JSON page (no password!)
 //********************************************************************************
  
-boolean handle_json()
+void handle_json()
 {
   String tasknr = WebServer.arg("tasknr");
   String reply = "";
