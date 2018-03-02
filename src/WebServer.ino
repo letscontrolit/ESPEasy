@@ -23,12 +23,11 @@ public:
   uint32_t maxServerUsage;
   unsigned int BufferSize;
   unsigned int sentBytes;
-  bool json_format;
   String buf;
 
   StreamingBuffer(void) : lowMemorySkip(false),
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0), json_format(false)
+    maxServerUsage(0), BufferSize(400), sentBytes(0)
   {
     buf.reserve(BufferSize + 100);
     buf = "";
@@ -57,8 +56,7 @@ public:
     }
   }
 
-  void startStream(bool json = false) {
-    json_format = json;
+  void startStream() {
     maxCoreUsage = maxServerUsage = 0;
     beforeTXRam = ESP.getFreeHeap();
     initialRam = ESP.getFreeHeap();
@@ -70,7 +68,7 @@ public:
       tcpCleanup();
       return;
     } else
-      sendHeaderBlocking(json);
+      sendHeaderBlocking();
   }
 
   void trackTotalMem() {
@@ -90,9 +88,7 @@ public:
       if (buf.length() > 0) sendContentBlocking(buf);
       buf = "";
       sendContentBlocking(buf);
-      // WebServer.sendHeader("Content-Length", String(sentBytes));
-      WebServer.send ( 200, json_format ? "application/json" : "text/plain", "");
-
+ 
       finalRam = ESP.getFreeHeap();
       String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                    " including Core: " + maxCoreUsage;
@@ -141,13 +137,10 @@ void sendContentBlocking(String& data) {
   data = "";
 }
 
-void sendHeaderBlocking(bool json) {
+void sendHeaderBlocking() {
   checkRAM(F("sendHeaderBlocking"));
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  if (json)  // "application/json"
-    WebServer.sendHeader("Content-Type", "application/json", true);
-  else
-    WebServer.sendHeader("Content-Type", "text/html", true);
+  WebServer.sendHeader("Content-Type", "text/html", true);
   WebServer.sendHeader("Cache-Control", "no-cache");
   WebServer.sendHeader("Transfer-Encoding", "chunked");
   WebServer.send(200);
@@ -158,10 +151,7 @@ void sendHeaderBlocking(bool json) {
   if (freeBeforeSend < 4000) timeout = 1000;
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  if (json)  // "application/json"
-    WebServer.sendHeader("Content-Type", "application/json", true);
-  else
-    WebServer.sendHeader("Content-Type", "text/html", true);
+  WebServer.sendHeader("Content-Type", "text/html", true);
   WebServer.sendHeader("Cache-Control", "no-cache");
   WebServer.send(200);
   // dont wait on 2.3.0. Memory returns just too slow.
@@ -3286,31 +3276,30 @@ void handle_control() {
 //********************************************************************************
 // Web Interface JSON page (no password!)
 //********************************************************************************
-
-
+ 
 void handle_json()
 {
-  // ToDo TD-er: Must check for allowed client IP??????
-  String tasknr = WebServer.arg(F("tasknr"));
-  TXBuffer.startStream( true);  // true = WebServer.send(200, "application/json");
- // sendHeadandTail(F("TmplStd"),_HEAD);
-
-
+  String tasknr = WebServer.arg("tasknr");
+  String reply = "";
+ 
   if (tasknr.length() == 0)
   {
-
-    TXBuffer.buf += F("{\"System\":{\n");
- 	  TXBuffer.buf += F("\"Name\":");		      TXBuffer.buf += F("\"");	TXBuffer.buf += Settings.Name;	TXBuffer.buf += F("\"");	TXBuffer.buf += F(",");
-	  TXBuffer.buf += F("\"Unit\":");					TXBuffer.buf += Settings.Unit;	TXBuffer.buf += F(",");
-	  TXBuffer.buf += F("\"Build\":");				TXBuffer.buf += BUILD;	TXBuffer.buf += F(",");
-	  TXBuffer.buf += F("\"Git Build\":");	  TXBuffer.buf += F("\"");	TXBuffer.buf += BUILD_GIT;	 TXBuffer.buf += F("\"");	TXBuffer.buf += F(",");
-	  TXBuffer.buf += F("\"Local time\":");	  TXBuffer.buf += F("\"");	TXBuffer.buf += getDateTimeString('-',':',' '); TXBuffer.buf += F("\"");	TXBuffer.buf += F(",");
-	  TXBuffer.buf += F("\"Uptime\":");				TXBuffer.buf += wdcounter / 2;		 TXBuffer.buf += F(",");
-    TXBuffer.buf += F("\"Free RAM\":");			TXBuffer.buf += ESP.getFreeHeap();	 	//end of array
-
-    TXBuffer.buf += F("},\n");
+    reply += F("{\"System\":{\n");
+    reply += F("\"Build\": ");
+    reply += BUILD;
+    reply += F(",\n\"Git Build\":\"");    
+    reply += BUILD_GIT; 
+    reply += F("\",\n\"Local time\":\"");   
+    reply += getDateTimeString('-',':',' ');
+    reply += F("\",\n\"Unit\": ");
+    reply += Settings.Unit;
+    reply += F(",\n\"Uptime\": ");
+    reply += wdcounter / 2;
+    reply += F(",\n\"Free RAM\": ");
+    reply += ESP.getFreeHeap();
+    reply += F("\n},\n");
   }
-
+ 
   byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
@@ -3319,14 +3308,13 @@ void handle_json()
     firstTaskIndex = taskNr - 1;
     lastTaskIndex = taskNr - 1;
   }
-
-  byte lastActiveTaskIndex = 0;
+   byte lastActiveTaskIndex = 0;
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
-
+ 
   if (taskNr == 0 )
-    TXBuffer += F("\"Sensors\":[\n");
+    reply += F("\"Sensors\":[\n");
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
   {
     if (Settings.TaskDeviceNumber[TaskIndex])
@@ -3334,38 +3322,36 @@ void handle_json()
       byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
       byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
       LoadTaskSettings(TaskIndex);
-      TXBuffer += F("{\n");
-
-      TXBuffer += F("\"TaskName\":\"");
-      TXBuffer +=  ExtraTaskSettings.TaskDeviceName;
-      TXBuffer += F("\"");
+      reply += F("{\n");
+ 
+      reply += F("\"TaskName\": \"");
+      reply += ExtraTaskSettings.TaskDeviceName;
+      reply += F("\"");
       if (Device[DeviceIndex].ValueCount != 0)
-        TXBuffer += F(",");
-      TXBuffer += F("\n");
-
+        reply += F(",");
+      reply += F("\n");
+ 
       for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
       {
-        TXBuffer += F("\"");
-        TXBuffer +=  ExtraTaskSettings.TaskDeviceValueNames[x];
-        TXBuffer += F("\": ");
-        TXBuffer +=  UserVar[BaseVarIndex + x];
+        reply += F("\"");
+        reply += ExtraTaskSettings.TaskDeviceValueNames[x];
+        reply += F("\": ");
+        reply += UserVar[BaseVarIndex + x];
         if (x < (Device[DeviceIndex].ValueCount - 1))
-          TXBuffer += F(",");
-        TXBuffer += F("\n");
+          reply += F(",");
+        reply += F("\n");
       }
-      TXBuffer += F("}");
+      reply += F("}");
       if (TaskIndex != lastActiveTaskIndex)
-        TXBuffer += F(",");
-      TXBuffer += F("\n");
+        reply += F(",");
+      reply += F("\n");
     }
   }
   if (taskNr == 0 )
-    TXBuffer += F("]}\n");
-
-  TXBuffer.endStream();
-
+    reply += F("]}\n");
+ 
+  WebServer.send(200, "application/json", reply);
 }
-
 
 //********************************************************************************
 // Web Interface config page
