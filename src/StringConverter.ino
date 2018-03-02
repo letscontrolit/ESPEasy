@@ -82,6 +82,35 @@ String formatUserVar(struct EventStruct *event, byte rel_index)
 }
 
 /*********************************************************************************************\
+   Wrap a string with given pre- and postfix string.
+  \*********************************************************************************************/
+String wrap_String(const String& string, const String& wrap) {
+  String result;
+  result.reserve(string.length() + 2* wrap.length());
+  result = wrap;
+  result += string;
+  result += wrap;
+  return result;
+}
+
+/*********************************************************************************************\
+   Format an object value pair for use in JSON.
+  \*********************************************************************************************/
+String to_json_object_value(const String& object, const String& value) {
+  String result;
+  result.reserve(object.length() + value.length() + 6);
+  result = wrap_String(object, F("\""));
+  result += F(":");
+  if (value.length() == 0 || !isFloat(value)) {
+    result += wrap_String(value, F("\""));
+  } else {
+    result += value;
+  }
+  return result;
+}
+
+
+/*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
 String parseString(String& string, byte indexFind)
