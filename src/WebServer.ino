@@ -3324,6 +3324,8 @@ void handle_json()
       reply += to_json_object_value(F("tasknr"), String(TaskIndex + 1));
       reply += F(",\n");
       reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+      reply += F(",\n");
+      reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
       if (Device[DeviceIndex].ValueCount != 0)
         reply += F(",");
       reply += F("\n");
