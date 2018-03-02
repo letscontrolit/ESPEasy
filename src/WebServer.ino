@@ -7,13 +7,13 @@
 #define _HEAD false
 #define _TAIL true
 
-
 void sendContentBlocking(String& data);
 void sendHeaderBlocking(bool json);
 
-class StreamingBuffer{
+class StreamingBuffer {
 private:
   bool lowMemorySkip;
+
 public:
   uint32_t initialRam;
   uint32_t beforeTXRam;
@@ -23,218 +23,206 @@ public:
   uint32_t maxServerUsage;
   unsigned int BufferSize;
   unsigned int sentBytes;
+  bool json_format;
   String buf;
 
   StreamingBuffer(void) : lowMemorySkip(false),
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0)
-    {
-      buf.reserve(BufferSize+100);
-      buf = "";
-    }
+    maxServerUsage(0), BufferSize(400), sentBytes(0), json_format(false)
+  {
+    buf.reserve(BufferSize + 100);
+    buf = "";
+  }
   StreamingBuffer operator= (String& a)                 { this->buf=a;           checkFull();  return *this;  }
   StreamingBuffer operator= (const String& a)           { this->buf=a;           checkFull();  return *this;  }
   StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (float a)                  { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (int a)                    { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (const String& a)          {
+  StreamingBuffer operator+=(const String& a) {
     if (lowMemorySkip) return *this;
-    if ((      (this->buf.length() + a.length()) >BufferSize)&&(this->buf.length()>100 ))
+    if (((this->buf.length() + a.length()) > BufferSize) &&
+        (this->buf.length() > 100))
       sendContentBlocking(this->buf);
-      this->buf+=a ;
-      checkFull();
-      return *this;
-    }
+    this->buf += a;
+    checkFull();
+    return *this;
+  }
 
-  void checkFull(void){
-    if (lowMemorySkip) this->buf="";
-    if (this->buf.length()>BufferSize) {
-    trackTotalMem();
-    sendContentBlocking(this->buf);
+  void checkFull(void) {
+    if (lowMemorySkip) this->buf = "";
+    if (this->buf.length() > BufferSize) {
+      trackTotalMem();
+      sendContentBlocking(this->buf);
     }
   }
 
-  void startStream(bool json=false){
-    maxCoreUsage=maxServerUsage=0;
-    beforeTXRam= ESP.getFreeHeap();
-    initialRam=  ESP.getFreeHeap();
-    sentBytes=0;
-    buf ="";
-    if (beforeTXRam<3000 ){
-       lowMemorySkip=true;
-       WebServer.send(200,"text/plain","Low memory. Cannot display webpage :-(");
-       tcpCleanup();
-       return;
-       }
-     else
-   sendHeaderBlocking(json);
-  }
-
-void trackTotalMem()
-{
+  void startStream(bool json = false) {
+    json_format = json;
+    maxCoreUsage = maxServerUsage = 0;
     beforeTXRam = ESP.getFreeHeap();
-    if( (initialRam-beforeTXRam)  > maxServerUsage)
-      maxServerUsage=initialRam-beforeTXRam ;
- }
-
-void trackCoreMem()
-{
-    duringTXRam = ESP.getFreeHeap();
-    if( (initialRam-duringTXRam)  > maxCoreUsage)
-      maxCoreUsage=(initialRam-duringTXRam) ;
-}
-  void endStream(void){
-  if (!lowMemorySkip){
-     if (buf.length() >0) sendContentBlocking(buf);
-        buf ="";
-        sendContentBlocking(buf);
-        WebServer.sendHeader( "Content-Length", "0");
-        WebServer.send ( 200, "text/plain", "");
-
-        finalRam= ESP.getFreeHeap();
-        String log = String("Ram usage: Webserver only: ")+ maxServerUsage +" including Core: "+ maxCoreUsage;
-        addLog(LOG_LEVEL_DEBUG, log);
-    } else {
-        String log = String("Webpage skipped: low memory: ")+ finalRam ;
-        addLog(LOG_LEVEL_DEBUG, log);
-        lowMemorySkip=false;
-    }
+    initialRam = ESP.getFreeHeap();
+    sentBytes = 0;
+    buf = "";
+    if (beforeTXRam < 3000) {
+      lowMemorySkip = true;
+      WebServer.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
+      tcpCleanup();
+      return;
+    } else
+      sendHeaderBlocking(json);
   }
 
-}TXBuffer;
+  void trackTotalMem() {
+    beforeTXRam = ESP.getFreeHeap();
+    if ((initialRam - beforeTXRam) > maxServerUsage)
+      maxServerUsage = initialRam - beforeTXRam;
+  }
 
+  void trackCoreMem() {
+    duringTXRam = ESP.getFreeHeap();
+    if ((initialRam - duringTXRam) > maxCoreUsage)
+      maxCoreUsage = (initialRam - duringTXRam);
+  }
 
-void sendContentBlocking(String& data){
-      checkRAM(F("sendContentBlocking"));
-       uint32_t freeBeforeSend= ESP.getFreeHeap();
-      String log = String("sendcontent free: ")+freeBeforeSend+" chunk size:"+ data.length();
-      addLog(LOG_LEVEL_DEBUG_DEV, log);
-      freeBeforeSend= ESP.getFreeHeap();
-      if (TXBuffer.beforeTXRam > freeBeforeSend)   TXBuffer.beforeTXRam = freeBeforeSend ;
-      TXBuffer.duringTXRam=freeBeforeSend;
-      #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-          String size  =String(data.length(), HEX)+"\r\n";
-          //do chunked transfer encoding ourselves (WebServer doesn't support it)
-          WebServer.sendContent(size);
-          if (data.length()) WebServer.sendContent(data);
-          WebServer.sendContent("\r\n");
-      #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-          unsigned int timeout = 0;
-          if (freeBeforeSend<5000 ) timeout = 100;
-          if (freeBeforeSend<4000 ) timeout = 1000;
-          uint32_t beginWait = millis();
-          WebServer.sendContent(data);
-          while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
-            if(ESP.getFreeHeap()<TXBuffer.duringTXRam) TXBuffer.duringTXRam=ESP.getFreeHeap();;
-            TXBuffer.trackCoreMem();
-            checkRAM(F("duringDataTX"));
-            delay(1);
-          }
-     #endif
+  void endStream(void) {
+    if (!lowMemorySkip) {
+      if (buf.length() > 0) sendContentBlocking(buf);
+      buf = "";
+      sendContentBlocking(buf);
+      // WebServer.sendHeader("Content-Length", String(sentBytes));
+      WebServer.send ( 200, json_format ? "application/json" : "text/plain", "");
 
-      TXBuffer.sentBytes+=data.length();
-      data="";
+      finalRam = ESP.getFreeHeap();
+      String log = String("Ram usage: Webserver only: ") + maxServerUsage +
+                   " including Core: " + maxCoreUsage;
+      addLog(LOG_LEVEL_DEBUG, log);
+    } else {
+      String log = String("Webpage skipped: low memory: ") + finalRam;
+      addLog(LOG_LEVEL_DEBUG, log);
+      lowMemorySkip = false;
+    }
+  }
+} TXBuffer;
+
+void sendContentBlocking(String& data) {
+  checkRAM(F("sendContentBlocking"));
+  uint32_t freeBeforeSend = ESP.getFreeHeap();
+  String log = String("sendcontent free: ") + freeBeforeSend + " chunk size:" + data.length();
+  addLog(LOG_LEVEL_DEBUG_DEV, log);
+  freeBeforeSend = ESP.getFreeHeap();
+  if (TXBuffer.beforeTXRam > freeBeforeSend)
+    TXBuffer.beforeTXRam = freeBeforeSend;
+  TXBuffer.duringTXRam = freeBeforeSend;
+#if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  String size = String(data.length(), HEX) + "\r\n";
+  // do chunked transfer encoding ourselves (WebServer doesn't support it)
+  WebServer.sendContent(size);
+  if (data.length()) WebServer.sendContent(data);
+  WebServer.sendContent("\r\n");
+#else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+  unsigned int timeout = 0;
+  if (freeBeforeSend < 5000) timeout = 100;
+  if (freeBeforeSend < 4000) timeout = 1000;
+  const uint32_t beginWait = millis();
+  WebServer.sendContent(data);
+  while ((ESP.getFreeHeap() < freeBeforeSend) &&
+         !timeOutReached(beginWait + timeout)) {
+    if (ESP.getFreeHeap() < TXBuffer.duringTXRam)
+      TXBuffer.duringTXRam = ESP.getFreeHeap();
+    ;
+    TXBuffer.trackCoreMem();
+    checkRAM(F("duringDataTX"));
+    delay(1);
+  }
+#endif
+
+  TXBuffer.sentBytes += data.length();
+  data = "";
 }
 
+void sendHeaderBlocking(bool json) {
+  checkRAM(F("sendHeaderBlocking"));
+#if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  if (json)  // "application/json"
+    WebServer.sendHeader("Content-Type", "application/json", true);
+  else
+    WebServer.sendHeader("Content-Type", "text/html", true);
+  WebServer.sendHeader("Cache-Control", "no-cache");
+  WebServer.sendHeader("Transfer-Encoding", "chunked");
+  WebServer.send(200);
+#else
+  unsigned int timeout = 0;
+  uint32_t freeBeforeSend = ESP.getFreeHeap();
+  if (freeBeforeSend < 5000) timeout = 100;
+  if (freeBeforeSend < 4000) timeout = 1000;
+  const uint32_t beginWait = millis();
+  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  if (json)  // "application/json"
+    WebServer.sendHeader("Content-Type", "application/json", true);
+  else
+    WebServer.sendHeader("Content-Type", "text/html", true);
+  WebServer.sendHeader("Cache-Control", "no-cache");
+  WebServer.send(200);
+  // dont wait on 2.3.0. Memory returns just too slow.
+  while ((ESP.getFreeHeap() < freeBeforeSend) &&
+         !timeOutReached(beginWait + timeout)) {
+    checkRAM(F("duringHeaderTX"));
+    delay(1);
+  }
+#endif
+}
 
-
- void sendHeaderBlocking(bool json=false){
-    checkRAM(F("sendHeaderBlocking"));
-    #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-     if (json) // "application/json"
-        WebServer.sendHeader("Content-Type","application/json",true);
-     else
-       WebServer.sendHeader("Content-Type","text/html",true);
-       WebServer.sendHeader("Cache-Control","no-cache");
-       WebServer.sendHeader("Transfer-Encoding","chunked");
-       WebServer.send(200);
-    #else
-     unsigned int timeout = 0;
-     uint32_t freeBeforeSend= ESP.getFreeHeap();
-     if (freeBeforeSend<5000 ) timeout = 100;
-     if (freeBeforeSend<4000 ) timeout = 1000;
-     uint32_t beginWait = millis();
-     WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-     if (json) // "application/json"
-        WebServer.sendHeader("Content-Type","application/json",true);
-     else
-       WebServer.sendHeader("Content-Type","text/html",true);
-       WebServer.sendHeader("Cache-Control","no-cache");
-       WebServer.send(200);
-       // dont wait on 2.3.0. Memory returns just too slow.
-     while ((ESP.getFreeHeap() < freeBeforeSend) &&  !timeOutReached(beginWait + timeout)) {
-        checkRAM(F("duringHeaderTX"));
-        delay(1);
-     }
-    #endif
- }
-
-
-
-
-void sendHeadandTail(const String& tmplName, boolean Tail=false)
-{
-  String pageTemplate="";
+void sendHeadandTail(const String& tmplName, boolean Tail = false) {
+  String pageTemplate = "";
   int indexStart, indexEnd;
-  String  varName; //, varValue;
+  String varName;  //, varValue;
   String fileName = tmplName;
   fileName += F(".htm");
   fs::File f = SPIFFS.open(fileName, "r+");
 
-  if (f)
-  {
+  if (f) {
     pageTemplate.reserve(f.size());
-    while (f.available())
-      pageTemplate += (char)f.read();
+    while (f.available()) pageTemplate += (char)f.read();
     f.close();
-  }
-  else
-  {
+  } else {
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
   checkRAM(F("sendWebPage"));
-    //web activity timer
+  // web activity timer
   lastWeb = millis();
 
-
-
   if (Tail) {
-    pageTemplate = pageTemplate.substring( 11+pageTemplate.indexOf("{{content}}")); // advance beyond content key
-    TXBuffer+=pageTemplate;
+    pageTemplate = pageTemplate.substring(
+        11 +
+        pageTemplate.indexOf("{{content}}"));  // advance beyond content key
+    TXBuffer += pageTemplate;
   } else
 
+    while ((indexStart = pageTemplate.indexOf("{{")) >= 0) {
+      TXBuffer += pageTemplate.substring(0, indexStart);
+      pageTemplate = pageTemplate.substring(indexStart);
+      if ((indexEnd = pageTemplate.indexOf("}}")) > 0) {
+        varName = pageTemplate.substring(2, indexEnd);
+        pageTemplate = pageTemplate.substring(indexEnd + 2);
+        varName.toLowerCase();
 
-  while ((indexStart = pageTemplate.indexOf("{{")) >= 0)
-  {
-    TXBuffer += pageTemplate.substring(0, indexStart);
-    pageTemplate = pageTemplate.substring(indexStart);
-    if ((indexEnd = pageTemplate.indexOf("}}")) > 0)
-    {
-     varName = pageTemplate.substring(2, indexEnd);
-     pageTemplate = pageTemplate.substring(indexEnd + 2);
-     varName.toLowerCase();
-
-     if (varName == F("content")) {  //is var == page content?
-           break;        // send first part of result only
-      } else if (varName == F("error")) {
-       String errors(getErrorNotifications());
-       if (errors.length() > 0)
-          TXBuffer+=(errors);
-      } else {
-         getWebPageTemplateVar(varName);
-         TXBuffer.checkFull();
-       }
+        if (varName == F("content")) {  // is var == page content?
+          break;  // send first part of result only
+        } else if (varName == F("error")) {
+          String errors(getErrorNotifications());
+          if (errors.length() > 0) TXBuffer += (errors);
+        } else {
+          getWebPageTemplateVar(varName);
+          TXBuffer.checkFull();
+        }
+      } else {  // no closing "}}"
+        pageTemplate = pageTemplate.substring(2);  // eat "{{"
+      }
     }
-    else   {//no closing "}}"
-      pageTemplate = pageTemplate.substring(2);   //eat "{{"
-   }
-  }
-
-  if (shouldReboot)
-  {
+  if (shouldReboot) {
     //we only add this here as a seperate chucnk to prevent using too much memory at once
-    TXBuffer+=F(
+    TXBuffer += F(
       "<script>"
         "i=document.getElementById('rbtmsg');"
         "i.innerHTML=\"Please reboot: <input id='reboot' class='button link' value='Reboot' type='submit' onclick='r()'>\";"
@@ -271,12 +259,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail=false)
         "}"
 
       "</script>"
-    );
-
+      );
   }
-
 }
-
 
 //********************************************************************************
 // Web Interface init
@@ -1409,17 +1394,6 @@ void handle_notifications() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 //********************************************************************************
 // Web Interface hardware page
 //********************************************************************************
@@ -1428,9 +1402,6 @@ void handle_hardware() {
   navMenuIndex = 3;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
-
-
-
 
   if (isFormItem(F("psda")))
   {
@@ -2815,9 +2786,6 @@ void handle_log() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
 
-
-
-
   TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
   TXBuffer += F("<table><TR><TH>Log<TR><TD>");
   for (int i = 0; i< LOG_STRUCT_MESSAGE_LINES; i++){
@@ -2945,7 +2913,7 @@ void handle_tools() {
   addButton(TXBuffer.buf,  F("download"), F("Save"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Saves a settings file");
-  
+
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
   addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
   TXBuffer += F("<TD>");
