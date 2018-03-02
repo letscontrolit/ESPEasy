@@ -1,4 +1,39 @@
 -------------------------------------------------
+Changes in release mega-20180302 (since mega-20180228)
+-------------------------------------------------
+
+Release date: Fri Mar  2 04:00:10 CET 2018
+
+Bartłomiej Zimoń (4):
+      provide System@Sleep event (#875)
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+      fix #964, add timeStringToSeconds and use it to compare time conditions (#965)
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180228
+
+Gijs Noorlander (1):
+      Merge pull request #983 from kahvm/mega
+
+Unknown (4):
+      [issue #914] _P053_PMSx003 Dust Sensor looses sync
+      [issue #914] Check first 2 bytes of packet
+      [Build error fix] Must-keep-focus-when-pressing-buttons...
+      [webserver] Layout of code to improve readability
+
+kahvm (1):
+      Support for degree sign on LCD1602
+
+mvdbro (2):
+      Rule wildcard option on literal events
+      Rule wildcard option on literal events
+
+s0170071 (1):
+      Add Factory Reset button to web interface (#954)
+
+
+-------------------------------------------------
 Changes in release mega-20180228 (since mega-20180227)
 -------------------------------------------------
 
