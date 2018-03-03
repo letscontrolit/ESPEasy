@@ -90,6 +90,9 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
         log = F("HDC1080: Humidity: ");
         log += UserVar[event->BaseVarIndex + 1];
         addLog(LOG_LEVEL_INFO, log);
+        success = true;
+        break;
+
       }
   }
   return success;
