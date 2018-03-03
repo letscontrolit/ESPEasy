@@ -421,7 +421,7 @@ String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeD
 /********************************************************************************************\
   Convert a string like "Sun,12:30" into a 32 bit integer
   \*********************************************************************************************/
-unsigned long string2TimeLong(String &str)
+unsigned long string2TimeLong(const String &str)
 {
   // format 0000WWWWAAAABBBBCCCCDDDD
   // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
@@ -430,8 +430,12 @@ unsigned long string2TimeLong(String &str)
   char TmpStr1[10];
   int w, x, y;
   unsigned long a;
-  str.toLowerCase();
-  str.toCharArray(command, 20);
+  {
+    // Within a scope so the tmpString is only used for copy.
+    String tmpString(str);
+    tmpString.toLowerCase();
+    tmpString.toCharArray(command, 20);    
+  }
   unsigned long lngTime = 0;
 
   if (GetArgv(command, TmpStr1, 1))
