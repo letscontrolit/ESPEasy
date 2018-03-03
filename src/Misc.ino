@@ -1322,7 +1322,7 @@ boolean saveToRTC()
     }
   #endif
   #if defined(ESP32)
-    boolean ret = false;
+    return false;
   #endif
 }
 
@@ -1356,7 +1356,7 @@ boolean readFromRTC()
       return false;
   #endif
   #if defined(ESP32)
-    boolean ret = false;
+    return false;
   #endif
 }
 
