@@ -14,12 +14,12 @@ extern "C" void tcp_abort (struct tcp_pcb* pcb);
 
 void tcpCleanup()
 {
-    
+
      while(tcp_tw_pcbs!=NULL)
     {
       tcp_abort(tcp_tw_pcbs);
     }
-   
+
  }
 #endif
 
@@ -1540,7 +1540,7 @@ int RPNCalculate(char* token)
   if (token[0] == 0)
     return 0; // geen moeite doen voor een lege string
 
-  if (is_operator(token[0]))
+  if (is_operator(token[0]) && token[1] == 0)
   {
     float second = pop();
     float first = pop();
@@ -1611,7 +1611,7 @@ int Calculate(const char *input, float* result)
 {
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
-  char c, *TokenPos = token;
+  char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
   char     sc;          // used for record stack element
@@ -1619,15 +1619,16 @@ int Calculate(const char *input, float* result)
 
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-
+  oc=c=0;
   while (strpos < strend)
   {
     // read one token from the input stream
+    oc = c;
     c = *strpos;
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if ((c >= '0' && c <= '9') || c == '.')
+      if ((c >= '0' && c <= '9') || c == '.' || (c == '-' && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;
@@ -1881,7 +1882,7 @@ String rulesProcessingFile(String fileName, String& event)
           {
             conditional = true;
             String check = lcAction.substring(split + 3);
-            condition = conditionMatch(check);
+            condition = conditionMatchExtended(check);
             ifBranche = true;
             isCommand = false;
           }
@@ -1966,14 +1967,14 @@ boolean ruleMatch(String& event, String& rule)
         tmpEvent = event.substring(0,rule.length());
         tmpRule = rule;
       }
-      
+
     pos = rule.indexOf('*');
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
       {
         tmpEvent = event.substring(0,pos-1);
         tmpRule = rule.substring(0,pos-1);
       }
-     
+
     if (tmpEvent.equalsIgnoreCase(tmpRule))
       return true;
     else
