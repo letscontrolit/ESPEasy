@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release v2.0-20180303 (since v2.0-20180302)
+-------------------------------------------------
+
+Release date: Sat Mar  3 04:00:19 CET 2018
+
+Unknown (5):
+      revert json to non-chunking #988 from s0170071/mega
+      [issue #293] json output nan values not double quoted
+      Add Task device type to json by @s0170071
+      [Issue #827] MQTT not using proper case for %sysname% variable.
+      Add AND/OR to rules & prevent unwanted case changes in strings (#994)
+
+
+-------------------------------------------------
 Changes in release v2.0-20180302 (since v2.0-20180228)
 -------------------------------------------------
 
