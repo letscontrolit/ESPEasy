@@ -14,12 +14,12 @@ extern "C" void tcp_abort (struct tcp_pcb* pcb);
 
 void tcpCleanup()
 {
-    
+
      while(tcp_tw_pcbs!=NULL)
     {
       tcp_abort(tcp_tw_pcbs);
     }
-   
+
  }
 #endif
 
@@ -79,7 +79,13 @@ void deepSleepStart(int delay)
     delay = 4294;   //max sleep time ~1.2h
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
-  ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
+  #if defined(ESP8266)
+    ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
+  #endif
+  #if defined(ESP32)
+    esp_sleep_enable_timer_wakeup((uint32_t)delay * 1000000);
+    esp_deep_sleep_start();
+  #endif
 }
 
 boolean remoteConfig(struct EventStruct *event, String& string)
@@ -310,6 +316,9 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
 /********************************************************************************************\
   Status LED
 \*********************************************************************************************/
+#if defined(ESP32)
+  #define PWMRANGE 1024
+#endif
 #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
 #define STATUS_PWM_TRAFFICRISE (PWMRANGE>>1)
@@ -367,7 +376,9 @@ void statusLED(boolean traffic)
     if (Settings.Pin_status_led_Inversed)
       pwm = PWMRANGE-pwm;
 
-    analogWrite(Settings.Pin_status_led, pwm);
+    #if defined(ESP8266)
+      analogWrite(Settings.Pin_status_led, pwm);
+    #endif
   }
 }
 
@@ -386,7 +397,7 @@ void delayBackground(unsigned long delay)
 /********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
-void parseCommandString(struct EventStruct *event, String& string)
+void parseCommandString(struct EventStruct *event, const String& string)
 {
   char command[80];
   command[0] = 0;
@@ -503,14 +514,16 @@ void fileSystemCheck()
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
-    fs::FSInfo fs_info;
-    SPIFFS.info(fs_info);
+    #if defined(ESP8266)
+      fs::FSInfo fs_info;
+      SPIFFS.info(fs_info);
 
-    String log = F("FS   : Mount successful, used ");
-    log=log+fs_info.usedBytes;
-    log=log+F(" bytes of ");
-    log=log+fs_info.totalBytes;
-    addLog(LOG_LEVEL_INFO, log);
+      String log = F("FS   : Mount successful, used ");
+      log=log+fs_info.usedBytes;
+      log=log+F(" bytes of ");
+      log=log+fs_info.totalBytes;
+      addLog(LOG_LEVEL_INFO, log);
+    #endif
 
     fs::File f = SPIFFS.open(FILE_CONFIG, "r");
     if (!f)
@@ -638,7 +651,7 @@ String SaveSettings(void)
   String err;
   err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
-    return(err);
+   return(err);
 
   return(SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
 }
@@ -894,9 +907,14 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 int SpiffsSectors()
 {
-  uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
-  return _sectorEnd - _sectorStart;
+  #if defined(ESP8266)
+    uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
+    return _sectorEnd - _sectorStart;
+  #endif
+  #if defined(ESP32)
+    return 32;
+  #endif
 }
 
 
@@ -953,7 +971,7 @@ void ResetFactory(void)
   fname=F(FILE_NOTIFICATION);
   InitFile(fname.c_str(), 4096);
 
-  fname=F("rules1.txt");
+  fname=F(FILE_RULES);
   InitFile(fname.c_str(), 0);
 
   LoadSettings();
@@ -973,6 +991,7 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
+
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
@@ -1046,14 +1065,18 @@ void ResetFactory(void)
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
-
   Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  ESP.reset();
+  #if defined(ESP8266)
+    ESP.reset();
+  #endif
+  #if defined(ESP32)
+    ESP.restart();
+  #endif
 }
 
 
@@ -1083,7 +1106,12 @@ void emergencyReset()
   \*********************************************************************************************/
 unsigned long FreeMem(void)
 {
-  return system_get_free_heap_size();
+  #if defined(ESP8266)
+    return system_get_free_heap_size();
+  #endif
+  #if defined(ESP32)
+    return ESP.getFreeHeap();
+  #endif
 }
 
 
@@ -1195,7 +1223,9 @@ void addLog(byte logLevel, const __FlashStringHelper* flashString)
 
 bool SerialAvailableForWrite() {
   if (!Settings.UseSerial) return false;
-  if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
+  #if defined(ESP8266)
+    if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
+  #endif
   return true;
 }
 
@@ -1241,12 +1271,15 @@ void addLog(byte logLevel, const char *line)
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(line);
   }
+
+#ifdef FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
       logFile.println(line);
     logFile.close();
   }
+#endif
 }
 
 
@@ -1263,7 +1296,12 @@ void delayedReboot(int rebootDelay)
     rebootDelay--;
     delay(1000);
   }
-  ESP.reset();
+   #if defined(ESP8266)
+     ESP.reset();
+   #endif
+   #if defined(ESP32)
+     ESP.restart();
+   #endif
 }
 
 
@@ -1272,15 +1310,20 @@ void delayedReboot(int rebootDelay)
   \*********************************************************************************************/
 boolean saveToRTC()
 {
-  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
-  {
-    addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
-    return(false);
-  }
-  else
-  {
-    return(true);
-  }
+  #if defined(ESP8266)
+    if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
+    {
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+      return(false);
+    }
+    else
+    {
+      return(true);
+    }
+  #endif
+  #if defined(ESP32)
+    return false;
+  #endif
 }
 
 
@@ -1303,13 +1346,18 @@ void initRTC()
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
-    return(false);
+  #if defined(ESP8266)
+    if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
+      return(false);
 
-  if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-    return true;
-  else
+    if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
+      return true;
+    else
+      return false;
+  #endif
+  #if defined(ESP32)
     return false;
+  #endif
 }
 
 
@@ -1318,12 +1366,17 @@ boolean readFromRTC()
 \*********************************************************************************************/
 boolean saveUserVarToRTC()
 {
-  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
-  byte* buffer = (byte*)&UserVar;
-  size_t size = sizeof(UserVar);
-  uint32 sum = getChecksum(buffer, size);
-  boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
-  ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  #if defined(ESP8266)
+    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
+    byte* buffer = (byte*)&UserVar;
+    size_t size = sizeof(UserVar);
+    uint32_t sum = getChecksum(buffer, size);
+    boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
+    ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+  #endif
+  #if defined(ESP32)
+    boolean ret = false;
+  #endif
   return ret;
 }
 
@@ -1333,33 +1386,42 @@ boolean saveUserVarToRTC()
 \*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
-  byte* buffer = (byte*)&UserVar;
-  size_t size = sizeof(UserVar);
-  boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
-  uint32 sumRAM = getChecksum(buffer, size);
-  uint32 sumRTC = 0;
-  ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
-  if (!ret || sumRTC != sumRAM)
-  {
-    addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
-    memset(buffer, 0, size);
-  }
+  #if defined(ESP8266)
+    //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
+    byte* buffer = (byte*)&UserVar;
+    size_t size = sizeof(UserVar);
+    boolean ret = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+    uint32_t sumRAM = getChecksum(buffer, size);
+    uint32_t sumRTC = 0;
+    ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
+    if (!ret || sumRTC != sumRAM)
+    {
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+      memset(buffer, 0, size);
+    }
+  #endif
+  #if defined(ESP32)
+    boolean ret = false;
+  #endif
   return ret;
 }
 
 
-uint32 getChecksum(byte* buffer, size_t size)
+uint32_t getChecksum(byte* buffer, size_t size)
 {
-  uint32 sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
+  uint32_t sum = 0x82662342;   //some magic to avoid valid checksum on new, uninitialized ESP
   for (size_t i=0; i<size; i++)
     sum += buffer[i];
   return sum;
 }
 
+
+
 /********************************************************************************************\
   Parse string template
   \*********************************************************************************************/
+
+
 
 String parseTemplate(String &tmpString, byte lineSize)
 {
@@ -1506,7 +1568,7 @@ float pop()
   if (sp != (globalstack - 1)) // empty
     return *(sp--);
   else
-    return(0);
+    return 0.0;
 }
 
 float apply_operator(char op, float first, float second)
@@ -1540,7 +1602,7 @@ int RPNCalculate(char* token)
   if (token[0] == 0)
     return 0; // geen moeite doen voor een lege string
 
-  if (is_operator(token[0]))
+  if (is_operator(token[0]) && token[1] == 0)
   {
     float second = pop();
     float first = pop();
@@ -1611,7 +1673,7 @@ int Calculate(const char *input, float* result)
 {
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
-  char c, *TokenPos = token;
+  char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
   char     sc;          // used for record stack element
@@ -1619,15 +1681,16 @@ int Calculate(const char *input, float* result)
 
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-
+  oc=c=0;
   while (strpos < strend)
   {
     // read one token from the input stream
+    oc = c;
     c = *strpos;
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if ((c >= '0' && c <= '9') || c == '.')
+      if ((c >= '0' && c <= '9') || c == '.' || (c == '-' && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;
@@ -1759,7 +1822,12 @@ void rulesProcessing(String& event)
 
   for (byte x = 1; x < RULESETS_MAX + 1; x++)
   {
-    String fileName = F("rules");
+    #if defined(ESP8266)
+      String fileName = F("rules");
+    #endif
+    #if defined(ESP32)
+      String fileName = F("/rules");
+    #endif
     fileName += x;
     fileName += F(".txt");
     if (SPIFFS.exists(fileName))
@@ -1881,7 +1949,7 @@ String rulesProcessingFile(String fileName, String& event)
           {
             conditional = true;
             String check = lcAction.substring(split + 3);
-            condition = conditionMatch(check);
+            condition = conditionMatchExtended(check);
             ifBranche = true;
             isCommand = false;
           }
@@ -1921,8 +1989,18 @@ String rulesProcessingFile(String fileName, String& event)
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
             yield();
-            if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+            // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+            String tmpAction(action);
+            if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+              if (!tmpAction.equals(action)) {
+                String log = F("PLUGIN_WRITE altered the string: ");
+                log += action;
+                log += F(" to: ");
+                log += tmpAction;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
               ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+            }
             yield();
           }
         }
@@ -1956,14 +2034,14 @@ boolean ruleMatch(String& event, String& rule)
         tmpEvent = event.substring(0,rule.length());
         tmpRule = rule;
       }
-      
+
     pos = rule.indexOf('*');
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
       {
         tmpEvent = event.substring(0,pos-1);
         tmpRule = rule.substring(0,pos-1);
       }
-     
+
     if (tmpEvent.equalsIgnoreCase(tmpRule))
       return true;
     else
@@ -2067,7 +2145,33 @@ boolean ruleMatch(String& event, String& rule)
 /********************************************************************************************\
   Check expression
   \*********************************************************************************************/
-boolean conditionMatch(String& check)
+
+boolean conditionMatchExtended(String& check) {
+	int condAnd = -1;
+	int condOr = -1;
+	boolean rightcond = false;
+	boolean leftcond = conditionMatch(check); // initial check
+
+	do {
+		condAnd = check.indexOf(F(" and "));
+		condOr  = check.indexOf(F(" or "));
+
+		if (condAnd > 0 || condOr > 0) { // we got AND/OR
+			if (condAnd > 0	&& ((condOr < 0 && condOr < condAnd) || (condOr > 0 && condOr > condAnd))) { //AND is first
+				check = check.substring(condAnd + 5);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond && rightcond);
+			} else { //OR is first
+				check = check.substring(condOr + 4);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond || rightcond);
+			}
+		}
+	} while (condAnd > 0 || condOr > 0);
+	return leftcond;
+}
+
+boolean conditionMatch(const String& check)
 {
   boolean match = false;
 
@@ -2212,13 +2316,14 @@ void SendValueLogger(byte TaskIndex)
 
   addLog(LOG_LEVEL_DEBUG, logger);
 
+#ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
   File logFile = SD.open(filename, FILE_WRITE);
   if (logFile)
     logFile.print(logger);
   logFile.close();
+#endif
 }
-
 
 void checkRAM( const __FlashStringHelper* flashString)
 {
@@ -2249,10 +2354,11 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
 /********************************************************************************************\
   Play RTTTL string on specified pin
   \*********************************************************************************************/
-void play_rtttl(uint8_t _pin, char *p )
+void play_rtttl(uint8_t _pin, const char *p )
 {
+  checkRAM(F("play_rtttl"));
   #define OCTAVE_OFFSET 0
-  // Absolutely no error checking in here
+  // FIXME: Absolutely no error checking in here
 
   int notes[] = { 0,
     262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,
@@ -2431,7 +2537,12 @@ void ArduinoOTAInit()
       //so dont touch device until restart is complete
       Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
       delay(100);
-      ESP.reset();
+      #if defined(ESP8266)
+        ESP.reset();
+      #endif
+      #if defined(ESP32)
+        ESP.restart();
+      #endif
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 
@@ -2447,7 +2558,12 @@ void ArduinoOTAInit()
       else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
 
       delay(100);
-      ESP.reset();
+      #if defined(ESP8266)
+       ESP.reset();
+      #endif
+      #if defined(ESP32)
+        ESP.restart();
+      #endif
   });
   ArduinoOTA.begin();
 
