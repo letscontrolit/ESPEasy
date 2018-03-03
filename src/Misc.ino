@@ -397,7 +397,7 @@ void delayBackground(unsigned long delay)
 /********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
-void parseCommandString(struct EventStruct *event, String& string)
+void parseCommandString(struct EventStruct *event, const String& string)
 {
   char command[80];
   command[0] = 0;
@@ -991,7 +991,7 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
-  
+
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
@@ -1989,8 +1989,18 @@ String rulesProcessingFile(String fileName, String& event)
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
             yield();
-            if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+            // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+            String tmpAction(action);
+            if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+              if (!tmpAction.equals(action)) {
+                String log = F("PLUGIN_WRITE altered the string: ");
+                log += action;
+                log += F(" to: ");
+                log += tmpAction;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
               ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+            }
             yield();
           }
         }
@@ -2161,7 +2171,7 @@ boolean conditionMatchExtended(String& check) {
 	return leftcond;
 }
 
-boolean conditionMatch(String& check)
+boolean conditionMatch(const String& check)
 {
   boolean match = false;
 
