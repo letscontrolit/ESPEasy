@@ -3,12 +3,6 @@
 // #######################################################################################################
 
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
-
-#if defined(ESP32)
-  #define ESP32noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
-  #define ESP32interrupts() portEXIT_CRITICAL(&mux);}
-#endif
-
 #define PLUGIN_004
 #define PLUGIN_ID_004         4
 #define PLUGIN_NAME_004       "Environment - DS18b20"
@@ -379,27 +373,24 @@ uint8_t Plugin_004_DS_reset()
 {
     uint8_t r;
     uint8_t retries = 125;
-    #if defined(ESP32)
-      ESP32noInterrupts();
-    #endif
-    pinMode(Plugin_004_DallasPin, INPUT);
-    do // wait until the wire is high... just in case
     {
-        if (--retries == 0)
-            return 0;
-        delayMicroseconds(2);
-    }
-    while (!digitalRead(Plugin_004_DallasPin));
+      DisableInterrupts disableInterrupts;  // will remain disabled as long as object exists.
+      pinMode(Plugin_004_DallasPin, INPUT);
+      do // wait until the wire is high... just in case
+      {
+          if (--retries == 0)
+              return 0;
+          delayMicroseconds(2);
+      }
+      while (!digitalRead(Plugin_004_DallasPin));
 
-    pinMode(Plugin_004_DallasPin, OUTPUT); digitalWrite(Plugin_004_DallasPin, LOW);
-    delayMicroseconds(492);               // Dallas spec. = Min. 480uSec. Arduino 500uSec.
-    pinMode(Plugin_004_DallasPin, INPUT); // Float
-    delayMicroseconds(40);
-    r = !digitalRead(Plugin_004_DallasPin);
-    delayMicroseconds(420);
-    #if defined(ESP32)
-      ESP32interrupts();
-    #endif
+      pinMode(Plugin_004_DallasPin, OUTPUT); digitalWrite(Plugin_004_DallasPin, LOW);
+      delayMicroseconds(492);               // Dallas spec. = Min. 480uSec. Arduino 500uSec.
+      pinMode(Plugin_004_DallasPin, INPUT); // Float
+      delayMicroseconds(40);
+      r = !digitalRead(Plugin_004_DallasPin);
+      delayMicroseconds(420);
+    }
     return r;
 }
 
@@ -580,19 +571,15 @@ void Plugin_004_DS_write(uint8_t ByteToWrite)
 uint8_t Plugin_004_DS_read_bit(void)
 {
     uint8_t r;
-
-    #if defined(ESP32)
-       ESP32noInterrupts();
-    #endif
-    pinMode(Plugin_004_DallasPin, OUTPUT);
-    digitalWrite(Plugin_004_DallasPin, LOW);
-    delayMicroseconds(3);
-    pinMode(Plugin_004_DallasPin, INPUT); // let pin float, pull up will raise
-    delayMicroseconds(10);
-    r = digitalRead(Plugin_004_DallasPin);
-    #if defined(ESP32)
-       ESP32interrupts();
-    #endif
+    {
+      DisableInterrupts disableInterrupts;  // will remain disabled as long as object exists.
+      pinMode(Plugin_004_DallasPin, OUTPUT);
+      digitalWrite(Plugin_004_DallasPin, LOW);
+      delayMicroseconds(3);
+      pinMode(Plugin_004_DallasPin, INPUT); // let pin float, pull up will raise
+      delayMicroseconds(10);
+      r = digitalRead(Plugin_004_DallasPin);
+    }
     delayMicroseconds(53);
     return r;
 }
@@ -604,31 +591,25 @@ void Plugin_004_DS_write_bit(uint8_t v)
 {
     if (v & 1)
     {
-        #if defined(ESP32)
-          ESP32noInterrupts();
-        #endif
+      {
+        DisableInterrupts disableInterrupts;  // will remain disabled as long as object exists.
         digitalWrite(Plugin_004_DallasPin, LOW);
         pinMode(Plugin_004_DallasPin, OUTPUT);
         delayMicroseconds(10);
         digitalWrite(Plugin_004_DallasPin, HIGH);
-        #if defined(ESP32)
-          ESP32interrupts();
-        #endif
-        delayMicroseconds(55);
+      }
+      delayMicroseconds(55);
     }
     else
     {
-        #if defined(ESP32)
-          ESP32noInterrupts();
-        #endif
+      {
+        DisableInterrupts disableInterrupts;  // will remain disabled as long as object exists.
         digitalWrite(Plugin_004_DallasPin, LOW);
         pinMode(Plugin_004_DallasPin, OUTPUT);
         delayMicroseconds(65);
         digitalWrite(Plugin_004_DallasPin, HIGH);
-        #if defined(ESP32)
-           ESP32interrupts();
-        #endif
-        delayMicroseconds(5);
+      }
+      delayMicroseconds(5);
     }
 }
 
