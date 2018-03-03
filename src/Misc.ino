@@ -14,12 +14,12 @@ extern "C" void tcp_abort (struct tcp_pcb* pcb);
 
 void tcpCleanup()
 {
-    
+
      while(tcp_tw_pcbs!=NULL)
     {
       tcp_abort(tcp_tw_pcbs);
     }
-   
+
  }
 #endif
 
@@ -386,7 +386,7 @@ void delayBackground(unsigned long delay)
 /********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
-void parseCommandString(struct EventStruct *event, String& string)
+void parseCommandString(struct EventStruct *event, const String& string)
 {
   char command[80];
   command[0] = 0;
@@ -1540,7 +1540,7 @@ int RPNCalculate(char* token)
   if (token[0] == 0)
     return 0; // geen moeite doen voor een lege string
 
-  if (is_operator(token[0]))
+  if (is_operator(token[0]) && token[1] == 0)
   {
     float second = pop();
     float first = pop();
@@ -1611,7 +1611,7 @@ int Calculate(const char *input, float* result)
 {
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
-  char c, *TokenPos = token;
+  char c, oc, *TokenPos = token;
   char stack[32];       // operator stack
   unsigned int sl = 0;  // stack length
   char     sc;          // used for record stack element
@@ -1619,15 +1619,16 @@ int Calculate(const char *input, float* result)
 
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-
+  oc=c=0;
   while (strpos < strend)
   {
     // read one token from the input stream
+    oc = c;
     c = *strpos;
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if ((c >= '0' && c <= '9') || c == '.')
+      if ((c >= '0' && c <= '9') || c == '.' || (c == '-' && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;
@@ -1881,7 +1882,7 @@ String rulesProcessingFile(String fileName, String& event)
           {
             conditional = true;
             String check = lcAction.substring(split + 3);
-            condition = conditionMatch(check);
+            condition = conditionMatchExtended(check);
             ifBranche = true;
             isCommand = false;
           }
@@ -1921,8 +1922,18 @@ String rulesProcessingFile(String fileName, String& event)
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
             yield();
-            if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+            // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+            String tmpAction(action);
+            if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+              if (!tmpAction.equals(action)) {
+                String log = F("PLUGIN_WRITE altered the string: ");
+                log += action;
+                log += F(" to: ");
+                log += tmpAction;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
               ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+            }
             yield();
           }
         }
@@ -1956,14 +1967,14 @@ boolean ruleMatch(String& event, String& rule)
         tmpEvent = event.substring(0,rule.length());
         tmpRule = rule;
       }
-      
+
     pos = rule.indexOf('*');
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
       {
         tmpEvent = event.substring(0,pos-1);
         tmpRule = rule.substring(0,pos-1);
       }
-     
+
     if (tmpEvent.equalsIgnoreCase(tmpRule))
       return true;
     else
@@ -2067,7 +2078,33 @@ boolean ruleMatch(String& event, String& rule)
 /********************************************************************************************\
   Check expression
   \*********************************************************************************************/
-boolean conditionMatch(String& check)
+
+boolean conditionMatchExtended(String& check) {
+	int condAnd = -1;
+	int condOr = -1;
+	boolean rightcond = false;
+	boolean leftcond = conditionMatch(check); // initial check
+
+	do {
+		condAnd = check.indexOf(F(" and "));
+		condOr  = check.indexOf(F(" or "));
+
+		if (condAnd > 0 || condOr > 0) { // we got AND/OR
+			if (condAnd > 0	&& ((condOr < 0 && condOr < condAnd) || (condOr > 0 && condOr > condAnd))) { //AND is first
+				check = check.substring(condAnd + 5);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond && rightcond);
+			} else { //OR is first
+				check = check.substring(condOr + 4);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond || rightcond);
+			}
+		}
+	} while (condAnd > 0 || condOr > 0);
+	return leftcond;
+}
+
+boolean conditionMatch(const String& check)
 {
   boolean match = false;
 
