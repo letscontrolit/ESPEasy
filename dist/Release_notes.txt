@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20180303 (since mega-20180302)
+-------------------------------------------------
+
+Release date: Sat Mar  3 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180302
+
+Unknown (5):
+      revert json to non-chunking #988 from s0170071/mega
+      [issue #293] json output nan values not double quoted
+      Add Task device type to json by @s0170071
+      [Issue #827] MQTT not using proper case for %sysname% variable.
+      Add AND/OR to rules & prevent unwanted case changes in strings (#994)
+
+s0170071 (3):
+      revert json to non-chunking
+      Add git build and local time
+      make handle_json return void
+
+
+-------------------------------------------------
 Changes in release mega-20180302 (since mega-20180228)
 -------------------------------------------------
 
