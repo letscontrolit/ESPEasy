@@ -162,7 +162,7 @@ bool MQTTConnect(int controller_idx)
   log += clientid;
   addLog(LOG_LEVEL_INFO, log);
   String subscribeTo = ControllerSettings.Subscribe;
-  subscribeTo.replace(F("%sysname%"), Settings.Name);
+  parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
   log = F("Subscribed to: ");
   log += subscribeTo;

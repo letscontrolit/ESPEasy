@@ -35,6 +35,12 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           success = false;
           break;
         }
+        const byte valueCount = getValueCountFromSensorType(event->sensorType);
+        if (valueCount == 0 || valueCount > 3) {
+          addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
+          break;
+        }
+
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
@@ -59,46 +65,14 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
         postDataStr += Settings.Unit;
         postDataStr += F("&json=");
 
-        switch (event->sensorType)
-        {
-          case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-          case SENSOR_TYPE_SWITCH:                      // report switch state
-            postDataStr += F("{field");
-            postDataStr += event->idx;
-            postDataStr += ":";
-            postDataStr += formatUserVar(event, 0);
-            postDataStr += "}";
-            break;
-          case SENSOR_TYPE_TEMP_HUM:                      // dual value
-          case SENSOR_TYPE_TEMP_BARO:
-          case SENSOR_TYPE_DUAL:
-            postDataStr += F("{field");
-            postDataStr += event->idx;
-            postDataStr += ":";
-            postDataStr += formatUserVar(event, 0);
-            postDataStr += F(",field");
-            postDataStr += event->idx + 1;
-            postDataStr += ":";
-            postDataStr += formatUserVar(event, 1);
-            postDataStr += "}";
-            break;
-          case SENSOR_TYPE_TEMP_HUM_BARO:
-          case SENSOR_TYPE_TRIPLE:
-            postDataStr += F("{field");
-            postDataStr += event->idx;
-            postDataStr += ":";
-            postDataStr += formatUserVar(event, 0);
-            postDataStr += F(",field");
-            postDataStr += event->idx + 1;
-            postDataStr += ":";
-            postDataStr += formatUserVar(event, 1);
-            postDataStr += F(",field");
-            postDataStr += event->idx + 2;
-            postDataStr += ":";
-            postDataStr += formatUserVar(event, 2);
-            postDataStr += "}";
-            break;
+        for (byte i = 0; i < valueCount; ++i) {
+          postDataStr += (i == 0) ? F("{") : F(",");
+          postDataStr += F("field");
+          postDataStr += event->idx + i;
+          postDataStr += ":";
+          postDataStr += formatUserVar(event, i);
         }
+        postDataStr += "}";
         postDataStr += F("&apikey=");
         postDataStr += SecuritySettings.ControllerPassword[event->ControllerIndex]; // "0UDNN17RW6XAS2E5" // api key
 
