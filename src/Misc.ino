@@ -2319,37 +2319,55 @@ boolean conditionMatch(const String& check)
 {
   boolean match = false;
 
-  int comparePos = 0;
-  char compare = ' ';
-  comparePos = check.indexOf(">");
-  if (comparePos > 0)
-  {
-    compare = '>';
+  char compare    = ' ';
+
+  int posStart = check.length();
+  int posEnd = posStart;
+  int comparePos  = 0;
+
+  if ((comparePos = check.indexOf("!="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '!'+'=';
   }
-  else
-  {
-    comparePos = check.indexOf("<");
-    if (comparePos > 0)
-    {
-      compare = '<';
-    }
-    else
-    {
-      comparePos = check.indexOf("=");
-      if (comparePos > 0)
-      {
-        compare = '=';
-      }
-    }
+  if ((comparePos = check.indexOf("<>"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '!'+'=';
+  }
+  if ((comparePos = check.indexOf(">="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '>'+'=';
+  }
+  if ((comparePos = check.indexOf("<="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '<'+'=';
+  }
+  if ((comparePos = check.indexOf("<"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '<';
+  }
+  if ((comparePos = check.indexOf(">"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '>';
+  }
+  if ((comparePos = check.indexOf("="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '=';
   }
 
   float Value1 = 0;
   float Value2 = 0;
 
-  if (comparePos > 0)
+  if (compare > ' ')
   {
-    String tmpCheck1 = check.substring(0, comparePos);
-    String tmpCheck2 = check.substring(comparePos + 1);
+    String tmpCheck1 = check.substring(0, posStart);
+    String tmpCheck2 = check.substring(posEnd);
     if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
         Value1 = timeStringToSeconds(tmpCheck1);
         Value2 = timeStringToSeconds(tmpCheck2);
@@ -2363,20 +2381,35 @@ boolean conditionMatch(const String& check)
 
   switch (compare)
   {
-    case '>':
-      if (Value1 > Value2)
-        match = true;
-      break;
+  case '>'+'=':
+	  if (Value1 >= Value2)
+		  match = true;
+	  break;
 
-    case '<':
-      if (Value1 < Value2)
-        match = true;
-      break;
+  case '<'+'=':
+	  if (Value1 <= Value2)
+		  match = true;
+	  break;
 
-    case '=':
-      if (Value1 == Value2)
-        match = true;
-      break;
+  case '!'+'=':
+	  if (Value1 != Value2)
+		  match = true;
+	  break;
+
+  case '>':
+	  if (Value1 > Value2)
+		  match = true;
+	  break;
+
+  case '<':
+	  if (Value1 < Value2)
+		  match = true;
+	  break;
+
+  case '=':
+	  if (Value1 == Value2)
+		  match = true;
+	  break;
   }
   return match;
 }
