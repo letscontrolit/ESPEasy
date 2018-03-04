@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release v2.0-20180304 (since v2.0-20180303)
+-------------------------------------------------
+
+Release date: Sun Mar  4 04:00:19 CET 2018
+
+Gijs Noorlander (2):
+      Merge pull request #1000 from uzi18/test3  (more comparisions in IF condition)
+      _P072_HDC1080 allow to send values to the controllers (#999)
+
+Unknown (2):
+      [issue #993] Add %unit% variable in MQTT subscribe topic
+      [issue #892 ] Only use sensor type when really needed
+
+
+-------------------------------------------------
 Changes in release v2.0-20180303 (since v2.0-20180302)
 -------------------------------------------------
 
