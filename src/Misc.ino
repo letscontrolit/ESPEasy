@@ -1427,6 +1427,7 @@ String parseTemplate(String &tmpString, byte lineSize)
   }
 
   parseSystemVariables(newString, false);
+  parseStandardConversions(newString, false);
 
   // padding spaces
   while (newString.length() < lineSize)
