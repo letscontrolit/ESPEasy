@@ -339,7 +339,12 @@ void clearAccessBlock()
 #include "core_version.h"
 #define HTML_SYMBOL_WARNING "&#9888;"
 
-#define TASKS_PER_PAGE 12
+#if defined(ESP8266)
+  #define TASKS_PER_PAGE 12
+#endif
+#if defined(ESP32)
+  #define TASKS_PER_PAGE 32
+#endif
 
 static const char pgDefaultCSS[] PROGMEM = {
   //color scheme: #07D #D50 #DB0 #A0D
