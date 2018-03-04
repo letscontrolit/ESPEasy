@@ -3038,11 +3038,6 @@ void handle_tools() {
   TXBuffer += F("<TD>");
   TXBuffer += F("Erase all settings files");
 
-  TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
-  TXBuffer += F("<TD>");
-  TXBuffer += F("Erase all settings files");
-
 #if defined(ESP8266)
   if (ESP.getFlashChipRealSize() > 524288)
   {
@@ -3421,7 +3416,7 @@ void handle_json()
 {
   String tasknr = WebServer.arg("tasknr");
   String reply = "";
- 
+
   if (tasknr.length() == 0)
   {
     reply += F("{\"System\":{\n");
@@ -3438,7 +3433,7 @@ void handle_json()
     reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
     reply += F("\n},\n");
   }
- 
+
   byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
@@ -3451,7 +3446,7 @@ void handle_json()
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
- 
+
   if (taskNr == 0 )
     reply += F("\"Sensors\":[\n");
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
