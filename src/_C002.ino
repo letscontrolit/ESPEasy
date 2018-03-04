@@ -189,8 +189,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG, log);
 
           String pubname = ControllerSettings.Publish;
-          parseSystemVariables(pubname, false);
-          parseEventVariables(pubname, event, false);
+          parseControllerVariables(pubname, event, false);
           if (!MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
           {
             connectionFailures++;

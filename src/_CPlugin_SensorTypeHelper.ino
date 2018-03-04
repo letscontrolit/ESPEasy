@@ -51,8 +51,11 @@ String getBearing(int degrees)
     F("NW"),
     F("NNW")
   };
-  int bearing_idx=int(degrees/22.5);
-  if (bearing_idx<0 || bearing_idx>=(int) (sizeof(bearing)/sizeof(bearing[0])))
+  int nr_directions = (int) (sizeof(bearing)/sizeof(bearing[0]));
+  float stepsize = (360.0 / nr_directions);
+  if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
+  int bearing_idx=int((degrees + (stepsize / 2.0)) / stepsize) % nr_directions;
+  if (bearing_idx < 0)
     return("");
   else
     return(bearing[bearing_idx]);

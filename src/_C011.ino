@@ -276,9 +276,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-  //NOTE: cant we just call parseTemplate() for all the standard stuff??
-  parseSystemVariables(s, true);
-  parseEventVariables(s, event, true);
+  parseControllerVariables(s, event, true);
 
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
