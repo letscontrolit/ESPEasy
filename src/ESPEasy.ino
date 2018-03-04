@@ -1806,3 +1806,26 @@ void backgroundtasks()
 
   runningBackgroundTasks=false;
 }
+
+
+/********************************************************************************************\
+  ESP32 specific temporary disable interrupts
+  \*********************************************************************************************/
+struct DisableInterrupts {
+  // As long as this object exists, the interrupts will be suppressed.
+#if defined(ESP32)
+  DisableInterrupts() : mux(portMUX_INITIALIZER_UNLOCKED) {
+    portENTER_CRITICAL(&mux);
+  }
+
+  ~DisableInterrupts() {
+    portEXIT_CRITICAL(&mux);
+  }
+
+private:
+  portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED
+#else
+  DisableInterrupts() {}
+
+#endif
+};
