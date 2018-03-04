@@ -170,6 +170,13 @@ void htmlEscape(String & html)
 /********************************************************************************************\
   replace other system variables like %sysname%, %systime%, %ip%
   \*********************************************************************************************/
+void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
+  parseSystemVariables(s, useURLencode);
+  parseEventVariables(s, event, useURLencode);
+  parseStandardConversions(s, useURLencode);
+}
+
+
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
@@ -323,3 +330,40 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   }
 }
 #undef SMART_REPL
+
+bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {
+  startIndex = s.indexOf(marker);
+  if (startIndex == -1) return false;
+
+  int startIndexArgument = startIndex + marker.length();
+  if (s.charAt(startIndexArgument) != '(') {
+    return false;
+  }
+  ++startIndexArgument;
+  endIndex = s.indexOf(')', startIndexArgument);
+  if (endIndex == -1) return false;
+
+  String argumentString = s.substring(startIndexArgument, endIndex);
+  if (argumentString.length() == 0 || !isFloat(argumentString)) return false;
+
+  argument = argumentString.toFloat();
+  ++endIndex; // Must also strip ')' from the original string.
+  return true;
+}
+
+// Parse conversions marked with "%conv_marker%(float)"
+// Must be called last, since all sensor values must be converted, processed, etc.
+void parseStandardConversions(String& s, boolean useURLencode) {
+  if (s.indexOf(F("%conv")) == -1)
+    return; // Nothing to replace
+
+  float argument = 0.0;
+  int startIndex = 0;
+  int endIndex = 0;
+  // These replacements should be done in a while loop per marker,
+  // since they also replace the numerical parameter.
+  // The marker may occur more than once per string, but with different parameters.
+  while (getConvertArgument(F("%conv_wind_dir%"), s, argument, startIndex, endIndex)) {
+    repl(s.substring(startIndex, endIndex), getBearing(argument), s, useURLencode);
+  }
+}

@@ -105,8 +105,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   String url = "/";
   url += ControllerSettings.Publish;
-  parseSystemVariables(url, true);
-  parseEventVariables(url, event, true);
+  parseControllerVariables(url, event, true);
 
   url.replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
   if (longValue)
