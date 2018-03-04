@@ -1056,7 +1056,7 @@ void ResetFactory(void)
   String fname;
 
   fname=F(FILE_CONFIG);
-  InitFile(fname.c_str(), 65536);
+  InitFile(fname.c_str(), CONFIG_FILE_SIZE);
 
   fname=F(FILE_SECURITY);
   InitFile(fname.c_str(), 4096);
