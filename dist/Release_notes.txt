@@ -1,4 +1,37 @@
 -------------------------------------------------
+Changes in release mega-20180304 (since mega-20180303)
+-------------------------------------------------
+
+Release date: Sun Mar  4 04:00:08 CET 2018
+
+Bartlomiej Zimon (4):
+      - pcfgpio,port,2 sets pin as input     - fix for #222,#702 - we can mix inputs and outputs now
+      - extend conditions with AND/OR, now it is possible to simplify rules
+      - remove Serial print
+      - support for more comparisions in IF conditions: >=,<=,!=,<>,<,>,=       also fix extended conditions when first check is not >
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180303
+
+Gijs Noorlander (2):
+      Merge pull request #1000 from uzi18/test3  (more comparisions in IF condition)
+      _P072_HDC1080 allow to send values to the controllers (#999)
+
+Unknown (2):
+      [issue #993] Add %unit% variable in MQTT subscribe topic
+      [issue #892 ] Only use sensor type when really needed
+
+clumsy-stefan (1):
+      add success and break statement
+
+mvdbro (1):
+      ESP32 Dallas DS18B20 fix
+
+soif (1):
+      Fixes P073 plugin for latest TM1637 based 7 segments displays modules
+
+
+-------------------------------------------------
 Changes in release mega-20180303 (since mega-20180302)
 -------------------------------------------------
 
