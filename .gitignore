@@ -1,7 +1,22 @@
+## OS Specific Hidden Files ####
+
+# MacOSX Finder *****
+.DS_Store
+
+# Fuse FileSystem ***
+.fuse_hidden*
+
+
+## PlatformIO ##################
 .pioenvs
 .clang_complete
 .gcc-flags.json
 .piolibdeps
+<<<<<<< HEAD
 .DS_Store
+=======
+
+## Project #####################
+>>>>>>> upstream/mega
 lib/readme.txt
 src/Custom.h

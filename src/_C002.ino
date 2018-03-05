@@ -135,14 +135,12 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          if (!WiFiConnected(100)) {
+          ControllerSettingsStruct ControllerSettings;
+          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+          if (!ControllerSettings.checkHostReachable(true)) {
             success = false;
             break;
           }
-
-          ControllerSettingsStruct ControllerSettings;
-          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
           StaticJsonBuffer<200> jsonBuffer;
 
           JsonObject& root = jsonBuffer.createObject();
@@ -191,8 +189,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_DEBUG, log);
 
           String pubname = ControllerSettings.Publish;
-          parseSystemVariables(pubname, false);
-          parseEventVariables(pubname, event, false);
+          parseControllerVariables(pubname, event, false);
           if (!MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag))
           {
             connectionFailures++;

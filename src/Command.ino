@@ -42,6 +42,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(byte source, const char *Line)
 {
+  checkRAM(F("ExecuteCommand"));
   String status = "";
   boolean success = false;
   char TmpStr1[80];
@@ -584,6 +585,13 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     ResetFactory();
+    #if defined(ESP8266)
+      ESP.reset();
+    #endif
+    #if defined(ESP32)
+      ESP.restart();
+    #endif
+
   }
 
   if (strcasecmp_P(Command, PSTR("Save")) == 0)

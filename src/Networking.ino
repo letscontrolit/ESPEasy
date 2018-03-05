@@ -7,7 +7,6 @@
   #endif
 
 
-
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
@@ -754,10 +753,10 @@ void SSDP_update() {
 }
 #endif
 
-// Check WiFi connection. Maximum timeout 2000 msec.
+// Check WiFi connection. Maximum timeout 500 msec.
 bool WiFiConnected(uint32_t timeout_ms) {
-  uint32_t timer = millis() + (timeout_ms > 2000 ? 2000 : timeout_ms);
-  uint32_t min_delay = timeout_ms / 10;
+  uint32_t timer = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
+  uint32_t min_delay = timeout_ms / 20;
   if (min_delay < 10) {
     yield(); // Allow at least once time for backgroundtasks
     min_delay = 10;
@@ -769,5 +768,34 @@ bool WiFiConnected(uint32_t timeout_ms) {
     delay(min_delay); // Allow the backgroundtasks to continue procesing.
   }
   return true;
+}
+
+bool hostReachable(const IPAddress& ip) {
+  // Only do 1 ping at a time to return early
+  byte retry = 3;
+  while (retry > 0) {
+#if defined(ESP8266)
+    if (Ping.ping(ip, 1)) return true;
+#endif
+#if defined(ESP32)
+  if (ping_start(ip, 4, 0, 0, 5)) return true;
+#endif
+    delay(50);
+    --retry;
+  }
+  String log = F("Host unreachable: ");
+  log += ip;
+  addLog(LOG_LEVEL_ERROR, log);
+  return false;
+}
+
+bool hostReachable(const String& hostname) {
+  IPAddress remote_addr;
+  if (WiFi.hostByName(hostname.c_str(), remote_addr))
+    return hostReachable(remote_addr);
+  String log = F("Hostname cannot be resolved: ");
+  log += hostname;
+  addLog(LOG_LEVEL_ERROR, log);
+  return false;
 }
 

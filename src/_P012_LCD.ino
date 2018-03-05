@@ -7,6 +7,7 @@
 //  DS Temp:[Dallas1#Temperature#R]
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
+//  Pump:[Pump#on#O] -> ON/OFF
 
 #include <LiquidCrystal_I2C.h>
 
@@ -202,7 +203,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           String tmpString = deviceTemplate[x];
           if (lcd && tmpString.length())
           {
-            String newString = parseTemplate(tmpString, col);
+            String newString = P012_parseTemplate(tmpString, col);
             lcd->setCursor(0, x);
             lcd->print(newString);
           }
@@ -301,4 +302,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
   }
   return success;
+}
+
+// Perform some specific changes for LCD display
+// https://www.letscontrolit.com/forum/viewtopic.php?t=2368
+String P012_parseTemplate(String &tmpString, byte lineSize) {
+  String result = parseTemplate(tmpString, lineSize);
+  const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+  const char degree_lcd[2] = {0xdf, 0};  // P012_LCD degree symbol
+  result.replace(degree, degree_lcd);
+  return result;
 }

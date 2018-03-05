@@ -47,6 +47,7 @@ byte    p073_dotpos;
 
 #define TM1637_POWER_ON   0b10001000
 #define TM1637_POWER_OFF  0b10000000
+#define TM1637_BIT_DELAY  50
 
 // each char table is specific for each display and maps all numbers/symbols needed:
 //   - pos 0-9  - Numbers from 0 to 9
@@ -409,22 +410,26 @@ void p073_FillBufferWithDash()  // in case of error show all dashes
 #define DIO_HIGH()  pinMode(dio_pin, INPUT)
 #define DIO_LOW()   pinMode(dio_pin, OUTPUT)
 
+void tm1637_bitDelay(){
+	delayMicroseconds(TM1637_BIT_DELAY);
+}
+
 void tm1637_i2cStart (uint8_t clk_pin, uint8_t dio_pin)
 {
   CLK_HIGH();
   DIO_HIGH();
-  delayMicroseconds(2);
+  tm1637_bitDelay();
   DIO_LOW();
 }
 
 void tm1637_i2cStop (uint8_t clk_pin, uint8_t dio_pin)
 {
   CLK_LOW();
-  delayMicroseconds(2);
+  tm1637_bitDelay();
   DIO_LOW();
-  delayMicroseconds(2);
+  tm1637_bitDelay();
   CLK_HIGH();
-  delayMicroseconds(2);
+  tm1637_bitDelay();
   DIO_HIGH();
 }
 
@@ -432,10 +437,10 @@ void tm1637_i2cAck (uint8_t clk_pin, uint8_t dio_pin)
 {
   CLK_LOW();
   DIO_HIGH();
-  delayMicroseconds(5);
+  tm1637_bitDelay();
   while(digitalRead(dio_pin));
   CLK_HIGH();
-  delayMicroseconds(2);
+  tm1637_bitDelay();
   CLK_LOW();
 }
 
@@ -446,10 +451,10 @@ void tm1637_i2cWrite (uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
   {
     CLK_LOW();
     (bytetoprint & B00000001)? DIO_HIGH() : DIO_LOW();
-    delayMicroseconds(3);
+    tm1637_bitDelay();
     bytetoprint = bytetoprint >> 1;
     CLK_HIGH();
-    delayMicroseconds(3);
+    tm1637_bitDelay();
   }
 }
 

@@ -3,7 +3,8 @@
 //********************************************************************************
 void sendData(struct EventStruct *event)
 {
-  LoadTaskSettings(event->TaskIndex);
+  checkRAM(F("sendData"));
+ LoadTaskSettings(event->TaskIndex);
   if (Settings.UseRules)
     createRuleEvents(event->TaskIndex);
 
@@ -118,11 +119,12 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 bool MQTTConnect(int controller_idx)
 {
-  if (!WiFiConnected(100)) return false;
-  if (MQTTclient.connected())
-    MQTTclient.disconnect();
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  if (!ControllerSettings.checkHostReachable(true))
+    return false;
+  if (MQTTclient.connected())
+    MQTTclient.disconnect();
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -160,13 +162,13 @@ bool MQTTConnect(int controller_idx)
   log += clientid;
   addLog(LOG_LEVEL_INFO, log);
   String subscribeTo = ControllerSettings.Subscribe;
-  subscribeTo.replace(F("%sysname%"), Settings.Name);
+  parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
   log = F("Subscribed to: ");
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), "Connected")) {
+  if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
     statusLED(true);
     return true; // end loop if succesfull
   }
@@ -226,7 +228,6 @@ boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, 
   if (MQTTclient.publish(topic, payload, retained))
     return true;
   addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
-  MQTTConnect(controller_idx);
   return false;
 }
 

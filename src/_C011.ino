@@ -270,44 +270,13 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname% Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
-
-	switch (event->sensorType)
-	{
-		case SENSOR_TYPE_SINGLE:
-		case SENSOR_TYPE_SWITCH:
-		case SENSOR_TYPE_DIMMER:
-		case SENSOR_TYPE_WIND:
-		case SENSOR_TYPE_LONG:
-		{
-			DeleteNotNeededValues(s,1);
-			break;
-		}
-		case SENSOR_TYPE_DUAL:
-		case SENSOR_TYPE_TEMP_HUM:
-		case SENSOR_TYPE_TEMP_BARO:
-		{
-			DeleteNotNeededValues(s,2);
-			break;
-		}
-		case SENSOR_TYPE_TRIPLE:
-		case SENSOR_TYPE_TEMP_HUM_BARO:
-		{
-			DeleteNotNeededValues(s,3);
-			break;
-		}
-		case SENSOR_TYPE_QUAD:
-		{
-			DeleteNotNeededValues(s,4);
-			break;
-		}
-	}
+  const byte valueCount = getValueCountFromSensorType(event->sensorType);
+  DeleteNotNeededValues(s,valueCount);
 
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-  //NOTE: cant we just call parseTemplate() for all the standard stuff??
-  parseSystemVariables(s, true);
-  parseEventVariables(s, event, true);
+  parseControllerVariables(s, event, true);
 
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);

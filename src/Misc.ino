@@ -7,17 +7,20 @@
   #include <md5.h>
 #endif
 #if defined(ESP8266)
+
+struct tcp_pcb;
+extern struct tcp_pcb* tcp_tw_pcbs;
+extern "C" void tcp_abort (struct tcp_pcb* pcb);
+
 void tcpCleanup()
 {
-  #if LWIP_VERSION_MAJOR == 2
-    // is it still needed ?
-  #else
-    while(tcp_tw_pcbs!=NULL)
+
+     while(tcp_tw_pcbs!=NULL)
     {
       tcp_abort(tcp_tw_pcbs);
     }
-  #endif
-}
+
+ }
 #endif
 
 bool isDeepSleepEnabled()
@@ -40,6 +43,7 @@ bool isDeepSleepEnabled()
 void deepSleep(int delay)
 {
 
+  checkRAM(F("deepSleep"));
   if (!isDeepSleepEnabled())
   {
     //Deep sleep canceled by GPIO16(D0)=LOW
@@ -87,6 +91,7 @@ void deepSleepStart(int delay)
 
 boolean remoteConfig(struct EventStruct *event, String& string)
 {
+  checkRAM(F("remoteConfig"));
   boolean success = false;
   String command = parseString(string, 1);
 
@@ -138,6 +143,7 @@ void flashCount()
 
 String flashGuard()
 {
+  checkRAM(F("flashGuard"));
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
     String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
@@ -150,43 +156,6 @@ String flashGuard()
 
 //use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
 #define FLASH_GUARD() { String flashErr=flashGuard(); if (flashErr.length()) return(flashErr); }
-
-/*********************************************************************************************\
-   Get value count from sensor type
-  \*********************************************************************************************/
-
-byte getValueCountFromSensorType(byte sensorType)
-{
-  byte valueCount = 0;
-
-  switch (sensorType)
-  {
-    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-    case SENSOR_TYPE_SWITCH:
-    case SENSOR_TYPE_DIMMER:
-      valueCount = 1;
-      break;
-    case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-      valueCount = 1;
-      break;
-    case SENSOR_TYPE_TEMP_HUM:
-    case SENSOR_TYPE_TEMP_BARO:
-    case SENSOR_TYPE_DUAL:
-      valueCount = 2;
-      break;
-    case SENSOR_TYPE_TEMP_HUM_BARO:
-    case SENSOR_TYPE_TRIPLE:
-    case SENSOR_TYPE_WIND:
-      valueCount = 3;
-      break;
-    case SENSOR_TYPE_QUAD:
-      valueCount = 4;
-      break;
-  }
-  return valueCount;
-}
-
-
 
 
 /*********************************************************************************************\
@@ -256,6 +225,7 @@ boolean hasPinState(byte plugin, byte index)
   \*********************************************************************************************/
 String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
 {
+  checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
   uint16_t value = noSearchValue;
@@ -394,8 +364,9 @@ void delayBackground(unsigned long delay)
 /********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
-void parseCommandString(struct EventStruct *event, String& string)
+void parseCommandString(struct EventStruct *event, const String& string)
 {
+  checkRAM(F("parseCommandString"));
   char command[80];
   command[0] = 0;
   char TmpStr1[80];
@@ -420,6 +391,7 @@ void parseCommandString(struct EventStruct *event, String& string)
   \*********************************************************************************************/
 void taskClear(byte taskIndex, boolean save)
 {
+  checkRAM(F("taskClear"));
   Settings.TaskDeviceNumber[taskIndex] = 0;
   ExtraTaskSettings.TaskDeviceName[0] = 0;
   Settings.TaskDeviceDataFeed[taskIndex] = 0;
@@ -481,6 +453,7 @@ String FileError(int line, const char * fname)
   \*********************************************************************************************/
 String BuildFixes()
 {
+  checkRAM(F("BuildFixes"));
   Serial.println(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
@@ -508,6 +481,7 @@ String BuildFixes()
   \*********************************************************************************************/
 void fileSystemCheck()
 {
+  checkRAM(F("fileSystemCheck"));
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
@@ -667,6 +641,7 @@ void dump (uint32_t addr) { //Seems already included in core 2.4 ...
 #endif
 
 uint32_t progMemMD5check(){
+    checkRAM(F("progMemMD5check"));
     #define BufSize 10
     uint32_t calcBuffer[BufSize];
     CRCValues.numberOfCRCBytes = 0;
@@ -706,6 +681,7 @@ uint32_t progMemMD5check(){
   \*********************************************************************************************/
 String SaveSettings(void)
 {
+  checkRAM(F("SaveSettings"));
   MD5Builder md5;
   memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
@@ -733,6 +709,7 @@ String SaveSettings(void)
   \*********************************************************************************************/
 String LoadSettings()
 {
+  checkRAM(F("LoadSettings"));
   String err;
   uint8_t calculatedMd5[16];
   MD5Builder md5;
@@ -777,6 +754,7 @@ String LoadSettings()
   \*********************************************************************************************/
 String SaveTaskSettings(byte TaskIndex)
 {
+  checkRAM(F("SaveTaskSettings"));
   ExtraTaskSettings.TaskIndex = TaskIndex;
   return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
 }
@@ -787,6 +765,7 @@ String SaveTaskSettings(byte TaskIndex)
   \*********************************************************************************************/
 String LoadTaskSettings(byte TaskIndex)
 {
+  checkRAM(F("LoadTaskSettings"));
   //already loaded
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String());
@@ -803,6 +782,7 @@ String LoadTaskSettings(byte TaskIndex)
   \*********************************************************************************************/
 String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveCustomTaskSettings"));
   if (datasize > DAT_TASKS_SIZE)
     return F("SaveCustomTaskSettings too big");
   return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
@@ -815,7 +795,7 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 String ClearCustomTaskSettings(int TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  return(ClearInFile((char*)"config.dat", DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
 }
 
 /********************************************************************************************\
@@ -823,6 +803,7 @@ String ClearCustomTaskSettings(int TaskIndex)
   \*********************************************************************************************/
 String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadCustomTaskSettings"));
   if (datasize > DAT_TASKS_SIZE)
     return (String(F("LoadCustomTaskSettings too big")));
   return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
@@ -833,6 +814,7 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   \*********************************************************************************************/
 String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveControllerSettings"));
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("SaveControllerSettings too big");
   return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
@@ -844,6 +826,7 @@ String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
   \*********************************************************************************************/
 String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadControllerSettings"));
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("LoadControllerSettings too big");
 
@@ -856,8 +839,9 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
   \*********************************************************************************************/
 String ClearCustomControllerSettings(int ControllerIndex)
 {
+  checkRAM(F("ClearCustomControllerSettings"));
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
-  return(ClearInFile((char*)"config.dat", DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
 }
 
 
@@ -866,6 +850,7 @@ String ClearCustomControllerSettings(int ControllerIndex)
   \*********************************************************************************************/
 String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveCustomControllerSettings"));
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return F("SaveCustomControllerSettings too big");
   return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
@@ -877,6 +862,7 @@ String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
   \*********************************************************************************************/
 String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadCustomControllerSettings"));
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return(F("LoadCustomControllerSettings too big"));
   return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
@@ -887,6 +873,7 @@ String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
   \*********************************************************************************************/
 String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveNotificationSettings"));
   if (datasize > DAT_NOTIFICATION_SIZE)
     return F("SaveNotificationSettings too big");
   return SaveToFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
@@ -898,6 +885,7 @@ String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int dat
   \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadNotificationSettings"));
   if (datasize > DAT_NOTIFICATION_SIZE)
     return(F("LoadNotificationSettings too big"));
   return(LoadFromFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
@@ -911,7 +899,7 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
   \*********************************************************************************************/
 String InitFile(const char* fname, int datasize)
 {
-
+  checkRAM(F("InitFile"));
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "w");
@@ -932,7 +920,7 @@ String InitFile(const char* fname, int datasize)
   \*********************************************************************************************/
 String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
-
+  checkRAM(F("SaveToFile"));
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "r+");
@@ -959,6 +947,7 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 String ClearInFile(char* fname, int index, int datasize)
 {
+  checkRAM(F("ClearInFile"));
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "r+");
@@ -981,6 +970,7 @@ String ClearInFile(char* fname, int index, int datasize)
   \*********************************************************************************************/
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadFromFile"));
   // addLog(LOG_LEVEL_INFO, String(F("FILE : Load size "))+datasize);
 
   fs::File f = SPIFFS.open(fname, "r+");
@@ -1008,6 +998,7 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 int SpiffsSectors()
 {
+  checkRAM(F("SpiffsSectors"));
   #if defined(ESP8266)
     uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
@@ -1025,6 +1016,7 @@ int SpiffsSectors()
 void ResetFactory(void)
 {
 
+  checkRAM(F("ResetFactory"));
   // Direct Serial is allowed here, since this is only an emergency task.
   Serial.println(F("RESET: Resetting factory defaults..."));
   delay(1000);
@@ -1064,7 +1056,7 @@ void ResetFactory(void)
   String fname;
 
   fname=F(FILE_CONFIG);
-  InitFile(fname.c_str(), 65536);
+  InitFile(fname.c_str(), CONFIG_FILE_SIZE);
 
   fname=F(FILE_SECURITY);
   InitFile(fname.c_str(), 4096);
@@ -1170,7 +1162,7 @@ void ResetFactory(void)
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
-
+  checkRAM(F("ResetFactory2"));
   Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
@@ -1280,7 +1272,25 @@ boolean isNumerical(const String& tBuf, bool mustBeInteger) {
   return true;
 }
 
-
+// convert old and new time string to nr of seconds
+float timeStringToSeconds(String tBuf) {
+	float sec = 0;
+	int split = tBuf.indexOf(':');
+	if (split < 0) { // assume only hours
+		sec += tBuf.toFloat() * 60 * 60;
+	} else {
+		sec += tBuf.substring(0, split).toFloat() * 60 * 60;
+		tBuf = tBuf.substring(split +1);
+		split = tBuf.indexOf(':');
+		if (split < 0) { //old format
+			sec += tBuf.toFloat() * 60;
+		} else { //new format
+			sec += tBuf.substring(0, split).toFloat() * 60;
+			sec += tBuf.substring(split +1).toFloat();
+		}
+	}
+	return sec;
+}
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
@@ -1305,6 +1315,7 @@ void addLog(byte loglevel, String& string)
 
 void addLog(byte logLevel, const __FlashStringHelper* flashString)
 {
+    checkRAM(F("addLog"));
     String s(flashString);
     addLog(logLevel, s.c_str());
 }
@@ -1509,25 +1520,11 @@ uint32_t getChecksum(byte* buffer, size_t size)
   Parse string template
   \*********************************************************************************************/
 
-// Call this by first declaring a char array of size 20, like:
-//  char strIP[20];
-//  formatIP(ip, strIP);
-void formatIP(const IPAddress& ip, char (&strIP)[20]) {
-  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-}
 
-String formatIP(const IPAddress& ip) {
-  char strIP[20];
-  formatIP(ip, strIP);
-  return String(strIP);
-}
-
-void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
-  sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
 
 String parseTemplate(String &tmpString, byte lineSize)
 {
+  checkRAM(F("parseTemplate"));
   String newString = "";
   String tmpStringMid = "";
   newString.reserve(lineSize);
@@ -1582,6 +1579,20 @@ String parseTemplate(String &tmpString, byte lineSize)
                     else
                       value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
+                    int oidx;
+                    if ((oidx = valueFormat.indexOf('O'))>=0) // Output
+                    {
+                      valueFormat.remove(oidx);
+                      oidx = valueFormat.indexOf('!'); // inverted or active low
+                      float val = value.toFloat();
+                      if (oidx >= 0) {
+                          valueFormat.remove(oidx);
+                    	  value = val == 0 ? " ON" : "OFF";
+                      } else {
+                    	  value = val == 0 ? "OFF" : " ON";
+                      }
+                    }
+
                     if (valueFormat == "R")
                     {
                       int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
@@ -1608,6 +1619,7 @@ String parseTemplate(String &tmpString, byte lineSize)
       leftBracketIndex = tmpString.indexOf('[');
       count++;
     }
+    checkRAM(F("parseTemplate2"));
     newString += tmpString;
 
     if (currentTaskIndex!=255)
@@ -1615,11 +1627,12 @@ String parseTemplate(String &tmpString, byte lineSize)
   }
 
   parseSystemVariables(newString, false);
+  parseStandardConversions(newString, false);
 
   // padding spaces
   while (newString.length() < lineSize)
     newString += " ";
-
+  checkRAM(F("parseTemplate3"));
   return newString;
 }
 
@@ -1760,6 +1773,7 @@ unsigned int op_arg_count(const char c)
 
 int Calculate(const char *input, float* result)
 {
+  checkRAM(F("Calculate"));
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
   char c, oc, *TokenPos = token;
@@ -1892,6 +1906,7 @@ int Calculate(const char *input, float* result)
     return error;
   }
   *result = *sp;
+  checkRAM(F("Calculate2"));
   return CALCULATE_OK;
 }
 
@@ -1902,6 +1917,7 @@ int Calculate(const char *input, float* result)
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   String log = "";
 
@@ -1935,6 +1951,7 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 String rulesProcessingFile(String fileName, String& event)
 {
+  checkRAM(F("rulesProcessingFile"));
   fs::File f = SPIFFS.open(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
@@ -2038,7 +2055,7 @@ String rulesProcessingFile(String fileName, String& event)
           {
             conditional = true;
             String check = lcAction.substring(split + 3);
-            condition = conditionMatch(check);
+            condition = conditionMatchExtended(check);
             ifBranche = true;
             isCommand = false;
           }
@@ -2078,8 +2095,18 @@ String rulesProcessingFile(String fileName, String& event)
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
             yield();
-            if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+            // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+            String tmpAction(action);
+            if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+              if (!tmpAction.equals(action)) {
+                String log = F("PLUGIN_WRITE altered the string: ");
+                log += action;
+                log += F(" to: ");
+                log += tmpAction;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
               ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+            }
             yield();
           }
         }
@@ -2091,6 +2118,7 @@ String rulesProcessingFile(String fileName, String& event)
   }
 
   nestingLevel--;
+  checkRAM(F("rulesProcessingFile2"));
   return(String());
 }
 
@@ -2100,6 +2128,7 @@ String rulesProcessingFile(String fileName, String& event)
   \*********************************************************************************************/
 boolean ruleMatch(String& event, String& rule)
 {
+  checkRAM(F("ruleMatch"));
   boolean match = false;
   String tmpEvent = event;
   String tmpRule = rule;
@@ -2108,10 +2137,20 @@ boolean ruleMatch(String& event, String& rule)
   if (event.charAt(0) == '!')
   {
     int pos = rule.indexOf('#');
-    if (pos == -1) // no # sign in rule, use 'wildcard' match...
-      tmpEvent = event.substring(0,rule.length());
+    if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
+      {
+        tmpEvent = event.substring(0,rule.length());
+        tmpRule = rule;
+      }
 
-    if (tmpEvent.equalsIgnoreCase(rule))
+    pos = rule.indexOf('*');
+    if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
+      {
+        tmpEvent = event.substring(0,pos-1);
+        tmpRule = rule.substring(0,pos-1);
+      }
+
+    if (tmpEvent.equalsIgnoreCase(tmpRule))
       return true;
     else
       return false;
@@ -2206,7 +2245,7 @@ boolean ruleMatch(String& event, String& rule)
         match = true;
       break;
   }
-
+  checkRAM(F("ruleMatch2"));
   return match;
 }
 
@@ -2214,63 +2253,127 @@ boolean ruleMatch(String& event, String& rule)
 /********************************************************************************************\
   Check expression
   \*********************************************************************************************/
-boolean conditionMatch(String& check)
+
+boolean conditionMatchExtended(String& check) {
+	int condAnd = -1;
+	int condOr = -1;
+	boolean rightcond = false;
+	boolean leftcond = conditionMatch(check); // initial check
+
+	do {
+		condAnd = check.indexOf(F(" and "));
+		condOr  = check.indexOf(F(" or "));
+
+		if (condAnd > 0 || condOr > 0) { // we got AND/OR
+			if (condAnd > 0	&& ((condOr < 0 && condOr < condAnd) || (condOr > 0 && condOr > condAnd))) { //AND is first
+				check = check.substring(condAnd + 5);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond && rightcond);
+			} else { //OR is first
+				check = check.substring(condOr + 4);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond || rightcond);
+			}
+		}
+	} while (condAnd > 0 || condOr > 0);
+	return leftcond;
+}
+
+boolean conditionMatch(const String& check)
 {
   boolean match = false;
 
-  int comparePos = 0;
-  char compare = ' ';
-  comparePos = check.indexOf(">");
-  if (comparePos > 0)
-  {
-    compare = '>';
+  char compare    = ' ';
+
+  int posStart = check.length();
+  int posEnd = posStart;
+  int comparePos  = 0;
+
+  if ((comparePos = check.indexOf("!="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '!'+'=';
   }
-  else
-  {
-    comparePos = check.indexOf("<");
-    if (comparePos > 0)
-    {
-      compare = '<';
-    }
-    else
-    {
-      comparePos = check.indexOf("=");
-      if (comparePos > 0)
-      {
-        compare = '=';
-      }
-    }
+  if ((comparePos = check.indexOf("<>"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '!'+'=';
+  }
+  if ((comparePos = check.indexOf(">="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '>'+'=';
+  }
+  if ((comparePos = check.indexOf("<="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '<'+'=';
+  }
+  if ((comparePos = check.indexOf("<"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '<';
+  }
+  if ((comparePos = check.indexOf(">"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '>';
+  }
+  if ((comparePos = check.indexOf("="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '=';
   }
 
   float Value1 = 0;
   float Value2 = 0;
 
-  if (comparePos > 0)
+  if (compare > ' ')
   {
-    String tmpCheck = check.substring(comparePos + 1);
-    Value2 = tmpCheck.toFloat();
-    tmpCheck = check.substring(0, comparePos);
-    Value1 = tmpCheck.toFloat();
+    String tmpCheck1 = check.substring(0, posStart);
+    String tmpCheck2 = check.substring(posEnd);
+    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
+        Value1 = timeStringToSeconds(tmpCheck1);
+        Value2 = timeStringToSeconds(tmpCheck2);
+    } else {
+        Value1 = tmpCheck1.toFloat();
+        Value2 = tmpCheck2.toFloat();
+    }
   }
   else
     return false;
 
   switch (compare)
   {
-    case '>':
-      if (Value1 > Value2)
-        match = true;
-      break;
+  case '>'+'=':
+	  if (Value1 >= Value2)
+		  match = true;
+	  break;
 
-    case '<':
-      if (Value1 < Value2)
-        match = true;
-      break;
+  case '<'+'=':
+	  if (Value1 <= Value2)
+		  match = true;
+	  break;
 
-    case '=':
-      if (Value1 == Value2)
-        match = true;
-      break;
+  case '!'+'=':
+	  if (Value1 != Value2)
+		  match = true;
+	  break;
+
+  case '>':
+	  if (Value1 > Value2)
+		  match = true;
+	  break;
+
+  case '<':
+	  if (Value1 < Value2)
+		  match = true;
+	  break;
+
+  case '=':
+	  if (Value1 == Value2)
+		  match = true;
+	  break;
   }
   return match;
 }
@@ -2364,8 +2467,107 @@ void SendValueLogger(byte TaskIndex)
 }
 
 
+#define TRACES 3                                            // number of memory traces
+#define TRACEENTRIES 15                                      // entries per trace
+
+class RamTracker{
+  private:
+    String        traces[TRACES]  ;                         // trace of latest memory checks
+    unsigned int  tracesMemory[TRACES] ;                    // lowest memory for that  trace
+    unsigned int  readPtr, writePtr;                        // pointer to cyclic buffer
+    String        nextAction[TRACEENTRIES];                 // buffer to record the names of functions before they are transfered to a trace
+    unsigned int  nextActionStartMemory[TRACEENTRIES];      // memory levels for the functions.
+
+    unsigned int  bestCaseTrace (void){                     // find highest the trace with the largest minimum memory (gets replaced by worse one)
+       unsigned int lowestMemoryInTrace = 0;
+       unsigned int lowestMemoryInTraceIndex=0;
+       for (int i = 0; i<TRACES; i++) {
+          if (tracesMemory[i] > lowestMemoryInTrace){
+            lowestMemoryInTrace= tracesMemory[i];
+            lowestMemoryInTraceIndex=i;
+            }
+          }
+      //Serial.println(lowestMemoryInTraceIndex);
+      return lowestMemoryInTraceIndex;
+      }
+
+  public:
+    RamTracker(void){                                       // constructor
+        readPtr=0;
+        writePtr=0;
+        for (int i = 0; i< TRACES; i++) {
+          traces[i]="";
+          tracesMemory[i]=0xffff;                           // init with best case memory values, so they get replaced if memory goes lower
+          }
+        for (int i = 0; i< TRACEENTRIES; i++) {
+          nextAction[i]="startup";
+          nextActionStartMemory[i] = ESP.getFreeHeap();     // init with best case memory values, so they get replaced if memory goes lower
+          }
+        };
+
+    void registerRamState(String &s){    // store function
+       nextAction[writePtr]=s;                              // name and mem
+       nextActionStartMemory[writePtr]=ESP.getFreeHeap();   // in cyclic buffer.
+       int bestCase = bestCaseTrace();                      // find best case memory trace
+       if ( ESP.getFreeHeap() < tracesMemory[bestCase]){    // compare to current memory value
+            traces[bestCase]="";
+            readPtr = writePtr+1;                           // read out buffer, oldest value first
+            if (readPtr>=TRACEENTRIES) readPtr=0;           // read pointer wrap around
+            tracesMemory[bestCase] = ESP.getFreeHeap();     // store new lowest value of that trace
+
+            for (int i = 0; i<TRACEENTRIES; i++) {          // tranfer cyclic buffer strings and mem values to this trace
+              traces[bestCase]+= nextAction[readPtr];
+              traces[bestCase]+= "-> ";
+              traces[bestCase]+= String(nextActionStartMemory[readPtr]);
+              traces[bestCase]+= " ";
+              readPtr++;
+              if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
+            }
+       }
+       writePtr++;
+       if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
+    };
+   void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
+      String retval="Memtrace\n";
+      for (int i = 0; i< TRACES; i++){
+        retval += String(i);
+        retval += ": lowest: ";
+        retval += String(tracesMemory[i]);
+        retval += "  ";
+        retval += traces[i];
+        addLog(LOG_LEVEL_DEBUG_DEV, retval);
+        retval="";
+      }
+    }
+}myRamTracker;                                              // instantiate class. (is global now)
+
+void checkRAMtoLog(void){
+  myRamTracker.getTraceBuffer();
+}
+
+void checkRAM(const __FlashStringHelper* flashString, int a ) {
+ String s=String(a);
+ checkRAM(flashString,s);
+}
+
+void checkRAM(const __FlashStringHelper* flashString, String &a ) {
+  String s = flashString;
+  checkRAM(s,a);
+}
+
+void checkRAM(String &flashString, String &a ) {
+  String s = flashString;
+  s+=" (";
+  s+=a;
+  s+=")";
+  checkRAM(s);
+}
+
 void checkRAM( const __FlashStringHelper* flashString)
 {
+  String s = flashString;
+  myRamTracker.registerRamState(s);
+
   uint32_t freeRAM = FreeMem();
 
   if (freeRAM < lowestRAM)
@@ -2374,6 +2576,11 @@ void checkRAM( const __FlashStringHelper* flashString)
     lowestRAMfunction = flashString;
   }
 }
+
+void checkRAM( String &a ) {
+  myRamTracker.registerRamState(a);
+}
+
 
 #ifdef PLUGIN_BUILD_TESTING
 
@@ -2395,6 +2602,7 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   \*********************************************************************************************/
 void play_rtttl(uint8_t _pin, const char *p )
 {
+  checkRAM(F("play_rtttl"));
   #define OCTAVE_OFFSET 0
   // FIXME: Absolutely no error checking in here
 
@@ -2545,6 +2753,7 @@ void play_rtttl(uint8_t _pin, const char *p )
       delay(duration/10);
     }
   }
+ checkRAM(F("play_rtttl2"));
 }
 
 #endif
@@ -2557,6 +2766,7 @@ void play_rtttl(uint8_t _pin, const char *p )
 
 void ArduinoOTAInit()
 {
+  checkRAM(F("ArduinoOTAInit"));
   // Default port is 8266
   ArduinoOTA.setPort(8266);
 	ArduinoOTA.setHostname(Settings.Name);
@@ -2612,33 +2822,6 @@ void ArduinoOTAInit()
 
 #endif
 
-String getBearing(int degrees)
-{
-  const __FlashStringHelper* bearing[] = {
-    F("N"),
-    F("NNE"),
-    F("NE"),
-    F("ENE"),
-    F("E"),
-    F("ESE"),
-    F("SE"),
-    F("SSE"),
-    F("S"),
-    F("SSW"),
-    F("SW"),
-    F("WSW"),
-    F("W"),
-    F("WNW"),
-    F("NW"),
-    F("NNW")
-  };
-  int bearing_idx=int(degrees/22.5);
-  if (bearing_idx<0 || bearing_idx>=(int) (sizeof(bearing)/sizeof(bearing[0])))
-    return("");
-  else
-    return(bearing[bearing_idx]);
-
-}
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php

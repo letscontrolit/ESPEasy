@@ -1,4 +1,234 @@
 -------------------------------------------------
+Changes in release mega-20180305 (since mega-20180304)
+-------------------------------------------------
+
+Release date: Mon Mar  5 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180304
+
+Edwin Eefting (2):
+      dont build in silent mode to prevent travis timeouts
+      automaticly updated release notes for v2.0-20180304b
+
+Unknown (3):
+      [Webserver] Factory Reset was present twice
+      [issue #528] Set DOUT flash mode for all 1M builds
+      [issue #1003 ] Add conversion of wind direction to string
+
+mvdbro (3):
+      ESP32 fix-2 for P020/P044
+      ESP32 - 32 Tasks
+      ESP32 - 32 Tasks -redo commit
+
+soif (2):
+      Add OS specific hidden files (#1005)
+      fixes typos in the issue template (#1006)
+
+
+-------------------------------------------------
+Changes in release mega-20180304 (since mega-20180303)
+-------------------------------------------------
+
+Release date: Sun Mar  4 04:00:08 CET 2018
+
+Bartlomiej Zimon (4):
+      - pcfgpio,port,2 sets pin as input     - fix for #222,#702 - we can mix inputs and outputs now
+      - extend conditions with AND/OR, now it is possible to simplify rules
+      - remove Serial print
+      - support for more comparisions in IF conditions: >=,<=,!=,<>,<,>,=       also fix extended conditions when first check is not >
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180303
+
+Gijs Noorlander (2):
+      Merge pull request #1000 from uzi18/test3  (more comparisions in IF condition)
+      _P072_HDC1080 allow to send values to the controllers (#999)
+
+Unknown (2):
+      [issue #993] Add %unit% variable in MQTT subscribe topic
+      [issue #892 ] Only use sensor type when really needed
+
+clumsy-stefan (1):
+      add success and break statement
+
+mvdbro (1):
+      ESP32 Dallas DS18B20 fix
+
+soif (1):
+      Fixes P073 plugin for latest TM1637 based 7 segments displays modules
+
+
+-------------------------------------------------
+Changes in release mega-20180303 (since mega-20180302)
+-------------------------------------------------
+
+Release date: Sat Mar  3 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180302
+
+Unknown (5):
+      revert json to non-chunking #988 from s0170071/mega
+      [issue #293] json output nan values not double quoted
+      Add Task device type to json by @s0170071
+      [Issue #827] MQTT not using proper case for %sysname% variable.
+      Add AND/OR to rules & prevent unwanted case changes in strings (#994)
+
+s0170071 (3):
+      revert json to non-chunking
+      Add git build and local time
+      make handle_json return void
+
+
+-------------------------------------------------
+Changes in release mega-20180302 (since mega-20180228)
+-------------------------------------------------
+
+Release date: Fri Mar  2 04:00:10 CET 2018
+
+Bartłomiej Zimoń (4):
+      provide System@Sleep event (#875)
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+      fix #964, add timeStringToSeconds and use it to compare time conditions (#965)
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180228
+
+Gijs Noorlander (1):
+      Merge pull request #983 from kahvm/mega
+
+Unknown (4):
+      [issue #914] _P053_PMSx003 Dust Sensor looses sync
+      [issue #914] Check first 2 bytes of packet
+      [Build error fix] Must-keep-focus-when-pressing-buttons...
+      [webserver] Layout of code to improve readability
+
+kahvm (1):
+      Support for degree sign on LCD1602
+
+mvdbro (2):
+      Rule wildcard option on literal events
+      Rule wildcard option on literal events
+
+s0170071 (1):
+      Add Factory Reset button to web interface (#954)
+
+
+-------------------------------------------------
+Changes in release mega-20180228 (since mega-20180227)
+-------------------------------------------------
+
+Release date: Wed Feb 28 04:00:09 CET 2018
+
+Bartłomiej Zimoń (1):
+      fix #964, add timeStringToSeconds and use it to compare time conditions (#965)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180227
+
+Gijs Noorlander (2):
+      [issue #966] Add %sysweekday% and  %sysweekday_s% (#973)
+      [issue #968] Use template parser for OLED commands (#974)
+
+
+-------------------------------------------------
+Changes in release mega-20180227 (since mega-20180226)
+-------------------------------------------------
+
+Release date: Tue Feb 27 04:00:11 CET 2018
+
+Bartłomiej Zimoń (1):
+      add format #O to templates to show OFF/ON instead 0/1 (#949)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180226
+
+Edwin Eefting (2):
+      [test suite] changes from mega to 2.0
+      [test suite] changes from mega to 2.0
+
+Gijs Noorlander (2):
+      [BuildError] StreamingBuffer code cleanup + fix order member initialize (#961)
+      [build conflict] Renamed ESP32 version of ping (#963)
+
+mvdbro (1):
+      Fix ESP32 compile errors
+
+s0170071 (1):
+      Add Factory Reset button to web interface (#954)
+
+
+-------------------------------------------------
+Changes in release mega-20180226 (since mega-20180224)
+-------------------------------------------------
+
+Release date: Mon Feb 26 04:00:08 CET 2018
+
+Bartłomiej Zimoń (2):
+      provide System@Sleep event (#875) (#931)
+      - extend conditions with AND/OR, now it is possible to simplify rules (#932)
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180221
+
+Edwin Eefting (1):
+      device page doesnt need next/previous page buttons anymore
+
+Gijs Noorlander (7):
+      [MQTT] LWT "Connected" message doesn't have the retained flag (#925)
+      [v2.0] Added Vcc-binaries to deploy process #933 (#935)
+      [v2.0 merge] 2kwebserver_merge_to_mega #929 (#934)
+      [v2.0] Use ESPeasySoftwareSerial (#936)
+      [Mega] rename SoftwareSerial lib #930 (#937)
+      [timeouts] Improve response when hosts are not reachable (#939)
+      [2k Webserver] Proper initialisation of StreamingBuffer members. (#941)
+
+Michael Schröder (1):
+      Added Vcc-binaries to deploy process (#933)
+
+Unknown (2):
+      [ping lib] Added ping library
+      [softwareSerial] Remove duplicate with only capilization as difference
+
+s0170071 (33):
+      Webserver min memory
+      Adjusted to min 7k free
+      Timeout 100ms
+      tcp_cleanup for LWIP1 & 2
+      Adapted timeout
+      trigger travis re-compile
+      try fix travis
+      Does Travis like extern "C" ?
+      Wait for memory be like before send chunked
+      "Content-Type","text/html"
+      Optimized memory usage
+      2k Webserver
+      fix travis
+      fix travis
+      Unused variable
+      navMenuIndex
+      fix download page
+      Add Ram usage debug message
+      fix Travis
+      Travis...
+      Cleanup and +1k Ram
+      4->12 Devices per page
+      Fix travis
+      Update .gitignore
+      Merge Webserver
+      Fixed String redeclaration
+      Merge into mega
+      fix travis
+      Removed double entry on info page
+      Fix compile error when SD card is enabled
+      Memtracker (#927)
+      V20 Webserver@LowMemory
+      Update WebServer.ino
+
+
+-------------------------------------------------
 Changes in release mega-20180224 (since mega-20180223)
 -------------------------------------------------
 

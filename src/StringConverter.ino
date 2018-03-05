@@ -37,7 +37,22 @@ boolean str2ip(const char *string, byte* IP)
   return false;
 }
 
+// Call this by first declaring a char array of size 20, like:
+//  char strIP[20];
+//  formatIP(ip, strIP);
+void formatIP(const IPAddress& ip, char (&strIP)[20]) {
+  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+}
 
+String formatIP(const IPAddress& ip) {
+  char strIP[20];
+  formatIP(ip, strIP);
+  return String(strIP);
+}
+
+void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
+  sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
 
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
@@ -65,6 +80,35 @@ String formatUserVar(struct EventStruct *event, byte rel_index)
   }
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
 }
+
+/*********************************************************************************************\
+   Wrap a string with given pre- and postfix string.
+  \*********************************************************************************************/
+String wrap_String(const String& string, const String& wrap) {
+  String result;
+  result.reserve(string.length() + 2* wrap.length());
+  result = wrap;
+  result += string;
+  result += wrap;
+  return result;
+}
+
+/*********************************************************************************************\
+   Format an object value pair for use in JSON.
+  \*********************************************************************************************/
+String to_json_object_value(const String& object, const String& value) {
+  String result;
+  result.reserve(object.length() + value.length() + 6);
+  result = wrap_String(object, F("\""));
+  result += F(":");
+  if (value.length() == 0 || !isFloat(value)) {
+    result += wrap_String(value, F("\""));
+  } else {
+    result += value;
+  }
+  return result;
+}
+
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter
@@ -126,6 +170,13 @@ void htmlEscape(String & html)
 /********************************************************************************************\
   replace other system variables like %sysname%, %systime%, %ip%
   \*********************************************************************************************/
+void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
+  parseSystemVariables(s, useURLencode);
+  parseEventVariables(s, event, useURLencode);
+  parseStandardConversions(s, useURLencode);
+}
+
+
 void repl(const String& key, const String& val, String& s, boolean useURLencode)
 {
   if (useURLencode) {
@@ -250,6 +301,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
     SMART_REPL_TIME(F("%sysmonth%"),PSTR("%02d"), month())
     SMART_REPL_TIME(F("%sysyear%"), PSTR("%04d"), year())
     SMART_REPL_TIME(F("%sysyears%"),PSTR("%02d"), year()%100)
+    SMART_REPL(F("%sysweekday%"), String(weekday()))
+    SMART_REPL(F("%sysweekday_s%"), weekday_str())
     #undef SMART_REPL_TIME
   }
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
@@ -279,3 +332,40 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   }
 }
 #undef SMART_REPL
+
+bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {
+  startIndex = s.indexOf(marker);
+  if (startIndex == -1) return false;
+
+  int startIndexArgument = startIndex + marker.length();
+  if (s.charAt(startIndexArgument) != '(') {
+    return false;
+  }
+  ++startIndexArgument;
+  endIndex = s.indexOf(')', startIndexArgument);
+  if (endIndex == -1) return false;
+
+  String argumentString = s.substring(startIndexArgument, endIndex);
+  if (argumentString.length() == 0 || !isFloat(argumentString)) return false;
+
+  argument = argumentString.toFloat();
+  ++endIndex; // Must also strip ')' from the original string.
+  return true;
+}
+
+// Parse conversions marked with "%conv_marker%(float)"
+// Must be called last, since all sensor values must be converted, processed, etc.
+void parseStandardConversions(String& s, boolean useURLencode) {
+  if (s.indexOf(F("%conv")) == -1)
+    return; // Nothing to replace
+
+  float argument = 0.0;
+  int startIndex = 0;
+  int endIndex = 0;
+  // These replacements should be done in a while loop per marker,
+  // since they also replace the numerical parameter.
+  // The marker may occur more than once per string, but with different parameters.
+  while (getConvertArgument(F("%conv_wind_dir%"), s, argument, startIndex, endIndex)) {
+    repl(s.substring(startIndex, endIndex), getBearing(argument), s, useURLencode);
+  }
+}

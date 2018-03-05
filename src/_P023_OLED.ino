@@ -213,7 +213,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
+          String newString = P023_parseTemplate(tmpString, 16);
+          Plugin_023_sendStrXY(newString.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         if (tmpString.equalsIgnoreCase(F("OLEDCMD")))
         {
