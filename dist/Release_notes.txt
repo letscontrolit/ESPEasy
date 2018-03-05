@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release v2.0-20180305 (since v2.0-20180304b)
+-------------------------------------------------
+
+Release date: Mon Mar  5 04:00:20 CET 2018
+
+Unknown (2):
+      [issue #528] Set DOUT flash mode for all 1M builds
+      [issue #1003 ] Add conversion of wind direction to string
+
+
+-------------------------------------------------
 Changes in release v2.0-20180304b (since v2.0-20180304)
 -------------------------------------------------
 
