@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20180305 (since mega-20180304)
+-------------------------------------------------
+
+Release date: Mon Mar  5 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180304
+
+Edwin Eefting (2):
+      dont build in silent mode to prevent travis timeouts
+      automaticly updated release notes for v2.0-20180304b
+
+Unknown (3):
+      [Webserver] Factory Reset was present twice
+      [issue #528] Set DOUT flash mode for all 1M builds
+      [issue #1003 ] Add conversion of wind direction to string
+
+mvdbro (3):
+      ESP32 fix-2 for P020/P044
+      ESP32 - 32 Tasks
+      ESP32 - 32 Tasks -redo commit
+
+soif (2):
+      Add OS specific hidden files (#1005)
+      fixes typos in the issue template (#1006)
+
+
+-------------------------------------------------
 Changes in release mega-20180304 (since mega-20180303)
 -------------------------------------------------
 
