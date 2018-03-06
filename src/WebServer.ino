@@ -347,47 +347,54 @@ void clearAccessBlock()
 #endif
 
 static const char pgDefaultCSS[] PROGMEM = {
-  //color scheme: #07D #D50 #DB0 #A0D
-  "* {font-family:sans-serif; font-size:12pt;}"
-  "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
-  "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
-  "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-  "h6 {font-size:10pt; color:#07D;}"
-  //buttons
-  ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
-  ".button.link {}"
-  ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
-  ".button:hover {background:#369;}"
-  //tables
-  "th {padding:6px; background-color:#444; color:#FFF; border-color:#888; font-weight:bold;}"
-  "td {padding:4px;}"
-  "tr {padding:4px;}"
-  "table {color:#000;}"
-  //inside a form
-  ".note {color:#444; font-style:italic}"
-  //header with title and menu
-  ".headermenu {position:fixed; top:0; left:0; right:0; height:64px; padding:8px 12px; background-color:#F8F8F8; border-bottom: 1px solid #DDD;}"
-  ".bodymenu {margin-top:96px;}"
-  //menu
-  ".menubar {position:inherit; top:44px;}"
-  ".menu {float:left; height:20px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
-  ".menu.active {color:#000; background-color:#FFF; border-color:#07D #DDD #FFF;}"
-  ".menu:hover {color:#000; background:#DEF;}"
-  //symbols for enabled
-  ".on {color:green;}"
-  ".off {color:red;}"
-  //others
-  ".div_l {float:left;}"
-  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
-  ".div_br {clear:both;}"
-  //".active {text-decoration:underline;}"
-  // The alert message box
-  ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px;}"
-  // The close button
-  ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s;}"
-  // When moving the mouse over the close button
-  ".closebtn:hover {color: black;}"
-  "\0"
+    //color scheme: #07D #D50 #DB0 #A0D
+    "* {font-family: sans-serif; font-size: 12pt; margin: 0px; padding: 0px; box-sizing: border-box; }"
+    "h1 {font-size: 16pt; color: #07D; margin: 8px 0; font-weight: bold; }"
+    "h2 {font-size: 12pt; margin: 0 -4px; padding: 6px; background-color: #444; color: #FFF; font-weight: bold; }"
+    "h3 {font-size: 12pt; margin: 16px -4px 0 -4px; padding: 4px; background-color: #EEE; color: #444; font-weight: bold; }"
+    "h6 {font-size: 10pt; color: #07D; }"
+    // buttons
+    ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; }"
+    ".button.link {}"
+    ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
+    ".button:hover {background: #369; }"
+    // tables
+    "th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
+    "td {padding: 4px; }"
+    "tr {padding: 4px; }"
+    "table {color: #000; width: 100%; min-width: 420px; }"
+    // inside a form
+    ".note {color: #444; font-style: italic; }"
+    //header with title and menu
+    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; }"
+    ".bodymenu {margin-top: 96px; }"
+    // menu
+    ".menubar {position: inherit; top: 55px; }"
+    ".menu {float: left; padding: 4px 16px 8px 16px; color: #444; white-space: nowrap; border: solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none; }"
+    ".menu.active {color: #000; background-color: #FFF; border-color: #07D #DDD #FFF; }"
+    ".menu:hover {color: #000; background: #DEF; }"
+    // symbols for enabled
+    ".on {color: green; }"
+    ".off {color: red; }"
+    // others
+    ".div_l {float: left; }"
+    ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 4px; background-color: #080; color: white; }"
+    ".div_br {clear: both; }"
+    // The alert message box
+    ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px; }"
+    // The close button
+    ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s; }"
+    // When moving the mouse over the close button
+    ".closebtn:hover {color: black; }"
+    "section{overflow-x: auto; width: 100%; }"
+    // For screens with width less than 960 pixels
+    "@media screen and (max-width: 960px) {"
+      ".bodymenu{  margin-top: 0px; }"
+      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; }"
+      ".headermenu h1{  padding: 8px 12px; }"
+      ".menubar{  top: 0px;   position: relative;   float: left;   width: 100%; }"
+      ".headermenu a{  width: 100%;   padding:7px 10px;   display: block;   height: auto;   border: 0px;   border-radius:0px; }; }"
+    "\0"
 };
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
