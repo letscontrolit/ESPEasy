@@ -40,10 +40,23 @@ public:
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+=(const String& a) {
     if (lowMemorySkip) return *this;
-    if (((this->buf.length() + a.length()) > BufferSize) &&
+    const int length = a.length();
+    if (((this->buf.length() + length) > BufferSize) &&
         (this->buf.length() > 100))
       sendContentBlocking(this->buf);
-    this->buf += a;
+    int pos = 0;
+    int flush_step = BufferSize - this->buf.length();
+    if (flush_step < 1) flush_step = 1;
+    while (pos < length) {
+      const char c = a[pos];
+      this->buf += c;
+      ++pos;
+      --flush_step;
+      if (flush_step == 0) {
+        sendContentBlocking(this->buf);
+        flush_step = BufferSize;
+      }
+    }
     checkFull();
     return *this;
   }
@@ -90,7 +103,6 @@ public:
       if (buf.length() > 0) sendContentBlocking(buf);
       buf = "";
       sendContentBlocking(buf);
-
       finalRam = ESP.getFreeHeap();
       String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                    " including Core: " + maxCoreUsage;
@@ -142,7 +154,9 @@ void sendContentBlocking(String& data) {
 void sendHeaderBlocking() {
   checkRAM(F("sendHeaderBlocking"));
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader("Content-Type", "text/html", true);
+  WebServer.sendHeader("Accept-Ranges", "none");
   WebServer.sendHeader("Cache-Control", "no-cache");
   WebServer.sendHeader("Transfer-Encoding", "chunked");
   WebServer.send(200);
@@ -185,12 +199,10 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
   lastWeb = millis();
 
   if (Tail) {
-    pageTemplate = pageTemplate.substring(
-        11 +
+    TXBuffer += pageTemplate.substring(
+        11 + // Size of "{{content}}"
         pageTemplate.indexOf("{{content}}"));  // advance beyond content key
-    TXBuffer += pageTemplate;
-  } else
-
+  } else {
     while ((indexStart = pageTemplate.indexOf("{{")) >= 0) {
       TXBuffer += pageTemplate.substring(0, indexStart);
       pageTemplate = pageTemplate.substring(indexStart);
@@ -212,6 +224,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
         pageTemplate = pageTemplate.substring(2);  // eat "{{"
       }
     }
+  }
   if (shouldReboot) {
     //we only add this here as a seperate chucnk to prevent using too much memory at once
     TXBuffer += F(
@@ -641,8 +654,23 @@ void getWebPageTemplateVar(const String& varName )
    else
     {
       TXBuffer += F("<style>");
-      // TXBuffer += PGMT(pgDefaultCSS);
-      for (unsigned int i = 0; i<  strlen(pgDefaultCSS); i++){   TXBuffer +=String((char)pgm_read_byte(&pgDefaultCSS[i]));      } // saves 1k of ram
+      //TXBuffer += PGMT(pgDefaultCSS);
+      // Send CSS per chunk to avoid sending either too short or too large strings.
+      String tmpString;
+      tmpString.reserve(64);
+      for (unsigned int i = 0; i < strlen(pgDefaultCSS); i++)
+      {
+        const char c = (char)pgm_read_byte(&pgDefaultCSS[i]);
+        tmpString += c;
+        if (c == ';' || c == '{') {
+          TXBuffer += tmpString;
+          tmpString = "";
+        }
+      } // saves 1k of ram
+      if (tmpString.length() > 0) {
+        // Flush left over part.
+        TXBuffer += tmpString;
+      }
       TXBuffer += F("</style>");
     }
   }
