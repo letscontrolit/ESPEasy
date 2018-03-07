@@ -40,10 +40,23 @@ public:
   StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
   StreamingBuffer operator+=(const String& a) {
     if (lowMemorySkip) return *this;
-    if (((this->buf.length() + a.length()) > BufferSize) &&
+    const int length = a.length();
+    if (((this->buf.length() + length) > BufferSize) &&
         (this->buf.length() > 100))
       sendContentBlocking(this->buf);
-    this->buf += a;
+    int pos = 0;
+    int flush_step = BufferSize - this->buf.length();
+    if (flush_step < 1) flush_step = 1;
+    while (pos < length) {
+      const char c = a[pos];
+      this->buf += c;
+      ++pos;
+      --flush_step;
+      if (flush_step == 0) {
+        sendContentBlocking(this->buf);
+        flush_step = BufferSize;
+      }
+    }
     checkFull();
     return *this;
   }
@@ -90,7 +103,6 @@ public:
       if (buf.length() > 0) sendContentBlocking(buf);
       buf = "";
       sendContentBlocking(buf);
-
       finalRam = ESP.getFreeHeap();
       String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                    " including Core: " + maxCoreUsage;
@@ -142,7 +154,9 @@ void sendContentBlocking(String& data) {
 void sendHeaderBlocking() {
   checkRAM(F("sendHeaderBlocking"));
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+  WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader("Content-Type", "text/html", true);
+  WebServer.sendHeader("Accept-Ranges", "none");
   WebServer.sendHeader("Cache-Control", "no-cache");
   WebServer.sendHeader("Transfer-Encoding", "chunked");
   WebServer.send(200);
@@ -185,12 +199,10 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
   lastWeb = millis();
 
   if (Tail) {
-    pageTemplate = pageTemplate.substring(
-        11 +
+    TXBuffer += pageTemplate.substring(
+        11 + // Size of "{{content}}"
         pageTemplate.indexOf("{{content}}"));  // advance beyond content key
-    TXBuffer += pageTemplate;
-  } else
-
+  } else {
     while ((indexStart = pageTemplate.indexOf("{{")) >= 0) {
       TXBuffer += pageTemplate.substring(0, indexStart);
       pageTemplate = pageTemplate.substring(indexStart);
@@ -212,6 +224,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
         pageTemplate = pageTemplate.substring(2);  // eat "{{"
       }
     }
+  }
   if (shouldReboot) {
     //we only add this here as a seperate chucnk to prevent using too much memory at once
     TXBuffer += F(
@@ -347,47 +360,54 @@ void clearAccessBlock()
 #endif
 
 static const char pgDefaultCSS[] PROGMEM = {
-  //color scheme: #07D #D50 #DB0 #A0D
-  "* {font-family:sans-serif; font-size:12pt;}"
-  "h1 {font-size:16pt; color:#07D; margin:8px 0; font-weight:bold;}"
-  "h2 {font-size:12pt; margin:0 -4px; padding:6px; background-color:#444; color:#FFF; font-weight:bold;}"
-  "h3 {font-size:12pt; margin:16px -4px 0 -4px; padding:4px; background-color:#EEE; color:#444; font-weight:bold;}"
-  "h6 {font-size:10pt; color:#07D;}"
-  //buttons
-  ".button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}"
-  ".button.link {}"
-  ".button.help {padding:2px 4px; border:solid 1px #FFF; border-radius:50%}"
-  ".button:hover {background:#369;}"
-  //tables
-  "th {padding:6px; background-color:#444; color:#FFF; border-color:#888; font-weight:bold;}"
-  "td {padding:4px;}"
-  "tr {padding:4px;}"
-  "table {color:#000;}"
-  //inside a form
-  ".note {color:#444; font-style:italic}"
-  //header with title and menu
-  ".headermenu {position:fixed; top:0; left:0; right:0; height:64px; padding:8px 12px; background-color:#F8F8F8; border-bottom: 1px solid #DDD;}"
-  ".bodymenu {margin-top:96px;}"
-  //menu
-  ".menubar {position:inherit; top:44px;}"
-  ".menu {float:left; height:20px; padding: 4px 16px 8px 16px; color:#444; white-space:nowrap; border:solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none;}"
-  ".menu.active {color:#000; background-color:#FFF; border-color:#07D #DDD #FFF;}"
-  ".menu:hover {color:#000; background:#DEF;}"
-  //symbols for enabled
-  ".on {color:green;}"
-  ".off {color:red;}"
-  //others
-  ".div_l {float:left;}"
-  ".div_r {float:right; margin:2px; padding:1px 10px; border-radius:4px; background-color:#080; color:white;}"
-  ".div_br {clear:both;}"
-  //".active {text-decoration:underline;}"
-  // The alert message box
-  ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px;}"
-  // The close button
-  ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s;}"
-  // When moving the mouse over the close button
-  ".closebtn:hover {color: black;}"
-  "\0"
+    //color scheme: #07D #D50 #DB0 #A0D
+    "* {font-family: sans-serif; font-size: 12pt; margin: 0px; padding: 0px; box-sizing: border-box; }"
+    "h1 {font-size: 16pt; color: #07D; margin: 8px 0; font-weight: bold; }"
+    "h2 {font-size: 12pt; margin: 0 -4px; padding: 6px; background-color: #444; color: #FFF; font-weight: bold; }"
+    "h3 {font-size: 12pt; margin: 16px -4px 0 -4px; padding: 4px; background-color: #EEE; color: #444; font-weight: bold; }"
+    "h6 {font-size: 10pt; color: #07D; }"
+    // buttons
+    ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; }"
+    ".button.link {}"
+    ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
+    ".button:hover {background: #369; }"
+    // tables
+    "th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
+    "td {padding: 4px; }"
+    "tr {padding: 4px; }"
+    "table {color: #000; width: 100%; min-width: 420px; }"
+    // inside a form
+    ".note {color: #444; font-style: italic; }"
+    //header with title and menu
+    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; }"
+    ".bodymenu {margin-top: 96px; }"
+    // menu
+    ".menubar {position: inherit; top: 55px; }"
+    ".menu {float: left; padding: 4px 16px 8px 16px; color: #444; white-space: nowrap; border: solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none; }"
+    ".menu.active {color: #000; background-color: #FFF; border-color: #07D #DDD #FFF; }"
+    ".menu:hover {color: #000; background: #DEF; }"
+    // symbols for enabled
+    ".on {color: green; }"
+    ".off {color: red; }"
+    // others
+    ".div_l {float: left; }"
+    ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 4px; background-color: #080; color: white; }"
+    ".div_br {clear: both; }"
+    // The alert message box
+    ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px; }"
+    // The close button
+    ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s; }"
+    // When moving the mouse over the close button
+    ".closebtn:hover {color: black; }"
+    "section{overflow-x: auto; width: 100%; }"
+    // For screens with width less than 960 pixels
+    "@media screen and (max-width: 960px) {"
+      ".bodymenu{  margin-top: 0px; }"
+      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; }"
+      ".headermenu h1{  padding: 8px 12px; }"
+      ".menubar{  top: 0px;   position: relative;   float: left;   width: 100%; }"
+      ".headermenu a{  width: 100%;   padding:7px 10px;   display: block;   height: auto;   border: 0px;   border-radius:0px; }; }"
+    "\0"
 };
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
@@ -634,8 +654,23 @@ void getWebPageTemplateVar(const String& varName )
    else
     {
       TXBuffer += F("<style>");
-      // TXBuffer += PGMT(pgDefaultCSS);
-      for (unsigned int i = 0; i<  strlen(pgDefaultCSS); i++){   TXBuffer +=String((char)pgm_read_byte(&pgDefaultCSS[i]));      } // saves 1k of ram
+      //TXBuffer += PGMT(pgDefaultCSS);
+      // Send CSS per chunk to avoid sending either too short or too large strings.
+      String tmpString;
+      tmpString.reserve(64);
+      for (unsigned int i = 0; i < strlen(pgDefaultCSS); i++)
+      {
+        const char c = (char)pgm_read_byte(&pgDefaultCSS[i]);
+        tmpString += c;
+        if (c == ';' || c == '{') {
+          TXBuffer += tmpString;
+          tmpString = "";
+        }
+      } // saves 1k of ram
+      if (tmpString.length() > 0) {
+        // Flush left over part.
+        TXBuffer += tmpString;
+      }
       TXBuffer += F("</style>");
     }
   }
