@@ -1073,6 +1073,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
   {
     // Unconditional calls to all plugins
     case PLUGIN_DEVICE_ADD:
+    case PLUGIN__UNCONDITIONAL_POLL:
       for (x = 0; x < PLUGIN_MAX; x++)
         if (Plugin_id[x] != 0)
           Plugin_ptr[x](Function, event, str);

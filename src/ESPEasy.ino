@@ -260,6 +260,7 @@
 #define PLUGIN_GET_DEVICEGPIONAMES         22
 #define PLUGIN_EXIT                        23
 #define PLUGIN_GET_CONFIG                  24
+#define PLUGIN__UNCONDITIONAL_POLL         25
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -1425,6 +1426,7 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  PluginCall(PLUGIN__UNCONDITIONAL_POLL, 0, dummyString);
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
