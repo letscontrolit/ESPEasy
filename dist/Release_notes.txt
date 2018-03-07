@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180307 (since mega-20180305)
+-------------------------------------------------
+
+Release date: Wed Mar  7 04:00:09 CET 2018
+
+Unknown (2):
+      [CSS] Quick fix for smaller displays
+      [issue #1012] Removed Content-Length header + improved webserver speed
+
+
+-------------------------------------------------
 Changes in release mega-20180305 (since mega-20180304)
 -------------------------------------------------
 
