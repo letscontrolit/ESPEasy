@@ -1515,13 +1515,9 @@ uint32_t getChecksum(byte* buffer, size_t size)
 }
 
 
-
 /********************************************************************************************\
   Parse string template
   \*********************************************************************************************/
-
-
-
 String parseTemplate(String &tmpString, byte lineSize)
 {
   checkRAM(F("parseTemplate"));
@@ -1557,64 +1553,73 @@ String parseTemplate(String &tmpString, byte lineSize)
           valueFormat = valueName.substring(hashtagIndex + 1);
           valueName = valueName.substring(0, hashtagIndex);
         }
-        for (byte y = 0; y < TASKS_MAX; y++)
+        
+        if (deviceName.equalsIgnoreCase("Plugin"))
         {
-          if (Settings.TaskDeviceEnabled[y])
+          String tmpString = tmpStringMid.substring(7);
+          tmpString.replace("#", ",");
+          if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
+            newString += tmpString;
+        }
+        else
+          for (byte y = 0; y < TASKS_MAX; y++)
           {
-            LoadTaskSettings(y);
-            if (ExtraTaskSettings.TaskDeviceName[0] != 0)
+            if (Settings.TaskDeviceEnabled[y])
             {
-              if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
+              LoadTaskSettings(y);
+              if (ExtraTaskSettings.TaskDeviceName[0] != 0)
               {
-                boolean match = false;
-                for (byte z = 0; z < VARS_PER_TASK; z++)
-                  if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                  {
-                    // here we know the task and value, so find the uservar
-                    match = true;
-                    String value = "";
-                    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                    if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
-                      value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
-                    else
-                      value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-
-                    int oidx;
-                    if ((oidx = valueFormat.indexOf('O'))>=0) // Output
-                    {
-                      valueFormat.remove(oidx);
-                      oidx = valueFormat.indexOf('!'); // inverted or active low
-                      float val = value.toFloat();
-                      if (oidx >= 0) {
-                          valueFormat.remove(oidx);
-                    	  value = val == 0 ? " ON" : "OFF";
-                      } else {
-                    	  value = val == 0 ? "OFF" : " ON";
-                      }
-                    }
-
-                    if (valueFormat == "R")
-                    {
-                      int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                      for (byte f = 0; f < filler; f++)
-                        newString += " ";
-                    }
-                    newString += String(value);
-                    break;
-                  }
-                if (!match) // try if this is a get config request
+                if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
                 {
-                  struct EventStruct TempEvent;
-                  TempEvent.TaskIndex = y;
-                  String tmpName = valueName;
-                  if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
-                    newString += tmpName;
+                  boolean match = false;
+                  for (byte z = 0; z < VARS_PER_TASK; z++)
+                    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
+                    {
+                      // here we know the task and value, so find the uservar
+                      match = true;
+                      String value = "";
+                      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                      if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+                        value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
+                      else
+                        value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+
+                      int oidx;
+                      if ((oidx = valueFormat.indexOf('O')) >= 0) // Output
+                      {
+                        valueFormat.remove(oidx);
+                        oidx = valueFormat.indexOf('!'); // inverted or active low
+                        float val = value.toFloat();
+                        if (oidx >= 0) {
+                          valueFormat.remove(oidx);
+                          value = val == 0 ? " ON" : "OFF";
+                        } else {
+                          value = val == 0 ? "OFF" : " ON";
+                        }
+                      }
+
+                      if (valueFormat == "R")
+                      {
+                        int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                        for (byte f = 0; f < filler; f++)
+                          newString += " ";
+                      }
+                      newString += String(value);
+                      break;
+                    }
+                  if (!match) // try if this is a get config request
+                  {
+                    struct EventStruct TempEvent;
+                    TempEvent.TaskIndex = y;
+                    String tmpName = valueName;
+                    if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+                      newString += tmpName;
+                  }
+                  break;
                 }
-                break;
               }
             }
           }
-        }
       }
       leftBracketIndex = tmpString.indexOf('[');
       count++;
@@ -1622,7 +1627,7 @@ String parseTemplate(String &tmpString, byte lineSize)
     checkRAM(F("parseTemplate2"));
     newString += tmpString;
 
-    if (currentTaskIndex!=255)
+    if (currentTaskIndex != 255)
       LoadTaskSettings(currentTaskIndex);
   }
 
