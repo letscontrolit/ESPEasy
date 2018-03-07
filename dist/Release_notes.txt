@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release v2.0-20180307 (since v2.0-20180306)
+-------------------------------------------------
+
+Release date: Wed Mar  7 04:00:21 CET 2018
+
+Gijs Noorlander (1):
+      [CSS] Quick fix for smaller displays (#1026)
+
+Unknown (1):
+      [issue #1012] Removed Content-Length header + improved webserver speed
+
+
+-------------------------------------------------
 Changes in release v2.0-20180306 (since v2.0-20180305)
 -------------------------------------------------
 
