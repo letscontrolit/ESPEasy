@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180308 (since mega-20180307)
+-------------------------------------------------
+
+Release date: Thu Mar  8 04:00:08 CET 2018
+
+mvdbro (2):
+      First step towards port monitoring without tasks
+      Second step towards port monitoring without tasks
+
+
+-------------------------------------------------
 Changes in release mega-20180307 (since mega-20180305)
 -------------------------------------------------
 
