@@ -904,7 +904,7 @@ void handle_config() {
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
 
     Settings.Delay = sensordelay.toInt();
-    Settings.deepSleep = (deepsleep == "on");
+    Settings.deepSleep = deepsleep.toInt();
     Settings.deepSleepOnFail = (deepsleeponfail == "on");
     str2ip(espip, Settings.IP);
     str2ip(espgateway, Settings.Gateway);
@@ -944,7 +944,9 @@ void handle_config() {
 
   addFormSubHeader(TXBuffer.buf,  F("Sleep Mode"));
 
-  addFormCheckBox(TXBuffer.buf,  F("Sleep enabled"), F("deepsleep"), Settings.deepSleep);
+  addFormNumericBox(TXBuffer.buf,  F("Sleep awake time"), F("deepsleep"), Settings.deepSleep, 0, 255);
+  addUnit(TXBuffer.buf,  F("sec"));
+  addFormNote(TXBuffer.buf,  F("0 = Sleep Disabled, else time awake from sleep"));
 
   addHelpButton(TXBuffer.buf,  F("SleepMode"));
   addFormNumericBox(TXBuffer.buf,  F("Sleep Delay"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
@@ -3254,6 +3256,11 @@ void handle_login() {
     else
     {
       TXBuffer += F("Invalid password!");
+      if (Settings.UseRules)
+      {
+        String event = F("Login#Failed");
+        rulesProcessing(event);
+      }
     }
   }
 
