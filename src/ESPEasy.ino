@@ -1071,6 +1071,7 @@ byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
+unsigned long timerAwakeFromDeepSleep = 0;
 
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
@@ -1270,11 +1271,16 @@ void setup()
   timerwd = 0; // timer for watchdog once per 30 sec
   timermqtt = 0; // Timer for the MQTT keep alive loop.
   timermqtt_interval = 250; // Interval for checking MQTT
+  timerAwakeFromDeepSleep = millis();
 
   PluginInit();
   CPluginInit();
   NPluginInit();
-
+  if (Settings.UseRules)
+  {
+    String event = F("System#Initialized");
+    rulesProcessing(event);
+  }
   WebServerInit();
 
   #ifdef FEATURE_ARDUINO_OTA

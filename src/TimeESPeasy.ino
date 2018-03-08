@@ -74,6 +74,13 @@ void setTime(unsigned long t) {
   sysTime = (uint32_t)t;
   nextSyncTime = (uint32_t)t + syncInterval;
   prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
+  if (Settings.UseRules)
+  {
+    static bool firstUpdate = true;
+    String event = firstUpdate ? F("Time#Initialized") : F("Time#Set");
+    firstUpdate = false;
+    rulesProcessing(event);
+  }
 }
 
 unsigned long now() {
@@ -434,7 +441,7 @@ unsigned long string2TimeLong(const String &str)
     // Within a scope so the tmpString is only used for copy.
     String tmpString(str);
     tmpString.toLowerCase();
-    tmpString.toCharArray(command, 20);    
+    tmpString.toCharArray(command, 20);
   }
   unsigned long lngTime = 0;
 
