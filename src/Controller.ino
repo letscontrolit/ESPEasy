@@ -169,6 +169,11 @@ bool MQTTConnect(int controller_idx)
   addLog(LOG_LEVEL_INFO, log);
 
   if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
+    if (Settings.UseRules)
+    {
+      String event = F("MQTT#Connected");
+      rulesProcessing(event);
+    }
     statusLED(true);
     return true; // end loop if succesfull
   }

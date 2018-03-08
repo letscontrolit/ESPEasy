@@ -27,6 +27,8 @@ bool isDeepSleepEnabled()
 {
   if (!Settings.deepSleep)
     return false;
+  if (!timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep))
+    return false;
 
   //cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
   //recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
@@ -1553,7 +1555,7 @@ String parseTemplate(String &tmpString, byte lineSize)
           valueFormat = valueName.substring(hashtagIndex + 1);
           valueName = valueName.substring(0, hashtagIndex);
         }
-        
+
         if (deviceName.equalsIgnoreCase("Plugin"))
         {
           String tmpString = tmpStringMid.substring(7);

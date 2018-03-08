@@ -138,7 +138,11 @@ boolean WifiConnect(byte connectAttempts)
       }
       addLog(LOG_LEVEL_INFO, log);
     #endif
-
+    if (Settings.UseRules)
+    {
+      String event = F("WiFi#Connected");
+      rulesProcessing(event);
+    }
     return(true);
   }
 
