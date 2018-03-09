@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release v2.0-20180309 (since v2.0-20180307)
+-------------------------------------------------
+
+Release date: Fri Mar  9 04:00:22 CET 2018
+
+Unknown (3):
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+
+
+-------------------------------------------------
 Changes in release v2.0-20180307 (since v2.0-20180306)
 -------------------------------------------------
 
