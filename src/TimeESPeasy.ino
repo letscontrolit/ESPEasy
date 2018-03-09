@@ -390,16 +390,28 @@ String getDateString()
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String getTimeString(const timeStruct& ts, char delimiter)
+String getTimeString(const timeStruct& ts, char delimiter, bool am_pm)
 {
   char TimeString[20]; //19 digits plus the null char
-  sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"), ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+  if (am_pm) {
+    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d%cm"),
+     ts.Hour %12, delimiter, ts.Minute, delimiter, ts.Second,
+     ts.Hour < 12 ? 'a' : 'p');
+  } else {
+    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
+     ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+  }
   return TimeString;
 }
 
 String getTimeString(char delimiter)
 {
-  return getTimeString(tm, delimiter);
+  return getTimeString(tm, delimiter, false);
+}
+
+String getTimeString_ampm(char delimiter)
+{
+  return getTimeString(tm, delimiter, true);
 }
 
 // returns the current Time without delimiter
@@ -409,20 +421,29 @@ String getTimeString()
 	return getTimeString('\0');
 }
 
+String getTimeString_ampm()
+{
+	return getTimeString_ampm('\0');
+}
+
 // returns the current Date and Time separated by the given delimiter
 // if called like this: getDateTimeString('\0', '\0', '\0');
 // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
 {
 	String ret = getDateString(ts, dateDelimiter);
 	if (dateTimeDelimiter != '\0')
 		ret += dateTimeDelimiter;
-	ret += getTimeString(ts, timeDelimiter);
+	ret += getTimeString(ts, timeDelimiter, am_pm);
 	return ret;
 }
 
 String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
-  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter);
+  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
+}
+
+String getDateTimeString_ampm(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
+  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
 }
 
 /********************************************************************************************\
