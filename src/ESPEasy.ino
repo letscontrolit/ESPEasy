@@ -1236,6 +1236,29 @@ void setup()
   checkRAM(F("hardwareInit"));
   hardwareInit();
 
+  //After booting, we want all the tasks to run without delaying more than neccesary.
+  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
+  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
+  for (byte x = 0; x < TASKS_MAX; x++)
+    if (Settings.TaskDeviceTimer[x] !=0)
+      timerSensor[x] = millis() + (x * Settings.MessageDelay);
+
+  timer100ms = 0; // timer for periodic actions 10 x per/sec
+  timer1s = 0; // timer for periodic actions once per/sec
+  timerwd = 0; // timer for watchdog once per 30 sec
+  timermqtt = 0; // Timer for the MQTT keep alive loop.
+  timermqtt_interval = 250; // Interval for checking MQTT
+  timerAwakeFromDeepSleep = millis();
+
+  PluginInit();
+  CPluginInit();
+  NPluginInit();
+  if (Settings.UseRules)
+  {
+    String event = F("System#Initialized");
+    rulesProcessing(event);
+  }
+  
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
 
@@ -1259,28 +1282,6 @@ void setup()
   ReportStatus();
   #endif
 
-  //After booting, we want all the tasks to run without delaying more than neccesary.
-  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
-  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
-  for (byte x = 0; x < TASKS_MAX; x++)
-    if (Settings.TaskDeviceTimer[x] !=0)
-      timerSensor[x] = millis() + (x * Settings.MessageDelay);
-
-  timer100ms = 0; // timer for periodic actions 10 x per/sec
-  timer1s = 0; // timer for periodic actions once per/sec
-  timerwd = 0; // timer for watchdog once per 30 sec
-  timermqtt = 0; // Timer for the MQTT keep alive loop.
-  timermqtt_interval = 250; // Interval for checking MQTT
-  timerAwakeFromDeepSleep = millis();
-
-  PluginInit();
-  CPluginInit();
-  NPluginInit();
-  if (Settings.UseRules)
-  {
-    String event = F("System#Initialized");
-    rulesProcessing(event);
-  }
   WebServerInit();
 
   #ifdef FEATURE_ARDUINO_OTA
