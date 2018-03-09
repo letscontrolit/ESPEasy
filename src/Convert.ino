@@ -58,19 +58,22 @@ String centimeterToImperialLength(float cm) {
 }
 
 String millimeterToImperialLength(float mm) {
-  int inches = mm / 25.4;
+  float inches = mm / 25.4;
   int feet = inches /12;
-  inches = inches % 12;
-  char imperial[20];
-  if (feet == 0)
-    sprintf_P(imperial, PSTR("%d%c"), inches, '"');
-  else
-    sprintf_P(imperial, PSTR("%d%c%d%c"), feet, '\'', inches, '"');
-  return imperial;
+  inches = inches - (feet * 12);
+  String result;
+  result.reserve(10);
+  if (feet != 0) {
+    result += feet;
+    result += '\'';
+  }
+  result += toString(inches,1);
+  result += '"';
+  return result;
 }
 
-int minutesToDay(int minutes) {
-  return minutes / 1440;
+float minutesToDay(int minutes) {
+  return minutes / 1440.0;
 }
 
 String minutesToDayHour(int minutes) {
