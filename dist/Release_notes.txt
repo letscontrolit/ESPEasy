@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release mega-20180309 (since mega-20180308)
+-------------------------------------------------
+
+Release date: Fri Mar  9 04:00:11 CET 2018
+
+ESPEasy release bot (3):
+      automaticly updated release notes for v2.0-20180305
+      automaticly updated release notes for v2.0-20180306
+      automaticly updated release notes for v2.0-20180307
+
+Gijs Noorlander (2):
+      Fixes P073 plugin for latest TM1637 based 7 segments displays modules (#996) (#1022)
+      [CSS] Quick fix for smaller displays (#1026)
+
+Unknown (5):
+      [issue #1012] Removed Content-Length header + improved webserver speed
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+
+
+-------------------------------------------------
 Changes in release mega-20180308 (since mega-20180307)
 -------------------------------------------------
 
