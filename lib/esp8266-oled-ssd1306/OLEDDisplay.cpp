@@ -349,7 +349,7 @@ void OLEDDisplay::drawProgressBar(uint16_t x, uint16_t y, uint16_t width, uint16
   drawHorizontalLine(xRadius, y + height, width - doubleRadius + 1);
   drawCircleQuads(x + width - radius, yRadius, radius, 0b00001001);
 
-  uint16_t maxProgressWidth = (width - doubleRadius - 1) * progress / 100;
+  uint16_t maxProgressWidth = (width - doubleRadius + 1) * progress / 100;
 
   fillCircle(xRadius, yRadius, innerRadius);
   fillRect(xRadius + 1, y + 2, maxProgressWidth, height - 3);
