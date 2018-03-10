@@ -832,22 +832,13 @@ String ClearInFile(char* fname, int index, int datasize)
   \*********************************************************************************************/
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadFromFile"));
   // addLog(LOG_LEVEL_INFO, String(F("FILE : Load size "))+datasize);
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
-
-  // addLog(LOG_LEVEL_INFO, String(F("FILE : File size "))+f.size());
-
   SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
-  byte *pointerToByteToRead = memAddress;
-  for (int x = 0; x < datasize; x++)
-  {
-    int readres=f.read();
-    SPIFFS_CHECK(readres >=0, fname);
-    *pointerToByteToRead = readres;
-    pointerToByteToRead++;// next byte
-  }
+  SPIFFS_CHECK(f.read(memAddress,datasize), fname);
   f.close();
 
   return(String());
