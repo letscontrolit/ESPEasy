@@ -1263,7 +1263,7 @@ void setup()
     String event = F("System#Initialized");
     rulesProcessing(event);
   }
-  
+
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
 
@@ -1412,7 +1412,7 @@ void loop()
 
   backgroundtasks();
 
-  if (isDeepSleepEnabled()){
+  if (readyForSleep()){
       deepSleep(Settings.Delay);
       //deepsleep will never return, its a special kind of reboot
   }
