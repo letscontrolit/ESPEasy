@@ -303,6 +303,7 @@
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
 #define RULESETS_MAX                        4
+#define RULES_BUFFER_SIZE                  64
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
