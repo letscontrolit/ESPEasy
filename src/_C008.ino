@@ -21,7 +21,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = false;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -51,7 +51,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
           {
             delayBackground(Settings.MessageDelay);
             // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (millis() < timer)
+            // while (!timeOutReached(timer))
             //   backgroundtasks();
           }
         }
@@ -68,6 +68,9 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
 {
+  if (!WiFiConnected(100)) {
+    return false;
+  }
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
@@ -102,10 +105,8 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   String url = "/";
   url += ControllerSettings.Publish;
-  //TODO: move this to a generic replacement function?
-  url.replace(F("%sysname%"), URLEncode(Settings.Name));
-  url.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
-  url.replace(F("%id%"), String(event->idx));
+  parseControllerVariables(url, event, true);
+
   url.replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
   if (longValue)
     url.replace(F("%value%"), String(longValue));
@@ -121,7 +122,7 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
                F("Connection: close\r\n\r\n"));
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+#runs all test modules
+
+import glob
+import importlib
+import os
+
+from esptest import *
+
+
+modules=glob.glob("test[0-9]*.py")
+modules.sort()
+
+for module in modules:
+    print()
+    print()
+    log.debug("Starting module "+module)
+    # importlib.import_module(module)
+    __import__(module.replace(".py",""))
+    log.debug("Completed module "+module)
+completed()

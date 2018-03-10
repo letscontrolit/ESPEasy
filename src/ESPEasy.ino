@@ -79,18 +79,29 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#define DEFAULT_NAME        "ESP_Easy"         // Enter your device friendly name
-#define DEFAULT_SSID        "ssid"              // Enter your network SSID
-#define DEFAULT_KEY         "wpakey"            // Enter your network WPA key
-#define DEFAULT_DELAY       60                  // Enter your Send delay in seconds
+// --- Basic Config Settings ------------------------------------------------------------------------
+#define DEFAULT_NAME        "ESP_Easy"			// Enter your device friendly name
+#define UNIT				0					// Unit Number
+#define DEFAULT_DELAY       60                  // Sleep Delay in seconds
+
+// --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
+#define DEFAULT_AP_IP      	192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
-#define DEFAULT_USE_STATIC_IP   false           // true or false enabled or disabled set static IP
+// --- Wifi Client Mode -----------------------------------------------------------------------------
+#define DEFAULT_SSID        "ssid"              // Enter your Wifi network SSID
+#define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
+
+#define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
-#define DEFAULT_GW          "192.168.0.1"       // Enter your gateway
-#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your subnet
+#define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
+#define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
+#define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
+#define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
+#define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
+// --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
@@ -109,12 +120,52 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
-#define UNIT                0
+
+// --- Advanced Settings ---------------------------------------------------------------------------------
+#define DEFAULT_USE_RULES			false	// (true|false) Enable Rules?
+
+#define DEFAULT_MQTT_RETAIN			false	// (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_DELAY			1000	// Time in milliseconds to retain MQTT messages
+
+#define DEFAULT_USE_NTP				false	// (true|false) Use NTP Server
+#define DEFAULT_NTP_HOST			""		// NTP Server Hostname
+#define DEFAULT_TIME_ZONE			0		// Time Offset (in minutes)
+#define DEFAULT_USE_DST				false	// (true|false) Use Daily Time Saving
+
+#define LOG_TO_SERIAL         1
+#define LOG_TO_SYSLOG         2
+#define LOG_TO_WEBLOG         3
+#define LOG_TO_SDCARD         4
+#define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
+#define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL		LOG_LEVEL_INFO	// Web Log Level
+#define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
+#define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
+
+#define DEFAULT_USE_SERIAL			true	// (true|false) Enable Logging to the Serial Port
+#define DEFAULT_SERIAL_BAUD			115200	// Serial Port Baud Rate
+
+/*
+// --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
+
+#define DEFAULT_USE_GLOBAL_SYNC			false		// (true|false)
+#define DEFAULT_SYNC_UDP_PORT			0			//
+
+#define DEFAULT_IP_OCTET				0			//
+#define DEFAULT_WD_IC2_ADDRESS			0			//
+#define DEFAULT_USE_SSDP			false		// (true|false)
+#define DEFAULT_CON_FAIL_THRES			0			//
+#define DEFAULT_I2C_CLOCK_LIMIT			0			//
+*/
+
 
 // Enable FEATURE_ADC_VCC to measure supply voltage using the analog pin
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
-#define FEATURE_ADC_VCC                  false
+#ifndef FEATURE_ADC_VCC
+  #define FEATURE_ADC_VCC                  false
+#endif
 
 
 #if defined(ESP8266)
@@ -157,8 +208,15 @@
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
 #define ESP_PROJECT_PID           2016110801L
-#define VERSION                             2
-#define BUILD                           20000 // git version 2.0.0
+
+#if defined(ESP8266)
+  #define VERSION                             2 // config file version (not ESPEasy version). increase if you make incompatible changes to config system.
+#endif
+#if defined(ESP32)
+  #define VERSION                             3 // Change in config.dat mapping needs a full reset
+#endif
+
+#define BUILD                           20100 // git version 2.1.0
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif
@@ -202,6 +260,8 @@
 #define PLUGIN_GET_DEVICEGPIONAMES         22
 #define PLUGIN_EXIT                        23
 #define PLUGIN_GET_CONFIG                  24
+#define PLUGIN_UNCONDITIONAL_POLL          25
+#define PLUGIN_REQUEST                     26
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -210,6 +270,15 @@
 #define CPLUGIN_GET_DEVICENAME              5
 #define CPLUGIN_WEBFORM_SAVE                6
 #define CPLUGIN_WEBFORM_LOAD                7
+#define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
+
+#define CONTROLLER_HOSTNAME                 1
+#define CONTROLLER_IP                       2
+#define CONTROLLER_PORT                     3
+#define CONTROLLER_USER                     4
+#define CONTROLLER_PASS                     5
+#define CONTROLLER_SUBSCRIBE                6
+#define CONTROLLER_PUBLISH                  7
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -234,7 +303,14 @@
 #else
   #define DEVICES_MAX                      64
 #endif
-#define TASKS_MAX                          12 // max 12!
+
+#if defined(ESP8266)
+  #define TASKS_MAX                          12 // max 12!
+#endif
+#if defined(ESP32)
+  #define TASKS_MAX                          32
+#endif
+
 #define CONTROLLER_MAX                      3 // max 4!
 #define NOTIFICATION_MAX                    3 // max 4!
 #define VARS_PER_TASK                       4
@@ -299,20 +375,50 @@
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
-#define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
-#define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-#define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+#if defined(ESP8266)
+  #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
+  #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
+  #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+  #define CONFIG_FILE_SIZE                65536
+#endif
+#if defined(ESP32)
+  #define DAT_OFFSET_CONTROLLER            8192  // each controller = 1k, 4 max
+  #define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
+  #define DAT_OFFSET_TASKS                32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
+  #define CONFIG_FILE_SIZE               131072
+#endif
+
+/*
+	To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+	- add a "Custom.h" file in this folder.
+
+*/
+#ifdef USE_CUSTOM_H
+#include "Custom.h"
+#endif
+
 
 #include "core_version.h"
+#include "ESPEasyTimeTypes.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
   #define FILE_SECURITY     "security.dat"
   #define FILE_NOTIFICATION "notification.dat"
-  #define FILE_RULES        "rules1.dat"
-  #include "lwip/tcp_impl.h"
+  #define FILE_RULES        "rules1.txt"
+  #include <lwip/init.h>
+  #ifndef LWIP_VERSION_MAJOR
+    #error
+  #endif
+  #if LWIP_VERSION_MAJOR == 2
+  //  #include <lwip/priv/tcp_priv.h>
+  #else
+    #include <lwip/tcp_impl.h>
+  #endif
   #include <ESP8266WiFi.h>
+  #include <ESP8266Ping.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
   #include <DNSServer.h>
@@ -353,11 +459,12 @@
   #define FILE_CONFIG       "/config.dat"
   #define FILE_SECURITY     "/security.dat"
   #define FILE_NOTIFICATION "/notification.dat"
-  #define FILE_RULES        "/rules1.dat"
+  #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
+  #include  "esp32_ping.h"
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
-  ESP32WebServer WebServer(80); 
+  ESP32WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
   #endif
@@ -389,7 +496,7 @@ ADC_MODE(ADC_VCC);
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
-IPAddress apIP(192, 168, 4, 1);
+IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
 #ifdef FEATURE_MDNS
 MDNSResponder mdns;
@@ -398,12 +505,42 @@ MDNSResponder mdns;
 // MQTT client
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
+bool MQTTclient_should_reconnect = true;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
+struct CRCStruct{
+  char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
+  char binaryFilename[16+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename...";
+  char compileTime[16]= __TIME__;
+  char compileDate[16]= __DATE__;
+  uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  bool checkPassed (void){ return memcmp(compileTimeMD5,runTimeMD5,16)==0 ; }
+  uint32_t numberOfCRCBytes=0;
+}CRCValues;
+
+// Forward declarations.
+bool WiFiConnected(uint32_t timeout_ms);
+bool hostReachable(const IPAddress& ip);
+bool hostReachable(const String& hostname);
+void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
+void formatIP(const IPAddress& ip, char (&strIP)[20]);
+
 struct SecurityStruct
 {
+  SecurityStruct() {
+    memset(WifiSSID, 0, sizeof(WifiSSID));
+    memset(WifiKey, 0, sizeof(WifiKey));
+    memset(WifiSSID2, 0, sizeof(WifiSSID2));
+    memset(WifiKey2, 0, sizeof(WifiKey2));
+    memset(WifiAPKey, 0, sizeof(WifiAPKey));
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      memset(ControllerUser[i], 0, sizeof(ControllerUser[i]));
+      memset(ControllerPassword[i], 0, sizeof(ControllerPassword[i]));
+    }
+    memset(Password, 0, sizeof(Password));
+  }
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];
@@ -412,11 +549,58 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
-  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
+  byte          AllowedIPrangeLow[4]; // TD-er: Use these
+  byte          AllowedIPrangeHigh[4];
+  byte          IPblockLevel;
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
+  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
+  uint8_t       md5[16];
 } SecuritySettings;
 
 struct SettingsStruct
 {
+  SettingsStruct() :
+    PID(0), Version(0), Build(0), IP_Octet(0), Unit(0), Delay(0),
+    Pin_i2c_sda(-1), Pin_i2c_scl(-1), Pin_status_led(-1), Pin_sd_cs(-1),
+    UDPPort(0), SyslogLevel(0), SerialLogLevel(0), WebLogLevel(0), SDLogLevel(0),
+    BaudRate(0), MessageDelay(0), deepSleep(0),
+    CustomCSS(false), DST(false), WDI2CAddress(0),
+    UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
+    WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
+    TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
+    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
+    DST_Start(0), DST_End(0)
+    {
+      for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+        Protocol[i] = 0;
+        ControllerEnabled[i] = false;
+        for (byte task = 0; task < TASKS_MAX; ++task) {
+          TaskDeviceID[i][task] = 0;
+          TaskDeviceSendData[i][task] = false;
+        }
+      }
+      for (byte task = 0; task < TASKS_MAX; ++task) {
+        TaskDeviceNumber[task] = 0;
+        OLD_TaskDeviceID[task] = 0;
+        TaskDevicePin1PullUp[task] = false;
+        for (byte cv = 0; cv < PLUGIN_CONFIGVAR_MAX; ++cv) {
+          TaskDevicePluginConfig[task][cv] = 0;
+        }
+        TaskDevicePin1Inversed[task] = false;
+        for (byte cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
+          TaskDevicePluginConfigFloat[task][cv] = 0.0;
+        }
+        for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
+          TaskDevicePluginConfigLong[task][cv] = 0;
+        }
+        OLD_TaskDeviceSendData[task] = false;
+        TaskDeviceGlobalSync[task] = false;
+        TaskDeviceDataFeed[task] = 0;
+        TaskDeviceTimer[task] = 0;
+        TaskDeviceEnabled[task] = false;
+      }
+    }
+
   unsigned long PID;
   int           Version;
   int16_t       Build;
@@ -487,13 +671,24 @@ struct SettingsStruct
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
   boolean       ArduinoOTAEnable;
+  uint16_t      DST_Start;
+  uint16_t      DST_End;
+
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
+  // make sure crc is the last value in the struct
+  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
+  uint8_t       md5[16];
 } Settings;
 
 struct ControllerSettingsStruct
 {
+  ControllerSettingsStruct() : UseDNS(false), Port(0) {
+    memset(HostName, 0, sizeof(HostName));
+    memset(Publish, 0, sizeof(Publish));
+    memset(Subscribe, 0, sizeof(Subscribe));
+  }
   boolean       UseDNS;
   byte          IP[4];
   unsigned int  Port;
@@ -513,18 +708,55 @@ struct ControllerSettingsStruct
     return getIP().toString();
   }
 
-  boolean connectToHost(WiFiClient &client) {
-    if (UseDNS) {
-      return client.connect(HostName, Port);
+  void setHostname(const String& controllerhostname) {
+    strncpy(HostName, controllerhostname.c_str(), sizeof(HostName));
+    updateIPcache();
+  }
+
+  boolean checkHostReachable(bool quick) {
+    if (!WiFiConnected(10)) {
+      return false; // Not connected, so no use in wasting time to connect to a host.
     }
-    return client.connect(getIP(), Port);
+    if (quick) return true;
+    if (UseDNS) {
+      if (!updateIPcache()) {
+        return false;
+      }
+    }
+    return hostReachable(getIP());
+  }
+
+  boolean connectToHost(WiFiClient &client) {
+    if (!checkHostReachable(true)) {
+      return false; // Host not reachable
+    }
+    byte retry = 2;
+    bool connected = false;
+    while (retry > 0 && !connected) {
+      --retry;
+      connected = client.connect(getIP(), Port);
+      if (connected) return true;
+      if (!checkHostReachable(false))
+        return false;
+    }
+    return false;
   }
 
   int beginPacket(WiFiUDP &client) {
-    if (UseDNS) {
-      return client.beginPacket(HostName, Port);
+    if (!checkHostReachable(true)) {
+      return 0; // Host not reachable
     }
-    return client.beginPacket(getIP(), Port);
+    byte retry = 2;
+    int connected = 0;
+    while (retry > 0 && !connected) {
+      --retry;
+      connected = client.beginPacket(getIP(), Port);
+      if (connected != 0) return connected;
+      if (!checkHostReachable(false))
+        return false;
+      delay(10);
+    }
+    return false;
   }
 
   String getHostPortString() const {
@@ -533,10 +765,37 @@ struct ControllerSettingsStruct
     result += Port;
     return result;
   }
+
+private:
+  bool updateIPcache() {
+    if (!UseDNS) {
+      return true;
+    }
+    IPAddress tmpIP;
+    if (WiFi.hostByName(HostName, tmpIP)) {
+      for (byte x = 0; x < 4; x++) {
+        IP[x] = tmpIP[x];
+      }
+      return true;
+    }
+    return false;
+  }
+
 };
 
 struct NotificationSettingsStruct
 {
+  NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
+    memset(Server,   0, sizeof(Server));
+    memset(Domain,   0, sizeof(Domain));
+    memset(Sender,   0, sizeof(Sender));
+    memset(Receiver, 0, sizeof(Receiver));
+    memset(Subject,  0, sizeof(Subject));
+    memset(Body,     0, sizeof(Body));
+    memset(User,     0, sizeof(User));
+    memset(Pass,     0, sizeof(Pass));
+  }
+
   char          Server[65];
   unsigned int  Port;
   char          Domain[65];
@@ -546,11 +805,28 @@ struct NotificationSettingsStruct
   char          Body[513];
   byte          Pin1;
   byte          Pin2;
+  char          User[49];
+  char          Pass[33];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
 struct ExtraTaskSettingsStruct
 {
+  ExtraTaskSettingsStruct() : TaskIndex(0) {
+    TaskDeviceName[0] = 0;
+    for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (byte j = 0; j < 41; ++j) {
+        TaskDeviceFormula[i][j] = 0;
+        TaskDeviceValueNames[i][j] = 0;
+        TaskDeviceValueDecimals[i] = 0;
+      }
+    }
+    for (byte i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
+      TaskDevicePluginConfigLong[i] = 0;
+      TaskDevicePluginConfig[i] = 0;
+    }
+  }
+
   byte    TaskIndex;
   char    TaskDeviceName[41];
   char    TaskDeviceFormula[VARS_PER_TASK][41];
@@ -562,6 +838,10 @@ struct ExtraTaskSettingsStruct
 
 struct EventStruct
 {
+  EventStruct() :
+    Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
+    BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
+    OriginTaskIndex(0), Data(NULL) {}
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
   byte ControllerIndex; // index position in Settings.Controller, 0-3
@@ -584,15 +864,87 @@ struct EventStruct
   byte *Data;
 };
 
-struct LogStruct
-{
-  unsigned long timeStamp;
-  char* Message;
-} Logging[10];
-int logcount = -1;
+#define LOG_STRUCT_MESSAGE_SIZE 128
+#define LOG_STRUCT_MESSAGE_LINES 20
+
+struct LogStruct {
+    LogStruct() : write_idx(0), read_idx(0) {
+      for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
+        memset(Message[i], 0, LOG_STRUCT_MESSAGE_SIZE);
+        timeStamp[i] = 0;
+      }
+    }
+
+    void add(const char *line) {
+      write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+      if (write_idx == read_idx) {
+        // Buffer full, move read_idx to overwrite oldest entry.
+        read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+      }
+      timeStamp[write_idx] = millis();
+      strncpy(Message[write_idx], line, LOG_STRUCT_MESSAGE_SIZE-1);
+    }
+
+    // Read the next item and append it to the given string.
+    // Returns whether new lines are available.
+    bool get(String& output, const String& lineEnd) {
+      if (!isEmpty()) {
+        read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+        output += formatLine(read_idx, lineEnd);
+      }
+      return !isEmpty();
+    }
+
+    bool get(String& output, const String& lineEnd, int line) {
+      int tmpread((write_idx + 1+line) % LOG_STRUCT_MESSAGE_LINES);
+      if (timeStamp[tmpread] != 0) {
+        output += formatLine(tmpread, lineEnd);
+      }
+      return !isEmpty();
+    }
+
+    bool getAll(String& output, const String& lineEnd) {
+      int tmpread((write_idx + 1) % LOG_STRUCT_MESSAGE_LINES);
+      bool someAdded = false;
+      while (tmpread != write_idx) {
+        if (timeStamp[tmpread] != 0) {
+          output += formatLine(tmpread, lineEnd);
+          someAdded = true;
+        }
+        tmpread = (tmpread + 1)% LOG_STRUCT_MESSAGE_LINES;
+      }
+      return someAdded;
+    }
+
+    bool isEmpty() {
+      return (write_idx == read_idx);
+    }
+
+  private:
+    String formatLine(int index, const String& lineEnd) {
+      String output;
+      output += timeStamp[index];
+      output += " : ";
+      output += Message[index];
+      output += lineEnd;
+      return output;
+    }
+
+
+    int write_idx;
+    int read_idx;
+    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
+    char Message[LOG_STRUCT_MESSAGE_LINES][LOG_STRUCT_MESSAGE_SIZE];
+
+} Logging;
 
 struct DeviceStruct
 {
+  DeviceStruct() :
+    Number(0), Type(0), VType(0), Ports(0),
+    PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
+    ValueCount(0), Custom(false), SendDataOption(false), GlobalSyncOption(false),
+    TimerOption(false), TimerOptional(false), DecimalsOnly(false) {}
   byte Number;
   byte Type;
   byte VType;
@@ -611,6 +963,9 @@ struct DeviceStruct
 
 struct ProtocolStruct
 {
+  ProtocolStruct() :
+    Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
+    defaultPort(0), usesTemplate(false), usesID(false) {}
   byte Number;
   boolean usesMQTT;
   boolean usesAccount;
@@ -622,6 +977,8 @@ struct ProtocolStruct
 
 struct NotificationStruct
 {
+  NotificationStruct() :
+    Number(0), usesMessaging(false), usesGPIO(0) {}
   byte Number;
   boolean usesMessaging;
   byte usesGPIO;
@@ -629,6 +986,11 @@ struct NotificationStruct
 
 struct NodeStruct
 {
+  NodeStruct() :
+    age(0), build(0), nodeName(NULL), nodeType(0)
+    {
+      for (byte i = 0; i < 4; ++i) ip[i] = 0;
+    }
   byte ip[4];
   byte age;
   uint16_t build;
@@ -638,6 +1000,9 @@ struct NodeStruct
 
 struct systemTimerStruct
 {
+  systemTimerStruct() :
+    timer(0), plugin(0), Par1(0), Par2(0), Par3(0) {}
+
   unsigned long timer;
   byte plugin;
   byte Par1;
@@ -647,6 +1012,7 @@ struct systemTimerStruct
 
 struct systemCMDTimerStruct
 {
+  systemCMDTimerStruct() : timer(0) {}
   unsigned long timer;
   String action;
 } systemCMDTimers[SYSTEM_CMD_TIMER_MAX];
@@ -695,6 +1061,8 @@ unsigned long timer100ms;
 unsigned long timer20ms;
 unsigned long timer1s;
 unsigned long timerwd;
+unsigned long timermqtt;
+unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
 unsigned int NC_Count = 0;
@@ -703,6 +1071,7 @@ byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
+unsigned long timerAwakeFromDeepSleep = 0;
 
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
@@ -740,11 +1109,30 @@ String eventBuffer = "";
 uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
 
+bool shouldReboot=false;
+
+// Blynk_get prototype
+boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
+
+int firstEnabledBlynkController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].Number == 12 && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+//void checkRAM( const __FlashStringHelper* flashString);
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
 void setup()
 {
+
+
+  checkRAM(F("setup"));
   #if defined(ESP32)
     for(byte x = 0; x < 16; x++)
       ledChannelPin[x] = -1;
@@ -806,8 +1194,8 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
+  progMemMD5check();
   LoadSettings();
-        
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 
@@ -845,8 +1233,32 @@ void setup()
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
 
+  checkRAM(F("hardwareInit"));
   hardwareInit();
 
+  //After booting, we want all the tasks to run without delaying more than neccesary.
+  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
+  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
+  for (byte x = 0; x < TASKS_MAX; x++)
+    if (Settings.TaskDeviceTimer[x] !=0)
+      timerSensor[x] = millis() + (x * Settings.MessageDelay);
+
+  timer100ms = 0; // timer for periodic actions 10 x per/sec
+  timer1s = 0; // timer for periodic actions once per/sec
+  timerwd = 0; // timer for watchdog once per 30 sec
+  timermqtt = 0; // Timer for the MQTT keep alive loop.
+  timermqtt_interval = 250; // Interval for checking MQTT
+  timerAwakeFromDeepSleep = millis();
+
+  PluginInit();
+  CPluginInit();
+  NPluginInit();
+  if (Settings.UseRules)
+  {
+    String event = F("System#Initialized");
+    rulesProcessing(event);
+  }
+  
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
 
@@ -870,21 +1282,6 @@ void setup()
   ReportStatus();
   #endif
 
-  //After booting, we want all the tasks to run without delaying more than neccesary.
-  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
-  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
-  for (byte x = 0; x < TASKS_MAX; x++)
-    if (Settings.TaskDeviceTimer[x] !=0)
-      timerSensor[x] = millis() + (x * Settings.MessageDelay);
-
-  timer100ms = 0; // timer for periodic actions 10 x per/sec
-  timer1s = 0; // timer for periodic actions once per/sec
-  timerwd = 0; // timer for watchdog once per 30 sec
-
-  PluginInit();
-  CPluginInit();
-  NPluginInit();
-
   WebServerInit();
 
   #ifdef FEATURE_ARDUINO_OTA
@@ -895,10 +1292,14 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
+/*
   // Setup MQTT Client
-  byte ProtocolIndex = getProtocolIndex(Settings.Protocol[0]);
-  if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[0])
-    MQTTConnect();
+  // ToDo TD-er: Controller index is forced to the first enabled MQTT controller.
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    MQTTConnect(enabledMqttController);
+  }
+*/
 
   sendSysInfoUDP(3);
 
@@ -925,12 +1326,28 @@ void setup()
 
 }
 
+int firstEnabledMQTTController() {
+  for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+    byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
+    if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, String& protoDisplayName) {
+  EventStruct tmpEvent;
+  tmpEvent.idx=parameterIdx;
+  return CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
+}
 
 /*********************************************************************************************\
  * MAIN LOOP
 \*********************************************************************************************/
 void loop()
 {
+  //checkRAM(F("loop"));
   loopCounter++;
 
   if (wifiSetupConnect)
@@ -940,7 +1357,6 @@ void loop()
     wifiSetupConnect = false;
   }
 
-
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
   if (isDeepSleepEnabled())
   {
@@ -948,27 +1364,53 @@ void loop()
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
-      deepSleep(Settings.Delay);
-      //deepsleep will never return, its a special kind of reboot
+      if (Settings.UseRules)
+      {
+        String event = F("System#Sleep");
+        rulesProcessing(event);
+      }
   }
   //normal mode, run each task when its time
   else
   {
 
-    if (millis() > timer20ms)
+    if (timeOutReached(timer20ms))
       run50TimesPerSecond();
 
-    if (millis() > timer100ms)
+    if (timeOutReached(timer100ms))
       run10TimesPerSecond();
 
-    if (millis() > timerwd)
+    if (timeOutReached(timerwd))
       runEach30Seconds();
 
-    if (millis() > timer1s)
+    if (timeOutReached(timer1s))
       runOncePerSecond();
+
+    if (timeOutReached(timermqtt)) {
+      // MQTT_KEEPALIVE = 15 seconds.
+      timermqtt = millis() + timermqtt_interval;
+      //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+      int enabledMqttController = firstEnabledMQTTController();
+      if (enabledMqttController >= 0) {
+        if (!MQTTclient.loop()) {
+          if (!MQTTCheck(enabledMqttController)) {
+            // Check failed, no need to retry it immediately.
+            if (timermqtt_interval < 2000)
+              timermqtt_interval += 250;
+          } else {
+            timermqtt_interval = 250;
+          }
+        }
+      }
+    }
   }
+
   backgroundtasks();
 
+  if (isDeepSleepEnabled()){
+      deepSleep(Settings.Delay);
+      //deepsleep will never return, its a special kind of reboot
+  }
 }
 
 
@@ -992,12 +1434,14 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
     eventBuffer = "";
   }
   elapsed = micros() - start;
+  WebServer.handleClient();
 }
 
 
@@ -1085,7 +1529,7 @@ void runOncePerSecond()
     Serial.println(timer);
   }
 
-  if (timerAPoff != 0 && millis() > timerAPoff)
+  if (timerAPoff != 0 && timeOutReached(timerAPoff))
   {
     timerAPoff = 0;
     WifiAPMode(false);
@@ -1097,6 +1541,8 @@ void runOncePerSecond()
 \*********************************************************************************************/
 void runEach30Seconds()
 {
+   extern void checkRAMtoLog();
+  checkRAMtoLog();
   wdcounter++;
   timerwd = millis() + 30000;
   char str[60];
@@ -1107,8 +1553,12 @@ void runEach30Seconds()
   addLog(LOG_LEVEL_INFO, log);
   sendSysInfoUDP(1);
   refreshNodeList();
-  if(Settings.ControllerEnabled[0])
-    MQTTCheck();
+
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    MQTTCheck(enabledMqttController);
+  }
+
   #if defined(ESP8266)
   if (Settings.UseSSDP)
     SSDP_update();
@@ -1135,13 +1585,14 @@ void runEach30Seconds()
 \*********************************************************************************************/
 void checkSensors()
 {
+  checkRAM(F("checkSensors"));
   bool isDeepSleep = isDeepSleepEnabled();
   //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     if (
         (Settings.TaskDeviceTimer[x] != 0) &&
-        (isDeepSleep || (millis() > timerSensor[x]))
+        (isDeepSleep || timeOutReached(timerSensor[x]))
     )
     {
       timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
@@ -1171,6 +1622,7 @@ void checkSensors()
 \*********************************************************************************************/
 void SensorSendTask(byte TaskIndex)
 {
+  checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     byte varIndex = TaskIndex * VARS_PER_TASK;
@@ -1213,6 +1665,12 @@ void SensorSendTask(byte TaskIndex)
         }
       }
       sendData(&TempEvent);
+    } else if (!anyControllerEnabled() && Settings.GlobalSync) {
+      // No other controller enabled thus need to make sure global sync is still performed.
+      if (Settings.TaskDeviceGlobalSync[TaskIndex]) {
+        LoadTaskSettings(TaskIndex);
+        SendUDPTaskData(0, TaskIndex, TaskIndex);
+      }
     }
   }
 }
@@ -1278,7 +1736,7 @@ void checkSystemTimers()
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
     if (systemTimers[x].timer != 0)
     {
-      if (timeOut(systemTimers[x].timer))
+      if (timeOutReached(systemTimers[x].timer))
       {
         struct EventStruct TempEvent;
         TempEvent.Par1 = systemTimers[x].Par1;
@@ -1293,7 +1751,7 @@ void checkSystemTimers()
 
   for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
     if (systemCMDTimers[x].timer != 0)
-      if (timeOut(systemCMDTimers[x].timer))
+      if (timeOutReached(systemCMDTimers[x].timer))
       {
         struct EventStruct TempEvent;
         parseCommandString(&TempEvent, systemCMDTimers[x].action);
@@ -1311,10 +1769,13 @@ void checkSystemTimers()
 bool runningBackgroundTasks=false;
 void backgroundtasks()
 {
+  //checkRAM(F("backgroundtasks"));
+  //always start with a yield
+  yield();
+
   //prevent recursion!
   if (runningBackgroundTasks)
   {
-    yield();
     return;
   }
   runningBackgroundTasks=true;
@@ -1333,8 +1794,7 @@ void backgroundtasks()
     dnsServer.processNextRequest();
 
   WebServer.handleClient();
-  if(Settings.ControllerEnabled[0])
-    MQTTclient.loop();
+
   checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA

@@ -130,9 +130,13 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
       {
         //  Here we check that the MQTT client is alive.
 
-        if (!MQTTclient_037->connected()) {
+        if (!MQTTclient_037->connected() || MQTTclient_should_reconnect) {
+          if (MQTTclient_should_reconnect) {
+            addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Intentional reconnect"));
+          } else {
+            addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
+          }
 
-          addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
 
           MQTTclient_037->disconnect();
           delay(1000);
@@ -162,13 +166,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         // This is a private option only used by the MQTT 037 callback function
 
         //      Get the payload and check it out
-
-        String Payload = event->String2;
-        float floatPayload = string2float(Payload);
-
         LoadTaskSettings(event->TaskIndex);
 
-        if (floatPayload == -999) {
+        String Payload = event->String2;
+        float floatPayload;
+        if (!string2float(Payload, floatPayload)) {
           String log = F("IMPT : Bad Import MQTT Command ");
           log += event->String1;
           addLog(LOG_LEVEL_ERROR, log);
@@ -324,18 +326,23 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 // It would be nice to understand this....
 
 boolean MQTTConnect_037(String clientid)
-
 {
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings)); // todo index is now fixed to 0
-
   boolean result = false;
-
+  // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController < 0) {
+    // No enabled MQTT controller
+    return false;
+  }
   // Do nothing if already connected
-
-  if (MQTTclient_037->connected())return true;
+  if (MQTTclient_037->connected()) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
+  if (!WiFiConnected(1000)) {
+    return false; // Not connected, so no use in wasting time to connect to a host.
+  }
+  ControllerSettingsStruct ControllerSettings;
+  LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (ControllerSettings.UseDNS) {
     MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -349,8 +356,8 @@ boolean MQTTConnect_037(String clientid)
   {
     String log = "";
 
-    if ((SecuritySettings.ControllerUser[0][0] != 0) && (SecuritySettings.ControllerPassword[0][0] != 0)) //
-      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[0], SecuritySettings.ControllerPassword[0]); // todo
+    if ((SecuritySettings.ControllerUser[enabledMqttController][0] != 0) && (SecuritySettings.ControllerPassword[enabledMqttController][0] != 0))
+      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[enabledMqttController], SecuritySettings.ControllerPassword[enabledMqttController]);
     else
       result = MQTTclient_037->connect(clientid.c_str());
 
@@ -440,43 +447,4 @@ boolean MQTTCheckSubscription_037(String Topic, String Subscription) {
     count = count + 1;
   }
   return false;
-}
-
-//	***************************************************************************
-// Convert String to float - returns -999 in case of error
-float string2float(String myString) {
-  int i, len;
-  float value;
-  len = myString.length();
-  char tmp[(len + 1)];       // one extra for the zero termination
-  byte start = 0;
-
-  //  Look for decimal point - they can be anywhere but no more than one of them!
-
-  int dotIndex = myString.indexOf(".");
-  //Serial.println(dotIndex);
-
-  if (dotIndex != -1)
-  {
-    int dotIndex2 = (myString.substring(dotIndex + 1)).indexOf(".");
-    //Serial.println(dotIndex2);
-    if (dotIndex2 != -1)return -999.00;    // Give error if there is more than one dot
-  }
-
-  if (myString.substring(0, 1) == "-") {
-    start = 1;   //allow a minus in front of string
-  }
-
-  for (i = start; i < len; i++)
-  {
-    tmp[i] = myString.charAt(i);
-    if (!isdigit(tmp[i]))
-    {
-      if (tmp[i] != '.')return -999;
-    }
-  }
-
-  tmp[i] = 0;
-  value = atof(tmp);
-  return value;
 }

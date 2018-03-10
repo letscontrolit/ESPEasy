@@ -50,7 +50,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
           {
             delayBackground(Settings.MessageDelay);
             // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (millis() < timer)
+            // while (!timeOutReached(timer))
             //   backgroundtasks();
           }
         }
@@ -80,18 +80,18 @@ void C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned l
 
   String msg = "";
   msg += ControllerSettings.Publish;
-  msg.replace(F("%sysname%"), Settings.Name);
-  msg.replace(F("%tskname%"), ExtraTaskSettings.TaskDeviceName);
-  msg.replace(F("%id%"), String(event->idx));
+  parseControllerVariables(msg, event, false);
   msg.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[varIndex]);
   if (longValue)
     msg.replace(F("%value%"), String(longValue));
   else
     msg.replace(F("%value%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
 
-  ControllerSettings.beginPacket(portUDP);
-  portUDP.write(msg.c_str());
-  portUDP.endPacket();
+  if (WiFi.status() == WL_CONNECTED) {
+    ControllerSettings.beginPacket(portUDP);
+    portUDP.write(msg.c_str());
+    portUDP.endPacket();
+  }
 
   msg.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, log);

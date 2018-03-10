@@ -1073,6 +1073,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
   {
     // Unconditional calls to all plugins
     case PLUGIN_DEVICE_ADD:
+    case PLUGIN_UNCONDITIONAL_POLL:
       for (x = 0; x < PLUGIN_MAX; x++)
         if (Plugin_id[x] != 0)
           Plugin_ptr[x](Function, event, str);
@@ -1081,6 +1082,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
+    case PLUGIN_REQUEST:
       for (x = 0; x < PLUGIN_MAX; x++)
         if (Plugin_id[x] != 0)
           if (Plugin_ptr[x](Function, event, str))
@@ -1104,8 +1106,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.BaseVarIndex = y * VARS_PER_TASK;
                 //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
                 TempEvent.sensorType = Device[DeviceIndex].VType;
-                if (Plugin_ptr[x](Function, event, str))
+                if (Plugin_ptr[x](Function, event, str)){
+                  checkRAM(F("PluginCallUDP"),x);
                   return true;
+                }
               }
             }
           }
@@ -1140,6 +1144,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               {
                 if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
                 {
+                  checkRAM(F("PluginCall_s"),x);
                   Plugin_ptr[x](Function, &TempEvent, str);
                 }
               }
@@ -1167,6 +1172,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))
         {
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+          checkRAM(F("PluginCall_init"),x);
           return Plugin_ptr[x](Function, event, str);
         }
       }

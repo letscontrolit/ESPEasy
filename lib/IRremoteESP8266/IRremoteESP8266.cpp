@@ -155,7 +155,7 @@ void ICACHE_FLASH_ATTR IRsend::sendNEC (unsigned long data, int nbits,
   // Footer
   mark(NEC_BIT_MARK);
   // Gap to next command.
-  space(max(0, NEC_MIN_COMMAND_LENGTH - usecs.elapsed()));
+  space(max(0ul, NEC_MIN_COMMAND_LENGTH - usecs.elapsed()));
 
   // Optional command repeat sequence.
   for (unsigned int i = 0; i < repeat; i++) {
@@ -164,7 +164,52 @@ void ICACHE_FLASH_ATTR IRsend::sendNEC (unsigned long data, int nbits,
     space(NEC_RPT_SPACE);
     mark(NEC_BIT_MARK);
     // Gap till next command.
-    space(max(0, NEC_MIN_COMMAND_LENGTH - usecs.elapsed()));
+    space(max(0ul, NEC_MIN_COMMAND_LENGTH - usecs.elapsed()));
+  }
+}
+
+void ICACHE_FLASH_ATTR IRsend::sendPioneer (unsigned long data, int nbits,
+                                            unsigned int repeat, unsigned long secondData) {
+  // Details about timings can be found at:
+  //   http://www.sbprojects.com/knowledge/ir/nec.php
+  // More about the pioneer format:
+  //   http://www.adrian-kingston.com/IRFormatPioneer.htm
+
+  // Set IR carrier frequency
+  enableIROut(40);
+  IRtimer usecs = IRtimer();
+
+  for (unsigned int i = 0; i <= repeat; i++) {
+    usecs.reset();
+    // Header
+    mark(PIONEER_HDR_MARK);
+    space(PIONEER_HDR_SPACE);
+
+    sendData(PIONEER_BIT_MARK, PIONEER_ONE_SPACE, PIONEER_BIT_MARK, PIONEER_ZERO_SPACE,
+             data, nbits, true);
+
+    // Footer
+    mark(PIONEER_BIT_MARK);
+    space(PIONEER_ONE_SPACE);
+    // Gap till next command.
+    space(max(0ul, PIONEER_MIN_COMMAND_LENGTH - usecs.elapsed()));
+    
+    // Some Pioneer signals have two 32 bit commands
+    if (secondData) {
+      usecs.reset();
+      // Header
+      mark(PIONEER_HDR_MARK);
+      space(PIONEER_HDR_SPACE);
+
+      sendData(PIONEER_BIT_MARK, PIONEER_ONE_SPACE, PIONEER_BIT_MARK, PIONEER_ZERO_SPACE,
+               secondData, nbits, true);
+
+      // Footer
+      mark(PIONEER_BIT_MARK);
+      space(PIONEER_ONE_SPACE);
+      // Gap till next command.
+      space(max(0ul, PIONEER_MIN_COMMAND_LENGTH - usecs.elapsed()));
+    }
   }
 }
 
@@ -236,7 +281,7 @@ void ICACHE_FLASH_ATTR IRsend::sendSony(unsigned long data, int nbits,
     // Footer
     // The Sony protocol requires us to wait 45ms from start of a code to the
     // start of the next one. A 10ms minimum gap is also required.
-    space(max(10000, 45000 - usecs.elapsed()));
+    space(max(10000u, 45000 - usecs.elapsed()));
   }
   // A space() is always performed last, so no need to turn off the LED.
 }
@@ -367,7 +412,7 @@ void ICACHE_FLASH_ATTR IRsend::sendRCMM(uint32_t data, uint8_t nbits) {
   mark(RCMM_BIT_MARK);
   // Protocol requires us to wait at least RCMM_RPT_LENGTH usecs from the start
   // or RCMM_MIN_GAP usecs.
-  space(max(RCMM_RPT_LENGTH - usecs.elapsed(), RCMM_MIN_GAP));
+  space(max(RCMM_RPT_LENGTH - usecs.elapsed(), static_cast<uint32_t>(RCMM_MIN_GAP)));
 }
 
 void ICACHE_FLASH_ATTR IRsend::sendPanasonic(unsigned int address,
@@ -415,7 +460,7 @@ void ICACHE_FLASH_ATTR IRsend::sendJVC(unsigned long data, int nbits,
     // Footer
     mark(JVC_BIT_MARK);
     // Wait till the end of the repeat time window before we send another code.
-    space(max(0, JVC_RPT_LENGTH - usecs.elapsed()));
+    space(max(0u, JVC_RPT_LENGTH - usecs.elapsed()));
     usecs.reset();
   }
   // No need to turn off the LED as we will always end with a space().
@@ -647,7 +692,7 @@ void ICACHE_FLASH_ATTR IRsend::sendSherwood(unsigned long data, int nbits,
                                             unsigned int repeat) {
   // Sherwood remote codes appear to be NEC codes with a manditory repeat code.
   // i.e. repeat should be >= 1.
-  sendNEC(data, nbits, max(1, repeat));
+  sendNEC(data, nbits, max(1u, repeat));
 }
 
 void ICACHE_FLASH_ATTR IRsend::sendMitsubishiAC(unsigned char data[]) {
@@ -911,7 +956,7 @@ bool ICACHE_FLASH_ATTR IRrecv::decode(decode_results *results,
 //   Nr. of ticks.
 uint32_t IRrecv::ticksLow(uint32_t usecs, uint8_t tolerance) {
   // max() used to ensure the result can't drop below 0 before the cast.
-  return((uint32_t) max(usecs * (1.0 - tolerance/100.)/USECPERTICK, 0));
+  return((uint32_t) max(usecs * (1.0 - tolerance/100.)/USECPERTICK, 0.0));
 }
 
 // Calculate the upper bound of the nr. of ticks.

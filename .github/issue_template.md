@@ -3,7 +3,7 @@
 ### Steps to reproduce
 How can we trigger this problem?
 
-Does the problem presist after powering off and on? (just resetting isnt enough sometimes)
+Does the problem persists after powering off and on? (just resetting isn't enough sometimes)
 
 ### Expected behavior
 Tell us what should happen?

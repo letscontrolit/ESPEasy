@@ -3,20 +3,31 @@
 // this feature is not in all upstream versions yet.
 // See https://github.com/esp8266/Arduino/issues/1923
 // and https://github.com/letscontrolit/ESPEasy/issues/253
-
 #if defined(ESP8266)
+  #include <md5.h>
+#endif
+#if defined(ESP8266)
+
+struct tcp_pcb;
+extern struct tcp_pcb* tcp_tw_pcbs;
+extern "C" void tcp_abort (struct tcp_pcb* pcb);
+
 void tcpCleanup()
 {
-  while(tcp_tw_pcbs!=NULL)
-  {
-    tcp_abort(tcp_tw_pcbs);
-  }
-}
+
+     while(tcp_tw_pcbs!=NULL)
+    {
+      tcp_abort(tcp_tw_pcbs);
+    }
+
+ }
 #endif
 
 bool isDeepSleepEnabled()
 {
   if (!Settings.deepSleep)
+    return false;
+  if (!timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep))
     return false;
 
   //cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
@@ -34,6 +45,7 @@ bool isDeepSleepEnabled()
 void deepSleep(int delay)
 {
 
+  checkRAM(F("deepSleep"));
   if (!isDeepSleepEnabled())
   {
     //Deep sleep canceled by GPIO16(D0)=LOW
@@ -81,6 +93,7 @@ void deepSleepStart(int delay)
 
 boolean remoteConfig(struct EventStruct *event, String& string)
 {
+  checkRAM(F("remoteConfig"));
   boolean success = false;
   String command = parseString(string, 1);
 
@@ -132,6 +145,7 @@ void flashCount()
 
 String flashGuard()
 {
+  checkRAM(F("flashGuard"));
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
     String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
@@ -144,109 +158,6 @@ String flashGuard()
 
 //use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
 #define FLASH_GUARD() { String flashErr=flashGuard(); if (flashErr.length()) return(flashErr); }
-
-/*********************************************************************************************\
-   Get value count from sensor type
-  \*********************************************************************************************/
-
-byte getValueCountFromSensorType(byte sensorType)
-{
-  byte valueCount = 0;
-
-  switch (sensorType)
-  {
-    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
-    case SENSOR_TYPE_SWITCH:
-    case SENSOR_TYPE_DIMMER:
-      valueCount = 1;
-      break;
-    case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
-      valueCount = 1;
-      break;
-    case SENSOR_TYPE_TEMP_HUM:
-    case SENSOR_TYPE_TEMP_BARO:
-    case SENSOR_TYPE_DUAL:
-      valueCount = 2;
-      break;
-    case SENSOR_TYPE_TEMP_HUM_BARO:
-    case SENSOR_TYPE_TRIPLE:
-    case SENSOR_TYPE_WIND:
-      valueCount = 3;
-      break;
-    case SENSOR_TYPE_QUAD:
-      valueCount = 4;
-      break;
-  }
-  return valueCount;
-}
-
-
-/*********************************************************************************************\
-   Workaround for removing trailing white space when String() converts a float with 0 decimals
-  \*********************************************************************************************/
-String toString(float value, byte decimals)
-{
-  String sValue = String(value, decimals);
-  sValue.trim();
-  return sValue;
-}
-
-/*********************************************************************************************\
-   Format a value to the set number of decimals
-  \*********************************************************************************************/
-String formatUserVar(struct EventStruct *event, byte rel_index)
-{
-  return toString(
-    UserVar[event->BaseVarIndex + rel_index],
-    ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
-}
-
-/*********************************************************************************************\
-   Parse a string and get the xth command or parameter
-  \*********************************************************************************************/
-String parseString(String& string, byte indexFind)
-{
-  String tmpString = string;
-  tmpString += ",";
-  tmpString.replace(" ", ",");
-  String locateString = "";
-  byte count = 0;
-  int index = tmpString.indexOf(',');
-  while (index > 0)
-  {
-    count++;
-    locateString = tmpString.substring(0, index);
-    tmpString = tmpString.substring(index + 1);
-    index = tmpString.indexOf(',');
-    if (count == indexFind)
-    {
-      locateString.toLowerCase();
-      return locateString;
-    }
-  }
-  return "";
-}
-
-
-/*********************************************************************************************\
-   Parse a string and get the xth command or parameter
-  \*********************************************************************************************/
-int getParamStartPos(String& string, byte indexFind)
-{
-  String tmpString = string;
-  byte count = 0;
-  tmpString.replace(" ", ",");
-  for (unsigned int x = 0; x < tmpString.length(); x++)
-  {
-    if (tmpString.charAt(x) == ',')
-    {
-      count++;
-      if (count == (indexFind - 1))
-        return x + 1;
-    }
-  }
-  return -1;
-}
 
 
 /*********************************************************************************************\
@@ -316,6 +227,7 @@ boolean hasPinState(byte plugin, byte index)
   \*********************************************************************************************/
 String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
 {
+  checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
   uint16_t value = noSearchValue;
@@ -371,25 +283,6 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
 
 
 /********************************************************************************************\
-  Unsigned long Timer timeOut check
-  \*********************************************************************************************/
-
-boolean timeOut(unsigned long timer)
-{
-  // This routine solves the 49 day bug without the need for separate start time and duration
-  //   that would need two 32 bit variables if duration is not static
-  // It limits the maximum delay to 24.9 days.
-
-  unsigned long now = millis();
-  //XXX: fix me, something fishy going on here, this << operator is in the wrong place or parenthesis are wrong
-  if (((now >= timer) && ((now - timer) < 1u << 31))  || ((timer >= now) && (timer - now > 1u << 31)))
-    return true;
-
-  return false;
-}
-
-
-/********************************************************************************************\
   Status LED
 \*********************************************************************************************/
 #if defined(ESP32)
@@ -421,7 +314,7 @@ void statusLED(boolean traffic)
 
     if (WiFi.status() == WL_CONNECTED)
     {
-      long int delta=millis()-gnLastUpdate;
+      long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
       {
         nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
@@ -465,7 +358,7 @@ void statusLED(boolean traffic)
 void delayBackground(unsigned long delay)
 {
   unsigned long timer = millis() + delay;
-  while (millis() < timer)
+  while (!timeOutReached(timer))
     backgroundtasks();
 }
 
@@ -473,8 +366,9 @@ void delayBackground(unsigned long delay)
 /********************************************************************************************\
   Parse a command string to event struct
   \*********************************************************************************************/
-void parseCommandString(struct EventStruct *event, String& string)
+void parseCommandString(struct EventStruct *event, const String& string)
 {
+  checkRAM(F("parseCommandString"));
   char command[80];
   command[0] = 0;
   char TmpStr1[80];
@@ -499,6 +393,7 @@ void parseCommandString(struct EventStruct *event, String& string)
   \*********************************************************************************************/
 void taskClear(byte taskIndex, boolean save)
 {
+  checkRAM(F("taskClear"));
   Settings.TaskDeviceNumber[taskIndex] = 0;
   ExtraTaskSettings.TaskDeviceName[0] = 0;
   Settings.TaskDeviceDataFeed[taskIndex] = 0;
@@ -560,6 +455,7 @@ String FileError(int line, const char * fname)
   \*********************************************************************************************/
 String BuildFixes()
 {
+  checkRAM(F("BuildFixes"));
   Serial.println(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
@@ -587,6 +483,7 @@ String BuildFixes()
   \*********************************************************************************************/
 void fileSystemCheck()
 {
+  checkRAM(F("fileSystemCheck"));
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
   if (SPIFFS.begin())
   {
@@ -623,11 +520,21 @@ void fileSystemCheck()
   \*********************************************************************************************/
 byte getDeviceIndex(byte Number)
 {
-  byte DeviceIndex = 0;
-  for (byte x = 0; x <= deviceCount ; x++)
-    if (Device[x].Number == Number)
-      DeviceIndex = x;
-  return DeviceIndex;
+  for (byte x = 0; x <= deviceCount ; x++) {
+    if (Device[x].Number == Number) {
+      return x;
+    }
+  }
+  return 0;
+}
+
+/********************************************************************************************\
+  Find name of plugin given the plugin device index..
+  \*********************************************************************************************/
+String getPluginNameFromDeviceIndex(byte deviceIndex) {
+  String deviceName = "";
+  Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, 0, deviceName);
+  return deviceName;
 }
 
 
@@ -636,11 +543,12 @@ byte getDeviceIndex(byte Number)
   \*********************************************************************************************/
 byte getProtocolIndex(byte Number)
 {
-  byte ProtocolIndex = 0;
-  for (byte x = 0; x <= protocolCount ; x++)
-    if (Protocol[x].Number == Number)
-      ProtocolIndex = x;
-  return ProtocolIndex;
+  for (byte x = 0; x <= protocolCount ; x++) {
+    if (Protocol[x].Number == Number) {
+      return x;
+    }
+  }
+  return 0;
 }
 
 /********************************************************************************************\
@@ -648,11 +556,11 @@ byte getProtocolIndex(byte Number)
   \*********************************************************************************************/
 byte getNotificationProtocolIndex(byte Number)
 {
-
-  for (byte x = 0; x <= notificationCount ; x++)
-    if (Notification[x].Number == Number)
+  for (byte x = 0; x <= notificationCount ; x++) {
+    if (Notification[x].Number == Number) {
       return(x);
-
+    }
+  }
   return(NPLUGIN_NOT_FOUND);
 }
 
@@ -706,51 +614,68 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
 }
 
 
-/********************************************************************************************\
-  Convert a char string to integer
-  \*********************************************************************************************/
-unsigned long str2int(char *string)
-{
-  unsigned long temp = atof(string);
-  return temp;
-}
 
 
 /********************************************************************************************\
-  Convert a char string to IP byte array
+  check the program memory hash
+  The const MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere... needs to remain unchanged as it will be replaced by
+  - 16 bytes md5 hash, followed by
+  - 4 * uint32_t start of memory segment 1-4
+  - 4 * uint32_t end of memory segment 1-4
+  currently there are only two segemts included in the hash. Unused segments have start adress 0.
+  Execution time 520kb @80Mhz: 236ms
+  Returns: 0 if hash compare fails, number of checked bytes otherwise.
+  The reference hash is calculated by a .py file and injected into the binary.
+  Caution: currently the hash sits in an unchecked segment. If it ever moves to a checked segment, make sure
+  it is excluded from the calculation !
   \*********************************************************************************************/
-boolean str2ip(char *string, byte* IP)
-{
-  byte c;
-  byte part = 0;
-  int value = 0;
-
-  for (unsigned int x = 0; x <= strlen(string); x++)
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+void dump (uint32_t addr) { //Seems already included in core 2.4 ...
+  Serial.print (addr, HEX);
+  Serial.print(": ");
+  for (uint32_t a = addr; a < addr + 16; a++)
   {
-    c = string[x];
-    if (isdigit(c))
-    {
-      value *= 10;
-      value += c - '0';
-    }
-
-    else if (c == '.' || c == 0) // next octet from IP address
-    {
-      if (value <= 255)
-        IP[part++] = value;
-      else
-        return false;
-      value = 0;
-    }
-    else if (c == ' ') // ignore these
-      ;
-    else // invalid token
-      return false;
+    Serial.print ( pgm_read_byte(a), HEX);
+    Serial.print (" ");
   }
-  if (part == 4) // correct number of octets
-    return true;
-  return false;
+  Serial.println("");
 }
+#endif
+
+uint32_t progMemMD5check(){
+    checkRAM(F("progMemMD5check"));
+    #define BufSize 10
+    uint32_t calcBuffer[BufSize];
+    CRCValues.numberOfCRCBytes = 0;
+    memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
+    if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
+        addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
+        return 0;
+    }
+    MD5Builder md5;
+    md5.begin();
+    for (int l = 0; l<4; l++){                                                                            // check max segments,  if the pointer is not 0
+        uint32_t *ptrStart = (uint32_t *)&CRCValues.compileTimeMD5[16+l*4];
+        uint32_t *ptrEnd =   (uint32_t *)&CRCValues.compileTimeMD5[16+4*4+l*4];
+        if ((*ptrStart) == 0) break;                                                                      // segment not used.
+        for (uint32_t i = *ptrStart; i< (*ptrEnd) ; i=i+sizeof(calcBuffer)){                              // "<" includes last byte
+             for (int buf = 0; buf < BufSize; buf ++){
+                calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
+                CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
+             }
+             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5. At the end not the whole buffer. md5 ptr to data in ram.
+        }
+   }
+   md5.calculate();
+   md5.getBytes(CRCValues.runTimeMD5);
+   if ( CRCValues.checkPassed())  {
+      addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
+      return CRCValues.numberOfCRCBytes;
+   }
+   addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
+   return 0;
+}
+
 
 
 /********************************************************************************************\
@@ -758,26 +683,71 @@ boolean str2ip(char *string, byte* IP)
   \*********************************************************************************************/
 String SaveSettings(void)
 {
+  checkRAM(F("SaveSettings"));
+  MD5Builder md5;
+  memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+  md5.begin();
+  md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
+  md5.calculate();
+  md5.getBytes(Settings.md5);
+
   String err;
   err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (err.length())
-    return(err);
+   return(err);
 
-  return(SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+  md5.begin();
+  md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
+  md5.calculate();
+  md5.getBytes(SecuritySettings.md5);
+  err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+
+ return (err);
 }
-
 
 /********************************************************************************************\
   Load settings from SPIFFS
   \*********************************************************************************************/
 String LoadSettings()
 {
+  checkRAM(F("LoadSettings"));
   String err;
-  err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  uint8_t calculatedMd5[16];
+  MD5Builder md5;
+
+  err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof( SettingsStruct));
   if (err.length())
     return(err);
 
-  return(LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  md5.begin();
+  md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
+  md5.calculate();
+  md5.getBytes(calculatedMd5);
+  if (memcmp (calculatedMd5, Settings.md5,16)==0){
+    addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+    if (memcmp(Settings.ProgmemMd5, CRCValues.runTimeMD5, 16)!=0)
+      addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
+  }
+  else{
+    addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+  }
+
+
+  err=LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof( SecurityStruct));
+  md5.begin();
+  md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
+  md5.calculate();
+  md5.getBytes(calculatedMd5);
+  if (memcmp (calculatedMd5, SecuritySettings.md5, 16)==0){
+    addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
+    if (memcmp(SecuritySettings.ProgmemMd5,CRCValues.runTimeMD5, 16)!=0)
+      addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
+ }
+  else{
+    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
+  }
+  return(err);
 }
 
 
@@ -786,6 +756,7 @@ String LoadSettings()
   \*********************************************************************************************/
 String SaveTaskSettings(byte TaskIndex)
 {
+  checkRAM(F("SaveTaskSettings"));
   ExtraTaskSettings.TaskIndex = TaskIndex;
   return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
 }
@@ -796,6 +767,7 @@ String SaveTaskSettings(byte TaskIndex)
   \*********************************************************************************************/
 String LoadTaskSettings(byte TaskIndex)
 {
+  checkRAM(F("LoadTaskSettings"));
   //already loaded
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String());
@@ -812,6 +784,7 @@ String LoadTaskSettings(byte TaskIndex)
   \*********************************************************************************************/
 String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveCustomTaskSettings"));
   if (datasize > DAT_TASKS_SIZE)
     return F("SaveCustomTaskSettings too big");
   return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
@@ -819,10 +792,20 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 
 
 /********************************************************************************************\
+  Clear custom task settings
+  \*********************************************************************************************/
+String ClearCustomTaskSettings(int TaskIndex)
+{
+  // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+}
+
+/********************************************************************************************\
   Load Custom Task settings to SPIFFS
   \*********************************************************************************************/
 String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadCustomTaskSettings"));
   if (datasize > DAT_TASKS_SIZE)
     return (String(F("LoadCustomTaskSettings too big")));
   return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
@@ -833,6 +816,7 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   \*********************************************************************************************/
 String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveControllerSettings"));
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("SaveControllerSettings too big");
   return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
@@ -844,17 +828,31 @@ String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
   \*********************************************************************************************/
 String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadControllerSettings"));
   if (datasize > DAT_CONTROLLER_SIZE)
     return F("LoadControllerSettings too big");
 
   return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
 }
 
+
+/********************************************************************************************\
+  Clear Custom Controller settings
+  \*********************************************************************************************/
+String ClearCustomControllerSettings(int ControllerIndex)
+{
+  checkRAM(F("ClearCustomControllerSettings"));
+  // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
+}
+
+
 /********************************************************************************************\
   Save Custom Controller settings to SPIFFS
   \*********************************************************************************************/
 String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveCustomControllerSettings"));
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return F("SaveCustomControllerSettings too big");
   return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
@@ -866,6 +864,7 @@ String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
   \*********************************************************************************************/
 String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadCustomControllerSettings"));
   if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
     return(F("LoadCustomControllerSettings too big"));
   return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
@@ -876,6 +875,7 @@ String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
   \*********************************************************************************************/
 String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("SaveNotificationSettings"));
   if (datasize > DAT_NOTIFICATION_SIZE)
     return F("SaveNotificationSettings too big");
   return SaveToFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
@@ -887,6 +887,7 @@ String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int dat
   \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
+  checkRAM(F("LoadNotificationSettings"));
   if (datasize > DAT_NOTIFICATION_SIZE)
     return(F("LoadNotificationSettings too big"));
   return(LoadFromFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
@@ -900,7 +901,7 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
   \*********************************************************************************************/
 String InitFile(const char* fname, int datasize)
 {
-
+  checkRAM(F("InitFile"));
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "w");
@@ -921,7 +922,7 @@ String InitFile(const char* fname, int datasize)
   \*********************************************************************************************/
 String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
-
+  checkRAM(F("SaveToFile"));
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "r+");
@@ -943,28 +944,40 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   return String();
 }
 
+/********************************************************************************************\
+  Clear a certain area in a file (set to 0)
+  \*********************************************************************************************/
+String ClearInFile(char* fname, int index, int datasize)
+{
+  checkRAM(F("ClearInFile"));
+  FLASH_GUARD();
+
+  fs::File f = SPIFFS.open(fname, "r+");
+  SPIFFS_CHECK(f, fname);
+
+  SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+  for (int x = 0; x < datasize ; x++)
+  {
+    SPIFFS_CHECK(f.write(0), fname);
+  }
+  f.close();
+
+  //OK
+  return String();
+
+}
 
 /********************************************************************************************\
   Load data from config file on SPIFFS
   \*********************************************************************************************/
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
-  // addLog(LOG_LEVEL_INFO, String(F("FILE : Load size "))+datasize);
+  checkRAM(F("LoadFromFile"));
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
-
-  // addLog(LOG_LEVEL_INFO, String(F("FILE : File size "))+f.size());
-
   SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
-  byte *pointerToByteToRead = memAddress;
-  for (int x = 0; x < datasize; x++)
-  {
-    int readres=f.read();
-    SPIFFS_CHECK(readres >=0, fname);
-    *pointerToByteToRead = readres;
-    pointerToByteToRead++;// next byte
-  }
+  SPIFFS_CHECK(f.read(memAddress,datasize), fname);
   f.close();
 
   return(String());
@@ -976,6 +989,7 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 int SpiffsSectors()
 {
+  checkRAM(F("SpiffsSectors"));
   #if defined(ESP8266)
     uint32_t _sectorStart = ((uint32_t)&_SPIFFS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
     uint32_t _sectorEnd = ((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE;
@@ -993,6 +1007,7 @@ int SpiffsSectors()
 void ResetFactory(void)
 {
 
+  checkRAM(F("ResetFactory"));
   // Direct Serial is allowed here, since this is only an emergency task.
   Serial.println(F("RESET: Resetting factory defaults..."));
   delay(1000);
@@ -1032,7 +1047,7 @@ void ResetFactory(void)
   String fname;
 
   fname=F(FILE_CONFIG);
-  InitFile(fname.c_str(), 65536);
+  InitFile(fname.c_str(), CONFIG_FILE_SIZE);
 
   fname=F(FILE_SECURITY);
   InitFile(fname.c_str(), 4096);
@@ -1060,6 +1075,11 @@ void ResetFactory(void)
   strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
   SecuritySettings.Password[0] = 0;
+  // TD-er Reset access control
+  str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
+  str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
+  SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
+
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = 4;
   Settings.Pin_i2c_scl     = 5;
@@ -1068,10 +1088,6 @@ void ResetFactory(void)
   Settings.Pin_sd_cs       = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-  Settings.SerialLogLevel  = 2;
-  Settings.WebLogLevel     = 2;
-  Settings.BaudRate        = 115200;
-  Settings.MessageDelay = 1000;
   Settings.deepSleep = false;
   Settings.CustomCSS = false;
   Settings.InitSPI = false;
@@ -1087,7 +1103,45 @@ void ResetFactory(void)
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
   Settings.Build = BUILD;
-  Settings.UseSerial = true;
+
+	// advanced Settings
+	Settings.UseRules 		= DEFAULT_USE_RULES;
+
+	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
+	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
+
+    Settings.UseNTP			= DEFAULT_USE_NTP;
+	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
+	Settings.TimeZone		= DEFAULT_TIME_ZONE;
+    Settings.DST 			= DEFAULT_USE_DST;
+
+	str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
+
+	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
+	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
+	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
+	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
+	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
+
+	Settings.UseSerial		= DEFAULT_USE_SERIAL;
+	Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+
+/*
+	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
+	Settings.UDPPort						= DEFAULT_SYNC_UDP_PORT;
+
+	Settings.IP_Octet						= DEFAULT_IP_OCTET;
+	Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
+	Settings.UseSSDP						= DEFAULT_USE_SSDP;
+	Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
+	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
+*/
+
+
+
+
+
+
   SaveSettings();
 
 #if DEFAULT_CONTROLLER
@@ -1099,7 +1153,7 @@ void ResetFactory(void)
   ControllerSettings.Port = DEFAULT_PORT;
   SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
-
+  checkRAM(F("ResetFactory2"));
   Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
@@ -1151,26 +1205,61 @@ unsigned long FreeMem(void)
 
 
 /********************************************************************************************\
-  In memory convert float to long
+  Check if string is valid float
   \*********************************************************************************************/
-unsigned long float2ul(float f)
-{
-  unsigned long ul;
-  memcpy(&ul, &f, 4);
-  return ul;
+boolean isFloat(const String& tBuf) {
+  return isNumerical(tBuf, false);
 }
 
-
-/********************************************************************************************\
-  In memory convert long to float
-  \*********************************************************************************************/
-float ul2float(unsigned long ul)
-{
-  float f;
-  memcpy(&f, &ul, 4);
-  return f;
+boolean isValidFloat(float f) {
+  if (f == NAN)      return false; //("NaN");
+  if (f == INFINITY) return false; //("INFINITY");
+  if (-f == INFINITY)return false; //("-INFINITY");
+  if (isnan(f))      return false; //("isnan");
+  if (isinf(f))      return false; //("isinf");
+  return true;
 }
 
+boolean isInt(const String& tBuf) {
+  return isNumerical(tBuf, true);
+}
+
+boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+  boolean decPt = false;
+  int firstDec = 0;
+  if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
+    firstDec = 1;
+  for(unsigned int x=firstDec; x < tBuf.length(); ++x) {
+    if(tBuf.charAt(x) == '.') {
+      if (mustBeInteger) return false;
+      // Only one decimal point allowed
+      if(decPt) return false;
+      else decPt = true;
+    }
+    else if(tBuf.charAt(x) < '0' || tBuf.charAt(x) > '9') return false;
+  }
+  return true;
+}
+
+// convert old and new time string to nr of seconds
+float timeStringToSeconds(String tBuf) {
+	float sec = 0;
+	int split = tBuf.indexOf(':');
+	if (split < 0) { // assume only hours
+		sec += tBuf.toFloat() * 60 * 60;
+	} else {
+		sec += tBuf.substring(0, split).toFloat() * 60 * 60;
+		tBuf = tBuf.substring(split +1);
+		split = tBuf.indexOf(':');
+		if (split < 0) { //old format
+			sec += tBuf.toFloat() * 60;
+		} else { //new format
+			sec += tBuf.substring(0, split).toFloat() * 60;
+			sec += tBuf.substring(split +1).toFloat();
+		}
+	}
+	return sec;
+}
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
@@ -1183,10 +1272,6 @@ void initLog()
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
-  for (int l=0; l<10; l++)
-  {
-    Logging[l].Message=0;
-  }
 }
 
 /********************************************************************************************\
@@ -1199,35 +1284,64 @@ void addLog(byte loglevel, String& string)
 
 void addLog(byte logLevel, const __FlashStringHelper* flashString)
 {
+    checkRAM(F("addLog"));
     String s(flashString);
     addLog(logLevel, s.c_str());
 }
 
-void addLog(byte loglevel, const char *line)
+bool SerialAvailableForWrite() {
+  if (!Settings.UseSerial) return false;
+  #if defined(ESP8266)
+    if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
+  #endif
+  return true;
+}
+
+boolean loglevelActiveFor(byte destination, byte logLevel) {
+  byte logLevelSettings = 0;
+  switch (destination) {
+    case LOG_TO_SERIAL: {
+      if (!SerialAvailableForWrite()) return false;
+      logLevelSettings = Settings.SerialLogLevel;
+      break;
+    }
+    case LOG_TO_SYSLOG: {
+      logLevelSettings = Settings.SyslogLevel;
+      break;
+    }
+    case LOG_TO_WEBLOG: {
+      logLevelSettings = Settings.WebLogLevel;
+      break;
+    }
+    case LOG_TO_SDCARD: {
+      logLevelSettings = Settings.SDLogLevel;
+      break;
+    }
+    default:
+      return false;
+  }
+  return loglevelActive(logLevel, logLevelSettings);
+}
+
+
+boolean loglevelActive(byte logLevel, byte logLevelSettings) {
+  return (logLevel <= logLevelSettings);
+}
+
+void addLog(byte logLevel, const char *line)
 {
-  if (Settings.UseSerial)
-    if (loglevel <= Settings.SerialLogLevel)
-      Serial.println(line);
-
-  if (loglevel <= Settings.SyslogLevel)
+  if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
+    Serial.println(line);
+  }
+  if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(line);
-
-  if (loglevel <= Settings.WebLogLevel)
-  {
-    logcount++;
-    if (logcount > 9)
-      logcount = 0;
-    Logging[logcount].timeStamp = millis();
-    if (Logging[logcount].Message == 0)
-      Logging[logcount].Message =  (char *)malloc(128);
-    strncpy(Logging[logcount].Message, line, 127);
-    Logging[logcount].Message[127]=0; //make sure its null terminated!
-
+  }
+  if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
+    Logging.add(line);
   }
 
 #ifdef FEATURE_SD
-  if (loglevel <= Settings.SDLogLevel)
-  {
+  if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
       logFile.println(line);
@@ -1371,275 +1485,14 @@ uint32_t getChecksum(byte* buffer, size_t size)
 
 
 /********************************************************************************************\
-  Convert a string like "Sun,12:30" into a 32 bit integer
-  \*********************************************************************************************/
-unsigned long string2TimeLong(String &str)
-{
-  // format 0000WWWWAAAABBBBCCCCDDDD
-  // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
-
-  char command[20];
-  char TmpStr1[10];
-  int w, x, y;
-  unsigned long a;
-  str.toLowerCase();
-  str.toCharArray(command, 20);
-  unsigned long lngTime = 0;
-
-  if (GetArgv(command, TmpStr1, 1))
-  {
-    String day = TmpStr1;
-    String weekDays = F("allsunmontuewedthufrisatwrkwkd");
-    y = weekDays.indexOf(TmpStr1) / 3;
-    if (y == 0)
-      y = 0xf; // wildcard is 0xf
-    lngTime |= (unsigned long)y << 16;
-  }
-
-  if (GetArgv(command, TmpStr1, 2))
-  {
-    y = 0;
-    for (x = strlen(TmpStr1) - 1; x >= 0; x--)
-    {
-      w = TmpStr1[x];
-      if ( (w >= '0' && w <= '9') || w == '*')
-      {
-        a = 0xffffffff  ^ (0xfUL << y); // create mask to clean nibble position y
-        lngTime &= a; // maak nibble leeg
-        if (w == '*')
-          lngTime |= (0xFUL << y); // fill nibble with wildcard value
-        else
-          lngTime |= (w - '0') << y; // fill nibble with token
-        y += 4;
-      }
-      else
-        if (w == ':');
-      else
-      {
-        break;
-      }
-    }
-  }
-  return lngTime;
-}
-
-
-/********************************************************************************************\
-  Convert  a 32 bit integer into a string like "Sun,12:30"
-  \*********************************************************************************************/
-String timeLong2String(unsigned long lngTime)
-{
-  unsigned long x = 0;
-  String time = "";
-
-  x = (lngTime >> 16) & 0xf;
-  if (x == 0x0f)
-    x = 0;
-  String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
-  time = weekDays.substring(x * 3, x * 3 + 3);
-  time += ",";
-
-  x = (lngTime >> 12) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
-
-  x = (lngTime >> 8) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
-
-  time += ":";
-
-  x = (lngTime >> 4) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
-
-  x = (lngTime) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
-
-  return time;
-}
-
-// returns the current Date separated by the given delimiter
-// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
-String getDateString(char delimiter)
-{
-  String reply = String(year());
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (month() < 10)
-    reply += "0";
-  reply += month();
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (day() < 10)
-  	reply += F("0");
-  reply += day();
-  return reply;
-}
-
-String getDayString()
-{
-  String reply;
-  if (day() < 10)
-    reply += F("0");
-  reply += day();
-  return reply;
-}
-String getMonthString()
-{
-  String reply;
-  if (month() < 10)
-    reply += F("0");
-  reply += month();
-  return reply;
-}
-String getYearString()
-{
-  String reply = String(year());
-  return reply;
-}
-String getYearStringShort()
-{
-  String dummy = String(year());
-  String reply = dummy.substring(2);
-  return reply;
-}
-
-// returns the current Date without delimiter
-// date format example: 20161231 (YYYYMMDD)
-String getDateString()
-{
-	return getDateString('\0');
-}
-
-// returns the current Time separated by the given delimiter
-// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String getTimeString(char delimiter)
-{
-	String reply;
-	if (hour() < 10)
-		reply += F("0");
-  reply += String(hour());
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (minute() < 10)
-    reply += F("0");
-  reply += minute();
-  if (delimiter != '\0')
-  	reply += delimiter;
-  if (second() < 10)
-  	reply += F("0");
-  reply += second();
-  return reply;
-}
-
-String getHourString()
-{
-  String reply;
-  if (hour() < 10)
-    reply += F("0");
-  reply += String(hour());
-  return reply;
-}
-String getMinuteString()
-{
-  String reply;
-  if (minute() < 10)
-    reply += F("0");
-  reply += minute();
-  return reply;
-}
-String getSecondString()
-{
-  String reply;
-  if (second() < 10)
-    reply += F("0");
-  reply += second();
-  return reply;
-}
-
-// returns the current Time without delimiter
-// time format example: 235959 (HHMMSS)
-String getTimeString()
-{
-	return getTimeString('\0');
-}
-
-// returns the current Date and Time separated by the given delimiter
-// if called like this: getDateTimeString('\0', '\0', '\0');
-// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
-{
-	String ret = getDateString(dateDelimiter);
-	if (dateTimeDelimiter != '\0')
-		ret += dateTimeDelimiter;
-	ret += getTimeString(timeDelimiter);
-	return ret;
-}
-
-/********************************************************************************************\
-  Match clock event
-  \*********************************************************************************************/
-boolean matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
-{
-  unsigned long Mask;
-  for (byte y = 0; y < 8; y++)
-  {
-    if (((clockSet >> (y * 4)) & 0xf) == 0xf)  // if nibble y has the wildcard value 0xf
-    {
-      Mask = 0xffffffff  ^ (0xFUL << (y * 4)); // Mask to wipe nibble position y.
-      clockEvent &= Mask;                      // clear nibble
-      clockEvent |= (0xFUL << (y * 4));        // fill with wildcard value 0xf
-    }
-  }
-
-  if (((clockSet >> (16)) & 0xf) == 0x8)     // if weekday nibble has the wildcard value 0x8 (workdays)
-    if (weekday() >= 2 and weekday() <= 6)   // and we have a working day today...
-    {
-      Mask = 0xffffffff  ^ (0xFUL << (16));  // Mask to wipe nibble position.
-      clockEvent &= Mask;                    // clear nibble
-      clockEvent |= (0x8UL << (16));         // fill with wildcard value 0x8
-    }
-
-  if (((clockSet >> (16)) & 0xf) == 0x9)     // if weekday nibble has the wildcard value 0x9 (weekends)
-    if (weekday() == 1 or weekday() == 7)    // and we have a weekend day today...
-    {
-      Mask = 0xffffffff  ^ (0xFUL << (16));  // Mask to wipe nibble position.
-      clockEvent &= Mask;                    // clear nibble
-      clockEvent |= (0x9UL << (16));         // fill with wildcard value 0x9
-    }
-
-  if (clockEvent == clockSet)
-    return true;
-  return false;
-}
-
-
-/********************************************************************************************\
   Parse string template
   \*********************************************************************************************/
-
 String parseTemplate(String &tmpString, byte lineSize)
 {
+  checkRAM(F("parseTemplate"));
   String newString = "";
   String tmpStringMid = "";
+  newString.reserve(lineSize);
 
   // replace task template variables
   int leftBracketIndex = tmpString.indexOf('[');
@@ -1669,93 +1522,91 @@ String parseTemplate(String &tmpString, byte lineSize)
           valueFormat = valueName.substring(hashtagIndex + 1);
           valueName = valueName.substring(0, hashtagIndex);
         }
-        for (byte y = 0; y < TASKS_MAX; y++)
-        {
-          if (Settings.TaskDeviceEnabled[y])
-          {
-            LoadTaskSettings(y);
-            if (ExtraTaskSettings.TaskDeviceName[0] != 0)
-            {
-              if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
-              {
-                boolean match = false;
-                for (byte z = 0; z < VARS_PER_TASK; z++)
-                  if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                  {
-                    // here we know the task and value, so find the uservar
-                    match = true;
-                    String value = "";
-                    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                    if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
-                      value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
-                    else
-                      value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
-                    if (valueFormat == "R")
-                    {
-                      int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                      for (byte f = 0; f < filler; f++)
-                        newString += " ";
-                    }
-                    newString += String(value);
-                    break;
-                  }
-                if (!match) // try if this is a get config request
+        if (deviceName.equalsIgnoreCase("Plugin"))
+        {
+          String tmpString = tmpStringMid.substring(7);
+          tmpString.replace("#", ",");
+          if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
+            newString += tmpString;
+        }
+        else
+          for (byte y = 0; y < TASKS_MAX; y++)
+          {
+            if (Settings.TaskDeviceEnabled[y])
+            {
+              LoadTaskSettings(y);
+              if (ExtraTaskSettings.TaskDeviceName[0] != 0)
+              {
+                if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
                 {
-                  struct EventStruct TempEvent;
-                  TempEvent.TaskIndex = y;
-                  String tmpName = valueName;
-                  if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
-                    newString += tmpName;
+                  boolean match = false;
+                  for (byte z = 0; z < VARS_PER_TASK; z++)
+                    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
+                    {
+                      // here we know the task and value, so find the uservar
+                      match = true;
+                      String value = "";
+                      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                      if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+                        value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
+                      else
+                        value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+
+                      int oidx;
+                      if ((oidx = valueFormat.indexOf('O')) >= 0) // Output
+                      {
+                        valueFormat.remove(oidx);
+                        oidx = valueFormat.indexOf('!'); // inverted or active low
+                        float val = value.toFloat();
+                        if (oidx >= 0) {
+                          valueFormat.remove(oidx);
+                          value = val == 0 ? " ON" : "OFF";
+                        } else {
+                          value = val == 0 ? "OFF" : " ON";
+                        }
+                      }
+
+                      if (valueFormat == "R")
+                      {
+                        int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                        for (byte f = 0; f < filler; f++)
+                          newString += " ";
+                      }
+                      newString += String(value);
+                      break;
+                    }
+                  if (!match) // try if this is a get config request
+                  {
+                    struct EventStruct TempEvent;
+                    TempEvent.TaskIndex = y;
+                    String tmpName = valueName;
+                    if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+                      newString += tmpName;
+                  }
+                  break;
                 }
-                break;
               }
             }
           }
-        }
       }
       leftBracketIndex = tmpString.indexOf('[');
       count++;
     }
+    checkRAM(F("parseTemplate2"));
     newString += tmpString;
 
-    if (currentTaskIndex!=255)
+    if (currentTaskIndex != 255)
       LoadTaskSettings(currentTaskIndex);
   }
 
-  // replace other system variables like %sysname%, %systime%, %ip%
-  newString.replace(F("%sysname%"), Settings.Name);
-
-  newString.replace(F("%systime%"), getTimeString(':'));
-
-  newString.replace(F("%syshour%"), getHourString());
-  newString.replace(F("%sysmin%"), getMinuteString());
-  newString.replace(F("%syssec%"), getSecondString());
-  newString.replace(F("%sysday%"), getDayString());
-  newString.replace(F("%sysmonth%"), getMonthString());
-  newString.replace(F("%sysyear%"), getYearString());
-  newString.replace(F("%sysyears%"), getYearStringShort());
-
-  newString.replace(F("%uptime%"), String(wdcounter / 2));
-
-#if FEATURE_ADC_VCC
-  newString.replace(F("%vcc%"), String(vcc));
-#endif
-
-  IPAddress ip = WiFi.localIP();
-  char strIP[20];
-  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  newString.replace(F("%ip%"), strIP);
-  newString.replace(F("%ip1%"), String(ip[0]));
-  newString.replace(F("%ip2%"), String(ip[1]));
-  newString.replace(F("%ip3%"), String(ip[2]));
-  newString.replace(F("%ip4%"), String(ip[3]));
-  newString.replace("%sysload%", String(100 - (100 * loopCounterLast / loopCounterMax)));
+  parseSystemVariables(newString, false);
+  parseStandardConversions(newString, false);
 
   // padding spaces
   while (newString.length() < lineSize)
     newString += " ";
-
+  checkRAM(F("parseTemplate3"));
   return newString;
 }
 
@@ -1896,6 +1747,7 @@ unsigned int op_arg_count(const char c)
 
 int Calculate(const char *input, float* result)
 {
+  checkRAM(F("Calculate"));
   const char *strpos = input, *strend = input + strlen(input);
   char token[25];
   char c, oc, *TokenPos = token;
@@ -2028,249 +1880,10 @@ int Calculate(const char *input, float* result)
     return error;
   }
   *result = *sp;
+  checkRAM(F("Calculate2"));
   return CALCULATE_OK;
 }
 
-
-/********************************************************************************************\
-  Time stuff
-  \*********************************************************************************************/
-#define SECS_PER_MIN  (60UL)
-#define SECS_PER_HOUR (3600UL)
-#define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
-#define DAYS_PER_WEEK (7UL)
-#define SECS_PER_WEEK (SECS_PER_DAY * DAYS_PER_WEEK)
-#define SECS_PER_YEAR (SECS_PER_WEEK * 52UL)
-#define SECS_YR_2000  (946684800UL) // the time at the start of y2k
-#define LEAP_YEAR(Y)     ( ((1970+Y)>0) && !((1970+Y)%4) && ( ((1970+Y)%100) || !((1970+Y)%400) ) )
-
-struct  timeStruct {
-  uint8_t Second;
-  uint8_t Minute;
-  uint8_t Hour;
-  uint8_t Wday;   // day of week, sunday is day 1
-  uint8_t Day;
-  uint8_t Month;
-  uint8_t Year;   // offset from 1970;
-} tm;
-
-uint32_t syncInterval = 3600;  // time sync will be attempted after this many seconds
-uint32_t sysTime = 0;
-uint32_t prevMillis = 0;
-uint32_t nextSyncTime = 0;
-
-byte PrevMinutes = 0;
-
-void breakTime(unsigned long timeInput, struct timeStruct &tm) {
-  uint8_t year;
-  uint8_t month, monthLength;
-  uint32_t time;
-  unsigned long days;
-  const uint8_t monthDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
-  time = (uint32_t)timeInput;
-  tm.Second = time % 60;
-  time /= 60; // now it is minutes
-  tm.Minute = time % 60;
-  time /= 60; // now it is hours
-  tm.Hour = time % 24;
-  time /= 24; // now it is days
-  tm.Wday = ((time + 4) % 7) + 1;  // Sunday is day 1
-
-  year = 0;
-  days = 0;
-  while ((unsigned)(days += (LEAP_YEAR(year) ? 366 : 365)) <= time) {
-    year++;
-  }
-  tm.Year = year; // year is offset from 1970
-
-  days -= LEAP_YEAR(year) ? 366 : 365;
-  time  -= days; // now it is days in this year, starting at 0
-
-  days = 0;
-  month = 0;
-  monthLength = 0;
-  for (month = 0; month < 12; month++) {
-    if (month == 1) { // february
-      if (LEAP_YEAR(year)) {
-        monthLength = 29;
-      } else {
-        monthLength = 28;
-      }
-    } else {
-      monthLength = monthDays[month];
-    }
-
-    if (time >= monthLength) {
-      time -= monthLength;
-    } else {
-      break;
-    }
-  }
-  tm.Month = month + 1;  // jan is month 1
-  tm.Day = time + 1;     // day of month
-}
-
-void setTime(unsigned long t) {
-  sysTime = (uint32_t)t;
-  nextSyncTime = (uint32_t)t + syncInterval;
-  prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
-}
-
-unsigned long now() {
-  // calculate number of seconds passed since last call to now()
-  while (millis() - prevMillis >= 1000) {
-    // millis() and prevMillis are both unsigned ints thus the subtraction will always be the absolute value of the difference
-    sysTime++;
-    prevMillis += 1000;
-  }
-  if (nextSyncTime <= sysTime) {
-    unsigned long  t = getNtpTime();
-    if (t != 0) {
-      if (Settings.DST)
-        t += SECS_PER_HOUR; // add one hour if DST active
-      setTime(t);
-    } else {
-      nextSyncTime = sysTime + syncInterval;
-    }
-  }
-  breakTime(sysTime, tm);
-  return (unsigned long)sysTime;
-}
-
-int year()
-{
-  return 1970 + tm.Year;
-}
-
-byte month()
-{
-	return tm.Month;
-}
-
-byte day()
-{
-	return tm.Day;
-}
-
-
-byte hour()
-{
-  return tm.Hour;
-}
-
-byte minute()
-{
-  return tm.Minute;
-}
-
-byte second()
-{
-	return tm.Second;
-}
-
-int weekday()
-{
-  return tm.Wday;
-}
-
-void initTime()
-{
-  nextSyncTime = 0;
-  now();
-}
-
-void checkTime()
-{
-  now();
-  if (tm.Minute != PrevMinutes)
-  {
-    PluginCall(PLUGIN_CLOCK_IN, 0, dummyString);
-    PrevMinutes = tm.Minute;
-    if (Settings.UseRules)
-    {
-      String weekDays = F("AllSunMonTueWedThuFriSat");
-      String event = F("Clock#Time=");
-      event += weekDays.substring(weekday() * 3, weekday() * 3 + 3);
-      event += ",";
-      if (hour() < 10)
-        event += "0";
-      event += hour();
-      event += ":";
-      if (minute() < 10)
-        event += "0";
-      event += minute();
-      rulesProcessing(event);
-    }
-  }
-}
-
-
-unsigned long getNtpTime()
-{
-  WiFiUDP udp;
-  udp.begin(123);
-  for (byte x = 1; x < 4; x++)
-  {
-    String log = F("NTP  : NTP sync request:");
-    log += x;
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-    const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
-    byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
-
-    IPAddress timeServerIP;
-    const char* ntpServerName = "pool.ntp.org";
-
-    if (Settings.NTPHost[0] != 0)
-      WiFi.hostByName(Settings.NTPHost, timeServerIP);
-    else
-      WiFi.hostByName(ntpServerName, timeServerIP);
-
-    char host[20];
-    sprintf_P(host, PSTR("%u.%u.%u.%u"), timeServerIP[0], timeServerIP[1], timeServerIP[2], timeServerIP[3]);
-    log = F("NTP  : NTP send to ");
-    log += host;
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-    while (udp.parsePacket() > 0) ; // discard any previously received packets
-
-    memset(packetBuffer, 0, NTP_PACKET_SIZE);
-    packetBuffer[0] = 0b11100011;   // LI, Version, Mode
-    packetBuffer[1] = 0;     // Stratum, or type of clock
-    packetBuffer[2] = 6;     // Polling Interval
-    packetBuffer[3] = 0xEC;  // Peer Clock Precision
-    packetBuffer[12]  = 49;
-    packetBuffer[13]  = 0x4E;
-    packetBuffer[14]  = 49;
-    packetBuffer[15]  = 52;
-    udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
-    udp.write(packetBuffer, NTP_PACKET_SIZE);
-    udp.endPacket();
-
-    uint32_t beginWait = millis();
-    while (millis() - beginWait < 1000) {
-      int size = udp.parsePacket();
-      if (size >= NTP_PACKET_SIZE) {
-        udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
-        unsigned long secsSince1900;
-        // convert four bytes starting at location 40 to a long integer
-        secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
-        secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-        secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-        secsSince1900 |= (unsigned long)packetBuffer[43];
-        log = F("NTP  : NTP replied: ");
-        log += millis() - beginWait;
-        log += F(" mSec");
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
-        return secsSince1900 - 2208988800UL + Settings.TimeZone * SECS_PER_MIN;
-      }
-    }
-    log = F("NTP  : No reply");
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
-  }
-  return 0;
-}
 
 
 /********************************************************************************************\
@@ -2278,6 +1891,7 @@ unsigned long getNtpTime()
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   String log = "";
 
@@ -2299,8 +1913,8 @@ void rulesProcessing(String& event)
       rulesProcessingFile(fileName, event);
   }
 
-  log = F("EVENT: Processing time:");
-  log += millis() - timer;
+  log += F(" Processing time:");
+  log += timePassedSince(timer);
   log += F(" milliSeconds");
   addLog(LOG_LEVEL_DEBUG, log);
 
@@ -2311,10 +1925,11 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 String rulesProcessingFile(String fileName, String& event)
 {
+  checkRAM(F("rulesProcessingFile"));
   fs::File f = SPIFFS.open(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
-  static byte nestingLevel;
+  static byte nestingLevel = 0;
   int data = 0;
   String log = "";
 
@@ -2357,9 +1972,13 @@ String rulesProcessingFile(String fileName, String& event)
         if (comment > 0)
           line = line.substring(0, comment);
 
-        line = parseTemplate(line, line.length());
-        line.trim();
-
+        if(match || !codeBlock){
+          // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
+          // This to avoid waisting CPU time...
+          line = parseTemplate(line, line.length());
+          line.trim();
+        }
+        
         String lineOrg = line; // store original line for future use
         line.toLowerCase(); // convert all to lower case to make checks easier
 
@@ -2414,7 +2033,7 @@ String rulesProcessingFile(String fileName, String& event)
           {
             conditional = true;
             String check = lcAction.substring(split + 3);
-            condition = conditionMatch(check);
+            condition = conditionMatchExtended(check);
             ifBranche = true;
             isCommand = false;
           }
@@ -2454,8 +2073,18 @@ String rulesProcessingFile(String fileName, String& event)
             struct EventStruct TempEvent;
             parseCommandString(&TempEvent, action);
             yield();
-            if (!PluginCall(PLUGIN_WRITE, &TempEvent, action))
+            // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+            String tmpAction(action);
+            if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+              if (!tmpAction.equals(action)) {
+                String log = F("PLUGIN_WRITE altered the string: ");
+                log += action;
+                log += F(" to: ");
+                log += tmpAction;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
               ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+            }
             yield();
           }
         }
@@ -2467,6 +2096,7 @@ String rulesProcessingFile(String fileName, String& event)
   }
 
   nestingLevel--;
+  checkRAM(F("rulesProcessingFile2"));
   return(String());
 }
 
@@ -2476,6 +2106,7 @@ String rulesProcessingFile(String fileName, String& event)
   \*********************************************************************************************/
 boolean ruleMatch(String& event, String& rule)
 {
+  checkRAM(F("ruleMatch"));
   boolean match = false;
   String tmpEvent = event;
   String tmpRule = rule;
@@ -2484,10 +2115,20 @@ boolean ruleMatch(String& event, String& rule)
   if (event.charAt(0) == '!')
   {
     int pos = rule.indexOf('#');
-    if (pos == -1) // no # sign in rule, use 'wildcard' match...
-      tmpEvent = event.substring(0,rule.length());
+    if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
+      {
+        tmpEvent = event.substring(0,rule.length());
+        tmpRule = rule;
+      }
 
-    if (tmpEvent.equalsIgnoreCase(rule))
+    pos = rule.indexOf('*');
+    if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
+      {
+        tmpEvent = event.substring(0,pos-1);
+        tmpRule = rule.substring(0,pos-1);
+      }
+
+    if (tmpEvent.equalsIgnoreCase(tmpRule))
       return true;
     else
       return false;
@@ -2582,7 +2223,7 @@ boolean ruleMatch(String& event, String& rule)
         match = true;
       break;
   }
-
+  checkRAM(F("ruleMatch2"));
   return match;
 }
 
@@ -2590,63 +2231,127 @@ boolean ruleMatch(String& event, String& rule)
 /********************************************************************************************\
   Check expression
   \*********************************************************************************************/
-boolean conditionMatch(String& check)
+
+boolean conditionMatchExtended(String& check) {
+	int condAnd = -1;
+	int condOr = -1;
+	boolean rightcond = false;
+	boolean leftcond = conditionMatch(check); // initial check
+
+	do {
+		condAnd = check.indexOf(F(" and "));
+		condOr  = check.indexOf(F(" or "));
+
+		if (condAnd > 0 || condOr > 0) { // we got AND/OR
+			if (condAnd > 0	&& ((condOr < 0 && condOr < condAnd) || (condOr > 0 && condOr > condAnd))) { //AND is first
+				check = check.substring(condAnd + 5);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond && rightcond);
+			} else { //OR is first
+				check = check.substring(condOr + 4);
+				rightcond = conditionMatch(check);
+				leftcond = (leftcond || rightcond);
+			}
+		}
+	} while (condAnd > 0 || condOr > 0);
+	return leftcond;
+}
+
+boolean conditionMatch(const String& check)
 {
   boolean match = false;
 
-  int comparePos = 0;
-  char compare = ' ';
-  comparePos = check.indexOf(">");
-  if (comparePos > 0)
-  {
-    compare = '>';
+  char compare    = ' ';
+
+  int posStart = check.length();
+  int posEnd = posStart;
+  int comparePos  = 0;
+
+  if ((comparePos = check.indexOf("!="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '!'+'=';
   }
-  else
-  {
-    comparePos = check.indexOf("<");
-    if (comparePos > 0)
-    {
-      compare = '<';
-    }
-    else
-    {
-      comparePos = check.indexOf("=");
-      if (comparePos > 0)
-      {
-        compare = '=';
-      }
-    }
+  if ((comparePos = check.indexOf("<>"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '!'+'=';
+  }
+  if ((comparePos = check.indexOf(">="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '>'+'=';
+  }
+  if ((comparePos = check.indexOf("<="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+2;
+	  compare = '<'+'=';
+  }
+  if ((comparePos = check.indexOf("<"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '<';
+  }
+  if ((comparePos = check.indexOf(">"))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '>';
+  }
+  if ((comparePos = check.indexOf("="))>0 && comparePos<posStart) {
+	  posStart = comparePos;
+	  posEnd = posStart+1;
+	  compare = '=';
   }
 
   float Value1 = 0;
   float Value2 = 0;
 
-  if (comparePos > 0)
+  if (compare > ' ')
   {
-    String tmpCheck = check.substring(comparePos + 1);
-    Value2 = tmpCheck.toFloat();
-    tmpCheck = check.substring(0, comparePos);
-    Value1 = tmpCheck.toFloat();
+    String tmpCheck1 = check.substring(0, posStart);
+    String tmpCheck2 = check.substring(posEnd);
+    if (!isFloat(tmpCheck1) || !isFloat(tmpCheck2)) {
+        Value1 = timeStringToSeconds(tmpCheck1);
+        Value2 = timeStringToSeconds(tmpCheck2);
+    } else {
+        Value1 = tmpCheck1.toFloat();
+        Value2 = tmpCheck2.toFloat();
+    }
   }
   else
     return false;
 
   switch (compare)
   {
-    case '>':
-      if (Value1 > Value2)
-        match = true;
-      break;
+  case '>'+'=':
+	  if (Value1 >= Value2)
+		  match = true;
+	  break;
 
-    case '<':
-      if (Value1 < Value2)
-        match = true;
-      break;
+  case '<'+'=':
+	  if (Value1 <= Value2)
+		  match = true;
+	  break;
 
-    case '=':
-      if (Value1 == Value2)
-        match = true;
-      break;
+  case '!'+'=':
+	  if (Value1 != Value2)
+		  match = true;
+	  break;
+
+  case '>':
+	  if (Value1 > Value2)
+		  match = true;
+	  break;
+
+  case '<':
+	  if (Value1 < Value2)
+		  match = true;
+	  break;
+
+  case '=':
+	  if (Value1 == Value2)
+		  match = true;
+	  break;
   }
   return match;
 }
@@ -2661,7 +2366,7 @@ void rulesTimers()
   {
     if (RulesTimer[x] != 0L) // timer active?
     {
-      if (RulesTimer[x] <= millis()) // timer finished?
+      if (timeOutReached(RulesTimer[x])) // timer finished?
       {
         RulesTimer[x] = 0L; // turn off this timer
         String event = F("Rules#Timer=");
@@ -2740,8 +2445,107 @@ void SendValueLogger(byte TaskIndex)
 }
 
 
+#define TRACES 3                                            // number of memory traces
+#define TRACEENTRIES 15                                      // entries per trace
+
+class RamTracker{
+  private:
+    String        traces[TRACES]  ;                         // trace of latest memory checks
+    unsigned int  tracesMemory[TRACES] ;                    // lowest memory for that  trace
+    unsigned int  readPtr, writePtr;                        // pointer to cyclic buffer
+    String        nextAction[TRACEENTRIES];                 // buffer to record the names of functions before they are transfered to a trace
+    unsigned int  nextActionStartMemory[TRACEENTRIES];      // memory levels for the functions.
+
+    unsigned int  bestCaseTrace (void){                     // find highest the trace with the largest minimum memory (gets replaced by worse one)
+       unsigned int lowestMemoryInTrace = 0;
+       unsigned int lowestMemoryInTraceIndex=0;
+       for (int i = 0; i<TRACES; i++) {
+          if (tracesMemory[i] > lowestMemoryInTrace){
+            lowestMemoryInTrace= tracesMemory[i];
+            lowestMemoryInTraceIndex=i;
+            }
+          }
+      //Serial.println(lowestMemoryInTraceIndex);
+      return lowestMemoryInTraceIndex;
+      }
+
+  public:
+    RamTracker(void){                                       // constructor
+        readPtr=0;
+        writePtr=0;
+        for (int i = 0; i< TRACES; i++) {
+          traces[i]="";
+          tracesMemory[i]=0xffff;                           // init with best case memory values, so they get replaced if memory goes lower
+          }
+        for (int i = 0; i< TRACEENTRIES; i++) {
+          nextAction[i]="startup";
+          nextActionStartMemory[i] = ESP.getFreeHeap();     // init with best case memory values, so they get replaced if memory goes lower
+          }
+        };
+
+    void registerRamState(String &s){    // store function
+       nextAction[writePtr]=s;                              // name and mem
+       nextActionStartMemory[writePtr]=ESP.getFreeHeap();   // in cyclic buffer.
+       int bestCase = bestCaseTrace();                      // find best case memory trace
+       if ( ESP.getFreeHeap() < tracesMemory[bestCase]){    // compare to current memory value
+            traces[bestCase]="";
+            readPtr = writePtr+1;                           // read out buffer, oldest value first
+            if (readPtr>=TRACEENTRIES) readPtr=0;           // read pointer wrap around
+            tracesMemory[bestCase] = ESP.getFreeHeap();     // store new lowest value of that trace
+
+            for (int i = 0; i<TRACEENTRIES; i++) {          // tranfer cyclic buffer strings and mem values to this trace
+              traces[bestCase]+= nextAction[readPtr];
+              traces[bestCase]+= "-> ";
+              traces[bestCase]+= String(nextActionStartMemory[readPtr]);
+              traces[bestCase]+= " ";
+              readPtr++;
+              if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
+            }
+       }
+       writePtr++;
+       if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
+    };
+   void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
+      String retval="Memtrace\n";
+      for (int i = 0; i< TRACES; i++){
+        retval += String(i);
+        retval += ": lowest: ";
+        retval += String(tracesMemory[i]);
+        retval += "  ";
+        retval += traces[i];
+        addLog(LOG_LEVEL_DEBUG_DEV, retval);
+        retval="";
+      }
+    }
+}myRamTracker;                                              // instantiate class. (is global now)
+
+void checkRAMtoLog(void){
+  myRamTracker.getTraceBuffer();
+}
+
+void checkRAM(const __FlashStringHelper* flashString, int a ) {
+ String s=String(a);
+ checkRAM(flashString,s);
+}
+
+void checkRAM(const __FlashStringHelper* flashString, String &a ) {
+  String s = flashString;
+  checkRAM(s,a);
+}
+
+void checkRAM(String &flashString, String &a ) {
+  String s = flashString;
+  s+=" (";
+  s+=a;
+  s+=")";
+  checkRAM(s);
+}
+
 void checkRAM( const __FlashStringHelper* flashString)
 {
+  String s = flashString;
+  myRamTracker.registerRamState(s);
+
   uint32_t freeRAM = FreeMem();
 
   if (freeRAM < lowestRAM)
@@ -2750,6 +2554,11 @@ void checkRAM( const __FlashStringHelper* flashString)
     lowestRAMfunction = flashString;
   }
 }
+
+void checkRAM( String &a ) {
+  myRamTracker.registerRamState(a);
+}
+
 
 #ifdef PLUGIN_BUILD_TESTING
 
@@ -2771,6 +2580,7 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   \*********************************************************************************************/
 void play_rtttl(uint8_t _pin, const char *p )
 {
+  checkRAM(F("play_rtttl"));
   #define OCTAVE_OFFSET 0
   // FIXME: Absolutely no error checking in here
 
@@ -2921,6 +2731,7 @@ void play_rtttl(uint8_t _pin, const char *p )
       delay(duration/10);
     }
   }
+ checkRAM(F("play_rtttl2"));
 }
 
 #endif
@@ -2933,6 +2744,7 @@ void play_rtttl(uint8_t _pin, const char *p )
 
 void ArduinoOTAInit()
 {
+  checkRAM(F("ArduinoOTAInit"));
   // Default port is 8266
   ArduinoOTA.setPort(8266);
 	ArduinoOTA.setHostname(Settings.Name);
@@ -2987,41 +2799,6 @@ void ArduinoOTAInit()
 }
 
 #endif
-
-String getBearing(int degrees)
-{
-  const char* bearing[] = {
-    PSTR("N"),
-    PSTR("NNE"),
-    PSTR("NE"),
-    PSTR("ENE"),
-    PSTR("E"),
-    PSTR("ESE"),
-    PSTR("SE"),
-    PSTR("SSE"),
-    PSTR("S"),
-    PSTR("SSW"),
-    PSTR("SW"),
-    PSTR("WSW"),
-    PSTR("W"),
-    PSTR("WNW"),
-    PSTR("NW"),
-    PSTR("NNW")
-  };
-
-    return(bearing[int(degrees/22.5)]);
-
-}
-
-//escapes special characters in strings for use in html-forms
-void htmlEscape(String & html)
-{
-  html.replace("&",  "&amp;");
-  html.replace("\"", "&quot;");
-  html.replace("'",  "&#039;");
-  html.replace("<",  "&lt;");
-  html.replace(">",  "&gt;");
-}
 
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)

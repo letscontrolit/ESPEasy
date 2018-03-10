@@ -148,11 +148,33 @@ byte CPluginCall(byte Function, struct EventStruct *event)
     // Unconditional calls to all plugins
     case CPLUGIN_PROTOCOL_ADD:
       for (x = 0; x < CPLUGIN_MAX; x++)
-        if (CPlugin_id[x] != 0)
+        if (CPlugin_id[x] != 0){
+          checkRAM(F("CPluginCallADD"),x);
           CPlugin_ptr[x](Function, event, dummyString);
+        }
       return true;
       break;
   }
 
   return false;
+}
+
+// Check if there is any controller enabled.
+bool anyControllerEnabled() {
+  for (byte i=0; i < CONTROLLER_MAX; i++) {
+    if (Settings.Protocol[i] != 0 && Settings.ControllerEnabled[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Find first enabled controller index with this protocol
+byte findFirstEnabledControllerWithId(byte cpluginid) {
+  for (byte i=0; i < CONTROLLER_MAX; i++) {
+    if (Settings.Protocol[i] == cpluginid && Settings.ControllerEnabled[i]) {
+      return i;
+    }
+  }
+  return CONTROLLER_MAX;
 }

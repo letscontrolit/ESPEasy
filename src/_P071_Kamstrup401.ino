@@ -13,7 +13,7 @@
 
 #include <ESPeasySoftwareSerial.h>
 #define PLUGIN_071
-#define PLUGIN_ID_071 071
+#define PLUGIN_ID_071 71
 #define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401 [TESTING]"
 #define PLUGIN_VALUENAME1_071 "Heat"
 #define PLUGIN_VALUENAME2_071 "Volume"
@@ -65,6 +65,11 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        success = true;
+        break;
+      }
 
     case PLUGIN_READ:
       {

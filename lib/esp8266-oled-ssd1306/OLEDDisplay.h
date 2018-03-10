@@ -44,9 +44,13 @@
 
 
 // Display settings
-#define DISPLAY_WIDTH 128
-#define DISPLAY_HEIGHT 64
-#define DISPLAY_BUFFER_SIZE 1024
+#ifndef DISPLAY_WIDTH
+  #define DISPLAY_WIDTH 128
+#endif
+#ifndef DISPLAY_HEIGHT
+  #define DISPLAY_HEIGHT 64
+#endif
+#define DISPLAY_BUFFER_SIZE DISPLAY_WIDTH * DISPLAY_HEIGHT / 8
 
 // Header Values
 #define JUMPTABLE_BYTES 4
@@ -109,11 +113,17 @@ enum OLEDDISPLAY_TEXT_ALIGNMENT {
 
 
 class OLEDDisplay : public Print {
+  private:
+    const int _width, _height;
+
   public:
+    OLEDDisplay(const int width = DISPLAY_WIDTH, const int height = DISPLAY_HEIGHT) : _width(width), _height(height){ };
+    virtual ~OLEDDisplay();
 
-    virtual ~OLEDDisplay() {}
+    const int width(void) const { return _width; };
+    const int height(void) const { return _height; };
 
-  // Initialize the display
+    // Initialize the display
     bool init();
 
     // Free the memory used by the display
@@ -204,7 +214,9 @@ class OLEDDisplay : public Print {
     void normalDisplay(void);
 
     // Set display contrast
-    void setContrast(char contrast);
+    // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
+    // normal brightness & contrast:  contrast = 100
+    void setContrast(char contrast, char precharge = 241, char comdetect = 64);
 
     // Turn the display upside down
     void flipScreenVertically();
@@ -229,10 +241,10 @@ class OLEDDisplay : public Print {
     size_t write(uint8_t c);
     size_t write(const char* s);
 
-    uint8_t            *buffer;
+    uint8_t            *buffer = NULL;
 
     #ifdef OLEDDISPLAY_DOUBLE_BUFFER
-    uint8_t            *buffer_back;
+    uint8_t            *buffer_back = NULL;
     #endif
 
   protected:
@@ -250,7 +262,7 @@ class OLEDDisplay : public Print {
     char      *logBuffer                       = NULL;
 
     // Send a command to the display (low level function)
-    virtual void sendCommand(uint8_t com) {};
+    virtual void sendCommand(uint8_t com) {(void)com;};
 
     // Connect to the display
     virtual bool connect() { return false; };

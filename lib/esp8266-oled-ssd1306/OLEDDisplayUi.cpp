@@ -251,31 +251,31 @@ void OLEDDisplayUi::drawFrame(){
   switch (this->state.frameState){
      case IN_TRANSITION: {
        float progress = (float) this->state.ticksSinceLastStateSwitch / (float) this->ticksPerTransition;
-       int16_t x, y, x1, y1;
+       int16_t x = 0, y = 0, x1 = 0, y1 = 0; 
        switch(this->frameAnimationDirection){
         case SLIDE_LEFT:
-          x = -128 * progress;
+          x = -this->display->width() * progress;
           y = 0;
-          x1 = x + 128;
+          x1 = x + this->display->width();
           y1 = 0;
           break;
         case SLIDE_RIGHT:
-          x = 128 * progress;
+          x = this->display->width() * progress;
           y = 0;
-          x1 = x - 128;
+          x1 = x - this->display->width();
           y1 = 0;
           break;
         case SLIDE_UP:
           x = 0;
-          y = -64 * progress;
+          y = -this->display->height() * progress;
           x1 = 0;
-          y1 = y + 64;
+          y1 = y + this->display->height();
           break;
         case SLIDE_DOWN:
           x = 0;
-          y = 64 * progress;
+          y = this->display->height() * progress;
           x1 = 0;
-          y1 = y - 64;
+          y1 = y - this->display->height();
           break;
        }
 
@@ -331,7 +331,7 @@ void OLEDDisplayUi::drawIndicator() {
       return;
     }
 
-    uint8_t posOfHighlightFrame;
+    uint8_t posOfHighlightFrame = 0;
     float indicatorFadeProgress = 0;
 
     // if the indicator needs to be slided in we want to
@@ -362,25 +362,25 @@ void OLEDDisplayUi::drawIndicator() {
 
     uint16_t frameStartPos = (12 * frameCount / 2);
     const char *image;
-    uint16_t x,y;
+    uint16_t x = 0, y = 0;
     for (byte i = 0; i < this->frameCount; i++) {
 
       switch (this->indicatorPosition){
         case TOP:
           y = 0 - (8 * indicatorFadeProgress);
-          x = 64 - frameStartPos + 12 * i;
+          x = (this->display->width() / 2) - frameStartPos + 12 * i;
           break;
         case BOTTOM:
-          y = 56 + (8 * indicatorFadeProgress);
-          x = 64 - frameStartPos + 12 * i;
+          y = (this->display->height() - 8) + (8 * indicatorFadeProgress);
+          x = (this->display->width() / 2) - frameStartPos + 12 * i;
           break;
         case RIGHT:
-          x = 120 + (8 * indicatorFadeProgress);
-          y = 32 - frameStartPos + 2 + 12 * i;
+          x = (this->display->width() - 8) + (8 * indicatorFadeProgress);
+          y = (this->display->height() / 2) - frameStartPos + 2 + 12 * i;
           break;
         case LEFT:
           x = 0 - (8 * indicatorFadeProgress);
-          y = 32 - frameStartPos + 2 + 12 * i;
+          y = (this->display->height() / 2) - frameStartPos + 2 + 12 * i;
           break;
       }
 

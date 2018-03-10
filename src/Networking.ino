@@ -2,21 +2,34 @@
 // Syslog
 // UDP system messaging
 // SSDP
+  #if LWIP_VERSION_MAJOR == 2
+   #define IP2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+  #endif
+
 
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
 void syslog(const char *message)
 {
-  if (Settings.Syslog_IP[0] != 0)
+  if (Settings.Syslog_IP[0] != 0 && WiFi.status() == WL_CONNECTED)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
     char str[256];
     str[0] = 0;
-    snprintf_P(str, sizeof(str), PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
+	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
+
+	// Using Settings.Name as the Hostname (Hostname must NOT content space)
+    snprintf_P(str, sizeof(str), PSTR("<7>%s EspEasy: %s"), Settings.Name, message);
+
+	// Using Setting.Unit to build a Hostname
+    //snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
     #if defined(ESP8266)
       portUDP.write(str);
+    #endif
+    #if defined(ESP32)
+      portUDP.write((uint8_t*)str,strlen(str));
     #endif
     portUDP.endPacket();
   }
@@ -65,7 +78,7 @@ void checkUDP()
     return;
 
   runningUPDCheck = true;
-    
+
   // UDP events
   int packetSize = portUDP.parsePacket();
   if (packetSize)
@@ -138,9 +151,9 @@ void checkUDP()
             }
 
             char macaddress[20];
-            sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            char ipaddress[16];
-            sprintf_P(ipaddress, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+            formatMAC(mac, macaddress);
+            char ipaddress[20];
+            formatIP(ip, ipaddress);
             char log[80];
             sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
             addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -228,6 +241,9 @@ void checkUDP()
   \*********************************************************************************************/
 void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
+  if (!WiFiConnected(100)) {
+    return;
+  }
   struct infoStruct infoReply;
   infoReply.sourcelUnit = Settings.Unit;
   infoReply.sourceTaskIndex = sourceTaskIndex;
@@ -260,6 +276,9 @@ void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   \*********************************************************************************************/
 void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
+  if (!WiFiConnected(100)) {
+    return;
+  }
   struct dataStruct dataReply;
   dataReply.sourcelUnit = Settings.Unit;
   dataReply.sourceTaskIndex = sourceTaskIndex;
@@ -289,6 +308,9 @@ void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
   \*********************************************************************************************/
 void SendUDPCommand(byte destUnit, char* data, byte dataLength)
 {
+  if (!WiFiConnected(100)) {
+    return;
+  }
   byte firstUnit = 1;
   byte lastUnit = UNIT_MAX - 1;
   if (destUnit != 0)
@@ -310,6 +332,9 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
+  if (!WiFiConnected(100)) {
+    return;
+  }
   if (unit != 255)
     if (Nodes[unit].ip[0] == 0)
       return;
@@ -353,7 +378,7 @@ void refreshNodeList()
 void sendSysInfoUDP(byte repeats)
 {
   char log[80];
-  if (Settings.UDPPort == 0)
+  if (Settings.UDPPort == 0 || !WiFiConnected(100))
     return;
 
   // TODO: make a nice struct of it and clean up
@@ -413,11 +438,12 @@ void sendSysInfoUDP(byte repeats)
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
 void SSDP_schema(WiFiClient &client) {
+  if (!WiFiConnected(100)) {
+    return;
+  }
 
-  IPAddress ip = WiFi.localIP();
-  char str[20];
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  uint32_t chipId = ESP.getChipId();
+  const IPAddress ip = WiFi.localIP();
+  const uint32_t chipId = ESP.getChipId();
   char uuid[64];
   sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
             (uint16_t) ((chipId >> 16) & 0xff),
@@ -437,7 +463,7 @@ void SSDP_schema(WiFiClient &client) {
                          "<minor>0</minor>"
                          "</specVersion>"
                          "<URLBase>http://");
-  ssdp_schema += str;
+  ssdp_schema += formatIP(ip);
   ssdp_schema += F(":80/</URLBase>"
                    "<device>"
                    "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
@@ -712,10 +738,10 @@ void SSDP_update() {
     }
   }
 
-  if (_pending && (millis() - _process_time) > _delay) {
+  if (_pending && timeOutReached(_process_time + _delay)) {
     _pending = false; _delay = 0;
     SSDP_send(NONE);
-  } else if (_notify_time == 0 || (millis() - _notify_time) > (SSDP_INTERVAL * 1000L)) {
+  } else if (_notify_time == 0 || timeOutReached(_notify_time + (SSDP_INTERVAL * 1000L))) {
     _notify_time = millis();
     SSDP_send(NOTIFY);
   }
@@ -724,6 +750,52 @@ void SSDP_update() {
     while (_server->next())
       _server->flush();
   }
-
 }
 #endif
+
+// Check WiFi connection. Maximum timeout 500 msec.
+bool WiFiConnected(uint32_t timeout_ms) {
+  uint32_t timer = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
+  uint32_t min_delay = timeout_ms / 20;
+  if (min_delay < 10) {
+    yield(); // Allow at least once time for backgroundtasks
+    min_delay = 10;
+  }
+  while (WiFi.status() != WL_CONNECTED) {
+    if (timeOutReached(timer)) {
+      return false;
+    }
+    delay(min_delay); // Allow the backgroundtasks to continue procesing.
+  }
+  return true;
+}
+
+bool hostReachable(const IPAddress& ip) {
+  // Only do 1 ping at a time to return early
+  byte retry = 3;
+  while (retry > 0) {
+#if defined(ESP8266)
+    if (Ping.ping(ip, 1)) return true;
+#endif
+#if defined(ESP32)
+  if (ping_start(ip, 4, 0, 0, 5)) return true;
+#endif
+    delay(50);
+    --retry;
+  }
+  String log = F("Host unreachable: ");
+  log += ip;
+  addLog(LOG_LEVEL_ERROR, log);
+  return false;
+}
+
+bool hostReachable(const String& hostname) {
+  IPAddress remote_addr;
+  if (WiFi.hostByName(hostname.c_str(), remote_addr))
+    return hostReachable(remote_addr);
+  String log = F("Hostname cannot be resolved: ");
+  log += hostname;
+  addLog(LOG_LEVEL_ERROR, log);
+  return false;
+}
+
