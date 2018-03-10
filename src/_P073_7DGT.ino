@@ -478,10 +478,6 @@ void p073_FillBufferWithDash()  // in case of error show all dashes
 #define DIO_HIGH()  pinMode(dio_pin, INPUT)
 #define DIO_LOW()   pinMode(dio_pin, OUTPUT)
 
-void tm1637_bitDelay(){
-	delayMicroseconds(TM1637_BIT_DELAY);
-}
-
 void tm1637_i2cStart (uint8_t clk_pin, uint8_t dio_pin)
 {
   if (PLUGIN_073_DEBUG) {
@@ -788,4 +784,3 @@ void max7219_ShowBuffer(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
 }
 
 #endif
-
