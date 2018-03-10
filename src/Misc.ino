@@ -1972,9 +1972,13 @@ String rulesProcessingFile(String fileName, String& event)
         if (comment > 0)
           line = line.substring(0, comment);
 
-        line = parseTemplate(line, line.length());
-        line.trim();
-
+        if(match || !codeBlock){
+          // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
+          // This to avoid waisting CPU time...
+          line = parseTemplate(line, line.length());
+          line.trim();
+        }
+        
         String lineOrg = line; // store original line for future use
         line.toLowerCase(); // convert all to lower case to make checks easier
 
