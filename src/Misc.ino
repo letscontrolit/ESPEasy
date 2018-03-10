@@ -27,8 +27,6 @@ bool isDeepSleepEnabled()
 {
   if (!Settings.deepSleep)
     return false;
-  if (!timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep))
-    return false;
 
   //cancel deep sleep loop by pulling the pin GPIO16(D0) to GND
   //recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
@@ -40,6 +38,13 @@ bool isDeepSleepEnabled()
     return false;
   }
   return true;
+}
+
+bool readyForSleep()
+{
+  if (!isDeepSleepEnabled())
+    return false;
+  return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);
 }
 
 void deepSleep(int delay)
