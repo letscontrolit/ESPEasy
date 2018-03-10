@@ -1126,6 +1126,9 @@ int firstEnabledBlynkController() {
 }
 
 //void checkRAM( const __FlashStringHelper* flashString);
+
+boolean activeRuleSets[RULESETS_MAX];
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -1195,6 +1198,7 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
+  checkRuleSets();
   progMemMD5check();
   LoadSettings();
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)

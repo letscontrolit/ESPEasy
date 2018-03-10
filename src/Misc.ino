@@ -1885,6 +1885,23 @@ int Calculate(const char *input, float* result)
 }
 
 
+void checkRuleSets(){
+for (byte x=0; x < RULESETS_MAX; x++){
+  #if defined(ESP8266)
+    String fileName = F("rules");
+  #endif
+  #if defined(ESP32)
+    String fileName = F("/rules");
+  #endif
+  fileName += x;
+  fileName += F(".txt");
+  if (SPIFFS.exists(fileName))
+    activeRuleSets[x] = true;
+  else
+    activeRuleSets[x] = false;
+  }
+}
+
 
 /********************************************************************************************\
   Rules processing
@@ -1909,7 +1926,7 @@ void rulesProcessing(String& event)
     #endif
     fileName += x;
     fileName += F(".txt");
-    if (SPIFFS.exists(fileName))
+    if(activeRuleSets[x])
       rulesProcessingFile(fileName, event);
   }
 

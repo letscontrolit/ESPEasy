@@ -4143,7 +4143,7 @@ void handle_filelist() {
   if (fdelete.length() > 0)
   {
     SPIFFS.remove(fdelete);
-    // flashCount();
+    checkRuleSets();
   }
 
 
@@ -4656,6 +4656,7 @@ void handle_rules() {
   sendHeadandTail(F("TmplStd"),true);
   TXBuffer.endStream();
 
+  checkRuleSets();
 }
 
 
