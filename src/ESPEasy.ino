@@ -1035,6 +1035,9 @@ int firstEnabledBlynkController() {
   return -1;
 }
 
+
+boolean activeRuleSets[RULESETS_MAX];
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -1100,6 +1103,7 @@ void setup()
 
 
   fileSystemCheck();
+  checkRuleSets();
   LoadSettings();
 
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
