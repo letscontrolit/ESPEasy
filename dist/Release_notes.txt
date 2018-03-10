@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180310 (since mega-20180309)
+-------------------------------------------------
+
+Release date: Sat Mar 10 04:00:07 CET 2018
+
+Unknown (2):
+      Move plugin init before WiFi init
+      [Conversions] Use more decimals in conversions and add AM/PM for time.
+
+
+-------------------------------------------------
 Changes in release mega-20180309 (since mega-20180308)
 -------------------------------------------------
 
