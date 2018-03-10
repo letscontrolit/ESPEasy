@@ -394,8 +394,10 @@ String getTimeString(const timeStruct& ts, char delimiter, bool am_pm)
 {
   char TimeString[20]; //19 digits plus the null char
   if (am_pm) {
+    uint8_t hour(ts.Hour % 12);
+    if (hour == 0) { hour = 12; }
     sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d%cm"),
-     ts.Hour %12, delimiter, ts.Minute, delimiter, ts.Second,
+     hour, delimiter, ts.Minute, delimiter, ts.Second,
      ts.Hour < 12 ? 'a' : 'p');
   } else {
     sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
