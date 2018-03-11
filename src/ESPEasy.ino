@@ -1208,9 +1208,9 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
-  checkRuleSets();
   progMemMD5check();
   LoadSettings();
+  checkRuleSets();
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 

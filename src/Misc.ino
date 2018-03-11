@@ -1898,12 +1898,18 @@ for (byte x=0; x < RULESETS_MAX; x++){
   #if defined(ESP32)
     String fileName = F("/rules");
   #endif
-  fileName += x;
+  fileName += x+1;
   fileName += F(".txt");
   if (SPIFFS.exists(fileName))
     activeRuleSets[x] = true;
   else
     activeRuleSets[x] = false;
+
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
+    Serial.print(fileName);
+    Serial.print(" ");
+    Serial.println(activeRuleSets[x]);
+    }
   }
 }
 
@@ -1921,7 +1927,7 @@ void rulesProcessing(String& event)
   log += event;
   addLog(LOG_LEVEL_INFO, log);
 
-  for (byte x = 1; x < RULESETS_MAX + 1; x++)
+  for (byte x = 0; x < RULESETS_MAX; x++)
   {
     #if defined(ESP8266)
       String fileName = F("rules");
@@ -1929,7 +1935,7 @@ void rulesProcessing(String& event)
     #if defined(ESP32)
       String fileName = F("/rules");
     #endif
-    fileName += x;
+    fileName += x+1;
     fileName += F(".txt");
     if(activeRuleSets[x])
       rulesProcessingFile(fileName, event);
@@ -1948,6 +1954,11 @@ void rulesProcessing(String& event)
 String rulesProcessingFile(String fileName, String& event)
 {
   checkRAM(F("rulesProcessingFile"));
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
+    Serial.print(F("RuleDebug Processing:"));
+    Serial.println(fileName);
+    Serial.println(F("     flags CMI  parse output:"));
+    }
   fs::File f = SPIFFS.open(fileName, "r+");
   SPIFFS_CHECK(f, fileName.c_str());
 
@@ -2048,8 +2059,18 @@ String rulesProcessingFile(String fileName, String& event)
           {
             isCommand = false;
             codeBlock = false;
+            match = false;            
           }
-
+          
+          if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
+            Serial.print(F("RuleDebug: "));
+            Serial.print(codeBlock);
+            Serial.print(match);
+            Serial.print(isCommand);
+            Serial.print(": ");
+            Serial.println(line);
+          }
+          
           if (match) // rule matched for one action or a block of actions
           {
             int split = lcAction.indexOf("if "); // check for optional "if" condition
