@@ -596,6 +596,9 @@ struct SettingsStruct
 struct ControllerSettingsStruct
 {
   ControllerSettingsStruct() : UseDNS(false), Port(0) {
+    for (byte i = 0; i < 4; ++i) {
+      IP[i] = 0;
+    }
     memset(HostName, 0, sizeof(HostName));
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
@@ -628,7 +631,7 @@ struct ControllerSettingsStruct
     if (!WiFiConnected(10)) {
       return false; // Not connected, so no use in wasting time to connect to a host.
     }
-    if (quick) return true;
+    if (quick && ipSet()) return true;
     if (UseDNS) {
       if (!updateIPcache()) {
         return false;
@@ -678,6 +681,13 @@ struct ControllerSettingsStruct
   }
 
 private:
+  bool ipSet() {
+    for (byte i = 0; i < 4; ++i) {
+      if (IP[i] != 0) return true;
+    }
+    return false;
+  }
+
   bool updateIPcache() {
     if (!UseDNS) {
       return true;
