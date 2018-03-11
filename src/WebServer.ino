@@ -6,6 +6,7 @@
 #define ONLY_IP_RANGE_ALLOWED  2
 #define _HEAD false
 #define _TAIL true
+#define CHUNKED_BUFFER_SIZE          400
 
 void sendContentBlocking(String& data);
 void sendHeaderBlocking(bool json);
@@ -21,49 +22,54 @@ public:
   uint32_t finalRam;
   uint32_t maxCoreUsage;
   uint32_t maxServerUsage;
-  unsigned int BufferSize;
   unsigned int sentBytes;
   String buf;
 
   StreamingBuffer(void) : lowMemorySkip(false),
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), BufferSize(400), sentBytes(0)
+    maxServerUsage(0), sentBytes(0)
   {
-    buf.reserve(BufferSize + 100);
+    buf.reserve(CHUNKED_BUFFER_SIZE + 50);
     buf = "";
   }
-  StreamingBuffer operator= (String& a)                 { this->buf=a;           checkFull();  return *this;  }
-  StreamingBuffer operator= (const String& a)           { this->buf=a;           checkFull();  return *this;  }
-  StreamingBuffer operator+= (long unsigned int  a)     { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (float a)                  { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (int a)                    { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+= (uint32_t a)               { this->buf+=String(a);  checkFull();  return *this;  }
-  StreamingBuffer operator+=(const String& a) {
+  StreamingBuffer operator= (String& a)                 { flush(); return addString(a); }
+  StreamingBuffer operator= (const String& a)           { flush(); return addString(a); }
+  StreamingBuffer operator+= (long unsigned int  a)     { return addString(String(a)); }
+  StreamingBuffer operator+= (float a)                  { return addString(String(a)); }
+  StreamingBuffer operator+= (int a)                    { return addString(String(a)); }
+  StreamingBuffer operator+= (uint32_t a)               { return addString(String(a)); }
+  StreamingBuffer operator+=(const String& a)           { return addString(a); }
+
+  StreamingBuffer addString(const String& a) {
     if (lowMemorySkip) return *this;
-    const int length = a.length();
-    if (((this->buf.length() + length) > BufferSize) &&
-        (this->buf.length() > 100))
-      sendContentBlocking(this->buf);
+    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
+    if (flush_step < 1) flush_step = 0;
     int pos = 0;
-    int flush_step = BufferSize - this->buf.length();
-    if (flush_step < 1) flush_step = 1;
+    const int length = a.length();
     while (pos < length) {
-      const char c = a[pos];
-      this->buf += c;
-      ++pos;
-      --flush_step;
       if (flush_step == 0) {
         sendContentBlocking(this->buf);
-        flush_step = BufferSize;
+        flush_step = CHUNKED_BUFFER_SIZE;
       }
+      this->buf += a[pos];
+      ++pos;
+      --flush_step;
     }
     checkFull();
     return *this;
   }
 
+  void flush() {
+    if (lowMemorySkip) {
+      this->buf = "";
+    } else {
+      sendContentBlocking(this->buf);
+    }
+  }
+
   void checkFull(void) {
     if (lowMemorySkip) this->buf = "";
-    if (this->buf.length() > BufferSize) {
+    if (this->buf.length() > CHUNKED_BUFFER_SIZE) {
       trackTotalMem();
       sendContentBlocking(this->buf);
     }
@@ -71,8 +77,8 @@ public:
 
   void startStream() {
     maxCoreUsage = maxServerUsage = 0;
-    beforeTXRam = ESP.getFreeHeap();
     initialRam = ESP.getFreeHeap();
+    beforeTXRam = initialRam;
     sentBytes = 0;
     buf = "";
     if (beforeTXRam < 3000) {
@@ -116,17 +122,18 @@ public:
 void sendContentBlocking(String& data) {
   checkRAM(F("sendContentBlocking"));
   uint32_t freeBeforeSend = ESP.getFreeHeap();
-  String log = String("sendcontent free: ") + freeBeforeSend + " chunk size:" + data.length();
+  const uint32_t length = data.length();
+  String log = String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length;
   addLog(LOG_LEVEL_DEBUG_DEV, log);
   freeBeforeSend = ESP.getFreeHeap();
   if (TXBuffer.beforeTXRam > freeBeforeSend)
     TXBuffer.beforeTXRam = freeBeforeSend;
   TXBuffer.duringTXRam = freeBeforeSend;
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  String size = String(data.length(), HEX) + "\r\n";
+  String size = String(length, HEX) + "\r\n";
   // do chunked transfer encoding ourselves (WebServer doesn't support it)
   WebServer.sendContent(size);
-  if (data.length()) WebServer.sendContent(data);
+  if (length > 0) WebServer.sendContent(data);
   WebServer.sendContent("\r\n");
 #else  // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
   unsigned int timeout = 0;
@@ -145,7 +152,7 @@ void sendContentBlocking(String& data) {
   }
 #endif
 
-  TXBuffer.sentBytes += data.length();
+  TXBuffer.sentBytes += length;
   data = "";
 }
 
@@ -295,6 +302,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
     ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; }"
+    ".apheader {padding: 8px 12px; background-color: #F8F8F8;}"
     ".bodymenu {margin-top: 96px; }"
     // menu
     ".menubar {position: inherit; top: 55px; }"
@@ -409,7 +417,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{css}}"
               "</head>"
               "<body>"
-              "<header class='headermenu'>"
+              "<header class='apheader'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
               "</header>"
               "<section>"
@@ -577,13 +585,15 @@ void getWebPageTemplateVar(const String& varName )
       // Send CSS per chunk to avoid sending either too short or too large strings.
       String tmpString;
       tmpString.reserve(64);
+      uint16_t tmpStringPos = 0;
       for (unsigned int i = 0; i < strlen(pgDefaultCSS); i++)
       {
-        const char c = (char)pgm_read_byte(&pgDefaultCSS[i]);
-        tmpString += c;
-        if (c == ';' || c == '{') {
+        tmpString += (char)pgm_read_byte(&pgDefaultCSS[i]);
+        ++tmpStringPos;
+        if (tmpStringPos == 64) {
           TXBuffer += tmpString;
           tmpString = "";
+          tmpStringPos = 0;
         }
       } // saves 1k of ram
       if (tmpString.length() > 0) {
