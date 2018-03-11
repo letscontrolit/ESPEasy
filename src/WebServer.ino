@@ -380,6 +380,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
     ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; }"
+    ".apheader {padding: 8px 12px; background-color: #F8F8F8;}"
     ".bodymenu {margin-top: 96px; }"
     // menu
     ".menubar {position: inherit; top: 55px; }"
@@ -494,7 +495,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{css}}"
               "</head>"
               "<body>"
-              "<header class='headermenu'>"
+              "<header class='apheader'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
               "</header>"
               "<section>"
