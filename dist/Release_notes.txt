@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release v2.0-20180311 (since v2.0-20180310)
+-------------------------------------------------
+
+Release date: Sun Mar 11 04:00:19 CET 2018
+
+Unknown (10):
+      Improve flash read performance
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      Update P07 Plugin
+      [P073] Remove tm1637_bitDelay()
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [issue #1039] Topmost SSID are covered on mobile Browser
+
+mvdbro (1):
+      Rule Engine, stop waisting time on non matching rules
+
+
+-------------------------------------------------
 Changes in release v2.0-20180310 (since v2.0-20180309)
 -------------------------------------------------
 
