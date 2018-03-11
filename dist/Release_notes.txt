@@ -1,4 +1,43 @@
 -------------------------------------------------
+Changes in release mega-20180311 (since mega-20180310)
+-------------------------------------------------
+
+Release date: Sun Mar 11 04:00:06 CET 2018
+
+ESPEasy release bot (2):
+      automaticly updated release notes for v2.0-20180309
+      automaticly updated release notes for v2.0-20180310
+
+Unknown (19):
+      Move plugin init before WiFi init
+      [Conversions] Use more decimals in conversions and add AM/PM for time.
+      Update P07 Plugin
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      [P073] Remove tm1637_bitDelay()
+      Improve flash read performance
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      Update P07 Plugin
+      [P073] Remove tm1637_bitDelay()
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [issue #1039] Topmost SSID are covered on mobile Browser
+      [issue #1039] Topmost SSID are covered on mobile Browser
+
+mvdbro (5):
+      Improve flash read performance
+      Rule Engine, stop waisting time on non matching rules
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      Rule Engine, stop waisting time on non matching rules
+
+
+-------------------------------------------------
 Changes in release mega-20180310 (since mega-20180309)
 -------------------------------------------------
 
