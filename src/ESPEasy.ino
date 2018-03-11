@@ -1113,9 +1113,9 @@ void setup()
 
 
   fileSystemCheck();
-  checkRuleSets();
   LoadSettings();
 
+  checkRuleSets();
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 
