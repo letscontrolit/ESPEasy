@@ -285,10 +285,11 @@ void parseSystemVariables(String& s, boolean useURLencode)
   #if defined(ESP8266)
     SMART_REPL(F("%mac_int%"), String(ESP.getChipId()))  // Last 24 bit of MAC address as integer, to be used in rules.
   #endif
-  
+
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
     SMART_REPL(F("%systime%"), getTimeString(':'))
+    SMART_REPL(F("%systime_am%"), getTimeString_ampm(':'))
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
     // valueString is being used by the macro.
@@ -306,6 +307,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
     #undef SMART_REPL_TIME
   }
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
+  SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-',':',' '))
   SMART_REPL(F("%uptime%"), String(wdcounter / 2))
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
@@ -356,16 +358,24 @@ bool getConvertArgument(const String& marker, const String& s, float& argument, 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
 void parseStandardConversions(String& s, boolean useURLencode) {
-  if (s.indexOf(F("%conv")) == -1)
+  if (s.indexOf(F("%c_")) == -1)
     return; // Nothing to replace
 
-  float argument = 0.0;
+  float arg = 0.0;
   int startIndex = 0;
   int endIndex = 0;
   // These replacements should be done in a while loop per marker,
   // since they also replace the numerical parameter.
   // The marker may occur more than once per string, but with different parameters.
-  while (getConvertArgument(F("%conv_wind_dir%"), s, argument, startIndex, endIndex)) {
-    repl(s.substring(startIndex, endIndex), getBearing(argument), s, useURLencode);
-  }
+  #define SMART_CONV(T,FUN) while (getConvertArgument((T), s, arg, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
+  SMART_CONV(F("%c_w_dir%"),  getBearing(arg))
+  SMART_CONV(F("%c_c2f%"),    toString(CelsiusToFahrenheit(arg), 1))
+  SMART_CONV(F("%c_ms2Bft%"), String(m_secToBeaufort(arg)))
+  SMART_CONV(F("%c_cm2imp%"), centimeterToImperialLength(arg))
+  SMART_CONV(F("%c_mm2imp%"), millimeterToImperialLength(arg))
+  SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(arg), 2))
+  SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(arg))
+  SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(arg))
+  SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(arg))
+  #undef SMART_CONV
 }

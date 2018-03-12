@@ -97,7 +97,7 @@ void logTimeZoneInfo() {
     if (m_dstLoc != 0) {
       timeStruct tmp;
       breakTime(m_dstLoc, tmp);
-      log += getDateTimeString(tmp, '-', ':', ' ');
+      log += getDateTimeString(tmp, '-', ':', ' ', false);
     }
     log += F(" offset: ");
     log += m_dst.offset;
@@ -108,7 +108,7 @@ void logTimeZoneInfo() {
   if (m_stdLoc != 0) {
     timeStruct tmp;
     breakTime(m_stdLoc, tmp);
-    log += getDateTimeString(tmp, '-', ':', ' ');
+    log += getDateTimeString(tmp, '-', ':', ' ', false);
   }
   log += F(" offset: ");
   log += m_std.offset;

@@ -260,6 +260,8 @@
 #define PLUGIN_GET_DEVICEGPIONAMES         22
 #define PLUGIN_EXIT                        23
 #define PLUGIN_GET_CONFIG                  24
+#define PLUGIN_UNCONDITIONAL_POLL          25
+#define PLUGIN_REQUEST                     26
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -327,6 +329,7 @@
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
 #define RULESETS_MAX                        4
+#define RULES_BUFFER_SIZE                  64
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
@@ -683,6 +686,9 @@ struct SettingsStruct
 struct ControllerSettingsStruct
 {
   ControllerSettingsStruct() : UseDNS(false), Port(0) {
+    for (byte i = 0; i < 4; ++i) {
+      IP[i] = 0;
+    }
     memset(HostName, 0, sizeof(HostName));
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
@@ -715,7 +721,7 @@ struct ControllerSettingsStruct
     if (!WiFiConnected(10)) {
       return false; // Not connected, so no use in wasting time to connect to a host.
     }
-    if (quick) return true;
+    if (quick && ipSet()) return true;
     if (UseDNS) {
       if (!updateIPcache()) {
         return false;
@@ -765,6 +771,13 @@ struct ControllerSettingsStruct
   }
 
 private:
+  bool ipSet() {
+    for (byte i = 0; i < 4; ++i) {
+      if (IP[i] != 0) return true;
+    }
+    return false;
+  }
+
   bool updateIPcache() {
     if (!UseDNS) {
       return true;
@@ -1069,6 +1082,7 @@ byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
+unsigned long timerAwakeFromDeepSleep = 0;
 
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
@@ -1122,6 +1136,9 @@ int firstEnabledBlynkController() {
 }
 
 //void checkRAM( const __FlashStringHelper* flashString);
+
+boolean activeRuleSets[RULESETS_MAX];
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -1193,6 +1210,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  checkRuleSets();
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
 
@@ -1233,6 +1251,29 @@ void setup()
   checkRAM(F("hardwareInit"));
   hardwareInit();
 
+  //After booting, we want all the tasks to run without delaying more than neccesary.
+  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
+  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
+  for (byte x = 0; x < TASKS_MAX; x++)
+    if (Settings.TaskDeviceTimer[x] !=0)
+      timerSensor[x] = millis() + (x * Settings.MessageDelay);
+
+  timer100ms = 0; // timer for periodic actions 10 x per/sec
+  timer1s = 0; // timer for periodic actions once per/sec
+  timerwd = 0; // timer for watchdog once per 30 sec
+  timermqtt = 0; // Timer for the MQTT keep alive loop.
+  timermqtt_interval = 250; // Interval for checking MQTT
+  timerAwakeFromDeepSleep = millis();
+
+  PluginInit();
+  CPluginInit();
+  NPluginInit();
+  if (Settings.UseRules)
+  {
+    String event = F("System#Initialized");
+    rulesProcessing(event);
+  }
+
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
 
@@ -1255,23 +1296,6 @@ void setup()
   #ifdef FEATURE_REPORTING
   ReportStatus();
   #endif
-
-  //After booting, we want all the tasks to run without delaying more than neccesary.
-  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
-  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
-  for (byte x = 0; x < TASKS_MAX; x++)
-    if (Settings.TaskDeviceTimer[x] !=0)
-      timerSensor[x] = millis() + (x * Settings.MessageDelay);
-
-  timer100ms = 0; // timer for periodic actions 10 x per/sec
-  timer1s = 0; // timer for periodic actions once per/sec
-  timerwd = 0; // timer for watchdog once per 30 sec
-  timermqtt = 0; // Timer for the MQTT keep alive loop.
-  timermqtt_interval = 250; // Interval for checking MQTT
-
-  PluginInit();
-  CPluginInit();
-  NPluginInit();
 
   WebServerInit();
 
@@ -1398,7 +1422,7 @@ void loop()
 
   backgroundtasks();
 
-  if (isDeepSleepEnabled()){
+  if (readyForSleep()){
       deepSleep(Settings.Delay);
       //deepsleep will never return, its a special kind of reboot
   }
@@ -1425,6 +1449,7 @@ void run10TimesPerSecond()
   start = micros();
   timer100ms = millis() + 100;
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);

@@ -74,6 +74,13 @@ void setTime(unsigned long t) {
   sysTime = (uint32_t)t;
   nextSyncTime = (uint32_t)t + syncInterval;
   prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
+  if (Settings.UseRules)
+  {
+    static bool firstUpdate = true;
+    String event = firstUpdate ? F("Time#Initialized") : F("Time#Set");
+    firstUpdate = false;
+    rulesProcessing(event);
+  }
 }
 
 unsigned long now() {
@@ -383,16 +390,30 @@ String getDateString()
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String getTimeString(const timeStruct& ts, char delimiter)
+String getTimeString(const timeStruct& ts, char delimiter, bool am_pm)
 {
   char TimeString[20]; //19 digits plus the null char
-  sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"), ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+  if (am_pm) {
+    uint8_t hour(ts.Hour % 12);
+    if (hour == 0) { hour = 12; }
+    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d%cm"),
+     hour, delimiter, ts.Minute, delimiter, ts.Second,
+     ts.Hour < 12 ? 'a' : 'p');
+  } else {
+    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
+     ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+  }
   return TimeString;
 }
 
 String getTimeString(char delimiter)
 {
-  return getTimeString(tm, delimiter);
+  return getTimeString(tm, delimiter, false);
+}
+
+String getTimeString_ampm(char delimiter)
+{
+  return getTimeString(tm, delimiter, true);
 }
 
 // returns the current Time without delimiter
@@ -402,20 +423,29 @@ String getTimeString()
 	return getTimeString('\0');
 }
 
+String getTimeString_ampm()
+{
+	return getTimeString_ampm('\0');
+}
+
 // returns the current Date and Time separated by the given delimiter
 // if called like this: getDateTimeString('\0', '\0', '\0');
 // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter)
+String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
 {
 	String ret = getDateString(ts, dateDelimiter);
 	if (dateTimeDelimiter != '\0')
 		ret += dateTimeDelimiter;
-	ret += getTimeString(ts, timeDelimiter);
+	ret += getTimeString(ts, timeDelimiter, am_pm);
 	return ret;
 }
 
 String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
-  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter);
+  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
+}
+
+String getDateTimeString_ampm(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
+  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
 }
 
 /********************************************************************************************\
@@ -434,7 +464,7 @@ unsigned long string2TimeLong(const String &str)
     // Within a scope so the tmpString is only used for copy.
     String tmpString(str);
     tmpString.toLowerCase();
-    tmpString.toCharArray(command, 20);    
+    tmpString.toCharArray(command, 20);
   }
   unsigned long lngTime = 0;
 

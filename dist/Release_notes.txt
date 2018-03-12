@@ -1,4 +1,107 @@
 -------------------------------------------------
+Changes in release mega-20180312 (since mega-20180311)
+-------------------------------------------------
+
+Release date: Mon Mar 12 04:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180311
+
+Unknown (4):
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+
+mvdbro (1):
+      Rule Engine minor fix and added dev debugging
+
+
+-------------------------------------------------
+Changes in release mega-20180311 (since mega-20180310)
+-------------------------------------------------
+
+Release date: Sun Mar 11 04:00:06 CET 2018
+
+ESPEasy release bot (2):
+      automaticly updated release notes for v2.0-20180309
+      automaticly updated release notes for v2.0-20180310
+
+Unknown (19):
+      Move plugin init before WiFi init
+      [Conversions] Use more decimals in conversions and add AM/PM for time.
+      Update P07 Plugin
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      [P073] Remove tm1637_bitDelay()
+      Improve flash read performance
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      Update P07 Plugin
+      [P073] Remove tm1637_bitDelay()
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [issue #1039] Topmost SSID are covered on mobile Browser
+      [issue #1039] Topmost SSID are covered on mobile Browser
+
+mvdbro (5):
+      Improve flash read performance
+      Rule Engine, stop waisting time on non matching rules
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      Rule Engine, stop waisting time on non matching rules
+
+
+-------------------------------------------------
+Changes in release mega-20180310 (since mega-20180309)
+-------------------------------------------------
+
+Release date: Sat Mar 10 04:00:07 CET 2018
+
+Unknown (2):
+      Move plugin init before WiFi init
+      [Conversions] Use more decimals in conversions and add AM/PM for time.
+
+
+-------------------------------------------------
+Changes in release mega-20180309 (since mega-20180308)
+-------------------------------------------------
+
+Release date: Fri Mar  9 04:00:11 CET 2018
+
+ESPEasy release bot (3):
+      automaticly updated release notes for v2.0-20180305
+      automaticly updated release notes for v2.0-20180306
+      automaticly updated release notes for v2.0-20180307
+
+Gijs Noorlander (2):
+      Fixes P073 plugin for latest TM1637 based 7 segments displays modules (#996) (#1022)
+      [CSS] Quick fix for smaller displays (#1026)
+
+Unknown (5):
+      [issue #1012] Removed Content-Length header + improved webserver speed
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+
+
+-------------------------------------------------
+Changes in release mega-20180308 (since mega-20180307)
+-------------------------------------------------
+
+Release date: Thu Mar  8 04:00:08 CET 2018
+
+mvdbro (2):
+      First step towards port monitoring without tasks
+      Second step towards port monitoring without tasks
+
+
+-------------------------------------------------
 Changes in release mega-20180307 (since mega-20180305)
 -------------------------------------------------
 

@@ -10,7 +10,7 @@
   Servo servo1;
   Servo servo2;
 #endif
-
+#define GPIO_MAX 17
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH 0
 #define PLUGIN_001_TYPE_DIMMER 3 // Due to some changes in previous versions, do not use 2.
@@ -27,6 +27,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   boolean success = false;
   static boolean switchstate[TASKS_MAX];
   static boolean outputstate[TASKS_MAX];
+  static int8_t PinMonitor[GPIO_MAX];
+  static int8_t PinMonitorState[GPIO_MAX];
 
   switch (function)
   {
@@ -108,6 +110,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        for (byte x=0; x < GPIO_MAX; x++){
+           PinMonitor[x] = 0;
+           PinMonitorState[x] = 0;
+          }
+
         if (Settings.TaskDevicePin1PullUp[event->TaskIndex])
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
         else
@@ -125,6 +132,38 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
         }
         success = true;
+        break;
+      }
+
+    case PLUGIN_REQUEST:
+      {
+        String device = parseString(string, 1);
+        String command = parseString(string, 2);
+        String strPar1 = parseString(string, 3);
+        int par1 = strPar1.toInt();
+        if (device == F("gpio") && command == F("pinstate"))
+        {
+          string = digitalRead(par1);
+          success = true;
+        }
+        break;
+      }
+      
+    case PLUGIN_UNCONDITIONAL_POLL:
+      {
+        // port monitoring, on request by rule command
+        for (byte x=0; x < GPIO_MAX; x++)
+           if (PinMonitor[x] != 0){
+             byte state = digitalRead(x);
+             if (PinMonitorState[x] != state){
+               String eventString = F("GPIO#");
+               eventString += x;
+               eventString += F("=");
+               eventString += state;
+               rulesProcessing(eventString);
+               PinMonitorState[x] = state;
+             }
+           }
         break;
       }
 
@@ -329,6 +368,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             success = true;
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, dummyString, 0));
+          }
+        }
+
+        if (command == F("monitor"))
+        {
+          if (parseString(string, 2) == F("gpio"))
+          {
+            PinMonitor[event->Par2] = 1;
+            success = true;
           }
         }
 
