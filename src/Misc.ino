@@ -2016,6 +2016,7 @@ String rulesProcessingFile(String fileName, String& event)
 
           String lineOrg = line; // store original line for future use
           line.toLowerCase(); // convert all to lower case to make checks easier
+          line.trim();
 
           String eventTrigger = "";
           String action = "";
