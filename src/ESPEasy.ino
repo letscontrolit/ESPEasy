@@ -400,10 +400,10 @@
 #endif
 
 
-#include "core_version.h"
 #include "ESPEasyTimeTypes.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
+  #include "core_version.h"
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
   #define FILE_SECURITY     "security.dat"
@@ -455,6 +455,10 @@
   #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
+
+  // Temp fix for a missing core_version.h within ESP Arduino core. Wait until they actually have different releases
+  #define ARDUINO_ESP8266_RELEASE "2_4_0"
+  
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
   #define ICACHE_RAM_ATTR IRAM_ATTR
   #define FILE_CONFIG       "/config.dat"

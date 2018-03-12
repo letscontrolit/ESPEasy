@@ -356,7 +356,7 @@ void clearAccessBlock()
 //********************************************************************************
 // Web Interface init
 //********************************************************************************
-#include "core_version.h"
+//#include "core_version.h"
 #define HTML_SYMBOL_WARNING "&#9888;"
 
 #if defined(ESP8266)
