@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20180312 (since mega-20180311)
+-------------------------------------------------
+
+Release date: Mon Mar 12 04:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180311
+
+Unknown (4):
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+
+mvdbro (1):
+      Rule Engine minor fix and added dev debugging
+
+
+-------------------------------------------------
 Changes in release mega-20180311 (since mega-20180310)
 -------------------------------------------------
 
