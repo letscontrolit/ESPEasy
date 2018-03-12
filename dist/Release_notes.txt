@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release v2.0-20180312 (since v2.0-20180311)
+-------------------------------------------------
+
+Release date: Mon Mar 12 04:00:19 CET 2018
+
+Unknown (3):
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+      Rule Engine minor fix and added dev debugging
+
+
+-------------------------------------------------
 Changes in release v2.0-20180311 (since v2.0-20180310)
 -------------------------------------------------
 
