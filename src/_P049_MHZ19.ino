@@ -48,9 +48,8 @@ enum mhzCommands : byte { mhzCmdReadPPM,
 // mhzCmdReset[]                = {0xFF,0x01,0x8d,0x00,0x00,0x00,0x00,0x00,0x72};
 /* It seems the offsets [3]..[4] for the detection range setting (command byte 0x99) are wrong in the latest
  * online data sheet: http://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19b-co2-ver1_0.pdf
- * According to the MH-Z19B datasheet version 1.2, valid from: 2017.03.22 (as of 2018-03-07)
+ * According to the MH-Z19B datasheet version 1.2, valid from: 2017.03.22 (received 2018-03-07)
  * the offset should be [6]..[7] instead.
- * MH-Z19B data sheet version 1.2, valid from: 2017.03.22 (received 2018-03-07):
  * 0x99 - Detection range setting, send command:
  * /---------+---------+---------+---------+---------+---------+---------+---------+---------\
  * | Byte 0  | Byte 1  | Byte 2  | Byte 3  | Byte 4  | Byte 5  | Byte 6  | Byte 7  | Byte 8  |
