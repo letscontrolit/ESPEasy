@@ -252,6 +252,8 @@
 #define CPLUGIN_WEBFORM_SAVE                6
 #define CPLUGIN_WEBFORM_LOAD                7
 #define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
+#define CPLUGIN_TASK_CHANGE_NOTIFICATION    9
+#define CPLUGIN_INIT                       10 
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2

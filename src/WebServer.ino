@@ -1069,6 +1069,7 @@ void handle_controllers() {
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
         strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
     addHtmlError( TXBuffer.buf, SaveControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
@@ -1744,6 +1745,18 @@ void handle_devices() {
 
       //allow the plugin to save plugin-specific form settings.
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
+ 
+      // notify controllers: CPLUGIN_TASK_CHANGE_NOTIFICATION
+      for (byte x=0; x < CONTROLLER_MAX; x++)
+        {
+          TempEvent.ControllerIndex = x;
+          if (Settings.TaskDeviceSendData[TempEvent.ControllerIndex][TempEvent.TaskIndex] &&
+            Settings.ControllerEnabled[TempEvent.ControllerIndex] && Settings.Protocol[TempEvent.ControllerIndex])
+            {
+              TempEvent.ProtocolIndex = getProtocolIndex(Settings.Protocol[TempEvent.ControllerIndex]);
+              CPlugin_ptr[TempEvent.ProtocolIndex](CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummyString);
+            }
+        }
     }
     addHtmlError(  SaveTaskSettings(taskIndex));
 
