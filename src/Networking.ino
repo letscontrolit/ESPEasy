@@ -37,35 +37,6 @@ void syslog(const char *message)
 
 
 /*********************************************************************************************\
-   Structs for UDP messaging
-  \*********************************************************************************************/
-struct infoStruct
-{
-  byte header = 255;
-  byte ID = 3;
-  byte sourcelUnit;
-  byte destUnit;
-  byte sourceTaskIndex;
-  byte destTaskIndex;
-  byte deviceNumber;
-  char taskName[26];
-  char ValueNames[VARS_PER_TASK][26];
-};
-
-struct dataStruct
-{
-  byte header = 255;
-  byte ID = 5;
-  byte sourcelUnit;
-  byte destUnit;
-  byte sourceTaskIndex;
-  byte destTaskIndex;
-  float Values[VARS_PER_TASK];
-};
-
-//TODO: add sysinfoStruct
-
-/*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
   \*********************************************************************************************/
 boolean runningUPDCheck = false;
@@ -108,22 +79,10 @@ void checkUDP()
     }
     else
     {
-      if (packetBuffer[1] > 1 && packetBuffer[1] < 6)
-      {
-        String log = (F("UDP  : Sensor msg "));
-        for (byte x = 1; x < 6; x++)
-        {
-          log += " ";
-          log += (int)packetBuffer[x];
-        }
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
-      }
-
       // binary data!
       switch (packetBuffer[1])
       {
 
-        //TODO: use a nice struct for it
         case 1: // sysinfo message
           {
             byte mac[6];
@@ -160,70 +119,13 @@ void checkUDP()
             break;
           }
 
-        case 2: // sensor info pull request
-          {
-            SendUDPTaskInfo(packetBuffer[2], packetBuffer[5], packetBuffer[4]);
-            break;
-          }
-
-        case 3: // sensor info
-          {
-            if (Settings.GlobalSync)
-            {
-              struct infoStruct infoReply;
-              memcpy((byte*)&infoReply, (byte*)&packetBuffer, sizeof(infoStruct));
-
-              // to prevent flash wear out (bugs in communication?) we can only write to an empty task
-              // so it will write only once and has to be cleared manually through webgui
-              if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
-              {
-                Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
-                Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
-                for (byte x=0; x < CONTROLLER_MAX; x++)
-                  Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
-                strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
-                for (byte x = 0; x < VARS_PER_TASK; x++)
-                  strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
-                SaveTaskSettings(infoReply.destTaskIndex);
-                SaveSettings();
-              }
-            }
-            break;
-          }
-
-        case 4: // sensor data pull request
-          {
-            SendUDPTaskData(packetBuffer[2], packetBuffer[5], packetBuffer[4]);
-            break;
-          }
-
-        case 5: // sensor data
-          {
-            if (Settings.GlobalSync)
-            {
-              struct dataStruct dataReply;
-              memcpy((byte*)&dataReply, (byte*)&packetBuffer, sizeof(dataStruct));
-
-              // only if this task has a remote feed, update values
-              if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
-              {
-                for (byte x = 0; x < VARS_PER_TASK; x++)
-                {
-                  UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
-                }
-                if (Settings.UseRules)
-                  createRuleEvents(dataReply.destTaskIndex);
-              }
-            }
-            break;
-          }
-
         default:
           {
             struct EventStruct TempEvent;
             TempEvent.Data = (byte*)packetBuffer;
             TempEvent.Par1 = remoteIP[3];
             PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
+            CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
             break;
           }
       }
@@ -233,73 +135,6 @@ void checkUDP()
     portUDP.flush();
   #endif
   runningUPDCheck = false;
-}
-
-
-/*********************************************************************************************\
-   Send task info using UDP message
-  \*********************************************************************************************/
-void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
-{
-  if (!WiFiConnected(100)) {
-    return;
-  }
-  struct infoStruct infoReply;
-  infoReply.sourcelUnit = Settings.Unit;
-  infoReply.sourceTaskIndex = sourceTaskIndex;
-  infoReply.destTaskIndex = destTaskIndex;
-  LoadTaskSettings(infoReply.sourceTaskIndex);
-  infoReply.deviceNumber = Settings.TaskDeviceNumber[infoReply.sourceTaskIndex];
-  strcpy(infoReply.taskName, ExtraTaskSettings.TaskDeviceName);
-  for (byte x = 0; x < VARS_PER_TASK; x++)
-    strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
-
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
-  if (destUnit != 0)
-  {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (byte x = firstUnit; x <= lastUnit; x++)
-  {
-    infoReply.destUnit = x;
-    sendUDP(x, (byte*)&infoReply, sizeof(infoStruct));
-    delay(10);
-  }
-  delay(50);
-}
-
-
-/*********************************************************************************************\
-   Send task data using UDP message
-  \*********************************************************************************************/
-void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
-{
-  if (!WiFiConnected(100)) {
-    return;
-  }
-  struct dataStruct dataReply;
-  dataReply.sourcelUnit = Settings.Unit;
-  dataReply.sourceTaskIndex = sourceTaskIndex;
-  dataReply.destTaskIndex = destTaskIndex;
-  for (byte x = 0; x < VARS_PER_TASK; x++)
-    dataReply.Values[x] = UserVar[dataReply.sourceTaskIndex * VARS_PER_TASK + x];
-
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
-  if (destUnit != 0)
-  {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (byte x = firstUnit; x <= lastUnit; x++)
-  {
-    dataReply.destUnit = x;
-    sendUDP(x, (byte*) &dataReply, sizeof(dataStruct));
-    delay(10);
-  }
-  delay(50);
 }
 
 

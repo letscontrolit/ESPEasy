@@ -8,9 +8,6 @@ void sendData(struct EventStruct *event)
   if (Settings.UseRules)
     createRuleEvents(event->TaskIndex);
 
-  if (Settings.GlobalSync && Settings.TaskDeviceGlobalSync[event->TaskIndex])
-    SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
-
   if (Settings.UseValueLogger && Settings.InitSPI && Settings.Pin_sd_cs >= 0)
     SendValueLogger(event->TaskIndex);
 
