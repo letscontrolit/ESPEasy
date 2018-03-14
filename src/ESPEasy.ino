@@ -273,6 +273,7 @@
 #define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
 #define CPLUGIN_TASK_CHANGE_NOTIFICATION    9
 #define CPLUGIN_INIT                       10 
+#define CPLUGIN_UDP_IN                     11
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2
@@ -573,7 +574,7 @@ struct SettingsStruct
     BaudRate(0), MessageDelay(0), deepSleep(0),
     CustomCSS(false), DST(false), WDI2CAddress(0),
     UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
-    WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
+    WireClockStretchLimit(0), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
     DST_Start(0), DST_End(0)
@@ -642,7 +643,7 @@ struct SettingsStruct
   boolean       UseSSDP;
   boolean       UseNTP;
   unsigned long WireClockStretchLimit;
-  boolean       GlobalSync;
+  boolean       _GlobalSync; // obsolete!
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
@@ -1687,12 +1688,6 @@ void SensorSendTask(byte TaskIndex)
         }
       }
       sendData(&TempEvent);
-    } else if (!anyControllerEnabled() && Settings.GlobalSync) {
-      // No other controller enabled thus need to make sure global sync is still performed.
-      if (Settings.TaskDeviceGlobalSync[TaskIndex]) {
-        LoadTaskSettings(TaskIndex);
-        SendUDPTaskData(0, TaskIndex, TaskIndex);
-      }
     }
   }
 }
