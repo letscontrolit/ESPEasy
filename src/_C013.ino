@@ -23,6 +23,7 @@ boolean CPlugin_013(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesPassword = false;
         Protocol[protocolCount].defaultPort = 65501;
         Protocol[protocolCount].usesID = false;
+        Protocol[protocolCount].Custom = true;
         break;
       }
 
