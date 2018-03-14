@@ -911,7 +911,7 @@ struct ProtocolStruct
 {
   ProtocolStruct() :
     Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
-    defaultPort(0), usesTemplate(false), usesID(false) {}
+    defaultPort(0), usesTemplate(false), usesID(false), Custom(false) {}
   byte Number;
   boolean usesMQTT;
   boolean usesAccount;
@@ -919,6 +919,7 @@ struct ProtocolStruct
   int defaultPort;
   boolean usesTemplate;
   boolean usesID;
+  boolean Custom;
 } Protocol[CPLUGIN_MAX];
 
 struct NotificationStruct
