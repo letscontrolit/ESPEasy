@@ -87,7 +87,7 @@ void SHT3X::get()
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-SHT3X*  Plugin_068_SHT3x = NULL;
+SHT3X*  Plugin_068_SHT3x[TASKS_MAX] = { NULL, };
 
 
 //==============================================
@@ -148,9 +148,9 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
 		case PLUGIN_INIT:
 		{
-			if (Plugin_068_SHT3x)
-				delete Plugin_068_SHT3x;
-			Plugin_068_SHT3x = new SHT3X(CONFIG(0));
+			if (Plugin_068_SHT3x[event->TaskIndex])
+				delete Plugin_068_SHT3x[event->TaskIndex];
+			Plugin_068_SHT3x[event->TaskIndex] = new SHT3X(CONFIG(0));
 
 			success = true;
 			break;
@@ -158,12 +158,12 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
 		case PLUGIN_READ:
 		{
-			if (!Plugin_068_SHT3x)
+			if (!Plugin_068_SHT3x[event->TaskIndex])
 				return success;
 
-			Plugin_068_SHT3x->get();
-			UserVar[event->BaseVarIndex + 0] = Plugin_068_SHT3x->tmp;
-			UserVar[event->BaseVarIndex + 1] = Plugin_068_SHT3x->hum;
+			Plugin_068_SHT3x[event->TaskIndex]->get();
+			UserVar[event->BaseVarIndex + 0] = Plugin_068_SHT3x[event->TaskIndex]->tmp;
+			UserVar[event->BaseVarIndex + 1] = Plugin_068_SHT3x[event->TaskIndex]->hum;
 			String log = F("SHT3x: Temperature: ");
 			log += UserVar[event->BaseVarIndex + 0];
 			addLog(LOG_LEVEL_INFO, log);
