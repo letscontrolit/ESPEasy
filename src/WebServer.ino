@@ -1148,56 +1148,60 @@ void handle_controllers() {
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
 
-      addFormSelector(TXBuffer.buf,  F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
-
-      if (ControllerSettings.UseDNS)
-      {
-        addFormTextBox(TXBuffer.buf,  F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
-      }
-      else
-      {
-        addFormIPBox(TXBuffer.buf,  F("Controller IP"), F("controllerip"), ControllerSettings.IP);
-      }
-
-      addFormNumericBox(TXBuffer.buf,  F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
-
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-      if (Protocol[ProtocolIndex].usesAccount)
-      {
-         String protoDisplayName;
-        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
-          protoDisplayName = F("Controller User");
+      if (!Protocol[ProtocolIndex].Custom){
+
+        addFormSelector(TXBuffer.buf,  F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
+
+        if (ControllerSettings.UseDNS)
+        {
+          addFormTextBox(TXBuffer.buf,  F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
         }
-        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
-       }
-      if (Protocol[ProtocolIndex].usesPassword)
-      {
-        String protoDisplayName;
-        if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
-          // It is not a regular password, thus use normal text field.
-          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
-        } else {
-          addFormPasswordBox(TXBuffer.buf, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        else
+        {
+          addFormIPBox(TXBuffer.buf,  F("Controller IP"), F("controllerip"), ControllerSettings.IP);
         }
+
+        addFormNumericBox(TXBuffer.buf,  F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
+
+        if (Protocol[ProtocolIndex].usesAccount)
+        {
+           String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
+            protoDisplayName = F("Controller User");
+          }
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
+         }
+        if (Protocol[ProtocolIndex].usesPassword)
+        {
+          String protoDisplayName;
+          if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
+            // It is not a regular password, thus use normal text field.
+            addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+          } else {
+            addFormPasswordBox(TXBuffer.buf, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+          }
+        }
+
+        if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+        {
+           String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
+            protoDisplayName = F("Controller Subscribe");
+          }
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
+         }
+
+        if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+        {
+           String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
+            protoDisplayName = F("Controller Publish");
+          }
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
+         }
+
       }
-
-      if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
-      {
-         String protoDisplayName;
-        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
-          protoDisplayName = F("Controller Subscribe");
-        }
-        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
-       }
-
-      if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
-      {
-         String protoDisplayName;
-        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
-          protoDisplayName = F("Controller Publish");
-        }
-        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
-       }
 
       addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
 
