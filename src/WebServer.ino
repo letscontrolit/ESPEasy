@@ -1710,18 +1710,6 @@ void handle_devices() {
       if (Device[DeviceIndex].InverseLogicOption)
         Settings.TaskDevicePin1Inversed[taskIndex] = (WebServer.arg(F("TDPI")) == F("on"));
 
-      if (Settings.GlobalSync)
-      {
-        if (Device[DeviceIndex].GlobalSyncOption)
-          Settings.TaskDeviceGlobalSync[taskIndex] = (WebServer.arg(F("TDGS")) == F("on"));
-
-        // Send task info if set global
-        if (Settings.TaskDeviceGlobalSync[taskIndex])
-        {
-          SendUDPTaskInfo(0, taskIndex, taskIndex);
-        }
-      }
-
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
 
@@ -1958,11 +1946,6 @@ void handle_devices() {
       addFormTextBox(TXBuffer.buf,  F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
 
       addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);   //="taskdeviceenabled"
-
-      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[taskIndex] == 0 && Settings.UDPPort != 0)
-      {
-        addFormCheckBox(TXBuffer.buf,  F("Global Sync"), F("TDGS"), Settings.TaskDeviceGlobalSync[taskIndex]);   //="taskdeviceglobalsync"
-      }
 
       // section: Sensor / Actuator
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[taskIndex] == 0 &&
@@ -3460,7 +3443,6 @@ void handle_advanced() {
   String usessdp = WebServer.arg(F("usessdp"));
   String edit = WebServer.arg(F("edit"));
   String wireclockstretchlimit = WebServer.arg(F("wireclockstretchlimit"));
-  String globalsync = WebServer.arg(F("globalsync"));
   String userules = WebServer.arg(F("userules"));
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
@@ -3492,7 +3474,6 @@ void handle_advanced() {
     Settings.UseSSDP = (usessdp == "on");
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
     Settings.UseRules = (userules == "on");
-    Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
 
@@ -3547,9 +3528,8 @@ void handle_advanced() {
   addFormNumericBox(TXBuffer.buf,  F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
-  addFormSubHeader(TXBuffer.buf,  F("Inter-ESPEasy Network (experimental)"));
+  addFormSubHeader(TXBuffer.buf,  F("Inter-ESPEasy Network"));
 
-  addFormCheckBox( TXBuffer.buf, F("Global Sync"), F("globalsync"), Settings.GlobalSync);
   addFormNumericBox(TXBuffer.buf,  F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
 
