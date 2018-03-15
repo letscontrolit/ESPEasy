@@ -76,6 +76,15 @@ public:
   }
 
   void startStream() {
+    startStream(false);
+  }
+
+  void startJsonStream() {
+    startStream(true);
+  }
+
+private:
+  void startStream(bool json) {
     maxCoreUsage = maxServerUsage = 0;
     initialRam = ESP.getFreeHeap();
     beforeTXRam = initialRam;
@@ -87,7 +96,7 @@ public:
       tcpCleanup();
       return;
     } else
-      sendHeaderBlocking();
+      sendHeaderBlocking(json);
   }
 
   void trackTotalMem() {
@@ -95,6 +104,8 @@ public:
     if ((initialRam - beforeTXRam) > maxServerUsage)
       maxServerUsage = initialRam - beforeTXRam;
   }
+
+public:
 
   void trackCoreMem() {
     duringTXRam = ESP.getFreeHeap();
@@ -156,14 +167,14 @@ void sendContentBlocking(String& data) {
   data = "";
 }
 
-void sendHeaderBlocking() {
+void sendHeaderBlocking(bool json) {
   checkRAM(F("sendHeaderBlocking"));
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader("Content-Type", "text/html", true);
-  WebServer.sendHeader("Accept-Ranges", "none");
-  WebServer.sendHeader("Cache-Control", "no-cache");
-  WebServer.sendHeader("Transfer-Encoding", "chunked");
+  WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
+  WebServer.sendHeader(F("Accept-Ranges"), F("none"));
+  WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
+  WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
   WebServer.send(200);
 #else
   unsigned int timeout = 0;
@@ -172,8 +183,8 @@ void sendHeaderBlocking() {
   if (freeBeforeSend < 4000) timeout = 1000;
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader("Content-Type", "text/html", true);
-  WebServer.sendHeader("Cache-Control", "no-cache");
+  WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
+  WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   WebServer.send(200);
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
@@ -1737,7 +1748,7 @@ void handle_devices() {
 
       //allow the plugin to save plugin-specific form settings.
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
- 
+
       // notify controllers: CPLUGIN_TASK_CHANGE_NOTIFICATION
       for (byte x=0; x < CONTROLLER_MAX; x++)
         {
@@ -3290,8 +3301,7 @@ void handle_login() {
 //********************************************************************************
 void handle_control() {
   //TXBuffer.startStream(true); // true= json
- // sendHeadandTail(F("TmplStd"),_HEAD);
-
+  // sendHeadandTail(F("TmplStd"),_HEAD);
   String webrequest = WebServer.arg(F("cmd"));
 
   // in case of event, store to buffer and return...
@@ -3310,18 +3320,18 @@ void handle_control() {
   printToWeb = true;
   printWebString = "";
 
+  if (printToWebJSON)
+    TXBuffer.startJsonStream();
+  else
+    TXBuffer.startStream();
 
   if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
   else if (remoteConfig(&TempEvent, webrequest));
   else
     TXBuffer += F("Unknown or restricted command!");
 
-  TXBuffer +=  printWebString;
-
-  if (printToWebJSON)
-    WebServer.send(200, "application/json");
-  else
-    WebServer.send(200, "text/html");
+  TXBuffer += printWebString;
+  TXBuffer.endStream();
 
   printWebString = "";
   printToWeb = false;
