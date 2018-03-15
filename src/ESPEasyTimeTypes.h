@@ -59,3 +59,5 @@ struct TimeChangeRule {
 void applyTimeZone(uint32_t curTime = 0);
 void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart, uint32_t curTime = 0);
 uint32_t calcTimeChangeForRule(const TimeChangeRule& r, int yr);
+String getTimeString(char delimiter, bool show_seconds=true);
+String getTimeString_ampm(char delimiter, bool show_seconds=true);
