@@ -87,8 +87,6 @@ int firstEnabledBlynkController() {
 }
 
 
-boolean activeRuleSets[RULESETS_MAX];
-
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -327,7 +325,7 @@ void loop()
       {
         String event = F("System#Sleep");
         rulesProcessing(event);
-      }  
+      }
   }
   //normal mode, run each task when its time
   else

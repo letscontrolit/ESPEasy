@@ -1,7 +1,6 @@
 
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
-
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -11,12 +10,12 @@
 // After loading firmware, issue a 'reset' command to load the defaults.
 
 // --- Basic Config Settings ------------------------------------------------------------------------
-#define DEFAULT_NAME        "ESP_Easy"                  // Enter your device friendly name
-#define UNIT                            0                                       // Unit Number
+#define DEFAULT_NAME        "ESP_Easy"			// Enter your device friendly name
+#define UNIT				0					// Unit Number
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
-#define DEFAULT_AP_IP           192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
+#define DEFAULT_AP_IP      	192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
@@ -28,9 +27,6 @@
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
 #define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
-#define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
-#define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
-#define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
@@ -53,41 +49,39 @@
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
-#define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES			false	// (true|false) Enable Rules?
 
-#define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
-#define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_RETAIN			false	// (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_DELAY			1000	// Time in milliseconds to retain MQTT messages
 
-#define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
-#define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
-#define DEFAULT_TIME_ZONE                       0               // Time Offset (in minutes)
-#define DEFAULT_USE_DST                         false   // (true|false) Use Daily Time Saving
+#define DEFAULT_USE_NTP				false	// (true|false) Use NTP Server
+#define DEFAULT_NTP_HOST			""		// NTP Server Hostname
+#define DEFAULT_TIME_ZONE			0		// Time Offset (in minutes)
+#define DEFAULT_USE_DST				false	// (true|false) Use Daily Time Saving
 
 #define LOG_TO_SERIAL         1
 #define LOG_TO_SYSLOG         2
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
-#define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
-#define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
-#define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
-#define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
+#define DEFAULT_SYSLOG_IP			""				// Syslog IP Address
+#define DEFAULT_SYSLOG_LEVEL		0				// Syslog Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL	LOG_LEVEL_INFO	// Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL		LOG_LEVEL_INFO	// Web Log Level
+#define DEFAULT_SD_LOG_LEVEL		0				// SD Card Log Level
+#define DEFAULT_USE_SD_LOG			false			// (true|false) Enable Logging to the SD card
 
-#define DEFAULT_USE_SERIAL                      true    // (true|false) Enable Logging to the Serial Port
-#define DEFAULT_SERIAL_BAUD                     115200  // Serial Port Baud Rate
+#define DEFAULT_USE_SERIAL			true	// (true|false) Enable Logging to the Serial Port
+#define DEFAULT_SERIAL_BAUD			115200	// Serial Port Baud Rate
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
-
-#define DEFAULT_USE_GLOBAL_SYNC                 false           // (true|false)
-#define DEFAULT_SYNC_UDP_PORT                   0                       //
-
-#define DEFAULT_IP_OCTET                                0                       //
-#define DEFAULT_WD_IC2_ADDRESS                  0                       //
-#define DEFAULT_USE_SSDP                        false           // (true|false)
-#define DEFAULT_CON_FAIL_THRES                  0                       //
-#define DEFAULT_I2C_CLOCK_LIMIT                 0                       //
+#define DEFAULT_USE_GLOBAL_SYNC			false		// (true|false)
+#define DEFAULT_SYNC_UDP_PORT			0			//
+#define DEFAULT_IP_OCTET				0			//
+#define DEFAULT_WD_IC2_ADDRESS			0			//
+#define DEFAULT_USE_SSDP			false		// (true|false)
+#define DEFAULT_CON_FAIL_THRES			0			//
+#define DEFAULT_I2C_CLOCK_LIMIT			0			//
 */
 
 
@@ -99,18 +93,13 @@
 #endif
 
 
-#if defined(ESP8266)
-  //enable Arduino OTA updating.
-  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
-  // #define FEATURE_ARDUINO_OTA
+//enable Arduino OTA updating.
+//Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+// #define FEATURE_ARDUINO_OTA
 
-  //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
-  // #define FEATURE_MDNS
-#endif
-#if defined(ESP32)
- #define FEATURE_ARDUINO_OTA
- //#define FEATURE_MDNS
-#endif
+//enable mDNS mode (adds about 6kb ram and some bytes IRAM)
+// #define FEATURE_MDNS
+
 
 //enable reporting status to ESPEasy developers.
 //this informs us of crashes and stability issues.
@@ -132,28 +121,18 @@
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
 
-//add this if you want SD support (add 10k flash)
-//#define FEATURE_SD
-
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE
 // ********************************************************************************
+#include "core_version.h"
+#ifndef ARDUINO_ESP8266_RELEASE_2_3_0
+#error ESPEasy v2.0 only support Arduino core 2.3.0. (Use the ESPEasy development branch to fix this)
+#endif
+
 #define ESP_PROJECT_PID           2016110801L
-
-#if defined(ESP8266)
-  #define VERSION                             2 // config file version (not ESPEasy version). increase if you make incompatible changes to config system.
-#endif
-#if defined(ESP32)
-  #define VERSION                             3 // Change in config.dat mapping needs a full reset
-#endif
-
-#define BUILD                           20100 // git version 2.1.0
-#if defined(ESP8266)
-  #define BUILD_NOTES                 " - Mega"
-#endif
-#if defined(ESP32)
-  #define BUILD_NOTES                 " - Mega32"
-#endif
+#define VERSION                             2 // config file version (not ESPEasy version). increase if you make incompatible changes to config system.
+#define BUILD                           20000 // git version 2.0.0
+#define BUILD_NOTES                 " - Mega"
 
 #ifndef BUILD_GIT
 #define BUILD_GIT "(custom)"
@@ -166,6 +145,7 @@
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
+#define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
@@ -191,8 +171,6 @@
 #define PLUGIN_GET_DEVICEGPIONAMES         22
 #define PLUGIN_EXIT                        23
 #define PLUGIN_GET_CONFIG                  24
-#define PLUGIN_UNCONDITIONAL_POLL          25
-#define PLUGIN_REQUEST                     26
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -202,6 +180,9 @@
 #define CPLUGIN_WEBFORM_SAVE                6
 #define CPLUGIN_WEBFORM_LOAD                7
 #define CPLUGIN_GET_PROTOCOL_DISPLAY_NAME   8
+#define CPLUGIN_TASK_CHANGE_NOTIFICATION    9
+#define CPLUGIN_INIT                       10
+#define CPLUGIN_UDP_IN                     11
 
 #define CONTROLLER_HOSTNAME                 1
 #define CONTROLLER_IP                       2
@@ -234,14 +215,7 @@
 #else
   #define DEVICES_MAX                      64
 #endif
-
-#if defined(ESP8266)
-  #define TASKS_MAX                          12 // max 12!
-#endif
-#if defined(ESP32)
-  #define TASKS_MAX                          32
-#endif
-
+#define TASKS_MAX                          12 // max 12!
 #define CONTROLLER_MAX                      3 // max 4!
 #define NOTIFICATION_MAX                    3 // max 4!
 #define VARS_PER_TASK                       4
@@ -307,126 +281,68 @@
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
-#if defined(ESP8266)
-  #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
-  #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
-  #define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
-  #define CONFIG_FILE_SIZE                65536
-#endif
-#if defined(ESP32)
-  #define DAT_OFFSET_CONTROLLER            8192  // each controller = 1k, 4 max
-  #define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
-  #define DAT_OFFSET_TASKS                32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
-  #define CONFIG_FILE_SIZE               131072
-#endif
+#define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
+#define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
+#define DAT_OFFSET_CUSTOM_CONTROLLER    32768  // each custom controller config = 1k, 4 max.
+
 
 /*
-        To modify the stock configuration without changing this repo file :
+	To modify the stock configuration without changing this repo file :
     - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
-        - add a "Custom.h" file in this folder.
-
+	- add a "Custom.h" file in this folder.
 */
 #ifdef USE_CUSTOM_H
 #include "Custom.h"
 #endif
 
-
+#define FILE_CONFIG       "config.dat"
+#define FILE_SECURITY     "security.dat"
+#define FILE_NOTIFICATION "notification.dat"
+#define FILE_RULES        "rules1.dat"
 #include "ESPEasyTimeTypes.h"
-#define FS_NO_GLOBALS
-#if defined(ESP8266)
-  #include "core_version.h"
-  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASYM_STD
-  #define FILE_CONFIG       "config.dat"
-  #define FILE_SECURITY     "security.dat"
-  #define FILE_NOTIFICATION "notification.dat"
-  #define FILE_RULES        "rules1.txt"
-  #include <lwip/init.h>
-  #ifndef LWIP_VERSION_MAJOR
-    #error
-  #endif
-  #if LWIP_VERSION_MAJOR == 2
-  //  #include <lwip/priv/tcp_priv.h>
-  #else
-    #include <lwip/tcp_impl.h>
-  #endif
-  #include <ESP8266WiFi.h>
-  #include <ESP8266Ping.h>
-  #include <ESP8266WebServer.h>
-  ESP8266WebServer WebServer(80);
-  #include <DNSServer.h>
-  #include <Servo.h>
-  #include <ESP8266HTTPUpdateServer.h>
-  ESP8266HTTPUpdateServer httpUpdater(true);
-  #ifndef LWIP_OPEN_SRC
-  #define LWIP_OPEN_SRC
-  #endif
-  #include "lwip/opt.h"
-  #include "lwip/udp.h"
-  #include "lwip/igmp.h"
-  #include "include/UdpContext.h"
-  #include "limits.h"
-  extern "C" {
-   #include "user_interface.h"
-  }
-  extern "C" {
-  #include "spi_flash.h"
-  }
-  extern "C" uint32_t _SPIFFS_start;
-  extern "C" uint32_t _SPIFFS_end;
-  extern "C" uint32_t _SPIFFS_page;
-  extern "C" uint32_t _SPIFFS_block;
-  #ifdef FEATURE_MDNS
-    #include <ESP8266mDNS.h>
-  #endif
-  #ifdef FEATURE_ARDUINO_OTA
-    #include <ArduinoOTA.h>
-    #include <ESP8266mDNS.h>
-    bool ArduinoOTAtriggered=false;
-  #endif
-  #define PIN_D_MAX        16
-#endif
-#if defined(ESP32)
-
-  // Temp fix for a missing core_version.h within ESP Arduino core. Wait until they actually have different releases
-  #define ARDUINO_ESP8266_RELEASE "2_4_0"
-  
-  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
-  #define ICACHE_RAM_ATTR IRAM_ATTR
-  #define FILE_CONFIG       "/config.dat"
-  #define FILE_SECURITY     "/security.dat"
-  #define FILE_NOTIFICATION "/notification.dat"
-  #define FILE_RULES        "/rules1.txt"
-  #include <WiFi.h>
-  #include  "esp32_ping.h"
-  #include <ESP32WebServer.h>
-  #include "SPIFFS.h"
-  ESP32WebServer WebServer(80);
-  #ifdef FEATURE_MDNS
-    #include <ESPmDNS.h>
-  #endif
-  #ifdef FEATURE_ARDUINO_OTA
-    #include <ArduinoOTA.h>
-    #include <ESPmDNS.h>
-    bool ArduinoOTAtriggered=false;
-  #endif
-  #define PIN_D_MAX        39
-  int8_t ledChannelPin[16];
-#endif
-
-#include <WiFiUdp.h>
+#include "lwip/tcp_impl.h"
+#include <ESP8266WiFi.h>
+#include <ESP8266Ping.h>
 #include <DNSServer.h>
+#include <WiFiUdp.h>
+#include <ESP8266WebServer.h>
+#ifdef FEATURE_MDNS
+#include <ESP8266mDNS.h>
+#endif
+
 #include <Wire.h>
 #include <SPI.h>
 #include <PubSubClient.h>
+// #include <ArduinoJson.h>
+// #include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+#define FS_NO_GLOBALS
 #include <FS.h>
-#ifdef FEATURE_SD
 #include <SD.h>
-#else
-using namespace fs;
-#endif
+#include <ESP8266HTTPUpdateServer.h>
+ESP8266HTTPUpdateServer httpUpdater(true);
 #include <base64.h>
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
+#endif
+#ifndef LWIP_OPEN_SRC
+#define LWIP_OPEN_SRC
+#endif
+#include "lwip/opt.h"
+#include "lwip/udp.h"
+#include "lwip/igmp.h"
+#include "include/UdpContext.h"
+#include "limits.h"
+
+extern "C" {
+#include "user_interface.h"
+}
+
+
+#ifdef FEATURE_ARDUINO_OTA
+#include <ArduinoOTA.h>
+#include <ESP8266mDNS.h>
+bool ArduinoOTAtriggered=false;
 #endif
 
 
@@ -443,25 +359,24 @@ WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
 
+// WebServer
+ESP8266WebServer WebServer(80);
+
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
-
-struct CRCStruct{
-  char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
-  char binaryFilename[16+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename...";
-  char compileTime[16]= __TIME__;
-  char compileDate[16]= __DATE__;
-  uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-  bool checkPassed (void){ return memcmp(compileTimeMD5,runTimeMD5,16)==0 ; }
-  uint32_t numberOfCRCBytes=0;
-}CRCValues;
 
 // Forward declarations.
 bool WiFiConnected(uint32_t timeout_ms);
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
-void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
-void formatIP(const IPAddress& ip, char (&strIP)[20]);
+
+extern "C" {
+#include "spi_flash.h"
+}
+extern "C" uint32_t _SPIFFS_start;
+extern "C" uint32_t _SPIFFS_end;
+extern "C" uint32_t _SPIFFS_page;
+extern "C" uint32_t _SPIFFS_block;
 
 struct SecurityStruct
 {
@@ -485,12 +400,7 @@ struct SecurityStruct
   char          ControllerUser[CONTROLLER_MAX][26];
   char          ControllerPassword[CONTROLLER_MAX][64];
   char          Password[26];
-  byte          AllowedIPrangeLow[4]; // TD-er: Use these
-  byte          AllowedIPrangeHigh[4];
-  byte          IPblockLevel;
-  //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
-  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-  uint8_t       md5[16];
+  //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 } SecuritySettings;
 
 struct SettingsStruct
@@ -502,7 +412,7 @@ struct SettingsStruct
     BaudRate(0), MessageDelay(0), deepSleep(0),
     CustomCSS(false), DST(false), WDI2CAddress(0),
     UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
-    WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
+    WireClockStretchLimit(0), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
     DST_Start(0), DST_End(0)
@@ -571,7 +481,7 @@ struct SettingsStruct
   boolean       UseSSDP;
   boolean       UseNTP;
   unsigned long WireClockStretchLimit;
-  boolean       GlobalSync;
+  boolean       _GlobalSync; // obsolete!
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag;
@@ -606,16 +516,11 @@ struct SettingsStruct
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
   boolean       UseValueLogger;
-  boolean       ArduinoOTAEnable;
   uint16_t      DST_Start;
   uint16_t      DST_End;
-
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
-  // make sure crc is the last value in the struct
-  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-  uint8_t       md5[16];
 } Settings;
 
 struct ControllerSettingsStruct
@@ -1053,9 +958,11 @@ unsigned long dailyResetCounter = 0;
 
 String eventBuffer = "";
 
-uint32_t lowestRAM = 0;
+uint16_t lowestRAM = 0;
 String lowestRAMfunction = "";
 
 bool shouldReboot=false;
+
+boolean activeRuleSets[RULESETS_MAX];
 
 #endif /* ESPEASY_GLOBALS_H_ */
