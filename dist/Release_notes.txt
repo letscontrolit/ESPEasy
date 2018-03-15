@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20180315 (since mega-20180314)
+-------------------------------------------------
+
+Release date: Thu Mar 15 04:00:08 CET 2018
+
+mvdbro (3):
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+
+-------------------------------------------------
 Changes in release mega-20180314 (since mega-20180313)
 -------------------------------------------------
 
