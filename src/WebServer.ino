@@ -1069,6 +1069,7 @@ void handle_controllers() {
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
         strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
+        CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
     addHtmlError( TXBuffer.buf, SaveControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
@@ -1147,56 +1148,60 @@ void handle_controllers() {
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
 
-      addFormSelector(TXBuffer.buf,  F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
-
-      if (ControllerSettings.UseDNS)
-      {
-        addFormTextBox(TXBuffer.buf,  F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
-      }
-      else
-      {
-        addFormIPBox(TXBuffer.buf,  F("Controller IP"), F("controllerip"), ControllerSettings.IP);
-      }
-
-      addFormNumericBox(TXBuffer.buf,  F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
-
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-      if (Protocol[ProtocolIndex].usesAccount)
-      {
-         String protoDisplayName;
-        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
-          protoDisplayName = F("Controller User");
+      if (!Protocol[ProtocolIndex].Custom){
+
+        addFormSelector(TXBuffer.buf,  F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
+
+        if (ControllerSettings.UseDNS)
+        {
+          addFormTextBox(TXBuffer.buf,  F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
         }
-        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
-       }
-      if (Protocol[ProtocolIndex].usesPassword)
-      {
-        String protoDisplayName;
-        if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
-          // It is not a regular password, thus use normal text field.
-          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
-        } else {
-          addFormPasswordBox(TXBuffer.buf, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+        else
+        {
+          addFormIPBox(TXBuffer.buf,  F("Controller IP"), F("controllerip"), ControllerSettings.IP);
         }
+
+        addFormNumericBox(TXBuffer.buf,  F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
+
+        if (Protocol[ProtocolIndex].usesAccount)
+        {
+           String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
+            protoDisplayName = F("Controller User");
+          }
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
+         }
+        if (Protocol[ProtocolIndex].usesPassword)
+        {
+          String protoDisplayName;
+          if (getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PASS, protoDisplayName)) {
+            // It is not a regular password, thus use normal text field.
+            addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+          } else {
+            addFormPasswordBox(TXBuffer.buf, F("Controller Password"), F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0])-1);
+          }
+        }
+
+        if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+        {
+           String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
+            protoDisplayName = F("Controller Subscribe");
+          }
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
+         }
+
+        if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+        {
+           String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
+            protoDisplayName = F("Controller Publish");
+          }
+          addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
+         }
+
       }
-
-      if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
-      {
-         String protoDisplayName;
-        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
-          protoDisplayName = F("Controller Subscribe");
-        }
-        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
-       }
-
-      if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
-      {
-         String protoDisplayName;
-        if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
-          protoDisplayName = F("Controller Publish");
-        }
-        addFormTextBox(TXBuffer.buf, protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
-       }
 
       addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
 
@@ -1705,18 +1710,6 @@ void handle_devices() {
       if (Device[DeviceIndex].InverseLogicOption)
         Settings.TaskDevicePin1Inversed[taskIndex] = (WebServer.arg(F("TDPI")) == F("on"));
 
-      if (Settings.GlobalSync)
-      {
-        if (Device[DeviceIndex].GlobalSyncOption)
-          Settings.TaskDeviceGlobalSync[taskIndex] = (WebServer.arg(F("TDGS")) == F("on"));
-
-        // Send task info if set global
-        if (Settings.TaskDeviceGlobalSync[taskIndex])
-        {
-          SendUDPTaskInfo(0, taskIndex, taskIndex);
-        }
-      }
-
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
 
@@ -1744,6 +1737,18 @@ void handle_devices() {
 
       //allow the plugin to save plugin-specific form settings.
       PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
+ 
+      // notify controllers: CPLUGIN_TASK_CHANGE_NOTIFICATION
+      for (byte x=0; x < CONTROLLER_MAX; x++)
+        {
+          TempEvent.ControllerIndex = x;
+          if (Settings.TaskDeviceSendData[TempEvent.ControllerIndex][TempEvent.TaskIndex] &&
+            Settings.ControllerEnabled[TempEvent.ControllerIndex] && Settings.Protocol[TempEvent.ControllerIndex])
+            {
+              TempEvent.ProtocolIndex = getProtocolIndex(Settings.Protocol[TempEvent.ControllerIndex]);
+              CPlugin_ptr[TempEvent.ProtocolIndex](CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummyString);
+            }
+        }
     }
     addHtmlError(  SaveTaskSettings(taskIndex));
 
@@ -1941,11 +1946,6 @@ void handle_devices() {
       addFormTextBox(TXBuffer.buf,  F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
 
       addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);   //="taskdeviceenabled"
-
-      if (Settings.GlobalSync && Device[DeviceIndex].GlobalSyncOption && Settings.TaskDeviceDataFeed[taskIndex] == 0 && Settings.UDPPort != 0)
-      {
-        addFormCheckBox(TXBuffer.buf,  F("Global Sync"), F("TDGS"), Settings.TaskDeviceGlobalSync[taskIndex]);   //="taskdeviceglobalsync"
-      }
 
       // section: Sensor / Actuator
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[taskIndex] == 0 &&
@@ -3443,7 +3443,6 @@ void handle_advanced() {
   String usessdp = WebServer.arg(F("usessdp"));
   String edit = WebServer.arg(F("edit"));
   String wireclockstretchlimit = WebServer.arg(F("wireclockstretchlimit"));
-  String globalsync = WebServer.arg(F("globalsync"));
   String userules = WebServer.arg(F("userules"));
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
@@ -3475,7 +3474,6 @@ void handle_advanced() {
     Settings.UseSSDP = (usessdp == "on");
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
     Settings.UseRules = (userules == "on");
-    Settings.GlobalSync = (globalsync == "on");
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
 
@@ -3530,9 +3528,8 @@ void handle_advanced() {
   addFormNumericBox(TXBuffer.buf,  F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
-  addFormSubHeader(TXBuffer.buf,  F("Inter-ESPEasy Network (experimental)"));
+  addFormSubHeader(TXBuffer.buf,  F("Inter-ESPEasy Network"));
 
-  addFormCheckBox( TXBuffer.buf, F("Global Sync"), F("globalsync"), Settings.GlobalSync);
   addFormNumericBox(TXBuffer.buf,  F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
 
