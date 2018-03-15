@@ -288,6 +288,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
+    SMART_REPL(F("%systm_hm%"), getTimeString(':', false))
+    SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"), getTimeString(':'))
     SMART_REPL(F("%systime_am%"), getTimeString_ampm(':'))
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
