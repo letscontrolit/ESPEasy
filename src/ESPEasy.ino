@@ -219,7 +219,7 @@ void setup()
   NPluginInit();
   if (Settings.UseRules)
   {
-    String event = F("System#Initialized");
+    String event = F("System#Wake");
     rulesProcessing(event);
   }
 
