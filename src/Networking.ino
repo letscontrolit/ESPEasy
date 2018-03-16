@@ -730,7 +730,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
     sendBuffer[11] = 1;
   ModbusClient->flush();
   ModbusClient->write(&sendBuffer[0], sizeof(sendBuffer));
-  for (int i = 0; i < sizeof(sendBuffer); i++) {
+  for (unsigned int i = 0; i < sizeof(sendBuffer); i++) {
     LogString += ((unsigned int)(sendBuffer[i]));
     LogString += (" ");
   }
@@ -743,6 +743,7 @@ bool Modbus::handle() {
   unsigned int RXavailable = 0;
   LogString = "";
   int64_t rxValue = 0;
+  if (ModbusClient) return false; 
   switch ( TXRXstate ) {
 
     case MODBUS_IDLE:
@@ -779,7 +780,7 @@ bool Modbus::handle() {
         TXRXstate = MODBUS_RECEIVE_PAYLOAD;
         break;
       }
-      for (int i = 0; i < RXavailable; i++) {
+      for (unsigned int i = 0; i < RXavailable; i++) {
         rxValue = rxValue << 8;
         char a = ModbusClient->read();
         rxValue = rxValue | a;
@@ -817,10 +818,12 @@ bool Modbus::handle() {
     default:
       LogString += F("default. ");
       TXRXstate = MODBUS_IDLE;
+      return false;
       break;
 
   }
   if (LogString.length() > 1 ) addLog(LOG_LEVEL_DEBUG, LogString);
+  return true; 
 }
 
 bool Modbus::hasTimeout()
