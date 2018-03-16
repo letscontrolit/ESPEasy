@@ -4638,6 +4638,7 @@ void handle_rules() {
 
    TXBuffer += F("<TR><TD>Edit: ");
   addSelector(TXBuffer.buf,  F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addButton(TXBuffer.buf, fileName, F("Download to file"));
   addHelpButton(TXBuffer.buf,  F("Tutorial_Rules"));
 
   // load form data from flash
