@@ -1065,6 +1065,8 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 {
   int x;
   struct EventStruct TempEvent;
+  bool retval; 
+  uint32_t timeout=0;
 
   if (event == 0)
     event = &TempEvent;
@@ -1075,8 +1077,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_DEVICE_ADD:
     case PLUGIN_UNCONDITIONAL_POLL:
       for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
+        if (Plugin_id[x] != 0){
+          timeout=millis();
           Plugin_ptr[x](Function, event, str);
+          measureTime(timeout, Function,x);
+        }
       return true;
       break;
 
@@ -1084,9 +1089,12 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WRITE:
     case PLUGIN_REQUEST:
       for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
-          if (Plugin_ptr[x](Function, event, str))
-            return true;
+        if (Plugin_id[x] != 0){
+          timeout=millis();
+          retval = (Plugin_ptr[x](Function, event, str));
+          measureTime(timeout, Function,x);
+          if (retval) return true; 
+          }
       break;
 
     // Call to all plugins used in a task. Return at first match
@@ -1106,7 +1114,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.BaseVarIndex = y * VARS_PER_TASK;
                 //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
                 TempEvent.sensorType = Device[DeviceIndex].VType;
-                if (Plugin_ptr[x](Function, event, str)){
+                timeout=millis();
+                retval =  (Plugin_ptr[x](Function, event, str));
+                measureTime(timeout, Function,x);
+                if (retval){
                   checkRAM(F("PluginCallUDP"),x);
                   return true;
                 }
@@ -1145,7 +1156,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
                 {
                   checkRAM(F("PluginCall_s"),x);
+                  timeout=millis();
                   Plugin_ptr[x](Function, &TempEvent, str);
+                  measureTime(timeout, Function,x);
                 }
               }
             }
@@ -1173,7 +1186,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         {
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
-          return Plugin_ptr[x](Function, event, str);
+          timeout = millis();
+          retval =  Plugin_ptr[x](Function, event, str);
+          measureTime(timeout, Function,x);
+          return retval; 
         }
       }
       return false;
@@ -1182,3 +1198,20 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
   }// case
   return false;
 }
+
+
+void measureTime(uint32_t start, byte function, int x){
+  if(timeOutReached(start+250)){
+    String LogString = F("Plugin timing violation: execution took ");
+    LogString += millis()-start; LogString+=" ms: ";
+    String P_name = ""; 
+    Plugin_ptr[x](PLUGIN_GET_DEVICENAME, NULL, P_name);
+    LogString+=P_name; 
+    LogString+=F(" function: ");
+    LogString+= function;
+    addLog(LOG_LEVEL_DEBUG, LogString);
+  }
+  
+};
+  
+
