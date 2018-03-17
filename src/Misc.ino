@@ -2497,14 +2497,14 @@ void SendValueLogger(byte TaskIndex)
 class RamTracker{
   private:
     String        traces[TRACES]  ;                         // trace of latest memory checks
-    unsigned int  tracesMemory[TRACES] ;                    // lowest memory for that  trace
+    uint64_t      tracesMemory[TRACES] ;                    // lowest memory for that  trace
     unsigned int  readPtr, writePtr;                        // pointer to cyclic buffer
     String        nextAction[TRACEENTRIES];                 // buffer to record the names of functions before they are transfered to a trace
-    unsigned int  nextActionStartMemory[TRACEENTRIES];      // memory levels for the functions.
+    uint64_t      nextActionStartMemory[TRACEENTRIES];      // memory levels for the functions.
 
-    unsigned int  bestCaseTrace (void){                     // find highest the trace with the largest minimum memory (gets replaced by worse one)
-       unsigned int lowestMemoryInTrace = 0;
-       unsigned int lowestMemoryInTraceIndex=0;
+    uint64_t  bestCaseTrace (void){                     // find highest the trace with the largest minimum memory (gets replaced by worse one)
+       uint64_t lowestMemoryInTrace = 0;
+       uint64_t lowestMemoryInTraceIndex=0;
        for (int i = 0; i<TRACES; i++) {
           if (tracesMemory[i] > lowestMemoryInTrace){
             lowestMemoryInTrace= tracesMemory[i];
@@ -2521,7 +2521,7 @@ class RamTracker{
         writePtr=0;
         for (int i = 0; i< TRACES; i++) {
           traces[i]="";
-          tracesMemory[i]=0xffff;                           // init with best case memory values, so they get replaced if memory goes lower
+          tracesMemory[i]=0xffffffff;                           // init with best case memory values, so they get replaced if memory goes lower
           }
         for (int i = 0; i< TRACEENTRIES; i++) {
           nextAction[i]="startup";
@@ -2542,7 +2542,8 @@ class RamTracker{
             for (int i = 0; i<TRACEENTRIES; i++) {          // tranfer cyclic buffer strings and mem values to this trace
               traces[bestCase]+= nextAction[readPtr];
               traces[bestCase]+= "-> ";
-              traces[bestCase]+= String(nextActionStartMemory[readPtr]);
+              double d = nextActionStartMemory[readPtr];    // there is no support of uint64 ti string.
+              traces[bestCase]+= String(d,0);
               traces[bestCase]+= " ";
               readPtr++;
               if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
@@ -2556,7 +2557,8 @@ class RamTracker{
       for (int i = 0; i< TRACES; i++){
         retval += String(i);
         retval += ": lowest: ";
-        retval += String(tracesMemory[i]);
+        double d = tracesMemory[i];                     // there is no support of 64bit integer to string.
+        retval += String(d,0);
         retval += "  ";
         retval += traces[i];
         addLog(LOG_LEVEL_DEBUG_DEV, retval);
