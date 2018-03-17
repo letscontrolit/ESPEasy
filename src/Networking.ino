@@ -702,6 +702,8 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   incomingValue = type;
   resultReceived = false;
   ModbusClient = new WiFiClient();
+  ModbusClient->setNoDelay(true);
+  ModbusClient->setTimeout(200);
   timeout = millis();
   ModbusClient->flush();
 
@@ -713,6 +715,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
       LogString += F(" fail. ");
       TXRXstate = MODBUS_IDLE;
       errcnt++;
+      if (LogString.length() > 1 ) addLog(LOG_LEVEL_DEBUG, LogString);
       return false;
     }
   }
