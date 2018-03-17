@@ -322,7 +322,7 @@ void loop()
   }
 
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
-  if (isDeepSleepEnabled())
+  if (firstLoop && isDeepSleepEnabled())
   {
       run50TimesPerSecond();
       run10TimesPerSecond();
@@ -375,6 +375,7 @@ void loop()
       deepSleep(Settings.Delay);
       //deepsleep will never return, its a special kind of reboot
   }
+  firstLoop = false;
 }
 
 

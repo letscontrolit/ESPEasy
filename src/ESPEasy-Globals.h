@@ -1060,6 +1060,7 @@ uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
 
 bool shouldReboot=false;
+bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
 
