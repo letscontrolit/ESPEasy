@@ -746,7 +746,6 @@ bool Modbus::handle() {
   unsigned int RXavailable = 0;
   LogString = "";
   int64_t rxValue = 0;
-  if (ModbusClient) return false; 
   switch ( TXRXstate ) {
 
     case MODBUS_IDLE:
@@ -821,7 +820,6 @@ bool Modbus::handle() {
     default:
       LogString += F("default. ");
       TXRXstate = MODBUS_IDLE;
-      return false;
       break;
 
   }
