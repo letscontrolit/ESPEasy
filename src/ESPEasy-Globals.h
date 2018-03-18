@@ -54,6 +54,7 @@
 #endif
 #ifndef DEFAULT_SUBNET
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
+#endif
 
 // --- Default Controller ------------------------------------------------------------------------------
 #ifndef DEFAULT_CONTROLLER
