@@ -10,7 +10,7 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#ifndef USE_OWN_DEFAULTS
+#ifdef USE_OWN_DEFAULTS
 #include <espeasy_personal_defaults.h>
 #endif
 
