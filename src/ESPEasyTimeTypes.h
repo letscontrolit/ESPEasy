@@ -2,7 +2,6 @@
 #define ESPEASY_TIMETYPES_H_
 
 #include <stdint.h>
-#include <String.h>
 
 struct  timeStruct {
   timeStruct() : Second(0), Minute(0), Hour(0), Wday(0), Day(0), Month(0), Year(0) {}
