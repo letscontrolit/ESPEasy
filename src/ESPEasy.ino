@@ -249,15 +249,6 @@ void setup()
   if (Settings.UDPPort != 0)
     portUDP.begin(Settings.UDPPort);
 
-/*
-  // Setup MQTT Client
-  // ToDo TD-er: Controller index is forced to the first enabled MQTT controller.
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    MQTTConnect(enabledMqttController);
-  }
-*/
-
   sendSysInfoUDP(3);
 
   if (Settings.UseNTP)
@@ -316,15 +307,18 @@ void loop()
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
   if (firstLoop && isDeepSleepEnabled())
   {
+      // Setup MQTT Client
+      // Controller index is forced to the first enabled MQTT controller.
+      // This is normally done via frequent checks, but there's no time for in deepsleep.
+      int enabledMqttController = firstEnabledMQTTController();
+      if (enabledMqttController >= 0) {
+        MQTTConnect(enabledMqttController);
+      }
+      // Now run all frequent tasks
       run50TimesPerSecond();
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
-      if (Settings.UseRules)
-      {
-        String event = F("System#Sleep");
-        rulesProcessing(event);
-      }
   }
   //normal mode, run each task when its time
   else
@@ -364,8 +358,14 @@ void loop()
   backgroundtasks();
 
   if (readyForSleep()){
-      deepSleep(Settings.Delay);
-      //deepsleep will never return, its a special kind of reboot
+    if (Settings.UseRules)
+    {
+      String event = F("System#Sleep");
+      rulesProcessing(event);
+    }
+
+    deepSleep(Settings.Delay);
+    //deepsleep will never return, its a special kind of reboot
   }
   firstLoop = false;
 }
