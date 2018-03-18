@@ -41,7 +41,7 @@ class p073_7dgt
     byte brightness;
     boolean timesep;
 };
-p073_7dgt *Plugin_073_7dgt;
+p073_7dgt *Plugin_073_7dgt = NULL;
 //---------------------------------------------------
 
 uint8_t p073_showbuffer[8];
