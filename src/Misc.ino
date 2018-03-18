@@ -2011,11 +2011,12 @@ String rulesProcessingFile(String fileName, String& event)
             // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
             // This to avoid waisting CPU time...
             line = parseTemplate(line, line.length());
-            line.trim();
           }
-
+          line.trim();
+          
           String lineOrg = line; // store original line for future use
           line.toLowerCase(); // convert all to lower case to make checks easier
+
 
           String eventTrigger = "";
           String action = "";
@@ -2629,7 +2630,7 @@ void play_rtttl(uint8_t _pin, const char *p )
   #define OCTAVE_OFFSET 0
   // FIXME: Absolutely no error checking in here
 
-  int notes[] = { 0,
+  const int notes[] = { 0,
     262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,
     523, 554, 587, 622, 659, 698, 740, 784, 831, 880, 932, 988,
     1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661, 1760, 1865, 1976,

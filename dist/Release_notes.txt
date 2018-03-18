@@ -1,4 +1,91 @@
 -------------------------------------------------
+Changes in release mega-20180316 (since mega-20180315)
+-------------------------------------------------
+
+Release date: Fri Mar 16 04:00:11 CET 2018
+
+Bartlomiej Zimon (3):
+      - move all structs from ESPEasy.ino into header file     - add some fix for headers     - add const to rtttl notes array
+      Merge branch 'mega' of github.com:letscontrolit/ESPEasy into mega
+      Merge branch 'mega' of github.com:letscontrolit/ESPEasy into mega
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180313
+
+Gijs Noorlander (3):
+      MCP3221 allow values for calibration (#1073)
+      [issue #1066] Fix Webserver handle_control (#1079)
+      Fixed multi instance problem on SHT3x #433 (#1081)
+
+JK (1):
+      Fixed #433
+
+Unknown (9):
+      [issue #1066] Fix Webserver handle_control
+      - move all structs from ESPEasy.ino into header file
+      [v2.0 split globals] Base split on v2.0 version of ESPEasy.ino
+      [issue #1057] AM PM display issue
+      [issue #993] variable in MQTT subscribe topic
+      [issue #951] Changed System#Initialized  => System#Wake
+      [issue #1057] AM PM display issue
+      [issue #993] variable in MQTT subscribe topic
+      [issue #951] Changed System#Initialized  => System#Wake
+
+mvdbro (4):
+      #893 part1, send messages
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+sassod (1):
+      12bit ADC values acceted up to 4095
+
+
+-------------------------------------------------
+Changes in release mega-20180315 (since mega-20180314)
+-------------------------------------------------
+
+Release date: Thu Mar 15 04:00:08 CET 2018
+
+mvdbro (3):
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+
+-------------------------------------------------
+Changes in release mega-20180314 (since mega-20180313)
+-------------------------------------------------
+
+Release date: Wed Mar 14 04:00:11 CET 2018
+
+mvdbro (1):
+      #893 part1, send messages
+
+
+-------------------------------------------------
+Changes in release mega-20180313 (since mega-20180312)
+-------------------------------------------------
+
+Release date: Tue Mar 13 04:00:11 CET 2018
+
+Bartlomiej Zimon (4):
+      - fix for #1065
+      - remove double trimm()
+      - fix for #1065
+      - remove double trimm()
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180312
+
+Unknown (1):
+      Rule Engine minor fix and added dev debugging
+
+mvdbro (1):
+      ESP32 C010 fix
+
+
+-------------------------------------------------
 Changes in release mega-20180312 (since mega-20180311)
 -------------------------------------------------
 

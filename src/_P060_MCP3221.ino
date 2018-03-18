@@ -81,11 +81,11 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(string, F("Calibration Enabled"), F("plugin_060_cal"), CONFIG(3));
 
-        addFormNumericBox(string, F("Point 1"), F("plugin_060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
+        addFormNumericBox(string, F("Point 1"), F("plugin_060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 4095);
         string += F(" &#8793; ");
         addTextBox(string, F("plugin_060_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(string, F("Point 2"), F("plugin_060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 1023);
+        addFormNumericBox(string, F("Point 2"), F("plugin_060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 4095);
         string += F(" &#8793; ");
         addTextBox(string, F("plugin_060_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 

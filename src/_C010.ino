@@ -89,7 +89,7 @@ void C010_Send(struct EventStruct *event, byte varIndex, float value, unsigned l
 
   if (WiFi.status() == WL_CONNECTED) {
     ControllerSettings.beginPacket(portUDP);
-    portUDP.write(msg.c_str());
+    portUDP.write((uint8_t*)msg.c_str(),msg.length());
     portUDP.endPacket();
   }
 

@@ -133,6 +133,7 @@ void CPluginInit(void)
 #endif
 
   CPluginCall(CPLUGIN_PROTOCOL_ADD, 0);
+  CPluginCall(CPLUGIN_INIT, 0);
 }
 
 byte CPluginCall(byte Function, struct EventStruct *event)
@@ -151,6 +152,17 @@ byte CPluginCall(byte Function, struct EventStruct *event)
         if (CPlugin_id[x] != 0){
           checkRAM(F("CPluginCallADD"),x);
           CPlugin_ptr[x](Function, event, dummyString);
+        }
+      return true;
+      break;
+
+    // calls to active plugins
+    case CPLUGIN_INIT:
+    case CPLUGIN_UDP_IN:
+      for (byte x=0; x < CONTROLLER_MAX; x++)
+        if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
+          event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
+          CPlugin_ptr[event->ProtocolIndex](Function, event, dummyString);
         }
       return true;
       break;

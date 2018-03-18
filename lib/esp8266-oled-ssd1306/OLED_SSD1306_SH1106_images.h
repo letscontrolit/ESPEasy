@@ -1,3 +1,6 @@
+#ifndef OLED_SSD1306_SH1106_IMAGES_H
+#define OLED_SSD1306_SH1106_IMAGES_H
+
 #define espeasy_logo_width 36
 #define espeasy_logo_height 36
 const char espeasy_logo_bits[] PROGMEM= {
@@ -38,3 +41,5 @@ const char inactiveSymbole[] PROGMEM = {
     B00000000,
     B00000000
 };
+
+#endif
