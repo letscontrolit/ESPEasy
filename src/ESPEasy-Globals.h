@@ -10,36 +10,81 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
+#ifndef USE_OWN_DEFAULTS
+#include <espeasy_personal_defaults.h>
+#endif
+
+
 // --- Basic Config Settings ------------------------------------------------------------------------
+#ifndef DEFAULT_NAME
 #define DEFAULT_NAME        "ESP_Easy"                  // Enter your device friendly name
+#endif
+#ifndef UNIT
 #define UNIT                            0                                       // Unit Number
+#endif
+#ifndef DEFAULT_DELAY
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
+#endif
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
+#ifndef DEFAULT_AP_IP
 #define DEFAULT_AP_IP           192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
+#endif
+#ifndef DEFAULT_AP_KEY
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
+#endif
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
+#ifndef DEFAULT_SSID
 #define DEFAULT_SSID        "ssid"              // Enter your Wifi network SSID
+#endif
+#ifndef DEFAULT_KEY
 #define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
-
+#endif
+#ifndef DEFAULT_USE_STATIC_IP
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
+#endif
+#ifndef DEFAULT_IP
 #define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
+#endif
+#ifndef DEFAULT_DNS
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
+#endif
+#ifndef DEFAULT_GW
 #define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
+#endif
+#ifndef DEFAULT_SUBNET
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
+#endif
+#ifndef DEFAULT_IPRANGE_LOW
 #define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
+#endif
+#ifndef DEFAULT_IPRANGE_HIGH
 #define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
+#endif
+#ifndef DEFAULT_IP_BLOCK_LEVEL
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
+#endif
 
 // --- Default Controller ------------------------------------------------------------------------------
+#ifndef DEFAULT_CONTROLLER
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
+#endif
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
+#ifndef DEFAULT_PUB
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
+#endif
+#ifndef DEFAULT_SUB
 #define DEFAULT_SUB         "sensors/espeasy/%sysname%/#" // Enter your sub
+#endif
+#ifndef DEFAULT_SERVER
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
+#endif
+#ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
+#endif
 
+#ifndef DEFAULT_PROTOCOL
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
 //   1 = Domoticz HTTP
 //   2 = Domoticz MQTT
@@ -50,32 +95,64 @@
 //   7 = EmonCMS
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
+#endif
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
+#ifndef DEFAULT_USE_RULES
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#endif
 
+#ifndef DEFAULT_MQTT_RETAIN
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
+#endif
+#ifndef DEFAULT_MQTT_DELAY
 #define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#endif
 
+#ifndef DEFAULT_USE_NTP
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
+#endif
+#ifndef DEFAULT_NTP_HOST
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
+#endif
+#ifndef DEFAULT_TIME_ZONE
 #define DEFAULT_TIME_ZONE                       0               // Time Offset (in minutes)
+#endif
+#ifndef DEFAULT_USE_DST
 #define DEFAULT_USE_DST                         false   // (true|false) Use Daily Time Saving
+#endif
 
 #define LOG_TO_SERIAL         1
 #define LOG_TO_SYSLOG         2
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
-#define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
-#define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
-#define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
-#define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
 
+#ifndef DEFAULT_SYSLOG_IP
+#define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
+#endif
+#ifndef DEFAULT_SYSLOG_LEVEL
+#define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
+#endif
+#ifndef DEFAULT_SERIAL_LOG_LEVEL
+#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
+#endif
+#ifndef DEFAULT_WEB_LOG_LEVEL
+#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
+#endif
+#ifndef DEFAULT_SD_LOG_LEVEL
+#define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
+#endif
+#ifndef DEFAULT_USE_SD_LOG
+#define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
+#endif
+
+#ifndef DEFAULT_USE_SERIAL
 #define DEFAULT_USE_SERIAL                      true    // (true|false) Enable Logging to the Serial Port
+#endif
+#ifndef DEFAULT_SERIAL_BAUD
 #define DEFAULT_SERIAL_BAUD                     115200  // Serial Port Baud Rate
+#endif
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
