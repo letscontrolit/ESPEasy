@@ -1,3 +1,6 @@
+#ifndef ESPEASY_TIMETYPES_H_
+#define ESPEASY_TIMETYPES_H_
+
 #include <stdint.h>
 
 struct  timeStruct {
@@ -61,3 +64,6 @@ void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart,
 uint32_t calcTimeChangeForRule(const TimeChangeRule& r, int yr);
 String getTimeString(char delimiter, bool show_seconds=true);
 String getTimeString_ampm(char delimiter, bool show_seconds=true);
+
+
+#endif /* ESPEASY_TIMETYPES_H_ */
