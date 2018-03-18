@@ -236,6 +236,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               break;
             }
           }
+          success = true;
         } else if (tmpString.equalsIgnoreCase(F("7dt"))) {
           if (Plugin_073_7dgt->output != 0)
             break;
@@ -291,6 +292,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               break;
             }
           }
+          success = true;
         } else {
           bool p073_validcmd = false;
           bool p073_displayon;
@@ -317,6 +319,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             }
           }
           if (p073_validcmd) {
+            success = true;
             switch (Plugin_073_7dgt->type)
             {
               case 0:
@@ -331,7 +334,6 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-        success = true;
         break;
       }
 
