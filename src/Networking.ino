@@ -596,6 +596,11 @@ bool WiFiConnected(uint32_t timeout_ms) {
     yield(); // Allow at least once time for backgroundtasks
     min_delay = 10;
   }
+  if (!wifiConnected) {
+    // Apparently something needs network, perform check to see if it is ready now.
+    if (tryConnectWiFi())
+      checkWifiJustConnected();
+  }
   while (WiFi.status() != WL_CONNECTED) {
     if (timeOutReached(timer)) {
       return false;
@@ -633,4 +638,3 @@ bool hostReachable(const String& hostname) {
   addLog(LOG_LEVEL_ERROR, log);
   return false;
 }
-
