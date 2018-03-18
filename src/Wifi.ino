@@ -80,10 +80,9 @@ void WifiAPMode(boolean state)
 
 
 //********************************************************************************
-// Configure network and connect to Wifi SSID and SSID2
+// Set Wifi config
 //********************************************************************************
-boolean WifiConnect(byte connectAttempts)
-{
+void prepareWiFi() {
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
@@ -106,62 +105,66 @@ boolean WifiConnect(byte connectAttempts)
     const IPAddress dns = Settings.DNS;
     WiFi.config(ip, gw, subnet, dns);
   }
+}
 
-  //try to connect to one of the access points
-  bool connected = WifiConnectAndWait(connectAttempts);
-  if (!connected) {
-    if (selectNextWiFiSettings()) {
-      connected = WifiConnectAndWait(connectAttempts);
+//********************************************************************************
+// Configure network and connect to Wifi SSID and SSID2
+//********************************************************************************
+boolean WifiConnect(byte connectAttempts)
+{
+  prepareWiFi();
+  if (anyValidWifiSettings()) {
+    //try to connect to one of the access points
+    bool connected = WifiConnectAndWait(connectAttempts);
+    if (!connected) {
+      if (selectNextWiFiSettings()) {
+        connected = WifiConnectAndWait(connectAttempts);
+      }
+    }
+    if (connected) {
+      return(true);
     }
   }
-  if (connected)
-  {
-    // fix octet?
-    if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
-    {
-      IPAddress ip = WiFi.localIP();
-      IPAddress gw = WiFi.gatewayIP();
-      IPAddress subnet = WiFi.subnetMask();
-      ip[3] = Settings.IP_Octet;
-      log = F("IP   : Fixed IP octet:");
-      log += ip;
-      addLog(LOG_LEVEL_INFO, log);
-      WiFi.config(ip, gw, subnet);
-    }
-
-    #ifdef FEATURE_MDNS
-
-      String log = F("WIFI : ");
-      if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
-
-        log += F("mDNS started, with name: ");
-        log += WifiGetHostname();
-        log += F(".local");
-      }
-      else{
-        log += F("mDNS failed");
-      }
-      addLog(LOG_LEVEL_INFO, log);
-    #endif
-
-    return(true);
-  }
-
   addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
-
   //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
   WifiAPMode(true);
-
   return(false);
 }
 
+//********************************************************************************
+// Start connect to WiFi and check later to see if connected.
+//********************************************************************************
+void WiFiConnectRelaxed() {
+  prepareWiFi();
+  wifiConnected = false;
+  wifi_connect_attempt = 0;
+  if (anyValidWifiSettings()) {
+    tryConnectWiFi();
+    return;
+  }
+  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
+  //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
+  WifiAPMode(true);
+}
 
+
+//********************************************************************************
+// Manage WiFi credentials
+//********************************************************************************
 const char* getLastWiFiSettingsSSID() {
   return lastWiFiSettings == 0 ? SecuritySettings.WifiSSID : SecuritySettings.WifiSSID2;
 }
 
 const char* getLastWiFiSettingsPassphrase() {
   return lastWiFiSettings == 0 ? SecuritySettings.WifiKey : SecuritySettings.WifiKey2;
+}
+
+bool anyValidWifiSettings() {
+  if (wifiSettingsValid(SecuritySettings.WifiSSID, SecuritySettings.WifiKey))
+    return true;
+  if (wifiSettingsValid(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2))
+    return true;
+  return false;
 }
 
 bool selectNextWiFiSettings() {
@@ -182,27 +185,45 @@ bool wifiSettingsValid(const char* ssid, const char* pass) {
   return true;
 }
 
-bool tryReconnect() {
-  //already connected, need to disconnect first
-  if (WiFi.status() == WL_CONNECTED)
-    return(true);
+bool wifiConnectTimeoutReached() {
+  if (wifi_connect_attempt == 0) return true;
+  // wait until it connects + add some device specific random offset to prevent
+  // all nodes overloading the accesspoint when turning on at the same time.
+  const unsigned int randomOffset_in_sec = wifi_connect_attempt == 1 ? 0 : 1000 * ((ESP.getChipId() & 0xF));
+  return timeOutReached(wifi_connect_timer + 7000 + randomOffset_in_sec);
+}
 
-  if (reconnect_attempt != 0 && ((reconnect_attempt % 3) == 0)) {
+//********************************************************************************
+// Simply start the WiFi connection sequence
+//********************************************************************************
+bool tryConnectWiFi() {
+  if (wifiSetup)
+    return false;
+  if (WiFi.status() == WL_CONNECTED)
+    return(true);   //already connected, need to disconnect first
+  if (!wifiConnectTimeoutReached())
+    return true;    // timeout not reached yet, thus no need to retry again.
+
+  if (wifi_connect_attempt != 0 && ((wifi_connect_attempt % 3) == 0)) {
     // Change to other wifi settings.
     if (selectNextWiFiSettings())
       WiFi.disconnect();
+  }
+  if (wifi_connect_attempt > 6) {
+    //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
+    WifiAPMode(true);
   }
   const char* ssid = getLastWiFiSettingsSSID();
   const char* passphrase = getLastWiFiSettingsPassphrase();
   String log = F("WIFI : Connecting ");
   log += ssid;
   log += F(" attempt #");
-  log += reconnect_attempt;
+  log += wifi_connect_attempt;
   addLog(LOG_LEVEL_INFO, log);
 
-  switch (reconnect_attempt) {
+  wifi_connect_timer = millis();
+  switch (wifi_connect_attempt) {
     case 0:
-      wifi_connect_timer = millis();
       if (lastBSSID[0] == 0)
         WiFi.begin(ssid, passphrase);
       else
@@ -211,7 +232,7 @@ bool tryReconnect() {
     default:
       WiFi.begin(ssid, passphrase);
   }
-  ++reconnect_attempt;
+  ++wifi_connect_attempt;
   switch (WiFi.status()) {
     case WL_NO_SSID_AVAIL: {
       log = F("WIFI : No SSID found matching: ");
@@ -225,6 +246,9 @@ bool tryReconnect() {
       addLog(LOG_LEVEL_INFO, log);
       return false;
     }
+    case WL_CONNECTED:
+      checkWifiJustConnected();
+      break;
     default:
      break;
   }
@@ -239,17 +263,14 @@ boolean WifiConnectAndWait(byte connectAttempts)
   String log;
 
   wifiConnected = false;
-  reconnect_attempt = 0;
+  wifi_connect_attempt = 0;
   for (byte tryConnect = 0; tryConnect < connectAttempts; tryConnect++)
   {
-    if (tryReconnect()) {
-      // wait until it connects + add some device specific random offset to prevent
-      // all nodes overloading the accesspoint when turning on at the same time.
-      const unsigned int randomOffset_in_sec = tryConnect == 0 ? 0 : 1000 * ((ESP.getChipId() & 0xF) * 2);
-      while (!timeOutReached(wifi_connect_timer + 10000 + randomOffset_in_sec)) {
+    if (tryConnectWiFi()) {
+      do {
         if (checkWifiJustConnected())
           return true;
-      }
+      } while (!wifiConnectTimeoutReached());
     }
     // log = F("WIFI : Disconnecting!");
     // addLog(LOG_LEVEL_INFO, log);
@@ -269,7 +290,7 @@ boolean WifiConnectAndWait(byte connectAttempts)
 
 bool checkWifiJustConnected() {
   if (wifiConnected) return true;
-  if (!WiFiConnected(50)) {
+  if (WiFi.status() != WL_CONNECTED) {
     statusLED(false);
     // No delay needed, since the WiFi check has a delay
     return false;
@@ -279,6 +300,35 @@ bool checkWifiJustConnected() {
   log += timePassedSince(wifi_connect_timer);
   log += F(" ms");
   addLog(LOG_LEVEL_INFO, log);
+
+  // fix octet?
+  if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
+  {
+    IPAddress ip = WiFi.localIP();
+    IPAddress gw = WiFi.gatewayIP();
+    IPAddress subnet = WiFi.subnetMask();
+    ip[3] = Settings.IP_Octet;
+    log = F("IP   : Fixed IP octet:");
+    log += ip;
+    addLog(LOG_LEVEL_INFO, log);
+    WiFi.config(ip, gw, subnet);
+  }
+
+  #ifdef FEATURE_MDNS
+
+    String log = F("WIFI : ");
+    if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
+
+      log += F("mDNS started, with name: ");
+      log += WifiGetHostname();
+      log += F(".local");
+    }
+    else{
+      log += F("mDNS failed");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  #endif
+
   // First try to get the time, since that may be used in logs
   if (Settings.UseNTP) {
     initTime();
@@ -362,7 +412,6 @@ void WifiScan()
 //********************************************************************************
 void WifiCheck()
 {
-
   if(wifiSetup)
     return;
 
@@ -372,9 +421,11 @@ void WifiCheck()
     //give it time to automatically reconnect
     if (NC_Count > 2)
     {
-      wifiConnected = false;
-      tryReconnect();
-
+      if (wifiConnected) {
+        wifi_connect_attempt = 0;
+        wifiConnected = false;
+        WiFiConnectRelaxed();
+      }
       C_Count=0;
       NC_Count = 0;
     }
@@ -388,6 +439,10 @@ void WifiCheck()
     {
       WifiAPMode(false);
     }
+  }
+  if (!wifiConnected) {
+    if (tryConnectWiFi())
+      checkWifiJustConnected();
   }
 }
 

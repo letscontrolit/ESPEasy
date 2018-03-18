@@ -239,8 +239,7 @@ void setup()
     }
   }
   else
-    // 3 connect attempts
-    WifiConnect(3);
+    WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -454,8 +453,8 @@ void runOncePerSecond()
     }
     cmd_within_mainloop = 0;
   }
+  WifiCheck();
 
-  checkWifiJustConnected();
   // clock events
   if (Settings.UseNTP)
     checkTime();
@@ -535,8 +534,6 @@ void runEach30Seconds()
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
     loopCounterMax = loopCounterLast;
-
-  WifiCheck();
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
