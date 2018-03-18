@@ -455,6 +455,7 @@ void runOncePerSecond()
     cmd_within_mainloop = 0;
   }
 
+  checkWifiJustConnected();
   // clock events
   if (Settings.UseNTP)
     checkTime();

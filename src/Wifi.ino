@@ -108,8 +108,13 @@ boolean WifiConnect(byte connectAttempts)
   }
 
   //try to connect to one of the access points
-  if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts) ||
-      WifiConnectSSID(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2, connectAttempts))
+  bool connected = WifiConnectAndWait(connectAttempts);
+  if (!connected) {
+    if (selectNextWiFiSettings()) {
+      connected = WifiConnectAndWait(connectAttempts);
+    }
+  }
+  if (connected)
   {
     // fix octet?
     if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
@@ -138,11 +143,7 @@ boolean WifiConnect(byte connectAttempts)
       }
       addLog(LOG_LEVEL_INFO, log);
     #endif
-    if (Settings.UseRules)
-    {
-      String event = F("WiFi#Connected");
-      rulesProcessing(event);
-    }
+
     return(true);
   }
 
@@ -155,82 +156,163 @@ boolean WifiConnect(byte connectAttempts)
 }
 
 
-//********************************************************************************
-// Connect to Wifi specific SSID
-//********************************************************************************
-boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
-{
-  String log;
+const char* getLastWiFiSettingsSSID() {
+  return lastWiFiSettings == 0 ? SecuritySettings.WifiSSID : SecuritySettings.WifiSSID2;
+}
 
+const char* getLastWiFiSettingsPassphrase() {
+  return lastWiFiSettings == 0 ? SecuritySettings.WifiKey : SecuritySettings.WifiKey2;
+}
+
+bool selectNextWiFiSettings() {
+  lastWiFiSettings = (lastWiFiSettings + 1) % 2;
+  if (!wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
+    // other settings are not correct, switch back.
+    lastWiFiSettings = (lastWiFiSettings + 1) % 2;
+    return false; // Nothing changed.
+  }
+  return true;
+}
+
+bool wifiSettingsValid(const char* ssid, const char* pass) {
+  if (ssid[0] == 0 || (strcasecmp(ssid, "ssid") == 0)) {
+    return false;
+  }
+  if (pass[0] == 0) return false;
+  return true;
+}
+
+bool tryReconnect() {
   //already connected, need to disconnect first
   if (WiFi.status() == WL_CONNECTED)
     return(true);
 
-  //no ssid specified
-  if ((WifiSSID[0] == 0)  || (strcasecmp(WifiSSID, "ssid") == 0))
-    return(false);
+  if (reconnect_attempt != 0 && ((reconnect_attempt % 3) == 0)) {
+    // Change to other wifi settings.
+    if (selectNextWiFiSettings())
+      WiFi.disconnect();
+  }
+  const char* ssid = getLastWiFiSettingsSSID();
+  const char* passphrase = getLastWiFiSettingsPassphrase();
+  String log = F("WIFI : Connecting ");
+  log += ssid;
+  log += F(" attempt #");
+  log += reconnect_attempt;
+  addLog(LOG_LEVEL_INFO, log);
 
-  for (byte tryConnect = 1; tryConnect <= connectAttempts; tryConnect++)
-  {
-    log = F("WIFI : Connecting ");
-    log += WifiSSID;
-    log += F(" attempt #");
-    log += tryConnect;
-    addLog(LOG_LEVEL_INFO, log);
-
-    if (tryConnect == 1)
-      WiFi.begin(WifiSSID, WifiKey);
-    else
-      WiFi.begin();
-
-    //wait until it connects
-    for (byte x = 0; x < 200; x++)
-    {
-      if (!WiFiConnected(50))
-      {
-        statusLED(false);
-        // No delay needed, since the WiFi check has a delay
-      }
+  switch (reconnect_attempt) {
+    case 0:
+      wifi_connect_timer = millis();
+      if (lastBSSID[0] == 0)
+        WiFi.begin(ssid, passphrase);
       else
-        break;
-    }
-
-    if (WiFi.status() == WL_CONNECTED)
-    {
-      if (Settings.UseNTP) {
-        initTime();
-      }
-      log = F("WIFI : Connected! IP: ");
-      log += formatIP(WiFi.localIP());
-      log += F(" (");
-      log += WifiGetHostname();
-      log += F(")");
-
+        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
+      break;
+    default:
+      WiFi.begin(ssid, passphrase);
+  }
+  ++reconnect_attempt;
+  switch (WiFi.status()) {
+    case WL_NO_SSID_AVAIL: {
+      log = F("WIFI : No SSID found matching: ");
+      log += ssid;
       addLog(LOG_LEVEL_INFO, log);
-      statusLED(true);
-      return(true);
+      return false;
     }
-    else
-    {
-      // log = F("WIFI : Disconnecting!");
-      // addLog(LOG_LEVEL_INFO, log);
-      #if defined(ESP8266)
-        ETS_UART_INTR_DISABLE();
-        wifi_station_disconnect();
-        ETS_UART_INTR_ENABLE();
-      #endif
-      for (byte x = 0; x < 20; x++)
-      {
-        statusLED(true);
-        delay(50);
+    case WL_CONNECT_FAILED: {
+      log = F("WIFI : Connection failed to: ");
+      log += ssid;
+      addLog(LOG_LEVEL_INFO, log);
+      return false;
+    }
+    default:
+     break;
+  }
+  return true; // Sent
+}
+
+//********************************************************************************
+// Connect to Wifi specific SSID
+//********************************************************************************
+boolean WifiConnectAndWait(byte connectAttempts)
+{
+  String log;
+
+  wifiConnected = false;
+  reconnect_attempt = 0;
+  for (byte tryConnect = 0; tryConnect < connectAttempts; tryConnect++)
+  {
+    if (tryReconnect()) {
+      // wait until it connects + add some device specific random offset to prevent
+      // all nodes overloading the accesspoint when turning on at the same time.
+      const unsigned int randomOffset_in_sec = tryConnect == 0 ? 0 : 1000 * ((ESP.getChipId() & 0xF) * 2);
+      while (!timeOutReached(wifi_connect_timer + 10000 + randomOffset_in_sec)) {
+        if (checkWifiJustConnected())
+          return true;
       }
+    }
+    // log = F("WIFI : Disconnecting!");
+    // addLog(LOG_LEVEL_INFO, log);
+    #if defined(ESP8266)
+      ETS_UART_INTR_DISABLE();
+      wifi_station_disconnect();
+      ETS_UART_INTR_ENABLE();
+    #endif
+    for (byte x = 0; x < 20; x++)
+    {
+      statusLED(true);
+      delay(50);
     }
   }
-
-
   return false;
 }
 
+bool checkWifiJustConnected() {
+  if (wifiConnected) return true;
+  if (!WiFiConnected(50)) {
+    statusLED(false);
+    // No delay needed, since the WiFi check has a delay
+    return false;
+  }
+  wifiConnected = true;
+  String log = F("WIFI : WiFi connect attempt took: ");
+  log += timePassedSince(wifi_connect_timer);
+  log += F(" ms");
+  addLog(LOG_LEVEL_INFO, log);
+  // First try to get the time, since that may be used in logs
+  if (Settings.UseNTP) {
+    initTime();
+  }
+  uint8_t* curBSSID = WiFi.BSSID();
+  bool changed = false;
+  for (byte i=0; i < 6; ++i) {
+    if (lastBSSID[i] != *(curBSSID + i)) {
+      changed = true;
+      lastBSSID[i] = *(curBSSID + i);
+    }
+  }
+  if (Settings.UseRules)
+  {
+    if (changed) {
+      String event = F("WiFi#ChangedAccesspoint");
+      rulesProcessing(event);
+    }
+    String event = F("WiFi#Connected");
+    rulesProcessing(event);
+  }
+  log = F("WIFI : Connected! IP: ");
+  log += formatIP(WiFi.localIP());
+  log += F(" (");
+  log += WifiGetHostname();
+  log += F(") AP: ");
+  log += WiFi.SSID();
+  log += F(" AP BSSID: ");
+  log += WiFi.BSSIDstr();
+
+  addLog(LOG_LEVEL_INFO, log);
+  statusLED(true);
+  return true;
+}
 
 //********************************************************************************
 // Disconnect from Wifi AP
@@ -238,6 +320,7 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
 void WifiDisconnect()
 {
   WiFi.disconnect();
+  wifiConnected = false;
 }
 
 
@@ -289,7 +372,8 @@ void WifiCheck()
     //give it time to automatically reconnect
     if (NC_Count > 2)
     {
-      WifiConnect(2);
+      wifiConnected = false;
+      tryReconnect();
 
       C_Count=0;
       NC_Count = 0;

@@ -1045,6 +1045,13 @@ byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
+uint8_t lastBSSID[6] = {0};
+boolean wifiConnected = false;
+unsigned long wifi_connect_timer = 0;
+unsigned int reconnect_attempt = 0;
+uint8_t lastWiFiSettings = 0;
+
+
 
 unsigned long start = 0;
 unsigned long elapsed = 0;
