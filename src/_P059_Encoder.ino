@@ -174,16 +174,15 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
             String command = parseString(string, 1);
             if (command == F("encwrite"))
             {
-              success = true;
               if (event->Par1 >= 0)
               {
                 log = String(F("QEI  : ")) + string;
                 addLog(LOG_LEVEL_INFO, log);
                 Plugin_059_QE->write(event->Par1);
+                success = true;
               }
             }
         }
-        success = true;
         break;
       }
 
