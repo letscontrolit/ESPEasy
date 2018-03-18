@@ -2521,7 +2521,7 @@ class RamTracker{
         writePtr=0;
         for (int i = 0; i< TRACES; i++) {
           traces[i]="";
-          tracesMemory[i]=0xffff;                           // init with best case memory values, so they get replaced if memory goes lower
+          tracesMemory[i]=0xffffffff;                           // init with best case memory values, so they get replaced if memory goes lower
           }
         for (int i = 0; i< TRACEENTRIES; i++) {
           nextAction[i]="startup";
