@@ -535,10 +535,15 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<meta charset='utf-8'/>"
               "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
               "<title>{{name}}</title>"
+              "{{js}}"
               "{{css}}"
+              "{{espjs}}"
               "</head>"
-              "<body>"
+              "<body class='bodymenu' id='shrink'>"
               "<header class='headermenu'>"
+              "<div class='logo'>"
+              "{{logo}}"
+              "</div>"
               "<h1>ESP Easy Mega: {{name}}</h1>"
               "</header>"
               "<section>"
@@ -562,12 +567,16 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "<title>{{name}}</title>"
         "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
         "{{js}}"
+        "{{espjs}}"
         "{{css}}"
       "</head>"
-      "<body class='bodymenu'>"
+      "<body class='bodymenu' id='shrink'>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
-          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
+        "<div class='logo'>"
+        "{{logo}}"
+        "</div>"
+        "<h1>ESP Easy Mega: {{name}}</h1>"
           "{{menu}}"
         "</header>"
         "<section>"
@@ -639,7 +648,7 @@ void getWebPageTemplateVar(const String& varName )
       F("Tools"), F("tools"),                 //7
     };
 
-    TXBuffer += F("<div class='menubar'>");
+    TXBuffer += F("<div class='menubar' id='myNav'>");
 
     for (byte i = 0; i < 8; i++)
     {
@@ -655,7 +664,7 @@ void getWebPageTemplateVar(const String& varName )
       TXBuffer += gpMenu[i][0];
       TXBuffer += F("</a>");
     }
-
+    TXBuffer += F("<a href='javascript:void(0);' class='icon' onclick='Topnav()'>&#9776;</a>");
     TXBuffer += F("</div>");
   }
 
@@ -663,7 +672,15 @@ void getWebPageTemplateVar(const String& varName )
   {
     if (SPIFFS.exists("esp.png"))
     {
-      TXBuffer = F("<img src=\"esp.png\" width=48 height=48 align=right>");
+      TXBuffer = F("<img src=\"esp.png\" alt=\"ESPeasy\">");
+    }
+  }
+
+  else if (varName == F("espjs"))
+  {
+    if (SPIFFS.exists("espjs.js"))
+    {
+      TXBuffer = F("<script src=\"espjs.js\"></script>");
     }
   }
 
@@ -809,7 +826,7 @@ void handle_root() {
 
     TXBuffer += printWebString;
     TXBuffer += F("<form>");
-    TXBuffer += F("<table><TR><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
+    TXBuffer += F("<table class='home-table'><TR><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
 
     TXBuffer += F("<TR><TD>Unit:<TD>");
     TXBuffer += String(Settings.Unit);
@@ -877,7 +894,7 @@ void handle_root() {
       if (Nodes[x].ip[0] != 0)
       {
         char url[80];
-        sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+        sprintf_P(url, PSTR("<a class='button link outline' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
         TXBuffer += F("<TR><TD>Unit ");
         TXBuffer += String(x);
         TXBuffer += F("<TD>");
@@ -1355,7 +1372,7 @@ void handle_controllers() {
 
     addFormSeparator (TXBuffer.buf);
 
-    TXBuffer += F("<TR><TD><TD><a class='button link' href=\"controllers\">Close</a>");
+    TXBuffer += F("<TR><TD colspan='2' class='btn-group'><a class='button link floatl close' href=\"controllers\">Close</a>");
     addSubmitButton (TXBuffer.buf);
     TXBuffer += F("</table></form>");
   }
@@ -1573,7 +1590,7 @@ void handle_notifications() {
 
     addFormSeparator (TXBuffer.buf);
 
-    TXBuffer += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
+    TXBuffer += F("<TR><TD colspan='2' class='btn-group'><a class='button link close' href=\"notifications\">Close</a>");
     addSubmitButton (TXBuffer.buf);
     addSubmitButton(TXBuffer.buf,  F("Test"), F("test"));
     TXBuffer += F("</table></form>");
@@ -1906,7 +1923,7 @@ void handle_devices() {
   // show all tasks as table
   if (taskIndexNotSet)
   {
-    TXBuffer += F("<table border=1px frame='box' rules='all'><TR><TH>");
+    TXBuffer += F("<table class='no-wrapp' border=1px frame='box' rules='all'><TR><TH>");
 
     if (TASKS_MAX != TASKS_PER_PAGE)
     {
@@ -1916,7 +1933,7 @@ void handle_devices() {
       else
         TXBuffer +=  page;
       TXBuffer += F("\">&lt;</a>");
-      TXBuffer += F("<a class='button link' href=\"devices?setpage=");
+      TXBuffer += F("<a class='button link floatl red' href=\"devices?setpage=");
       if (page < (TASKS_MAX / TASKS_PER_PAGE))
         TXBuffer +=  page + 1;
       else
@@ -2223,8 +2240,10 @@ void handle_devices() {
     }
 
     addFormSeparator (TXBuffer.buf);
+    TXBuffer += F("</table>");
 
-    TXBuffer += F("<TR><TD><TD><a class='button link' href=\"devices?setpage=");
+    TXBuffer += F("<table>");
+    TXBuffer += F("<TR><TD class='btn-group'><a class='button link close' href=\"devices?setpage=");
     TXBuffer +=  page;
     TXBuffer += F("\">Close</a>");
     addSubmitButton (TXBuffer.buf);
@@ -2235,9 +2254,8 @@ void handle_devices() {
     if (Settings.TaskDeviceNumber[taskIndex] != 0 )
       addSubmitButton( TXBuffer.buf, F("Delete"), F("del"));
 
-
-
-    TXBuffer += F("</table></form>");
+      TXBuffer += F("</table>");
+      TXBuffer += F("</form>");
   }
 
 
