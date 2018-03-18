@@ -69,4 +69,29 @@
 // #define DEFAULT_SERIAL_BAUD                     115200  // Serial Port Baud Rate
 
 
+// #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
+// #define DEVICES_MAX                       72
+// #define TASKS_MAX                         12 // max 12 for ESP8266
+
+// #define CONTROLLER_MAX                      3 // max 4!
+// #define NOTIFICATION_MAX                    3 // max 4!
+// #define VARS_PER_TASK                       4
+// #define PLUGIN_MAX                DEVICES_MAX
+// #define PLUGIN_CONFIGVAR_MAX                8
+// #define PLUGIN_CONFIGFLOATVAR_MAX           4
+// #define PLUGIN_CONFIGLONGVAR_MAX            4
+// #define PLUGIN_EXTRACONFIGVAR_MAX          16
+// #define CPLUGIN_MAX                        16
+// #define NPLUGIN_MAX                         4
+// #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
+// #define RULES_TIMER_MAX                     8
+// #define SYSTEM_TIMER_MAX                    8
+// #define SYSTEM_CMD_TIMER_MAX                2
+// #define PINSTATE_TABLE_MAX                 32
+// #define RULES_MAX_SIZE                   2048
+// #define RULES_MAX_NESTING_LEVEL             3
+// #define RULESETS_MAX                        4
+// #define RULES_BUFFER_SIZE                  64
+
+
 #endif /* ESPEASY_PERSONAL_DEFAULTS_H_ */

@@ -236,7 +236,9 @@
 #define BUILD_GIT "(custom)"
 #endif
 
+#ifndef MAX_FLASHWRITES_PER_DAY
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
+#endif
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
@@ -309,38 +311,80 @@
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
-#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      72
-#else
-  #define DEVICES_MAX                      64
+#ifndef DEVICES_MAX
+  #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+    #define DEVICES_MAX                      72
+  #else
+    #define DEVICES_MAX                      64
+  #endif
 #endif
 
-#if defined(ESP8266)
-  #define TASKS_MAX                          12 // max 12!
-#endif
-#if defined(ESP32)
-  #define TASKS_MAX                          32
+#ifndef TASKS_MAX
+  #if defined(ESP8266)
+    #define TASKS_MAX                          12 // max 12!
+  #endif
+  #if defined(ESP32)
+    #define TASKS_MAX                          32
+  #endif
 #endif
 
+#ifndef CONTROLLER_MAX
 #define CONTROLLER_MAX                      3 // max 4!
+#endif
+#ifndef NOTIFICATION_MAX
 #define NOTIFICATION_MAX                    3 // max 4!
+#endif
+#ifndef VARS_PER_TASK
 #define VARS_PER_TASK                       4
+#endif
+#ifndef PLUGIN_MAX
 #define PLUGIN_MAX                DEVICES_MAX
+#endif
+#ifndef PLUGIN_CONFIGVAR_MAX
 #define PLUGIN_CONFIGVAR_MAX                8
+#endif
+#ifndef PLUGIN_CONFIGFLOATVAR_MAX
 #define PLUGIN_CONFIGFLOATVAR_MAX           4
+#endif
+#ifndef PLUGIN_CONFIGLONGVAR_MAX
 #define PLUGIN_CONFIGLONGVAR_MAX            4
+#endif
+#ifndef PLUGIN_EXTRACONFIGVAR_MAX
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
+#endif
+#ifndef CPLUGIN_MAX
 #define CPLUGIN_MAX                        16
+#endif
+#ifndef NPLUGIN_MAX
 #define NPLUGIN_MAX                         4
+#endif
+#ifndef UNIT_MAX
 #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
+#endif
+#ifndef RULES_TIMER_MAX
 #define RULES_TIMER_MAX                     8
+#endif
+#ifndef SYSTEM_TIMER_MAX
 #define SYSTEM_TIMER_MAX                    8
+#endif
+#ifndef SYSTEM_CMD_TIMER_MAX
 #define SYSTEM_CMD_TIMER_MAX                2
+#endif
+#ifndef PINSTATE_TABLE_MAX
 #define PINSTATE_TABLE_MAX                 32
+#endif
+#ifndef RULES_MAX_SIZE
 #define RULES_MAX_SIZE                   2048
+#endif
+#ifndef RULES_MAX_NESTING_LEVEL
 #define RULES_MAX_NESTING_LEVEL             3
+#endif
+#ifndef RULESETS_MAX
 #define RULESETS_MAX                        4
+#endif
+#ifndef RULES_BUFFER_SIZE
 #define RULES_BUFFER_SIZE                  64
+#endif
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
