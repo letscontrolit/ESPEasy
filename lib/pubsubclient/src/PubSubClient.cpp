@@ -117,8 +117,8 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
     if (!connected()) {
         int result = 0;
 
-        if (domain != NULL) {
-            result = _client->connect(this->domain, this->port);
+        if (domain.length() != 0) {
+            result = _client->connect(this->domain.c_str(), this->port);
         } else {
             result = _client->connect(this->ip, this->port);
         }
@@ -244,7 +244,7 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
         buffer[len++] = digit;
         length += (digit & 127) * multiplier;
         multiplier *= 128;
-    } while ((digit & 128) != 0);
+    } while ((digit & 128) != 0 && len < (MQTT_MAX_PACKET_SIZE -2));
     *lengthLength = len-1;
 
     if (isPublish) {
@@ -420,7 +420,7 @@ boolean PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsig
 
     lastOutActivity = millis();
 
-    return rc == tlen + 4 + plength;
+    return rc == tlen + 3 + llen + plength;
 }
 
 boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
@@ -525,7 +525,7 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
     const char* idp = string;
     uint16_t i = 0;
     pos += 2;
-    while (*idp) {
+    while (*idp && pos < (MQTT_MAX_PACKET_SIZE - 2)) {
         buf[pos++] = *idp++;
         i++;
     }
@@ -560,7 +560,7 @@ PubSubClient& PubSubClient::setServer(uint8_t * ip, uint16_t port) {
 PubSubClient& PubSubClient::setServer(IPAddress ip, uint16_t port) {
     this->ip = ip;
     this->port = port;
-    this->domain = NULL;
+    this->domain = "";
     return *this;
 }
 

@@ -21,7 +21,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = false;
+        Protocol[protocolCount].usesID = true;
         break;
       }
 
@@ -51,7 +51,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
           {
             delayBackground(Settings.MessageDelay);
             // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (millis() < timer)
+            // while (!timeOutReached(timer))
             //   backgroundtasks();
           }
         }
@@ -68,6 +68,9 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
 {
+  if (!WiFiConnected(100)) {
+    return false;
+  }
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
@@ -82,19 +85,12 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
     authHeader += encoder.encode(auth) + " \r\n";
   }
 
-  // char log[80];
   // boolean success = false;
-  // char host[20];
-  // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  // sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host, ControllerSettings.Port);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, ControllerSettings.Port))
+  if (!ControllerSettings.connectToHost(client))
   {
     connectionFailures++;
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
@@ -109,10 +105,8 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
 
   String url = "/";
   url += ControllerSettings.Publish;
-  //TODO: move this to a generic replacement function?
-  url.replace(F("%sysname%"), URLEncode(Settings.Name));
-  url.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
-  url.replace(F("%id%"), String(event->idx));
+  parseControllerVariables(url, event, true);
+
   url.replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
   if (longValue)
     url.replace(F("%value%"), String(longValue));
@@ -122,17 +116,13 @@ boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned
   // url.toCharArray(log, 80);
   addLog(LOG_LEVEL_DEBUG_MORE, url);
 
-  String hostName = host.toString();
-  if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName;
-
   // This will send the request to the server
   client.print(String(F("GET ")) + url + F(" HTTP/1.1\r\n") +
-               F("Host: ") + hostName + "\r\n" + authHeader +
+               F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
                F("Connection: close\r\n\r\n"));
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial

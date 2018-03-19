@@ -194,7 +194,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           String tmpString = deviceTemplate[x];
           if (tmpString.length())
           {
-            String newString = parseTemplate(tmpString, 16);
+            String newString = P023_parseTemplate(tmpString, 16);
             Plugin_023_sendStrXY(newString.c_str(), x, 0);
           }
         }
@@ -213,7 +213,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           success = true;
           argIndex = string.lastIndexOf(',');
           tmpString = string.substring(argIndex + 1);
-          Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
+          String newString = P023_parseTemplate(tmpString, 16);
+          Plugin_023_sendStrXY(newString.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
         if (tmpString.equalsIgnoreCase(F("OLEDCMD")))
         {
@@ -332,6 +333,17 @@ const char Plugin_023_myFont_Size[] PROGMEM = {
   0x08,  // ~
   0x08   // DEL
 };
+
+// Perform some specific changes for OLED display
+String P023_parseTemplate(String &tmpString, byte lineSize) {
+  String result = parseTemplate(tmpString, lineSize);
+  const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+  const char degree_oled[2] = {0x7F, 0};  // P023_OLED degree symbol
+  result.replace(degree, degree_oled);
+  return result;
+}
+
+
 
 const char Plugin_023_myFont[][8] PROGMEM = {
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  // SPACE

@@ -4,9 +4,8 @@ char* ramtest;
 //We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
 bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize=1024, unsigned int timeout=1000)
 {
-    unsigned long startMillis;
     int c;
-    startMillis = millis();
+    const unsigned long timer = millis() + timeout;
     str="";
 
     do {
@@ -32,7 +31,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
             }
         }
         yield();
-    } while(millis() - startMillis < timeout);
+    } while(!timeOutReached(timer));
 
     addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
     return(false);
@@ -43,6 +42,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 #define INPUT_COMMAND_SIZE          80
 void ExecuteCommand(byte source, const char *Line)
 {
+  checkRAM(F("ExecuteCommand"));
   String status = "";
   boolean success = false;
   char TmpStr1[80];
@@ -67,7 +67,7 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     unsigned long timer = millis() + Par1;
     Serial.println("start");
-    while (millis() < timer)
+    while (!timeOutReached(timer))
       backgroundtasks();
     Serial.println("end");
   }
@@ -180,6 +180,21 @@ void ExecuteCommand(byte source, const char *Line)
     delay(60000);
   }
 
+  if (strcasecmp_P(Command, PSTR("accessinfo")) == 0)
+  {
+    success = true;
+    Serial.print(F("Allowed IP range : "));
+    Serial.println(describeAllowedIPrange());
+  }
+
+  if (strcasecmp_P(Command, PSTR("clearaccessblock")) == 0)
+  {
+    success = true;
+    clearAccessBlock();
+    Serial.print(F("Allowed IP range : "));
+    Serial.println(describeAllowedIPrange());
+  }
+
   if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
   {
     success = true;
@@ -197,6 +212,14 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     taskClear(Par1 - 1, true);
+  }
+
+  //quickly clear all tasks, without saving (used by test suite)
+  if (strcasecmp_P(Command, PSTR("TaskClearAll")) == 0)
+  {
+    success = true;
+    for (byte t=0; t<TASKS_MAX; t++)
+      taskClear(t, false);
   }
 
   if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
@@ -350,22 +373,25 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-
-  if (strcasecmp_P(Command, PSTR("Publish")) == 0)
+  if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
   {
-    success = true;
-    String event = Line;
-    event = event.substring(8);
-    int index = event.indexOf(',');
-    if (index > 0)
-    {
-      String topic = event.substring(0, index);
-      String value = event.substring(index + 1);
-      MQTTclient.publish(topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+    // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
+    int enabledMqttController = firstEnabledMQTTController();
+    if (enabledMqttController >= 0) {
+      success = true;
+      String event = Line;
+      event = event.substring(8);
+      int index = event.indexOf(',');
+      if (index > 0)
+      {
+        String topic = event.substring(0, index);
+        String value = event.substring(index + 1);
+        MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+      }
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -373,17 +399,20 @@ void ExecuteCommand(byte source, const char *Line)
     String port = parseString(strLine, 3);
     int msgpos = getParamStartPos(strLine, 4);
     String message = strLine.substring(msgpos);
-    byte ipaddress[4];
-    str2ip((char*)ip.c_str(), ipaddress);
-    IPAddress UDP_IP(ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3]);
-    portUDP.beginPacket(UDP_IP, port.toInt());
-    #if defined(ESP8266)
-      portUDP.write(message.c_str(), message.length());
-    #endif
-    portUDP.endPacket();
+    IPAddress UDP_IP;
+    if(UDP_IP.fromString(ip)) {
+      portUDP.beginPacket(UDP_IP, port.toInt());
+      #if defined(ESP8266)
+        portUDP.write(message.c_str(), message.length());
+      #endif
+      #if defined(ESP32)
+        portUDP.write((uint8_t*)message.c_str(), message.length());
+      #endif
+      portUDP.endPacket();
+    }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0)
+  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && WiFi.status() == WL_CONNECTED)
   {
     success = true;
     String strLine = Line;
@@ -399,7 +428,7 @@ void ExecuteCommand(byte source, const char *Line)
                    "Connection: close\r\n\r\n");
 
       unsigned long timer = millis() + 200;
-      while (!client.available() && millis() < timer)
+      while (!client.available() && !timeOutReached(timer))
         delay(1);
 
       while (client.available()) {
@@ -417,6 +446,43 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
+  // ****************************************
+  // special commands for Blynk
+  // ****************************************
+
+#ifdef CPLUGIN_012
+  //FIXME: this should go to PLUGIN_WRITE in _C012.ino
+  if (strcasecmp_P(Command, PSTR("BlynkGet")) == 0)
+  {
+    byte first_enabled_blynk_controller = firstEnabledBlynkController();
+    if (first_enabled_blynk_controller == -1) {
+      status = F("Controller not enabled");
+    } else {
+      String strLine = Line;
+      strLine = strLine.substring(9);
+      int index = strLine.indexOf(',');
+      if (index > 0)
+      {
+        int index = strLine.lastIndexOf(',');
+        String blynkcommand = strLine.substring(index+1);
+        float value = 0;
+        if (Blynk_get(blynkcommand, first_enabled_blynk_controller, &value))
+        {
+          UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = value;
+        }
+        else
+          status = F("Error getting data");
+      }
+      else
+      {
+        if (!Blynk_get(strLine, first_enabled_blynk_controller))
+        {
+          status = F("Error getting data");
+        }
+      }
+    }
+  }
+#endif
 
   // ****************************************
   // configure settings commands
@@ -519,6 +585,13 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     ResetFactory();
+    #if defined(ESP8266)
+      ESP.reset();
+    #endif
+    #if defined(ESP32)
+      ESP.restart();
+    #endif
+
   }
 
   if (strcasecmp_P(Command, PSTR("Save")) == 0)
@@ -542,9 +615,10 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("IP")) == 0)
   {
     success = true;
-    if (GetArgv(Line, TmpStr1, 2))
+    if (GetArgv(Line, TmpStr1, 2)) {
       if (!str2ip(TmpStr1, Settings.IP))
         Serial.println("?");
+    }
   }
 
   if (strcasecmp_P(Command, PSTR("Settings")) == 0)

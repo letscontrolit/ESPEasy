@@ -11,9 +11,9 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <SoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 #define PLUGIN_071
-#define PLUGIN_ID_071 071
+#define PLUGIN_ID_071 71
 #define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401 [TESTING]"
 #define PLUGIN_VALUENAME1_071 "Heat"
 #define PLUGIN_VALUENAME2_071 "Volume"
@@ -65,13 +65,18 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        success = true;
+        break;
+      }
 
     case PLUGIN_READ:
       {
         PIN_KAMSER_RX = Settings.TaskDevicePin1[event->TaskIndex];
         PIN_KAMSER_TX = Settings.TaskDevicePin2[event->TaskIndex];
 
-        SoftwareSerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
+        ESPeasySoftwareSerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
 
         pinMode(PIN_KAMSER_RX,INPUT);
         pinMode(PIN_KAMSER_TX,OUTPUT);

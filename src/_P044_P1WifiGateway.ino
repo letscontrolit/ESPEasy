@@ -108,12 +108,22 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
         {
-          byte serialconfig = 0x10;
+          #if defined(ESP8266)
+            byte serialconfig = 0x10;
+          #endif
+          #if defined(ESP32)
+            uint32_t serialconfig = 0x8000010;
+          #endif
           serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];
           serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;
           if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
             serialconfig += 0x20;
-          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+          #if defined(ESP8266)
+            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+          #endif
+          #if defined(ESP32)
+            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
+          #endif            
           if (P1GatewayServer) P1GatewayServer->close();
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           P1GatewayServer->begin();
@@ -153,6 +163,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (P1GatewayServer) {
           P1GatewayServer->close();
+          //FIXME: shouldnt P1P1GatewayServer be deleted?
           P1GatewayServer = NULL;
         }
         success = true;

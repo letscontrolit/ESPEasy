@@ -290,7 +290,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_055_Data->millisStateEnd > 0)   // just striking?
         {
-          if (Plugin_055_Data->millisStateEnd <= millisAct)   // end reached?
+          if (timeDiff(millisAct, Plugin_055_Data->millisStateEnd) <= 0)   // end reached?
           {
             for (byte i=0; i<4; i++)
             {

@@ -26,7 +26,7 @@
 #include <SensorSerial.h>
 
 
-SensorSerial::SensorSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) : SoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize)
+SensorSerial::SensorSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) : ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize)
 {
   //boolean sws = isValidGPIOpin(receivePin);
   _hw = receivePin < 0;
@@ -37,7 +37,7 @@ void SensorSerial::begin(long speed)
   if (_hw)
     Serial.begin(speed);
   else
-    SoftwareSerial::begin(speed);
+    ESPeasySoftwareSerial::begin(speed);
 }
 
 int SensorSerial::peek()
@@ -45,7 +45,7 @@ int SensorSerial::peek()
   if (_hw)
     return Serial.peek();
   else
-    return SoftwareSerial::peek();
+    return ESPeasySoftwareSerial::peek();
 }
 
 size_t SensorSerial::write(uint8_t byte)
@@ -53,7 +53,7 @@ size_t SensorSerial::write(uint8_t byte)
   if (_hw)
     return Serial.write(byte);
   else
-    return SoftwareSerial::write(byte);
+    return ESPeasySoftwareSerial::write(byte);
 }
 
 int SensorSerial::read()
@@ -61,7 +61,7 @@ int SensorSerial::read()
   if (_hw)
     return Serial.read();
   else
-    return SoftwareSerial::read();
+    return ESPeasySoftwareSerial::read();
 }
 
 int SensorSerial::available()
@@ -69,7 +69,7 @@ int SensorSerial::available()
   if (_hw)
     return Serial.available();
   else
-    return SoftwareSerial::available();
+    return ESPeasySoftwareSerial::available();
 }
 
 void SensorSerial::flush()
@@ -77,5 +77,5 @@ void SensorSerial::flush()
   if (_hw)
     Serial.flush();
   else
-    SoftwareSerial::flush();
+    ESPeasySoftwareSerial::flush();
 }

@@ -16,7 +16,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_004;
         Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = false;
+        Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
@@ -29,22 +29,33 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+      {
+        success = true;
+        switch (event->idx) {
+          case CONTROLLER_USER:
+            string = F("ThingHTTP Name");
+            break;
+          case CONTROLLER_PASS:
+            string = F("API Key");
+            break;
+          default:
+            success = false;
+            break;
+        }
+      }
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-        char log[80];
         // boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
+        addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
+        char log[80];
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
+        if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
           strcpy_P(log, PSTR("HTTP : connection failed"));
@@ -86,7 +97,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         client.print(postStr);
 
         unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
+        while (!client.available() && !timeOutReached(timer))
           delay(1);
 
         // Read all the lines of the reply from server and print them to Serial

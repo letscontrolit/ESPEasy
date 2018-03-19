@@ -195,9 +195,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
             //addLog(LOG_LEVEL_INFO, log);
           } else {
+            unsigned int IrRepeat=0;
+            unsigned long IrSecondCode=0UL;
+
             if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
             if (GetArgv(command, TmpStr1, 3)) IrCode = strtoul(TmpStr1, NULL, 16); //(long) TmpStr1
             if (GetArgv(command, TmpStr1, 4)) IrBits = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 5)) IrRepeat = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
             if (IrType.equalsIgnoreCase("NEC")) Plugin_035_irSender->sendNEC(IrCode, IrBits);
             if (IrType.equalsIgnoreCase("JVC")) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
@@ -206,6 +211,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase("SAMSUNG")) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
             if (IrType.equalsIgnoreCase("SONY")) Plugin_035_irSender->sendSony(IrCode, IrBits);
             if (IrType.equalsIgnoreCase("PANASONIC")) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
+            if (IrType.equalsIgnoreCase("PIONEER")) Plugin_035_irSender->sendPioneer(IrCode, IrBits, IrRepeat, IrSecondCode);
           }
 
           addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
