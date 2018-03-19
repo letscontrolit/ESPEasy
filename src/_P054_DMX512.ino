@@ -34,7 +34,7 @@
 // Transceiver:
 // SN75176 or MAX485 or LT1785 or ...
 // Pin 5: GND
-// Pin 2, 3, 5: +5V
+// Pin 2, 3, 8: +5V
 // Pin 4: to ESP D4
 // Pin 6: DMX+ (hot)
 // Pin 7: DMX- (cold)
