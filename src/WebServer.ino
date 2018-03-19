@@ -3850,7 +3850,7 @@ void handle_upload() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" accept=\".htm, .css, .js, .png, .gif, .jpg, .ico, .txt, .dat, .esp\"  name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
      sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
   printWebString = "";
@@ -4080,7 +4080,7 @@ boolean handle_custom(String path) {
         name += Settings.Name;
 
       addSelector_Item(reply, name, x, choice == x, false, F(""));
-      }
+    }
     }
     addSelector_Foot(reply);
 
