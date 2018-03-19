@@ -3357,9 +3357,33 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Unit"), String(Settings.Unit));
     reply += F(",\n");
+    reply += to_json_object_value(F("Name"), String(Settings.Name));
+    reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
     reply += F(",\n");
     reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
+    reply += F("\n},\n");
+
+    reply += F("\"WiFi\":{\n");
+    reply += to_json_object_value(F("Hostname"), WiFi.hostname());
+    reply += F(",\n");
+    reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Gateway IP"), WiFi.gatewayIP().toString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("MAC address"), WiFi.macAddress());
+    reply += F(",\n");
+    reply += to_json_object_value(F("DNS 1"), WiFi.dnsIP(0).toString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("DNS 2"), WiFi.dnsIP(1).toString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("SSID"), WiFi.SSID());
+    reply += F(",\n");
+    reply += to_json_object_value(F("BSSID"), WiFi.BSSIDstr());
+    reply += F(",\n");
+    reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
   }
 
@@ -4476,6 +4500,7 @@ void handle_rules() {
 
    TXBuffer += F("<TR><TD>Edit: ");
   addSelector(TXBuffer.buf,  F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addButton(TXBuffer.buf, fileName, F("Download to file"));
   addHelpButton(TXBuffer.buf,  F("Tutorial_Rules"));
 
   // load form data from flash
