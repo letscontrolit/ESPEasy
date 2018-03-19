@@ -1,4 +1,49 @@
 -------------------------------------------------
+Changes in release mega-20180319 (since mega-20180316)
+-------------------------------------------------
+
+Release date: Mon Mar 19 04:00:11 CET 2018
+
+Bartlomiej Zimon (5):
+      Add download button for current rule set
+      - add encoder write #1086
+      - fix success setting
+      - fix P073 success setting in PLUGIN_WRITE callback
+      - initialize pointer in P073
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180316
+
+Gijs Noorlander (6):
+      Add download button for current rule set (#1102)
+      - add encoder write command #1086 (#1103)
+      Changed so that running all tasks immediately with deep sleep enabled… (#1110)
+      Merge pull request #1112 from uzi18/fix-p073
+      Merge pull request #1114 from TD-er/feature/wifi_details_json
+      Merge pull request #1118 from TD-er/bugfix/mqtt_publish_after_deep_sleep
+
+Panayotis Kouvarakis (1):
+      Changed so that running all tasks immediately with deep sleep enabled only happens on first iteration after wake up
+
+Unknown (11):
+      [WiFi] Try to minimize effect of WiFi interruptions
+      [Relaxed WiFi] Perform WiFi initialization in steps
+      [Travis error] Some #include test that wasn't meant to be included
+      [JSON] Add uint name (#1099) and WiFi information (PR #1113)
+      [issue #1007] Allow user specific data in separate file
+      #ifndef instead of #ifdef
+      [issue #1007] Add other defines as suggested by @uzi18
+      [issue #1097] MQTT publish after deep sleep
+      Merge pull request #1113 from TD-er/feature/reduce_impact_wifi_disconnect
+      Merge pull request #1116 from TD-er/feature/allow_own_defaults
+      [merge] MIssing #endif due to merging.
+
+s0170071 (2):
+      changed memory tracker to uint64_t for the ESP32
+      Keep uint. Just change the init value.
+
+
+-------------------------------------------------
 Changes in release mega-20180316 (since mega-20180315)
 -------------------------------------------------
 
