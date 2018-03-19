@@ -262,6 +262,7 @@ boolean WifiConnectAndWait(byte connectAttempts)
       do {
         if (checkWifiJustConnected())
           return true;
+        delay(50);
       } while (!wifiConnectTimeoutReached());
     }
     // log = F("WIFI : Disconnecting!");
@@ -284,7 +285,7 @@ bool checkWifiJustConnected() {
   if (wifiConnected) return true;
   if (WiFi.status() != WL_CONNECTED) {
     statusLED(false);
-    // No delay needed, since the WiFi check has a delay
+    delay(1);
     return false;
   }
   wifiConnected = true;
