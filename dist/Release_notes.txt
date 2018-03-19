@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release v2.0-20180319 (since v2.0-20180316)
+-------------------------------------------------
+
+Release date: Mon Mar 19 04:00:24 CET 2018
+
+Gijs Noorlander (6):
+      Add download button for current rule set (#1102)
+      - add encoder write command #1086 (#1103)
+      Changed so that running all tasks immediately with deep sleep enabled… (#1110)
+      Merge pull request #1112 from uzi18/fix-p073
+      Merge pull request #1114 from TD-er/feature/wifi_details_json
+      Merge pull request #1118 from TD-er/bugfix/mqtt_publish_after_deep_sleep
+
+Unknown (3):
+      Merge pull request #1113 from TD-er/feature/reduce_impact_wifi_disconnect
+      Merge pull request #1116 from TD-er/feature/allow_own_defaults
+      [merge] MIssing #endif due to merging.
+
+
+-------------------------------------------------
 Changes in release v2.0-20180316 (since v2.0-20180313)
 -------------------------------------------------
 
