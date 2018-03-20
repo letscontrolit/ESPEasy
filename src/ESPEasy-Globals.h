@@ -27,7 +27,6 @@
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
 #define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
-#endif
 
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
