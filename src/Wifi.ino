@@ -142,7 +142,7 @@ void WiFiConnectRelaxed() {
     tryConnectWiFi();
     return;
   }
-  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
+  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP, no valid WiFi settings!"));
   //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
   WifiAPMode(true);
 }
@@ -164,6 +164,7 @@ bool anyValidWifiSettings() {
     return true;
   if (wifiSettingsValid(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2))
     return true;
+  addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings!"));
   return false;
 }
 
@@ -197,7 +198,7 @@ bool wifiConnectTimeoutReached() {
 // Simply start the WiFi connection sequence
 //********************************************************************************
 bool tryConnectWiFi() {
-  if (wifiSetup)
+  if (wifiSetup && !wifiSetupConnect)
     return false;
   if (WiFi.status() == WL_CONNECTED)
     return(true);   //already connected, need to disconnect first
