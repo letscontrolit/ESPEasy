@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180321 (since mega-20180320)
+-------------------------------------------------
+
+Release date: Wed Mar 21 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180320
+
+Unknown (2):
+      [wifi] Setup with factory settings could not complete
+      [wifi] Setup with factory settings could not complete
+
+
+-------------------------------------------------
 Changes in release mega-20180320 (since mega-20180319)
 -------------------------------------------------
 
