@@ -2202,9 +2202,9 @@ boolean ruleMatch(String& event, String& rule)
     }
   }
 
-      if (event.startsWith("System#Bootcause")) //by vader
+  if (event.startsWith("System#Bootcause")) //by vader
   {
-    String reason[4] = {"warmboot", "coldboot", "deepsleep", "watchdog"};
+    String reason[] = {F("warmboot"), F("coldboot"), F("deepsleep"), F("watchdog")};
     int pos = rule.indexOf("=");
     int ruleValue;
     byte i;
