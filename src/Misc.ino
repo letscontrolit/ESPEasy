@@ -1320,74 +1320,76 @@ String parseTemplate(String &tmpString, byte lineSize)
       newString += tmpString.substring(0, leftBracketIndex);
       tmpString = tmpString.substring(leftBracketIndex + 1);
       int rightBracketIndex = tmpString.indexOf(']');
-      if (rightBracketIndex)
+      if (rightBracketIndex >= 0)
       {
         tmpStringMid = tmpString.substring(0, rightBracketIndex);
         tmpString = tmpString.substring(rightBracketIndex + 1);
         int hashtagIndex = tmpStringMid.indexOf('#');
-        String deviceName = tmpStringMid.substring(0, hashtagIndex);
-        String valueName = tmpStringMid.substring(hashtagIndex + 1);
-        String valueFormat = "";
-        hashtagIndex = valueName.indexOf('#');
-        if (hashtagIndex >= 0)
-        {
-          valueFormat = valueName.substring(hashtagIndex + 1);
-          valueName = valueName.substring(0, hashtagIndex);
-        }
-        for (byte y = 0; y < TASKS_MAX; y++)
-        {
-          if (Settings.TaskDeviceEnabled[y])
+        if (hashtagIndex >= 0) {
+          String deviceName = tmpStringMid.substring(0, hashtagIndex);
+          String valueName = tmpStringMid.substring(hashtagIndex + 1);
+          String valueFormat = "";
+          hashtagIndex = valueName.indexOf('#');
+          if (hashtagIndex >= 0)
           {
-            LoadTaskSettings(y);
-            if (ExtraTaskSettings.TaskDeviceName[0] != 0)
+            valueFormat = valueName.substring(hashtagIndex + 1);
+            valueName = valueName.substring(0, hashtagIndex);
+          }
+          for (byte y = 0; y < TASKS_MAX; y++)
+          {
+            if (Settings.TaskDeviceEnabled[y])
             {
-              if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
+              LoadTaskSettings(y);
+              if (ExtraTaskSettings.TaskDeviceName[0] != 0)
               {
-                boolean match = false;
-                for (byte z = 0; z < VARS_PER_TASK; z++)
-                  if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                  {
-                    // here we know the task and value, so find the uservar
-                    match = true;
-                    String value = "";
-                    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                    if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
-                      value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
-                    else
-                      value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-
-                    int oidx;
-                    if ((oidx = valueFormat.indexOf('O'))>=0) // Output
-                    {
-                      valueFormat.remove(oidx);
-                      oidx = valueFormat.indexOf('!'); // inverted or active low
-                      float val = value.toFloat();
-                      if (oidx >= 0) {
-                          valueFormat.remove(oidx);
-                    	  value = val == 0 ? " ON" : "OFF";
-                      } else {
-                    	  value = val == 0 ? "OFF" : " ON";
-                      }
-                    }
-
-                    if (valueFormat == "R")
-                    {
-                      int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                      for (byte f = 0; f < filler; f++)
-                        newString += " ";
-                    }
-                    newString += String(value);
-                    break;
-                  }
-                if (!match) // try if this is a get config request
+                if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
                 {
-                  struct EventStruct TempEvent;
-                  TempEvent.TaskIndex = y;
-                  String tmpName = valueName;
-                  if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
-                    newString += tmpName;
+                  boolean match = false;
+                  for (byte z = 0; z < VARS_PER_TASK; z++)
+                    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
+                    {
+                      // here we know the task and value, so find the uservar
+                      match = true;
+                      String value = "";
+                      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                      if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+                        value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
+                      else
+                        value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+
+                      int oidx;
+                      if ((oidx = valueFormat.indexOf('O'))>=0) // Output
+                      {
+                        valueFormat.remove(oidx);
+                        oidx = valueFormat.indexOf('!'); // inverted or active low
+                        float val = value.toFloat();
+                        if (oidx >= 0) {
+                            valueFormat.remove(oidx);
+                      	  value = val == 0 ? " ON" : "OFF";
+                        } else {
+                      	  value = val == 0 ? "OFF" : " ON";
+                        }
+                      }
+
+                      if (valueFormat == "R")
+                      {
+                        int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                        for (byte f = 0; f < filler; f++)
+                          newString += " ";
+                      }
+                      newString += String(value);
+                      break;
+                    }
+                  if (!match) // try if this is a get config request
+                  {
+                    struct EventStruct TempEvent;
+                    TempEvent.TaskIndex = y;
+                    String tmpName = valueName;
+                    if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+                      newString += tmpName;
+                  }
+                  break;
                 }
-                break;
               }
             }
           }
@@ -1807,7 +1809,7 @@ String rulesProcessingFile(String fileName, String& event)
             line = parseTemplate(line, line.length());
           }
           line.trim();
-          
+
           String lineOrg = line; // store original line for future use
           line.toLowerCase(); // convert all to lower case to make checks easier
 
@@ -1854,9 +1856,9 @@ String rulesProcessingFile(String fileName, String& event)
           {
             isCommand = false;
             codeBlock = false;
-            match = false;            
+            match = false;
           }
-          
+
           if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
             Serial.print(F("RuleDebug: "));
             Serial.print(codeBlock);
@@ -1865,7 +1867,7 @@ String rulesProcessingFile(String fileName, String& event)
             Serial.print(": ");
             Serial.println(line);
           }
-          
+
           if (match) // rule matched for one action or a block of actions
           {
             int split = lcAction.indexOf("if "); // check for optional "if" condition
