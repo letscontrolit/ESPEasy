@@ -32,6 +32,8 @@
 #define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
+#define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
+
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
