@@ -2204,14 +2204,25 @@ boolean ruleMatch(String& event, String& rule)
 
       if (event.startsWith("System#Bootcause")) //by vader
   {
+    String reason[4] = {"warmboot", "coldboot", "deepsleep", "watchdog"};
     int pos = rule.indexOf("=");
+    int ruleValue;
+    byte i;
     if (pos > 0)
     {
       tmpRule = rule.substring(pos + 1);
-      byte ruleValue = tmpRule.toInt();
+      for (i = 0; i < 4; i++)
+      {
+        if (reason[i] == tmpRule) {
+          ruleValue = i;
+          break;
+        }
+      }
+      if (i == 4) ruleValue = tmpRule.toInt();
+      if (ruleValue == 3) ruleValue = 10;
       return (ruleValue == lastBootCause) ? true : false;
     }
-  }	
+  }
 
   // parse event into verb and value
   float value = 0;
