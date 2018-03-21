@@ -28,6 +28,8 @@
 #define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
 
+#define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
+
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !

@@ -4,7 +4,7 @@
 String WifiGetAPssid()
 {
   String ssid(Settings.Name);
-  ssid+=F("_");
+  ssid+=F("-");
   ssid+=Settings.Unit;
   return (ssid);
 }
@@ -28,8 +28,8 @@ void WifiAPconfig()
   // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
   // setup ssid for AP Mode when needed
 
-  String softAPSSID=WifiGetAPssid(); 
-  String pwd = SecuritySettings.WifiAPKey; 
+  String softAPSSID=WifiGetAPssid();
+  String pwd = SecuritySettings.WifiAPKey;
   WiFi.softAP(softAPSSID.c_str(),pwd.c_str());
   // We start in STA mode
   WifiAPMode(false);
@@ -80,7 +80,7 @@ void WifiAPMode(boolean state)
 //********************************************************************************
 // Set Wifi config
 //********************************************************************************
-void prepareWiFi() {
+bool prepareWiFi() {
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
@@ -100,6 +100,7 @@ void prepareWiFi() {
     IPAddress dns = Settings.DNS;
     WiFi.config(ip, gw, subnet, dns);
   }
+  return selectValidWiFiSettings();
 }
 
 //********************************************************************************
@@ -107,8 +108,7 @@ void prepareWiFi() {
 //********************************************************************************
 boolean WifiConnect(byte connectAttempts)
 {
-  prepareWiFi();
-  if (anyValidWifiSettings()) {
+  if (prepareWiFi()) {
     //try to connect to one of the access points
     bool connected = WifiConnectAndWait(connectAttempts);
     if (!connected) {
@@ -130,10 +130,9 @@ boolean WifiConnect(byte connectAttempts)
 // Start connect to WiFi and check later to see if connected.
 //********************************************************************************
 void WiFiConnectRelaxed() {
-  prepareWiFi();
   wifiConnected = false;
   wifi_connect_attempt = 0;
-  if (anyValidWifiSettings()) {
+  if (prepareWiFi()) {
     tryConnectWiFi();
     return;
   }
@@ -164,13 +163,20 @@ bool anyValidWifiSettings() {
 }
 
 bool selectNextWiFiSettings() {
+  uint8_t tmp = lastWiFiSettings;
   lastWiFiSettings = (lastWiFiSettings + 1) % 2;
   if (!wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase())) {
     // other settings are not correct, switch back.
-    lastWiFiSettings = (lastWiFiSettings + 1) % 2;
+    lastWiFiSettings = tmp;
     return false; // Nothing changed.
   }
   return true;
+}
+
+bool selectValidWiFiSettings() {
+  if (wifiSettingsValid(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase()))
+    return true;
+  return selectNextWiFiSettings();
 }
 
 bool wifiSettingsValid(const char* ssid, const char* pass) {
@@ -178,6 +184,8 @@ bool wifiSettingsValid(const char* ssid, const char* pass) {
     return false;
   }
   if (pass[0] == 0) return false;
+  if (strlen(ssid) > 32) return false;
+  if (strlen(pass) > 64) return false;
   return true;
 }
 
@@ -186,7 +194,7 @@ bool wifiConnectTimeoutReached() {
   // wait until it connects + add some device specific random offset to prevent
   // all nodes overloading the accesspoint when turning on at the same time.
   const unsigned int randomOffset_in_sec = wifi_connect_attempt == 1 ? 0 : 1000 * ((ESP.getChipId() & 0xF));
-  return timeOutReached(wifi_connect_timer + 7000 + randomOffset_in_sec);
+  return timeOutReached(wifi_connect_timer + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
 
 //********************************************************************************
@@ -199,6 +207,8 @@ bool tryConnectWiFi() {
     return(true);   //already connected, need to disconnect first
   if (!wifiConnectTimeoutReached())
     return true;    // timeout not reached yet, thus no need to retry again.
+  if (!anyValidWifiSettings())
+    return false;
 
   if (wifi_connect_attempt != 0 && ((wifi_connect_attempt % 3) == 0)) {
     // Change to other wifi settings.
@@ -209,8 +219,12 @@ bool tryConnectWiFi() {
     //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
     WifiAPMode(true);
   }
-  const char* ssid = getLastWiFiSettingsSSID();
-  const char* passphrase = getLastWiFiSettingsPassphrase();
+  String ssid;
+  ssid.reserve(32);
+  String passphrase;
+  passphrase.reserve(64);
+  ssid = getLastWiFiSettingsSSID();
+  passphrase = getLastWiFiSettingsPassphrase();
   String log = F("WIFI : Connecting ");
   log += ssid;
   log += F(" attempt #");
@@ -221,12 +235,12 @@ bool tryConnectWiFi() {
   switch (wifi_connect_attempt) {
     case 0:
       if (lastBSSID[0] == 0)
-        WiFi.begin(ssid, passphrase);
+        WiFi.begin(ssid.c_str(), passphrase.c_str());
       else
-        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
+        WiFi.begin(ssid.c_str(), passphrase.c_str(), 0, &lastBSSID[0]);
       break;
     default:
-      WiFi.begin(ssid, passphrase);
+      WiFi.begin(ssid.c_str(), passphrase.c_str());
   }
   ++wifi_connect_attempt;
   switch (WiFi.status()) {
@@ -287,9 +301,9 @@ boolean WifiConnectAndWait(byte connectAttempts)
 
 bool checkWifiJustConnected() {
   if (wifiConnected) return true;
+  delay(1);
   if (WiFi.status() != WL_CONNECTED) {
     statusLED(false);
-    delay(1);
     return false;
   }
   wifiConnected = true;
