@@ -208,14 +208,6 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("OLED")))
-        {
-          success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          String newString = P023_parseTemplate(tmpString, 16);
-          Plugin_023_sendStrXY(newString.c_str(), event->Par1 - 1, event->Par2 - 1);
-        }
         if (tmpString.equalsIgnoreCase(F("OLEDCMD")))
         {
           success = true;
@@ -228,9 +220,16 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           else if (tmpString.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display();
         }
+        else if (tmpString.equalsIgnoreCase(F("OLED")))
+        {
+          success = true;
+          argIndex = string.lastIndexOf(',');
+          tmpString = string.substring(argIndex + 1);
+          String newString = P023_parseTemplate(tmpString, 16);
+          Plugin_023_sendStrXY(newString.c_str(), event->Par1 - 1, event->Par2 - 1);
+        }
         break;
       }
-
   }
   return success;
 }
