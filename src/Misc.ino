@@ -2202,6 +2202,16 @@ boolean ruleMatch(String& event, String& rule)
     }
   }
 
+      if (event.startsWith("System#Bootcause")) //Meine Änderungen
+  {
+    int pos = rule.indexOf("=");
+    if (pos > 0)
+    {
+      tmpRule = rule.substring(pos + 1);
+      byte ruleValue = tmpRule.toInt();
+      return (ruleValue == lastBootCause) ? true : false;
+    }
+  }	
 
   // parse event into verb and value
   float value = 0;
