@@ -2202,7 +2202,7 @@ boolean ruleMatch(String& event, String& rule)
     }
   }
 
-      if (event.startsWith("System#Bootcause")) //Meine Änderungen
+      if (event.startsWith("System#Bootcause")) //by vader
   {
     int pos = rule.indexOf("=");
     if (pos > 0)
