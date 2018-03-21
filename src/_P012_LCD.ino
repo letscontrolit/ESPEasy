@@ -226,7 +226,22 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
 
-        if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
+        if (lcd && tmpString.equalsIgnoreCase(F("LCDCMD")))
+        {
+          success = true;
+          argIndex = string.lastIndexOf(',');
+          tmpString = string.substring(argIndex + 1);
+          if (tmpString.equalsIgnoreCase(F("Off"))){
+              lcd->noBacklight();
+          }
+          else if (tmpString.equalsIgnoreCase(F("On"))){
+              lcd->backlight();
+          }
+          else if (tmpString.equalsIgnoreCase(F("Clear"))){
+              lcd->clear();
+          }
+        }
+        else if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
           argIndex = string.lastIndexOf(',');
@@ -280,22 +295,6 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
               // end fix
           }
 
-        }
-
-        if (lcd && tmpString.equalsIgnoreCase(F("LCDCMD")))
-        {
-          success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          if (tmpString.equalsIgnoreCase(F("Off"))){
-              lcd->noBacklight();
-          }
-          else if (tmpString.equalsIgnoreCase(F("On"))){
-              lcd->backlight();
-          }
-          else if (tmpString.equalsIgnoreCase(F("Clear"))){
-              lcd->clear();
-          }
         }
         break;
       }
