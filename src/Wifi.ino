@@ -27,7 +27,10 @@ void WifiAPconfig()
 {
   // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
   // setup ssid for AP Mode when needed
-  WiFi.softAP(WifiGetAPssid().c_str(), SecuritySettings.WifiAPKey);
+  
+  String softAPSSID=WifiGetAPssid(); 
+  String pwd = SecuritySettings.WifiAPKey; 
+  WiFi.softAP(softAPSSID.c_str(),pwd.c_str());
   // We start in STA mode
   WifiAPMode(false);
 
