@@ -274,7 +274,7 @@ void setup()
   {
     String event = F("System#Boot");
     rulesProcessing(event);
-    event = F("System#Bootcause"); //Meine Änderungen
+    event = F("System#Bootcause"); //by vader
     rulesProcessing(event);     
   }
 
