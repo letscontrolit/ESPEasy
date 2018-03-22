@@ -205,7 +205,12 @@ bool wifiConnectTimeoutReached() {
   }
   // wait until it connects + add some device specific random offset to prevent
   // all nodes overloading the accesspoint when turning on at the same time.
+  #if defined(ESP8266)
   const unsigned int randomOffset_in_sec = wifi_connect_attempt == 1 ? 0 : 1000 * ((ESP.getChipId() & 0xF));
+  #endif
+  #if defined(ESP32)
+  const unsigned int randomOffset_in_sec = wifi_connect_attempt == 1 ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
+  #endif
   return timeOutReached(wifi_connect_timer + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
 
