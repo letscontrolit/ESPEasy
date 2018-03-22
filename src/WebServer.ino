@@ -3447,12 +3447,6 @@ void handle_control() {
 
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
-  if (command == F("event"))
-  {
-    eventBuffer = webrequest.substring(6);
-    WebServer.send(200, "text/html", "OK");
-    return;
-  }
 
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
@@ -3466,10 +3460,11 @@ void handle_control() {
   else
     TXBuffer.startStream();
 
-  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
-  else if (remoteConfig(&TempEvent, webrequest));
-  else
-    TXBuffer += F("Unknown or restricted command!");
+  if (webrequest.length() > 0) {
+    if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
+    else if (remoteConfig(&TempEvent, webrequest));
+    else ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+  }
 
   TXBuffer += printWebString;
   TXBuffer.endStream();
