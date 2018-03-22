@@ -487,18 +487,6 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
   // configure settings commands
   // ****************************************
-  if (strcasecmp_P(Command, PSTR("WifiSSID")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.WifiSSID, Line + 9);
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiKey")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.WifiKey, Line + 8);
-  }
-
   if (strcasecmp_P(Command, PSTR("WifiSSID2")) == 0)
   {
     success = true;
@@ -509,6 +497,18 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     strcpy(SecuritySettings.WifiKey2, Line + 9);
+  }
+
+  if (strcasecmp_P(Command, PSTR("WifiSSID")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.WifiSSID, Line + 9);
+  }
+
+  if (strcasecmp_P(Command, PSTR("WifiKey")) == 0)
+  {
+    success = true;
+    strcpy(SecuritySettings.WifiKey, Line + 8);
   }
 
   if (strcasecmp_P(Command, PSTR("WifiScan")) == 0)
