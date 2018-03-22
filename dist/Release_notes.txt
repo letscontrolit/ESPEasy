@@ -1,4 +1,41 @@
 -------------------------------------------------
+Changes in release mega-20180322 (since mega-20180321)
+-------------------------------------------------
+
+Release date: Thu Mar 22 04:00:11 CET 2018
+
+Bartlomiej Zimon (7):
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P035 move strings to flash
+      - P048 fetch params only when needed
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P048 fetch params only when needed
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180321
+
+Gijs Noorlander (1):
+      [merge issue] Forgotten #endif in merge
+
+TD-er (6):
+      [wifi] Make more robust checks and increase timeout
+      - P035 move strings to flash
+      [wifi] Make more robust checks and increase timeout
+      [Memory] parseTemplate did not check if markers were found
+      [WiFi] Take much more time for initial WiFi connect during setup
+      [WiFi] Take much more time for initial WiFi connect during setup
+
+Unknown (1):
+      [Memory] parseTemplate did not check if markers were found
+
+s0170071 (2):
+      Serial WD crash
+      Serial WD crash
+
+
+-------------------------------------------------
 Changes in release mega-20180321 (since mega-20180320)
 -------------------------------------------------
 
