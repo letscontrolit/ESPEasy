@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release v2.0-20180322 (since v2.0-20180321)
+-------------------------------------------------
+
+Release date: Thu Mar 22 04:00:24 CET 2018
+
+Bartlomiej Zimon (3):
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P048 fetch params only when needed
+
+TD-er (4):
+      - P035 move strings to flash
+      [wifi] Make more robust checks and increase timeout
+      [Memory] parseTemplate did not check if markers were found
+      [WiFi] Take much more time for initial WiFi connect during setup
+
+s0170071 (1):
+      Serial WD crash
+
+
+-------------------------------------------------
 Changes in release v2.0-20180321 (since v2.0-20180320)
 -------------------------------------------------
 
