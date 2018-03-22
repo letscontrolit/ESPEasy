@@ -475,7 +475,7 @@ size_t _P049_send_mhzCmd(byte CommandId)
   mhzResp[0] = 0xFF; // Start byte, fixed
   mhzResp[1] = 0x01; // Sensor number, 0x01 by default
   memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
-  mhzResp[6] = mhzResp[3], mhzResp[7] = mhzResp[4];
+  mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
   mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
   mhzResp[8] = _P049_calculateChecksum(mhzResp);
 
