@@ -624,7 +624,8 @@ bool hostReachable(const IPAddress& ip) {
     --retry;
   }
   String log = F("Host unreachable: ");
-  log += ip;
+  // ip.toString() doesn't have const set, so use const_cast
+  log += const_cast<IPAddress&>(ip).toString();
   addLog(LOG_LEVEL_ERROR, log);
   return false;
 }
