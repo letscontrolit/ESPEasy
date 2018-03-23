@@ -72,6 +72,7 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
 
 void setTime(unsigned long t) {
   sysTime = (uint32_t)t;
+  applyTimeZone(t);
   nextSyncTime = (uint32_t)t + syncInterval;
   prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
   if (Settings.UseRules)
@@ -81,6 +82,10 @@ void setTime(unsigned long t) {
     firstUpdate = false;
     rulesProcessing(event);
   }
+}
+
+uint32_t getUnixTime() {
+  return sysTime;
 }
 
 unsigned long now() {
@@ -94,7 +99,6 @@ unsigned long now() {
     unsigned long  t = getNtpTime();
     if (t != 0) {
       setTime(t);
-      applyTimeZone(t);
     } else {
       // Unable to sync, retry again in a minute
       nextSyncTime = sysTime + 60;
