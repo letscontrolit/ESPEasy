@@ -326,6 +326,7 @@ void loop()
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
+      runPeriodicalMQTT();
   }
   //normal mode, run each task when its time
   else
@@ -344,21 +345,7 @@ void loop()
       runOncePerSecond();
 
     if (timeOutReached(timermqtt)) {
-      // MQTT_KEEPALIVE = 15 seconds.
-      timermqtt = millis() + timermqtt_interval;
-      //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
-      int enabledMqttController = firstEnabledMQTTController();
-      if (enabledMqttController >= 0) {
-        if (!MQTTclient.loop()) {
-          if (!MQTTCheck(enabledMqttController)) {
-            // Check failed, no need to retry it immediately.
-            if (timermqtt_interval < 2000)
-              timermqtt_interval += 250;
-          } else {
-            timermqtt_interval = 250;
-          }
-        }
-      }
+      runPeriodicalMQTT();
     }
   }
 
@@ -370,6 +357,8 @@ void loop()
       String event = F("System#Sleep");
       rulesProcessing(event);
     }
+    // Flush outstanding MQTT messages
+    runPeriodicalMQTT();
 
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
@@ -377,6 +366,24 @@ void loop()
   firstLoop = false;
 }
 
+
+void runPeriodicalMQTT() {
+  // MQTT_KEEPALIVE = 15 seconds.
+  timermqtt = millis() + timermqtt_interval;
+  //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
+  int enabledMqttController = firstEnabledMQTTController();
+  if (enabledMqttController >= 0) {
+    if (!MQTTclient.loop()) {
+      if (!MQTTCheck(enabledMqttController)) {
+        // Check failed, no need to retry it immediately.
+        if (timermqtt_interval < 2000)
+          timermqtt_interval += 250;
+      } else {
+          timermqtt_interval = 250;
+      }
+    }
+  }
+}
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
