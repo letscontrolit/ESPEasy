@@ -2372,100 +2372,51 @@ void addFormPinSelectI2C(String& str, const String& label, const String& id, int
 
 
 //********************************************************************************
-// Add a GPIO pin select dropdown list for both 8266 and 8285
+// Add a GPIO pin select dropdown list
 //********************************************************************************
+void addPinSelect(boolean forI2C, String & str, String name,  int choice) //Code clean-up by vader
+{
+  byte x = 0;
 #if defined(ESP8285)
-// Code for the ESP8285
-
-//********************************************************************************
-// Add a GPIO pin select dropdown list
-//********************************************************************************
-void addPinSelect(boolean forI2C, String& str, String name,  int choice)
-{
   String options[18];
-  options[0] = F("- None -");
-  options[1] = F("GPIO-0 (D3)");
-  options[2] = F("GPIO-1 (D10)");
-  options[3] = F("GPIO-2 (D4)");
-  options[4] = F("GPIO-3 (D9)");
-  options[5] = F("GPIO-4 (D2)");
-  options[6] = F("GPIO-5 (D1)");
-  options[7] = F("GPIO-6");
-  options[8] = F("GPIO-7");
-  options[9] = F("GPIO-8");
-  options[10] = F("GPIO-9 (D11)");
-  options[11] = F("GPIO-10 (D12)");
-  options[12] = F("GPIO-11");
-  options[13] = F("GPIO-12 (D6)");
-  options[14] = F("GPIO-13 (D7)");
-  options[15] = F("GPIO-14 (D5)");
-  options[16] = F("GPIO-15 (D8)");
-  options[17] = F("GPIO-16 (D0)");
-  int optionValues[18];
-  optionValues[0] = -1;
-  optionValues[1] = 0;
-  optionValues[2] = 1;
-  optionValues[3] = 2;
-  optionValues[4] = 3;
-  optionValues[5] = 4;
-  optionValues[6] = 5;
-  optionValues[7] = 7;
-  optionValues[8] = 7;
-  optionValues[9] = 8;
-  optionValues[10] = 9;
-  optionValues[11] = 10;
-  optionValues[12] = 11;
-  optionValues[13] = 12;
-  optionValues[14] = 13;
-  optionValues[15] = 14;
-  optionValues[16] = 15;
-  optionValues[17] = 16;
-  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 18);
-
-}
-
-#else
-#if defined(ESP8266)
-// Code for the ESP8266
-
-//********************************************************************************
-// Add a GPIO pin select dropdown list
-//********************************************************************************
-void addPinSelect(boolean forI2C, String& str, String name,  int choice)
-{
-  String options[14];
-  options[0] = F("- None -");
-  options[1] = F("GPIO-0 (D3)");
-  options[2] = F("GPIO-1 (D10)");
-  options[3] = F("GPIO-2 (D4)");
-  options[4] = F("GPIO-3 (D9)");
-  options[5] = F("GPIO-4 (D2)");
-  options[6] = F("GPIO-5 (D1)");
-  options[7] = F("GPIO-9 (D11) " HTML_SYMBOL_WARNING);
-  options[8] = F("GPIO-10 (D12)");
-  options[9] = F("GPIO-12 (D6)");
-  options[10] = F("GPIO-13 (D7)");
-  options[11] = F("GPIO-14 (D5)");
-  options[12] = F("GPIO-15 (D8)");
-  options[13] = F("GPIO-16 (D0)");
-  int optionValues[14];
-  optionValues[0] = -1;
-  optionValues[1] = 0;
-  optionValues[2] = 1;
-  optionValues[3] = 2;
-  optionValues[4] = 3;
-  optionValues[5] = 4;
-  optionValues[6] = 5;
-  optionValues[7] = 9;
-  optionValues[8] = 10;
-  optionValues[9] = 12;
-  optionValues[10] = 13;
-  optionValues[11] = 14;
-  optionValues[12] = 15;
-  optionValues[13] = 16;
-  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, 14);
-}
 #endif
+#if defined(ESP8266)
+  String options[14];
+#endif
+  options[x] = F("- None -"); x++;
+  options[x] = F("GPIO-0 (D3)"); x++;
+  options[x] = F("GPIO-1 (D10)"); x++;
+  options[x] = F("GPIO-2 (D4)"); x++;
+  options[x] = F("GPIO-3 (D9)"); x++;
+  options[x] = F("GPIO-4 (D2)"); x++;
+  options[x] = F("GPIO-5 (D1)"); x++;
+#if defined(ESP8285)
+  options[x] = F("GPIO-6"); x++;
+  options[x] = F("GPIO-7"); x++;
+  options[x] = F("GPIO-8"); x++;
+#endif
+  options[x] = F("GPIO-9 (D11)"); x++;
+#if defined(ESP8266)
+  options[x - 1] += F(" " HTML_SYMBOL_WARNING);
+#endif
+  options[x] = F("GPIO-10 (D12)"); x++;
+#if defined(ESP8285)
+  options[x] = F("GPIO-11"); x++;
+#endif
+  options[x] = F("GPIO-12 (D6)"); x++;
+  options[x] = F("GPIO-13 (D7)"); x++;
+  options[x] = F("GPIO-14 (D5)"); x++;
+  options[x] = F("GPIO-15 (D8)"); x++;
+  options[x] = F("GPIO-16 (D0)"); x++;
+
+#if defined(ESP8285)
+  int optionValues[18] = { -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+#endif
+#if defined(ESP8266)
+  int optionValues[14] = { -1, 0, 1, 2, 3, 4, 5, 9, 10, 12, 13, 14, 15, 16};
+#endif
+  renderHTMLForPinSelect(options, optionValues, forI2C, str, name, choice, x);
+}
 
 #if defined(ESP32)
 //********************************************************************************
