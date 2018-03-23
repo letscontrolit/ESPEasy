@@ -3502,7 +3502,9 @@ void handle_json()
     reply += F("\n},\n");
 
     reply += F("\"WiFi\":{\n");
-    reply += to_json_object_value(F("Hostname"), WiFi.hostname());
+    #if defined(ESP8266)
+      reply += to_json_object_value(F("Hostname"), WiFi.hostname());
+    #endif
     reply += F(",\n");
     reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
     reply += F(",\n");
