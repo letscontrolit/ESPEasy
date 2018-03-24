@@ -183,10 +183,12 @@ bool MQTTConnect(int controller_idx)
 \*********************************************************************************************/
 bool MQTTCheck(int controller_idx)
 {
+  if (!WiFiConnected(10))
+    return false;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !WiFiConnected(10) || !MQTTclient.connected())
+    if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));

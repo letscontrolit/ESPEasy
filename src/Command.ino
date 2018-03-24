@@ -373,7 +373,7 @@ void ExecuteCommand(byte source, const char *Line)
       SendUDPCommand(Par1, (char*)event.c_str(), event.length());
     }
   }
-  if (strcasecmp_P(Command, PSTR("Publish")) == 0 && WiFi.status() == WL_CONNECTED)
+  if (strcasecmp_P(Command, PSTR("Publish")) == 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
     int enabledMqttController = firstEnabledMQTTController();
@@ -391,7 +391,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0 && WiFi.status() == WL_CONNECTED)
+  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     success = true;
     String strLine = Line;
@@ -412,7 +412,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
   }
 
-  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && WiFi.status() == WL_CONNECTED)
+  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     success = true;
     String strLine = Line;
@@ -520,7 +520,7 @@ void ExecuteCommand(byte source, const char *Line)
   if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
   {
     success = true;
-    WifiConnect(1);
+    WiFiConnectRelaxed();
   }
 
   if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)

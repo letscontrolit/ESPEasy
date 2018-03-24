@@ -84,6 +84,14 @@ String minutesToDayHour(int minutes) {
   return TimeString;
 }
 
+String minutesToHourMinute(int minutes) {
+  int hours = (minutes % 1440) / 60;
+  int mins = (minutes % 1440) % 60;
+  char TimeString[20];
+  sprintf_P(TimeString, PSTR("%d%c%02d%c"), hours, 'h', mins, 'm');
+  return TimeString;
+}
+
 String minutesToDayHourMinute(int minutes) {
   int days = minutes / 1440;
   int hours = (minutes % 1440) / 60;
@@ -104,7 +112,33 @@ String secondsToDayHourMinuteSecond(int seconds) {
   return TimeString;
 }
 
-
+String format_msec_duration(long duration) {
+  String result;
+  if (duration < 0) {
+    result = "-";
+    duration = -1 * duration;
+  }
+  if (duration < 10000) {
+    result += duration;
+    result += F(" ms");
+    return result;
+  }
+  duration /= 1000;
+  if (duration < 3600) {
+    int sec = duration % 60;
+    int minutes = duration / 60;
+    if (minutes > 0) {
+      result += minutes;
+      result += F(" m ");
+    }
+    result += sec;
+    result += F(" s");
+    return result;
+  }
+  duration /= 60;
+  if (duration < 1440) return minutesToHourMinute(duration);
+  return minutesToDayHourMinute(duration);
+}
 
 
 /********************************************************************************************\

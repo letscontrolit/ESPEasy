@@ -108,6 +108,10 @@ void setup()
 
   initLog();
 
+  // WiFi event handlers
+  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
+	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
+	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
 
   if (SpiffsSectors() < 32)
   {
@@ -226,20 +230,7 @@ void setup()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WifiAPconfig();
 
-  if (Settings.deepSleep)
-  {
-    //only one attempt in deepsleep, to conserve battery
-    if (!WifiConnect(1))
-    {
-        if (Settings.deepSleepOnFail)
-        {
-          addLog(LOG_LEVEL_ERROR, F("SLEEP: Connection failed, going back to sleep."));
-          deepSleep(Settings.Delay);
-        }
-    }
-  }
-  else
-    WiFiConnectRelaxed();
+  WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -307,8 +298,13 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WifiConnect(1);
+    WiFiConnectRelaxed();
     wifiSetupConnect = false;
+  }
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
+    if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
+    if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
   }
 
   // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
