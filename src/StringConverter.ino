@@ -311,6 +311,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
   SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-',':',' '))
   SMART_REPL(F("%uptime%"), String(wdcounter / 2))
+  SMART_REPL(F("%unixtime%"), String(getUnixTime()))
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   if (s.indexOf("%vname") != -1) {

@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20180324 (since mega-20180323)
+-------------------------------------------------
+
+Release date: Sat Mar 24 04:00:10 CET 2018
+
+TD-er (3):
+      [WiFi] Reverted those temp String uses for ssid/pass
+      [issue #1131] Add %unixtime%
+      [issue #1097] Call MQTTclient.loop() during deepsleep
+
+
+-------------------------------------------------
+Changes in release mega-20180323 (since mega-20180322)
+-------------------------------------------------
+
+Release date: Fri Mar 23 04:00:06 CET 2018
+
+mvdbro (1):
+      ESP32 fix
+
+
+-------------------------------------------------
 Changes in release mega-20180322 (since mega-20180321)
 -------------------------------------------------
 

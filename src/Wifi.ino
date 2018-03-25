@@ -86,6 +86,9 @@ void WifiAPMode(boolean state)
 // Set Wifi config
 //********************************************************************************
 bool prepareWiFi() {
+  if (!selectValidWiFiSettings())
+    return false;
+
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
@@ -108,7 +111,7 @@ bool prepareWiFi() {
     const IPAddress dns = Settings.DNS;
     WiFi.config(ip, gw, subnet, dns);
   }
-  return selectValidWiFiSettings();
+  return true;
 }
 
 //********************************************************************************
@@ -144,7 +147,7 @@ void WiFiConnectRelaxed() {
     tryConnectWiFi();
     return;
   }
-  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP, no valid WiFi settings!"));
+  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP! (relaxed connect mode)"));
   //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
   WifiAPMode(true);
 }
@@ -159,15 +162,6 @@ const char* getLastWiFiSettingsSSID() {
 
 const char* getLastWiFiSettingsPassphrase() {
   return lastWiFiSettings == 0 ? SecuritySettings.WifiKey : SecuritySettings.WifiKey2;
-}
-
-bool anyValidWifiSettings() {
-  if (wifiSettingsValid(SecuritySettings.WifiSSID, SecuritySettings.WifiKey))
-    return true;
-  if (wifiSettingsValid(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2))
-    return true;
-  addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings!"));
-  return false;
 }
 
 bool selectNextWiFiSettings() {
@@ -224,8 +218,10 @@ bool tryConnectWiFi() {
     return(true);   //already connected, need to disconnect first
   if (!wifiConnectTimeoutReached())
     return true;    // timeout not reached yet, thus no need to retry again.
-  if (!anyValidWifiSettings())
+  if (!selectValidWiFiSettings()) {
+    addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings!"));
     return false;
+  }
 
   if (wifi_connect_attempt != 0 && ((wifi_connect_attempt % 3) == 0)) {
     // Change to other wifi settings.
@@ -236,12 +232,8 @@ bool tryConnectWiFi() {
     //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
     WifiAPMode(true);
   }
-  String ssid;
-  ssid.reserve(32);
-  String passphrase;
-  passphrase.reserve(64);
-  ssid = getLastWiFiSettingsSSID();
-  passphrase = getLastWiFiSettingsPassphrase();
+  const char* ssid = getLastWiFiSettingsSSID();
+  const char* passphrase = getLastWiFiSettingsPassphrase();
   String log = F("WIFI : Connecting ");
   log += ssid;
   log += F(" attempt #");
@@ -252,12 +244,12 @@ bool tryConnectWiFi() {
   switch (wifi_connect_attempt) {
     case 0:
       if (lastBSSID[0] == 0)
-        WiFi.begin(ssid.c_str(), passphrase.c_str());
+        WiFi.begin(ssid, passphrase);
       else
-        WiFi.begin(ssid.c_str(), passphrase.c_str(), 0, &lastBSSID[0]);
+        WiFi.begin(ssid, passphrase, 0, &lastBSSID[0]);
       break;
     default:
-      WiFi.begin(ssid.c_str(), passphrase.c_str());
+      WiFi.begin(ssid, passphrase);
   }
   ++wifi_connect_attempt;
   switch (WiFi.status()) {
