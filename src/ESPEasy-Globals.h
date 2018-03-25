@@ -434,6 +434,14 @@ using namespace fs;
 ADC_MODE(ADC_VCC);
 #endif
 
+#define ESPEASY_WIFI_DISCONNECTED            0
+#define ESPEASY_WIFI_CONNECTED               1
+#define ESPEASY_WIFI_GOT_IP                  2
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    3
+
+WiFiEventHandler stationConnectedHandler;
+WiFiEventHandler stationDisconnectedHandler;
+WiFiEventHandler stationGotIpHandler;
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -461,7 +469,68 @@ struct CRCStruct{
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
 
+enum Command {
+  cmd_Unknown,
+  cmd_accessinfo,
+  cmd_background,
+  cmd_BlynkGet,
+  cmd_build,
+  cmd_clearaccessblock,
+  cmd_clearRTCRAM,
+  cmd_config,
+  cmd_Debug,
+  cmd_Delay,
+  cmd_deepSleep,
+  cmd_Erase,
+  cmd_Event,
+  cmd_executeRules,
+  cmd_i2cscanner,
+  cmd_IP,
+  cmd_Load,
+  cmd_lowmem,
+  cmd_malloc,
+  cmd_meminfo,
+  cmd_Name,
+  cmd_notify,
+  cmd_NoSleep,
+  cmd_Password,
+  cmd_Publish,
+  cmd_Reboot,
+  cmd_Reset,
+  cmd_Restart,
+  cmd_resetFlashWriteCounter,
+  cmd_Rules,
+  cmd_sdcard,
+  cmd_sdremove,
+  cmd_sysload,
+  cmd_Save,
+  cmd_SendTo,
+  cmd_SendToHTTP,
+  cmd_SendToUDP,
+  cmd_SerialFloat,
+  cmd_Settings,
+  cmd_TaskClear,
+  cmd_TaskClearAll,
+  cmd_TaskRun,
+  cmd_TaskValueSet,
+  cmd_TimerSet,
+  cmd_udptest,
+  cmd_Unit,
+  cmd_wdconfig,
+  cmd_wdread,
+  cmd_WifiAPMode,
+  cmd_WifiConnect,
+  cmd_WifiDisconnect,
+  cmd_WifiKey2,
+  cmd_WifiKey,
+  cmd_WifiSSID2,
+  cmd_WifiSSID,
+  cmd_WifiScan
+};
+
+
 // Forward declarations.
+Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
@@ -1045,14 +1114,28 @@ String dummyString = "";
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
+// WiFi related data
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
 uint8_t lastBSSID[6] = {0};
-boolean wifiConnected = false;
-unsigned long wifi_connect_timer = 0;
+uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
 uint8_t lastWiFiSettings = 0;
+String last_ssid;
+bool bssid_changed = false;
+uint8 last_channel = 0;
+WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+unsigned long lastConnectMoment = 0;
+unsigned long lastDisconnectMoment = 0;
+unsigned long lastGetIPmoment = 0;
+unsigned long lastConnectedDuration = 0;
+bool intent_to_reboot = false;
 
+// Semaphore like booleans for processing data gathered from WiFi events.
+bool processedConnect = true;
+bool processedDisconnect = true;
+bool processedGetIP = true;
 
 
 unsigned long start = 0;
