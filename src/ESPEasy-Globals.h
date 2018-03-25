@@ -469,7 +469,68 @@ struct CRCStruct{
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
 
+enum Command {
+  cmd_Unknown,
+  cmd_accessinfo,
+  cmd_background,
+  cmd_BlynkGet,
+  cmd_build,
+  cmd_clearaccessblock,
+  cmd_clearRTCRAM,
+  cmd_config,
+  cmd_Debug,
+  cmd_Delay,
+  cmd_deepSleep,
+  cmd_Erase,
+  cmd_Event,
+  cmd_executeRules,
+  cmd_i2cscanner,
+  cmd_IP,
+  cmd_Load,
+  cmd_lowmem,
+  cmd_malloc,
+  cmd_meminfo,
+  cmd_Name,
+  cmd_notify,
+  cmd_NoSleep,
+  cmd_Password,
+  cmd_Publish,
+  cmd_Reboot,
+  cmd_Reset,
+  cmd_Restart,
+  cmd_resetFlashWriteCounter,
+  cmd_Rules,
+  cmd_sdcard,
+  cmd_sdremove,
+  cmd_sysload,
+  cmd_Save,
+  cmd_SendTo,
+  cmd_SendToHTTP,
+  cmd_SendToUDP,
+  cmd_SerialFloat,
+  cmd_Settings,
+  cmd_TaskClear,
+  cmd_TaskClearAll,
+  cmd_TaskRun,
+  cmd_TaskValueSet,
+  cmd_TimerSet,
+  cmd_udptest,
+  cmd_Unit,
+  cmd_wdconfig,
+  cmd_wdread,
+  cmd_WifiAPMode,
+  cmd_WifiConnect,
+  cmd_WifiDisconnect,
+  cmd_WifiKey2,
+  cmd_WifiKey,
+  cmd_WifiSSID2,
+  cmd_WifiSSID,
+  cmd_WifiScan
+};
+
+
 // Forward declarations.
+Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
