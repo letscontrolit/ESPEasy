@@ -278,8 +278,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   repl(F("%CR%"), F("\r"), s, useURLencode);
   repl(F("%LF%"), F("\n"), s, useURLencode);
   SMART_REPL(F("%ip%"),WiFi.localIP().toString())
-  SMART_REPL(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0))
-  SMART_REPL(F("%ssid%"), (WiFi.status() == WL_CONNECTED) ? WiFi.SSID() : F("--"))
+  SMART_REPL(F("%rssi%"), String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
+  SMART_REPL(F("%ssid%"), (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID())
   SMART_REPL(F("%unit%"), String(Settings.Unit))
   SMART_REPL(F("%mac%"), String(WiFi.macAddress()))
   #if defined(ESP8266)

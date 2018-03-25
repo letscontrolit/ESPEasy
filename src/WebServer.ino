@@ -856,7 +856,7 @@ void handle_root() {
     TXBuffer += formatIP(ip);
 
     TXBuffer += F("<TD><TD>Wifi RSSI:<TD>");
-    if (WiFi.status() == WL_CONNECTED)
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
       TXBuffer += F(" dB");
@@ -3527,6 +3527,14 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("BSSID"), WiFi.BSSIDstr());
     reply += F(",\n");
+    reply += to_json_object_value(F("Channel"), String(WiFi.channel()));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
+    reply += F(",\n");
     reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
   }
@@ -4453,7 +4461,7 @@ void handle_setup() {
 
   addHeader(false,TXBuffer.buf);
 
-  if (WiFi.status() == WL_CONNECTED)
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     addHtmlError(  SaveSettings());
     const IPAddress ip = WiFi.localIP();
@@ -4783,7 +4791,7 @@ void handle_sysinfo() {
 
    TXBuffer += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
 
-  if (WiFi.status() == WL_CONNECTED)
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
      TXBuffer += F("<TR><TD>Wifi<TD>");
     #if defined(ESP8266)
@@ -4818,14 +4826,13 @@ void handle_sysinfo() {
    TXBuffer += formatIP(WiFi.gatewayIP());
 
   {
-     TXBuffer += F("<TR><TD>Client IP<TD>");
+    TXBuffer += F("<TR><TD>Client IP<TD>");
     WiFiClient client(WebServer.client());
-     TXBuffer += formatIP(client.remoteIP());
+    TXBuffer += formatIP(client.remoteIP());
   }
 
-
-   TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
-   TXBuffer += describeAllowedIPrange();
+  TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
+  TXBuffer += describeAllowedIPrange();
 
   TXBuffer += F("<TR><TD>Serial Port available:<TD>");
   TXBuffer += String(SerialAvailableForWrite());
@@ -4843,19 +4850,34 @@ void handle_sysinfo() {
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
   formatMAC(macread, macaddress);
-   TXBuffer += macaddress;
+  TXBuffer += macaddress;
 
-   TXBuffer += F("<TR><TD>AP MAC<TD>");
+  TXBuffer += F("<TR><TD>AP MAC<TD>");
   macread = WiFi.softAPmacAddress(mac);
   formatMAC(macread, macaddress);
-   TXBuffer += macaddress;
+  TXBuffer += macaddress;
 
-   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
+  TXBuffer += F("<TR><TD>SSID<TD>");
+  TXBuffer += WiFi.SSID();
+  TXBuffer += F(" (");
+  TXBuffer += WiFi.BSSIDstr();
+  TXBuffer += F(")");
 
-   TXBuffer += F("<TR><TD>Build<TD>");
-   TXBuffer += BUILD;
-   TXBuffer += F(" ");
-   TXBuffer += F(BUILD_NOTES);
+  TXBuffer += F("<TR><TD>Channel<TD>");
+  TXBuffer += WiFi.channel();
+
+  TXBuffer += F("<TR><TD>Connected<TD>");
+  TXBuffer += format_msec_duration(timeDiff(lastConnectMoment, millis()));
+
+  TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
+  TXBuffer += getLastDisconnectReason();
+
+  TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
+
+  TXBuffer += F("<TR><TD>Build<TD>");
+  TXBuffer += BUILD;
+  TXBuffer += F(" ");
+  TXBuffer += F(BUILD_NOTES);
   #if defined(ESP8266)
      TXBuffer += F(" (core ");
      TXBuffer += ESP.getCoreVersion();

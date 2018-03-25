@@ -99,9 +99,6 @@ unsigned long now() {
     unsigned long  t = getNtpTime();
     if (t != 0) {
       setTime(t);
-    } else {
-      // Unable to sync, retry again in a minute
-      nextSyncTime = sysTime + 60;
     }
   }
   uint32_t localSystime = toLocal(sysTime);
@@ -201,19 +198,30 @@ void checkTime()
 
 unsigned long getNtpTime()
 {
-  if (!Settings.UseNTP || !WiFiConnected(100)) {
+  if (!Settings.UseNTP || !WiFiConnected(10)) {
     return 0;
   }
   IPAddress timeServerIP;
-  const char* ntpServerName = "pool.ntp.org";
-  // Have to do a lookup eacht time, since the NTP pool always returns another IP
-  if (Settings.NTPHost[0] != 0)
+  String log = F("NTP  : NTP send to ");
+  if (Settings.NTPHost[0] != 0) {
     WiFi.hostByName(Settings.NTPHost, timeServerIP);
-  else
-    WiFi.hostByName(ntpServerName, timeServerIP);
+    log += Settings.NTPHost;
+    // When single set host fails, retry again in a minute
+    nextSyncTime = sysTime + 20;
+  }
+  else {
+    // Have to do a lookup eacht time, since the NTP pool always returns another IP
+    String ntpServerName = String(random(0, 3));
+    ntpServerName += F(".pool.ntp.org");
+    WiFi.hostByName(ntpServerName.c_str(), timeServerIP);
+    log += ntpServerName;
+    // When pool host fails, retry can be much sooner
+    nextSyncTime = sysTime + 5;
+  }
 
-  if (!hostReachable(timeServerIP))
+  if (!hostReachable(timeServerIP)) {
     return 0;
+  }
 
   WiFiUDP udp;
   udp.begin(123);
@@ -221,8 +229,9 @@ unsigned long getNtpTime()
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
   byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-  String log = F("NTP  : NTP send to ");
+  log += F(" (");
   log += timeServerIP.toString();
+  log += F(")");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
@@ -257,6 +266,7 @@ unsigned long getNtpTime()
       addLog(LOG_LEVEL_DEBUG_MORE, log);
       return secsSince1900 - 2208988800UL;
     }
+    delay(10);
   }
   log = F("NTP  : No reply");
   addLog(LOG_LEVEL_DEBUG_MORE, log);

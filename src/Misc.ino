@@ -317,7 +317,7 @@ void statusLED(boolean traffic)
   else
   {
 
-    if (WiFi.status() == WL_CONNECTED)
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -1163,6 +1163,7 @@ void ResetFactory(void)
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+  intent_to_reboot = true;
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   #if defined(ESP8266)

@@ -434,6 +434,14 @@ using namespace fs;
 ADC_MODE(ADC_VCC);
 #endif
 
+#define ESPEASY_WIFI_DISCONNECTED            0
+#define ESPEASY_WIFI_CONNECTED               1
+#define ESPEASY_WIFI_GOT_IP                  2
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    3
+
+WiFiEventHandler stationConnectedHandler;
+WiFiEventHandler stationDisconnectedHandler;
+WiFiEventHandler stationGotIpHandler;
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -1045,14 +1053,28 @@ String dummyString = "";
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
+// WiFi related data
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
 uint8_t lastBSSID[6] = {0};
-boolean wifiConnected = false;
-unsigned long wifi_connect_timer = 0;
+uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
 uint8_t lastWiFiSettings = 0;
+String last_ssid;
+bool bssid_changed = false;
+uint8 last_channel = 0;
+WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+unsigned long lastConnectMoment = 0;
+unsigned long lastDisconnectMoment = 0;
+unsigned long lastGetIPmoment = 0;
+unsigned long lastConnectedDuration = 0;
+bool intent_to_reboot = false;
 
+// Semaphore like booleans for processing data gathered from WiFi events.
+bool processedConnect = true;
+bool processedDisconnect = true;
+bool processedGetIP = true;
 
 
 unsigned long start = 0;
