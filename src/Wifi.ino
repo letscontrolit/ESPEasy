@@ -3,6 +3,36 @@
 // Functions called on events.
 // Make sure not to call anything in these functions that result in delay() or yield()
 //********************************************************************************
+#ifdef ESP32
+void WiFiEvent(WiFiEvent_t event) {
+  switch(event) {
+    case SYSTEM_EVENT_STA_CONNECTED:
+      lastConnectMoment = millis();
+      processedConnect = false;
+      wifiStatus = ESPEASY_WIFI_CONNECTED;
+      break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:
+      lastDisconnectMoment = millis();
+      if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
+        // There was an unsuccessful connection attempt
+        lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
+      } else
+        lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+      processedDisconnect = false;
+      wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+      break;
+    case SYSTEM_EVENT_STA_GOT_IP:
+      lastGetIPmoment = millis();
+      wifiStatus = ESPEASY_WIFI_GOT_IP;
+      processedGetIP = false;
+      break;
+    default:
+      break;
+  }
+}
+
+#else
+
 void onConnected(const WiFiEventStationModeConnected& event){
   lastConnectMoment = millis();
   processedConnect = false;
@@ -35,6 +65,7 @@ void onGotIP(const WiFiEventStationModeGotIP& event){
   wifiStatus = ESPEASY_WIFI_GOT_IP;
   processedGetIP = false;
 }
+#endif
 
 //********************************************************************************
 // Functions to process the data gathered from the events.
