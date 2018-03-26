@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20180326 (since mega-20180324)
+-------------------------------------------------
+
+Release date: Mon Mar 26 04:00:14 CEST 2018
+
+Bartlomiej Zimon (1):
+      - fix for #1170 - uservar not setted on encwrite
+
+Brian Setz (1):
+      [P1] Support for latest standard
+
+TD-er (3):
+      [Command] Parsing improvement for commands
+      [wifi] Event based connect/reconnect
+      [NTP] Speedup NTP again with async WiFi
+
+
+-------------------------------------------------
 Changes in release mega-20180324 (since mega-20180323)
 -------------------------------------------------
 
