@@ -3575,6 +3575,8 @@ void handle_json()
           for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
           {
             reply += F("{");
+            reply += to_json_object_value(F("ValueNumber"), String(x + 1));
+            reply += F(",\n");
             reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
             reply += F(",\n");
             reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
@@ -3861,7 +3863,7 @@ void handle_upload() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" accept=\".htm, .css, .js, .png, .gif, .jpg, .ico, .txt, .dat, .esp\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
      sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
   printWebString = "";
