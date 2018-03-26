@@ -3552,42 +3552,43 @@ void handle_json()
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
 
-  if (taskNr == 0 )
-    reply += F("\"Sensors\":[\n");
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
-  {
-    if (Settings.TaskDeviceNumber[TaskIndex])
-    {
-      byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-      LoadTaskSettings(TaskIndex);
-      reply += F("{\n");
-
-      reply += to_json_object_value(F("tasknr"), String(TaskIndex + 1));
-      reply += F(",\n");
-      reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
-      reply += F(",\n");
-      reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
-      if (Device[DeviceIndex].ValueCount != 0)
-        reply += F(",");
-      reply += F("\n");
-
-      for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+      if (taskNr == 0 )
+        reply += F("\"Sensors\":[\n");
+      for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
       {
-        reply += to_json_object_value(ExtraTaskSettings.TaskDeviceValueNames[x],
-                             toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-        if (x < (Device[DeviceIndex].ValueCount - 1))
-          reply += F(",");
-        reply += F("\n");
+        if (Settings.TaskDeviceNumber[TaskIndex])
+        {
+          byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+          byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+          LoadTaskSettings(TaskIndex);
+          reply += F("{\n");
+
+          reply += to_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+          reply += F(",\n");
+          reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
+          reply += F(",\n");
+          reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+          if (Device[DeviceIndex].ValueCount != 0)
+            reply += F(",\n");
+            reply += F("\"TaskValues\": [\n");
+
+          for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+          {
+            reply += F("{");
+            reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            reply += F(",\n");
+            reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+            if (x < (Device[DeviceIndex].ValueCount - 1))
+              reply += F("},\n");
+          }
+          reply += F("}]\n}");
+          if (TaskIndex != lastActiveTaskIndex)
+            reply += F(",");
+          reply += F("\n");
+        }
       }
-      reply += F("}");
-      if (TaskIndex != lastActiveTaskIndex)
-        reply += F(",");
-      reply += F("\n");
-    }
-  }
-  if (taskNr == 0 )
-    reply += F("]}\n");
+      if (taskNr == 0 )
+        reply += F("]\n}");
 
   WebServer.send(200, "application/json", reply);
 }
@@ -3860,7 +3861,7 @@ void handle_upload() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" accept=\".htm, .css, .js, .png, .gif, .jpg, .ico, .txt, .dat, .esp\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
      sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
   printWebString = "";
