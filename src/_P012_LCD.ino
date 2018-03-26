@@ -244,8 +244,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         else if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
+          tmpString = P012_parseTemplate(string, cols);
+          argIndex = tmpString.lastIndexOf(',');
+          tmpString = tmpString.substring(argIndex + 1);
 
           int colPos = event->Par2 - 1;
           int rowPos = event->Par1 - 1;
