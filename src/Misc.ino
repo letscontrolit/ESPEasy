@@ -1961,8 +1961,6 @@ String rulesProcessingFile(String fileName, String& event)
     Serial.println(fileName);
     Serial.println(F("     flags CMI  parse output:"));
     }
-  fs::File f = SPIFFS.open(fileName, "r+");
-  SPIFFS_CHECK(f, fileName.c_str());
 
   static byte nestingLevel = 0;
   int data = 0;
@@ -1976,6 +1974,9 @@ String rulesProcessingFile(String fileName, String& event)
     nestingLevel--;
     return (log);
   }
+
+  fs::File f = SPIFFS.open(fileName, "r+");
+  SPIFFS_CHECK(f, fileName.c_str());
 
   String line = "";
   boolean match = false;
