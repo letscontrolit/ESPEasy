@@ -2496,7 +2496,7 @@ void addPinSelect(boolean forI2C, String name,  int choice)
   optionValues[4] = 3;
   optionValues[5] = 4;
   optionValues[6] = 5;
-  optionValues[7] = 7;
+  optionValues[7] = 6;
   optionValues[8] = 7;
   optionValues[9] = 8;
   optionValues[10] = 9;
