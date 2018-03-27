@@ -1,3 +1,4 @@
+#ifdef USES_P042
 //#######################################################################################################
 //######################################## Plugin 042: NeoPixel Candle ##################################
 //#######################################################################################################
@@ -49,7 +50,7 @@
 // https://www.ruinelli.ch/rgb-to-hsv               Code
 // http://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both    Code Sammlung
 
-#include <Adafruit_NeoPixel.h>
+#include <../lib/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
 
 #define NUM_PIXEL       20         // Defines the amount of LED Pixel
 #define NUM_PIXEL_ROW    5         // Defines the amount of LED Pixel per Row
@@ -718,3 +719,4 @@ void RGBtoHSV(byte r, byte g, byte b, double hsv[3]) {
     hsv[1] = s * 255;
     hsv[2] = v * 255;
 }
+#endif // USES_P042

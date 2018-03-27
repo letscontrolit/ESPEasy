@@ -29,7 +29,8 @@
 #include "Arduino.h"
 //#include "SensorSerial.h"
 #include "SensorSerialBuffer.h"
-#include "ESPeasySoftwareSerial.h"
+#include <../ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
+
 
 class CjkSDS011
 {

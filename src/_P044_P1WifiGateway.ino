@@ -1,3 +1,4 @@
+#ifdef USES_P044
 //#################################### Plugin 044: P1WifiGateway ########################################
 //
 //  based on P020 Ser2Net, extended by Ronald Leenes romix/-at-/macuser.nl
@@ -436,3 +437,4 @@ bool checkDatagram(int len) {
   }
   return validCRCFound;
 }
+#endif // USES_P044

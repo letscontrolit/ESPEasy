@@ -1,3 +1,4 @@
+#ifdef USES_P036
 //#######################################################################################################
 //#################################### Plugin 036: OLED SSD1306 display #################################
 //
@@ -24,10 +25,12 @@
 #define P36_CONTRAST_MED  0xCF
 #define P36_CONTRAST_HIGH 0xFF
 
-#include "SSD1306.h"
-#include "SH1106Wire.h"
-#include "OLED_SSD1306_SH1106_images.h"
-#include "Dialog_Plain_12_font.h"
+
+#include <../lib/esp8266-oled-ssd1306/SSD1306.h>
+#include <../lib/esp8266-oled-ssd1306/SSD1306.h>
+#include <../lib/esp8266-oled-ssd1306/SH1106Wire.h>
+#include <../lib/esp8266-oled-ssd1306/OLED_SSD1306_SH1106_images.h>
+#include <../lib/esp8266-oled-ssd1306/Dialog_Plain_12_font.h>
 
 #define P36_WIFI_STATE_UNSET          -2
 #define P36_WIFI_STATE_NOT_CONNECTED  -1
@@ -670,3 +673,4 @@ bool display_wifibars() {
   }
   return true;
 }
+#endif // USES_P036

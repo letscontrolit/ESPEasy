@@ -1,3 +1,4 @@
+#ifdef USES_P023
 //#######################################################################################################
 //#################################### Plugin 023: OLED SSD1306 display #################################
 //#######################################################################################################
@@ -443,7 +444,7 @@ const char Plugin_023_myFont[][8] PROGMEM = {
   {0x00, 0x02, 0x05, 0x05, 0x02, 0x00, 0x00, 0x00}   // DEL
 };
 
-static void Plugin_023_reset_display(void)
+void Plugin_023_reset_display(void)
 {
   Plugin_023_displayOff();
   Plugin_023_clear_display();
@@ -474,7 +475,7 @@ void Plugin_023_displayOff(void)
 }
 
 
-static void Plugin_023_clear_display(void)
+void Plugin_023_clear_display(void)
 {
   unsigned char i, k;
   for (k = 0; k < 8; k++)
@@ -491,7 +492,7 @@ static void Plugin_023_clear_display(void)
 
 
 // Actually this sends a byte, not a char to draw in the display.
-static void Plugin_023_SendChar(unsigned char data)
+void Plugin_023_SendChar(unsigned char data)
 {
   Wire.beginTransmission(Plugin_023_OLED_address);  // begin transmitting
   Wire.write(0x40);                      //data mode
@@ -502,7 +503,7 @@ static void Plugin_023_SendChar(unsigned char data)
 
 // Prints a display char (not just a byte) in coordinates X Y,
 //currently unused:
-// static void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
+// void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
 // {
 //   //if (interrupt && !doing_menu) return; // Stop printing only if interrupt is call but not in button functions
 //   Plugin_023_setXY(X, Y);
@@ -516,7 +517,7 @@ static void Plugin_023_SendChar(unsigned char data)
 // }
 
 
-static void Plugin_023_sendcommand(unsigned char com)
+void Plugin_023_sendcommand(unsigned char com)
 {
   Wire.beginTransmission(Plugin_023_OLED_address);     //begin transmitting
   Wire.write(0x80);                          //command mode
@@ -527,7 +528,7 @@ static void Plugin_023_sendcommand(unsigned char com)
 
 // Set the cursor position in a 16 COL * 8 ROW map (128x64 pixels)
 // or 8 COL * 5 ROW map (64x48 pixels)
-static void Plugin_023_setXY(unsigned char row, unsigned char col)
+void Plugin_023_setXY(unsigned char row, unsigned char col)
 {
   switch (Plugin_023_OLED_type)
   {
@@ -547,7 +548,7 @@ static void Plugin_023_setXY(unsigned char row, unsigned char col)
 
 // Prints a string regardless the cursor position.
 // unused:
-// static void Plugin_023_sendStr(unsigned char *string)
+// void Plugin_023_sendStr(unsigned char *string)
 // {
 //   unsigned char i = 0;
 //   while (*string)
@@ -563,7 +564,7 @@ static void Plugin_023_setXY(unsigned char row, unsigned char col)
 
 // Prints a string in coordinates X Y, being multiples of 8.
 // This means we have 16 COLS (0-15) and 8 ROWS (0-7).
-static void Plugin_023_sendStrXY(const char *string, int X, int Y)
+void Plugin_023_sendStrXY(const char *string, int X, int Y)
 {
   Plugin_023_setXY(X, Y);
   unsigned char i = 0;
@@ -589,7 +590,7 @@ static void Plugin_023_sendStrXY(const char *string, int X, int Y)
 }
 
 
-static void Plugin_023_init_OLED(void)
+void Plugin_023_init_OLED(void)
 {
   unsigned char multiplex;
   unsigned char compins;
@@ -635,3 +636,4 @@ static void Plugin_023_init_OLED(void)
   Plugin_023_sendcommand(0x00);            //Set Memory Addressing Mode ab Horizontal addressing mode
 
 }
+#endif // USES_P023

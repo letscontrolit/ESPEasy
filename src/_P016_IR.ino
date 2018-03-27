@@ -1,3 +1,4 @@
+#ifdef USES_P016
 //#######################################################################################################
 //#################################### Plugin 016: Input IR #############################################
 //#######################################################################################################
@@ -5,7 +6,7 @@
 
 #ifdef PLUGIN_BUILD_NORMAL
 
-#include <IRremoteESP8266.h>
+#include <../lib/IRremoteESP8266/IRremoteESP8266.h>
 IRrecv *irReceiver;
 decode_results results;
 
@@ -93,3 +94,4 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 }
 
 #endif
+#endif // USES_P016

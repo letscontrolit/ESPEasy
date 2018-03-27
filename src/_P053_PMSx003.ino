@@ -1,3 +1,4 @@
+#ifdef USES_P053
 //#######################################################################################################
 //#################################### Plugin 053: Plantower PMSx003 ####################################
 //#######################################################################################################
@@ -10,7 +11,7 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <ESPeasySoftwareSerial.h>
+#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
@@ -301,3 +302,4 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
   return success;
 }
 #endif // PLUGIN_BUILD_TESTING
+#endif // USES_P053

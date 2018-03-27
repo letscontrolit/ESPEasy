@@ -1,3 +1,4 @@
+#ifdef USES_P070
 //#######################################################################################################
 //#################################### Plugin 070: NeoPixel ring clock #######################################
 //#######################################################################################################
@@ -16,7 +17,7 @@
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-#include <Adafruit_NeoPixel.h>
+#include <../lib/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 
@@ -281,3 +282,4 @@ void timeToStrip(int hours, int minutes, int seconds) {
 }
 
 #endif
+#endif // USES_P070

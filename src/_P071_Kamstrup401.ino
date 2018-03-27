@@ -1,3 +1,4 @@
+#ifdef USES_P071
 //#######################################################################################################
 //############################# Plugin 071: Kamstrup Multical 401 #######################################
 //#######################################################################################################
@@ -11,7 +12,7 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <ESPeasySoftwareSerial.h>
+#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
 #define PLUGIN_071
 #define PLUGIN_ID_071 71
 #define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401 [TESTING]"
@@ -270,3 +271,4 @@ bool parity_check(unsigned input) {
 }
 
 #endif
+#endif // USES_P071
