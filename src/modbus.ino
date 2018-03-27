@@ -65,6 +65,7 @@ Modbus::Modbus() {
   errcnt = 0;
   payLoad = 0;
   ModbusClient = nullptr;
+  RXavailable=0;
 }
 
 
