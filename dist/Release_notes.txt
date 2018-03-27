@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180327 (since mega-20180326)
+-------------------------------------------------
+
+Release date: Tue Mar 27 04:00:09 CEST 2018
+
+TD-er (1):
+      [issue #1174] Show degree sign via external writes to LCD
+
+
+-------------------------------------------------
 Changes in release mega-20180326 (since mega-20180324)
 -------------------------------------------------
 
