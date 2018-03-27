@@ -74,6 +74,7 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_SONOFF_POW
     #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P075
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S20
