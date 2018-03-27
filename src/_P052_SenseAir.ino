@@ -1,3 +1,4 @@
+#ifdef USES_P052
 //#######################################################################################################
 //############################# Plugin 052: Senseair CO2 Sensors ########################################
 //#######################################################################################################
@@ -24,7 +25,7 @@
 
 boolean Plugin_052_init = false;
 
-#include <ESPeasySoftwareSerial.h>
+#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
 ESPeasySoftwareSerial *Plugin_052_SoftSerial;
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string)
@@ -416,3 +417,4 @@ int getBitOfInt(int reg, int pos)
 
   return result;
 }
+#endif // USES_P052

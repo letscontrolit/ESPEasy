@@ -157,7 +157,7 @@ To create/register a plugin, you have to :
     #ifndef USES_P003
         #define USES_P003   // pulse
     #endif
-    #ifndef USES_P003
+    #ifndef USES_P037
         #define USES_P037   // MQTTImport
     #endif
 #endif
@@ -239,6 +239,46 @@ To create/register a plugin, you have to :
         #undef NOTIFIER_SET_EXPERIMENTAL
     #endif
 #endif
+
+// ALL ###########################################
+#ifdef PLUGIN_SET_ALL
+    #ifndef PLUGIN_SET_STABLE
+        #define PLUGIN_SET_STABLE
+    #endif
+    #ifndef PLUGIN_SET_TESTING
+        #define PLUGIN_SET_TESTING
+    #endif
+    #ifndef PLUGIN_SET_EXPERIMENTAL
+        #define PLUGIN_SET_EXPERIMENTAL
+    #endif
+#endif
+
+
+#ifdef CONTROLLER_SET_ALL
+    #ifndef CONTROLLER_SET_STABLE
+        #define CONTROLLER_SET_STABLE
+    #endif
+    #ifndef CONTROLLER_SET_TESTING
+        #define CONTROLLER_SET_TESTING
+    #endif
+    #ifndef CONTROLLER_SET_EXPERIMENTAL
+        #define CONTROLLER_SET_EXPERIMENTAL
+    #endif
+#endif
+
+
+#ifdef NOTIFIER_SET_ALL
+    #ifndef NOTIFIER_SET_STABLE
+        #define NOTIFIER_SET_STABLE
+    #endif
+    #ifndef NOTIFIER_SET_TESTING
+        #define NOTIFIER_SET_TESTING
+    #endif
+    #ifndef NOTIFIER_SET_EXPERIMENTAL
+        #define NOTIFIER_SET_EXPERIMENTAL
+    #endif
+#endif
+
 
 
 
@@ -367,6 +407,8 @@ To create/register a plugin, you have to :
 // EXPERIMENTAL (playground) #######################
 #ifdef PLUGIN_SET_EXPERIMENTAL
     #define USES_P046   // VentusW266
+    #define USES_P050   // TCS34725 RGB Color Sensor with IR filter and White LED
+    #define USES_P064   // APDS9960 Gesture
 
     // [copied from Playground as of 6 March 2018]
     // It needs some cleanup as some are ALSO in the main repo,
@@ -443,47 +485,6 @@ To create/register a plugin, you have to :
 #ifdef NOTIFIER_SET_EXPERIMENTAL
 #endif
 
-
-
-// ALL ###########################################
-
-#ifdef PLUGIN_SET_ALL
-    #ifndef PLUGIN_SET_STABLE
-        #define PLUGIN_SET_STABLE
-    #endif
-    #ifndef PLUGIN_SET_TESTING
-        #define PLUGIN_SET_TESTING
-    #endif
-    #ifndef PLUGIN_SET_EXPERIMENTAL
-        #define PLUGIN_SET_EXPERIMENTAL
-    #endif
-#endif
-
-
-#ifdef CONTROLLER_SET_ALL
-    #ifndef CONTROLLER_SET_STABLE
-        #define CONTROLLER_SET_STABLE
-    #endif
-    #ifndef CONTROLLER_SET_TESTING
-        #define CONTROLLER_SET_TESTING
-    #endif
-    #ifndef PLUGIN_SET_EXPERIMENTAL
-        #define PLUGIN_SET_EXPERIMENTAL
-    #endif
-#endif
-
-
-#ifdef NOTIFIER_SET_ALL
-    #ifndef NOTIFIER_SET_STABLE
-        #define NOTIFIER_SET_STABLE
-    #endif
-    #ifndef NOTIFIER_SET_TESTING
-        #define NOTIFIER_SET_TESTING
-    #endif
-    #ifndef PLUGIN_SET_EXPERIMENTAL
-        #define PLUGIN_SET_EXPERIMENTAL
-    #endif
-#endif
 
 
 

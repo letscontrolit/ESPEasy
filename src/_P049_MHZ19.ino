@@ -1,3 +1,4 @@
+#ifdef USES_P049
 /*
 
   This plug in is written by Dmitry (rel22 ___ inbox.ru)
@@ -28,7 +29,7 @@ boolean Plugin_049_init = false;
 boolean Plugin_049_ABC_Disable = false;
 boolean Plugin_049_ABC_MustApply = false;
 
-#include <ESPeasySoftwareSerial.h>
+#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
 ESPeasySoftwareSerial *Plugin_049_SoftSerial;
 
 enum mhzCommands : byte { mhzCmdReadPPM,
@@ -461,3 +462,4 @@ size_t _P049_send_mhzCmd(byte CommandId)
 
   return Plugin_049_SoftSerial->write(mhzResp, sizeof(mhzResp));
 }
+#endif // USES_P049

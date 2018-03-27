@@ -1,3 +1,4 @@
+#ifdef USES_P012
 //#######################################################################################################
 //#################################### Plugin 012: LCD ##################################################
 //#######################################################################################################
@@ -8,8 +9,7 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 //  Pump:[Pump#on#O] -> ON/OFF
-
-#include <LiquidCrystal_I2C.h>
+#include <../lib/LiquidCrystal_I2C/LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C *lcd=NULL;
 
@@ -313,3 +313,4 @@ String P012_parseTemplate(String &tmpString, byte lineSize) {
   result.replace(degree, degree_lcd);
   return result;
 }
+#endif // USES_P012

@@ -1,3 +1,4 @@
+#ifdef USES_P065
 //#######################################################################################################
 //############################# Plugin 065: P065_DFR0299_MP3 ############################################
 //#######################################################################################################
@@ -33,7 +34,7 @@
 #define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
-#include <ESPeasySoftwareSerial.h>
+#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -227,3 +228,4 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
 }
 
 #endif
+#endif // USES_P065

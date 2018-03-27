@@ -1,3 +1,4 @@
+
 #ifdef CONTINUOUS_INTEGRATION
 #pragma GCC diagnostic error "-Wall"
 #else
@@ -71,7 +72,9 @@
 //   SHT1X temperature/humidity sensors
 //   Ser2Net server
 
+// Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
+#include <define_plugin_sets.h>
 
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );

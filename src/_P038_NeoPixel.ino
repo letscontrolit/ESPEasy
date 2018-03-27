@@ -1,3 +1,4 @@
+#ifdef USES_P038
 //#######################################################################################################
 //#################################### Plugin 038: NeoPixel Basic #######################################
 //#######################################################################################################
@@ -20,7 +21,8 @@
 // eg: NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>,<brightness 0-255>
 // The NeoPixelLine command does not work for RGBW, cause espeasy currently only allows max. 5 parameters
 
-#include <Adafruit_NeoPixel.h>
+#include <../lib/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
+
 Adafruit_NeoPixel *Plugin_038_pixels;
 
 #define PLUGIN_038
@@ -159,3 +161,4 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P038
