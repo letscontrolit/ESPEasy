@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180328 (since mega-20180327)
+-------------------------------------------------
+
+Release date: Wed Mar 28 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build] Cleanup/split builds using defines
+      [build] Disabled a few PlatformIO profiles for now.
+
+mvdbro (1):
+      Fix nesting level check
+
+soif (1):
+      Initial re-organisation of plugin sets (#1019)
+
+
+-------------------------------------------------
 Changes in release mega-20180327 (since mega-20180326)
 -------------------------------------------------
 
