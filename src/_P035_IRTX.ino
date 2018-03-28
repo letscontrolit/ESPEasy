@@ -4,7 +4,7 @@
 //#######################################################################################################
 #ifdef PLUGIN_BUILD_NORMAL
 
-#include <../lib/IRremoteESP8266/IRremoteESP8266.h>
+#include <IRremoteESP8266.h>
 IRsend *Plugin_035_irSender;
 
 #define PLUGIN_035

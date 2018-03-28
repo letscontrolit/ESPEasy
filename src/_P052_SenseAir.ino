@@ -25,7 +25,7 @@
 
 boolean Plugin_052_init = false;
 
-#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 ESPeasySoftwareSerial *Plugin_052_SoftSerial;
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string)

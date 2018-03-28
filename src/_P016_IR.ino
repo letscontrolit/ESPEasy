@@ -6,7 +6,7 @@
 
 #ifdef PLUGIN_BUILD_NORMAL
 
-#include <../lib/IRremoteESP8266/IRremoteESP8266.h>
+#include <IRremoteESP8266.h>
 IRrecv *irReceiver;
 decode_results results;
 

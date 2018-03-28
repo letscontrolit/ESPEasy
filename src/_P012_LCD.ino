@@ -9,7 +9,7 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 //  Pump:[Pump#on#O] -> ON/OFF
-#include <../lib/LiquidCrystal_I2C/LiquidCrystal_I2C.h>
+#include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C *lcd=NULL;
 

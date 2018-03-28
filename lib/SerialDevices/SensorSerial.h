@@ -27,7 +27,7 @@
 #define _SENSORSERIAL_H_
 
 #include "Arduino.h"
-#include <../ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
 class SensorSerial : public ESPeasySoftwareSerial
 {
