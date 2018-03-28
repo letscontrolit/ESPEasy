@@ -21,7 +21,7 @@
 // eg: NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>,<brightness 0-255>
 // The NeoPixelLine command does not work for RGBW, cause espeasy currently only allows max. 5 parameters
 
-#include <../lib/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h>
 
 Adafruit_NeoPixel *Plugin_038_pixels;
 

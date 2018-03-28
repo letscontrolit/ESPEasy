@@ -17,7 +17,7 @@
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-#include <../lib/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h>
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 

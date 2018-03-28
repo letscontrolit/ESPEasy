@@ -34,7 +34,7 @@
 #define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
-#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])

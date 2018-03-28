@@ -29,7 +29,7 @@ boolean Plugin_049_init = false;
 boolean Plugin_049_ABC_Disable = false;
 boolean Plugin_049_ABC_MustApply = false;
 
-#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 ESPeasySoftwareSerial *Plugin_049_SoftSerial;
 
 enum mhzCommands : byte { mhzCmdReadPPM,

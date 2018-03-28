@@ -11,7 +11,7 @@
 
 #ifdef PLUGIN_BUILD_TESTING
 
-#include <../lib/ESPEasySoftwareSerial/ESPeasySoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
