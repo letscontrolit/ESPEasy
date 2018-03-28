@@ -439,9 +439,13 @@ ADC_MODE(ADC_VCC);
 #define ESPEASY_WIFI_GOT_IP                  2
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    3
 
+#ifdef ESP32
+void WiFiEvent(WiFiEvent_t event);
+#else
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 WiFiEventHandler stationGotIpHandler;
+#endif
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;

@@ -111,10 +111,14 @@ void setup()
 
   initLog();
 
+#ifdef ESP32
+  WiFi.onEvent(WiFiEvent);
+#else
   // WiFi event handlers
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
 	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
 	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+#endif
 
   if (SpiffsSectors() < 32)
   {
