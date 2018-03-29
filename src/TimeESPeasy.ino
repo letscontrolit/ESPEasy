@@ -72,6 +72,7 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
 
 void setTime(unsigned long t) {
   sysTime = (uint32_t)t;
+  applyTimeZone(t);
   nextSyncTime = (uint32_t)t + syncInterval;
   prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
   if (Settings.UseRules)
@@ -81,6 +82,10 @@ void setTime(unsigned long t) {
     firstUpdate = false;
     rulesProcessing(event);
   }
+}
+
+uint32_t getUnixTime() {
+  return sysTime;
 }
 
 unsigned long now() {
@@ -94,10 +99,6 @@ unsigned long now() {
     unsigned long  t = getNtpTime();
     if (t != 0) {
       setTime(t);
-      applyTimeZone(t);
-    } else {
-      // Unable to sync, retry again in a minute
-      nextSyncTime = sysTime + 60;
     }
   }
   uint32_t localSystime = toLocal(sysTime);
@@ -197,19 +198,30 @@ void checkTime()
 
 unsigned long getNtpTime()
 {
-  if (!Settings.UseNTP || !WiFiConnected(100)) {
+  if (!Settings.UseNTP || !WiFiConnected(10)) {
     return 0;
   }
   IPAddress timeServerIP;
-  const char* ntpServerName = "pool.ntp.org";
-  // Have to do a lookup eacht time, since the NTP pool always returns another IP
-  if (Settings.NTPHost[0] != 0)
+  String log = F("NTP  : NTP send to ");
+  if (Settings.NTPHost[0] != 0) {
     WiFi.hostByName(Settings.NTPHost, timeServerIP);
-  else
-    WiFi.hostByName(ntpServerName, timeServerIP);
+    log += Settings.NTPHost;
+    // When single set host fails, retry again in a minute
+    nextSyncTime = sysTime + 20;
+  }
+  else {
+    // Have to do a lookup eacht time, since the NTP pool always returns another IP
+    String ntpServerName = String(random(0, 3));
+    ntpServerName += F(".pool.ntp.org");
+    WiFi.hostByName(ntpServerName.c_str(), timeServerIP);
+    log += ntpServerName;
+    // When pool host fails, retry can be much sooner
+    nextSyncTime = sysTime + 5;
+  }
 
-  if (!hostReachable(timeServerIP))
+  if (!hostReachable(timeServerIP)) {
     return 0;
+  }
 
   WiFiUDP udp;
   udp.begin(123);
@@ -217,8 +229,9 @@ unsigned long getNtpTime()
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
   byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-  String log = F("NTP  : NTP send to ");
+  log += F(" (");
   log += timeServerIP.toString();
+  log += F(")");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
@@ -253,6 +266,7 @@ unsigned long getNtpTime()
       addLog(LOG_LEVEL_DEBUG_MORE, log);
       return secsSince1900 - 2208988800UL;
     }
+    delay(10);
   }
   log = F("NTP  : No reply");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -390,30 +404,40 @@ String getDateString()
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String getTimeString(const timeStruct& ts, char delimiter, bool am_pm)
+String getTimeString(const timeStruct& ts, char delimiter, bool am_pm, bool show_seconds)
 {
   char TimeString[20]; //19 digits plus the null char
   if (am_pm) {
     uint8_t hour(ts.Hour % 12);
     if (hour == 0) { hour = 12; }
-    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d%cm"),
-     hour, delimiter, ts.Minute, delimiter, ts.Second,
-     ts.Hour < 12 ? 'a' : 'p');
+    const char a_or_p = ts.Hour < 12 ? 'A' : 'P';
+    if (show_seconds) {
+      sprintf_P(TimeString, PSTR("%d%c%02d%c%02d %cM"),
+        hour, delimiter, ts.Minute, delimiter, ts.Second, a_or_p);
+    } else {
+      sprintf_P(TimeString, PSTR("%d%c%02d %cM"),
+        hour, delimiter, ts.Minute, a_or_p);
+    }
   } else {
-    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
-     ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+    if (show_seconds) {
+      sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
+        ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+    } else {
+      sprintf_P(TimeString, PSTR("%d%c%02d"),
+        ts.Hour, delimiter, ts.Minute);
+    }
   }
   return TimeString;
 }
 
-String getTimeString(char delimiter)
+String getTimeString(char delimiter, bool show_seconds /*=true*/)
 {
-  return getTimeString(tm, delimiter, false);
+  return getTimeString(tm, delimiter, false, show_seconds);
 }
 
-String getTimeString_ampm(char delimiter)
+String getTimeString_ampm(char delimiter, bool show_seconds /*=true*/)
 {
-  return getTimeString(tm, delimiter, true);
+  return getTimeString(tm, delimiter, true, show_seconds);
 }
 
 // returns the current Time without delimiter
@@ -436,7 +460,7 @@ String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDeli
 	String ret = getDateString(ts, dateDelimiter);
 	if (dateTimeDelimiter != '\0')
 		ret += dateTimeDelimiter;
-	ret += getTimeString(ts, timeDelimiter, am_pm);
+	ret += getTimeString(ts, timeDelimiter, am_pm, true);
 	return ret;
 }
 

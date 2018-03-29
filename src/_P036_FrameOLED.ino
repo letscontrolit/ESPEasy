@@ -1,3 +1,4 @@
+#ifdef USES_P036
 //#######################################################################################################
 //#################################### Plugin 036: OLED SSD1306 display #################################
 //
@@ -24,10 +25,11 @@
 #define P36_CONTRAST_MED  0xCF
 #define P36_CONTRAST_HIGH 0xFF
 
-#include "SSD1306.h"
-#include "SH1106Wire.h"
-#include "OLED_SSD1306_SH1106_images.h"
-#include "Dialog_Plain_12_font.h"
+
+#include "SSD1306.h" 
+#include "SH1106Wire.h" 
+#include "OLED_SSD1306_SH1106_images.h" 
+#include "Dialog_Plain_12_font.h" 
 
 #define P36_WIFI_STATE_UNSET          -2
 #define P36_WIFI_STATE_NOT_CONNECTED  -1
@@ -466,7 +468,7 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
 
 void display_header() {
   static boolean showWiFiName = true;
-  if (showWiFiName && (WiFi.status() == WL_CONNECTED) ) {
+  if (showWiFiName && (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) ) {
     String newString = WiFi.SSID();
     newString.trim();
     display_title(newString);
@@ -629,7 +631,7 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
-  const bool connected = WiFi.status() == WL_CONNECTED;
+  const bool connected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
   const int nbars_filled = (WiFi.RSSI() + 100) / 8;
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_UNSET;
   if (newState == lastWiFiState)
@@ -651,7 +653,7 @@ bool display_wifibars() {
   display->setColor(BLACK);
   display->fillRect(x , y, size_x, size_y);
   display->setColor(WHITE);
-  if (WiFi.status() == WL_CONNECTED) {
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
     for (byte ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;
@@ -670,3 +672,4 @@ bool display_wifibars() {
   }
   return true;
 }
+#endif // USES_P036

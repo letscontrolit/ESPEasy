@@ -1,3 +1,4 @@
+#ifdef USES_P044
 //#################################### Plugin 044: P1WifiGateway ########################################
 //
 //  based on P020 Ser2Net, extended by Ronald Leenes romix/-at-/macuser.nl
@@ -123,7 +124,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           #endif
           #if defined(ESP32)
             Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
-          #endif            
+          #endif
           if (P1GatewayServer) P1GatewayServer->close();
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           P1GatewayServer->begin();
@@ -347,7 +348,7 @@ void blinkLED() {
        checks whether the incoming character is a valid one for a P1 datagram. Returns false if not, which signals corrupt datagram
 */
 bool validP1char(char ch) {
-  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch == '.') || (ch == '!') || (ch == 92) || (ch == 13) || (ch == '\n') || (ch == '(') || (ch == ')') || (ch == '-') || (ch == '*') || (ch == ':') )
+  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch == '.') || (ch == '!') || (ch == ' ') || (ch == 92) || (ch == 13) || (ch == '\n') || (ch == '(') || (ch == ')') || (ch == '-') || (ch == '*') || (ch == ':') )
   {
     return true;
   } else {
@@ -436,3 +437,4 @@ bool checkDatagram(int len) {
   }
   return validCRCFound;
 }
+#endif // USES_P044

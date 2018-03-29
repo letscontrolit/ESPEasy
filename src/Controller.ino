@@ -8,9 +8,6 @@ void sendData(struct EventStruct *event)
   if (Settings.UseRules)
     createRuleEvents(event->TaskIndex);
 
-  if (Settings.GlobalSync && Settings.TaskDeviceGlobalSync[event->TaskIndex])
-    SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
-
   if (Settings.UseValueLogger && Settings.InitSPI && Settings.Pin_sd_cs >= 0)
     SendValueLogger(event->TaskIndex);
 
@@ -138,7 +135,7 @@ bool MQTTConnect(int controller_idx)
 
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
-  LWTTopic.replace(F("%sysname%"), Settings.Name);
+  parseSystemVariables(LWTTopic, false);
   LWTTopic += F("/LWT"); // Extend the topic for status updates of connected/disconnected status.
 
   boolean MQTTresult = false;
@@ -186,10 +183,12 @@ bool MQTTConnect(int controller_idx)
 \*********************************************************************************************/
 bool MQTTCheck(int controller_idx)
 {
+  if (!WiFiConnected(10))
+    return false;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !WiFiConnected(10) || !MQTTclient.connected())
+    if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -247,7 +246,7 @@ void MQTTStatus(String& status)
     LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
     String pubname = ControllerSettings.Subscribe;
     pubname.replace(F("/#"), F("/status"));
-    pubname.replace(F("%sysname%"), Settings.Name);
+    parseSystemVariables(pubname, false);
     MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
   }
 }

@@ -1,4 +1,265 @@
 -------------------------------------------------
+Changes in release mega-20180329 (since mega-20180328)
+-------------------------------------------------
+
+Release date: Thu Mar 29 04:00:11 CEST 2018
+
+TD-er (2):
+      [ESP32] Event driven WiFi for ESP32
+      [Arduino IDE] Revert changes in include paths
+
+
+-------------------------------------------------
+Changes in release mega-20180328 (since mega-20180327)
+-------------------------------------------------
+
+Release date: Wed Mar 28 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build] Cleanup/split builds using defines
+      [build] Disabled a few PlatformIO profiles for now.
+
+mvdbro (1):
+      Fix nesting level check
+
+soif (1):
+      Initial re-organisation of plugin sets (#1019)
+
+
+-------------------------------------------------
+Changes in release mega-20180327 (since mega-20180326)
+-------------------------------------------------
+
+Release date: Tue Mar 27 04:00:09 CEST 2018
+
+TD-er (1):
+      [issue #1174] Show degree sign via external writes to LCD
+
+
+-------------------------------------------------
+Changes in release mega-20180326 (since mega-20180324)
+-------------------------------------------------
+
+Release date: Mon Mar 26 04:00:14 CEST 2018
+
+Bartlomiej Zimon (1):
+      - fix for #1170 - uservar not setted on encwrite
+
+Brian Setz (1):
+      [P1] Support for latest standard
+
+TD-er (3):
+      [Command] Parsing improvement for commands
+      [wifi] Event based connect/reconnect
+      [NTP] Speedup NTP again with async WiFi
+
+
+-------------------------------------------------
+Changes in release mega-20180324 (since mega-20180323)
+-------------------------------------------------
+
+Release date: Sat Mar 24 04:00:10 CET 2018
+
+TD-er (3):
+      [WiFi] Reverted those temp String uses for ssid/pass
+      [issue #1131] Add %unixtime%
+      [issue #1097] Call MQTTclient.loop() during deepsleep
+
+
+-------------------------------------------------
+Changes in release mega-20180323 (since mega-20180322)
+-------------------------------------------------
+
+Release date: Fri Mar 23 04:00:06 CET 2018
+
+mvdbro (1):
+      ESP32 fix
+
+
+-------------------------------------------------
+Changes in release mega-20180322 (since mega-20180321)
+-------------------------------------------------
+
+Release date: Thu Mar 22 04:00:11 CET 2018
+
+Bartlomiej Zimon (7):
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P035 move strings to flash
+      - P048 fetch params only when needed
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P048 fetch params only when needed
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180321
+
+Gijs Noorlander (1):
+      [merge issue] Forgotten #endif in merge
+
+TD-er (6):
+      [wifi] Make more robust checks and increase timeout
+      - P035 move strings to flash
+      [wifi] Make more robust checks and increase timeout
+      [Memory] parseTemplate did not check if markers were found
+      [WiFi] Take much more time for initial WiFi connect during setup
+      [WiFi] Take much more time for initial WiFi connect during setup
+
+Unknown (1):
+      [Memory] parseTemplate did not check if markers were found
+
+s0170071 (2):
+      Serial WD crash
+      Serial WD crash
+
+
+-------------------------------------------------
+Changes in release mega-20180321 (since mega-20180320)
+-------------------------------------------------
+
+Release date: Wed Mar 21 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180320
+
+Unknown (2):
+      [wifi] Setup with factory settings could not complete
+      [wifi] Setup with factory settings could not complete
+
+
+-------------------------------------------------
+Changes in release mega-20180320 (since mega-20180319)
+-------------------------------------------------
+
+Release date: Tue Mar 20 04:00:10 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180319
+
+Gijs Noorlander (1):
+      Revert "Merge pull request #1116 from TD-er/feature/allow_own_defaults"
+
+Unknown (3):
+      Revert "Merge pull request #1116 from TD-er/feature/allow_own_defaults"
+      [issue #1097] WiFi connect with deepsleep enabled trigger watchdog reset
+      [issue #1097] WiFi connect with deepsleep enabled trigger watchdog reset
+
+es-ka (2):
+      Fix wiring description for SN75176 transceiver
+      Fix wiring description for SN75176 transceiver
+
+
+-------------------------------------------------
+Changes in release mega-20180319 (since mega-20180316)
+-------------------------------------------------
+
+Release date: Mon Mar 19 04:00:11 CET 2018
+
+Bartlomiej Zimon (5):
+      Add download button for current rule set
+      - add encoder write #1086
+      - fix success setting
+      - fix P073 success setting in PLUGIN_WRITE callback
+      - initialize pointer in P073
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180316
+
+Gijs Noorlander (6):
+      Add download button for current rule set (#1102)
+      - add encoder write command #1086 (#1103)
+      Changed so that running all tasks immediately with deep sleep enabled… (#1110)
+      Merge pull request #1112 from uzi18/fix-p073
+      Merge pull request #1114 from TD-er/feature/wifi_details_json
+      Merge pull request #1118 from TD-er/bugfix/mqtt_publish_after_deep_sleep
+
+Panayotis Kouvarakis (1):
+      Changed so that running all tasks immediately with deep sleep enabled only happens on first iteration after wake up
+
+Unknown (11):
+      [WiFi] Try to minimize effect of WiFi interruptions
+      [Relaxed WiFi] Perform WiFi initialization in steps
+      [Travis error] Some #include test that wasn't meant to be included
+      [JSON] Add uint name (#1099) and WiFi information (PR #1113)
+      [issue #1007] Allow user specific data in separate file
+      #ifndef instead of #ifdef
+      [issue #1007] Add other defines as suggested by @uzi18
+      [issue #1097] MQTT publish after deep sleep
+      Merge pull request #1113 from TD-er/feature/reduce_impact_wifi_disconnect
+      Merge pull request #1116 from TD-er/feature/allow_own_defaults
+      [merge] MIssing #endif due to merging.
+
+s0170071 (2):
+      changed memory tracker to uint64_t for the ESP32
+      Keep uint. Just change the init value.
+
+
+-------------------------------------------------
+Changes in release mega-20180316 (since mega-20180315)
+-------------------------------------------------
+
+Release date: Fri Mar 16 04:00:11 CET 2018
+
+Bartlomiej Zimon (3):
+      - move all structs from ESPEasy.ino into header file     - add some fix for headers     - add const to rtttl notes array
+      Merge branch 'mega' of github.com:letscontrolit/ESPEasy into mega
+      Merge branch 'mega' of github.com:letscontrolit/ESPEasy into mega
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180313
+
+Gijs Noorlander (3):
+      MCP3221 allow values for calibration (#1073)
+      [issue #1066] Fix Webserver handle_control (#1079)
+      Fixed multi instance problem on SHT3x #433 (#1081)
+
+JK (1):
+      Fixed #433
+
+Unknown (9):
+      [issue #1066] Fix Webserver handle_control
+      - move all structs from ESPEasy.ino into header file
+      [v2.0 split globals] Base split on v2.0 version of ESPEasy.ino
+      [issue #1057] AM PM display issue
+      [issue #993] variable in MQTT subscribe topic
+      [issue #951] Changed System#Initialized  => System#Wake
+      [issue #1057] AM PM display issue
+      [issue #993] variable in MQTT subscribe topic
+      [issue #951] Changed System#Initialized  => System#Wake
+
+mvdbro (4):
+      #893 part1, send messages
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+sassod (1):
+      12bit ADC values acceted up to 4095
+
+
+-------------------------------------------------
+Changes in release mega-20180315 (since mega-20180314)
+-------------------------------------------------
+
+Release date: Thu Mar 15 04:00:08 CET 2018
+
+mvdbro (3):
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+
+-------------------------------------------------
+Changes in release mega-20180314 (since mega-20180313)
+-------------------------------------------------
+
+Release date: Wed Mar 14 04:00:11 CET 2018
+
+mvdbro (1):
+      #893 part1, send messages
+
+
+-------------------------------------------------
 Changes in release mega-20180313 (since mega-20180312)
 -------------------------------------------------
 

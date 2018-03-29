@@ -278,8 +278,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   repl(F("%CR%"), F("\r"), s, useURLencode);
   repl(F("%LF%"), F("\n"), s, useURLencode);
   SMART_REPL(F("%ip%"),WiFi.localIP().toString())
-  SMART_REPL(F("%rssi%"), String((WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0))
-  SMART_REPL(F("%ssid%"), (WiFi.status() == WL_CONNECTED) ? WiFi.SSID() : F("--"))
+  SMART_REPL(F("%rssi%"), String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
+  SMART_REPL(F("%ssid%"), (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID())
   SMART_REPL(F("%unit%"), String(Settings.Unit))
   SMART_REPL(F("%mac%"), String(WiFi.macAddress()))
   #if defined(ESP8266)
@@ -288,6 +288,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
+    SMART_REPL(F("%systm_hm%"), getTimeString(':', false))
+    SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"), getTimeString(':'))
     SMART_REPL(F("%systime_am%"), getTimeString_ampm(':'))
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
@@ -309,6 +311,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
   SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-',':',' '))
   SMART_REPL(F("%uptime%"), String(wdcounter / 2))
+  SMART_REPL(F("%unixtime%"), String(getUnixTime()))
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   if (s.indexOf("%vname") != -1) {

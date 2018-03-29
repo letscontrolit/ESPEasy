@@ -31,6 +31,7 @@
 #include "SensorSerialBuffer.h"
 #include "ESPeasySoftwareSerial.h"
 
+
 class CjkSDS011
 {
 public:

@@ -1,3 +1,4 @@
+#ifdef USES_P050
 //#######################################################################################################
 //#################### Plugin 050 I2C TCS34725 RGB Color Sensor with IR filter and White LED ############
 //#######################################################################################################
@@ -176,3 +177,4 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
 
 #endif
+#endif // USES_P050

@@ -1,3 +1,4 @@
+#ifdef USES_P073
 //#######################################################################################################
 //###################   Plugin 073 - 7-segment display plugin TM1637/MAX7219       ######################
 //#######################################################################################################
@@ -41,7 +42,7 @@ class p073_7dgt
     byte brightness;
     boolean timesep;
 };
-p073_7dgt *Plugin_073_7dgt;
+p073_7dgt *Plugin_073_7dgt = NULL;
 //---------------------------------------------------
 
 uint8_t p073_showbuffer[8];
@@ -236,6 +237,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               break;
             }
           }
+          success = true;
         } else if (tmpString.equalsIgnoreCase(F("7dt"))) {
           if (Plugin_073_7dgt->output != 0)
             break;
@@ -291,6 +293,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               break;
             }
           }
+          success = true;
         } else {
           bool p073_validcmd = false;
           bool p073_displayon;
@@ -317,6 +320,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             }
           }
           if (p073_validcmd) {
+            success = true;
             switch (Plugin_073_7dgt->type)
             {
               case 0:
@@ -331,7 +335,6 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             }
           }
         }
-        success = true;
         break;
       }
 
@@ -784,3 +787,4 @@ void max7219_ShowBuffer(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
 }
 
 #endif
+#endif // USES_P073

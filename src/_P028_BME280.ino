@@ -1,3 +1,4 @@
+#ifdef USES_P028
 //#######################################################################################################
 //#################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 //#######################################################################################################
@@ -667,3 +668,4 @@ float Plugin_028_readAltitude(float seaLevel)
 float Plugin_028_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P028

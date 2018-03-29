@@ -1,3 +1,4 @@
+#ifdef USES_P030
 //#######################################################################################################
 //#################### Plugin 030 BMP280 I2C Temp/Barometric Pressure Sensor      #######################
 //#######################################################################################################
@@ -394,3 +395,4 @@ float Plugin_030_readAltitude(float seaLevel)
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P030
