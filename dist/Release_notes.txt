@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180329 (since mega-20180328)
+-------------------------------------------------
+
+Release date: Thu Mar 29 04:00:11 CEST 2018
+
+TD-er (2):
+      [ESP32] Event driven WiFi for ESP32
+      [Arduino IDE] Revert changes in include paths
+
+
+-------------------------------------------------
 Changes in release mega-20180328 (since mega-20180327)
 -------------------------------------------------
 
