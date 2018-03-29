@@ -6,8 +6,21 @@
   Additional features based on https://geektimes.ru/post/285572/ by Gerben (infernix__AT__gmail.com)
 
   This plugin reads the CO2 value from MH-Z19 NDIR Sensor
-  DevicePin1 - is RX for ESP
-  DevicePin2 - is TX for ESP
+
+  Pin-out:
+  Hd
+  SR    PWM
+  Tx    AOT
+  Rx    GND
+  Vo    Vin
+  (bottom view)
+  Skipping pin numbers due to inconsistancies in individual data sheet revisions.
+  MHZ19:  Connection:
+  VCC     5 V
+  GND     GND
+  Tx      ESP8266 1st GPIO specified in Device-settings
+  Rx      ESP8266 2nd GPIO specified in Device-settings
+  Currently (2018-03-29) also wrong on the wiki: https://www.letscontrolit.com/wiki/index.php/%22CO2_Sensor_MH-Z19%22
 */
 
 #define PLUGIN_049
