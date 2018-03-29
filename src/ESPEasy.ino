@@ -74,7 +74,7 @@
 
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
-#include <define_plugin_sets.h>
+#include "define_plugin_sets.h"
 
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
