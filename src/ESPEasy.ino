@@ -111,7 +111,7 @@ void setup()
 
   initLog();
 
-#ifdef ESP32
+#if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
 #else
   // WiFi event handlers
