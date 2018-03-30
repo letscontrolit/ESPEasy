@@ -439,8 +439,8 @@ ADC_MODE(ADC_VCC);
 #define ESPEASY_WIFI_GOT_IP                  2
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    3
 
-#ifdef ESP32
-void WiFiEvent(WiFiEvent_t event);
+#if defined(ESP32)
+void WiFiEvent(system_event_id_t event, system_event_info_t info);
 #else
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
@@ -1118,8 +1118,8 @@ String dummyString = "";
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
-#ifdef ESP32
-enum WiFiDisconnectReason 
+#if defined(ESP32)
+enum WiFiDisconnectReason
 {
     WIFI_DISCONNECT_REASON_UNSPECIFIED              = 1,
     WIFI_DISCONNECT_REASON_AUTH_EXPIRE              = 2,
@@ -1149,7 +1149,7 @@ enum WiFiDisconnectReason
     WIFI_DISCONNECT_REASON_NO_AP_FOUND              = 201,
     WIFI_DISCONNECT_REASON_AUTH_FAIL                = 202,
     WIFI_DISCONNECT_REASON_ASSOC_FAIL               = 203,
-    WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT        = 204,
+    WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT        = 204
 };
 #endif
 
@@ -1194,5 +1194,11 @@ bool shouldReboot=false;
 bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
+
+
+// These wifi event functions must be in a .h-file because otherwise the preprocessor
+// may not filter the ifdef checks properly.
+// Also the functions use a lot of global defined variables, so include at the end of this file.
+#include "ESPEasyWiFiEvent.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

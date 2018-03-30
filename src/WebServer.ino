@@ -4249,7 +4249,7 @@ void handle_filelist() {
   {
     if(!file.isDirectory()){
       TXBuffer += F("<TR><TD>");
-      if (file.name() != "/config.dat" && file.name() != "/security.dat" && file.name() != "/notification.dat")
+      if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
       {
         TXBuffer += F("<a class='button link' href=\"filelist?delete=");
         TXBuffer +=  file.name();

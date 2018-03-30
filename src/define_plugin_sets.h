@@ -134,6 +134,21 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Generic ESP32 -----------------------------
+#ifdef PLUGIN_SET_GENERIC_ESP32
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P036   // FrameOLED
+    // TODO : Add list of compatible plugins for ESP32 board.
+#endif
+
+
+
 // Generic ------------------------------------
 #ifdef PLUGIN_SET_GENERIC_1M
     #define PLUGIN_SET_NONE
