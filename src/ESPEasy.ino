@@ -112,7 +112,7 @@ void setup()
   initLog();
 
 #ifdef ESP32
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
 #else
   // WiFi event handlers
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);

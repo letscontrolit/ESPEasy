@@ -4,7 +4,7 @@
 // Make sure not to call anything in these functions that result in delay() or yield()
 //********************************************************************************
 #ifdef ESP32
-void WiFiEvent(WiFiEvent_t event) {
+void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch(event) {
     case SYSTEM_EVENT_STA_CONNECTED:
       lastConnectMoment = millis();
@@ -19,6 +19,7 @@ void WiFiEvent(WiFiEvent_t event) {
       } else
         lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
       processedDisconnect = false;
+      lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
       wifiStatus = ESPEASY_WIFI_DISCONNECTED;
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
