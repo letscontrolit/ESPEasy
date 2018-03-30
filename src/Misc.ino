@@ -1561,19 +1561,37 @@ String parseTemplate(String &tmpString, byte lineSize)
                           value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
                         int oidx;
-                        if ((oidx = valueFormat.indexOf('O')) >= 0) // Output
+                        if (value.toFloat() == 0 || value.toFloat() == 1) //if val != 0 or != 1 ignore the format setting
                         {
-                          valueFormat.remove(oidx);
-                          oidx = valueFormat.indexOf('!'); // inverted or active low
                           float val = value.toFloat();
-                          if (oidx >= 0) {
-                            valueFormat.remove(oidx);
-                            value = val == 0 ? " ON" : "OFF";
-                          } else {
-                            value = val == 0 ? "OFF" : " ON";
+                          if ((oidx = valueFormat.indexOf('O')) >= 0) // on-off
+                          {
+                            //valueFormat.remove(oidx);
+                            oidx = valueFormat.indexOf('!'); // inverted or active low
+                            if (oidx >= 0) {
+                              //valueFormat.remove(oidx);
+                              value = val == 0 ? " ON" : "OFF";
+                            } else {
+                              value = val == 0 ? "OFF" : " ON";
+                            }
+                          } else if ((oidx = valueFormat.indexOf('U')) >= 0) // Up-down
+                          {
+                            oidx = valueFormat.indexOf('!'); // inverted or active low
+                            if (oidx >= 0) {
+                              value = val == 0 ? "  UP" : "DOWN";
+                            } else {
+                              value = val == 0 ? "DOWN" : "  UP";
+                            }
+                          } else if ((oidx = valueFormat.indexOf('C')) >= 0) // Open-close
+                          {
+                            oidx = valueFormat.indexOf('!'); // inverted or active low
+                            if (oidx >= 0) {
+                              value = val == 0 ? " OPEN" : "CLOSE";
+                            } else {
+                              value = val == 0 ? "CLOSE" : " OPEN";
+                            }
                           }
                         }
-
                         if (valueFormat == "R")
                         {
                           int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
