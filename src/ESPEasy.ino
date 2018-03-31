@@ -318,7 +318,10 @@ void loop()
   }
 
   bool firstLoopWiFiConnected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED && firstLoop;
-  if (firstLoopWiFiConnected)  firstLoop = false;
+  if (firstLoopWiFiConnected) {
+     firstLoop = false;
+     timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
+   }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopWiFiConnected || readyForSleep()) && isDeepSleepEnabled())
