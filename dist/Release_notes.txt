@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180331 (since mega-20180330)
+-------------------------------------------------
+
+Release date: Sat Mar 31 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build ESP32] Fix for build issues between ESP32 and ESP8266
+      [ESP32] Build errors/warnings
+
+mvdbro (1):
+      ESP32: Fix Wifi Disconnect reason
+
+
+-------------------------------------------------
 Changes in release mega-20180330 (since mega-20180329)
 -------------------------------------------------
 
