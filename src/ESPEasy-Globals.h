@@ -459,6 +459,7 @@ MDNSResponder mdns;
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
+bool MQTTclient_connected = false;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;

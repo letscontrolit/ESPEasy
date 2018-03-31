@@ -118,6 +118,8 @@ void processGotIP() {
   if (Settings.UseNTP) {
     initTime();
   }
+  timermqtt_interval = 100;
+  timermqtt = millis() + timermqtt_interval;
   if (Settings.UseRules)
   {
     String event = F("WiFi#Connected");
@@ -128,7 +130,14 @@ void processGotIP() {
   processedGetIP = true;
 }
 
-
+void resetWiFi() {
+  WiFiMode_t currentMode = WiFi.getMode();
+  WiFi.mode(WIFI_OFF);
+  WiFi.mode(currentMode);
+  lastDisconnectMoment = millis();
+  processedDisconnect = false;
+  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+}
 
 
 //********************************************************************************

@@ -221,7 +221,7 @@ void setup()
   timer100ms = 0; // timer for periodic actions 10 x per/sec
   timer1s = 0; // timer for periodic actions once per/sec
   timerwd = 0; // timer for watchdog once per 30 sec
-  timermqtt = 0; // Timer for the MQTT keep alive loop.
+  timermqtt = 10000; // Timer for the MQTT keep alive loop, initial value can be high, since it will be set as soon as IP is set.
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
 
@@ -312,24 +312,26 @@ void loop()
     if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
     if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
+  } else if (WiFi.status() != WL_CONNECTED) {
+    // Somehow the WiFi has entered a limbo state.
+    resetWiFi();
   }
 
-  // Deep sleep mode, just run all tasks one time and go back to sleep as fast as possible
-  if (firstLoop && isDeepSleepEnabled())
+  bool firstLoopWiFiConnected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED && firstLoop;
+  if (firstLoopWiFiConnected) {
+     firstLoop = false;
+     timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
+   }
+
+  // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
+  if ((firstLoopWiFiConnected || readyForSleep()) && isDeepSleepEnabled())
   {
-      // Setup MQTT Client
-      // Controller index is forced to the first enabled MQTT controller.
-      // This is normally done via frequent checks, but there's no time for in deepsleep.
-      int enabledMqttController = firstEnabledMQTTController();
-      if (enabledMqttController >= 0) {
-        MQTTConnect(enabledMqttController);
-      }
+      runPeriodicalMQTT();
       // Now run all frequent tasks
       run50TimesPerSecond();
       run10TimesPerSecond();
       runEach30Seconds();
       runOncePerSecond();
-      runPeriodicalMQTT();
   }
   //normal mode, run each task when its time
   else
@@ -366,26 +368,50 @@ void loop()
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
-  firstLoop = false;
 }
 
 
 void runPeriodicalMQTT() {
   // MQTT_KEEPALIVE = 15 seconds.
-  timermqtt = millis() + timermqtt_interval;
+  if (!WiFiConnected(10)) {
+    updateMQTTclient_connected();
+    return;
+  }
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
     if (!MQTTclient.loop()) {
-      if (!MQTTCheck(enabledMqttController)) {
-        // Check failed, no need to retry it immediately.
-        if (timermqtt_interval < 2000)
-          timermqtt_interval += 250;
-      } else {
-          timermqtt_interval = 250;
+      updateMQTTclient_connected();
+      if (MQTTCheck(enabledMqttController)) {
+        updateMQTTclient_connected();
       }
     }
+  } else {
+    if (MQTTclient.connected()) {
+      MQTTclient.disconnect();
+      updateMQTTclient_connected();
+    }
   }
+}
+
+void updateMQTTclient_connected() {
+  if (MQTTclient_connected != MQTTclient.connected()) {
+    MQTTclient_connected = !MQTTclient_connected;
+    if (!MQTTclient_connected)
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
+    if (Settings.UseRules) {
+      String event = MQTTclient_connected ? F("MQTT#Connected") : F("MQTT#Disconnected");
+      rulesProcessing(event);
+    }
+  }
+  if (!MQTTclient_connected) {
+    if (timermqtt_interval < 2000) {
+      timermqtt_interval += 250;
+    }
+  } else {
+    timermqtt_interval = 250;
+  }
+  timermqtt = millis() + timermqtt_interval;
 }
 
 /*********************************************************************************************\
