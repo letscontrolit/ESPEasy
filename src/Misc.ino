@@ -2861,14 +2861,3 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
   return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
                      (112.0 + 0.9 * temperature), 8);
 }
-
-boolean serialIsSwapped=false; 
-void swapSerial(boolean state)
-{
-    Serial.flush();
-    if (state != serialIsSwapped) 
-      Serial.swap();
-
-    serialIsSwapped = state;
-}
-
