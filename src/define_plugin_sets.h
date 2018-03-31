@@ -350,6 +350,10 @@ To create/register a plugin, you have to :
     #define USES_P049   // MHZ19
 
     #define USES_P052   // SenseAir
+
+    #define USES_P059   // Encoder
+
+    #define USES_P063   // TTP229_KeyPad
 #endif
 
 
@@ -388,12 +392,11 @@ To create/register a plugin, you have to :
     #define USES_P056   // SDS011-Dust
     #define USES_P057   // HT16K33_LED
     #define USES_P058   // HT16K33_KeyPad
-    #define USES_P059   // Encoder
 
     #define USES_P060   // MCP3221
     #define USES_P061   // Keypad
     #define USES_P062   // MPR121_KeyPad
-    #define USES_P063   // TTP229_KeyPad
+
     #define USES_P064   // APDS9960
     #define USES_P065   // DRF0299
     #define USES_P066   // VEML6040
