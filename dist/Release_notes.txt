@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20180401 (since mega-20180331)
+-------------------------------------------------
+
+Release date: Sun Apr  1 04:00:08 CEST 2018
+
+Grovkillen (1):
+      P0059 (rotary encoder) and P0063 (ttp229, keypad)
+
+TD-er (3):
+      [issue #1201] MQTT#Disconnected event and MQTT stability improvements
+      [issue #1201] MQTT#Disconnected event and MQTT stability improvements
+      [deepsleep] Allow for some minimum wifi connect time
+
+s0170071 (1):
+      Serial Swap function
+
+
+-------------------------------------------------
 Changes in release mega-20180331 (since mega-20180330)
 -------------------------------------------------
 
