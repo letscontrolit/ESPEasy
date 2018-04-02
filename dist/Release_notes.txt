@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180402 (since mega-20180401)
+-------------------------------------------------
+
+Release date: Mon Apr  2 04:00:10 CEST 2018
+
+Gijs Noorlander (1):
+      Revert "Merge pull request #1205 from s0170071/SerialSwap"
+
+
+-------------------------------------------------
 Changes in release mega-20180401 (since mega-20180331)
 -------------------------------------------------
 
