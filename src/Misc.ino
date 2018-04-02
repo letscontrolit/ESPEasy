@@ -712,7 +712,12 @@ String SaveSettings(void)
   md5.getBytes(SecuritySettings.md5);
   err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
 
- return (err);
+  if (WifiIsAP()) {
+    // Security settings are saved, may be update of WiFi settings or hostname.
+    wifiSetupConnect = true;
+  }
+
+  return (err);
 }
 
 /********************************************************************************************\
@@ -1341,6 +1346,8 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 void addLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
+    Serial.print(millis());
+    Serial.print(F(" : "));
     Serial.println(line);
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {

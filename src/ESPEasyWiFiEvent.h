@@ -55,9 +55,9 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event){
     lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
   } else
     lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
-  processedDisconnect = false;
   lastDisconnectReason = event.reason;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event){
@@ -65,4 +65,19 @@ void onGotIP(const WiFiEventStationModeGotIP& event){
   wifiStatus = ESPEASY_WIFI_GOT_IP;
   processedGetIP = false;
 }
+
+void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
+  for (byte i = 0; i < 6; ++i) {
+    lastMacConnectedAPmode[i] = event.mac[i];
+  }
+  processedConnectAPmode = false;
+}
+
+void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+  for (byte i = 0; i < 6; ++i) {
+    lastMacDisconnectedAPmode[i] = event.mac[i];
+  }
+  processedDisconnectAPmode = false;
+}
+
 #endif

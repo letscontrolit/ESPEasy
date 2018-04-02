@@ -16,7 +16,8 @@
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
-#define DEFAULT_AP_IP           192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
+#define DEFAULT_AP_IP       192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
+#define DEFAULT_AP_SUBNET   255,255,255,0       // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
@@ -445,6 +446,8 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info);
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 WiFiEventHandler stationGotIpHandler;
+WiFiEventHandler APModeStationConnectedHandler;
+WiFiEventHandler APModeStationDisconnectedHandler;
 #endif
 
 // Setup DNS, only used if the ESP has no valid WiFi config
@@ -1171,12 +1174,15 @@ unsigned long lastDisconnectMoment = 0;
 unsigned long lastGetIPmoment = 0;
 unsigned long lastConnectedDuration = 0;
 bool intent_to_reboot = false;
+uint8_t lastMacConnectedAPmode[6] = {0};
+uint8_t lastMacDisconnectedAPmode[6] = {0};
 
 // Semaphore like booleans for processing data gathered from WiFi events.
 bool processedConnect = true;
 bool processedDisconnect = true;
 bool processedGetIP = true;
-
+bool processedConnectAPmode = true;
+bool processedDisconnectAPmode = true;
 
 unsigned long start = 0;
 unsigned long elapsed = 0;

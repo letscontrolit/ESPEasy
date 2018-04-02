@@ -348,6 +348,11 @@ boolean clientIPallowed()
   WiFiClient client(WebServer.client());
   if (ipInRange(client.remoteIP(), low, high))
     return true;
+
+  if (WifiIsAP()) {
+    // @TD-er Fixme: Should match subnet of SoftAP.
+    return true;
+  }
   String response = F("IP blocked: ");
   response += formatIP(client.remoteIP());
   WebServer.send(403, "text/html", response);
