@@ -5,7 +5,7 @@
 
 #define PLUGIN_029
 #define PLUGIN_ID_029         29
-#define PLUGIN_NAME_029       "Output - (Domoticz MQTT helper)"
+#define PLUGIN_NAME_029       "Output - Domoticz MQTT Helper"
 #define PLUGIN_VALUENAME1_029 "Output"
 boolean Plugin_029(byte function, struct EventStruct *event, String& string)
 {
