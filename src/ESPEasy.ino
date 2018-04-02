@@ -276,7 +276,34 @@ void setup()
 
   writeDefaultCSS();
 
+  #ifdef USE_RTOS_MULTITASKING
+    xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 8192, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(RTOS_TaskSerial, "RTOS_TaskSerial", 8192, NULL, 1, NULL, 1);
+  #endif
+
 }
+
+#ifdef USE_RTOS_MULTITASKING
+void RTOS_TaskServers( void * parameter )
+{
+ while (true){
+  delay(100);
+  WebServer.handleClient();
+  checkUDP();
+ }
+}
+
+void RTOS_TaskSerial( void * parameter )
+{
+ while (true){
+    delay(100);
+    if (Settings.UseSerial)
+    if (Serial.available())
+      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+        serial();
+ }
+}
+#endif
 
 int firstEnabledMQTTController() {
   for (byte i = 0; i < CONTROLLER_MAX; ++i) {
@@ -441,7 +468,9 @@ void run10TimesPerSecond()
     eventBuffer = "";
   }
   elapsed = micros() - start;
-  WebServer.handleClient();
+  #ifndef USE_RTOS_MULTITASKING
+    WebServer.handleClient();
+  #endif
 }
 
 
@@ -780,18 +809,18 @@ void backgroundtasks()
     tcpCleanup();
   #endif
 
+#ifndef USE_RTOS_MULTITASKING
   if (Settings.UseSerial)
     if (Serial.available())
       if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
         serial();
+  WebServer.handleClient();
+  checkUDP();
+#endif
 
   // process DNS, only used if the ESP has no valid WiFi config
   if (wifiSetup)
     dnsServer.processNextRequest();
-
-  WebServer.handleClient();
-
-  checkUDP();
 
   #ifdef FEATURE_ARDUINO_OTA
   if(Settings.ArduinoOTAEnable)

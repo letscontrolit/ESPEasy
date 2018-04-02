@@ -55,6 +55,10 @@
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
+#if defined(ESP32)
+  #define USE_RTOS_MULTITASKING
+#endif
+
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
