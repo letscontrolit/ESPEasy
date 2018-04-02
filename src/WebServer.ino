@@ -3508,6 +3508,8 @@ void handle_json()
     {
         reply += to_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
         reply += F(",\n");
+        reply += to_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+        reply += F(",\n");
     }
 
     reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
