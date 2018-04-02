@@ -118,6 +118,8 @@ void setup()
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
 	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
 	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
+  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
 #endif
 
   if (SpiffsSectors() < 32)
@@ -195,6 +197,7 @@ void setup()
     //make sure previous serial buffers are flushed before resetting baudrate
     Serial.flush();
     Serial.begin(Settings.BaudRate);
+//    Serial.setDebugOutput(true);
   }
 
   if (Settings.Build != BUILD)
@@ -235,8 +238,7 @@ void setup()
   }
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WifiAPconfig();
-
+  WifiAPMode(false);
   WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
@@ -341,8 +343,11 @@ void loop()
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
   } else if (WiFi.status() != WL_CONNECTED) {
     // Somehow the WiFi has entered a limbo state.
+    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
     resetWiFi();
   }
+  if (!processedConnectAPmode) processConnectAPmode();
+  if (!processedDisconnectAPmode) processDisconnectAPmode();
 
   bool firstLoopWiFiConnected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED && firstLoop;
   if (firstLoopWiFiConnected) {
@@ -557,12 +562,6 @@ void runOncePerSecond()
     Serial.print(elapsed);
     Serial.print(F(" uS  1 ps:"));
     Serial.println(timer);
-  }
-
-  if (timerAPoff != 0 && timeOutReached(timerAPoff))
-  {
-    timerAPoff = 0;
-    WifiAPMode(false);
   }
 }
 
