@@ -3503,6 +3503,13 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
     reply += F(",\n");
+
+    if (wdcounter > 0)
+    {
+        reply += to_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
+        reply += F(",\n");
+    }
+
     reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
     reply += F("\n},\n");
 
