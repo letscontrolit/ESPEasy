@@ -27,7 +27,7 @@ Adafruit_NeoPixel *Plugin_038_pixels;
 
 #define PLUGIN_038
 #define PLUGIN_ID_038         38
-#define PLUGIN_NAME_038       "Output - NeoPixel (basic)"
+#define PLUGIN_NAME_038       "Output - NeoPixel (Basic)"
 #define PLUGIN_VALUENAME1_038 ""
 
 int MaxPixels = 0;
