@@ -349,7 +349,7 @@ boolean clientIPallowed()
   if (ipInRange(client.remoteIP(), low, high))
     return true;
 
-  if (WifiIsAP()) {
+  if (WifiIsAP(WiFi.getMode())) {
     // @TD-er Fixme: Should match subnet of SoftAP.
     return true;
   }
@@ -4483,7 +4483,7 @@ void handle_setup() {
     TXBuffer.endStream();
 
     wifiSetup = false;
-    //WifiAPMode(false);  //this forces the iPhone to exit safari and this page was never displayed
+    //setWifiMode(WIFI_STA);  //this forces the iPhone to exit safari and this page was never displayed
     timerAPoff = millis() + 60000L;  //switch the AP off in 1 minute
     return;
   }
@@ -4506,6 +4506,7 @@ void handle_setup() {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
+    setWifiState(WifiCredentialsChanged);
     status = 1;
     refreshCount = 0;
   }
@@ -4551,8 +4552,8 @@ void handle_setup() {
     if (refreshCount > 0)
     {
       status = 0;
-      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
-      SecuritySettings.WifiKey[0] = 0;
+//      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
+//      SecuritySettings.WifiKey[0] = 0;
       TXBuffer += F("<a class=\"button\" href=\"setup\">Back to Setup</a>");
     }
     else

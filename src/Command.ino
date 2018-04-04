@@ -681,7 +681,7 @@ void ExecuteCommand(byte source, const char *Line)
   case cmd_WifiConnect:
   {
     success = true;
-    WiFiConnectRelaxed();
+    setWifiState(WifiTryConnect);
     break;
   }
 
@@ -694,7 +694,7 @@ void ExecuteCommand(byte source, const char *Line)
 
   case cmd_WifiAPMode:
   {
-    WifiAPMode(true);
+    setWifiState(WifiEnableAP);
     success = true;
     break;
   }

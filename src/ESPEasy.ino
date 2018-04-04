@@ -168,6 +168,8 @@ void setup()
   saveToRTC();
 
   addLog(LOG_LEVEL_INFO, log);
+  WiFi.setAutoReconnect(false);
+  setWifiState(WifiStart);
 
   fileSystemCheck();
   progMemMD5check();
@@ -238,8 +240,7 @@ void setup()
   }
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WifiAPMode(false);
-  WiFiConnectRelaxed();
+  setWifiState(WifiTryConnect);
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -263,12 +264,6 @@ void setup()
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
-
-  // Start DNS, only used if the ESP has no valid WiFi config
-  // It will reply with it's own address on all DNS requests
-  // (captive portal concept)
-  if (wifiSetup)
-    dnsServer.start(DNS_PORT, "*", apIP);
 
   if (Settings.UseRules)
   {
@@ -334,7 +329,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WiFiConnectRelaxed();
+    setWifiState(WifiCredentialsChanged);
     wifiSetupConnect = false;
   }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
@@ -818,7 +813,7 @@ void backgroundtasks()
 #endif
 
   // process DNS, only used if the ESP has no valid WiFi config
-  if (wifiSetup)
+  if (dnsServerActive)
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA

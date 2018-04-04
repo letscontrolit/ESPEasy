@@ -458,6 +458,7 @@ WiFiEventHandler APModeStationDisconnectedHandler;
 const byte DNS_PORT = 53;
 IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
+bool dnsServerActive = false;
 #ifdef FEATURE_MDNS
 MDNSResponder mdns;
 #endif
@@ -1160,6 +1161,23 @@ enum WiFiDisconnectReason
     WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT        = 204
 };
 #endif
+
+enum WifiState {
+  WifiOff,
+  WifiStart,
+  WifiTryConnect,
+  WifiConnectionFailed,
+  WifiClientConnectAP,
+  WifiClientDisconnectAP,
+  WifiCredentialsChanged,
+  WifiConnectSuccess,
+  WifiDisableAP,
+  WifiEnableAP,
+};
+
+WifiState currentWifiState = WifiStart;
+
+void setWifiState(WifiState state);
 
 // WiFi related data
 boolean wifiSetup = false;
