@@ -1561,9 +1561,10 @@ String parseTemplate(String &tmpString, byte lineSize)
                           value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
                         int oidx;
-                        if (value.toFloat() == 0 || value.toFloat() == 1) //if val != 0 or != 1 ignore the format setting
+                        float val = value.toFloat();
+
+                        if (val == 0 || val == 1) //if val != 0 or != 1 ignore the format setting
                         {
-                          float val = value.toFloat();
                           if ((oidx = valueFormat.indexOf('O')) >= 0) // on-off
                           {
                             //valueFormat.remove(oidx);
