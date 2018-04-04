@@ -3646,7 +3646,7 @@ void handle_advanced() {
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
   String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
-
+  String UseRTOSMultitasking = WebServer.arg(F("usertosmultitasking"));
 
 
   if (edit.length() != 0)
@@ -3678,6 +3678,7 @@ void handle_advanced() {
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
     Settings.ArduinoOTAEnable = (ArduinoOTAEnable == "on");
+    Settings.UseRTOSMultitasking = (UseRTOSMultitasking == "on");
 
     addHtmlError( TXBuffer.buf, SaveSettings());
     if (Settings.UseNTP)
@@ -3750,6 +3751,10 @@ void handle_advanced() {
   addFormNumericBox(TXBuffer.buf,  F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
 
   addFormCheckBox(TXBuffer.buf,  F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
+
+  #if defined(ESP32)
+    addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
+  #endif
 
   addFormSeparator (TXBuffer.buf);
 

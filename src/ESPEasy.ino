@@ -276,9 +276,14 @@ void setup()
 
   writeDefaultCSS();
 
+  UseRTOSMultitasking = Settings.UseRTOSMultitasking;
   #ifdef USE_RTOS_MULTITASKING
-    xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 8192, NULL, 1, NULL, 1);
-    xTaskCreatePinnedToCore(RTOS_TaskSerial, "RTOS_TaskSerial", 8192, NULL, 1, NULL, 1);
+    if(UseRTOSMultitasking){
+      log = F("RTOS : Launching tasks");
+      addLog(LOG_LEVEL_INFO, log);
+      xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 8192, NULL, 1, NULL, 1);
+      xTaskCreatePinnedToCore(RTOS_TaskSerial, "RTOS_TaskSerial", 8192, NULL, 1, NULL, 1);
+    }
   #endif
 
 }
@@ -809,14 +814,14 @@ void backgroundtasks()
     tcpCleanup();
   #endif
 
-#ifndef USE_RTOS_MULTITASKING
-  if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
-  WebServer.handleClient();
-  checkUDP();
-#endif
+  if(!UseRTOSMultitasking){
+    if (Settings.UseSerial)
+      if (Serial.available())
+        if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
+          serial();
+    WebServer.handleClient();
+    checkUDP();
+  }
 
   // process DNS, only used if the ESP has no valid WiFi config
   if (wifiSetup)

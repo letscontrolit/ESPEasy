@@ -699,6 +699,7 @@ struct SettingsStruct
   // make sure crc is the last value in the struct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
+  boolean       UseRTOSMultitasking;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -1200,7 +1201,8 @@ bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
 
-
+boolean       UseRTOSMultitasking;
+  
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.
