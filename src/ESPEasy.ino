@@ -283,6 +283,7 @@ void setup()
       addLog(LOG_LEVEL_INFO, log);
       xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 8192, NULL, 1, NULL, 1);
       xTaskCreatePinnedToCore(RTOS_TaskSerial, "RTOS_TaskSerial", 8192, NULL, 1, NULL, 1);
+      xTaskCreatePinnedToCore(RTOS_Task10ps, "RTOS_Task10ps", 8192, NULL, 1, NULL, 1);
     }
   #endif
 
@@ -306,6 +307,14 @@ void RTOS_TaskSerial( void * parameter )
     if (Serial.available())
       if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
         serial();
+ }
+}
+
+void RTOS_Task10ps( void * parameter )
+{
+ while (true){
+    delay(100);
+    run10TimesPerSecond();
  }
 }
 #endif
@@ -373,7 +382,8 @@ void loop()
       run50TimesPerSecond();
 
     if (timeOutReached(timer100ms))
-      run10TimesPerSecond();
+      if(!UseRTOSMultitasking)
+        run10TimesPerSecond();
 
     if (timeOutReached(timerwd))
       runEach30Seconds();
