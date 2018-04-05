@@ -1560,45 +1560,31 @@ String parseTemplate(String &tmpString, byte lineSize)
                         else
                           value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
-                        int oidx;
-                        float val = value.toFloat();
+                        const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
+                        const float valFloat = value.toFloat();
+                        const int inverted = valueFormat.indexOf('!') >= 0 ? 1 : 0;
 
-                        if (val == 0 || val == 1) //if val != 0 or != 1 ignore the format setting
-                        {
-                          if ((oidx = valueFormat.indexOf('O')) >= 0) // on-off
-                          {
-                            //valueFormat.remove(oidx);
-                            oidx = valueFormat.indexOf('!'); // inverted or active low
-                            if (oidx >= 0) {
-                              //valueFormat.remove(oidx);
-                              value = val == 0 ? " ON" : "OFF";
-                            } else {
-                              value = val == 0 ? "OFF" : " ON";
-                            }
-                          } else if ((oidx = valueFormat.indexOf('U')) >= 0) // Up-down
-                          {
-                            oidx = valueFormat.indexOf('!'); // inverted or active low
-                            if (oidx >= 0) {
-                              value = val == 0 ? "  UP" : "DOWN";
-                            } else {
-                              value = val == 0 ? "DOWN" : "  UP";
-                            }
-                          } else if ((oidx = valueFormat.indexOf('C')) >= 0) // Open-close
-                          {
-                            oidx = valueFormat.indexOf('!'); // inverted or active low
-                            if (oidx >= 0) {
-                              value = val == 0 ? " OPEN" : "CLOSE";
-                            } else {
-                              value = val == 0 ? "CLOSE" : " OPEN";
-                            }
-                          }
-                        }
-                        if (valueFormat == "R")
-                        {
+                        if (valueFormat.indexOf('O') >= 0)
+                          value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
+                        else if (valueFormat.indexOf('C') >= 0)
+                          value = val == inverted ? "CLOSE" : " OPEN";
+                        else if (valueFormat.indexOf('U') >= 0)
+                          value = val == inverted ? "DOWN" : "  UP";
+                        else if (valueFormat.indexOf('Y') >= 0)
+                          value = val == inverted ? " NO" : "YES";
+                        else if (valueFormat.indexOf('D') >= 0)  // round to the nearest integer
+                          value = (int)roundf(valFloat);
+                        else if (valueFormat.indexOf('F') >= 0)  // FLOOR (round down)
+                          value = (int)floorf(valFloat);
+                        else if (valueFormat.indexOf('E') >= 0)  // CEILING (round up)
+                          value = (int)ceilf(valFloat);
+
+                        if (valueFormat.indexOf('R') >= 0) {
                           int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
                           for (byte f = 0; f < filler; f++)
                             newString += " ";
                         }
+
                         newString += String(value);
                         break;
                       }
