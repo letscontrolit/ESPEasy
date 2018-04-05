@@ -4950,6 +4950,25 @@ void handle_sysinfo() {
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
+  #if defined(ESP32)
+     TXBuffer += F(" (0x");
+     uint64_t chipid=ESP.getEfuseMac();   //The chip ID is essentially its MAC address(length: 6 bytes).
+     uint32_t ChipId1 = (uint16_t)(chipid>>32);
+     String espChipIdS(ChipId1, HEX);
+     espChipIdS.toUpperCase();
+     TXBuffer += espChipIdS;
+     ChipId1 = (uint32_t)chipid;
+     String espChipIdS1(ChipId1, HEX);
+     espChipIdS1.toUpperCase();
+     TXBuffer += espChipIdS1;
+     TXBuffer += F(")");
+
+     TXBuffer += F("<TR><TD>ESP Chip Freq:<TD>");
+     TXBuffer += ESP.getCpuFreqMHz(); 
+     TXBuffer += F(" MHz");
+  #endif
+  
+  
 
    TXBuffer += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 
