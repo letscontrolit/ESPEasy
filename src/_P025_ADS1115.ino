@@ -1,3 +1,4 @@
+#ifdef USES_P025
 //#######################################################################################################
 //#################################### Plugin 025: ADS1115 I2C 0x48)  ###############################################
 //#######################################################################################################
@@ -9,7 +10,7 @@
 
 boolean Plugin_025_init = false;
 
-static uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
+uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
   Wire.beginTransmission(i2cAddress);
   Wire.write((0x00));
   Wire.endTransmission();
@@ -202,3 +203,4 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P025

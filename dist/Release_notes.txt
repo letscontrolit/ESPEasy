@@ -1,4 +1,243 @@
 -------------------------------------------------
+Changes in release mega-20180405 (since mega-20180403)
+-------------------------------------------------
+
+Release date: Thu Apr  5 04:00:10 CEST 2018
+
+Grovkillen (4):
+      Updated JSON path for sensor values and names
+      Delete WebServer.ino
+      Moved to correct folder
+      Added value number as discussed.
+
+moi (3):
+      Show CPU Load in JSON page
+      Adds CPU Load LC in JSON page
+      unwanted lib_ignore now properly commented
+
+mvdbro (2):
+      ESP32 RTOS config setting
+      ESP32 RTOS 10 per second
+
+
+-------------------------------------------------
+Changes in release mega-20180403 (since mega-20180402)
+-------------------------------------------------
+
+Release date: Tue Apr  3 04:00:14 CEST 2018
+
+Grovkillen (2):
+      Update _P038_NeoPixel.ino
+      Update _P029_Output.ino
+
+mvdbro (1):
+      ESP32 prep for RTOS multitasking
+
+
+-------------------------------------------------
+Changes in release mega-20180402 (since mega-20180401)
+-------------------------------------------------
+
+Release date: Mon Apr  2 04:00:10 CEST 2018
+
+Gijs Noorlander (1):
+      Revert "Merge pull request #1205 from s0170071/SerialSwap"
+
+
+-------------------------------------------------
+Changes in release mega-20180401 (since mega-20180331)
+-------------------------------------------------
+
+Release date: Sun Apr  1 04:00:08 CEST 2018
+
+Grovkillen (1):
+      P0059 (rotary encoder) and P0063 (ttp229, keypad)
+
+TD-er (3):
+      [issue #1201] MQTT#Disconnected event and MQTT stability improvements
+      [issue #1201] MQTT#Disconnected event and MQTT stability improvements
+      [deepsleep] Allow for some minimum wifi connect time
+
+s0170071 (1):
+      Serial Swap function
+
+
+-------------------------------------------------
+Changes in release mega-20180331 (since mega-20180330)
+-------------------------------------------------
+
+Release date: Sat Mar 31 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build ESP32] Fix for build issues between ESP32 and ESP8266
+      [ESP32] Build errors/warnings
+
+mvdbro (1):
+      ESP32: Fix Wifi Disconnect reason
+
+
+-------------------------------------------------
+Changes in release mega-20180330 (since mega-20180329)
+-------------------------------------------------
+
+Release date: Fri Mar 30 04:00:10 CEST 2018
+
+Gijs Noorlander (1):
+      Build issue with Arduino IDE
+
+
+-------------------------------------------------
+Changes in release mega-20180329 (since mega-20180328)
+-------------------------------------------------
+
+Release date: Thu Mar 29 04:00:11 CEST 2018
+
+TD-er (2):
+      [ESP32] Event driven WiFi for ESP32
+      [Arduino IDE] Revert changes in include paths
+
+
+-------------------------------------------------
+Changes in release mega-20180328 (since mega-20180327)
+-------------------------------------------------
+
+Release date: Wed Mar 28 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build] Cleanup/split builds using defines
+      [build] Disabled a few PlatformIO profiles for now.
+
+mvdbro (1):
+      Fix nesting level check
+
+soif (1):
+      Initial re-organisation of plugin sets (#1019)
+
+
+-------------------------------------------------
+Changes in release mega-20180327 (since mega-20180326)
+-------------------------------------------------
+
+Release date: Tue Mar 27 04:00:09 CEST 2018
+
+TD-er (1):
+      [issue #1174] Show degree sign via external writes to LCD
+
+
+-------------------------------------------------
+Changes in release mega-20180326 (since mega-20180324)
+-------------------------------------------------
+
+Release date: Mon Mar 26 04:00:14 CEST 2018
+
+Bartlomiej Zimon (1):
+      - fix for #1170 - uservar not setted on encwrite
+
+Brian Setz (1):
+      [P1] Support for latest standard
+
+TD-er (3):
+      [Command] Parsing improvement for commands
+      [wifi] Event based connect/reconnect
+      [NTP] Speedup NTP again with async WiFi
+
+
+-------------------------------------------------
+Changes in release mega-20180324 (since mega-20180323)
+-------------------------------------------------
+
+Release date: Sat Mar 24 04:00:10 CET 2018
+
+TD-er (3):
+      [WiFi] Reverted those temp String uses for ssid/pass
+      [issue #1131] Add %unixtime%
+      [issue #1097] Call MQTTclient.loop() during deepsleep
+
+
+-------------------------------------------------
+Changes in release mega-20180323 (since mega-20180322)
+-------------------------------------------------
+
+Release date: Fri Mar 23 04:00:06 CET 2018
+
+mvdbro (1):
+      ESP32 fix
+
+
+-------------------------------------------------
+Changes in release mega-20180322 (since mega-20180321)
+-------------------------------------------------
+
+Release date: Thu Mar 22 04:00:11 CET 2018
+
+Bartlomiej Zimon (7):
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P035 move strings to flash
+      - P048 fetch params only when needed
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P048 fetch params only when needed
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180321
+
+Gijs Noorlander (1):
+      [merge issue] Forgotten #endif in merge
+
+TD-er (6):
+      [wifi] Make more robust checks and increase timeout
+      - P035 move strings to flash
+      [wifi] Make more robust checks and increase timeout
+      [Memory] parseTemplate did not check if markers were found
+      [WiFi] Take much more time for initial WiFi connect during setup
+      [WiFi] Take much more time for initial WiFi connect during setup
+
+Unknown (1):
+      [Memory] parseTemplate did not check if markers were found
+
+s0170071 (2):
+      Serial WD crash
+      Serial WD crash
+
+
+-------------------------------------------------
+Changes in release mega-20180321 (since mega-20180320)
+-------------------------------------------------
+
+Release date: Wed Mar 21 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180320
+
+Unknown (2):
+      [wifi] Setup with factory settings could not complete
+      [wifi] Setup with factory settings could not complete
+
+
+-------------------------------------------------
+Changes in release mega-20180320 (since mega-20180319)
+-------------------------------------------------
+
+Release date: Tue Mar 20 04:00:10 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180319
+
+Gijs Noorlander (1):
+      Revert "Merge pull request #1116 from TD-er/feature/allow_own_defaults"
+
+Unknown (3):
+      Revert "Merge pull request #1116 from TD-er/feature/allow_own_defaults"
+      [issue #1097] WiFi connect with deepsleep enabled trigger watchdog reset
+      [issue #1097] WiFi connect with deepsleep enabled trigger watchdog reset
+
+es-ka (2):
+      Fix wiring description for SN75176 transceiver
+      Fix wiring description for SN75176 transceiver
+
+
+-------------------------------------------------
 Changes in release mega-20180319 (since mega-20180316)
 -------------------------------------------------
 

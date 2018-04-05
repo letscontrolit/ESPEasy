@@ -44,6 +44,10 @@ bool readyForSleep()
 {
   if (!isDeepSleepEnabled())
     return false;
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    // Allow 6 seconds to connect to WiFi
+    return timeOutReached(timerAwakeFromDeepSleep + 6000);
+  }
   return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);
 }
 
@@ -317,7 +321,7 @@ void statusLED(boolean traffic)
   else
   {
 
-    if (WiFi.status() == WL_CONNECTED)
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -1163,6 +1167,7 @@ void ResetFactory(void)
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+  intent_to_reboot = true;
   WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   #if defined(ESP8266)
@@ -1383,7 +1388,9 @@ void delayedReboot(int rebootDelay)
   \*********************************************************************************************/
 boolean saveToRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
     {
       addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
@@ -1393,9 +1400,6 @@ boolean saveToRTC()
     {
       return(true);
     }
-  #endif
-  #if defined(ESP32)
-    boolean ret = false;
   #endif
 }
 
@@ -1419,17 +1423,12 @@ void initRTC()
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
       return(false);
-
-    if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-      return true;
-    else
-      return false;
-  #endif
-  #if defined(ESP32)
-    boolean ret = false;
+    return (RTC.ID1 == 0xAA && RTC.ID2 == 0x55);
   #endif
 }
 
@@ -1439,18 +1438,17 @@ boolean readFromRTC()
 \*********************************************************************************************/
 boolean saveUserVarToRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
     byte* buffer = (byte*)&UserVar;
     size_t size = sizeof(UserVar);
     uint32_t sum = getChecksum(buffer, size);
     boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
     ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+    return ret;
   #endif
-  #if defined(ESP32)
-    boolean ret = false;
-  #endif
-  return ret;
 }
 
 
@@ -1459,7 +1457,9 @@ boolean saveUserVarToRTC()
 \*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
     byte* buffer = (byte*)&UserVar;
     size_t size = sizeof(UserVar);
@@ -1472,11 +1472,8 @@ boolean readUserVarFromRTC()
       addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
       memset(buffer, 0, size);
     }
+    return ret;
   #endif
-  #if defined(ESP32)
-    boolean ret = false;
-  #endif
-  return ret;
 }
 
 
@@ -1513,87 +1510,89 @@ String parseTemplate(String &tmpString, byte lineSize)
       newString += tmpString.substring(0, leftBracketIndex);
       tmpString = tmpString.substring(leftBracketIndex + 1);
       int rightBracketIndex = tmpString.indexOf(']');
-      if (rightBracketIndex)
+      if (rightBracketIndex >= 0)
       {
         tmpStringMid = tmpString.substring(0, rightBracketIndex);
         tmpString = tmpString.substring(rightBracketIndex + 1);
         int hashtagIndex = tmpStringMid.indexOf('#');
-        String deviceName = tmpStringMid.substring(0, hashtagIndex);
-        String valueName = tmpStringMid.substring(hashtagIndex + 1);
-        String valueFormat = "";
-        hashtagIndex = valueName.indexOf('#');
-        if (hashtagIndex >= 0)
-        {
-          valueFormat = valueName.substring(hashtagIndex + 1);
-          valueName = valueName.substring(0, hashtagIndex);
-        }
-
-        if (deviceName.equalsIgnoreCase("Plugin"))
-        {
-          String tmpString = tmpStringMid.substring(7);
-          tmpString.replace("#", ",");
-          if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
-            newString += tmpString;
-        }
-        else
-          for (byte y = 0; y < TASKS_MAX; y++)
+        if (hashtagIndex >= 0) {
+          String deviceName = tmpStringMid.substring(0, hashtagIndex);
+          String valueName = tmpStringMid.substring(hashtagIndex + 1);
+          String valueFormat = "";
+          hashtagIndex = valueName.indexOf('#');
+          if (hashtagIndex >= 0)
           {
-            if (Settings.TaskDeviceEnabled[y])
+            valueFormat = valueName.substring(hashtagIndex + 1);
+            valueName = valueName.substring(0, hashtagIndex);
+          }
+
+          if (deviceName.equalsIgnoreCase("Plugin"))
+          {
+            String tmpString = tmpStringMid.substring(7);
+            tmpString.replace("#", ",");
+            if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
+              newString += tmpString;
+          }
+          else
+            for (byte y = 0; y < TASKS_MAX; y++)
             {
-              LoadTaskSettings(y);
-              if (ExtraTaskSettings.TaskDeviceName[0] != 0)
+              if (Settings.TaskDeviceEnabled[y])
               {
-                if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
+                LoadTaskSettings(y);
+                if (ExtraTaskSettings.TaskDeviceName[0] != 0)
                 {
-                  boolean match = false;
-                  for (byte z = 0; z < VARS_PER_TASK; z++)
-                    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
-                    {
-                      // here we know the task and value, so find the uservar
-                      match = true;
-                      String value = "";
-                      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                      if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
-                        value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
-                      else
-                        value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-
-                      int oidx;
-                      if ((oidx = valueFormat.indexOf('O')) >= 0) // Output
-                      {
-                        valueFormat.remove(oidx);
-                        oidx = valueFormat.indexOf('!'); // inverted or active low
-                        float val = value.toFloat();
-                        if (oidx >= 0) {
-                          valueFormat.remove(oidx);
-                          value = val == 0 ? " ON" : "OFF";
-                        } else {
-                          value = val == 0 ? "OFF" : " ON";
-                        }
-                      }
-
-                      if (valueFormat == "R")
-                      {
-                        int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                        for (byte f = 0; f < filler; f++)
-                          newString += " ";
-                      }
-                      newString += String(value);
-                      break;
-                    }
-                  if (!match) // try if this is a get config request
+                  if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
                   {
-                    struct EventStruct TempEvent;
-                    TempEvent.TaskIndex = y;
-                    String tmpName = valueName;
-                    if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
-                      newString += tmpName;
+                    boolean match = false;
+                    for (byte z = 0; z < VARS_PER_TASK; z++)
+                      if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
+                      {
+                        // here we know the task and value, so find the uservar
+                        match = true;
+                        String value = "";
+                        byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                        if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+                          value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
+                        else
+                          value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
+
+                        int oidx;
+                        if ((oidx = valueFormat.indexOf('O')) >= 0) // Output
+                        {
+                          valueFormat.remove(oidx);
+                          oidx = valueFormat.indexOf('!'); // inverted or active low
+                          float val = value.toFloat();
+                          if (oidx >= 0) {
+                            valueFormat.remove(oidx);
+                            value = val == 0 ? " ON" : "OFF";
+                          } else {
+                            value = val == 0 ? "OFF" : " ON";
+                          }
+                        }
+
+                        if (valueFormat == "R")
+                        {
+                          int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                          for (byte f = 0; f < filler; f++)
+                            newString += " ";
+                        }
+                        newString += String(value);
+                        break;
+                      }
+                    if (!match) // try if this is a get config request
+                    {
+                      struct EventStruct TempEvent;
+                      TempEvent.TaskIndex = y;
+                      String tmpName = valueName;
+                      if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+                        newString += tmpName;
+                    }
+                    break;
                   }
-                  break;
                 }
               }
             }
-          }
+        }
       }
       leftBracketIndex = tmpString.indexOf('[');
       count++;
@@ -1614,7 +1613,6 @@ String parseTemplate(String &tmpString, byte lineSize)
   checkRAM(F("parseTemplate3"));
   return newString;
 }
-
 
 /********************************************************************************************\
   Calculate function for simple expressions
@@ -1959,8 +1957,6 @@ String rulesProcessingFile(String fileName, String& event)
     Serial.println(fileName);
     Serial.println(F("     flags CMI  parse output:"));
     }
-  fs::File f = SPIFFS.open(fileName, "r+");
-  SPIFFS_CHECK(f, fileName.c_str());
 
   static byte nestingLevel = 0;
   int data = 0;
@@ -1974,6 +1970,9 @@ String rulesProcessingFile(String fileName, String& event)
     nestingLevel--;
     return (log);
   }
+
+  fs::File f = SPIFFS.open(fileName, "r+");
+  SPIFFS_CHECK(f, fileName.c_str());
 
   String line = "";
   boolean match = false;
@@ -2013,7 +2012,7 @@ String rulesProcessingFile(String fileName, String& event)
             line = parseTemplate(line, line.length());
           }
           line.trim();
-          
+
           String lineOrg = line; // store original line for future use
           line.toLowerCase(); // convert all to lower case to make checks easier
 
@@ -2060,9 +2059,9 @@ String rulesProcessingFile(String fileName, String& event)
           {
             isCommand = false;
             codeBlock = false;
-            match = false;            
+            match = false;
           }
-          
+
           if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
             Serial.print(F("RuleDebug: "));
             Serial.print(codeBlock);
@@ -2071,7 +2070,7 @@ String rulesProcessingFile(String fileName, String& event)
             Serial.print(": ");
             Serial.println(line);
           }
-          
+
           if (match) // rule matched for one action or a block of actions
           {
             int split = lcAction.indexOf("if "); // check for optional "if" condition

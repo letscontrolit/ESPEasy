@@ -12,7 +12,7 @@
   \*********************************************************************************************/
 void syslog(const char *message)
 {
-  if (Settings.Syslog_IP[0] != 0 && WiFi.status() == WL_CONNECTED)
+  if (Settings.Syslog_IP[0] != 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
@@ -596,12 +596,10 @@ bool WiFiConnected(uint32_t timeout_ms) {
     yield(); // Allow at least once time for backgroundtasks
     min_delay = 10;
   }
-  if (!wifiConnected) {
-    // Apparently something needs network, perform check to see if it is ready now.
-    if (tryConnectWiFi())
-      checkWifiJustConnected();
-  }
-  while (WiFi.status() != WL_CONNECTED) {
+  // Apparently something needs network, perform check to see if it is ready now.
+//  if (!tryConnectWiFi())
+//    return false;
+  while (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (timeOutReached(timer)) {
       return false;
     }
@@ -624,7 +622,7 @@ bool hostReachable(const IPAddress& ip) {
     --retry;
   }
   String log = F("Host unreachable: ");
-  log += ip;
+  log += formatIP(ip);
   addLog(LOG_LEVEL_ERROR, log);
   return false;
 }

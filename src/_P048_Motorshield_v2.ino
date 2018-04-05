@@ -1,3 +1,4 @@
+#ifdef USES_P048
 //#######################################################################################################
 //#################################### Plugin 048: Adafruit Motorshield v2 ##############################
 //#######################################################################################################
@@ -102,18 +103,17 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 			String tmpString = string;
 
 			String cmd = parseString(tmpString, 1);
-			String param1 = parseString(tmpString, 2);
-			String param2 = parseString(tmpString, 3);
-			String param3 = parseString(tmpString, 4);
-			String param4 = parseString(tmpString, 5);
-			String param5 = parseString(tmpString, 6);
-
 
 			// Commands:
 			// MotorShieldCMD,<DCMotor>,<Motornumber>,<Forward/Backward/Release>,<Speed>
 
 			if (cmd.equalsIgnoreCase(F("MotorShieldCMD")))
 			{
+                                String param1 = parseString(tmpString, 2);
+                                String param2 = parseString(tmpString, 3);
+                                String param3 = parseString(tmpString, 4);
+                                String param4 = parseString(tmpString, 5);
+                                String param5 = parseString(tmpString, 6);
 
 				// Create the motor shield object with the default I2C address
 				AFMS = Adafruit_MotorShield(Plugin_048_MotorShield_address);
@@ -277,3 +277,4 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 
 #endif
+#endif // USES_P048

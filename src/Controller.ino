@@ -120,8 +120,10 @@ bool MQTTConnect(int controller_idx)
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (!ControllerSettings.checkHostReachable(true))
     return false;
-  if (MQTTclient.connected())
+  if (MQTTclient.connected()) {
     MQTTclient.disconnect();
+    updateMQTTclient_connected();
+  }
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -166,11 +168,7 @@ bool MQTTConnect(int controller_idx)
   addLog(LOG_LEVEL_INFO, log);
 
   if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
-    if (Settings.UseRules)
-    {
-      String event = F("MQTT#Connected");
-      rulesProcessing(event);
-    }
+    updateMQTTclient_connected();
     statusLED(true);
     return true; // end loop if succesfull
   }
@@ -183,15 +181,17 @@ bool MQTTConnect(int controller_idx)
 \*********************************************************************************************/
 bool MQTTCheck(int controller_idx)
 {
+  if (!WiFiConnected(10)) {
+    return false;
+  }
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !WiFiConnected(10) || !MQTTclient.connected())
+    if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
       } else {
-        addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
         connectionFailures += 2;
       }
       return MQTTConnect(controller_idx);

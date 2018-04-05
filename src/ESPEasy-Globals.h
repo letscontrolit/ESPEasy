@@ -10,81 +10,38 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 
-#ifdef USE_OWN_DEFAULTS
-#include <espeasy_personal_defaults.h>
-#endif
-
-
 // --- Basic Config Settings ------------------------------------------------------------------------
-#ifndef DEFAULT_NAME
 #define DEFAULT_NAME        "ESP_Easy"                  // Enter your device friendly name
-#endif
-#ifndef UNIT
 #define UNIT                            0                                       // Unit Number
-#endif
-#ifndef DEFAULT_DELAY
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
-#endif
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
-#ifndef DEFAULT_AP_IP
 #define DEFAULT_AP_IP           192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
-#endif
-#ifndef DEFAULT_AP_KEY
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
-#endif
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
-#ifndef DEFAULT_SSID
 #define DEFAULT_SSID        "ssid"              // Enter your Wifi network SSID
-#endif
-#ifndef DEFAULT_KEY
 #define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
-#endif
-#ifndef DEFAULT_USE_STATIC_IP
+
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
-#endif
-#ifndef DEFAULT_IP
 #define DEFAULT_IP          "192.168.0.50"      // Enter your IP address
-#endif
-#ifndef DEFAULT_DNS
 #define DEFAULT_DNS         "192.168.0.1"       // Enter your DNS
-#endif
-#ifndef DEFAULT_GW
 #define DEFAULT_GW          "192.168.0.1"       // Enter your Gateway
-#endif
-#ifndef DEFAULT_SUBNET
 #define DEFAULT_SUBNET      "255.255.255.0"     // Enter your Subnet
-#endif
-#ifndef DEFAULT_IPRANGE_LOW
 #define DEFAULT_IPRANGE_LOW  "0.0.0.0"          // Allowed IP range to access webserver
-#endif
-#ifndef DEFAULT_IPRANGE_HIGH
 #define DEFAULT_IPRANGE_HIGH "255.255.255.255"  // Allowed IP range to access webserver
-#endif
-#ifndef DEFAULT_IP_BLOCK_LEVEL
 #define DEFAULT_IP_BLOCK_LEVEL 1                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
-#endif
+
+#define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
 
 // --- Default Controller ------------------------------------------------------------------------------
-#ifndef DEFAULT_CONTROLLER
 #define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
-#endif
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
-#ifndef DEFAULT_PUB
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
-#endif
-#ifndef DEFAULT_SUB
 #define DEFAULT_SUB         "sensors/espeasy/%sysname%/#" // Enter your sub
-#endif
-#ifndef DEFAULT_SERVER
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
-#endif
-#ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
-#endif
 
-#ifndef DEFAULT_PROTOCOL
 #define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
 //   1 = Domoticz HTTP
 //   2 = Domoticz MQTT
@@ -95,64 +52,36 @@
 //   7 = EmonCMS
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
-#endif
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
-#ifndef DEFAULT_USE_RULES
+#if defined(ESP32)
+  #define USE_RTOS_MULTITASKING
+#endif
+
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
-#endif
 
-#ifndef DEFAULT_MQTT_RETAIN
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
-#endif
-#ifndef DEFAULT_MQTT_DELAY
 #define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
-#endif
 
-#ifndef DEFAULT_USE_NTP
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
-#endif
-#ifndef DEFAULT_NTP_HOST
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
-#endif
-#ifndef DEFAULT_TIME_ZONE
 #define DEFAULT_TIME_ZONE                       0               // Time Offset (in minutes)
-#endif
-#ifndef DEFAULT_USE_DST
 #define DEFAULT_USE_DST                         false   // (true|false) Use Daily Time Saving
-#endif
 
 #define LOG_TO_SERIAL         1
 #define LOG_TO_SYSLOG         2
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
-
-#ifndef DEFAULT_SYSLOG_IP
 #define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
-#endif
-#ifndef DEFAULT_SYSLOG_LEVEL
 #define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#endif
-#ifndef DEFAULT_SERIAL_LOG_LEVEL
 #define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
-#endif
-#ifndef DEFAULT_WEB_LOG_LEVEL
 #define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
-#endif
-#ifndef DEFAULT_SD_LOG_LEVEL
 #define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
-#endif
-#ifndef DEFAULT_USE_SD_LOG
 #define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
-#endif
 
-#ifndef DEFAULT_USE_SERIAL
 #define DEFAULT_USE_SERIAL                      true    // (true|false) Enable Logging to the Serial Port
-#endif
-#ifndef DEFAULT_SERIAL_BAUD
 #define DEFAULT_SERIAL_BAUD                     115200  // Serial Port Baud Rate
-#endif
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
@@ -236,9 +165,7 @@
 #define BUILD_GIT "(custom)"
 #endif
 
-#ifndef MAX_FLASHWRITES_PER_DAY
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
-#endif
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
@@ -311,80 +238,38 @@
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
-#ifndef DEVICES_MAX
-  #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-    #define DEVICES_MAX                      72
-  #else
-    #define DEVICES_MAX                      64
-  #endif
+#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+  #define DEVICES_MAX                      72
+#else
+  #define DEVICES_MAX                      64
 #endif
 
-#ifndef TASKS_MAX
-  #if defined(ESP8266)
-    #define TASKS_MAX                          12 // max 12!
-  #endif
-  #if defined(ESP32)
-    #define TASKS_MAX                          32
-  #endif
+#if defined(ESP8266)
+  #define TASKS_MAX                          12 // max 12!
+#endif
+#if defined(ESP32)
+  #define TASKS_MAX                          32
 #endif
 
-#ifndef CONTROLLER_MAX
 #define CONTROLLER_MAX                      3 // max 4!
-#endif
-#ifndef NOTIFICATION_MAX
 #define NOTIFICATION_MAX                    3 // max 4!
-#endif
-#ifndef VARS_PER_TASK
 #define VARS_PER_TASK                       4
-#endif
-#ifndef PLUGIN_MAX
 #define PLUGIN_MAX                DEVICES_MAX
-#endif
-#ifndef PLUGIN_CONFIGVAR_MAX
 #define PLUGIN_CONFIGVAR_MAX                8
-#endif
-#ifndef PLUGIN_CONFIGFLOATVAR_MAX
 #define PLUGIN_CONFIGFLOATVAR_MAX           4
-#endif
-#ifndef PLUGIN_CONFIGLONGVAR_MAX
 #define PLUGIN_CONFIGLONGVAR_MAX            4
-#endif
-#ifndef PLUGIN_EXTRACONFIGVAR_MAX
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
-#endif
-#ifndef CPLUGIN_MAX
 #define CPLUGIN_MAX                        16
-#endif
-#ifndef NPLUGIN_MAX
 #define NPLUGIN_MAX                         4
-#endif
-#ifndef UNIT_MAX
 #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
-#endif
-#ifndef RULES_TIMER_MAX
 #define RULES_TIMER_MAX                     8
-#endif
-#ifndef SYSTEM_TIMER_MAX
 #define SYSTEM_TIMER_MAX                    8
-#endif
-#ifndef SYSTEM_CMD_TIMER_MAX
 #define SYSTEM_CMD_TIMER_MAX                2
-#endif
-#ifndef PINSTATE_TABLE_MAX
 #define PINSTATE_TABLE_MAX                 32
-#endif
-#ifndef RULES_MAX_SIZE
 #define RULES_MAX_SIZE                   2048
-#endif
-#ifndef RULES_MAX_NESTING_LEVEL
 #define RULES_MAX_NESTING_LEVEL             3
-#endif
-#ifndef RULESETS_MAX
 #define RULESETS_MAX                        4
-#endif
-#ifndef RULES_BUFFER_SIZE
 #define RULES_BUFFER_SIZE                  64
-#endif
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
@@ -553,6 +438,18 @@ using namespace fs;
 ADC_MODE(ADC_VCC);
 #endif
 
+#define ESPEASY_WIFI_DISCONNECTED            0
+#define ESPEASY_WIFI_CONNECTED               1
+#define ESPEASY_WIFI_GOT_IP                  2
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    3
+
+#if defined(ESP32)
+void WiFiEvent(system_event_id_t event, system_event_info_t info);
+#else
+WiFiEventHandler stationConnectedHandler;
+WiFiEventHandler stationDisconnectedHandler;
+WiFiEventHandler stationGotIpHandler;
+#endif
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
@@ -566,6 +463,7 @@ MDNSResponder mdns;
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
+bool MQTTclient_connected = false;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
@@ -580,7 +478,68 @@ struct CRCStruct{
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
 
+enum Command {
+  cmd_Unknown,
+  cmd_accessinfo,
+  cmd_background,
+  cmd_BlynkGet,
+  cmd_build,
+  cmd_clearaccessblock,
+  cmd_clearRTCRAM,
+  cmd_config,
+  cmd_Debug,
+  cmd_Delay,
+  cmd_deepSleep,
+  cmd_Erase,
+  cmd_Event,
+  cmd_executeRules,
+  cmd_i2cscanner,
+  cmd_IP,
+  cmd_Load,
+  cmd_lowmem,
+  cmd_malloc,
+  cmd_meminfo,
+  cmd_Name,
+  cmd_notify,
+  cmd_NoSleep,
+  cmd_Password,
+  cmd_Publish,
+  cmd_Reboot,
+  cmd_Reset,
+  cmd_Restart,
+  cmd_resetFlashWriteCounter,
+  cmd_Rules,
+  cmd_sdcard,
+  cmd_sdremove,
+  cmd_sysload,
+  cmd_Save,
+  cmd_SendTo,
+  cmd_SendToHTTP,
+  cmd_SendToUDP,
+  cmd_SerialFloat,
+  cmd_Settings,
+  cmd_TaskClear,
+  cmd_TaskClearAll,
+  cmd_TaskRun,
+  cmd_TaskValueSet,
+  cmd_TimerSet,
+  cmd_udptest,
+  cmd_Unit,
+  cmd_wdconfig,
+  cmd_wdread,
+  cmd_WifiAPMode,
+  cmd_WifiConnect,
+  cmd_WifiDisconnect,
+  cmd_WifiKey2,
+  cmd_WifiKey,
+  cmd_WifiSSID2,
+  cmd_WifiSSID,
+  cmd_WifiScan
+};
+
+
 // Forward declarations.
+Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
@@ -740,6 +699,7 @@ struct SettingsStruct
   // make sure crc is the last value in the struct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
+  boolean       UseRTOSMultitasking;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -1164,14 +1124,63 @@ String dummyString = "";
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
+#if defined(ESP32)
+enum WiFiDisconnectReason
+{
+    WIFI_DISCONNECT_REASON_UNSPECIFIED              = 1,
+    WIFI_DISCONNECT_REASON_AUTH_EXPIRE              = 2,
+    WIFI_DISCONNECT_REASON_AUTH_LEAVE               = 3,
+    WIFI_DISCONNECT_REASON_ASSOC_EXPIRE             = 4,
+    WIFI_DISCONNECT_REASON_ASSOC_TOOMANY            = 5,
+    WIFI_DISCONNECT_REASON_NOT_AUTHED               = 6,
+    WIFI_DISCONNECT_REASON_NOT_ASSOCED              = 7,
+    WIFI_DISCONNECT_REASON_ASSOC_LEAVE              = 8,
+    WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED         = 9,
+    WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD      = 10,  /* 11h */
+    WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD     = 11,  /* 11h */
+    WIFI_DISCONNECT_REASON_IE_INVALID               = 13,  /* 11i */
+    WIFI_DISCONNECT_REASON_MIC_FAILURE              = 14,  /* 11i */
+    WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,  /* 11i */
+    WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,  /* 11i */
+    WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS       = 17,  /* 11i */
+    WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID     = 18,  /* 11i */
+    WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID  = 19,  /* 11i */
+    WIFI_DISCONNECT_REASON_AKMP_INVALID             = 20,  /* 11i */
+    WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION    = 21,  /* 11i */
+    WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP       = 22,  /* 11i */
+    WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED       = 23,  /* 11i */
+    WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED    = 24,  /* 11i */
+
+    WIFI_DISCONNECT_REASON_BEACON_TIMEOUT           = 200,
+    WIFI_DISCONNECT_REASON_NO_AP_FOUND              = 201,
+    WIFI_DISCONNECT_REASON_AUTH_FAIL                = 202,
+    WIFI_DISCONNECT_REASON_ASSOC_FAIL               = 203,
+    WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT        = 204
+};
+#endif
+
+// WiFi related data
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
 uint8_t lastBSSID[6] = {0};
-boolean wifiConnected = false;
-unsigned long wifi_connect_timer = 0;
+uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
 uint8_t lastWiFiSettings = 0;
+String last_ssid;
+bool bssid_changed = false;
+uint8_t last_channel = 0;
+WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+unsigned long lastConnectMoment = 0;
+unsigned long lastDisconnectMoment = 0;
+unsigned long lastGetIPmoment = 0;
+unsigned long lastConnectedDuration = 0;
+bool intent_to_reboot = false;
 
+// Semaphore like booleans for processing data gathered from WiFi events.
+bool processedConnect = true;
+bool processedDisconnect = true;
+bool processedGetIP = true;
 
 
 unsigned long start = 0;
@@ -1191,5 +1200,12 @@ bool shouldReboot=false;
 bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
+
+boolean       UseRTOSMultitasking;
+  
+// These wifi event functions must be in a .h-file because otherwise the preprocessor
+// may not filter the ifdef checks properly.
+// Also the functions use a lot of global defined variables, so include at the end of this file.
+#include "ESPEasyWiFiEvent.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

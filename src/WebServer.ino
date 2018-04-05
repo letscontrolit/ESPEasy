@@ -856,7 +856,7 @@ void handle_root() {
     TXBuffer += formatIP(ip);
 
     TXBuffer += F("<TD><TD>Wifi RSSI:<TD>");
-    if (WiFi.status() == WL_CONNECTED)
+    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
       TXBuffer += F(" dB");
@@ -3503,11 +3503,22 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
     reply += F(",\n");
+
+    if (wdcounter > 0)
+    {
+        reply += to_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
+        reply += F(",\n");
+        reply += to_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+        reply += F(",\n");
+    }
+
     reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
     reply += F("\n},\n");
 
     reply += F("\"WiFi\":{\n");
-    reply += to_json_object_value(F("Hostname"), WiFi.hostname());
+    #if defined(ESP8266)
+      reply += to_json_object_value(F("Hostname"), WiFi.hostname());
+    #endif
     reply += F(",\n");
     reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
     reply += F(",\n");
@@ -3524,6 +3535,14 @@ void handle_json()
     reply += to_json_object_value(F("SSID"), WiFi.SSID());
     reply += F(",\n");
     reply += to_json_object_value(F("BSSID"), WiFi.BSSIDstr());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Channel"), String(WiFi.channel()));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
     reply += F(",\n");
     reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
@@ -3542,42 +3561,45 @@ void handle_json()
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
 
-  if (taskNr == 0 )
-    reply += F("\"Sensors\":[\n");
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
-  {
-    if (Settings.TaskDeviceNumber[TaskIndex])
-    {
-      byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-      LoadTaskSettings(TaskIndex);
-      reply += F("{\n");
-
-      reply += to_json_object_value(F("tasknr"), String(TaskIndex + 1));
-      reply += F(",\n");
-      reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
-      reply += F(",\n");
-      reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
-      if (Device[DeviceIndex].ValueCount != 0)
-        reply += F(",");
-      reply += F("\n");
-
-      for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+      if (taskNr == 0 )
+        reply += F("\"Sensors\":[\n");
+      for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
       {
-        reply += to_json_object_value(ExtraTaskSettings.TaskDeviceValueNames[x],
-                             toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-        if (x < (Device[DeviceIndex].ValueCount - 1))
-          reply += F(",");
-        reply += F("\n");
+        if (Settings.TaskDeviceNumber[TaskIndex])
+        {
+          byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+          byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+          LoadTaskSettings(TaskIndex);
+          reply += F("{\n");
+
+          reply += to_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+          reply += F(",\n");
+          reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
+          reply += F(",\n");
+          reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+          if (Device[DeviceIndex].ValueCount != 0)
+            reply += F(",\n");
+            reply += F("\"TaskValues\": [\n");
+
+          for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+          {
+            reply += F("{");
+            reply += to_json_object_value(F("ValueNumber"), String(x + 1));
+            reply += F(",\n");
+            reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            reply += F(",\n");
+            reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+            if (x < (Device[DeviceIndex].ValueCount - 1))
+              reply += F("},\n");
+          }
+          reply += F("}]\n}");
+          if (TaskIndex != lastActiveTaskIndex)
+            reply += F(",");
+          reply += F("\n");
+        }
       }
-      reply += F("}");
-      if (TaskIndex != lastActiveTaskIndex)
-        reply += F(",");
-      reply += F("\n");
-    }
-  }
-  if (taskNr == 0 )
-    reply += F("]}\n");
+      if (taskNr == 0 )
+        reply += F("]\n}");
 
   WebServer.send(200, "application/json", reply);
 }
@@ -3624,7 +3646,7 @@ void handle_advanced() {
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
   String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
-
+  String UseRTOSMultitasking = WebServer.arg(F("usertosmultitasking"));
 
 
   if (edit.length() != 0)
@@ -3656,6 +3678,7 @@ void handle_advanced() {
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
     Settings.ArduinoOTAEnable = (ArduinoOTAEnable == "on");
+    Settings.UseRTOSMultitasking = (UseRTOSMultitasking == "on");
 
     addHtmlError( TXBuffer.buf, SaveSettings());
     if (Settings.UseNTP)
@@ -3728,6 +3751,10 @@ void handle_advanced() {
   addFormNumericBox(TXBuffer.buf,  F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
 
   addFormCheckBox(TXBuffer.buf,  F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
+
+  #if defined(ESP32)
+    addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
+  #endif
 
   addFormSeparator (TXBuffer.buf);
 
@@ -4239,7 +4266,7 @@ void handle_filelist() {
   {
     if(!file.isDirectory()){
       TXBuffer += F("<TR><TD>");
-      if (file.name() != "/config.dat" && file.name() != "/security.dat" && file.name() != "/notification.dat")
+      if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
       {
         TXBuffer += F("<a class='button link' href=\"filelist?delete=");
         TXBuffer +=  file.name();
@@ -4451,7 +4478,7 @@ void handle_setup() {
 
   addHeader(false,TXBuffer.buf);
 
-  if (WiFi.status() == WL_CONNECTED)
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     addHtmlError(  SaveSettings());
     const IPAddress ip = WiFi.localIP();
@@ -4781,7 +4808,7 @@ void handle_sysinfo() {
 
    TXBuffer += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
 
-  if (WiFi.status() == WL_CONNECTED)
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
      TXBuffer += F("<TR><TD>Wifi<TD>");
     #if defined(ESP8266)
@@ -4816,14 +4843,13 @@ void handle_sysinfo() {
    TXBuffer += formatIP(WiFi.gatewayIP());
 
   {
-     TXBuffer += F("<TR><TD>Client IP<TD>");
+    TXBuffer += F("<TR><TD>Client IP<TD>");
     WiFiClient client(WebServer.client());
-     TXBuffer += formatIP(client.remoteIP());
+    TXBuffer += formatIP(client.remoteIP());
   }
 
-
-   TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
-   TXBuffer += describeAllowedIPrange();
+  TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
+  TXBuffer += describeAllowedIPrange();
 
   TXBuffer += F("<TR><TD>Serial Port available:<TD>");
   TXBuffer += String(SerialAvailableForWrite());
@@ -4841,19 +4867,34 @@ void handle_sysinfo() {
   uint8_t* macread = WiFi.macAddress(mac);
   char macaddress[20];
   formatMAC(macread, macaddress);
-   TXBuffer += macaddress;
+  TXBuffer += macaddress;
 
-   TXBuffer += F("<TR><TD>AP MAC<TD>");
+  TXBuffer += F("<TR><TD>AP MAC<TD>");
   macread = WiFi.softAPmacAddress(mac);
   formatMAC(macread, macaddress);
-   TXBuffer += macaddress;
+  TXBuffer += macaddress;
 
-   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
+  TXBuffer += F("<TR><TD>SSID<TD>");
+  TXBuffer += WiFi.SSID();
+  TXBuffer += F(" (");
+  TXBuffer += WiFi.BSSIDstr();
+  TXBuffer += F(")");
 
-   TXBuffer += F("<TR><TD>Build<TD>");
-   TXBuffer += BUILD;
-   TXBuffer += F(" ");
-   TXBuffer += F(BUILD_NOTES);
+  TXBuffer += F("<TR><TD>Channel<TD>");
+  TXBuffer += WiFi.channel();
+
+  TXBuffer += F("<TR><TD>Connected<TD>");
+  TXBuffer += format_msec_duration(timeDiff(lastConnectMoment, millis()));
+
+  TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
+  TXBuffer += getLastDisconnectReason();
+
+  TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
+
+  TXBuffer += F("<TR><TD>Build<TD>");
+  TXBuffer += BUILD;
+  TXBuffer += F(" ");
+  TXBuffer += F(BUILD_NOTES);
   #if defined(ESP8266)
      TXBuffer += F(" (core ");
      TXBuffer += ESP.getCoreVersion();
