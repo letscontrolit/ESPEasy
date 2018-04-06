@@ -975,7 +975,7 @@ struct DeviceStruct
     Number(0), Type(0), VType(0), Ports(0),
     PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
     ValueCount(0), Custom(false), SendDataOption(false), GlobalSyncOption(false),
-    TimerOption(false), TimerOptional(false), ResetPin(false), DecimalsOnly(false) {}
+    TimerOption(false), TimerOptional(false), DecimalsOnly(false), ResetPin(false) {}
   byte Number;
   byte Type;
   byte VType;
@@ -989,8 +989,8 @@ struct DeviceStruct
   boolean GlobalSyncOption;
   boolean TimerOption;
   boolean TimerOptional;
-  boolean ResetPin;  
   boolean DecimalsOnly;
+  boolean ResetPin;   
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
