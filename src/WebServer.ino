@@ -1854,6 +1854,9 @@ void handle_devices() {
 
       if (Device[DeviceIndex].InverseLogicOption)
         Settings.TaskDevicePin1Inversed[taskIndex] = (WebServer.arg(F("TDPI")) == F("on"));
+      
+      if (Device[DeviceIndex].ResetPin)
+        Settings.TaskDeviceResetPin[taskIndex] = (WebServer.arg(F("TDRP")) == F("on"));         
 
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
@@ -2113,6 +2116,12 @@ void handle_devices() {
           addFormCheckBox( TXBuffer.buf, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[taskIndex]);   //="taskdevicepin1inversed"
           addFormNote( TXBuffer.buf, F("Will go into effect on next input change."));
         }
+        
+        if (Device[DeviceIndex].ResetPin) //Factory reset button function by vader
+        {
+          addFormCheckBox(TXBuffer.buf, F("Enable factory reset function"), F("TDRP"), Settings.TaskDeviceResetPin[taskIndex]);
+          addFormNote(TXBuffer.buf, F("CAUTION! Press about 10s for factory reset")); //Meine Änderungen
+        }          
 
         //get descriptive GPIO-names from plugin
         TempEvent.String1 = F("1st GPIO");
