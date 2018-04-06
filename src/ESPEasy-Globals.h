@@ -700,6 +700,7 @@ struct SettingsStruct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
   boolean       UseRTOSMultitasking;
+  boolean       TaskDeviceResetPin[TASKS_MAX];
 } Settings;
 
 struct ControllerSettingsStruct
@@ -974,7 +975,7 @@ struct DeviceStruct
     Number(0), Type(0), VType(0), Ports(0),
     PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
     ValueCount(0), Custom(false), SendDataOption(false), GlobalSyncOption(false),
-    TimerOption(false), TimerOptional(false), DecimalsOnly(false) {}
+    TimerOption(false), TimerOptional(false), ResetPin(false), DecimalsOnly(false) {}
   byte Number;
   byte Type;
   byte VType;
@@ -989,6 +990,7 @@ struct DeviceStruct
   boolean TimerOption;
   boolean TimerOptional;
   boolean DecimalsOnly;
+  boolean ResetPin;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
