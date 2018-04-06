@@ -1560,31 +1560,39 @@ String parseTemplate(String &tmpString, byte lineSize)
                         else
                           value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
-                        const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
-                        const float valFloat = value.toFloat();
-                        const int inverted = valueFormat.indexOf('!') >= 0 ? 1 : 0;
+                        if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+                        {
+                          const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
+                          const float valFloat = value.toFloat();
+                          const int inverted = valueFormat.indexOf('!') >= 0 ? 1 : 0;
 
-                        if (valueFormat.indexOf('O') >= 0)
-                          value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
-                        else if (valueFormat.indexOf('C') >= 0)
-                          value = val == inverted ? "CLOSE" : " OPEN";
-                        else if (valueFormat.indexOf('U') >= 0)
-                          value = val == inverted ? "DOWN" : "  UP";
-                        else if (valueFormat.indexOf('Y') >= 0)
-                          value = val == inverted ? " NO" : "YES";
-                        else if (valueFormat.indexOf('D') >= 0)  // round to the nearest integer
-                          value = (int)roundf(valFloat);
-                        else if (valueFormat.indexOf('F') >= 0)  // FLOOR (round down)
-                          value = (int)floorf(valFloat);
-                        else if (valueFormat.indexOf('E') >= 0)  // CEILING (round up)
-                          value = (int)ceilf(valFloat);
+                          if (valueFormat.indexOf('O') >= 0)
+                            value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
+                          else if (valueFormat.indexOf('C') >= 0)
+                            value = val == inverted ? "CLOSE" : " OPEN";
+                          else if (valueFormat.indexOf('U') >= 0)
+                            value = val == inverted ? "DOWN" : "  UP";
+                          else if (valueFormat.indexOf('Y') >= 0)
+                            value = val == inverted ? " NO" : "YES";
+                          else if (valueFormat.indexOf('y') >= 0)
+                            value = val == inverted ? "N" : "Y";
+                          else if (valueFormat.indexOf('X') >= 0)
+                            value = val == inverted ? "O" : "X";
+                          else if (valueFormat.indexOf('Z') >= 0)  // return "0" or "1"
+                            value = val == inverted ? "0" : "1";
+                          else if (valueFormat.indexOf('D') >= 0)  // round to the nearest integer
+                            value = (int)roundf(valFloat);
+                          else if (valueFormat.indexOf('F') >= 0)  // FLOOR (round down)
+                            value = (int)floorf(valFloat);
+                          else if (valueFormat.indexOf('E') >= 0)  // CEILING (round up)
+                            value = (int)ceilf(valFloat);
 
-                        if (valueFormat.indexOf('R') >= 0) {
-                          int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                          for (byte f = 0; f < filler; f++)
-                            newString += " ";
+                          if (valueFormat.indexOf('R') >= 0) {
+                            int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                            for (byte f = 0; f < filler; f++)
+                              newString += " ";
+                          }
                         }
-
                         newString += String(value);
                         break;
                       }
