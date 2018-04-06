@@ -11,6 +11,7 @@
   Servo servo1;
   Servo servo2;
 #endif
+byte factoryResetCounter;
 #define GPIO_MAX 17
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH 0
