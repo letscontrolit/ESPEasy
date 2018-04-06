@@ -1578,6 +1578,8 @@ String parseTemplate(String &tmpString, byte lineSize)
                             value = val == inverted ? "N" : "Y";
                           else if (valueFormat.indexOf('X') >= 0)
                             value = val == inverted ? "O" : "X";
+                          else if (valueFormat.indexOf('I') >= 0)
+                            value = val == inverted ? "OUT" : " IN";
                           else if (valueFormat.indexOf('Z') >= 0)  // return "0" or "1"
                             value = val == inverted ? "0" : "1";
                           else if (valueFormat.indexOf('D') >= 0)  // round to the nearest integer
