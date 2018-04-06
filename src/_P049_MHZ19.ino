@@ -8,11 +8,11 @@
   This plugin reads the CO2 value from MH-Z19 NDIR Sensor
 
   Pin-out:
-  Hd
-  SR    PWM
-  Tx    AOT
-  Rx    GND
-  Vo    Vin
+  Hd o
+  SR o   o PWM
+  Tx o   o AOT
+  Rx o   o GND
+  Vo o   o Vin
   (bottom view)
   Skipping pin numbers due to inconsistancies in individual data sheet revisions.
   MHZ19:  Connection:
@@ -20,8 +20,10 @@
   GND     GND
   Tx      ESP8266 1st GPIO specified in Device-settings
   Rx      ESP8266 2nd GPIO specified in Device-settings
-  Currently (2018-03-29) also wrong on the wiki: https://www.letscontrolit.com/wiki/index.php/%22CO2_Sensor_MH-Z19%22
 */
+
+// Uncomment the following define to enable the detection range commands:
+//#define ENABLE_DETECTION_RANGE_COMMANDS
 
 #define PLUGIN_049
 #define PLUGIN_ID_049         49
@@ -50,10 +52,13 @@ enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdABCEnable,
                           mhzCmdABCDisable,
                           mhzCmdReset,
+#ifdef ENABLE_DETECTION_RANGE_COMMANDS
                           mhzCmdMeasurementRange1000,
                           mhzCmdMeasurementRange2000,
                           mhzCmdMeasurementRange3000,
-                          mhzCmdMeasurementRange5000 };
+                          mhzCmdMeasurementRange5000
+#endif
+                        };
 // 9 byte commands:
 // mhzCmdReadPPM[]              = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
 // mhzCmdCalibrateZero[]        = {0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78};
@@ -90,10 +95,13 @@ const PROGMEM byte mhzCmdData[][3] = {
   {0x79,0xA0,0x00},
   {0x79,0x00,0x00},
   {0x8d,0x00,0x00},
+#ifdef ENABLE_DETECTION_RANGE_COMMANDS
   {0x99,0x03,0xE8},
   {0x99,0x07,0xD0},
   {0x99,0x0B,0xB8},
-  {0x99,0x13,0x88}};
+  {0x99,0x13,0x88}
+#endif
+  };
 
 byte mhzResp[9];    // 9 byte response buffer
 
@@ -278,6 +286,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
+#ifdef ENABLE_DETECTION_RANGE_COMMANDS
         if (command == F("mhzmeasurementrange1000"))
         {
           _P049_send_mhzCmd(mhzCmdMeasurementRange1000);
@@ -305,6 +314,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
           success = true;
         }
+#endif
         break;
 
       }
@@ -445,6 +455,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO, log);
               break;
 
+//#ifdef ENABLE_DETECTION_RANGE_COMMANDS
           // Sensor responds with 0x99 whenever we send it a measurement range adjustment
           } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99 && mhzResp[8] == checksum)  {
 
@@ -452,6 +463,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
             success = false;
             break;
+//#endif
 
           // log verbosely anything else that the sensor reports
           } else {
