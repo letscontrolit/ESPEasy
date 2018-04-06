@@ -989,8 +989,8 @@ struct DeviceStruct
   boolean GlobalSyncOption;
   boolean TimerOption;
   boolean TimerOptional;
+  boolean ResetPin;  
   boolean DecimalsOnly;
-  boolean ResetPin;
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
