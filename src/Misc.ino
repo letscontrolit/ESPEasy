@@ -1163,7 +1163,7 @@ void ResetFactory(void)
   SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
   checkRAM(F("ResetFactory2"));
-  Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
+  Serial.println("RESET: Successful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
