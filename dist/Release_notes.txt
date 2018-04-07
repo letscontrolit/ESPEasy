@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180407 (since mega-20180405)
+-------------------------------------------------
+
+Release date: Sat Apr  7 04:00:12 CEST 2018
+
+Grovkillen (1):
+      Fixed clickable link www.letscontrolit.com (#1192)
+
+
+-------------------------------------------------
 Changes in release mega-20180405 (since mega-20180403)
 -------------------------------------------------
 
