@@ -4501,12 +4501,15 @@ void handle_setup() {
   }
 
   // if ssid config not set and params are both provided
-  if (status == 0 && ssid.length() != 0 && strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+  if (status == 0 && ssid.length() != 0 /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
   {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
     setWifiState(WifiCredentialsChanged);
+    String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
+    reconnectlog += ssid;
+    addLog(LOG_LEVEL_INFO, reconnectlog);
     status = 1;
     refreshCount = 0;
   }
@@ -4836,6 +4839,11 @@ void handle_sysinfo() {
     WiFiClient client(WebServer.client());
     TXBuffer += formatIP(client.remoteIP());
   }
+
+  TXBuffer += F("<TR><TD>DNS<TD>");
+  TXBuffer += formatIP(WiFi.dnsIP(0));
+  TXBuffer += F(" / ");
+  TXBuffer += formatIP(WiFi.dnsIP(1));
 
   TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
   TXBuffer += describeAllowedIPrange();

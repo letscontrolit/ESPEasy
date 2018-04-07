@@ -1173,7 +1173,7 @@ void ResetFactory(void)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   intent_to_reboot = true;
-  WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
+  WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   #if defined(ESP8266)
     ESP.reset();

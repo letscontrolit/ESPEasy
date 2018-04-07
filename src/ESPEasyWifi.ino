@@ -1,4 +1,5 @@
 
+#define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
 //********************************************************************************
 // Functions to process the data gathered from the events.
@@ -208,7 +209,7 @@ void resetWiFi() {
 // 8  Disable AP after N seconds   => STA
 //********************************************************************************
 
-bool WifiIsAP(byte wifimode)
+bool WifiIsAP(WiFiMode_t wifimode)
 {
   #if defined(ESP32)
     return ((wifimode & WIFI_MODE_AP) != 0);
@@ -217,44 +218,28 @@ bool WifiIsAP(byte wifimode)
   #endif
 }
 
+bool WifiIsSTA(WiFiMode_t wifimode)
+{
+  #if defined(ESP32)
+    return ((wifimode & WIFI_MODE_STA) != 0);
+  #else
+    return ((wifimode & WIFI_STA) != 0);
+  #endif
+}
+
 void setWifiState(WifiState state) {
   currentWifiState = state;
   switch (state) {
     case WifiOff:
-      WiFi.disconnect();
+      WifiDisconnect();
       setWifiMode(WIFI_OFF);
       break;
     case WifiStart:
       setWifiMode(WIFI_STA);
       break;
     case WifiTryConnect:
-      setWifiMode(WIFI_STA);
-      if (prepareWiFi()) {
-        tryConnectWiFi();
-      } else {
-        setWifiState(WifiConnectionFailed);
-      }
-      break;
-    case WifiConnectionFailed:
-      setWifiMode(WIFI_AP);
-      wifiSetup = true;
-      timerAPoff = millis() + 60000;
-      break;
-    case WifiClientConnectAP:
-      timerAPoff = 0; // Disable timer to switch AP off.
-      setWifiMode(WIFI_AP);
-      break;
-    case WifiClientDisconnectAP:
-      if (WifiIsAP(WiFi.getMode())) {
-        timerAPoff = millis() + 60000;
-      }
-      break;
-    case WifiCredentialsChanged:
-      if (WifiIsAP(WiFi.getMode())) {
-        timerAPoff = 0; // Disable timer to switch AP off.
-        setWifiMode(WIFI_AP_STA);
-        lastWiFiSettings = 0; // Force to load the first settings.
-        wifi_connect_attempt = 0;
+      if (WIFI_AP != WiFi.getMode()) {
+        setWifiMode(WIFI_STA);
         if (prepareWiFi()) {
           tryConnectWiFi();
         } else {
@@ -262,10 +247,39 @@ void setWifiState(WifiState state) {
         }
       }
       break;
+    case WifiConnectionFailed:
+      if (WIFI_AP != WiFi.getMode()) {
+        setWifiMode(WIFI_AP);
+        wifiSetup = true;
+        timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+      }
+      break;
+    case WifiClientConnectAP:
+      timerAPoff = 0; // Disable timer to switch AP off.
+      setWifiMode(WIFI_AP);
+      break;
+    case WifiClientDisconnectAP:
+      if (WifiIsAP(WiFi.getMode())) {
+        timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+      }
+      break;
+    case WifiCredentialsChanged:
+      if (WifiIsAP(WiFi.getMode())) {
+        timerAPoff = 0; // Disable timer to switch AP off.
+        setWifiMode(WIFI_AP_STA);
+      }
+      lastWiFiSettings = 0; // Force to load the first settings.
+      wifi_connect_attempt = 0;
+      if (prepareWiFi()) {
+        tryConnectWiFi();
+      } else {
+        setWifiState(WifiConnectionFailed);
+      }
+      break;
     case WifiConnectSuccess:
       if (WifiIsAP(WiFi.getMode())) {
         setWifiMode(WIFI_AP_STA);
-        timerAPoff = millis() + 60000;
+        timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       } else {
         timerAPoff = 0; // Disable timer to switch AP off.
         setWifiMode(WIFI_STA);
@@ -284,7 +298,7 @@ void setWifiState(WifiState state) {
       } else {
         setWifiMode(WIFI_AP);
       }
-      timerAPoff = millis() + 60000;
+      timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       break;
   }
 }
@@ -292,62 +306,94 @@ void setWifiState(WifiState state) {
 //********************************************************************************
 // Set Wifi AP Mode
 //********************************************************************************
-void setWifiMode(int wifimode)
+void setWifiMode(WiFiMode_t wifimode)
 {
   if (wifimode == WiFi.getMode()) return;
-  if (WifiIsAP(wifimode) == WifiIsAP(WiFi.getMode())) {
-    WiFi.mode(static_cast<WiFiMode_t>(wifimode));
+  if (WiFi.getMode() == WIFI_OFF) {
+    // Any mode can be selected, starting from off mode.
+    addLog(LOG_LEVEL_INFO, F("WIFI : Switch on WiFi"));
+    WiFi.mode(wifimode);
     return;
   }
-  if (WifiIsAP(wifimode)) {
-    if (WiFi.getMode() == WIFI_STA) {
-      // Changing from STA, with probably searching for wifi active, to either AP or AP_STA.
-      // So disable wifi first.
-      WiFi.disconnect();
+  switch (wifimode) {
+    case WIFI_OFF:
+      WifiDisconnect();
       WiFi.mode(WIFI_OFF);
-      delay(100); // Make sure the disconnect is processed.
+      return;
+    case WIFI_STA:
+      if (WifiIsAP(WiFi.getMode())) {
+        // Change from AP mode to STA mode, must disconnect clients.
+        dnsServerActive = false;
+        dnsServer.stop();
+        if (WiFi.softAPdisconnect(true)) {
+          String log("WIFI : AP Mode Disabled for SSID: ");
+          log += WifiGetAPssid();
+          addLog(LOG_LEVEL_INFO, log);
+        } else {
+          String log("WIFI : Error while disabling AP Mode with SSID: ");
+          log += WifiGetAPssid();
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+      }
+      WiFi.mode(wifimode);
+      WiFi.reconnect();
+      break;
+    case WIFI_AP_STA:
+    case WIFI_AP:
+    {
+      if (WifiIsSTA(WiFi.getMode())) {
+        // Should disable WiFi first and then restart in AP mode.
+        WifiDisconnect();
+        if (wifimode == WIFI_AP_STA) {
+          WiFi.reconnect();
+        }
+//        WiFi.mode(WIFI_OFF);
+        delay(100);
+      }
+      // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
+      // setup ssid for AP Mode when needed
+      WiFi.mode(wifimode);
+      WiFi.setAutoConnect(false);
+      String softAPSSID=WifiGetAPssid();
+      String pwd = SecuritySettings.WifiAPKey;
+      IPAddress subnet(DEFAULT_AP_SUBNET);
+      WiFi.softAPConfig(apIP, apIP, subnet);
+      if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
+        String log("WIFI : AP Mode ssid will be ");
+        log += softAPSSID;
+        log += F(" with address ");
+        log += WiFi.softAPIP().toString();
+        addLog(LOG_LEVEL_INFO, log);
+      } else {
+        String log("WIFI : Error while starting AP Mode with SSID: ");
+        log += softAPSSID;
+        log += F(" IP: ");
+        log += apIP.toString();
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+//      delay(100); // Wait until SoftAP is started before configure.
+//      WiFi.begin();
+//      WiFi.config(apIP, apIP, subnet);
+
+      if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
+        addLog(LOG_LEVEL_ERROR, "WIFI : [AP] softAPConfig failed!");
+      }
+      if(wifi_softap_dhcps_status() != DHCP_STARTED) {
+        if(!wifi_softap_dhcps_start()) {
+          addLog(LOG_LEVEL_ERROR, "WIFI : [AP] wifi_softap_dhcps_start failed!");
+        }
+      }
+//      WiFi.begin();
+      // Start DNS, only used if the ESP has no valid WiFi config
+      // It will reply with it's own address on all DNS requests
+      // (captive portal concept)
+      dnsServerActive = true;
+      dnsServer.start(DNS_PORT, "*", apIP);
+      break;
     }
-    // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
-    // setup ssid for AP Mode when needed
-    WiFi.mode(static_cast<WiFiMode_t>(wifimode));
-    String softAPSSID=WifiGetAPssid();
-    String pwd = SecuritySettings.WifiAPKey;
-    IPAddress subnet(DEFAULT_AP_SUBNET);
-    if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
-      String log("WIFI : AP Mode ssid will be ");
-      log += softAPSSID;
-      log += F(" with address ");
-      log += WiFi.softAPIP().toString();
-      addLog(LOG_LEVEL_INFO, log);
-    } else {
-      String log("WIFI : Error while starting AP Mode with SSID: ");
-      log += softAPSSID;
-      log += F(" IP: ");
-      log += apIP.toString();
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-    delay(100); // Wait until SoftAP is started before configure.
-    WiFi.softAPConfig(apIP, apIP, subnet);
-    // Start DNS, only used if the ESP has no valid WiFi config
-    // It will reply with it's own address on all DNS requests
-    // (captive portal concept)
-    dnsServerActive = true;
-    dnsServer.start(DNS_PORT, "*", apIP);
-    return;
+    default:
+      break;
   }
-  // Must disable AP mode.
-  dnsServerActive = false;
-  dnsServer.stop();
-  if (WiFi.softAPdisconnect(true)) {
-    String log("WIFI : AP Mode Disabled for SSID: ");
-    log += WifiGetAPssid();
-    addLog(LOG_LEVEL_INFO, log);
-  } else {
-    String log("WIFI : Error while disabling AP Mode with SSID: ");
-    log += WifiGetAPssid();
-    addLog(LOG_LEVEL_ERROR, log);
-  }
-  WiFi.mode(static_cast<WiFiMode_t>(wifimode));
 }
 
 //********************************************************************************
@@ -356,7 +402,7 @@ void setWifiMode(int wifimode)
 String WifiGetAPssid()
 {
   String ssid(Settings.Name);
-  ssid+=F("-");
+  ssid+=F("_");
   ssid+=Settings.Unit;
   return (ssid);
 }
@@ -515,7 +561,13 @@ bool tryConnectWiFi() {
 //********************************************************************************
 void WifiDisconnect()
 {
-  WiFi.disconnect();
+  #if defined(ESP32)
+    WiFi.disconnect();
+  #else
+    ETS_UART_INTR_DISABLE();
+    wifi_station_disconnect();
+    ETS_UART_INTR_ENABLE();
+  #endif
 }
 
 
