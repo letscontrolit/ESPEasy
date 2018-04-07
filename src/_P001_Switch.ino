@@ -11,6 +11,7 @@
   Servo servo1;
   Servo servo2;
 #endif
+byte factoryResetCounter;
 #define GPIO_MAX 17
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH 0
@@ -47,6 +48,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].TimerOptional = true;
         Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].ResetPin = true;        
         break;
       }
 
@@ -231,6 +233,27 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_ONCE_A_SECOND: //by vader
+      {
+        if (Settings.TaskDeviceResetPin[event->TaskIndex]) { //Is it a reset button?
+          if (switchstate[event->TaskIndex] == (Settings.TaskDevicePin1Inversed[event->TaskIndex] == 0 ? 0 : 1))
+            factoryResetCounter++;
+          else if (factoryResetCounter > 0)
+            factoryResetCounter = 0;
+          if (factoryResetCounter > 9) {
+            ResetFactory();
+#if defined(ESP8266)
+            ESP.reset();
+#endif
+#if defined(ESP32)
+            ESP.restart();
+#endif
+          }
+        }
+        success = true;
+        break;
+      }
+      
     case PLUGIN_WRITE:
       {
         String log = "";
