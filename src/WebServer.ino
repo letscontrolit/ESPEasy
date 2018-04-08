@@ -528,7 +528,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{content}}"
               "</section>"
               "<footer>"
-              "<h6>Powered by www.letscontrolit.com</h6>"
+              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
               "</footer>"
               "</body>"            );
   }
@@ -553,7 +553,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{content}}"
               "</section>"
               "<footer>"
-              "<h6>Powered by www.letscontrolit.com</h6>"
+              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
               "</footer>"
               "</body>"
             );
@@ -582,7 +582,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{content}}"
         "</section>"
         "<footer>"
-          "<h6>Powered by www.letscontrolit.com</h6>"
+          "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
         "</footer>"
       "</body></html>"
             );
@@ -1602,6 +1602,7 @@ void handle_hardware() {
   {
     Settings.Pin_status_led  = getFormItemInt(F("pled"));
     Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
+    Settings.Pin_Reset  = getFormItemInt(F("pres"));    
     Settings.Pin_i2c_sda     = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl     = getFormItemInt(F("pscl"));
     Settings.InitSPI = isFormItemChecked(F("initspi"));      // SPI Init
@@ -1627,6 +1628,11 @@ void handle_hardware() {
   addFormPinSelect( TXBuffer.buf,F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
   addFormCheckBox(TXBuffer.buf,  F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(TXBuffer.buf,      F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
+
+  addFormSubHeader(TXBuffer.buf, F("Reset Pin"));
+  addFormPinSelect( TXBuffer.buf,F("GPIO &larr; Switch"), "pres", Settings.Pin_Reset);
+  addFormNote(TXBuffer.buf,      F("Press about 10s for factory reset"));
+
   addFormSubHeader(TXBuffer.buf, F("I2C Interface"));
   addFormPinSelectI2C(TXBuffer.buf, F("GPIO &#8703; SDA"), F("psda"), Settings.Pin_i2c_sda);
   addFormPinSelectI2C(TXBuffer.buf, F("GPIO &#8702; SCL"), F("pscl"), Settings.Pin_i2c_scl);
@@ -3508,6 +3514,15 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
     reply += F(",\n");
+
+    if (wdcounter > 0)
+    {
+        reply += to_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
+        reply += F(",\n");
+        reply += to_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+        reply += F(",\n");
+    }
+
     reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
     reply += F("\n},\n");
 
@@ -3557,42 +3572,45 @@ void handle_json()
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
 
-  if (taskNr == 0 )
-    reply += F("\"Sensors\":[\n");
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
-  {
-    if (Settings.TaskDeviceNumber[TaskIndex])
-    {
-      byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-      LoadTaskSettings(TaskIndex);
-      reply += F("{\n");
-
-      reply += to_json_object_value(F("tasknr"), String(TaskIndex + 1));
-      reply += F(",\n");
-      reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
-      reply += F(",\n");
-      reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
-      if (Device[DeviceIndex].ValueCount != 0)
-        reply += F(",");
-      reply += F("\n");
-
-      for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+      if (taskNr == 0 )
+        reply += F("\"Sensors\":[\n");
+      for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
       {
-        reply += to_json_object_value(ExtraTaskSettings.TaskDeviceValueNames[x],
-                             toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-        if (x < (Device[DeviceIndex].ValueCount - 1))
-          reply += F(",");
-        reply += F("\n");
+        if (Settings.TaskDeviceNumber[TaskIndex])
+        {
+          byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+          byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+          LoadTaskSettings(TaskIndex);
+          reply += F("{\n");
+
+          reply += to_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+          reply += F(",\n");
+          reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
+          reply += F(",\n");
+          reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+          if (Device[DeviceIndex].ValueCount != 0)
+            reply += F(",\n");
+            reply += F("\"TaskValues\": [\n");
+
+          for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+          {
+            reply += F("{");
+            reply += to_json_object_value(F("ValueNumber"), String(x + 1));
+            reply += F(",\n");
+            reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            reply += F(",\n");
+            reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+            if (x < (Device[DeviceIndex].ValueCount - 1))
+              reply += F("},\n");
+          }
+          reply += F("}]\n}");
+          if (TaskIndex != lastActiveTaskIndex)
+            reply += F(",");
+          reply += F("\n");
+        }
       }
-      reply += F("}");
-      if (TaskIndex != lastActiveTaskIndex)
-        reply += F(",");
-      reply += F("\n");
-    }
-  }
-  if (taskNr == 0 )
-    reply += F("]}\n");
+      if (taskNr == 0 )
+        reply += F("]\n}");
 
   WebServer.send(200, "application/json", reply);
 }
@@ -3639,7 +3657,7 @@ void handle_advanced() {
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
   String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
-
+  String UseRTOSMultitasking = WebServer.arg(F("usertosmultitasking"));
 
 
   if (edit.length() != 0)
@@ -3671,6 +3689,7 @@ void handle_advanced() {
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
     Settings.ArduinoOTAEnable = (ArduinoOTAEnable == "on");
+    Settings.UseRTOSMultitasking = (UseRTOSMultitasking == "on");
 
     addHtmlError( TXBuffer.buf, SaveSettings());
     if (Settings.UseNTP)
@@ -3743,6 +3762,10 @@ void handle_advanced() {
   addFormNumericBox(TXBuffer.buf,  F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
 
   addFormCheckBox(TXBuffer.buf,  F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
+
+  #if defined(ESP32)
+    addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
+  #endif
 
   addFormSeparator (TXBuffer.buf);
 
