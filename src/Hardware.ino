@@ -101,26 +101,26 @@ void hardwareInit()
 }
 
 void checkResetFactoryPin(){
-  static byte factoryResetCounter;
+  static byte factoryResetCounter=0;
   if (Settings.Pin_Reset == -1)
     return;
 
   if (digitalRead(Settings.Pin_Reset) == 0){ // active low reset pin  
-    factoryResetCounter++;
-    if (factoryResetCounter > 9) {
-      ResetFactory();
-      #if defined(ESP8266)
-        ESP.reset();
-      #endif
-      #if defined(ESP32)
-        ESP.restart();
-      #endif
-    }
+    factoryResetCounter++; // just count every second
   }
   else
-    factoryResetCounter = 0;
+  { // reset pin released
+    if (factoryResetCounter > 9) // factory reset and reboot
+      ResetFactory();
+    if (factoryResetCounter > 3) // normal reboot
+    #if defined(ESP8266)
+      ESP.reset();
+    #endif
+    #if defined(ESP32)
+      ESP.restart();
+    #endif    
 
-Serial.println(factoryResetCounter);
-
+    factoryResetCounter = 0; // count was < 3, reset counter
+  }
 }
 
