@@ -1318,6 +1318,8 @@ boolean loglevelActiveFor(byte destination, byte logLevel) {
     case LOG_TO_SERIAL: {
       if (!SerialAvailableForWrite()) return false;
       logLevelSettings = Settings.SerialLogLevel;
+      if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED)
+        logLevelSettings = 2;
       break;
     }
     case LOG_TO_SYSLOG: {

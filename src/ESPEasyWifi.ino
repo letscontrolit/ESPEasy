@@ -357,7 +357,7 @@ void setWifiMode(WiFiMode_t wifimode)
       String softAPSSID=WifiGetAPssid();
       String pwd = SecuritySettings.WifiAPKey;
       IPAddress subnet(DEFAULT_AP_SUBNET);
-      WiFi.softAPConfig(apIP, apIP, subnet);
+//      WiFi.softAPConfig(apIP, apIP, subnet);
       if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
         String log("WIFI : AP Mode ssid will be ");
         log += softAPSSID;
@@ -371,19 +371,18 @@ void setWifiMode(WiFiMode_t wifimode)
         log += apIP.toString();
         addLog(LOG_LEVEL_ERROR, log);
       }
-//      delay(100); // Wait until SoftAP is started before configure.
-//      WiFi.begin();
-//      WiFi.config(apIP, apIP, subnet);
-
       if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
         addLog(LOG_LEVEL_ERROR, "WIFI : [AP] softAPConfig failed!");
       }
-      if(wifi_softap_dhcps_status() != DHCP_STARTED) {
-        if(!wifi_softap_dhcps_start()) {
-          addLog(LOG_LEVEL_ERROR, "WIFI : [AP] wifi_softap_dhcps_start failed!");
+      #ifdef ESP32
+
+      #else
+        if(wifi_softap_dhcps_status() != DHCP_STARTED) {
+          if(!wifi_softap_dhcps_start()) {
+            addLog(LOG_LEVEL_ERROR, "WIFI : [AP] wifi_softap_dhcps_start failed!");
+          }
         }
-      }
-//      WiFi.begin();
+      #endif
       // Start DNS, only used if the ESP has no valid WiFi config
       // It will reply with it's own address on all DNS requests
       // (captive portal concept)

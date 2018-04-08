@@ -169,7 +169,6 @@ void setup()
 
   addLog(LOG_LEVEL_INFO, log);
   WiFi.setAutoReconnect(false);
-  setWifiState(WifiStart);
 
   fileSystemCheck();
   progMemMD5check();
@@ -177,6 +176,7 @@ void setup()
   checkRuleSets();
   if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
     wifiSetup = true;
+//  setWifiState(WifiStart);
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
