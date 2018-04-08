@@ -26,6 +26,9 @@ void hardwareInit()
           break;
       }
 
+  if (Settings.Pin_Reset != -1)
+    pinMode(Settings.Pin_Reset,INPUT_PULLUP);
+ 
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
   {
@@ -94,6 +97,30 @@ void hardwareInit()
     }
   }
 #endif
+
+}
+
+void checkResetFactoryPin(){
+  static byte factoryResetCounter;
+  if (Settings.Pin_Reset == -1)
+    return;
+
+  if (digitalRead(Settings.Pin_Reset) == 0){ // active low reset pin  
+    factoryResetCounter++;
+    if (factoryResetCounter > 9) {
+      ResetFactory();
+      #if defined(ESP8266)
+        ESP.reset();
+      #endif
+      #if defined(ESP32)
+        ESP.restart();
+      #endif
+    }
+  }
+  else
+    factoryResetCounter = 0;
+
+Serial.println(factoryResetCounter);
 
 }
 

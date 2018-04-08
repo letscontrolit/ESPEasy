@@ -1597,6 +1597,7 @@ void handle_hardware() {
   {
     Settings.Pin_status_led  = getFormItemInt(F("pled"));
     Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
+    Settings.Pin_Reset  = getFormItemInt(F("pres"));    
     Settings.Pin_i2c_sda     = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl     = getFormItemInt(F("pscl"));
     Settings.InitSPI = isFormItemChecked(F("initspi"));      // SPI Init
@@ -1622,6 +1623,11 @@ void handle_hardware() {
   addFormPinSelect( TXBuffer.buf,F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
   addFormCheckBox(TXBuffer.buf,  F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(TXBuffer.buf,      F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
+
+  addFormSubHeader(TXBuffer.buf, F("Reset Pin"));
+  addFormPinSelect( TXBuffer.buf,F("GPIO &larr; Switch"), "pres", Settings.Pin_Reset);
+  addFormNote(TXBuffer.buf,      F("Press about 10s for factory reset"));
+
   addFormSubHeader(TXBuffer.buf, F("I2C Interface"));
   addFormPinSelectI2C(TXBuffer.buf, F("GPIO &#8703; SDA"), F("psda"), Settings.Pin_i2c_sda);
   addFormPinSelectI2C(TXBuffer.buf, F("GPIO &#8702; SCL"), F("pscl"), Settings.Pin_i2c_scl);

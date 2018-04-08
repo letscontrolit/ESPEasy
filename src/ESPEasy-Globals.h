@@ -700,6 +700,7 @@ struct SettingsStruct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
   boolean       UseRTOSMultitasking;
+  int8_t        Pin_Reset;
 } Settings;
 
 struct ControllerSettingsStruct

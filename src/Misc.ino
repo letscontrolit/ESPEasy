@@ -1095,6 +1095,7 @@ void ResetFactory(void)
   Settings.Pin_status_led  = -1;
   Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
+  Settings.Pin_Reset = -1;  
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.deepSleep = false;
