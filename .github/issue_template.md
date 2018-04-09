@@ -5,12 +5,15 @@
 
 ### Summarize of the problem/feature request
 <!--- Describe the problem or feature request --->
+YOUR TEXT GOES HERE
 
 ### Expected behavior
 <!--- Tell us what should happen? --->
+YOUR TEXT GOES HERE
 
 ### Actual behavior
 <!--- Tell us what happens instead? --->
+YOUR TEXT GOES HERE
 
 ### Steps to reproduce
 <!--- How can we trigger this problem? --->
