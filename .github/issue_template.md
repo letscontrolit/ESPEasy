@@ -6,6 +6,12 @@
 ### Summarize of the problem/feature request
 <!--- Describe the problem or feature request --->
 
+### Expected behavior
+<!--- Tell us what should happen? --->
+
+### Actual behavior
+<!--- Tell us what happens instead? --->
+
 ### Steps to reproduce
 <!--- How can we trigger this problem? --->
 1. 
@@ -13,13 +19,7 @@
 3. 
 
 <!--- Does the problem persists after powering off and on? (just resetting isn't enough sometimes) --->
-
-### Expected behavior
-<!--- Tell us what should happen? --->
-
-### Actual behavior
-<!--- Tell us what happens instead? --->
-
+<!--- Please document if you have restarted the unit and if the problem is then gone etc. etc. --->
 ### System configuration
 <!--- Please add as much information and screenshots as possible  --->
 Hardware:
