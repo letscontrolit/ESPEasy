@@ -1,6 +1,10 @@
 <!--- NOTE: This is not a support forum! For questions and support go here: --->
 <!--- https://www.letscontrolit.com/forum/viewforum.php?f=1 --->
 <!--- Remove topics that are not applicable to your feature request of issue --->
+<!--- Remember to have a "to the point" TITLE --->
+
+### Summarize of the problem/feature request
+<!--- Describe the problem or feature request --->
 
 ### Steps to reproduce
 <!--- How can we trigger this problem? --->
