@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180409 (since mega-20180407)
+-------------------------------------------------
+
+Release date: Mon Apr  9 04:00:13 CEST 2018
+
+mvdbro (2):
+      Factory Reset (not enabled yet)
+      Both reset/factoryreset option
+
+
+-------------------------------------------------
 Changes in release mega-20180407 (since mega-20180405)
 -------------------------------------------------
 
