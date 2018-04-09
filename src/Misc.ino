@@ -44,6 +44,10 @@ bool readyForSleep()
 {
   if (!isDeepSleepEnabled())
     return false;
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    // Allow 6 seconds to connect to WiFi
+    return timeOutReached(timerAwakeFromDeepSleep + 6000);
+  }
   return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);
 }
 
@@ -1091,6 +1095,7 @@ void ResetFactory(void)
   Settings.Pin_status_led  = -1;
   Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
+  Settings.Pin_Reset = -1;  
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.deepSleep = false;
@@ -1384,7 +1389,9 @@ void delayedReboot(int rebootDelay)
   \*********************************************************************************************/
 boolean saveToRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
     {
       addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
@@ -1394,9 +1401,6 @@ boolean saveToRTC()
     {
       return(true);
     }
-  #endif
-  #if defined(ESP32)
-    boolean ret = false;
   #endif
 }
 
@@ -1420,17 +1424,12 @@ void initRTC()
   \*********************************************************************************************/
 boolean readFromRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)))
       return(false);
-
-    if (RTC.ID1 == 0xAA && RTC.ID2 == 0x55)
-      return true;
-    else
-      return false;
-  #endif
-  #if defined(ESP32)
-    boolean ret = false;
+    return (RTC.ID1 == 0xAA && RTC.ID2 == 0x55);
   #endif
 }
 
@@ -1440,18 +1439,17 @@ boolean readFromRTC()
 \*********************************************************************************************/
 boolean saveUserVarToRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
     byte* buffer = (byte*)&UserVar;
     size_t size = sizeof(UserVar);
     uint32_t sum = getChecksum(buffer, size);
     boolean ret = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
     ret &= system_rtc_mem_write(RTC_BASE_USERVAR+(size>>2), (byte*)&sum, 4);
+    return ret;
   #endif
-  #if defined(ESP32)
-    boolean ret = false;
-  #endif
-  return ret;
 }
 
 
@@ -1460,7 +1458,9 @@ boolean saveUserVarToRTC()
 \*********************************************************************************************/
 boolean readUserVarFromRTC()
 {
-  #if defined(ESP8266)
+  #if defined(ESP32)
+    return false;
+  #else
     //addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
     byte* buffer = (byte*)&UserVar;
     size_t size = sizeof(UserVar);
@@ -1473,11 +1473,8 @@ boolean readUserVarFromRTC()
       addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
       memset(buffer, 0, size);
     }
+    return ret;
   #endif
-  #if defined(ESP32)
-    boolean ret = false;
-  #endif
-  return ret;
 }
 
 

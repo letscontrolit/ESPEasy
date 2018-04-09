@@ -55,6 +55,10 @@
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
+#if defined(ESP32)
+  #define USE_RTOS_MULTITASKING
+#endif
+
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
@@ -439,8 +443,8 @@ ADC_MODE(ADC_VCC);
 #define ESPEASY_WIFI_GOT_IP                  2
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    3
 
-#ifdef ESP32
-void WiFiEvent(WiFiEvent_t event);
+#if defined(ESP32)
+void WiFiEvent(system_event_id_t event, system_event_info_t info);
 #else
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
@@ -459,6 +463,7 @@ MDNSResponder mdns;
 WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
+bool MQTTclient_connected = false;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
@@ -694,6 +699,8 @@ struct SettingsStruct
   // make sure crc is the last value in the struct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
+  boolean       UseRTOSMultitasking;
+  int8_t        Pin_Reset;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -1118,6 +1125,41 @@ String dummyString = "";
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
+#if defined(ESP32)
+enum WiFiDisconnectReason
+{
+    WIFI_DISCONNECT_REASON_UNSPECIFIED              = 1,
+    WIFI_DISCONNECT_REASON_AUTH_EXPIRE              = 2,
+    WIFI_DISCONNECT_REASON_AUTH_LEAVE               = 3,
+    WIFI_DISCONNECT_REASON_ASSOC_EXPIRE             = 4,
+    WIFI_DISCONNECT_REASON_ASSOC_TOOMANY            = 5,
+    WIFI_DISCONNECT_REASON_NOT_AUTHED               = 6,
+    WIFI_DISCONNECT_REASON_NOT_ASSOCED              = 7,
+    WIFI_DISCONNECT_REASON_ASSOC_LEAVE              = 8,
+    WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED         = 9,
+    WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD      = 10,  /* 11h */
+    WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD     = 11,  /* 11h */
+    WIFI_DISCONNECT_REASON_IE_INVALID               = 13,  /* 11i */
+    WIFI_DISCONNECT_REASON_MIC_FAILURE              = 14,  /* 11i */
+    WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,  /* 11i */
+    WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,  /* 11i */
+    WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS       = 17,  /* 11i */
+    WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID     = 18,  /* 11i */
+    WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID  = 19,  /* 11i */
+    WIFI_DISCONNECT_REASON_AKMP_INVALID             = 20,  /* 11i */
+    WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION    = 21,  /* 11i */
+    WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP       = 22,  /* 11i */
+    WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED       = 23,  /* 11i */
+    WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED    = 24,  /* 11i */
+
+    WIFI_DISCONNECT_REASON_BEACON_TIMEOUT           = 200,
+    WIFI_DISCONNECT_REASON_NO_AP_FOUND              = 201,
+    WIFI_DISCONNECT_REASON_AUTH_FAIL                = 202,
+    WIFI_DISCONNECT_REASON_ASSOC_FAIL               = 203,
+    WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT        = 204
+};
+#endif
+
 // WiFi related data
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
@@ -1128,7 +1170,7 @@ unsigned int wifi_connect_attempt = 0;
 uint8_t lastWiFiSettings = 0;
 String last_ssid;
 bool bssid_changed = false;
-uint8 last_channel = 0;
+uint8_t last_channel = 0;
 WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
 unsigned long lastConnectMoment = 0;
 unsigned long lastDisconnectMoment = 0;
@@ -1159,5 +1201,12 @@ bool shouldReboot=false;
 bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
+
+boolean       UseRTOSMultitasking;
+  
+// These wifi event functions must be in a .h-file because otherwise the preprocessor
+// may not filter the ifdef checks properly.
+// Also the functions use a lot of global defined variables, so include at the end of this file.
+#include "ESPEasyWiFiEvent.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

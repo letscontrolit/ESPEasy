@@ -64,6 +64,7 @@ void setTimeZone(const TimeChangeRule& dstStart, const TimeChangeRule& stdStart,
 uint32_t calcTimeChangeForRule(const TimeChangeRule& r, int yr);
 String getTimeString(char delimiter, bool show_seconds=true);
 String getTimeString_ampm(char delimiter, bool show_seconds=true);
+long timeDiff(unsigned long prev, unsigned long next);
 
 
 #endif /* ESPEASY_TIMETYPES_H_ */

@@ -134,6 +134,21 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Generic ESP32 -----------------------------
+#ifdef PLUGIN_SET_GENERIC_ESP32
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P036   // FrameOLED
+    // TODO : Add list of compatible plugins for ESP32 board.
+#endif
+
+
+
 // Generic ------------------------------------
 #ifdef PLUGIN_SET_GENERIC_1M
     #define PLUGIN_SET_NONE
@@ -335,6 +350,10 @@ To create/register a plugin, you have to :
     #define USES_P049   // MHZ19
 
     #define USES_P052   // SenseAir
+
+    #define USES_P059   // Encoder
+
+    #define USES_P063   // TTP229_KeyPad
 #endif
 
 
@@ -373,12 +392,11 @@ To create/register a plugin, you have to :
     #define USES_P056   // SDS011-Dust
     #define USES_P057   // HT16K33_LED
     #define USES_P058   // HT16K33_KeyPad
-    #define USES_P059   // Encoder
 
     #define USES_P060   // MCP3221
     #define USES_P061   // Keypad
     #define USES_P062   // MPR121_KeyPad
-    #define USES_P063   // TTP229_KeyPad
+
     #define USES_P064   // APDS9960
     #define USES_P065   // DRF0299
     #define USES_P066   // VEML6040
