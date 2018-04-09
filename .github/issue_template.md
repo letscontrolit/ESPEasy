@@ -26,3 +26,14 @@ Hardware:
 
 <!--- You should also provide links to hardware pages etc where we can find more info  --->
 ESP Easy version: 
+
+<!--- In order to have a better readablity of your issue then you should place screenshots here  --->
+<!--- Simply drag and drop them onto this template, move the text string below the "ESP Easy settings/screenshots" topic  --->
+ESP Easy settings/screenshots: 
+
+### Rules or log data
+<!--- place your code/rules between the two ``` rows  --->
+<!--- remove if not applicable!  --->
+```
+
+```
