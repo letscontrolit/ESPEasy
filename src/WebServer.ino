@@ -1100,7 +1100,7 @@ void handle_config() {
   addFormNote(TXBuffer.buf,  F("0 = Sleep Disabled, else time awake from sleep"));
 
   addHelpButton(TXBuffer.buf,  F("SleepMode"));
-  addFormNumericBox(TXBuffer.buf,  F("Sleep Delay"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
+  addFormNumericBox(TXBuffer.buf,  F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   addUnit(TXBuffer.buf,  F("sec"));
 
   addFormCheckBox( TXBuffer.buf, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
@@ -1597,7 +1597,7 @@ void handle_hardware() {
   {
     Settings.Pin_status_led  = getFormItemInt(F("pled"));
     Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
-    Settings.Pin_Reset  = getFormItemInt(F("pres"));    
+    Settings.Pin_Reset  = getFormItemInt(F("pres"));
     Settings.Pin_i2c_sda     = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl     = getFormItemInt(F("pscl"));
     Settings.InitSPI = isFormItemChecked(F("initspi"));      // SPI Init
@@ -2172,7 +2172,7 @@ void handle_devices() {
       if (Device[DeviceIndex].TimerOption)
       {
         //FIXME: shoudn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints for min and max specification
-        addFormNumericBox(TXBuffer.buf,  F("Delay"), F("TDT"), Settings.TaskDeviceTimer[taskIndex], 0, 65535);   //="taskdevicetimer"
+        addFormNumericBox(TXBuffer.buf,  F("Interval"), F("TDT"), Settings.TaskDeviceTimer[taskIndex], 0, 65535);   //="taskdevicetimer"
         addUnit(TXBuffer.buf,  F("sec"));
         if (Device[DeviceIndex].TimerOptional)
           TXBuffer += F(" (Optional for this Device)");
@@ -3106,11 +3106,6 @@ void handle_tools() {
   TXBuffer += F("<TD>");
   TXBuffer += F("Saves a settings file");
 
-  TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
-  TXBuffer += F("<TD>");
-  TXBuffer += F("Erase all settings files");
-
 #if defined(ESP8266)
   if (ESP.getFlashChipRealSize() > 524288)
   {
@@ -3129,6 +3124,11 @@ void handle_tools() {
   addButton(TXBuffer.buf,  F("filelist"), F("Flash"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Show files on internal flash");
+
+  TXBuffer += F("<TR><TD HEIGHT=\"30\">");
+  addButton(TXBuffer.buf,  F("/?cmd=reset"), F("Factory Reset"));
+  TXBuffer += F("<TD>");
+  TXBuffer += F("Erase all settings files");
 
 #ifdef FEATURE_SD
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
@@ -3366,7 +3366,7 @@ void handle_wifiscanner() {
 
 
 
-  TXBuffer += F("<table><TR><TH>Access Points:<TH>RSSI");
+  TXBuffer += F("<table><TR><TH>SSID<TH>Channel<TH>RSSI (dB)<TH>BSSID");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -3378,7 +3378,11 @@ void handle_wifiscanner() {
       TXBuffer += F("<TR><TD>");
       TXBuffer +=  WiFi.SSID(i);
       TXBuffer +=  "<TD>";
+      TXBuffer +=  WiFi.channel(i);
+      TXBuffer +=  "<TD>";
       TXBuffer +=  WiFi.RSSI(i);
+      TXBuffer +=  "<TD>";
+      TXBuffer +=  WiFi.BSSIDstr(i);
     }
   }
 
@@ -3702,7 +3706,7 @@ void handle_advanced() {
   addFormSubHeader(TXBuffer.buf,  F("Controller Settings"));
 
   addFormCheckBox(TXBuffer.buf,  F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
-  addFormNumericBox(TXBuffer.buf,  F("Message Delay"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
+  addFormNumericBox(TXBuffer.buf,  F("Message Interval"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
   addUnit(TXBuffer.buf,  F("ms"));
 
   addFormSubHeader(TXBuffer.buf, F("NTP Settings"));
@@ -4549,6 +4553,13 @@ void handle_setup() {
           TXBuffer += F(" checked ");
         TXBuffer += F(">");
         TXBuffer +=  WiFi.SSID(i);
+        TXBuffer += F(" (ch:");
+        TXBuffer += WiFi.channel(i);
+        TXBuffer += F(" ");
+        TXBuffer += WiFi.RSSI(i);
+        TXBuffer += F("dB) [");
+        TXBuffer +=  WiFi.BSSIDstr(i);
+        TXBuffer += F("]");
         TXBuffer += F("</input><br>");
       }
     }
