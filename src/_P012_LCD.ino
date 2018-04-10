@@ -1,3 +1,4 @@
+#ifdef USES_P012
 //#######################################################################################################
 //#################################### Plugin 012: LCD ##################################################
 //#######################################################################################################
@@ -8,7 +9,6 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 //  Pump:[Pump#on#O] -> ON/OFF
-
 #include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C *lcd=NULL;
@@ -244,8 +244,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         else if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
+          tmpString = P012_parseTemplate(string, cols);
+          argIndex = tmpString.lastIndexOf(',');
+          tmpString = tmpString.substring(argIndex + 1);
 
           int colPos = event->Par2 - 1;
           int rowPos = event->Par1 - 1;
@@ -312,3 +313,4 @@ String P012_parseTemplate(String &tmpString, byte lineSize) {
   result.replace(degree, degree_lcd);
   return result;
 }
+#endif // USES_P012

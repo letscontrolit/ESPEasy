@@ -1,3 +1,4 @@
+#ifdef USES_P032
 //#######################################################################################################
 //################ Plugin 032 MS5611 (GY-63) I2C Temp/Barometric Pressure Sensor  #######################
 //#######################################################################################################
@@ -252,3 +253,4 @@ void Plugin_032_readout() {
 double Plugin_032_pressureElevation(double atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P032
