@@ -96,6 +96,8 @@ void processGotIP() {
   if (wifiStatus < ESPEASY_WIFI_GOT_IP)
     return;
   IPAddress ip = WiFi.localIP();
+  if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
+    return;
   const IPAddress gw = WiFi.gatewayIP();
   const IPAddress subnet = WiFi.subnetMask();
   String log = F("WIFI : ");
@@ -212,9 +214,9 @@ void resetWiFi() {
 bool WifiIsAP(WiFiMode_t wifimode)
 {
   #if defined(ESP32)
-    return ((wifimode & WIFI_MODE_AP) != 0);
+    return (wifimode == WIFI_MODE_AP) || (wifimode == WIFI_MODE_APSTA);
   #else
-    return ((wifimode & WIFI_AP) != 0);
+    return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA);
   #endif
 }
 
@@ -232,14 +234,14 @@ void setWifiState(WifiState state) {
   switch (state) {
     case WifiOff:
       WifiDisconnect();
-      setWifiMode(WIFI_OFF);
+      changeWifiMode(WIFI_OFF);
       break;
     case WifiStart:
-      setWifiMode(WIFI_STA);
+      changeWifiMode(WIFI_STA);
       break;
     case WifiTryConnect:
       if (WIFI_AP != WiFi.getMode()) {
-        setWifiMode(WIFI_STA);
+        changeWifiMode(WIFI_STA);
         if (prepareWiFi()) {
           tryConnectWiFi();
         } else {
@@ -248,15 +250,16 @@ void setWifiState(WifiState state) {
       }
       break;
     case WifiConnectionFailed:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Connection Failed"));
       if (WIFI_AP != WiFi.getMode()) {
-        setWifiMode(WIFI_AP);
+        changeWifiMode(WIFI_AP);
         wifiSetup = true;
         timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       }
       break;
     case WifiClientConnectAP:
       timerAPoff = 0; // Disable timer to switch AP off.
-      setWifiMode(WIFI_AP);
+      changeWifiMode(WIFI_AP);
       break;
     case WifiClientDisconnectAP:
       if (WifiIsAP(WiFi.getMode())) {
@@ -266,7 +269,7 @@ void setWifiState(WifiState state) {
     case WifiCredentialsChanged:
       if (WifiIsAP(WiFi.getMode())) {
         timerAPoff = 0; // Disable timer to switch AP off.
-        setWifiMode(WIFI_AP_STA);
+        changeWifiMode(WIFI_AP_STA);
       }
       lastWiFiSettings = 0; // Force to load the first settings.
       wifi_connect_attempt = 0;
@@ -278,25 +281,25 @@ void setWifiState(WifiState state) {
       break;
     case WifiConnectSuccess:
       if (WifiIsAP(WiFi.getMode())) {
-        setWifiMode(WIFI_AP_STA);
+        changeWifiMode(WIFI_AP_STA);
         timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       } else {
         timerAPoff = 0; // Disable timer to switch AP off.
-        setWifiMode(WIFI_STA);
+        changeWifiMode(WIFI_STA);
       }
       wifi_connect_attempt = 0;
       break;
     case WifiDisableAP:
       if (WifiIsAP(WiFi.getMode())) {
         timerAPoff = 0; // Disable timer to switch AP off.
-        setWifiMode(WIFI_STA);
+        changeWifiMode(WIFI_STA);
       }
       break;
     case WifiEnableAP:
       if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
-        setWifiMode(WIFI_AP_STA);
+        changeWifiMode(WIFI_AP_STA);
       } else {
-        setWifiMode(WIFI_AP);
+        changeWifiMode(WIFI_AP);
       }
       timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       break;
@@ -306,19 +309,37 @@ void setWifiState(WifiState state) {
 //********************************************************************************
 // Set Wifi AP Mode
 //********************************************************************************
-void setWifiMode(WiFiMode_t wifimode)
+void setWifiMode(WiFiMode_t wifimode) {
+  switch (wifimode) {
+    case WIFI_OFF:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Switch off WiFi"));
+      break;
+    case WIFI_STA:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to STA"));
+      break;
+    case WIFI_AP:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP"));
+      break;
+    case WIFI_AP_STA:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
+      break;
+  }
+  WiFi.mode(wifimode);
+}
+
+void changeWifiMode(WiFiMode_t wifimode)
 {
   if (wifimode == WiFi.getMode()) return;
   if (WiFi.getMode() == WIFI_OFF) {
     // Any mode can be selected, starting from off mode.
     addLog(LOG_LEVEL_INFO, F("WIFI : Switch on WiFi"));
-    WiFi.mode(wifimode);
+    setWifiMode(wifimode);
     return;
   }
   switch (wifimode) {
     case WIFI_OFF:
       WifiDisconnect();
-      WiFi.mode(WIFI_OFF);
+      setWifiMode(WIFI_OFF);
       return;
     case WIFI_STA:
       if (WifiIsAP(WiFi.getMode())) {
@@ -335,7 +356,7 @@ void setWifiMode(WiFiMode_t wifimode)
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
-      WiFi.mode(wifimode);
+      setWifiMode(wifimode);
       WiFi.reconnect();
       break;
     case WIFI_AP_STA:
@@ -347,17 +368,19 @@ void setWifiMode(WiFiMode_t wifimode)
         if (wifimode == WIFI_AP_STA) {
           WiFi.reconnect();
         }
-//        WiFi.mode(WIFI_OFF);
+//        setWifiMode(WIFI_OFF);
         delay(100);
       }
       // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
       // setup ssid for AP Mode when needed
-      WiFi.mode(wifimode);
+      setWifiMode(wifimode);
       WiFi.setAutoConnect(false);
       String softAPSSID=WifiGetAPssid();
       String pwd = SecuritySettings.WifiAPKey;
       IPAddress subnet(DEFAULT_AP_SUBNET);
-//      WiFi.softAPConfig(apIP, apIP, subnet);
+      if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
+        addLog(LOG_LEVEL_ERROR, "WIFI : [AP] softAPConfig failed!");
+      }
       if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
         String log("WIFI : AP Mode ssid will be ");
         log += softAPSSID;
@@ -370,9 +393,6 @@ void setWifiMode(WiFiMode_t wifimode)
         log += F(" IP: ");
         log += apIP.toString();
         addLog(LOG_LEVEL_ERROR, log);
-      }
-      if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
-        addLog(LOG_LEVEL_ERROR, "WIFI : [AP] softAPConfig failed!");
       }
       #ifdef ESP32
 
@@ -508,8 +528,11 @@ bool wifiConnectTimeoutReached() {
 bool tryConnectWiFi() {
 //  if (wifiSetup && !wifiSetupConnect)
 //    return false;
-  if (wifiStatus != ESPEASY_WIFI_DISCONNECTED)
-    return(true);   //already connected, need to disconnect first
+  if (wifiStatus != ESPEASY_WIFI_DISCONNECTED) {
+    if (!WifiIsAP(WiFi.getMode())) {
+      return(true);   //already connected, need to disconnect first
+    }
+  }
   if (!wifiConnectTimeoutReached())
     return true;    // timeout not reached yet, thus no need to retry again.
   if (!selectValidWiFiSettings()) {
@@ -591,15 +614,40 @@ void WifiScan()
       Serial.print(F("WIFI : "));
       Serial.print(i + 1);
       Serial.print(": ");
-      Serial.print(WiFi.SSID(i));
-      Serial.print(" (");
-      Serial.print(WiFi.RSSI(i));
-      Serial.print(")");
-      Serial.println("");
+      Serial.println(formatScanResult(i, " "));
       delay(10);
     }
   }
   Serial.println("");
+}
+
+String formatScanResult(int i, const String& separator) {
+  String result = WiFi.SSID(i);
+  result += separator;
+  result += F("Ch:");
+  result += WiFi.channel(i);
+  result += F(" (");
+  result += WiFi.RSSI(i);
+  result += F("dBm) ");
+  switch (WiFi.encryptionType(i)) {
+  #ifdef ESP32
+    case WIFI_AUTH_OPEN: result += F("open"); break;
+    case WIFI_AUTH_WEP:  result += F("WEP"); break;
+    case WIFI_AUTH_WPA_PSK: result += F("WPA/PSK"); break;
+    case WIFI_AUTH_WPA2_PSK: result += F("WPA2/PSK"); break;
+    case WIFI_AUTH_WPA_WPA2_PSK: result += F("WPA/WPA2/PSK"); break;
+    case WIFI_AUTH_WPA2_ENTERPRISE: result += F("WPA2 Enterprise"); break;
+  #else
+    case ENC_TYPE_WEP: result += F("WEP"); break;
+    case ENC_TYPE_TKIP: result += F("WPA/PSK"); break;
+    case ENC_TYPE_CCMP: result += F("WPA2/PSK"); break;
+    case ENC_TYPE_NONE: result += F("open"); break;
+    case ENC_TYPE_AUTO: result += F("WPA/WPA2/PSK"); break;
+  #endif
+    default:
+      break;
+  }
+  return result;
 }
 
 

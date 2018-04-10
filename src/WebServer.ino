@@ -1602,7 +1602,7 @@ void handle_hardware() {
   {
     Settings.Pin_status_led  = getFormItemInt(F("pled"));
     Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
-    Settings.Pin_Reset  = getFormItemInt(F("pres"));    
+    Settings.Pin_Reset  = getFormItemInt(F("pres"));
     Settings.Pin_i2c_sda     = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl     = getFormItemInt(F("pscl"));
     Settings.InitSPI = isFormItemChecked(F("initspi"));      // SPI Init
@@ -3371,7 +3371,7 @@ void handle_wifiscanner() {
 
 
 
-  TXBuffer += F("<table><TR><TH>Access Points:<TH>RSSI");
+  TXBuffer += F("<table><TR><TH>SSID<TH>info");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -3381,9 +3381,7 @@ void handle_wifiscanner() {
     for (int i = 0; i < n; ++i)
     {
       TXBuffer += F("<TR><TD>");
-      TXBuffer +=  WiFi.SSID(i);
-      TXBuffer +=  "<TD>";
-      TXBuffer +=  WiFi.RSSI(i);
+      TXBuffer += formatScanResult(i, "<TD>");
     }
   }
 
@@ -4542,24 +4540,28 @@ void handle_setup() {
 
   if (status == 0)  // first step, scan and show access points within reach...
   {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
     if (n == 0)
       n = WiFi.scanNetworks();
-
+    setWifiMode(cur_wifimode);
     if (n == 0)
       TXBuffer += F("No Access Points found");
     else
     {
+      TXBuffer += F("<table><TR><TH>SSID<TH>info");
       for (int i = 0; i < n; ++i)
       {
+        TXBuffer += F("<TR><TD>");
         TXBuffer += F("<input type='radio' name='ssid' value='");
         TXBuffer +=  WiFi.SSID(i);
         TXBuffer += F("'");
         if (WiFi.SSID(i) == ssid)
           TXBuffer += F(" checked ");
         TXBuffer += F(">");
-        TXBuffer +=  WiFi.SSID(i);
+        TXBuffer += formatScanResult(i, "<TD>");
         TXBuffer += F("</input><br>");
       }
+      TXBuffer += F("</table>");
     }
 
     TXBuffer += F("<input type='radio' name='ssid' id='other_ssid' value='other' >other SSID:</input>");

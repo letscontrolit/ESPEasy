@@ -27,6 +27,18 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       wifiStatus = ESPEASY_WIFI_GOT_IP;
       processedGetIP = false;
       break;
+    case SYSTEM_EVENT_AP_STACONNECTED:
+      for (byte i = 0; i < 6; ++i) {
+        lastMacConnectedAPmode[i] = info.sta_connected.mac[i];
+      }
+      processedConnectAPmode = false;
+      break;
+    case SYSTEM_EVENT_AP_STADISCONNECTED:
+      for (byte i = 0; i < 6; ++i) {
+        lastMacConnectedAPmode[i] = info.sta_disconnected.mac[i];
+      }
+      processedDisconnectAPmode = false;
+      break;
     default:
       break;
   }
