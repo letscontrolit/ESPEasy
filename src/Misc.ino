@@ -482,6 +482,13 @@ String BuildFixes()
       f.close();
     }
   }
+
+  if (Settings.Build < 20101)
+  {
+    Serial.println(F("Fix reset Pin"));
+    Settings.Pin_Reset = -1;
+  }
+  
   Settings.Build = BUILD;
   return(SaveSettings());
 }

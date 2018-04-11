@@ -579,7 +579,7 @@ void runOncePerSecond()
     timerAPoff = 0;
     WifiAPMode(false);
   }
-  //checkResetFactoryPin(); // wait for buildfix solution before enabling!
+  checkResetFactoryPin();
 }
 
 /*********************************************************************************************\
