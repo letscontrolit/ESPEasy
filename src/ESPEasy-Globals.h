@@ -154,7 +154,7 @@
   #define VERSION                             3 // Change in config.dat mapping needs a full reset
 #endif
 
-#define BUILD                           20100 // git version 2.1.0
+#define BUILD                           20101 // git version 2.1.01
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif

@@ -582,6 +582,7 @@ void runOncePerSecond()
     Serial.print(F(" uS  1 ps:"));
     Serial.println(timer);
   }
+  checkResetFactoryPin();
 }
 
 /*********************************************************************************************\

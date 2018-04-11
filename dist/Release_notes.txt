@@ -1,4 +1,29 @@
 -------------------------------------------------
+Changes in release mega-20180410 (since mega-20180409)
+-------------------------------------------------
+
+Release date: Tue Apr 10 04:00:21 CEST 2018
+
+Grovkillen (5):
+      Added comments that will not show up on issues
+      Update issue_template.md
+      Update issue_template.md
+      Update issue_template.md
+      Update issue_template.md
+
+
+-------------------------------------------------
+Changes in release mega-20180409 (since mega-20180407)
+-------------------------------------------------
+
+Release date: Mon Apr  9 04:00:13 CEST 2018
+
+mvdbro (2):
+      Factory Reset (not enabled yet)
+      Both reset/factoryreset option
+
+
+-------------------------------------------------
 Changes in release mega-20180407 (since mega-20180405)
 -------------------------------------------------
 
