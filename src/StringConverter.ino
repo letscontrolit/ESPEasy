@@ -54,6 +54,12 @@ void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
   sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
+String formatMAC(const uint8_t* mac) {
+  char str[20];
+  formatMAC(mac, str);
+  return String(str);
+}
+
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
   \*********************************************************************************************/

@@ -27,6 +27,25 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       wifiStatus = ESPEASY_WIFI_GOT_IP;
       processedGetIP = false;
       break;
+    case SYSTEM_EVENT_AP_STACONNECTED:
+      for (byte i = 0; i < 6; ++i) {
+        lastMacConnectedAPmode[i] = info.sta_connected.mac[i];
+      }
+      processedConnectAPmode = false;
+      break;
+    case SYSTEM_EVENT_AP_STADISCONNECTED:
+      for (byte i = 0; i < 6; ++i) {
+        lastMacConnectedAPmode[i] = info.sta_disconnected.mac[i];
+      }
+      processedDisconnectAPmode = false;
+      break;
+    case SYSTEM_EVENT_SCAN_DONE:
+      lastGetScanMoment = millis();
+//      scan_done_status = info.scan_done.status;
+      scan_done_number = info.scan_done.number;
+//      scan_done_scan_id = info.scan_done.scan_id;
+      processedScanDone = false;
+      break;
     default:
       break;
   }
@@ -55,9 +74,9 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event){
     lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
   } else
     lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
-  processedDisconnect = false;
   lastDisconnectReason = event.reason;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event){
@@ -65,4 +84,25 @@ void onGotIP(const WiFiEventStationModeGotIP& event){
   wifiStatus = ESPEASY_WIFI_GOT_IP;
   processedGetIP = false;
 }
+
+void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
+  for (byte i = 0; i < 6; ++i) {
+    lastMacConnectedAPmode[i] = event.mac[i];
+  }
+  processedConnectAPmode = false;
+}
+
+void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+  for (byte i = 0; i < 6; ++i) {
+    lastMacDisconnectedAPmode[i] = event.mac[i];
+  }
+  processedDisconnectAPmode = false;
+}
+
+void onScanFinished(int networksFound) {
+  lastGetScanMoment = millis();
+  scan_done_number = networksFound;
+  processedScanDone = false;
+}
+
 #endif
