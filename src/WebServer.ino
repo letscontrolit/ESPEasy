@@ -3366,12 +3366,7 @@ void handle_wifiscanner() {
   navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
-
-   char *TempString = (char*)malloc(80);
-
-
-
-  TXBuffer += F("<table><TR><TH>SSID<TH>info");
+  TXBuffer += F("<table><TR><TH>SSID<TH>BSSID<TH>info");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -3385,11 +3380,9 @@ void handle_wifiscanner() {
     }
   }
 
-
   TXBuffer += F("</table>");
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
-  free(TempString);
 }
 
 
@@ -4548,7 +4541,7 @@ void handle_setup() {
       TXBuffer += F("No Access Points found");
     else
     {
-      TXBuffer += F("<table><TR><TH>SSID<TH>info");
+      TXBuffer += F("<table><TR><TH>SSID<TH>BSSID<TH>info");
       for (int i = 0; i < n; ++i)
       {
         TXBuffer += F("<TR><TD>");

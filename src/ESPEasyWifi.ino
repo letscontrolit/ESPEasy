@@ -160,6 +160,7 @@ void processGotIP() {
     rulesProcessing(event);
   }
   statusLED(true);
+  WiFi.scanDelete();
   wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
 }
 
@@ -188,6 +189,48 @@ void processDisconnectAPmode() {
   }
 }
 
+void processScanDone() {
+  if (processedScanDone) return;
+  processedScanDone = true;
+  String log = F("WIFI  : Scan finished, found: ");
+  log += scan_done_number;
+  addLog(LOG_LEVEL_INFO, log);
+
+  int bestScanID = -1;
+  int32_t bestRssi = -1000;
+  uint8_t bestWiFiSettings = lastWiFiSettings;
+  if (selectValidWiFiSettings()) {
+    bool done = false;
+    String lastWiFiSettingsSSID = getLastWiFiSettingsSSID();
+    for (int settingNr = 0; !done && settingNr < 2; ++settingNr) {
+      for (int i = 0; i < scan_done_number; ++i) {
+        if (WiFi.SSID(i) == lastWiFiSettingsSSID) {
+          int32_t rssi = WiFi.RSSI(i);
+          if (bestRssi < rssi) {
+            bestRssi = rssi;
+            bestScanID = i;
+            bestWiFiSettings = lastWiFiSettings;
+          }
+        }
+      }
+      if (!selectNextWiFiSettings()) done = true;
+    }
+    if (bestScanID >= 0) {
+      log = F("WIFI  : Selected: ");
+      log += formatScanResult(bestScanID, " ");
+      addLog(LOG_LEVEL_INFO, log);
+      lastWiFiSettings = bestWiFiSettings;
+      uint8_t * scanbssid = WiFi.BSSID(bestScanID);
+      if (scanbssid) {
+        for (int i = 0; i < 6 ; ++i) {
+          lastBSSID[i] = *(scanbssid + i);
+        }
+      }
+    }
+    setWifiState(WifiTryConnect);
+  }
+}
+
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
   setWifiState(WifiOff);
@@ -195,6 +238,21 @@ void resetWiFi() {
   lastDisconnectMoment = millis();
   processedDisconnect = false;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+}
+
+void WifiScanAsync() {
+  setWifiState(WifiStartScan);
+  addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
+  #ifdef ESP32
+    bool async = true;
+    bool show_hidden = false;
+    bool passive = false;
+    uint32_t max_ms_per_chan = 300;
+    WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan);
+  #else
+      // 2.4.x only and it doesn't work like expected.
+//    WiFi.scanNetworksAsync(onScanFinished);
+  #endif
 }
 
 //********************************************************************************
@@ -303,6 +361,11 @@ void setWifiState(WifiState state) {
       }
       timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       break;
+    case WifiStartScan:
+      if (WifiIsAP(WiFi.getMode())) {
+        changeWifiMode(WIFI_AP_STA);
+      } else changeWifiMode(WIFI_STA);
+      break;
   }
 }
 
@@ -322,6 +385,8 @@ void setWifiMode(WiFiMode_t wifimode) {
       break;
     case WIFI_AP_STA:
       addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
+      break;
+    default:
       break;
   }
   WiFi.mode(wifimode);
@@ -495,7 +560,7 @@ bool wifiSettingsValid(const char* ssid, const char* pass) {
   if (ssid[0] == 0 || (strcasecmp(ssid, "ssid") == 0)) {
     return false;
   }
-  if (pass[0] == 0) return false;
+//  if (pass[0] == 0) return false; // Allow for empty pass
   if (strlen(ssid) > 32) return false;
   if (strlen(pass) > 64) return false;
   return true;
@@ -530,6 +595,7 @@ bool tryConnectWiFi() {
 //    return false;
   if (wifiStatus != ESPEASY_WIFI_DISCONNECTED) {
     if (!WifiIsAP(WiFi.getMode())) {
+      // Only when not in AP mode.
       return(true);   //already connected, need to disconnect first
     }
   }
@@ -623,6 +689,8 @@ void WifiScan()
 
 String formatScanResult(int i, const String& separator) {
   String result = WiFi.SSID(i);
+  result += separator;
+  result += WiFi.BSSIDstr(i);
   result += separator;
   result += F("Ch:");
   result += WiFi.channel(i);

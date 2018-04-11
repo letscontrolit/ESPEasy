@@ -174,9 +174,9 @@ void setup()
   progMemMD5check();
   LoadSettings();
   checkRuleSets();
-  if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+  if (!selectValidWiFiSettings()) {
     wifiSetup = true;
-//  setWifiState(WifiStart);
+  }
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
@@ -240,6 +240,14 @@ void setup()
   }
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+/*
+  // FIXME TD-er:
+  // Async scanning for wifi doesn't work yet like it should.
+  // So no selection of strongest network yet.
+  if (selectValidWiFiSettings()) {
+    WifiScanAsync();
+  }
+*/
   setWifiState(WifiTryConnect);
 
   #ifdef FEATURE_REPORTING
@@ -357,6 +365,7 @@ void loop()
   }
   if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();
+  if (!processedScanDone) processScanDone();
 
   bool firstLoopWiFiConnected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED && firstLoop;
   if (firstLoopWiFiConnected) {

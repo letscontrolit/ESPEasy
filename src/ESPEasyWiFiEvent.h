@@ -39,6 +39,13 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       }
       processedDisconnectAPmode = false;
       break;
+    case SYSTEM_EVENT_SCAN_DONE:
+      lastGetScanMoment = millis();
+//      scan_done_status = info.scan_done.status;
+      scan_done_number = info.scan_done.number;
+//      scan_done_scan_id = info.scan_done.scan_id;
+      processedScanDone = false;
+      break;
     default:
       break;
   }
@@ -90,6 +97,12 @@ void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
     lastMacDisconnectedAPmode[i] = event.mac[i];
   }
   processedDisconnectAPmode = false;
+}
+
+void onScanFinished(int networksFound) {
+  lastGetScanMoment = millis();
+  scan_done_number = networksFound;
+  processedScanDone = false;
 }
 
 #endif

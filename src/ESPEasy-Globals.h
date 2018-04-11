@@ -1175,6 +1175,7 @@ enum WifiState {
   WifiConnectSuccess,
   WifiDisableAP,
   WifiEnableAP,
+  WifiStartScan,
 };
 
 WifiState currentWifiState = WifiStart;
@@ -1196,10 +1197,15 @@ WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
 unsigned long lastConnectMoment = 0;
 unsigned long lastDisconnectMoment = 0;
 unsigned long lastGetIPmoment = 0;
+unsigned long lastGetScanMoment = 0;
 unsigned long lastConnectedDuration = 0;
 bool intent_to_reboot = false;
 uint8_t lastMacConnectedAPmode[6] = {0};
 uint8_t lastMacDisconnectedAPmode[6] = {0};
+
+//uint32_t scan_done_status = 0;
+uint8_t  scan_done_number = 0;
+//uint8_t  scan_done_scan_id = 0;
 
 // Semaphore like booleans for processing data gathered from WiFi events.
 bool processedConnect = true;
@@ -1207,6 +1213,7 @@ bool processedDisconnect = true;
 bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
+bool processedScanDone = true;
 
 unsigned long start = 0;
 unsigned long elapsed = 0;
@@ -1227,7 +1234,7 @@ bool firstLoop=true;
 boolean activeRuleSets[RULESETS_MAX];
 
 boolean       UseRTOSMultitasking;
-  
+
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.
