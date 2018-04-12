@@ -12,7 +12,11 @@
 .clang_complete
 .gcc-flags.json
 .piolibdeps
+<<<<<<< HEAD
+.DS_Store
+=======
 
 ## Project #####################
+>>>>>>> upstream/mega
 lib/readme.txt
 src/Custom.h
