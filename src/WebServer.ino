@@ -348,6 +348,11 @@ boolean clientIPallowed()
   WiFiClient client(WebServer.client());
   if (ipInRange(client.remoteIP(), low, high))
     return true;
+
+  if (WifiIsAP(WiFi.getMode())) {
+    // @TD-er Fixme: Should match subnet of SoftAP.
+    return true;
+  }
   String response = F("IP blocked: ");
   response += formatIP(client.remoteIP());
   WebServer.send(403, "text/html", response);
@@ -3361,12 +3366,7 @@ void handle_wifiscanner() {
   navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
-
-   char *TempString = (char*)malloc(80);
-
-
-
-  TXBuffer += F("<table><TR><TH>SSID<TH>Channel<TH>RSSI (dB)<TH>BSSID");
+  TXBuffer += F("<table><TR><TH>SSID<TH>BSSID<TH>info");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -3376,21 +3376,13 @@ void handle_wifiscanner() {
     for (int i = 0; i < n; ++i)
     {
       TXBuffer += F("<TR><TD>");
-      TXBuffer +=  WiFi.SSID(i);
-      TXBuffer +=  "<TD>";
-      TXBuffer +=  WiFi.channel(i);
-      TXBuffer +=  "<TD>";
-      TXBuffer +=  WiFi.RSSI(i);
-      TXBuffer +=  "<TD>";
-      TXBuffer +=  WiFi.BSSIDstr(i);
+      TXBuffer += formatScanResult(i, "<TD>");
     }
   }
-
 
   TXBuffer += F("</table>");
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
-  free(TempString);
 }
 
 
@@ -4505,7 +4497,7 @@ void handle_setup() {
     TXBuffer.endStream();
 
     wifiSetup = false;
-    //WifiAPMode(false);  //this forces the iPhone to exit safari and this page was never displayed
+    //setWifiMode(WIFI_STA);  //this forces the iPhone to exit safari and this page was never displayed
     timerAPoff = millis() + 60000L;  //switch the AP off in 1 minute
     return;
   }
@@ -4523,11 +4515,15 @@ void handle_setup() {
   }
 
   // if ssid config not set and params are both provided
-  if (status == 0 && ssid.length() != 0 && strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+  if (status == 0 && ssid.length() != 0 /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
   {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
+    setWifiState(WifiCredentialsChanged);
+    String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
+    reconnectlog += ssid;
+    addLog(LOG_LEVEL_INFO, reconnectlog);
     status = 1;
     refreshCount = 0;
   }
@@ -4537,31 +4533,28 @@ void handle_setup() {
 
   if (status == 0)  // first step, scan and show access points within reach...
   {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
     if (n == 0)
       n = WiFi.scanNetworks();
-
+    setWifiMode(cur_wifimode);
     if (n == 0)
       TXBuffer += F("No Access Points found");
     else
     {
+      TXBuffer += F("<table><TR><TH>SSID<TH>BSSID<TH>info");
       for (int i = 0; i < n; ++i)
       {
+        TXBuffer += F("<TR><TD>");
         TXBuffer += F("<input type='radio' name='ssid' value='");
         TXBuffer +=  WiFi.SSID(i);
         TXBuffer += F("'");
         if (WiFi.SSID(i) == ssid)
           TXBuffer += F(" checked ");
         TXBuffer += F(">");
-        TXBuffer +=  WiFi.SSID(i);
-        TXBuffer += F(" (ch:");
-        TXBuffer += WiFi.channel(i);
-        TXBuffer += F(" ");
-        TXBuffer += WiFi.RSSI(i);
-        TXBuffer += F("dB) [");
-        TXBuffer +=  WiFi.BSSIDstr(i);
-        TXBuffer += F("]");
+        TXBuffer += formatScanResult(i, "<TD>");
         TXBuffer += F("</input><br>");
       }
+      TXBuffer += F("</table>");
     }
 
     TXBuffer += F("<input type='radio' name='ssid' id='other_ssid' value='other' >other SSID:</input>");
@@ -4580,8 +4573,8 @@ void handle_setup() {
     if (refreshCount > 0)
     {
       status = 0;
-      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
-      SecuritySettings.WifiKey[0] = 0;
+//      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
+//      SecuritySettings.WifiKey[0] = 0;
       TXBuffer += F("<a class=\"button\" href=\"setup\">Back to Setup</a>");
     }
     else
@@ -4865,6 +4858,11 @@ void handle_sysinfo() {
     TXBuffer += formatIP(client.remoteIP());
   }
 
+  TXBuffer += F("<TR><TD>DNS<TD>");
+  TXBuffer += formatIP(WiFi.dnsIP(0));
+  TXBuffer += F(" / ");
+  TXBuffer += formatIP(WiFi.dnsIP(1));
+
   TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
   TXBuffer += describeAllowedIPrange();
 
@@ -4967,6 +4965,25 @@ void handle_sysinfo() {
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
+  #if defined(ESP32)
+     TXBuffer += F(" (0x");
+     uint64_t chipid=ESP.getEfuseMac();   //The chip ID is essentially its MAC address(length: 6 bytes).
+     uint32_t ChipId1 = (uint16_t)(chipid>>32);
+     String espChipIdS(ChipId1, HEX);
+     espChipIdS.toUpperCase();
+     TXBuffer += espChipIdS;
+     ChipId1 = (uint32_t)chipid;
+     String espChipIdS1(ChipId1, HEX);
+     espChipIdS1.toUpperCase();
+     TXBuffer += espChipIdS1;
+     TXBuffer += F(")");
+
+     TXBuffer += F("<TR><TD>ESP Chip Freq:<TD>");
+     TXBuffer += ESP.getCpuFreqMHz(); 
+     TXBuffer += F(" MHz");
+  #endif
+  
+  
 
    TXBuffer += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 

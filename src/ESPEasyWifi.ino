@@ -1,4 +1,5 @@
 
+#define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
 //********************************************************************************
 // Functions to process the data gathered from the events.
@@ -6,15 +7,15 @@
 //********************************************************************************
 void processConnect() {
   if (processedConnect) return;
+  processedConnect = true;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
-
+  const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
   String log = F("WIFI : Connected! AP: ");
   log += WiFi.SSID();
   log += F(" (");
   log += WiFi.BSSIDstr();
   log += F(") Ch: ");
   log += last_channel;
-  const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
   if (connect_duration > 0 && connect_duration < 30000) {
     // Just log times when they make sense.
     log += F(" Duration: ");
@@ -22,17 +23,27 @@ void processConnect() {
     log += F(" ms");
   }
   addLog(LOG_LEVEL_INFO, log);
-
+  if (useStaticIP())
+  {
+    const IPAddress ip = Settings.IP;
+    log = F("IP   : Static IP :");
+    log += ip;
+    addLog(LOG_LEVEL_INFO, log);
+    const IPAddress gw = Settings.Gateway;
+    const IPAddress subnet = Settings.Subnet;
+    const IPAddress dns = Settings.DNS;
+    WiFi.config(ip, gw, subnet, dns);
+  }
   if (Settings.UseRules && bssid_changed) {
     String event = F("WiFi#ChangedAccesspoint");
     rulesProcessing(event);
   }
-  wifi_connect_attempt = 0;
-  processedConnect = true;
+  setWifiState(WifiConnectSuccess);
 }
 
 void processDisconnect() {
   if (processedDisconnect) return;
+  processedDisconnect = true;
   if (Settings.UseRules) {
     String event = F("WiFi#Disconnected");
     rulesProcessing(event);
@@ -45,25 +56,48 @@ void processDisconnect() {
     log += format_msec_duration(lastConnectedDuration);
   }
   addLog(LOG_LEVEL_INFO, log);
-  processedDisconnect = true;
-
-  if (Settings.deepSleep && Settings.deepSleepOnFail) {
-    //only one attempt in deepsleep, to conserve battery
-    addLog(LOG_LEVEL_ERROR, F("SLEEP: Connection failed, going back to sleep."));
-    deepSleep(Settings.Delay);
+  if (wifi_connect_attempt > 5) {
+    setWifiState(WifiConnectionFailed);
+  } else {
+    switch (lastDisconnectReason) {
+      case WIFI_DISCONNECT_REASON_NO_AP_FOUND:
+      case WIFI_DISCONNECT_REASON_AUTH_FAIL:
+      case WIFI_DISCONNECT_REASON_ASSOC_FAIL:
+      case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:
+        // Disconnect without chance for success on next attempt
+        if (selectNextWiFiSettings()) {
+          if (!intent_to_reboot)
+            setWifiState(WifiTryConnect);
+          return;
+        } else {
+          if (Settings.deepSleep && Settings.deepSleepOnFail) {
+            //only one attempt in deepsleep, to conserve battery
+            addLog(LOG_LEVEL_ERROR, F("SLEEP: Connection failed, going back to sleep."));
+            deepSleep(Settings.Delay);
+          }
+          setWifiState(WifiConnectionFailed);
+          return;
+        }
+        break;
+      default:
+        setWifiState(WifiStart);
+        if (!intent_to_reboot)
+          setWifiState(WifiTryConnect);
+        return;
+    }
   }
-
-  if (!intent_to_reboot)
-    WiFiConnectRelaxed();
 }
 
 
 void processGotIP() {
   if (processedGetIP)
     return;
+  processedGetIP = true;
   if (wifiStatus < ESPEASY_WIFI_GOT_IP)
     return;
   IPAddress ip = WiFi.localIP();
+  if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
+    return;
   const IPAddress gw = WiFi.gatewayIP();
   const IPAddress subnet = WiFi.subnetMask();
   String log = F("WIFI : ");
@@ -126,19 +160,325 @@ void processGotIP() {
     rulesProcessing(event);
   }
   statusLED(true);
+  WiFi.scanDelete();
   wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
-  processedGetIP = true;
+}
+
+void processConnectAPmode() {
+  if (processedConnectAPmode) return;
+  processedConnectAPmode = true;
+  String log = F("AP Mode: Client connected: ");
+  log += formatMAC(lastMacConnectedAPmode);
+  log += F(" Connected devices: ");
+  log += WiFi.softAPgetStationNum();
+  addLog(LOG_LEVEL_INFO, log);
+  setWifiState(WifiClientConnectAP);
+}
+
+void processDisconnectAPmode() {
+  if (processedDisconnectAPmode) return;
+  processedDisconnectAPmode = true;
+  const int nrStationsConnected = WiFi.softAPgetStationNum();
+  String log = F("AP Mode: Client disconnected: ");
+  log += formatMAC(lastMacDisconnectedAPmode);
+  log += F(" Connected devices: ");
+  log += nrStationsConnected;
+  addLog(LOG_LEVEL_INFO, log);
+  if (nrStationsConnected == 0) {
+    setWifiState(WifiClientDisconnectAP);
+  }
+}
+
+void processScanDone() {
+  if (processedScanDone) return;
+  processedScanDone = true;
+  String log = F("WIFI  : Scan finished, found: ");
+  log += scan_done_number;
+  addLog(LOG_LEVEL_INFO, log);
+
+  int bestScanID = -1;
+  int32_t bestRssi = -1000;
+  uint8_t bestWiFiSettings = lastWiFiSettings;
+  if (selectValidWiFiSettings()) {
+    bool done = false;
+    String lastWiFiSettingsSSID = getLastWiFiSettingsSSID();
+    for (int settingNr = 0; !done && settingNr < 2; ++settingNr) {
+      for (int i = 0; i < scan_done_number; ++i) {
+        if (WiFi.SSID(i) == lastWiFiSettingsSSID) {
+          int32_t rssi = WiFi.RSSI(i);
+          if (bestRssi < rssi) {
+            bestRssi = rssi;
+            bestScanID = i;
+            bestWiFiSettings = lastWiFiSettings;
+          }
+        }
+      }
+      if (!selectNextWiFiSettings()) done = true;
+    }
+    if (bestScanID >= 0) {
+      log = F("WIFI  : Selected: ");
+      log += formatScanResult(bestScanID, " ");
+      addLog(LOG_LEVEL_INFO, log);
+      lastWiFiSettings = bestWiFiSettings;
+      uint8_t * scanbssid = WiFi.BSSID(bestScanID);
+      if (scanbssid) {
+        for (int i = 0; i < 6 ; ++i) {
+          lastBSSID[i] = *(scanbssid + i);
+        }
+      }
+    }
+    setWifiState(WifiTryConnect);
+  }
 }
 
 void resetWiFi() {
-  WiFiMode_t currentMode = WiFi.getMode();
-  WiFi.mode(WIFI_OFF);
-  WiFi.mode(currentMode);
+  addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
+  setWifiState(WifiOff);
+  setWifiState(WifiStart);
   lastDisconnectMoment = millis();
   processedDisconnect = false;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
 }
 
+void WifiScanAsync() {
+  setWifiState(WifiStartScan);
+  addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
+  #ifdef ESP32
+    bool async = true;
+    bool show_hidden = false;
+    bool passive = false;
+    uint32_t max_ms_per_chan = 300;
+    WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan);
+  #else
+      // 2.4.x only and it doesn't work like expected.
+//    WiFi.scanNetworksAsync(onScanFinished);
+  #endif
+}
+
+//********************************************************************************
+// WiFi state
+//********************************************************************************
+// 0  Wifi off
+// 1  Start                        => STA
+// 2  Try connect                  => STA      => successful, goto 7
+// 3  Connection fails             => AP       => no client in N seconds, goto 1
+// 4  Client connects              => AP
+// 5  Credentials changed          => STA_AP   => goto 2
+// 6  Connect successful (AP on)   => STA_AP   => disable AP after N seconds, goto 8
+// 7  Connect successful           => STA
+// 8  Disable AP after N seconds   => STA
+//********************************************************************************
+
+bool WifiIsAP(WiFiMode_t wifimode)
+{
+  #if defined(ESP32)
+    return (wifimode == WIFI_MODE_AP) || (wifimode == WIFI_MODE_APSTA);
+  #else
+    return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA);
+  #endif
+}
+
+bool WifiIsSTA(WiFiMode_t wifimode)
+{
+  #if defined(ESP32)
+    return ((wifimode & WIFI_MODE_STA) != 0);
+  #else
+    return ((wifimode & WIFI_STA) != 0);
+  #endif
+}
+
+void setWifiState(WifiState state) {
+  currentWifiState = state;
+  switch (state) {
+    case WifiOff:
+      WifiDisconnect();
+      changeWifiMode(WIFI_OFF);
+      break;
+    case WifiStart:
+      changeWifiMode(WIFI_STA);
+      break;
+    case WifiTryConnect:
+      if (WIFI_AP != WiFi.getMode()) {
+        changeWifiMode(WIFI_STA);
+        if (prepareWiFi()) {
+          tryConnectWiFi();
+        } else {
+          setWifiState(WifiConnectionFailed);
+        }
+      }
+      break;
+    case WifiConnectionFailed:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Connection Failed"));
+      if (WIFI_AP != WiFi.getMode()) {
+        changeWifiMode(WIFI_AP);
+        wifiSetup = true;
+        timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+      }
+      break;
+    case WifiClientConnectAP:
+      timerAPoff = 0; // Disable timer to switch AP off.
+      changeWifiMode(WIFI_AP);
+      break;
+    case WifiClientDisconnectAP:
+      if (WifiIsAP(WiFi.getMode())) {
+        timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+      }
+      break;
+    case WifiCredentialsChanged:
+      if (WifiIsAP(WiFi.getMode())) {
+        timerAPoff = 0; // Disable timer to switch AP off.
+        changeWifiMode(WIFI_AP_STA);
+      }
+      lastWiFiSettings = 0; // Force to load the first settings.
+      wifi_connect_attempt = 0;
+      if (prepareWiFi()) {
+        tryConnectWiFi();
+      } else {
+        setWifiState(WifiConnectionFailed);
+      }
+      break;
+    case WifiConnectSuccess:
+      if (WifiIsAP(WiFi.getMode())) {
+        changeWifiMode(WIFI_AP_STA);
+        timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+      } else {
+        timerAPoff = 0; // Disable timer to switch AP off.
+        changeWifiMode(WIFI_STA);
+      }
+      wifi_connect_attempt = 0;
+      break;
+    case WifiDisableAP:
+      if (WifiIsAP(WiFi.getMode())) {
+        timerAPoff = 0; // Disable timer to switch AP off.
+        changeWifiMode(WIFI_STA);
+      }
+      break;
+    case WifiEnableAP:
+      if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+        changeWifiMode(WIFI_AP_STA);
+      } else {
+        changeWifiMode(WIFI_AP);
+      }
+      timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+      break;
+    case WifiStartScan:
+      if (WifiIsAP(WiFi.getMode())) {
+        changeWifiMode(WIFI_AP_STA);
+      } else changeWifiMode(WIFI_STA);
+      break;
+  }
+}
+
+//********************************************************************************
+// Set Wifi AP Mode
+//********************************************************************************
+void setWifiMode(WiFiMode_t wifimode) {
+  switch (wifimode) {
+    case WIFI_OFF:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Switch off WiFi"));
+      break;
+    case WIFI_STA:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to STA"));
+      break;
+    case WIFI_AP:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP"));
+      break;
+    case WIFI_AP_STA:
+      addLog(LOG_LEVEL_INFO, F("WIFI : Set WiFi to AP+STA"));
+      break;
+    default:
+      break;
+  }
+  WiFi.mode(wifimode);
+}
+
+void changeWifiMode(WiFiMode_t wifimode)
+{
+  if (wifimode == WiFi.getMode()) return;
+  if (WiFi.getMode() == WIFI_OFF) {
+    // Any mode can be selected, starting from off mode.
+    addLog(LOG_LEVEL_INFO, F("WIFI : Switch on WiFi"));
+    setWifiMode(wifimode);
+    return;
+  }
+  switch (wifimode) {
+    case WIFI_OFF:
+      WifiDisconnect();
+      setWifiMode(WIFI_OFF);
+      return;
+    case WIFI_STA:
+      if (WifiIsAP(WiFi.getMode())) {
+        // Change from AP mode to STA mode, must disconnect clients.
+        dnsServerActive = false;
+        dnsServer.stop();
+        if (WiFi.softAPdisconnect(true)) {
+          String log("WIFI : AP Mode Disabled for SSID: ");
+          log += WifiGetAPssid();
+          addLog(LOG_LEVEL_INFO, log);
+        } else {
+          String log("WIFI : Error while disabling AP Mode with SSID: ");
+          log += WifiGetAPssid();
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+      }
+      setWifiMode(wifimode);
+      WiFi.reconnect();
+      break;
+    case WIFI_AP_STA:
+    case WIFI_AP:
+    {
+      if (WifiIsSTA(WiFi.getMode())) {
+        // Should disable WiFi first and then restart in AP mode.
+        WifiDisconnect();
+        if (wifimode == WIFI_AP_STA) {
+          WiFi.reconnect();
+        }
+//        setWifiMode(WIFI_OFF);
+        delay(100);
+      }
+      // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
+      // setup ssid for AP Mode when needed
+      setWifiMode(wifimode);
+      WiFi.setAutoConnect(false);
+      String softAPSSID=WifiGetAPssid();
+      String pwd = SecuritySettings.WifiAPKey;
+      IPAddress subnet(DEFAULT_AP_SUBNET);
+      if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
+        addLog(LOG_LEVEL_ERROR, "WIFI : [AP] softAPConfig failed!");
+      }
+      if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
+        String log("WIFI : AP Mode ssid will be ");
+        log += softAPSSID;
+        log += F(" with address ");
+        log += WiFi.softAPIP().toString();
+        addLog(LOG_LEVEL_INFO, log);
+      } else {
+        String log("WIFI : Error while starting AP Mode with SSID: ");
+        log += softAPSSID;
+        log += F(" IP: ");
+        log += apIP.toString();
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      #ifdef ESP32
+
+      #else
+        if(wifi_softap_dhcps_status() != DHCP_STARTED) {
+          if(!wifi_softap_dhcps_start()) {
+            addLog(LOG_LEVEL_ERROR, "WIFI : [AP] wifi_softap_dhcps_start failed!");
+          }
+        }
+      #endif
+      // Start DNS, only used if the ESP has no valid WiFi config
+      // It will reply with it's own address on all DNS requests
+      // (captive portal concept)
+      dnsServerActive = true;
+      dnsServer.start(DNS_PORT, "*", apIP);
+      break;
+    }
+    default:
+      break;
+  }
+}
 
 //********************************************************************************
 // Determine Wifi AP name to set. (also used for mDNS)
@@ -146,7 +486,7 @@ void resetWiFi() {
 String WifiGetAPssid()
 {
   String ssid(Settings.Name);
-  ssid+=F("-");
+  ssid+=F("_");
   ssid+=Settings.Unit;
   return (ssid);
 }
@@ -163,65 +503,6 @@ String WifiGetHostname()
 }
 
 
-//********************************************************************************
-// Set Wifi AP Mode config
-//********************************************************************************
-void WifiAPconfig()
-{
-  // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
-  // setup ssid for AP Mode when needed
-
-  String softAPSSID=WifiGetAPssid();
-  String pwd = SecuritySettings.WifiAPKey;
-  WiFi.softAP(softAPSSID.c_str(),pwd.c_str());
-  // We start in STA mode
-  WifiAPMode(false);
-
-  String log("WIFI : AP Mode ssid will be ");
-  log=log+WifiGetAPssid();
-
-  log=log+F(" with address ");
-  log=log+apIP.toString();
-  addLog(LOG_LEVEL_INFO, log);
-}
-
-
-bool WifiIsAP()
-{
-  #if defined(ESP8266)
-    byte wifimode = wifi_get_opmode();
-  #endif
-  #if defined(ESP32)
-    byte wifimode = WiFi.getMode();
-  #endif
-  return(wifimode == 2 || wifimode == 3); //apmode is enabled
-}
-
-//********************************************************************************
-// Set Wifi AP Mode
-//********************************************************************************
-void WifiAPMode(boolean state)
-{
-  if (WifiIsAP())
-  {
-    //want to disable?
-    if (!state)
-    {
-      WiFi.mode(WIFI_STA);
-      addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode disabled"));
-    }
-  }
-  else
-  {
-    //want to enable?
-    if (state)
-    {
-      WiFi.mode(WIFI_AP_STA);
-      addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode enabled"));
-    }
-  }
-}
-
 bool useStaticIP() {
   return (Settings.IP[0] != 0 && Settings.IP[0] != 255);
 }
@@ -230,9 +511,10 @@ bool useStaticIP() {
 // Set Wifi config
 //********************************************************************************
 bool prepareWiFi() {
-  if (!selectValidWiFiSettings())
+  if (!selectValidWiFiSettings()) {
+    addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
     return false;
-
+  }
   String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
@@ -242,33 +524,7 @@ bool prepareWiFi() {
   #if defined(ESP32)
     WiFi.setHostname(hostname);
   #endif
-
-  //use static ip?
-  if (useStaticIP())
-  {
-    const IPAddress ip = Settings.IP;
-    log = F("IP   : Static IP :");
-    log += ip;
-    addLog(LOG_LEVEL_INFO, log);
-    const IPAddress gw = Settings.Gateway;
-    const IPAddress subnet = Settings.Subnet;
-    const IPAddress dns = Settings.DNS;
-    WiFi.config(ip, gw, subnet, dns);
-  }
   return true;
-}
-
-//********************************************************************************
-// Start connect to WiFi and check later to see if connected.
-//********************************************************************************
-void WiFiConnectRelaxed() {
-  if (prepareWiFi()) {
-    tryConnectWiFi();
-    return;
-  }
-  addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP! (relaxed connect mode)"));
-  //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
-  WifiAPMode(true);
 }
 
 
@@ -304,7 +560,7 @@ bool wifiSettingsValid(const char* ssid, const char* pass) {
   if (ssid[0] == 0 || (strcasecmp(ssid, "ssid") == 0)) {
     return false;
   }
-  if (pass[0] == 0) return false;
+//  if (pass[0] == 0) return false; // Allow for empty pass
   if (strlen(ssid) > 32) return false;
   if (strlen(pass) > 64) return false;
   return true;
@@ -316,7 +572,7 @@ bool wifiConnectTimeoutReached() {
     // Connection attempt was already ended.
     return true;
   }
-  if (wifiSetupConnect) {
+  if (WifiIsAP(WiFi.getMode())) {
     // Initial setup of WiFi, may take much longer since accesspoint is still active.
     return timeOutReached(last_wifi_connect_attempt_moment + 20000);
   }
@@ -335,25 +591,19 @@ bool wifiConnectTimeoutReached() {
 // Simply start the WiFi connection sequence
 //********************************************************************************
 bool tryConnectWiFi() {
-  if (wifiSetup && !wifiSetupConnect)
-    return false;
-  if (wifiStatus != ESPEASY_WIFI_DISCONNECTED)
-    return(true);   //already connected, need to disconnect first
+//  if (wifiSetup && !wifiSetupConnect)
+//    return false;
+  if (wifiStatus != ESPEASY_WIFI_DISCONNECTED) {
+    if (!WifiIsAP(WiFi.getMode())) {
+      // Only when not in AP mode.
+      return(true);   //already connected, need to disconnect first
+    }
+  }
   if (!wifiConnectTimeoutReached())
     return true;    // timeout not reached yet, thus no need to retry again.
   if (!selectValidWiFiSettings()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings!"));
     return false;
-  }
-
-  if (wifi_connect_attempt != 0 && ((wifi_connect_attempt % 3) == 0)) {
-    // Change to other wifi settings.
-    if (selectNextWiFiSettings())
-      WiFi.disconnect();
-  }
-  if (wifi_connect_attempt > 6) {
-    //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
-    WifiAPMode(true);
   }
   const char* ssid = getLastWiFiSettingsSSID();
   const char* passphrase = getLastWiFiSettingsPassphrase();
@@ -399,7 +649,13 @@ bool tryConnectWiFi() {
 //********************************************************************************
 void WifiDisconnect()
 {
-  WiFi.disconnect();
+  #if defined(ESP32)
+    WiFi.disconnect();
+  #else
+    ETS_UART_INTR_DISABLE();
+    wifi_station_disconnect();
+    ETS_UART_INTR_ENABLE();
+  #endif
 }
 
 
@@ -424,15 +680,42 @@ void WifiScan()
       Serial.print(F("WIFI : "));
       Serial.print(i + 1);
       Serial.print(": ");
-      Serial.print(WiFi.SSID(i));
-      Serial.print(" (");
-      Serial.print(WiFi.RSSI(i));
-      Serial.print(")");
-      Serial.println("");
+      Serial.println(formatScanResult(i, " "));
       delay(10);
     }
   }
   Serial.println("");
+}
+
+String formatScanResult(int i, const String& separator) {
+  String result = WiFi.SSID(i);
+  result += separator;
+  result += WiFi.BSSIDstr(i);
+  result += separator;
+  result += F("Ch:");
+  result += WiFi.channel(i);
+  result += F(" (");
+  result += WiFi.RSSI(i);
+  result += F("dBm) ");
+  switch (WiFi.encryptionType(i)) {
+  #ifdef ESP32
+    case WIFI_AUTH_OPEN: result += F("open"); break;
+    case WIFI_AUTH_WEP:  result += F("WEP"); break;
+    case WIFI_AUTH_WPA_PSK: result += F("WPA/PSK"); break;
+    case WIFI_AUTH_WPA2_PSK: result += F("WPA2/PSK"); break;
+    case WIFI_AUTH_WPA_WPA2_PSK: result += F("WPA/WPA2/PSK"); break;
+    case WIFI_AUTH_WPA2_ENTERPRISE: result += F("WPA2 Enterprise"); break;
+  #else
+    case ENC_TYPE_WEP: result += F("WEP"); break;
+    case ENC_TYPE_TKIP: result += F("WPA/PSK"); break;
+    case ENC_TYPE_CCMP: result += F("WPA2/PSK"); break;
+    case ENC_TYPE_NONE: result += F("open"); break;
+    case ENC_TYPE_AUTO: result += F("WPA/WPA2/PSK"); break;
+  #endif
+    default:
+      break;
+  }
+  return result;
 }
 
 
@@ -444,20 +727,24 @@ void WifiCheck()
   if(wifiSetup)
     return;
 
+  if (WifiIsAP(WiFi.getMode())) {
+    // disable AP after timeout.
+    if (timerAPoff && timeOutReached(timerAPoff)) {
+      setWifiState(WifiDisableAP);
+    }
+  }
+
   if (wifiStatus == ESPEASY_WIFI_DISCONNECTED)
   {
     NC_Count++;
-    WiFiConnectRelaxed();
+    if (!WifiIsAP(WiFi.getMode()))
+      setWifiState(WifiTryConnect);
   }
   //connected
-  else
+  else if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
     C_Count++;
     NC_Count = 0;
-    if (C_Count > 2) // disable AP after timeout if a Wifi connection is established...
-    {
-      WifiAPMode(false);
-    }
   }
 }
 
@@ -466,7 +753,7 @@ void WifiCheck()
 //********************************************************************************
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
-  if (WifiIsAP()) {
+  if (WifiIsAP(WiFi.getMode())) {
     // WiFi is active as accesspoint, do not check.
     return false;
   }
@@ -486,6 +773,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
   }
   return true;
 }
+
 
 String getLastDisconnectReason() {
   switch (lastDisconnectReason) {

@@ -332,7 +332,7 @@ void statusLED(boolean traffic)
       }
     }
     //AP mode is active
-    else if (WifiIsAP())
+    else if (WifiIsAP(WiFi.getMode()))
     {
       nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
     }
@@ -482,6 +482,13 @@ String BuildFixes()
       f.close();
     }
   }
+
+  if (Settings.Build < 20101)
+  {
+    Serial.println(F("Fix reset Pin"));
+    Settings.Pin_Reset = -1;
+  }
+  
   Settings.Build = BUILD;
   return(SaveSettings());
 }
@@ -712,7 +719,12 @@ String SaveSettings(void)
   md5.getBytes(SecuritySettings.md5);
   err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
 
- return (err);
+  if (WifiIsAP(WiFi.getMode())) {
+    // Security settings are saved, may be update of WiFi settings or hostname.
+    wifiSetupConnect = true;
+  }
+
+  return (err);
 }
 
 /********************************************************************************************\
@@ -1169,7 +1181,7 @@ void ResetFactory(void)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   intent_to_reboot = true;
-  WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
+  WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   #if defined(ESP8266)
     ESP.reset();
@@ -1314,6 +1326,8 @@ boolean loglevelActiveFor(byte destination, byte logLevel) {
     case LOG_TO_SERIAL: {
       if (!SerialAvailableForWrite()) return false;
       logLevelSettings = Settings.SerialLogLevel;
+      if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED)
+        logLevelSettings = 2;
       break;
     }
     case LOG_TO_SYSLOG: {
@@ -1342,6 +1356,8 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 void addLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
+    Serial.print(millis());
+    Serial.print(F(" : "));
     Serial.println(line);
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
