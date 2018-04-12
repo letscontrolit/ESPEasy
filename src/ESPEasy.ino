@@ -360,8 +360,9 @@ void loop()
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
   } else if (WiFi.status() != WL_CONNECTED) {
     // Somehow the WiFi has entered a limbo state.
-    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
-    resetWiFi();
+    // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
+//    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
+//    resetWiFi();
   }
   if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();

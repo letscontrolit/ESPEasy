@@ -488,7 +488,7 @@ String BuildFixes()
     Serial.println(F("Fix reset Pin"));
     Settings.Pin_Reset = -1;
   }
-  
+
   Settings.Build = BUILD;
   return(SaveSettings());
 }
@@ -701,29 +701,35 @@ String SaveSettings(void)
 {
   checkRAM(F("SaveSettings"));
   MD5Builder md5;
+  uint8_t tmp_md5[16] = {0};
   memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
   md5.calculate();
-  md5.getBytes(Settings.md5);
-
+  md5.getBytes(tmp_md5);
   String err;
-  err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
-  if (err.length())
-   return(err);
+  if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
+    // Settings have changed, save to file.
+    memcpy(Settings.md5, tmp_md5, 16);
+    err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+    if (err.length())
+     return(err);
+  }
 
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
   md5.calculate();
-  md5.getBytes(SecuritySettings.md5);
-  err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-
-  if (WifiIsAP(WiFi.getMode())) {
-    // Security settings are saved, may be update of WiFi settings or hostname.
-    wifiSetupConnect = true;
+  md5.getBytes(tmp_md5);
+  if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
+    // Settings have changed, save to file.
+    memcpy(SecuritySettings.md5, tmp_md5, 16);
+    err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+    if (WifiIsAP(WiFi.getMode())) {
+      // Security settings are saved, may be update of WiFi settings or hostname.
+      wifiSetupConnect = true;
+    }
   }
-
   return (err);
 }
 
@@ -1107,7 +1113,7 @@ void ResetFactory(void)
   Settings.Pin_status_led  = -1;
   Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset = -1;  
+  Settings.Pin_Reset = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.deepSleep = false;

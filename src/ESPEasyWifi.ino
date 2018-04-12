@@ -160,8 +160,13 @@ void processGotIP() {
     rulesProcessing(event);
   }
   statusLED(true);
-  WiFi.scanDelete();
+//  WiFi.scanDelete();
   wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+  if (wifiSetup) {
+    // Wifi setup was active, Apparently these settings work.
+    wifiSetup = false;
+    SaveSettings();
+  }
 }
 
 void processConnectAPmode() {
@@ -297,16 +302,6 @@ void setWifiState(WifiState state) {
     case WifiStart:
       changeWifiMode(WIFI_STA);
       break;
-    case WifiTryConnect:
-      if (WIFI_AP != WiFi.getMode()) {
-        changeWifiMode(WIFI_STA);
-        if (prepareWiFi()) {
-          tryConnectWiFi();
-        } else {
-          setWifiState(WifiConnectionFailed);
-        }
-      }
-      break;
     case WifiConnectionFailed:
       addLog(LOG_LEVEL_INFO, F("WIFI : Connection Failed"));
       if (WIFI_AP != WiFi.getMode()) {
@@ -325,12 +320,16 @@ void setWifiState(WifiState state) {
       }
       break;
     case WifiCredentialsChanged:
+      lastWiFiSettings = 0; // Force to load the first settings.
+      wifi_connect_attempt = 0;
+      // fall through
+    case WifiTryConnect:
       if (WifiIsAP(WiFi.getMode())) {
         timerAPoff = 0; // Disable timer to switch AP off.
         changeWifiMode(WIFI_AP_STA);
+      } else {
+        changeWifiMode(WIFI_STA);
       }
-      lastWiFiSettings = 0; // Force to load the first settings.
-      wifi_connect_attempt = 0;
       if (prepareWiFi()) {
         tryConnectWiFi();
       } else {
@@ -339,7 +338,6 @@ void setWifiState(WifiState state) {
       break;
     case WifiConnectSuccess:
       if (WifiIsAP(WiFi.getMode())) {
-        changeWifiMode(WIFI_AP_STA);
         timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
       } else {
         timerAPoff = 0; // Disable timer to switch AP off.

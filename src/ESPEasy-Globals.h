@@ -575,6 +575,7 @@ struct SecurityStruct
   byte          AllowedIPrangeLow[4]; // TD-er: Use these
   byte          AllowedIPrangeHigh[4];
   byte          IPblockLevel;
+
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
@@ -696,6 +697,9 @@ struct SettingsStruct
   boolean       ArduinoOTAEnable;
   uint16_t      DST_Start;
   uint16_t      DST_End;
+  boolean       UseRTOSMultitasking;
+  int8_t        Pin_Reset;
+
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
@@ -703,8 +707,6 @@ struct SettingsStruct
   // make sure crc is the last value in the struct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
-  boolean       UseRTOSMultitasking;
-  int8_t        Pin_Reset;
 } Settings;
 
 struct ControllerSettingsStruct
