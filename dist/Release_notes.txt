@@ -1,4 +1,29 @@
 -------------------------------------------------
+Changes in release mega-20180412 (since mega-20180410)
+-------------------------------------------------
+
+Release date: Thu Apr 12 04:00:14 CEST 2018
+
+Gijs Noorlander (1):
+      [MQTT] Process MQTT loop on publish
+
+TD-er (7):
+      [issue #1215] Cannot login to accesspoint on new install
+      [issue #1215] Cannot login to accesspoint on new install
+      [Wifi] Use statemachine to move between Wifi states
+      [WiFi] Event based wifi, now AP mode works
+      [wifi] Make it work for ESP32 again
+      [wifi] Fix wifi AP setup mode for ESP32.
+      [wifi] Event based wifi, improve scan information.
+
+flexiti (1):
+      ESP CPU speed and ID
+
+mvdbro (1):
+      Reboot/Reset pin, build 20101 patch
+
+
+-------------------------------------------------
 Changes in release mega-20180410 (since mega-20180409)
 -------------------------------------------------
 
