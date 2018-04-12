@@ -4496,7 +4496,6 @@ void handle_setup() {
     sendHeadandTail(F("TmplAP"),true);
     TXBuffer.endStream();
 
-    wifiSetup = false;
     //setWifiMode(WIFI_STA);  //this forces the iPhone to exit safari and this page was never displayed
     timerAPoff = millis() + 60000L;  //switch the AP off in 1 minute
     return;
@@ -4979,11 +4978,11 @@ void handle_sysinfo() {
      TXBuffer += F(")");
 
      TXBuffer += F("<TR><TD>ESP Chip Freq:<TD>");
-     TXBuffer += ESP.getCpuFreqMHz(); 
+     TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
-  
-  
+
+
 
    TXBuffer += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 
