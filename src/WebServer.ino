@@ -926,7 +926,6 @@ void handle_root() {
     printToWeb = false;
     sendHeadandTail(F("TmplStd"),_TAIL);
     TXBuffer.endStream();
-      Serial.println("done.");
 
   }
   else
