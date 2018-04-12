@@ -296,6 +296,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
   if (s.indexOf(F("%sys")) != -1) {
     SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
+    SMART_REPL(F("%sysheap%"), String(ESP.getFreeHeap()));
     SMART_REPL(F("%systm_hm%"), getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"), getTimeString(':'))
@@ -308,6 +309,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
     SMART_REPL_TIME(F("%syshour%"), PSTR("%02d"), hour())
     SMART_REPL_TIME(F("%sysmin%"), PSTR("%02d"), minute())
     SMART_REPL_TIME(F("%syssec%"),PSTR("%02d"), second())
+    SMART_REPL_TIME(F("%syssec_d%"),PSTR("%d"), ((hour()*60) + minute())*60 + second());
     SMART_REPL_TIME(F("%sysday%"), PSTR("%02d"), day())
     SMART_REPL_TIME(F("%sysmonth%"),PSTR("%02d"), month())
     SMART_REPL_TIME(F("%sysyear%"), PSTR("%04d"), year())
