@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180413 (since mega-20180412)
+-------------------------------------------------
+
+Release date: Fri Apr 13 04:00:09 CEST 2018
+
+TD-er (1):
+      [wifi] Event based wifi, fix set AP and crash on start
+
+
+-------------------------------------------------
 Changes in release mega-20180412 (since mega-20180410)
 -------------------------------------------------
 
