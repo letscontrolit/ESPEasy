@@ -395,10 +395,16 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
     ".button:hover {background: #369; }"
     // tables
-    "th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
-    "td {padding: 4px; }"
-    "tr {padding: 4px; }"
-    "table {color: #000; width: 100%; min-width: 420px; }"
+    "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
+    "table.normal td {padding: 4px; }"
+    "table.normal tr {padding: 4px; }"
+    "table.normal {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
+    //every second row
+    "table.multirow th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
+    "table.multirow td {padding: 4px; text-align: center; }"
+    "table.multirow tr {padding: 4px; }"
+      "table.multirow tr:nth-child(even){background-color: #cfd6e4; }"
+    "table.multirow {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
     // inside a form
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
@@ -528,7 +534,8 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{content}}"
               "</section>"
               "<footer>"
-              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
+                "<br>"
+                "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
               "</footer>"
               "</body>"            );
   }
@@ -553,7 +560,8 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "{{content}}"
               "</section>"
               "<footer>"
-              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
+                "<br>"
+                "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
               "</footer>"
               "</body>"
             );
@@ -582,6 +590,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{content}}"
         "</section>"
         "<footer>"
+          "<br>"
           "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
         "</footer>"
       "</body></html>"
@@ -814,7 +823,7 @@ void handle_root() {
 
     TXBuffer += printWebString;
     TXBuffer += F("<form>");
-    TXBuffer += F("<table><TR><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
+    TXBuffer += F("<table class='multirow'><TR><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
 
     TXBuffer += F("<TR><TD>Unit:<TD>");
     TXBuffer += String(Settings.Unit);
@@ -1053,7 +1062,7 @@ void handle_config() {
     addHtmlError(  SaveSettings());
   }
 
-  TXBuffer += F("<form name='frmselect' method='post'><table>");
+  TXBuffer += F("<form name='frmselect' method='post'><table class='normal'>");
 
   addFormHeader(TXBuffer.buf,  F("Main Settings"));
 
@@ -1226,8 +1235,8 @@ void handle_controllers() {
 
   if (controllerNotSet)
   {
-    TXBuffer += F("<table border=1px frame='box' rules='all'><TR><TH>");
-    TXBuffer += F("<TH>Nr<TH>Enabled<TH>Protocol<TH>Host<TH>Port");
+    TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
+    TXBuffer += F("<TH style='width:50px;'>Nr<TH style='width:100px;'>Enabled<TH>Protocol<TH>Host<TH>Port");
 
     ControllerSettingsStruct ControllerSettings;
     for (byte x = 0; x < CONTROLLER_MAX; x++)
@@ -1262,7 +1271,7 @@ void handle_controllers() {
   }
   else
   {
-    TXBuffer += F("<table><TR><TH>Controller Settings<TH>");
+    TXBuffer += F("<table class='normal'><TR><TH>Controller Settings<TH>");
     TXBuffer += F("<TR><TD>Protocol:");
     byte choice = Settings.Protocol[controllerindex];
     TXBuffer += F("<TD>");
@@ -1451,8 +1460,8 @@ void handle_notifications() {
 
   if (notificationindexNotSet)
   {
-    TXBuffer += F("<table border=1px frame='box' rules='all'><TR><TH>");
-    TXBuffer += F("<TH>Nr<TH>Enabled<TH>Service<TH>Server<TH>Port");
+    TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
+    TXBuffer += F("<TH style='width:50px;'>Nr<TH style='width:100px;'>Enabled<TH>Service<TH>Server<TH>Port");
 
     NotificationSettingsStruct NotificationSettings;
     for (byte x = 0; x < NOTIFICATION_MAX; x++)
@@ -1489,7 +1498,7 @@ void handle_notifications() {
   }
   else
   {
-    TXBuffer += F("<table><TR><TH>Notification Settings<TH>");
+    TXBuffer += F("<table class='normal'><TR><TH>Notification Settings<TH>");
     TXBuffer += F("<TR><TD>Notification:");
     byte choice = Settings.Notification[notificationindex];
     TXBuffer += F("<TD>");
@@ -1596,7 +1605,6 @@ void handle_hardware() {
   navMenuIndex = 3;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
-
   if (isFormItem(F("psda")))
   {
     Settings.Pin_status_led  = getFormItemInt(F("pled"));
@@ -1621,7 +1629,7 @@ void handle_hardware() {
     addHtmlError(TXBuffer.buf, SaveSettings());
   }
 
-  TXBuffer += F("<form  method='post'><table><TR><TH>Hardware Settings<TH><TR><TD>");
+  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH>Hardware Settings<TH><TR><TD>");
 
   addFormSubHeader(TXBuffer.buf, F("Wifi Status LED"));
   addFormPinSelect( TXBuffer.buf,F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
@@ -1916,7 +1924,7 @@ void handle_devices() {
   // show all tasks as table
   if (taskIndexNotSet)
   {
-    TXBuffer += F("<table border=1px frame='box' rules='all'><TR><TH>");
+    TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
 
     if (TASKS_MAX != TASKS_PER_PAGE)
     {
@@ -1934,7 +1942,7 @@ void handle_devices() {
       TXBuffer += F("\">&gt;</a>");
     }
 
-    TXBuffer += F("<TH>Task<TH>Enabled<TH>Device<TH>Name<TH>Port<TH>Ctr (IDX)<TH>GPIO<TH>Values");
+    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:50px;'>Ctr (IDX)<TH style='width:70px;'>GPIO<TH>Values");
 
     String deviceName;
 
@@ -2072,7 +2080,7 @@ void handle_devices() {
     DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
     TempEvent.TaskIndex = taskIndex;
 
-    TXBuffer += F("<form name='frmselect' method='post'><table>");
+    TXBuffer += F("<form name='frmselect' method='post'><table class='normal'>");
     addFormHeader(TXBuffer.buf,  F("Task Settings"));
 
 
@@ -2186,7 +2194,7 @@ void handle_devices() {
       if (!Device[DeviceIndex].Custom && Device[DeviceIndex].ValueCount > 0)
       {
         addFormSubHeader( TXBuffer.buf, F("Values"));
-        TXBuffer += F("</table><table>");
+        TXBuffer += F("</table><table class='normal'>");
 
         //table header
         TXBuffer += F("<TR><TH>Value");
@@ -2983,7 +2991,7 @@ void handle_log() {
   sendHeadandTail(F("TmplStd"),_HEAD);
 
   TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  TXBuffer += F("<table><TR><TH>Log<TR><TD>");
+  TXBuffer += F("<table class='normal'><TR><TH>Log<TR><TD>");
   for (int i = 0; i< LOG_STRUCT_MESSAGE_LINES; i++){
     Logging.get(TXBuffer.buf, F("<BR>"),i);
     TXBuffer.checkFull();
@@ -3008,7 +3016,7 @@ void handle_tools() {
   String webrequest = WebServer.arg(F("cmd"));
 
   TXBuffer += F("<form>");
-  TXBuffer += F("<table>");
+  TXBuffer += F("<table class='normal'>");
 
   addFormHeader(TXBuffer.buf,  F("Tools"));
 
@@ -3165,7 +3173,7 @@ void handle_pinstates() {
 
   //addFormSubHeader(  F("Pin state table<TR>"));
 
-  TXBuffer += F("<table border=1px frame='box' rules='all'><TH>Plugin");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH>Plugin");
   addHelpButton(TXBuffer.buf,  F("Official_plugin_list"));
   TXBuffer += F("<TH>GPIO<TH>Mode<TH>Value/State");
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -3227,7 +3235,7 @@ void handle_i2cscanner() {
 
 
 
-  TXBuffer += F("<table border=1px frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH>I2C Addresses in use<TH>Supported devices");
 
   byte error, address;
   int nDevices;
@@ -3365,7 +3373,7 @@ void handle_wifiscanner() {
   navMenuIndex = 7;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
-  TXBuffer += F("<table><TR><TH>SSID<TH>BSSID<TH>info");
+  TXBuffer += F("<table class='multirow'><TR><TH>SSID<TH>BSSID<TH>info");
 
   int n = WiFi.scanNetworks();
   if (n == 0)
@@ -3401,7 +3409,7 @@ void handle_login() {
 
 
   TXBuffer += F("<form method='post'>");
-  TXBuffer += F("<table><TR><TD>Password<TD>");
+  TXBuffer += F("<table class='normal'><TR><TD>Password<TD>");
   TXBuffer += F("<input type='password' name='password' value='");
   TXBuffer +=  webrequest;
   TXBuffer += F("'><TR><TD><TD>");
@@ -3688,7 +3696,7 @@ void handle_advanced() {
 
   // char str[20];
 
-  TXBuffer += F("<form  method='post'><table>");
+  TXBuffer += F("<form  method='post'><table class='normal'>");
 
   addFormHeader(TXBuffer.buf,  F("Advanced Settings"));
 
@@ -4166,7 +4174,7 @@ boolean handle_custom(String path) {
     {
       // if the custom page does not exist, create a basic task value overview page in case of dashboard request...
       reply += F("<meta name=\"viewport\" content=\"width=width=device-width, initial-scale=1\"><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
-      reply += F("<table>");
+      reply += F("<table class='normal'>");
       for (byte x = 0; x < TASKS_MAX; x++)
       {
         if (Settings.TaskDeviceNumber[x] != 0)
@@ -4221,7 +4229,7 @@ void handle_filelist() {
 
 
 
-  TXBuffer += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'><TH>Filename:<TH style='width:80px;'>Size");
 
   fs::Dir dir = SPIFFS.openDir("");
   while (dir.next())
@@ -4259,7 +4267,7 @@ void handle_filelist() {
 
 
 
-  TXBuffer += F("<table border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
+  TXBuffer += F("<table class='normal' border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
 
   File root = SPIFFS.open("/");
   File file = root.openNextFile();
@@ -4366,7 +4374,7 @@ void handle_SDfilelist() {
   String subheader = "SD Card: " + current_dir;
   addFormSubHeader(  subheader,TXBuffer.buf);
   TXBuffer += F("<BR>");
-  TXBuffer += F("<table border=1px frame='box' rules='all'><TH>Action<TH>Name<TH>Size");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'>Action<TH>Name<TH>Size");
   TXBuffer += F("<TR><TD>");
   TXBuffer += F("<TD><a href=\"SDfilelist?chgto=");
   TXBuffer +=  parent_dir;
@@ -4540,7 +4548,7 @@ void handle_setup() {
       TXBuffer += F("No Access Points found");
     else
     {
-      TXBuffer += F("<table><TR><TH>SSID<TH>BSSID<TH>info");
+      TXBuffer += F("<table class='multirow'><TR><TH>SSID<TH>BSSID<TH>info");
       for (int i = 0; i < n; ++i)
       {
         TXBuffer += F("<TR><TD>");
@@ -4684,7 +4692,7 @@ void handle_rules() {
   if (rulesSet != currentSet)
     currentSet = rulesSet;
 
-  TXBuffer += F("<form name = 'frmselect' method = 'post'><table><TR><TH>Rules");
+  TXBuffer += F("<form name = 'frmselect' method = 'post'><table class='normal'><TR><TH>Rules");
 
   byte choice = rulesSet;
   String options[RULESETS_MAX];
@@ -4756,7 +4764,7 @@ void handle_sysinfo() {
   addHeader(true,  TXBuffer.buf);
    TXBuffer += printWebString;
    TXBuffer += F("<form>");
-   TXBuffer += F("<table><TR><TH width=120>System Info<TH>");
+   TXBuffer += F("<table class='normal'><TR><TH width=120>System Info<TH>");
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
@@ -4978,11 +4986,11 @@ void handle_sysinfo() {
      TXBuffer += F(")");
 
      TXBuffer += F("<TR><TD>ESP Chip Freq:<TD>");
-     TXBuffer += ESP.getCpuFreqMHz(); 
+     TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
-  
-  
+
+
 
    TXBuffer += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
 
