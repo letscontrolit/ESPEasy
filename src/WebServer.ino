@@ -823,12 +823,12 @@ void handle_root() {
 
     TXBuffer += printWebString;
     TXBuffer += F("<form>");
-    TXBuffer += F("<table class='multirow'><TR><TH>System Info<TH>Value<TH><TH>System Info<TH>Value<TH>");
+    TXBuffer += F("<table class='normal'><TH style='width:150px;' align='left'>System Info<TH align='left'>Value");
 
     TXBuffer += F("<TR><TD>Unit:<TD>");
     TXBuffer += String(Settings.Unit);
 
-    TXBuffer += F("<TD><TD>GIT version:<TD>");
+    TXBuffer += F("<TR><TD>GIT version:<TD>");
     TXBuffer += BUILD_GIT;
 
     TXBuffer += F("<TR><TD>Local Time:<TD>");
@@ -837,9 +837,9 @@ void handle_root() {
       TXBuffer += getDateTimeString('-', ':', ' ');
     }
     else
-      TXBuffer += F("NTP disabled");
+      TXBuffer += F("<font color='red'>NTP disabled</font>");
 
-    TXBuffer += F("<TD><TD>Uptime:<TD>");
+    TXBuffer += F("<TR><TD>Uptime:<TD>");
     char strUpTime[40];
     int minutes = wdcounter / 2;
     int days = minutes / 1440;
@@ -858,7 +858,7 @@ void handle_root() {
       TXBuffer += F(")");
     }
 
-    TXBuffer += F("<TD><TD>Free Mem:<TD>");
+    TXBuffer += F("<TR><TD>Free Mem:<TD>");
     TXBuffer += String(freeMem);
     TXBuffer += F(" (");
     TXBuffer += String(lowestRAM);
@@ -869,7 +869,7 @@ void handle_root() {
     TXBuffer += F("<TR><TD>IP:<TD>");
     TXBuffer += formatIP(ip);
 
-    TXBuffer += F("<TD><TD>Wifi RSSI:<TD>");
+    TXBuffer += F("<TR><TD>Wifi RSSI:<TD>");
     if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
@@ -885,7 +885,7 @@ void handle_root() {
     #endif
 
 
-    TXBuffer += F("<TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age<TR><TD><TD>");
+    TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
     for (byte x = 0; x < UNIT_MAX; x++)
     {
       if (Nodes[x].ip[0] != 0)
@@ -1120,7 +1120,7 @@ void handle_config() {
 
   addFormSeparator( TXBuffer.buf);
 
-  TXBuffer += F("<TR><TD><TD>");
+  TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
   addSubmitButton(TXBuffer.buf );
   TXBuffer += F("</table></form>");
 
@@ -1271,7 +1271,7 @@ void handle_controllers() {
   }
   else
   {
-    TXBuffer += F("<table class='normal'><TR><TH>Controller Settings<TH>");
+    TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Controller Settings<TH>");
     TXBuffer += F("<TR><TD>Protocol:");
     byte choice = Settings.Protocol[controllerindex];
     TXBuffer += F("<TD>");
@@ -1498,7 +1498,7 @@ void handle_notifications() {
   }
   else
   {
-    TXBuffer += F("<table class='normal'><TR><TH>Notification Settings<TH>");
+    TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Notification Settings<TH>");
     TXBuffer += F("<TR><TD>Notification:");
     byte choice = Settings.Notification[notificationindex];
     TXBuffer += F("<TD>");
@@ -1629,7 +1629,7 @@ void handle_hardware() {
     addHtmlError(TXBuffer.buf, SaveSettings());
   }
 
-  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH>Hardware Settings<TH><TR><TD>");
+  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH style='width:150px;' align='left'>Hardware Settings<TH><TR><TD>");
 
   addFormSubHeader(TXBuffer.buf, F("Wifi Status LED"));
   addFormPinSelect( TXBuffer.buf,F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
@@ -2084,7 +2084,7 @@ void handle_devices() {
     addFormHeader(TXBuffer.buf,  F("Task Settings"));
 
 
-    TXBuffer += F("<TR><TD>Device:<TD>");
+    TXBuffer += F("<TR><TD style='width:150px;' align='left'>Device:<TD>");
 
     //no device selected
     if (Settings.TaskDeviceNumber[taskIndex] == 0 )
@@ -2197,18 +2197,18 @@ void handle_devices() {
         TXBuffer += F("</table><table class='normal'>");
 
         //table header
-        TXBuffer += F("<TR><TH>Value");
-        TXBuffer += F("<TH>Name");
+        TXBuffer += F("<TR><TH style='width:50px;' align='left'>Value");
+        TXBuffer += F("<TH align='left'>Name");
 
         if (Device[DeviceIndex].FormulaOption)
         {
-          TXBuffer += F("<TH>Formula");
+          TXBuffer += F("<TH align='left'>Formula");
           addHelpButton( TXBuffer.buf, F("EasyFormula"));
         }
 
         if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
         {
-          TXBuffer += F("<TH>Decimals");
+          TXBuffer += F("<TH style='width:40px;' align='left'>Decimals");
         }
 
         //table body
@@ -2216,7 +2216,7 @@ void handle_devices() {
         {
           TXBuffer += F("<TR><TD>");
           TXBuffer +=  varNr + 1;
-          TXBuffer += F("<TD>");
+          TXBuffer += F("<TD style='width:100px;'>");
           String id = F("TDVN");   //="taskdevicevaluename"
           id += (varNr + 1);
           addTextBox( TXBuffer.buf, id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
@@ -2231,7 +2231,7 @@ void handle_devices() {
 
           if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
           {
-            TXBuffer += F("<TD>");
+            TXBuffer += F("<TD style='width:40px;'>");
             String id = F("TDVD");   //="taskdevicevaluedecimals"
             id += (varNr + 1);
             addNumericBox(TXBuffer.buf,  id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
@@ -2242,7 +2242,7 @@ void handle_devices() {
 
     addFormSeparator (TXBuffer.buf);
 
-    TXBuffer += F("<TR><TD><TD><a class='button link' href=\"devices?setpage=");
+    TXBuffer += F("<TR><TD><TD colspan='3'><a class='button link' href=\"devices?setpage=");
     TXBuffer +=  page;
     TXBuffer += F("\">Close</a>");
     addSubmitButton (TXBuffer.buf);
@@ -2991,7 +2991,7 @@ void handle_log() {
   sendHeadandTail(F("TmplStd"),_HEAD);
 
   TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  TXBuffer += F("<table class='normal'><TR><TH>Log<TR><TD>");
+  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD>");
   for (int i = 0; i< LOG_STRUCT_MESSAGE_LINES; i++){
     Logging.get(TXBuffer.buf, F("<BR>"),i);
     TXBuffer.checkFull();
@@ -3021,13 +3021,13 @@ void handle_tools() {
   addFormHeader(TXBuffer.buf,  F("Tools"));
 
   addFormSubHeader(TXBuffer.buf,  F("Command"));
-    TXBuffer += F("<TR><TD HEIGHT=\"30\">");
+    TXBuffer += F("<TR><TD style='width: 180px'>");
     TXBuffer += F("<input type='text' name='cmd' value='");
     TXBuffer +=  webrequest;
     TXBuffer += F("'>");
-    addHelpButton( TXBuffer.buf, F("ESPEasy_Command_Reference"));
     TXBuffer += F("<TD>");
     addSubmitButton(TXBuffer.buf );
+    addHelpButton( TXBuffer.buf, F("ESPEasy_Command_Reference"));
     TXBuffer += F("<TR><TD>");
 
     printToWeb = true;
@@ -3767,7 +3767,7 @@ void handle_advanced() {
 
   addFormSeparator (TXBuffer.buf);
 
-  TXBuffer += F("<TR><TD><TD>");
+  TXBuffer += F("<TR><TD style='width:150px;' align='left'>");
   addSubmitButton (TXBuffer.buf);
   TXBuffer += F("<input type='hidden' name='edit' value='1'>");
   TXBuffer += F("</table></form>");
@@ -4293,7 +4293,7 @@ void handle_filelist() {
     }
   }
   TXBuffer += F("</table></form>");
-  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a><BR><BR>");
     sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
 #endif
@@ -4692,7 +4692,7 @@ void handle_rules() {
   if (rulesSet != currentSet)
     currentSet = rulesSet;
 
-  TXBuffer += F("<form name = 'frmselect' method = 'post'><table class='normal'><TR><TH>Rules");
+  TXBuffer += F("<form name = 'frmselect' method = 'post'><table class='normal'><TR><TH align='left'>Rules");
 
   byte choice = rulesSet;
   String options[RULESETS_MAX];
@@ -4764,7 +4764,7 @@ void handle_sysinfo() {
   addHeader(true,  TXBuffer.buf);
    TXBuffer += printWebString;
    TXBuffer += F("<form>");
-   TXBuffer += F("<table class='normal'><TR><TH width=120>System Info<TH>");
+   TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH>");
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
