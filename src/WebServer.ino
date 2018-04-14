@@ -3069,7 +3069,7 @@ void handle_tools() {
 
     if (printWebString.length() > 0)
     {
-      TXBuffer += F("<TR><TD>Command Output<TD><textarea readonly rows='10' wrap='on'>");
+      TXBuffer += F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>");
       TXBuffer +=  printWebString;
       TXBuffer += F("</textarea>");
     }
@@ -4745,7 +4745,7 @@ void handle_rules() {
        TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
     else
     {
-       TXBuffer += F("<TR><TD><textarea name='rules'  rows='40' wrap='off'>");
+       TXBuffer += F("<TR><TD><textarea name='rules'  rows='30' wrap='off'>");
       while (f.available())
       {
         String c((char)f.read());
