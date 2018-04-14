@@ -149,7 +149,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      
+
     case PLUGIN_UNCONDITIONAL_POLL:
       {
         // port monitoring, on request by rule command
