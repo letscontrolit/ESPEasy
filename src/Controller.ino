@@ -228,7 +228,7 @@ void SendStatus(byte source, String status)
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
   if (MQTTclient.publish(topic, payload, retained)) {
-    timermqtt = millis(); // Make sure the MQTT is being processed as soon as possible.
+    timermqtt = millis() + 10; // Make sure the MQTT is being processed as soon as possible.
     return true;
   }
   addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
