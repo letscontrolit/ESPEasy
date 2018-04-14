@@ -69,13 +69,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         options[1] = F("Dimmer");
         int optionValues[2] = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const byte switchtype = P001_getSwitchType(event);
-        addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
+        addFormSelector(F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
           char tmpString[128];
           sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-          string += tmpString;
+          addHtml(tmpString);
         }
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -84,9 +84,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
         int buttonOptionValues[3] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH};
-        addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
-        addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
+        addFormCheckBox(F("Send Boot state"),F("plugin_001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;

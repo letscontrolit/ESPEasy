@@ -85,7 +85,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         byte addr = 0x39;   // CONFIG(0); chip has only 1 address
 
         int optionValues[1] = { 0x39 };
-        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
+        addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
 
         success = true;
         break;

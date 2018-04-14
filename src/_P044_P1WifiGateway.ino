@@ -66,9 +66,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(string, F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(string, F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -76,13 +76,13 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         options[1] = F("Even");
         options[2] = F("Odd");
         int optionValues[3] = { 0, 2, 3 };
-        addFormSelector(string, F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(string, F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-      	addFormPinSelect(string, F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(string, F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;

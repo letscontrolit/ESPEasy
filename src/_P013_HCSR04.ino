@@ -58,11 +58,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         options[0] = F("Value");
         options[1] = F("State");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(string, F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
+        addFormSelector(F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-        	addFormNumericBox(string, F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        	addFormNumericBox(F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         }
         success = true;
         break;
