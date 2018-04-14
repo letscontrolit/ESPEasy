@@ -76,11 +76,11 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
         int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
         addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
 
-        addFormCheckBox(string, F("Oversampling"), F("plugin_060_oversampling"), CONFIG(1));
+        addFormCheckBox(string, F("Oversampling"), F("plugin_060_oversampling"), CONFIG(1), F("&nbsp;"));
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_060_cal"), CONFIG(3));
+        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_060_cal"), CONFIG(3), F("&nbsp;"));
 
         addFormNumericBox(string, F("Point 1"), F("plugin_060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 4095);
         string += F(" &#8793; ");

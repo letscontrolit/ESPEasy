@@ -87,7 +87,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
         addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3], F("&nbsp;"));
 
         success = true;
         break;
@@ -149,7 +149,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      
+
     case PLUGIN_UNCONDITIONAL_POLL:
       {
         // port monitoring, on request by rule command

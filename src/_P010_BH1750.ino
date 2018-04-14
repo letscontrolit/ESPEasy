@@ -73,7 +73,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
         addFormSelector(string, F("Measurement mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
 
-        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], F("&nbsp;"));
 
         success = true;
         break;
