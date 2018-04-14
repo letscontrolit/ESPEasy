@@ -7,4 +7,4 @@ CUSTOM_H=${WORKDIR}/Custom.h
 GLOBAL_H=${WORKDIR}/ESPEasy-Globals.h
 
 [[ -f ${CUSTOM_H} ]] && \
-sed -i.bak -e "s/\(#define BUILD_GIT\).*/\1 $(git log -1 --pretty=format:%h HEAD)/" ${CUSTOM_H}
+sed -i.bak -e "s/\(#define BUILD_GIT\).*/\1 \"$(git log -1 --pretty=format:%h HEAD)\"/" ${CUSTOM_H}
