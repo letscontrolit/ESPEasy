@@ -126,6 +126,8 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("taskrun")               ) == 0) return cmd_TaskRun;
       else if (strcmp_P(cmd_lc, PSTR("taskvalueset")          ) == 0) return cmd_TaskValueSet;
       else if (strcmp_P(cmd_lc, PSTR("timerset")              ) == 0) return cmd_TimerSet;
+      else if (strcmp_P(cmd_lc, PSTR("timerpause")            ) == 0) return cmd_TimerPause;
+      else if (strcmp_P(cmd_lc, PSTR("timerresume")           ) == 0) return cmd_TimerResume;
       break;
     }
     case 'u': {
@@ -465,11 +467,19 @@ void ExecuteCommand(byte source, const char *Line)
     {
       success = true;
       if (Par2)
+      {
         //start new timer
-        RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+        RulesTimer[Par1 - 1].interval = Par2*1000;
+        RulesTimer[Par1 - 1].paused = false;
+        RulesTimer[Par1 - 1].timestamp = millis() + (1000 * Par2);
+      }
       else
+      {
         //disable existing timer
-        RulesTimer[Par1 - 1] = 0L;
+        RulesTimer[Par1 - 1].interval = 0;
+        RulesTimer[Par1 - 1].paused = false;
+        RulesTimer[Par1 - 1].timestamp = 0L;
+      }
     }
     else
     {
@@ -477,7 +487,58 @@ void ExecuteCommand(byte source, const char *Line)
     }
     break;
   }
-
+  
+  case cmd_TimerPause:
+  {
+    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
+    {
+       success = true;
+       if (RulesTimer[Par1 - 1].paused == false)
+       {
+          long delta = timePassedSince(RulesTimer[Par1 - 1].timestamp);
+          if(RulesTimer[Par1 - 1].timestamp != 0L && delta < 0)
+          {
+            RulesTimer[Par1 - 1].paused = true;
+            RulesTimer[Par1 - 1].interval = -delta; // set remaind time
+          }
+       }
+       else
+       {
+         addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
+       }
+    }
+    else
+    {
+      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
+    }
+    break;    
+  }
+  
+  case cmd_TimerResume:
+  {
+    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
+    {
+       success = true;
+       if (RulesTimer[Par1 - 1].paused == true)
+       {
+          if(RulesTimer[Par1 - 1].interval > 0 && RulesTimer[Par1 - 1].timestamp != 0L)
+          {
+            RulesTimer[Par1 - 1].timestamp = millis() + (RulesTimer[Par1 - 1].interval);
+            RulesTimer[Par1 - 1].paused = false;            
+          }
+       }
+       else
+       {
+         addLog(LOG_LEVEL_INFO, F("TIMER: already resumed"));
+       }
+    }
+    else
+    {
+      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
+    }
+    break;    
+  }
+  
   case cmd_Delay:
   {
     success = true;

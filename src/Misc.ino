@@ -2449,11 +2449,11 @@ void rulesTimers()
 {
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
   {
-    if (RulesTimer[x] != 0L) // timer active?
+    if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
     {
-      if (timeOutReached(RulesTimer[x])) // timer finished?
+      if (timeOutReached(RulesTimer[x].timestamp)) // timer finished?
       {
-        RulesTimer[x] = 0L; // turn off this timer
+        RulesTimer[x].timestamp = 0L; // turn off this timer
         String event = F("Rules#Timer=");
         event += x + 1;
         rulesProcessing(event);
