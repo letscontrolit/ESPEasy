@@ -412,7 +412,10 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".container input:checked ~ .checkmark:after {display: block; }"
     // Style the checkmark/indicator
     ".container .checkmark:after {left: 9px; top: 5px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
-    // tables    "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
+    // text textarea
+    "textarea {border:1px solid #999999; width:80%; margin:5px 0; padding:2px; }"
+    // tables
+    "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
     "table.normal td {padding: 4px; }"
     "table.normal tr {padding: 4px; }"
     "table.normal {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
@@ -1542,39 +1545,39 @@ void handle_notifications() {
 
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
-          TXBuffer += F("<TR><TD>Domain:<TD><input type='text' name='domain' size=64 value='");
+          TXBuffer += F("<TR><TD>Domain:<TD><input class='wide' type='text' name='domain' size=64 value='");
           TXBuffer += NotificationSettings.Domain;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Server:<TD><input type='text' name='server' size=64 value='");
+          TXBuffer += F("<TR><TD>Server:<TD><input class='wide' type='text' name='server' size=64 value='");
           TXBuffer += NotificationSettings.Server;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Port:<TD><input type='text' name='port' value='");
+          TXBuffer += F("<TR><TD>Port:<TD><input class='wide' type='text' name='port' value='");
           TXBuffer += NotificationSettings.Port;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Sender:<TD><input type='text' name='sender' size=64 value='");
+          TXBuffer += F("<TR><TD>Sender:<TD><input class='wide' type='text' name='sender' size=64 value='");
           TXBuffer += NotificationSettings.Sender;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Receiver:<TD><input type='text' name='receiver' size=64 value='");
+          TXBuffer += F("<TR><TD>Receiver:<TD><input class='wide' type='text' name='receiver' size=64 value='");
           TXBuffer += NotificationSettings.Receiver;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Subject:<TD><input type='text' name='subject' size=64 value='");
+          TXBuffer += F("<TR><TD>Subject:<TD><input class='wide' type='text' name='subject' size=64 value='");
           TXBuffer += NotificationSettings.Subject;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>User:<TD><input type='text' name='user' size=48 value='");
+          TXBuffer += F("<TR><TD>User:<TD><input class='wide' type='text' name='user' size=48 value='");
           TXBuffer += NotificationSettings.User;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Pass:<TD><input type='text' name='pass' size=32 value='");
+          TXBuffer += F("<TR><TD>Pass:<TD><input class='wide' type='text' name='pass' size=32 value='");
           TXBuffer += NotificationSettings.Pass;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Body:<TD><textarea name='body' rows='5' cols='80' size=512 wrap='off'>");
+          TXBuffer += F("<TR><TD>Body:<TD><textarea name='body' rows='20' size=512 wrap='off'>");
           TXBuffer += NotificationSettings.Body;
           TXBuffer += F("</textarea>");
         }
@@ -3021,7 +3024,7 @@ void handle_tools() {
 
     if (printWebString.length() > 0)
     {
-      TXBuffer += F("<TR><TD>Command Output<TD><textarea readonly rows='10' cols='60' wrap='on'>");
+      TXBuffer += F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>");
       TXBuffer += printWebString;
       TXBuffer += F("</textarea>");
     }
@@ -4705,7 +4708,7 @@ void handle_rules() {
        TXBuffer += F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>");
     else
     {
-       TXBuffer += F("<TR><TD><textarea name='rules' rows='15' cols='80' wrap='off'>");
+       TXBuffer += F("<TR><TD><textarea name='rules' rows='30' wrap='off'>");
       while (f.available())
       {
         String c((char)f.read());
