@@ -52,7 +52,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           string += F("<TR><TD>Analog Pin:<TD>");
           addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
         #endif
-        
+
         addFormCheckBox(string, F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         addFormSubHeader(string, F("Two Point Calibration"));

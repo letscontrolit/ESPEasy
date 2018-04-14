@@ -390,11 +390,31 @@ static const char pgDefaultCSS[] PROGMEM = {
     "h3 {font-size: 12pt; margin: 16px -4px 0 -4px; padding: 4px; background-color: #EEE; color: #444; font-weight: bold; }"
     "h6 {font-size: 10pt; color: #07D; }"
     // buttons
-    ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; }"
-    ".button.link {}"
+    ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; border: none;}"
+    ".button.link { }"
     ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
     ".button:hover {background: #369; }"
-    // tables
+    // inputs
+    "input.wide {width:80%;}"
+    // select
+    "#selectwidth {width:80%;}"
+    // custom checkboxes
+    ".container {display: block; position: relative; padding-left: 35px; margin-bottom: 12px; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
+        // Hide the browser's default checkbox
+        ".container input {position: absolute; opacity: 0; cursor: pointer;  }"
+        // Create a custom checkbox
+        ".checkmark {position: absolute; top: 0; left: 0; height: 25px;  width: 25px;  background-color: #eee; }"
+        // On mouse-over, add a grey background color
+        ".container:hover input ~ .checkmark {background-color: #ccc; }"
+        // When the checkbox is checked, add a blue background
+        ".container input:checked ~ .checkmark { background-color: #07D; }"
+        // Create the checkmark/indicator (hidden when not checked)
+        ".checkmark:after {content: ''; position: absolute; display: none; }"
+        // Show the checkmark when checked
+        ".container input:checked ~ .checkmark:after {display: block; }"
+        // Style the checkmark/indicator
+        ".container .checkmark:after {left: 9px; top: 5px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
+      // tables
     "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
     "table.normal td {padding: 4px; }"
     "table.normal tr {padding: 4px; }"
@@ -1078,7 +1098,7 @@ void handle_config() {
   addFormPasswordBox( TXBuffer.buf, F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(TXBuffer.buf,  F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(TXBuffer.buf,  F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
-  addFormSeparator(TXBuffer.buf  );
+  addFormSeparator(2);
   addFormPasswordBox( TXBuffer.buf, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
   // TD-er add IP access box F("ipblocklevel")
@@ -1118,7 +1138,7 @@ void handle_config() {
 
   addFormCheckBox( TXBuffer.buf, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
-  addFormSeparator( TXBuffer.buf);
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
   addSubmitButton(TXBuffer.buf );
@@ -1366,7 +1386,7 @@ void handle_controllers() {
 
     }
 
-    addFormSeparator (TXBuffer.buf);
+    addFormSeparator (2);
 
     TXBuffer += F("<TR><TD><TD><a class='button link' href=\"controllers\">Close</a>");
     addSubmitButton (TXBuffer.buf);
@@ -1577,14 +1597,14 @@ void handle_notifications() {
         }
 
         TXBuffer += F("<TR><TD>Enabled:<TD>");
-        addCheckBox(TXBuffer.buf,  F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
+        addCheckBox(TXBuffer.buf,  F("notificationenabled"), Settings.NotificationEnabled[notificationindex], F(""));
 
         TempEvent.NotificationIndex = notificationindex;
         NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent,TXBuffer.buf);
       }
     }
 
-    addFormSeparator (TXBuffer.buf);
+    addFormSeparator (2);
 
     TXBuffer += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
     addSubmitButton (TXBuffer.buf);
@@ -1665,7 +1685,7 @@ void handle_hardware() {
   addFormPinStateSelect(TXBuffer.buf, F("Pin mode 14 (D5)"), F("p14"), Settings.PinBootStates[14]);
   addFormPinStateSelect(TXBuffer.buf, F("Pin mode 15 (D8)"), F("p15"), Settings.PinBootStates[15]);
   addFormPinStateSelect(TXBuffer.buf, F("Pin mode 16 (D0)"), F("p16"), Settings.PinBootStates[16]);
-  addFormSeparator(TXBuffer.buf);
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD><TD>");
   addSubmitButton(TXBuffer.buf);
@@ -2162,15 +2182,15 @@ void handle_devices() {
             String id = F("TDSD");   //="taskdevicesenddata"
             id += controllerNr + 1;
 
-            TXBuffer += F("<TR><TD>Send to Controller ");
+            TXBuffer += F("<TR><TD>Send to<BR>Controller ");
             TXBuffer +=  getControllerSymbol(controllerNr);
             TXBuffer += F("<TD>");
-            addCheckBox(TXBuffer.buf,  id, Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+            addCheckBox(TXBuffer.buf,  id, Settings.TaskDeviceSendData[controllerNr][taskIndex], F(""));
 
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
-              TXBuffer += F(" &nbsp; IDX: ");
+              TXBuffer += F("<TR><TD>IDX:<TD>");
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
               addNumericBox(TXBuffer.buf,  id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, 9999);
@@ -2179,7 +2199,7 @@ void handle_devices() {
         }
       }
 
-      addFormSeparator (TXBuffer.buf);
+      addFormSeparator (2);
 
       if (Device[DeviceIndex].TimerOption)
       {
@@ -2197,7 +2217,7 @@ void handle_devices() {
         TXBuffer += F("</table><table class='normal'>");
 
         //table header
-        TXBuffer += F("<TR><TH style='width:50px;' align='left'>Value");
+        TXBuffer += F("<TR><TH style='width:30px;' align='center'>#");
         TXBuffer += F("<TH align='left'>Name");
 
         if (Device[DeviceIndex].FormulaOption)
@@ -2208,7 +2228,7 @@ void handle_devices() {
 
         if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
         {
-          TXBuffer += F("<TH style='width:40px;' align='left'>Decimals");
+          TXBuffer += F("<TH style='width:30px;' align='left'>Decimals");
         }
 
         //table body
@@ -2216,7 +2236,7 @@ void handle_devices() {
         {
           TXBuffer += F("<TR><TD>");
           TXBuffer +=  varNr + 1;
-          TXBuffer += F("<TD style='width:100px;'>");
+          TXBuffer += F("<TD>");
           String id = F("TDVN");   //="taskdevicevaluename"
           id += (varNr + 1);
           addTextBox( TXBuffer.buf, id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
@@ -2231,7 +2251,7 @@ void handle_devices() {
 
           if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
           {
-            TXBuffer += F("<TD style='width:40px;'>");
+            TXBuffer += F("<TD>");
             String id = F("TDVD");   //="taskdevicevaluedecimals"
             id += (varNr + 1);
             addNumericBox(TXBuffer.buf,  id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
@@ -2240,7 +2260,7 @@ void handle_devices() {
       }
     }
 
-    addFormSeparator (TXBuffer.buf);
+    addFormSeparator (4);
 
     TXBuffer += F("<TR><TD><TD colspan='3'><a class='button link' href=\"devices?setpage=");
     TXBuffer +=  page;
@@ -2732,33 +2752,36 @@ void addFormNote(String& str, const String& text)
 //********************************************************************************
 // Add a separator as row start
 //********************************************************************************
-void addFormSeparator(String& str)
+void addFormSeparator(int clspan)
 {
-  str += F("<TR><TD colspan='2'><hr>");
-  TXBuffer.checkFull();
+ TXBuffer += F("<TR><TD colspan='");
+ TXBuffer += clspan;
+ TXBuffer += F("'><hr>");
 }
 
 
 //********************************************************************************
 // Add a checkbox
 //********************************************************************************
-void addCheckBox(String& str, const String& id, boolean checked)
+void addCheckBox(String& str, const String& id, boolean checked, const String& chktext)
 {
-  str += F("<input type=checkbox id='");
+  str += F("<label class='container'>&nbsp;");
+  str += chktext;
+  str += F("<input type='checkbox' id='");
   str += id;
   str += F("' name='");
   str += id;
   str += F("'");
   if (checked)
     str += F(" checked");
-  str += F(">");
+  str += F("><span class='checkmark'></span></label>");
   TXBuffer.checkFull();
 }
 
 void addFormCheckBox(String& str, const String& label, const String& id, boolean checked)
 {
   addRowLabel(str, label);
-  addCheckBox(str, id, checked);
+  addCheckBox(str, id, checked, F(""));
   TXBuffer.checkFull();
 }
 
@@ -2768,7 +2791,7 @@ void addFormCheckBox(String& str, const String& label, const String& id, boolean
 //********************************************************************************
 void addNumericBox(String& str, const String& id, int value, int min, int max)
 {
-  str += F("<input type='number' name='");
+  str += F("<input class='wide' type='number' name='");
   str += id;
   str += F("'");
   if (min != INT_MIN)
@@ -2781,7 +2804,7 @@ void addNumericBox(String& str, const String& id, int value, int min, int max)
     str += F(" max=");
     str += max;
   }
-  str += F(" style='width:5em;' value=");
+  str += F(" value=");
   str += value;
   str += F(">");
   TXBuffer.checkFull();
@@ -2807,7 +2830,7 @@ void addFormNumericBox(String& str, const String& label, const String& id, int v
 
 void addTextBox(String& str, const String& id, const String&  value, int maxlength)
 {
-  str += F("<input type='text' name='");
+  str += F("<input class='wide' type='text' name='");
   str += id;
   str += F("' maxlength=");
   str += maxlength;
@@ -2827,7 +2850,7 @@ void addFormTextBox(String& str, const String& label, const String& id, const St
 void addFormPasswordBox(String& str, const String& label, const String& id, const String& password, int maxlength)
 {
   addRowLabel(str, label);
-  str += F("<input type='password' name='");
+  str += F("<input class='wide' type='password' name='");
   str += id;
   str += F("' maxlength=");
   str += maxlength;
@@ -2857,7 +2880,7 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
   }
 
   addRowLabel(str, label);
-  str += F("<input type='text' name='");
+  str += F("<input class='wide' type='text' name='");
   str += id;
   str += F("' value='");
   str += strip;
@@ -2868,9 +2891,9 @@ void addFormIPBox(String& str, const String& label, const String& id, const byte
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(String& str, const String& url)
 {
-  str += F(" <a class=\"button help\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  str += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
   str += url;
-  str += F("\" target=\"_blank\">&#10068;</a>");
+  str += F("' target='_blank'>&#10068;</a>");
   TXBuffer.checkFull();
 }
 
@@ -2894,9 +2917,9 @@ void addTaskSelect(String& str, String name,  int choice)
   struct EventStruct TempEvent;
   String deviceName;
 
-  str += F("<select name='");
+  str += F("<select id='selectwidth' name='");
   str += name;
-  str += F("' onchange=\"return dept_onchange(frmselect)\">");
+  str += F("' onchange='return dept_onchange(frmselect)'>");
 
   for (byte x = 0; x < TASKS_MAX; x++)
   {
@@ -2958,7 +2981,7 @@ bool isFormItem(const String& id)
 //********************************************************************************
 void addTaskValueSelect(String& str, String name,  int choice, byte TaskIndex)
 {
-  str += F("<select name='");
+  str += F("<select id='selectwidth' name='");
   str += name;
   str += "'>";
 
@@ -3765,7 +3788,7 @@ void handle_advanced() {
     addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif
 
-  addFormSeparator (TXBuffer.buf);
+  addFormSeparator (2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'>");
   addSubmitButton (TXBuffer.buf);
@@ -3886,7 +3909,7 @@ void handle_upload() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  TXBuffer += F("<form enctype=\"multipart/form-data\" method=\"post\"><p>Upload settings file:<br><input type=\"file\" name=\"datafile\" size=\"40\"></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  TXBuffer += F("<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
      sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
   printWebString = "";
@@ -4173,7 +4196,7 @@ boolean handle_custom(String path) {
     if (path.startsWith(F("dashboard")))
     {
       // if the custom page does not exist, create a basic task value overview page in case of dashboard request...
-      reply += F("<meta name=\"viewport\" content=\"width=width=device-width, initial-scale=1\"><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
+      reply += F("<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
       reply += F("<table class='normal'>");
       for (byte x = 0; x < TASKS_MAX; x++)
       {
@@ -4229,7 +4252,7 @@ void handle_filelist() {
 
 
 
-  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'><TH>Filename:<TH style='width:80px;'>Size");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'><TH>Filename<TH style='width:80px;'>Size");
 
   fs::Dir dir = SPIFFS.openDir("");
   while (dir.next())
@@ -4252,7 +4275,7 @@ void handle_filelist() {
     TXBuffer +=  f.size();
   }
   TXBuffer += F("</table></form>");
-  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a><BR><BR>");
     sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
 #endif
@@ -4267,7 +4290,7 @@ void handle_filelist() {
 
 
 
-  TXBuffer += F("<table class='normal' border=1px frame='box' rules='all'><TH><TH>Filename:<TH>Size");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH><TH>Filename<TH>Size");
 
   File root = SPIFFS.open("/");
   File file = root.openNextFile();
@@ -4374,7 +4397,7 @@ void handle_SDfilelist() {
   String subheader = "SD Card: " + current_dir;
   addFormSubHeader(  subheader,TXBuffer.buf);
   TXBuffer += F("<BR>");
-  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'>Action<TH>Name<TH>Size");
+  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'><TH>Name<TH>Size");
   TXBuffer += F("<TR><TD>");
   TXBuffer += F("<TD><a href=\"SDfilelist?chgto=");
   TXBuffer +=  parent_dir;
@@ -4503,6 +4526,7 @@ void handle_setup() {
     sendHeadandTail(F("TmplAP"),true);
     TXBuffer.endStream();
 
+    wifiSetup = false;
     //setWifiMode(WIFI_STA);  //this forces the iPhone to exit safari and this page was never displayed
     timerAPoff = millis() + 60000L;  //switch the AP off in 1 minute
     return;
@@ -4737,7 +4761,7 @@ void handle_rules() {
    TXBuffer += RULES_MAX_SIZE;
    TXBuffer += F(")");
 
-  addFormSeparator( TXBuffer.buf);
+  addFormSeparator(2);
 
    TXBuffer += F("<TR><TD>");
   addSubmitButton( TXBuffer.buf);
