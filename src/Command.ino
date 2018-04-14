@@ -498,6 +498,9 @@ void ExecuteCommand(byte source, const char *Line)
           long delta = timePassedSince(RulesTimer[Par1 - 1].timestamp);
           if(RulesTimer[Par1 - 1].timestamp != 0L && delta < 0)
           {
+            String event = F("Rules#TimerPause=");
+            event += Par1;
+            rulesProcessing(event);			  
             RulesTimer[Par1 - 1].paused = true;
             RulesTimer[Par1 - 1].interval = -delta; // set remaind time
           }
@@ -523,8 +526,11 @@ void ExecuteCommand(byte source, const char *Line)
        {
           if(RulesTimer[Par1 - 1].interval > 0 && RulesTimer[Par1 - 1].timestamp != 0L)
           {
+            String event = F("Rules#TimerResume=");
+            event += Par1;
+            rulesProcessing(event);            
             RulesTimer[Par1 - 1].timestamp = millis() + (RulesTimer[Par1 - 1].interval);
-            RulesTimer[Par1 - 1].paused = false;            
+            RulesTimer[Par1 - 1].paused = false;   
           }
        }
        else
