@@ -1,8 +1,9 @@
+#ifdef USES_C011
 //#######################################################################################################
 //########################### Controller Plugin 011: Generic HTTP #######################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
+// #ifdef PLUGIN_BUILD_TESTING
 
 #define CPLUGIN_011
 #define CPLUGIN_ID_011         11
@@ -283,3 +284,4 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 }
 
 #endif
+
