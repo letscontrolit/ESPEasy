@@ -1098,7 +1098,7 @@ void handle_config() {
   addFormPasswordBox( TXBuffer.buf, F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(TXBuffer.buf,  F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(TXBuffer.buf,  F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
-  addFormSeparator(TXBuffer.buf , F("2"));
+  addFormSeparator(2);
   addFormPasswordBox( TXBuffer.buf, F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
   // TD-er add IP access box F("ipblocklevel")
@@ -1138,7 +1138,7 @@ void handle_config() {
 
   addFormCheckBox( TXBuffer.buf, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
-  addFormSeparator( TXBuffer.buf, F("2"));
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
   addSubmitButton(TXBuffer.buf );
@@ -1386,7 +1386,7 @@ void handle_controllers() {
 
     }
 
-    addFormSeparator (TXBuffer.buf, F("2"));
+    addFormSeparator (2);
 
     TXBuffer += F("<TR><TD><TD><a class='button link' href=\"controllers\">Close</a>");
     addSubmitButton (TXBuffer.buf);
@@ -1604,7 +1604,7 @@ void handle_notifications() {
       }
     }
 
-    addFormSeparator (TXBuffer.buf, F("2"));
+    addFormSeparator (2);
 
     TXBuffer += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
     addSubmitButton (TXBuffer.buf);
@@ -1685,7 +1685,7 @@ void handle_hardware() {
   addFormPinStateSelect(TXBuffer.buf, F("Pin mode 14 (D5)"), F("p14"), Settings.PinBootStates[14]);
   addFormPinStateSelect(TXBuffer.buf, F("Pin mode 15 (D8)"), F("p15"), Settings.PinBootStates[15]);
   addFormPinStateSelect(TXBuffer.buf, F("Pin mode 16 (D0)"), F("p16"), Settings.PinBootStates[16]);
-  addFormSeparator(TXBuffer.buf, F("2"));
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD><TD>");
   addSubmitButton(TXBuffer.buf);
@@ -2199,7 +2199,7 @@ void handle_devices() {
         }
       }
 
-      addFormSeparator (TXBuffer.buf, F("2"));
+      addFormSeparator (2);
 
       if (Device[DeviceIndex].TimerOption)
       {
@@ -2260,7 +2260,7 @@ void handle_devices() {
       }
     }
 
-    addFormSeparator (TXBuffer.buf, F("4"));
+    addFormSeparator (4);
 
     TXBuffer += F("<TR><TD><TD colspan='3'><a class='button link' href=\"devices?setpage=");
     TXBuffer +=  page;
@@ -2752,12 +2752,11 @@ void addFormNote(String& str, const String& text)
 //********************************************************************************
 // Add a separator as row start
 //********************************************************************************
-void addFormSeparator(String& str, const String& clspan)
+void addFormSeparator(int clspan)
 {
-  str += F("<TR><TD colspan='");
-  str += clspan;
-  str += F("'><hr>");
-  TXBuffer.checkFull();
+ TXBuffer += F("<TR><TD colspan='");
+ TXBuffer += clspan;
+ TXBuffer += F("'><hr>");
 }
 
 
@@ -3789,7 +3788,7 @@ void handle_advanced() {
     addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif
 
-  addFormSeparator (TXBuffer.buf, F("2"));
+  addFormSeparator (2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'>");
   addSubmitButton (TXBuffer.buf);
@@ -4762,7 +4761,7 @@ void handle_rules() {
    TXBuffer += RULES_MAX_SIZE;
    TXBuffer += F(")");
 
-  addFormSeparator( TXBuffer.buf, F("2"));
+  addFormSeparator(2);
 
    TXBuffer += F("<TR><TD>");
   addSubmitButton( TXBuffer.buf);

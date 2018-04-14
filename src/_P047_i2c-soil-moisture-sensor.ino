@@ -83,13 +83,13 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(string, F("Check sensor version") ,F("plugin_047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-        addFormSeparator(string, F("2"));
+        addFormSeparator(2);
 
         addFormCheckBox(string, F("Change Sensor address"),F("plugin_047_changeAddr"), false);
       	addFormTextBox(string, F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), String(F("0x")) +
       			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
-        addFormSeparator(string, F("2"));
+        addFormSeparator(2);
 
         success = true;
         break;
