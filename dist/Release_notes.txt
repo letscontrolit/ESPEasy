@@ -1,4 +1,80 @@
 -------------------------------------------------
+Changes in release mega-20180414 (since mega-20180413)
+-------------------------------------------------
+
+Release date: Sat Apr 14 04:00:08 CEST 2018
+
+GHolli (3):
+      Update _P049_MHZ19.ino
+      Change comma to semicolon
+      Downstream updates (#1)
+
+Gerald (1):
+      Update _P049_MHZ19.ino
+
+Grovkillen (4):
+      Added RSSI, BSSID, Channel to WifiScan/Setup
+      Removed the serial print "done."
+      Added better(?) format for tables
+      Fixed main page!
+
+Holli (2):
+      It seems the offsets [3]..[4] for the detection range setting (command byte 0x99) are wrong in the latest online data sheet: http://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19b-co2-ver1_0.pdf     According to the MH-Z19B data sheet version 1.2, valid from: 2017.03.22 (received 2018-03-07), the offset should be [6]..[7] instead.     Fixing the implementation accordingly.
+      Disable detection range commands by default.
+
+Plebs (5):
+      Fixes for #1208 and partial #1196
+      modified float() call
+      new #formats
+      added more formats
+      Added #I
+
+TD-er (1):
+      [issue #1239] %bssid% and %wi_ch% added as variables
+
+clumsy-stefan (1):
+      _P015_TSL2561 added Broadband and IR Values
+
+linuxnico (1):
+      add ds1822 definition to ds_read_temp function
+
+
+-------------------------------------------------
+Changes in release mega-20180413 (since mega-20180412)
+-------------------------------------------------
+
+Release date: Fri Apr 13 04:00:09 CEST 2018
+
+TD-er (1):
+      [wifi] Event based wifi, fix set AP and crash on start
+
+
+-------------------------------------------------
+Changes in release mega-20180412 (since mega-20180410)
+-------------------------------------------------
+
+Release date: Thu Apr 12 04:00:14 CEST 2018
+
+Gijs Noorlander (1):
+      [MQTT] Process MQTT loop on publish
+
+TD-er (7):
+      [issue #1215] Cannot login to accesspoint on new install
+      [issue #1215] Cannot login to accesspoint on new install
+      [Wifi] Use statemachine to move between Wifi states
+      [WiFi] Event based wifi, now AP mode works
+      [wifi] Make it work for ESP32 again
+      [wifi] Fix wifi AP setup mode for ESP32.
+      [wifi] Event based wifi, improve scan information.
+
+flexiti (1):
+      ESP CPU speed and ID
+
+mvdbro (1):
+      Reboot/Reset pin, build 20101 patch
+
+
+-------------------------------------------------
 Changes in release mega-20180410 (since mega-20180409)
 -------------------------------------------------
 

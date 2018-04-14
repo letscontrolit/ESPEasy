@@ -92,11 +92,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   String log;
   log=F("MQTT : Topic: ");
   log+=c_topic;
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   log=F("MQTT : Payload: ");
   log+=c_payload;
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
   // addLog(LOG_LEVEL_DEBUG, log);
@@ -227,8 +227,10 @@ void SendStatus(byte source, String status)
 
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
-  if (MQTTclient.publish(topic, payload, retained))
+  if (MQTTclient.publish(topic, payload, retained)) {
+    timermqtt = millis(); // Make sure the MQTT is being processed as soon as possible.
     return true;
+  }
   addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
   return false;
 }

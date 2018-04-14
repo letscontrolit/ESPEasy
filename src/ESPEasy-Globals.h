@@ -16,7 +16,8 @@
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
-#define DEFAULT_AP_IP           192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
+#define DEFAULT_AP_IP       192,168,4,1         // Enter IP address (comma separated) for AP (config) mode
+#define DEFAULT_AP_SUBNET   255,255,255,0       // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
@@ -153,7 +154,7 @@
   #define VERSION                             3 // Change in config.dat mapping needs a full reset
 #endif
 
-#define BUILD                           20100 // git version 2.1.0
+#define BUILD                           20101 // git version 2.1.01
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif
@@ -449,12 +450,15 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info);
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 WiFiEventHandler stationGotIpHandler;
+WiFiEventHandler APModeStationConnectedHandler;
+WiFiEventHandler APModeStationDisconnectedHandler;
 #endif
 
 // Setup DNS, only used if the ESP has no valid WiFi config
 const byte DNS_PORT = 53;
 IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
+bool dnsServerActive = false;
 #ifdef FEATURE_MDNS
 MDNSResponder mdns;
 #endif
@@ -571,6 +575,7 @@ struct SecurityStruct
   byte          AllowedIPrangeLow[4]; // TD-er: Use these
   byte          AllowedIPrangeHigh[4];
   byte          IPblockLevel;
+
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
@@ -692,6 +697,9 @@ struct SettingsStruct
   boolean       ArduinoOTAEnable;
   uint16_t      DST_Start;
   uint16_t      DST_End;
+  boolean       UseRTOSMultitasking;
+  int8_t        Pin_Reset;
+
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
@@ -699,8 +707,6 @@ struct SettingsStruct
   // make sure crc is the last value in the struct
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
-  boolean       UseRTOSMultitasking;
-  int8_t        Pin_Reset;
 } Settings;
 
 struct ControllerSettingsStruct
@@ -1160,6 +1166,24 @@ enum WiFiDisconnectReason
 };
 #endif
 
+enum WifiState {
+  WifiOff,
+  WifiStart,
+  WifiTryConnect,
+  WifiConnectionFailed,
+  WifiClientConnectAP,
+  WifiClientDisconnectAP,
+  WifiCredentialsChanged,
+  WifiConnectSuccess,
+  WifiDisableAP,
+  WifiEnableAP,
+  WifiStartScan,
+};
+
+WifiState currentWifiState = WifiStart;
+
+void setWifiState(WifiState state);
+
 // WiFi related data
 boolean wifiSetup = false;
 boolean wifiSetupConnect = false;
@@ -1175,14 +1199,23 @@ WiFiDisconnectReason lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
 unsigned long lastConnectMoment = 0;
 unsigned long lastDisconnectMoment = 0;
 unsigned long lastGetIPmoment = 0;
+unsigned long lastGetScanMoment = 0;
 unsigned long lastConnectedDuration = 0;
 bool intent_to_reboot = false;
+uint8_t lastMacConnectedAPmode[6] = {0};
+uint8_t lastMacDisconnectedAPmode[6] = {0};
+
+//uint32_t scan_done_status = 0;
+uint8_t  scan_done_number = 0;
+//uint8_t  scan_done_scan_id = 0;
 
 // Semaphore like booleans for processing data gathered from WiFi events.
 bool processedConnect = true;
 bool processedDisconnect = true;
 bool processedGetIP = true;
-
+bool processedConnectAPmode = true;
+bool processedDisconnectAPmode = true;
+bool processedScanDone = true;
 
 unsigned long start = 0;
 unsigned long elapsed = 0;
@@ -1203,7 +1236,7 @@ bool firstLoop=true;
 boolean activeRuleSets[RULESETS_MAX];
 
 boolean       UseRTOSMultitasking;
-  
+
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.

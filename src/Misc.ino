@@ -332,7 +332,7 @@ void statusLED(boolean traffic)
       }
     }
     //AP mode is active
-    else if (WifiIsAP())
+    else if (WifiIsAP(WiFi.getMode()))
     {
       nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
     }
@@ -482,6 +482,13 @@ String BuildFixes()
       f.close();
     }
   }
+
+  if (Settings.Build < 20101)
+  {
+    Serial.println(F("Fix reset Pin"));
+    Settings.Pin_Reset = -1;
+  }
+
   Settings.Build = BUILD;
   return(SaveSettings());
 }
@@ -694,25 +701,36 @@ String SaveSettings(void)
 {
   checkRAM(F("SaveSettings"));
   MD5Builder md5;
+  uint8_t tmp_md5[16] = {0};
   memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
   md5.calculate();
-  md5.getBytes(Settings.md5);
-
+  md5.getBytes(tmp_md5);
   String err;
-  err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
-  if (err.length())
-   return(err);
+  if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
+    // Settings have changed, save to file.
+    memcpy(Settings.md5, tmp_md5, 16);
+    err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+    if (err.length())
+     return(err);
+  }
 
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
   md5.calculate();
-  md5.getBytes(SecuritySettings.md5);
-  err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
-
- return (err);
+  md5.getBytes(tmp_md5);
+  if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
+    // Settings have changed, save to file.
+    memcpy(SecuritySettings.md5, tmp_md5, 16);
+    err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+    if (WifiIsAP(WiFi.getMode())) {
+      // Security settings are saved, may be update of WiFi settings or hostname.
+      wifiSetupConnect = true;
+    }
+  }
+  return (err);
 }
 
 /********************************************************************************************\
@@ -1095,7 +1113,7 @@ void ResetFactory(void)
   Settings.Pin_status_led  = -1;
   Settings.Pin_status_led_Inversed  = true;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset = -1;  
+  Settings.Pin_Reset = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
   strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
   Settings.deepSleep = false;
@@ -1169,7 +1187,7 @@ void ResetFactory(void)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
   intent_to_reboot = true;
-  WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
+  WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   #if defined(ESP8266)
     ESP.reset();
@@ -1314,6 +1332,8 @@ boolean loglevelActiveFor(byte destination, byte logLevel) {
     case LOG_TO_SERIAL: {
       if (!SerialAvailableForWrite()) return false;
       logLevelSettings = Settings.SerialLogLevel;
+      if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED)
+        logLevelSettings = 2;
       break;
     }
     case LOG_TO_SYSLOG: {
@@ -1342,6 +1362,8 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 void addLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
+    Serial.print(millis());
+    Serial.print(F(" : "));
     Serial.println(line);
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
@@ -1557,25 +1579,40 @@ String parseTemplate(String &tmpString, byte lineSize)
                         else
                           value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
-                        int oidx;
-                        if ((oidx = valueFormat.indexOf('O')) >= 0) // Output
+                        if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
                         {
-                          valueFormat.remove(oidx);
-                          oidx = valueFormat.indexOf('!'); // inverted or active low
-                          float val = value.toFloat();
-                          if (oidx >= 0) {
-                            valueFormat.remove(oidx);
-                            value = val == 0 ? " ON" : "OFF";
-                          } else {
-                            value = val == 0 ? "OFF" : " ON";
-                          }
-                        }
+                          const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
+                          const float valFloat = value.toFloat();
+                          const int inverted = valueFormat.indexOf('!') >= 0 ? 1 : 0;
 
-                        if (valueFormat == "R")
-                        {
-                          int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                          for (byte f = 0; f < filler; f++)
-                            newString += " ";
+                          if (valueFormat.indexOf('O') >= 0)
+                            value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
+                          else if (valueFormat.indexOf('C') >= 0)
+                            value = val == inverted ? "CLOSE" : " OPEN";
+                          else if (valueFormat.indexOf('U') >= 0)
+                            value = val == inverted ? "DOWN" : "  UP";
+                          else if (valueFormat.indexOf('Y') >= 0)
+                            value = val == inverted ? " NO" : "YES";
+                          else if (valueFormat.indexOf('y') >= 0)
+                            value = val == inverted ? "N" : "Y";
+                          else if (valueFormat.indexOf('X') >= 0)
+                            value = val == inverted ? "O" : "X";
+                          else if (valueFormat.indexOf('I') >= 0)
+                            value = val == inverted ? "OUT" : " IN";
+                          else if (valueFormat.indexOf('Z') >= 0)  // return "0" or "1"
+                            value = val == inverted ? "0" : "1";
+                          else if (valueFormat.indexOf('D') >= 0)  // round to the nearest integer
+                            value = (int)roundf(valFloat);
+                          else if (valueFormat.indexOf('F') >= 0)  // FLOOR (round down)
+                            value = (int)floorf(valFloat);
+                          else if (valueFormat.indexOf('E') >= 0)  // CEILING (round up)
+                            value = (int)ceilf(valFloat);
+
+                          if (valueFormat.indexOf('R') >= 0) {
+                            int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                            for (byte f = 0; f < filler; f++)
+                              newString += " ";
+                          }
                         }
                         newString += String(value);
                         break;

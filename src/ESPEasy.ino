@@ -118,6 +118,8 @@ void setup()
   stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
 	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
 	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
+  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
+  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
 #endif
 
   if (SpiffsSectors() < 32)
@@ -166,13 +168,15 @@ void setup()
   saveToRTC();
 
   addLog(LOG_LEVEL_INFO, log);
+  WiFi.setAutoReconnect(false);
 
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
   checkRuleSets();
-  if (strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0)
+  if (!selectValidWiFiSettings()) {
     wifiSetup = true;
+  }
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
@@ -195,6 +199,7 @@ void setup()
     //make sure previous serial buffers are flushed before resetting baudrate
     Serial.flush();
     Serial.begin(Settings.BaudRate);
+//    Serial.setDebugOutput(true);
   }
 
   if (Settings.Build != BUILD)
@@ -235,9 +240,15 @@ void setup()
   }
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WifiAPconfig();
-
-  WiFiConnectRelaxed();
+/*
+  // FIXME TD-er:
+  // Async scanning for wifi doesn't work yet like it should.
+  // So no selection of strongest network yet.
+  if (selectValidWiFiSettings()) {
+    WifiScanAsync();
+  }
+*/
+  setWifiState(WifiTryConnect);
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -261,12 +272,6 @@ void setup()
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
-
-  // Start DNS, only used if the ESP has no valid WiFi config
-  // It will reply with it's own address on all DNS requests
-  // (captive portal concept)
-  if (wifiSetup)
-    dnsServer.start(DNS_PORT, "*", apIP);
 
   if (Settings.UseRules)
   {
@@ -346,7 +351,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    WiFiConnectRelaxed();
+    setWifiState(WifiCredentialsChanged);
     wifiSetupConnect = false;
   }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
@@ -355,8 +360,13 @@ void loop()
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
   } else if (WiFi.status() != WL_CONNECTED) {
     // Somehow the WiFi has entered a limbo state.
-    resetWiFi();
+    // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
+//    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
+//    resetWiFi();
   }
+  if (!processedConnectAPmode) processConnectAPmode();
+  if (!processedDisconnectAPmode) processDisconnectAPmode();
+  if (!processedScanDone) processScanDone();
 
   bool firstLoopWiFiConnected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED && firstLoop;
   if (firstLoopWiFiConnected) {
@@ -573,13 +583,7 @@ void runOncePerSecond()
     Serial.print(F(" uS  1 ps:"));
     Serial.println(timer);
   }
-
-  if (timerAPoff != 0 && timeOutReached(timerAPoff))
-  {
-    timerAPoff = 0;
-    WifiAPMode(false);
-  }
-  //checkResetFactoryPin(); // wait for buildfix solution before enabling!
+  checkResetFactoryPin();
 }
 
 /*********************************************************************************************\
@@ -835,7 +839,7 @@ void backgroundtasks()
   }
 
   // process DNS, only used if the ESP has no valid WiFi config
-  if (wifiSetup)
+  if (dnsServerActive)
     dnsServer.processNextRequest();
 
   #ifdef FEATURE_ARDUINO_OTA

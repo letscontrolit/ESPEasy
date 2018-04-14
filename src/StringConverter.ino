@@ -54,6 +54,12 @@ void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {
   sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
+String formatMAC(const uint8_t* mac) {
+  char str[20];
+  formatMAC(mac, str);
+  return String(str);
+}
+
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
   \*********************************************************************************************/
@@ -280,6 +286,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%ip%"),WiFi.localIP().toString())
   SMART_REPL(F("%rssi%"), String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
   SMART_REPL(F("%ssid%"), (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID())
+  SMART_REPL(F("%bssid%"), (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr())
+  SMART_REPL(F("%wi_ch%"), String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel()))
   SMART_REPL(F("%unit%"), String(Settings.Unit))
   SMART_REPL(F("%mac%"), String(WiFi.macAddress()))
   #if defined(ESP8266)

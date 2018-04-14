@@ -12,6 +12,8 @@
 #define PLUGIN_ID_015        15
 #define PLUGIN_NAME_015       "Light/Lux - TSL2561"
 #define PLUGIN_VALUENAME1_015 "Lux"
+#define PLUGIN_VALUENAME2_015 "Infrared"
+#define PLUGIN_VALUENAME3_015 "Broadband"
 
 boolean Plugin_015_init = false;
 
@@ -219,7 +221,7 @@ boolean plugin_015_getData(unsigned int &data0, unsigned int &data1)
 }
 
 
-boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0, unsigned int CH1, double &lux)
+boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0, unsigned int CH1, double &lux, double &infrared, double &broadband)
 	// Convert raw data to lux
 	// gain: 0 (1X) or 1 (16X), see setTiming()
 	// ms: integration time in ms, from setTiming() or from manual integration
@@ -245,6 +247,10 @@ boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0,
 
 		// We will need the ratio for subsequent calculations
 		ratio = d1 / d0;
+
+    // save original values
+    infrared = d1;
+    broadband = d0;
 
 		// Normalize for integration time
 		d0 *= (402.0/ms);
@@ -290,7 +296,6 @@ boolean plugin_015_getLux(unsigned char gain, unsigned int ms, unsigned int CH0,
 }
 
 
-
 boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -301,12 +306,12 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_015;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].ValueCount = 3;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
@@ -322,6 +327,9 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_015));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_015));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_015));
+
         break;
       }
 
@@ -403,12 +411,17 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
          {
 
            double lux;    // Resulting lux value
+           double infrared;    // Resulting infrared value
+           double broadband;    // Resulting broadband value
            boolean good;  // True if neither sensor is saturated
 
            // Perform lux calculation:
 
-           good = plugin_015_getLux(gain,ms,data0,data1,lux);
+           good = plugin_015_getLux(gain,ms,data0,data1,lux, infrared, broadband);
         	 UserVar[event->BaseVarIndex] = lux;
+           UserVar[event->BaseVarIndex + 1] = infrared;
+           UserVar[event->BaseVarIndex + 2] = broadband;
+
            if (!good)
            {
              addLog(LOG_LEVEL_INFO,F("TSL2561: Sensor saturated! > 65535 Lux"));
@@ -423,6 +436,10 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
            log += String(gain,HEX);
            log += F(": Lux: ");
            log += UserVar[event->BaseVarIndex];
+           log += F(": Infrared: ");
+           log += UserVar[event->BaseVarIndex + 1];
+           log += F(": Broadband: ");
+           log += UserVar[event->BaseVarIndex + 2];
            addLog(LOG_LEVEL_INFO,log);
          }
          else
