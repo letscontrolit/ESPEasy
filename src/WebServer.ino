@@ -398,22 +398,21 @@ static const char pgDefaultCSS[] PROGMEM = {
     "#selectwidth {width:80%;}"
     // custom checkboxes
     ".container {display: block; position: relative; padding-left: 35px; margin-bottom: 12px; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
-        // Hide the browser's default checkbox
-        ".container input {position: absolute; opacity: 0; cursor: pointer;  }"
-        // Create a custom checkbox
-        ".checkmark {position: absolute; top: 0; left: 0; height: 25px;  width: 25px;  background-color: #eee; }"
-        // On mouse-over, add a grey background color
-        ".container:hover input ~ .checkmark {background-color: #ccc; }"
-        // When the checkbox is checked, add a blue background
-        ".container input:checked ~ .checkmark { background-color: #07D; }"
-        // Create the checkmark/indicator (hidden when not checked)
-        ".checkmark:after {content: ''; position: absolute; display: none; }"
-        // Show the checkmark when checked
-        ".container input:checked ~ .checkmark:after {display: block; }"
-        // Style the checkmark/indicator
-        ".container .checkmark:after {left: 9px; top: 5px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
-      // tables
-    "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
+    // Hide the browser's default checkbox
+    ".container input {position: absolute; opacity: 0; cursor: pointer;  }"
+    // Create a custom checkbox
+    ".checkmark {position: absolute; top: 0; left: 0; height: 25px;  width: 25px;  background-color: #eee; }"
+    // On mouse-over, add a grey background color
+    ".container:hover input ~ .checkmark {background-color: #ccc; }"
+    // When the checkbox is checked, add a blue background
+    ".container input:checked ~ .checkmark { background-color: #07D; }"
+    // Create the checkmark/indicator (hidden when not checked)
+    ".checkmark:after {content: ''; position: absolute; display: none; }"
+    // Show the checkmark when checked
+    ".container input:checked ~ .checkmark:after {display: block; }"
+    // Style the checkmark/indicator
+    ".container .checkmark:after {left: 9px; top: 5px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
+    // tables    "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
     "table.normal td {padding: 4px; }"
     "table.normal tr {padding: 4px; }"
     "table.normal {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
@@ -1090,7 +1089,7 @@ void handle_config() {
   addFormPasswordBox(F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox( F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox( F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
-  addFormSeparator();
+  addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 
   // TD-er add IP access box F("ipblocklevel")
@@ -1130,7 +1129,7 @@ void handle_config() {
 
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
-  addFormSeparator();
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
   addSubmitButton();
@@ -1377,7 +1376,7 @@ void handle_controllers() {
 
     }
 
-    addFormSeparator();
+    addFormSeparator(2);
 
     TXBuffer += F("<TR><TD><TD><a class='button link' href=\"controllers\">Close</a>");
     addSubmitButton();
@@ -1594,7 +1593,7 @@ void handle_notifications() {
       }
     }
 
-    addFormSeparator();
+    addFormSeparator(2);
 
     TXBuffer += F("<TR><TD><TD><a class='button link' href=\"notifications\">Close</a>");
     addSubmitButton();
@@ -1675,7 +1674,7 @@ void handle_hardware() {
   addFormPinStateSelect(F("Pin mode 14 (D5)"), F("p14"), Settings.PinBootStates[14]);
   addFormPinStateSelect(F("Pin mode 15 (D8)"), F("p15"), Settings.PinBootStates[15]);
   addFormPinStateSelect(F("Pin mode 16 (D0)"), F("p16"), Settings.PinBootStates[16]);
-  addFormSeparator();
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD><TD>");
   addSubmitButton();
@@ -2193,7 +2192,7 @@ void handle_devices() {
         }
       }
 
-      addFormSeparator();
+      addFormSeparator(2);
 
       if (Device[DeviceIndex].TimerOption)
       {
@@ -2230,7 +2229,7 @@ void handle_devices() {
         {
           TXBuffer += F("<TR><TD>");
           TXBuffer += varNr + 1;
-          TXBuffer += F("<TD style='width:100px;'>");
+          TXBuffer += F("<TD>");
           String id = F("TDVN");   //="taskdevicevaluename"
           id += (varNr + 1);
           addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
@@ -2254,7 +2253,7 @@ void handle_devices() {
       }
     }
 
-    addFormSeparator();
+    addFormSeparator(4);
 
     TXBuffer += F("<TR><TD><TD colspan='3'><a class='button link' href=\"devices?setpage=");
     TXBuffer += page;
@@ -2572,11 +2571,11 @@ void addSelector(const String& id, int optionCount, const String options[], cons
 {
   int index;
 
-  TXBuffer += F("<select name='");
+  TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += id;
   TXBuffer += F("'");
   if (reloadonchange)
-    TXBuffer += F(" onchange=\"return dept_onchange(frmselect)\"");
+    TXBuffer += F(" onchange='return dept_onchange(frmselect)'>");
   TXBuffer += F(">");
   for (byte x = 0; x < optionCount; x++)
   {
@@ -2603,11 +2602,11 @@ void addSelector(const String& id, int optionCount, const String options[], cons
 
 void addSelector_Head(const String& id, boolean reloadonchange)
 {
-  TXBuffer += F("<select name='");
+  TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += id;
   TXBuffer += F("'");
   if (reloadonchange)
-    TXBuffer += F(" onchange=\"return dept_onchange(frmselect)\"");
+    TXBuffer += F(" onchange='return dept_onchange(frmselect)'>");
   TXBuffer += F(">");
 }
 
@@ -2722,25 +2721,27 @@ void addFormNote(const String& text)
 //********************************************************************************
 // Add a separator as row start
 //********************************************************************************
-void addFormSeparator()
+void addFormSeparator(int clspan)
 {
-  TXBuffer += F("<TR><TD colspan='2'><hr>");
+ TXBuffer += F("<TR><TD colspan='");
+ TXBuffer += clspan;
+ TXBuffer += F("'><hr>");
 }
-
 
 //********************************************************************************
 // Add a checkbox
 //********************************************************************************
 void addCheckBox(const String& id, boolean checked)
 {
-  TXBuffer += F("<input type=checkbox id='");
+  TXBuffer += F("<label class='container'>&nbsp;");
+  TXBuffer += F("<input type='checkbox' id='");
   TXBuffer += id;
   TXBuffer += F("' name='");
   TXBuffer += id;
   TXBuffer += F("'");
   if (checked)
     TXBuffer += F(" checked");
-  TXBuffer += F(">");
+  TXBuffer += F("><span class='checkmark'></span></label>");
 }
 
 void addFormCheckBox(const String& label, const String& id, boolean checked)
@@ -2768,7 +2769,7 @@ void addNumericBox(const String& id, int value, int min, int max)
     TXBuffer += F(" max=");
     TXBuffer += max;
   }
-  TXBuffer += F(" style='width:5em;' value=");
+  TXBuffer += F(" value=");
   TXBuffer += value;
   TXBuffer += F(">");
 }
@@ -2793,7 +2794,7 @@ void addFormNumericBox(const String& label, const String& id, int value)
 
 void addTextBox(const String& id, const String&  value, int maxlength)
 {
-  TXBuffer += F("<input type='text' name='");
+  TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' maxlength=");
   TXBuffer += maxlength;
@@ -2841,7 +2842,7 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
   }
 
   addRowLabel(label);
-  TXBuffer += F("<input type='text' name='");
+  TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' value='");
   TXBuffer += strip;
@@ -2851,9 +2852,9 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(const String& url)
 {
-  TXBuffer += F(" <a class=\"button help\" href=\"http://www.letscontrolit.com/wiki/index.php/");
+  TXBuffer += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
   TXBuffer += url;
-  TXBuffer += F("\" target=\"_blank\">&#10068;</a>");
+  TXBuffer += F("' target='_blank'>&#10068;</a>");
 }
 
 
@@ -2874,9 +2875,9 @@ void addTaskSelect(String name,  int choice)
   struct EventStruct TempEvent;
   String deviceName;
 
-  TXBuffer += F("<select name='");
+  TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += name;
-  TXBuffer += F("' onchange=\"return dept_onchange(frmselect)\">");
+  TXBuffer += F("' onchange='return dept_onchange(frmselect)'>");
 
   for (byte x = 0; x < TASKS_MAX; x++)
   {
@@ -2936,7 +2937,7 @@ bool isFormItem(const String& id)
 //********************************************************************************
 void addTaskValueSelect(String name, int choice, byte TaskIndex)
 {
-  TXBuffer += F("<select name='");
+  TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += name;
   TXBuffer += "'>";
 
@@ -2998,7 +2999,7 @@ void handle_tools() {
 
   addFormSubHeader(F("Command"));
     TXBuffer += F("<TR><TD style='width: 180px'>");
-    TXBuffer += F("<input type='text' name='cmd' value='");
+    TXBuffer += F("<input class='wide' type='text' name='cmd' value='");
     TXBuffer += webrequest;
     TXBuffer += F("'>");
     TXBuffer += F("<TD>");
@@ -3741,7 +3742,7 @@ void handle_advanced() {
     addFormCheckBox(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif
 
-  addFormSeparator();
+  addFormSeparator(2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'>");
   addSubmitButton();
@@ -4158,7 +4159,7 @@ boolean handle_custom(String path) {
     if (dashboardPage)
     {
       // if the custom page does not exist, create a basic task value overview page in case of dashboard request...
-      TXBuffer += F("<meta name=\"viewport\" content=\"width=width=device-width, initial-scale=1\"><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
+      TXBuffer += F("<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>");
       TXBuffer += F("<table class='normal'>");
       for (byte x = 0; x < TASKS_MAX; x++)
       {
@@ -4722,7 +4723,7 @@ void handle_rules() {
    TXBuffer += RULES_MAX_SIZE;
    TXBuffer += F(")");
 
-  addFormSeparator();
+  addFormSeparator(2);
 
    TXBuffer += F("<TR><TD>");
   addSubmitButton();
