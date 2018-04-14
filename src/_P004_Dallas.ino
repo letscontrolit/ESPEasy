@@ -154,7 +154,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
                 if (Plugin_004_DS_readTemp(addr, &value))
                 {
-                    UserVar[event->BaseVarIndex] = value;
+                    if (value != 85.0)    // ignore power on reset value
+                        UserVar[event->BaseVarIndex] = value;
                     log    += UserVar[event->BaseVarIndex];
                     success = true;
                 }
