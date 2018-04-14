@@ -152,7 +152,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(string, F("Chiming Clock"));
 
-        addFormCheckBox(string, F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], F("&nbsp;"));
+        addFormCheckBox(string, F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         //string += F("<TR><TD><TD>");
         string += F(" ");
         addButton(string, F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));

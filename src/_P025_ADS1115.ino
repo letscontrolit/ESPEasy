@@ -99,7 +99,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], F("&nbsp;"));
+        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         addFormNumericBox(string, F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
         string += F(" &#8793; ");

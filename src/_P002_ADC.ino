@@ -53,11 +53,11 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
         #endif
 
-        addFormCheckBox(string, F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], F("&nbsp;"));
+        addFormCheckBox(string, F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_002_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], F("&nbsp;"));
+        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_002_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         addFormNumericBox(string, F("Point 1"), F("plugin_002_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
         string += F(" &#8793; ");

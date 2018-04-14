@@ -87,7 +87,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
         addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][3], F("&nbsp;"));
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;

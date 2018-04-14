@@ -124,18 +124,18 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(string, F("Measurement"));
 
-        addFormCheckBox(string, F("Oversampling"), F("oversampling"), CONFIG(0), F("&nbsp;"));
+        addFormCheckBox(string, F("Oversampling"), F("oversampling"), CONFIG(0));
 
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
         addFormSelector(string, F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
 
         addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
         string += F(" &nbsp; &nbsp; &#8617; Tare: ");
-        addCheckBox(string, F("tare"), 0, F("&nbsp;"));   //always off
+        addCheckBox(string, F("tare"), 0);   //always off
 
         addFormSubHeader(string, F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("Plugin_067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], F("&nbsp;"));
+        addFormCheckBox(string, F("Calibration Enabled"), F("Plugin_067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         addFormNumericBox(string, F("Point 1"), F("Plugin_067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
         string += F(" &#8793; ");

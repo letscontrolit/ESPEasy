@@ -1136,7 +1136,7 @@ void handle_config() {
   addFormNumericBox(TXBuffer.buf,  F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   addUnit(TXBuffer.buf,  F("sec"));
 
-  addFormCheckBox( TXBuffer.buf, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail, F("&nbsp;"));
+  addFormCheckBox( TXBuffer.buf, F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
   addFormSeparator( TXBuffer.buf, F("2"));
 
@@ -1378,7 +1378,7 @@ void handle_controllers() {
 
       }
 
-      addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex], F("&nbsp;"));
+      addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
 
       TempEvent.ControllerIndex = controllerindex;
       TempEvent.ProtocolIndex = ProtocolIndex;
@@ -1597,7 +1597,7 @@ void handle_notifications() {
         }
 
         TXBuffer += F("<TR><TD>Enabled:<TD>");
-        addCheckBox(TXBuffer.buf,  F("notificationenabled"), Settings.NotificationEnabled[notificationindex], F("&nbsp;"));
+        addCheckBox(TXBuffer.buf,  F("notificationenabled"), Settings.NotificationEnabled[notificationindex], F(""));
 
         TempEvent.NotificationIndex = notificationindex;
         NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent,TXBuffer.buf);
@@ -1653,7 +1653,7 @@ void handle_hardware() {
 
   addFormSubHeader(TXBuffer.buf, F("Wifi Status LED"));
   addFormPinSelect( TXBuffer.buf,F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
-  addFormCheckBox(TXBuffer.buf,  F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(TXBuffer.buf,      F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(TXBuffer.buf, F("Reset Pin"));
@@ -1666,7 +1666,7 @@ void handle_hardware() {
 
   // SPI Init
   addFormSubHeader(TXBuffer.buf, F("SPI Interface"));
-  addFormCheckBox(TXBuffer.buf,  F("Init SPI"), F("initspi"), Settings.InitSPI, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Init SPI"), F("initspi"), Settings.InitSPI);
   addFormNote( TXBuffer.buf,     F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote( TXBuffer.buf,     F("Chip Select (CS) config must be done in the plugin"));
 #ifdef FEATURE_SD
@@ -2128,7 +2128,7 @@ void handle_devices() {
 
       addFormTextBox(TXBuffer.buf,  F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
 
-      addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex], F("&nbsp;"));   //="taskdeviceenabled"
+      addFormCheckBox(TXBuffer.buf,  F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);   //="taskdeviceenabled"
 
       // section: Sensor / Actuator
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[taskIndex] == 0 &&
@@ -2141,14 +2141,14 @@ void handle_devices() {
 
         if (Device[DeviceIndex].PullUpOption)
         {
-          addFormCheckBox(TXBuffer.buf,  F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex], F("&nbsp;"));   //="taskdevicepin1pullup"
+          addFormCheckBox(TXBuffer.buf,  F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex]);   //="taskdevicepin1pullup"
           if ((Settings.TaskDevicePin1[taskIndex] == 16) || (Settings.TaskDevicePin2[taskIndex] == 16) || (Settings.TaskDevicePin3[taskIndex] == 16))
             addFormNote(TXBuffer.buf,  F("GPIO-16 (D0) does not support PullUp"));
         }
 
         if (Device[DeviceIndex].InverseLogicOption)
         {
-          addFormCheckBox( TXBuffer.buf, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[taskIndex], F("&nbsp;"));   //="taskdevicepin1inversed"
+          addFormCheckBox( TXBuffer.buf, F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[taskIndex]);   //="taskdevicepin1inversed"
           addFormNote( TXBuffer.buf, F("Will go into effect on next input change."));
         }
 
@@ -2185,12 +2185,12 @@ void handle_devices() {
             TXBuffer += F("<TR><TD>Send to<BR>Controller ");
             TXBuffer +=  getControllerSymbol(controllerNr);
             TXBuffer += F("<TD>");
-            addCheckBox(TXBuffer.buf,  id, Settings.TaskDeviceSendData[controllerNr][taskIndex], F("&nbsp;"));
+            addCheckBox(TXBuffer.buf,  id, Settings.TaskDeviceSendData[controllerNr][taskIndex], F(""));
 
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
-              TXBuffer += F(" &nbsp; IDX: ");
+              TXBuffer += F("<TR><TD>IDX:<TD>");
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
               addNumericBox(TXBuffer.buf,  id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, 9999);
@@ -2217,8 +2217,8 @@ void handle_devices() {
         TXBuffer += F("</table><table class='normal'>");
 
         //table header
-        TXBuffer += F("<TR><TH style='width:50px;' align='left'>Value");
-        TXBuffer += F("<TH style='width:100px; align='left'>Name");
+        TXBuffer += F("<TR><TH style='width:30px;' align='center'>#");
+        TXBuffer += F("<TH align='left'>Name");
 
         if (Device[DeviceIndex].FormulaOption)
         {
@@ -2228,7 +2228,7 @@ void handle_devices() {
 
         if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
         {
-          TXBuffer += F("<TH style='width:40px;' align='left'>Decimals");
+          TXBuffer += F("<TH style='width:30px;' align='left'>Decimals");
         }
 
         //table body
@@ -2766,7 +2766,7 @@ void addFormSeparator(String& str, const String& clspan)
 //********************************************************************************
 void addCheckBox(String& str, const String& id, boolean checked, const String& chktext)
 {
-  str += F("<label class='container'>");
+  str += F("<label class='container'>&nbsp;");
   str += chktext;
   str += F("<input type='checkbox' id='");
   str += id;
@@ -2779,10 +2779,10 @@ void addCheckBox(String& str, const String& id, boolean checked, const String& c
   TXBuffer.checkFull();
 }
 
-void addFormCheckBox(String& str, const String& label, const String& id, boolean checked, const String& chktext)
+void addFormCheckBox(String& str, const String& label, const String& id, boolean checked)
 {
   addRowLabel(str, label);
-  addCheckBox(str, id, checked, chktext);
+  addCheckBox(str, id, checked, F(""));
   TXBuffer.checkFull();
 }
 
@@ -3724,17 +3724,17 @@ void handle_advanced() {
 
   addFormHeader(TXBuffer.buf,  F("Advanced Settings"));
 
-  addFormCheckBox(TXBuffer.buf,  F("Rules"), F("userules"), Settings.UseRules, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Rules"), F("userules"), Settings.UseRules);
 
   addFormSubHeader(TXBuffer.buf,  F("Controller Settings"));
 
-  addFormCheckBox(TXBuffer.buf,  F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
   addFormNumericBox(TXBuffer.buf,  F("Message Interval"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
   addUnit(TXBuffer.buf,  F("ms"));
 
   addFormSubHeader(TXBuffer.buf, F("NTP Settings"));
 
-  addFormCheckBox(TXBuffer.buf,  F("Use NTP"), F("usentp"), Settings.UseNTP, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Use NTP"), F("usentp"), Settings.UseNTP);
   addFormTextBox(TXBuffer.buf,  F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
 
   addFormSubHeader(TXBuffer.buf,  F("DST Settings"));
@@ -3742,7 +3742,7 @@ void handle_advanced() {
   addFormDstSelect( TXBuffer.buf, false, Settings.DST_End);
   addFormNumericBox( TXBuffer.buf, F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840);   // UTC-12H ... UTC+14h
   addUnit( TXBuffer.buf, F("minutes"));
-  addFormCheckBox( TXBuffer.buf, F("DST"), F("dst"), Settings.DST, F("&nbsp;"));
+  addFormCheckBox( TXBuffer.buf, F("DST"), F("dst"), Settings.DST);
 
   addFormSubHeader(TXBuffer.buf,  F("Log Settings"));
 
@@ -3754,13 +3754,13 @@ void handle_advanced() {
 #ifdef FEATURE_SD
   addFormLogLevelSelect(TXBuffer.buf,  F("SD Card log Level"), F("sdloglevel"),     Settings.SDLogLevel);
 
-  addFormCheckBox(TXBuffer.buf,  F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 #endif
 
 
   addFormSubHeader(TXBuffer.buf,  F("Serial Settings"));
 
-  addFormCheckBox(TXBuffer.buf,  F("Enable Serial port"), F("useserial"), Settings.UseSerial, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Enable Serial port"), F("useserial"), Settings.UseSerial);
   addFormNumericBox(TXBuffer.buf,  F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 
@@ -3777,16 +3777,16 @@ void handle_advanced() {
   addFormNumericBox(TXBuffer.buf,  F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   TXBuffer += F(" (decimal)");
 
-  addFormCheckBox(TXBuffer.buf,  F("Use SSDP"), F("usessdp"), Settings.UseSSDP, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
   addFormNumericBox(TXBuffer.buf,  F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 
   addFormNumericBox(TXBuffer.buf,  F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit);   //TODO define limits
 
-  addFormCheckBox(TXBuffer.buf,  F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable, F("&nbsp;"));
+  addFormCheckBox(TXBuffer.buf,  F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
 
   #if defined(ESP32)
-    addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking, F("&nbsp;"));
+    addFormCheckBox(TXBuffer.buf,  F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif
 
   addFormSeparator (TXBuffer.buf, F("2"));

@@ -362,10 +362,10 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 				addFormSelector(string, F("Integration time"), F("plugin_015_integration"), TSL2561_INTEGRATION_OPTION, options2, optionValues2, choice2);
 
         addFormCheckBox(string, F("Send sensor to sleep:"), F("plugin_015_sleep"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][2], F("&nbsp;"));
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         addFormCheckBox(string, F("Enable 16x Gain:"), F("plugin_015_gain"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][3], F("&nbsp;"));
+        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;
