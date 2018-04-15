@@ -64,9 +64,9 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                   savedAddress[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
 
               // find all suitable devices
-              addRowLabel(string, F("Device Address"));
-              addSelector_Head(string, F("plugin_004_dev"), false);
-              addSelector_Item(string, "", -1, false, false, F(""));
+              addRowLabel(F("Device Address"));
+              addSelector_Head(F("plugin_004_dev"), false);
+              addSelector_Item("", -1, false, false, F(""));
               uint8_t tmpAddress[8];
               byte count = 0;
               Plugin_004_DS_reset();
@@ -80,10 +80,10 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                       if (j < 7) option += F("-");
                   }
                   bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-                  addSelector_Item(string, option, count, selected, false, F(""));
+                  addSelector_Item(option, count, selected, false, F(""));
                   count ++;
               }
-              addSelector_Foot(string);
+              addSelector_Foot();
 
               // Device Resolution select
               if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0)
@@ -92,8 +92,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                   resolutionChoice = 9;
               String resultsOptions[4] = { "9", "10", "11", "12" };
               int resultsOptionValues[4] = { 9, 10, 11, 12 };
-              addFormSelector(string, F("Device Resolution"), F("plugin_004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
-              string += F(" Bit");
+              addFormSelector(F("Device Resolution"), F("plugin_004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+              addHtml(F(" Bit"));
             }
             success = true;
             break;
@@ -251,13 +251,17 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
         return false;
     }
 
-    if ((ROM[0] == 0x28 ) || (ROM[0] == 0x3b)) // DS18B20 or DS1825
+    if ((ROM[0] == 0x28 ) || (ROM[0] == 0x3b) || (ROM[0] == 0x22)) // DS18B20 or DS1825 or DS1822
     {
         DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
+        if (DSTemp == 0x550)      // power-on reset value
+           return false;
         *value = (float(DSTemp) * 0.0625);
     }
     else if (ROM[0] == 0x10) // DS1820 DS18S20
     {
+        if (ScratchPad[0] == 0xaa)        // power-on reset value
+          return false;
         DSTemp = (ScratchPad[1] << 11) | ScratchPad[0] << 3;
         DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
                  (((ScratchPad[7] - ScratchPad[6]) << 7) / ScratchPad[7]);

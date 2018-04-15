@@ -65,9 +65,9 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
         const String options[] = { F("GRB"), F("GRBW") };
         int indices[] = { 1, 2 };
 
-      	addFormNumericBox(string, F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
-      	addFormPinSelect(string, F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
-        addFormSelector(string, F("Strip Type"), F("plugin_038_strip"), 2, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][1] );
+      	addFormNumericBox(F("Led Count"), F("plugin_038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
+      	addFormPinSelect(F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+        addFormSelector(F("Strip Type"), F("plugin_038_strip"), 2, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][1] );
 
       	success = true;
         break;

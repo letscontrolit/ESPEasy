@@ -50,7 +50,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("Altitude [m]"), F("_p006_bmp085_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+      	addFormNumericBox(F("Altitude [m]"), F("_p006_bmp085_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         success = true;
         break;
       }

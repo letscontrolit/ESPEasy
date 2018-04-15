@@ -681,7 +681,7 @@ void ExecuteCommand(byte source, const char *Line)
   case cmd_WifiConnect:
   {
     success = true;
-    WiFiConnectRelaxed();
+    setWifiState(WifiTryConnect);
     break;
   }
 
@@ -694,7 +694,7 @@ void ExecuteCommand(byte source, const char *Line)
 
   case cmd_WifiAPMode:
   {
-    WifiAPMode(true);
+    setWifiState(WifiEnableAP);
     success = true;
     break;
   }
@@ -746,7 +746,7 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
-    WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
+    WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
     WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
     break;
   }

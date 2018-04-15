@@ -133,7 +133,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		case PLUGIN_WEBFORM_LOAD:
 		{
 			int optionValues[2] = { 0x44, 0x45 };
-			addFormSelectorI2C(string, F("i2c_addr"), 2, optionValues, CONFIG(0));
+			addFormSelectorI2C(F("i2c_addr"), 2, optionValues, CONFIG(0));
 
 			success = true;
 			break;

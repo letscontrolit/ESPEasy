@@ -101,8 +101,8 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePin1[event->TaskIndex] = 2;
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_054_DMXSize;
-        addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
-        addFormNumericBox(string, F("Channels"), F("channels"), Plugin_054_DMXSize, 1, 512);
+        addFormNote(F("Only GPIO-2 (D4) can be used as TX1!"));
+        addFormNumericBox(F("Channels"), F("channels"), Plugin_054_DMXSize, 1, 512);
         success = true;
         break;
       }

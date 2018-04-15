@@ -83,7 +83,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-          addFormNumericBox(string, F("Volume"), F("volume"), CONFIG(0), 1, 30);
+          addFormNumericBox(F("Volume"), F("volume"), CONFIG(0), 1, 30);
 
           success = true;
           break;

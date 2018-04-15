@@ -51,9 +51,9 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("Red"), F("plugin_041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
-      	addFormNumericBox(string, F("Green"), F("plugin_041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
-      	addFormNumericBox(string, F("Blue"), F("plugin_041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
+      	addFormNumericBox(F("Red"), F("plugin_041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+      	addFormNumericBox(F("Green"), F("plugin_041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+      	addFormNumericBox(F("Blue"), F("plugin_041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
         success = true;
         break;
       }

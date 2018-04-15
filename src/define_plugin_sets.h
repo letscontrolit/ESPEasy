@@ -368,6 +368,7 @@ To create/register a plugin, you have to :
     #define USES_C008   // Generic HTTP
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
+    #define USES_C013   // ESPEasy P2P network
 #endif
 
 

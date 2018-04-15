@@ -65,16 +65,16 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("Debounce Time (mSec)"), F("plugin_003")
+      	addFormNumericBox(F("Debounce Time (mSec)"), F("plugin_003")
       			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
-        addFormSelector(string, F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
+        addFormSelector(F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
 
         if (choice !=0)
-          string += F("<span style=\"color:red\">Total count is not persistent!</span>");
+          addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
 
         String modeRaise[4];
         modeRaise[0] = F("LOW");
@@ -87,7 +87,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         modeValues[2] = RISING;
         modeValues[3] = FALLING;
 
-        addFormSelector(string, F("Mode Type"), F("plugin_003_raisetype"), 4, modeRaise, modeValues, choice2 );
+        addFormSelector(F("Mode Type"), F("plugin_003_raisetype"), 4, modeRaise, modeValues, choice2 );
 
         success = true;
         break;

@@ -6,9 +6,24 @@
   Additional features based on https://geektimes.ru/post/285572/ by Gerben (infernix__AT__gmail.com)
 
   This plugin reads the CO2 value from MH-Z19 NDIR Sensor
-  DevicePin1 - is RX for ESP
-  DevicePin2 - is TX for ESP
+
+  Pin-out:
+  Hd o
+  SR o   o PWM
+  Tx o   o AOT
+  Rx o   o GND
+  Vo o   o Vin
+  (bottom view)
+  Skipping pin numbers due to inconsistancies in individual data sheet revisions.
+  MHZ19:  Connection:
+  VCC     5 V
+  GND     GND
+  Tx      ESP8266 1st GPIO specified in Device-settings
+  Rx      ESP8266 2nd GPIO specified in Device-settings
 */
+
+// Uncomment the following define to enable the detection range commands:
+//#define ENABLE_DETECTION_RANGE_COMMANDS
 
 #define PLUGIN_049
 #define PLUGIN_ID_049         49
@@ -37,31 +52,56 @@ enum mhzCommands : byte { mhzCmdReadPPM,
                           mhzCmdABCEnable,
                           mhzCmdABCDisable,
                           mhzCmdReset,
+#ifdef ENABLE_DETECTION_RANGE_COMMANDS
                           mhzCmdMeasurementRange1000,
                           mhzCmdMeasurementRange2000,
                           mhzCmdMeasurementRange3000,
-                          mhzCmdMeasurementRange5000 };
+                          mhzCmdMeasurementRange5000
+#endif
+                        };
 // 9 byte commands:
 // mhzCmdReadPPM[]              = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
 // mhzCmdCalibrateZero[]        = {0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78};
 // mhzCmdABCEnable[]            = {0xFF,0x01,0x79,0xA0,0x00,0x00,0x00,0x00,0xE6};
 // mhzCmdABCDisable[]           = {0xFF,0x01,0x79,0x00,0x00,0x00,0x00,0x00,0x86};
 // mhzCmdReset[]                = {0xFF,0x01,0x8d,0x00,0x00,0x00,0x00,0x00,0x72};
-// mhzCmdMeasurementRange1000[] = {0xFF,0x01,0x99,0x03,0xE8,0x00,0x00,0x00,0x7B};
-// mhzCmdMeasurementRange2000[] = {0xFF,0x01,0x99,0x07,0xD0,0x00,0x00,0x00,0x8F};
-// mhzCmdMeasurementRange3000[] = {0xFF,0x01,0x99,0x0B,0xB8,0x00,0x00,0x00,0xA3};
-// mhzCmdMeasurementRange5000[] = {0xFF,0x01,0x99,0x13,0x88,0x00,0x00,0x00,0xCB};
-// Removing redundant data, just keeping offsets [2]..[4]:
+/* It seems the offsets [3]..[4] for the detection range setting (command byte 0x99) are wrong in the latest
+ * online data sheet: http://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19b-co2-ver1_0.pdf
+ * According to the MH-Z19B datasheet version 1.2, valid from: 2017.03.22 (received 2018-03-07)
+ * the offset should be [6]..[7] instead.
+ * 0x99 - Detection range setting, send command:
+ * /---------+---------+---------+---------+---------+---------+---------+---------+---------\
+ * | Byte 0  | Byte 1  | Byte 2  | Byte 3  | Byte 4  | Byte 5  | Byte 6  | Byte 7  | Byte 8  |
+ * |---------+---------+---------+---------+---------+---------+---------+---------+---------|
+ * | Start   | Reserved| Command | Reserved|Detection|Detection|Detection|Detection| Checksum|
+ * | Byte    |         |         |         |range    |range    |range    |range    |         |
+ * |         |         |         |         |24~32 bit|16~23 bit|8~15 bit |0~7 bit  |         |
+ * |---------+---------+---------+---------+---------+---------+---------+---------+---------|
+ * | 0xFF    | 0x01    | 0x99    | 0x00    | Data 1  | Data 2  | Data 3  | Data 4  | Checksum|
+ * \---------+---------+---------+---------+---------+---------+---------+---------+---------/
+ * Note: Detection range should be 0~2000, 0~5000, 0~10000 ppm.
+ * For example: set 0~2000 ppm  detection range, send command: FF 01 99 00 00 00 07 D0 8F
+ *              set 0~10000 ppm detection range, send command: FF 01 99 00 00 00 27 10 8F
+ * The latter, updated version above is implemented here.
+ */
+// mhzCmdMeasurementRange1000[] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x03,0xE8,0x7B};
+// mhzCmdMeasurementRange2000[] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x07,0xD0,0x8F};
+// mhzCmdMeasurementRange3000[] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x0B,0xB8,0xA3};
+// mhzCmdMeasurementRange5000[] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x13,0x88,0xCB};
+// Removing redundant data, just keeping offsets [2], [6]..[7]:
 const PROGMEM byte mhzCmdData[][3] = {
   {0x86,0x00,0x00},
   {0x87,0x00,0x00},
   {0x79,0xA0,0x00},
   {0x79,0x00,0x00},
   {0x8d,0x00,0x00},
+#ifdef ENABLE_DETECTION_RANGE_COMMANDS
   {0x99,0x03,0xE8},
   {0x99,0x07,0xD0},
   {0x99,0x0B,0xB8},
-  {0x99,0x13,0x88}};
+  {0x99,0x13,0x88}
+#endif
+  };
 
 byte mhzResp[9];    // 9 byte response buffer
 
@@ -163,7 +203,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
-        addFormSelector(string, F("Auto Base Calibration"), F("plugin_049_abcdisable"), 2, options, optionValues, choice);
+        addFormSelector(F("Auto Base Calibration"), F("plugin_049_abcdisable"), 2, options, optionValues, choice);
         byte choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String filteroptions[5] = { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
@@ -172,7 +212,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           PLUGIN_049_FILTER_FAST,
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
-        addFormSelector(string, F("Filter"), F("plugin_049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
+        addFormSelector(F("Filter"), F("plugin_049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
 
         success = true;
         break;
@@ -246,6 +286,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           success = true;
         }
 
+#ifdef ENABLE_DETECTION_RANGE_COMMANDS
         if (command == F("mhzmeasurementrange1000"))
         {
           _P049_send_mhzCmd(mhzCmdMeasurementRange1000);
@@ -273,6 +314,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
           success = true;
         }
+#endif
         break;
 
       }
@@ -413,6 +455,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO, log);
               break;
 
+//#ifdef ENABLE_DETECTION_RANGE_COMMANDS
           // Sensor responds with 0x99 whenever we send it a measurement range adjustment
           } else if (mhzResp[0] == 0xFF && mhzResp[1] == 0x99 && mhzResp[8] == checksum)  {
 
@@ -420,6 +463,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
             success = false;
             break;
+//#endif
 
           // log verbosely anything else that the sensor reports
           } else {
@@ -457,7 +501,8 @@ size_t _P049_send_mhzCmd(byte CommandId)
   mhzResp[0] = 0xFF; // Start byte, fixed
   mhzResp[1] = 0x01; // Sensor number, 0x01 by default
   memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
-  mhzResp[5] = mhzResp[6] = mhzResp[7] = 0x00;
+  mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
+  mhzResp[3] = mhzResp[4] = mhzResp[5] = 0x00;
   mhzResp[8] = _P049_calculateChecksum(mhzResp);
 
   return Plugin_049_SoftSerial->write(mhzResp, sizeof(mhzResp));
