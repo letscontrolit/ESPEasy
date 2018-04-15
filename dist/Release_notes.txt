@@ -1,4 +1,37 @@
 -------------------------------------------------
+Changes in release mega-20180415 (since mega-20180414)
+-------------------------------------------------
+
+Release date: Sun Apr 15 04:00:08 CEST 2018
+
+Gijs Noorlander (1):
+      Added C013
+
+Grovkillen (6):
+      Made checkmarks CSS
+      Fixed missed update.
+      Added column width for separator...
+      Updated some more stuff
+      Made addFormSeparator function a lot cleaner
+      Bumped delay timer for MQTT pub 10mSec
+
+Nuno Sousa (1):
+      Replace ultrasonic plugin with NewPing lib
+
+Susis Strolch (4):
+      add missing USES_XXX to _C*.ino, _N*.ino
+      system variables %sysheap%, %syssec_d
+      ignore power-on reset value (85.0 °C)
+      DS_readTemp: handle power-on reset value
+
+TD-er (4):
+      [WebServer] Cleanup of all functions appending to a big string
+      [PR #1247 ]  Merged PR into the refactoring of Webserver
+      [PR #1248] Fixed textarea sizes
+      [Merge] Easier to merge, rebased on Mega branch.
+
+
+-------------------------------------------------
 Changes in release mega-20180414 (since mega-20180413)
 -------------------------------------------------
 
