@@ -96,7 +96,8 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 void setup()
 {
-
+  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  WiFi.setAutoReconnect(false);
 
   checkRAM(F("setup"));
   #if defined(ESP32)
@@ -111,6 +112,7 @@ void setup()
 
   initLog();
 
+  resetWiFi();
 #if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
 #else
@@ -168,15 +170,11 @@ void setup()
   saveToRTC();
 
   addLog(LOG_LEVEL_INFO, log);
-  WiFi.setAutoReconnect(false);
 
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
   checkRuleSets();
-  if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
-  }
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
@@ -239,7 +237,9 @@ void setup()
     rulesProcessing(event);
   }
 
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  if (!selectValidWiFiSettings()) {
+    wifiSetup = true;
+  }
 /*
   // FIXME TD-er:
   // Async scanning for wifi doesn't work yet like it should.
