@@ -135,6 +135,11 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
+  #if defined(ESP8266)
+     log += F(" (core ");
+     log += ESP.getCoreVersion();
+     log += F(")");
+  #endif
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -231,6 +236,24 @@ void setup()
   PluginInit();
   CPluginInit();
   NPluginInit();
+  log = F("INFO : Plugins: ");
+  log += deviceCount + 1;
+ #ifdef PLUGIN_BUILD_NORMAL
+    log += F(" [Normal]");
+ #endif
+ #ifdef PLUGIN_BUILD_TESTING
+    log += F(" [Testing]");
+ #endif
+ #ifdef PLUGIN_BUILD_DEV
+    log += F(" [Development]");
+ #endif
+ #if defined(ESP8266)
+    log += F(" (core ");
+    log += ESP.getCoreVersion();
+    log += F(")");
+ #endif
+  addLog(LOG_LEVEL_INFO, log);
+
   if (Settings.UseRules)
   {
     String event = F("System#Wake");
