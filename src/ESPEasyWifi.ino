@@ -26,12 +26,18 @@ void processConnect() {
   if (useStaticIP())
   {
     const IPAddress ip = Settings.IP;
-    log = F("IP   : Static IP :");
-    log += ip;
-    addLog(LOG_LEVEL_INFO, log);
     const IPAddress gw = Settings.Gateway;
     const IPAddress subnet = Settings.Subnet;
     const IPAddress dns = Settings.DNS;
+    log = F("IP   : Static IP : ");
+    log += formatIP(ip);
+    log += F(" GW: ");
+    log += formatIP(gw);
+    log += F(" SN: ");
+    log += formatIP(subnet);
+    log += F(" DNS: ");
+    log += formatIP(dns);
+    addLog(LOG_LEVEL_INFO, log);
     WiFi.config(ip, gw, subnet, dns);
   }
   if (Settings.UseRules && bssid_changed) {
