@@ -71,33 +71,33 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("3C"), F("3D") };*/
         int optionValues[2] = { 0x3C, 0x3D };
-        addFormSelectorI2C(string, F("plugin_023_adr"), 2, optionValues, choice);
+        addFormSelectorI2C(F("plugin_023_adr"), 2, optionValues, choice);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[2] = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
-        addFormSelector(string, F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
+        addFormSelector(F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
         String options3[3] = { F("128x64"), F("128x32"), F("64x48") };
         int optionValues3[3] = { 1, 3, 2 };
-        addFormSelector(string, F("Display Size"), F("plugin_023_size"), 3, options3, optionValues3, choice3);
+        addFormSelector(F("Display Size"), F("plugin_023_size"), 3, options3, optionValues3, choice3);
 
         byte choice4 = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
         String options4[2] = { F("Normal"), F("Optimized") };
         int optionValues4[2] = { 1, 2 };
-        addFormSelector(string, F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
+        addFormSelector(F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
 
         char deviceTemplate[8][64];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-        	addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
+        	addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
-        addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-        addFormNumericBox(string, F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;

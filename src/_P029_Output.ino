@@ -50,10 +50,10 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
             if (Settings.Protocol[i] == 2) { controllerNr = i; }
           }
 
-        string += F("<TR><TD>IDX:<TD>");
+        addHtml(F("<TR><TD>IDX:<TD>"));
         String id = F("TDID");   //="taskdeviceid"
         id += controllerNr + 1;
-        addNumericBox(string, id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);
+        addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);
         success = true;
         break;
       }

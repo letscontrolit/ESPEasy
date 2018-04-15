@@ -71,9 +71,9 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         byte addr = CONFIG(0);
 
         int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
-        addFormSelectorI2C(string, F("i2c_addr"), 4, optionValues, addr);
+        addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
 
-        addFormCheckBox(string, F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
 
         success = true;
         break;

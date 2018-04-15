@@ -52,7 +52,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         options[7] = F("IP 3.Octet");
         options[8] = F("IP 4.Octet");
         options[9] = F("Web activity");
-        addFormSelector(string, F("Indicator"), F("plugin_026"), 10, options, NULL, choice);
+        addFormSelector(F("Indicator"), F("plugin_026"), 10, options, NULL, choice);
 
         success = true;
         break;

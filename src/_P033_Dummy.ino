@@ -71,7 +71,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         optionValues[9] = SENSOR_TYPE_LONG;
         optionValues[10] = SENSOR_TYPE_WIND;
 
-        addFormSelector(string, F("Simulate Data Type"), F("plugin_033_sensortype"), 11, options, optionValues, choice );
+        addFormSelector(F("Simulate Data Type"), F("plugin_033_sensortype"), 11, options, optionValues, choice );
 
         success = true;
         break;
