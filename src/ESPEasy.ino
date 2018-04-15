@@ -111,8 +111,8 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
+  setWifiMode(WIFI_STA);
 
-  resetWiFi();
 #if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
 #else
