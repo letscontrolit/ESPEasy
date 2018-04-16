@@ -1124,9 +1124,9 @@ void handle_config() {
 
   addFormNumericBox( F("Sleep awake time"), F("deepsleep"), Settings.deepSleep, 0, 255);
   addUnit(F("sec"));
+  addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
-  addHelpButton(F("SleepMode"));
   addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   addUnit(F("sec"));
 
