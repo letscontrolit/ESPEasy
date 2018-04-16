@@ -45,7 +45,6 @@
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_057
 #define PLUGIN_ID_057         57
@@ -324,5 +323,4 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P057

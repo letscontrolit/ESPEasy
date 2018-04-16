@@ -9,7 +9,6 @@
 // together with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #include <ESPeasySoftwareSerial.h>
 
@@ -301,5 +300,4 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-#endif // PLUGIN_BUILD_TESTING
 #endif // USES_P053

@@ -2,7 +2,6 @@
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
-#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRsend *Plugin_035_irSender;
@@ -233,5 +232,4 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P035
