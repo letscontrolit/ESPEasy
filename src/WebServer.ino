@@ -5081,9 +5081,9 @@ String URLEncode(const char* msg)
 
 String getControllerSymbol(byte index)
 {
-  String ret = F("&#");
+  String ret = F("<p style='font-size:20px'>&#");
   ret += 10102 + index;
-  ret += F(";");
+  ret += F(";</p>");
   return ret;
 }
 
