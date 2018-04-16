@@ -3568,22 +3568,24 @@ void handle_json()
           reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
           reply += F(",\n");
           reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
-          if (Device[DeviceIndex].ValueCount != 0)
+          if (Device[DeviceIndex].ValueCount != 0) {
             reply += F(",\n");
             reply += F("\"TaskValues\": [\n");
 
-          for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
-          {
-            reply += F("{");
-            reply += to_json_object_value(F("ValueNumber"), String(x + 1));
-            reply += F(",\n");
-            reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-            reply += F(",\n");
-            reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-            if (x < (Device[DeviceIndex].ValueCount - 1))
-              reply += F("},\n");
+            for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+            {
+              reply += F("{");
+              reply += to_json_object_value(F("ValueNumber"), String(x + 1));
+              reply += F(",\n");
+              reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+              reply += F(",\n");
+              reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+              if (x < (Device[DeviceIndex].ValueCount - 1))
+                reply += F("},\n");
+            }
+            reply += F("}]\n");
           }
-          reply += F("}]\n}");
+          reply += F("}");
           if (TaskIndex != lastActiveTaskIndex)
             reply += F(",");
           reply += F("\n");
