@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180416 (since mega-20180415)
+-------------------------------------------------
+
+Release date: Mon Apr 16 04:00:09 CEST 2018
+
+TD-er (4):
+      [wifi] Prevent starting AP+STA mode with correct settings
+      [Wifi] force STA mode at boot
+      [wifi] Proper log of static IP configuration
+      [info] Added FW information to help diagnose issues
+
+
+-------------------------------------------------
 Changes in release mega-20180415 (since mega-20180414)
 -------------------------------------------------
 
