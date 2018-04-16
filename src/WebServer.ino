@@ -394,6 +394,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".button:hover {background: #369; }"
     // inputs
     "input.wide {width:80%;}"
+    "input.widenumber {width:100px;}"
     // select
     "#selectwidth {width:80%;}"
     // custom checkboxes
@@ -2760,7 +2761,7 @@ void addFormCheckBox(const String& label, const String& id, boolean checked)
 //********************************************************************************
 void addNumericBox(const String& id, int value, int min, int max)
 {
-  TXBuffer += F("<input type='number' name='");
+  TXBuffer += F("<input class='widenumber' type='number' name='");
   TXBuffer += id;
   TXBuffer += F("'");
   if (min != INT_MIN)
