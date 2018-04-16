@@ -10,7 +10,6 @@
 //########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_068
 #define PLUGIN_ID_068         68
@@ -178,5 +177,4 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 	return success;
 }
 
-#endif
 #endif // USES_P068

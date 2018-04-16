@@ -9,7 +9,6 @@
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
 //
-#ifdef PLUGIN_BUILD_DEV
 
 #include "Adafruit_TCS34725.h"
 
@@ -176,5 +175,4 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 }
 
 
-#endif
 #endif // USES_P050

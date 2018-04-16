@@ -15,7 +15,6 @@
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
 
-#ifdef PLUGIN_BUILD_DEV
 
 #define PLUGIN_064
 #define PLUGIN_ID_064         64
@@ -215,5 +214,4 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P064

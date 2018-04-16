@@ -23,7 +23,6 @@
 //  - "7db,<0-15> -- set brightness to specific value between 0 and 15
 //
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_073
 #define PLUGIN_ID_073        73
@@ -786,5 +785,4 @@ void max7219_ShowBuffer(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
     max7219_SetDigit(din_pin, clk_pin, cs_pin, i, p073_showbuffer[7-i], dotflags[7-i]);
 }
 
-#endif
 #endif // USES_P073

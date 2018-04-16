@@ -2645,7 +2645,7 @@ void checkRAM( String &a ) {
 }
 
 
-#ifdef PLUGIN_BUILD_TESTING
+//#ifdef PLUGIN_BUILD_TESTING
 
 #define isdigit(n) (n >= '0' && n <= '9')
 
@@ -2819,7 +2819,7 @@ void play_rtttl(uint8_t _pin, const char *p )
  checkRAM(F("play_rtttl2"));
 }
 
-#endif
+//#endif
 
 
 #ifdef FEATURE_ARDUINO_OTA

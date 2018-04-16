@@ -55,7 +55,6 @@
 //              Settings.TaskDevicePluginConfigLong[x][0] - Minimal detection threshold counter
 //              Settings.TaskDevicePluginConfigLong[x][1] - Detection threshold window counter
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define MPU6050_RA_GYRO_CONFIG              0x1B
 #define MPU6050_RA_ACCEL_CONFIG             0x1C
@@ -401,5 +400,4 @@ void _P045_writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t
       Wire.endTransmission();
     }
 }
-#endif
 #endif // USES_P045

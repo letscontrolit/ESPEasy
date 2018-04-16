@@ -52,7 +52,6 @@
 // No key - the code 0
 // If more than one key is pressed, the scan code is the code with the lowest value
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_061
 #define PLUGIN_ID_061         61
@@ -373,5 +372,4 @@ byte PCF8574_KeyPadDirectScan(byte addr)
 	return 0;   // no key pressed!
 }
 
-#endif
 #endif // USES_P061
