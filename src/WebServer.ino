@@ -393,9 +393,10 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
     ".button:hover {background: #369; }"
     // inputs
-    "input.wide {width:80%;}"
+    "input.wide {max-width: 500px; width:80%;}"
+    "input.widenumber {max-width: 500px; width:100px;}"
     // select
-    "#selectwidth {width:80%;}"
+    "#selectwidth {max-width: 500px; width:80%;}"
     // custom checkboxes
     ".container {display: block; position: relative; padding-left: 35px; margin-bottom: 12px; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
     // Hide the browser's default checkbox
@@ -413,7 +414,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     // Style the checkmark/indicator
     ".container .checkmark:after {left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
     // text textarea
-    "textarea {border:1px solid #999999; width:80%; margin:5px 0; padding:2px; }"
+    "textarea {border:1px solid #999999; max-width: 1000px; width:80%; margin:5px 0; padding:2px; }"
     // tables
     "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
     "table.normal td {padding: 4px; }"
@@ -1124,9 +1125,9 @@ void handle_config() {
 
   addFormNumericBox( F("Sleep awake time"), F("deepsleep"), Settings.deepSleep, 0, 255);
   addUnit(F("sec"));
+  addHelpButton(F("SleepMode"));
   addFormNote(F("0 = Sleep Disabled, else time awake from sleep"));
 
-  addHelpButton(F("SleepMode"));
   addFormNumericBox( F("Sleep time"), F("delay"), Settings.Delay, 0, 4294);   //limited by hardware to ~1.2h
   addUnit(F("sec"));
 
@@ -1641,7 +1642,9 @@ void handle_hardware() {
     addHtmlError(SaveSettings());
   }
 
-  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH style='width:150px;' align='left'>Hardware Settings<TH><TR><TD>");
+  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH style='width:150px;' align='left'>Hardware Settings<TH align='left'>");
+  addHelpButton(F("ESPEasy#Hardware_page"));
+  TXBuffer += F("<TR><TD>");
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
@@ -1681,7 +1684,6 @@ void handle_hardware() {
 
   TXBuffer += F("<TR><TD><TD>");
   addSubmitButton();
-  addHelpButton(F("ESPEasy#Hardware_page"));
   TXBuffer += F("<TR><TD></table></form>");
 
   sendHeadandTail(F("TmplStd"),_TAIL);
@@ -1950,7 +1952,7 @@ void handle_devices() {
       TXBuffer += F("\">&gt;</a>");
     }
 
-    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:50px;'>Ctr (IDX)<TH style='width:70px;'>GPIO<TH>Values");
+    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:100px;'>Ctr (IDX)<TH style='width:70px;'>GPIO<TH>Values");
 
     String deviceName;
 
@@ -2759,7 +2761,7 @@ void addFormCheckBox(const String& label, const String& id, boolean checked)
 //********************************************************************************
 void addNumericBox(const String& id, int value, int min, int max)
 {
-  TXBuffer += F("<input type='number' name='");
+  TXBuffer += F("<input class='widenumber' type='number' name='");
   TXBuffer += id;
   TXBuffer += F("'");
   if (min != INT_MIN)
@@ -2816,7 +2818,7 @@ void addFormTextBox(const String& label, const String& id, const String&  value,
 void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength)
 {
   addRowLabel(label);
-  TXBuffer += F("<input type='password' name='");
+  TXBuffer += F("<input class='wide' type='password' name='");
   TXBuffer += id;
   TXBuffer += F("' maxlength=");
   TXBuffer += maxlength;
@@ -2866,7 +2868,7 @@ void addEnabled(boolean enabled)
   if (enabled)
     TXBuffer += F("<span class='enabled on'>&#10004;</span>");
   else
-    TXBuffer += F("<span class='enabled off'>&#10008;</span>");
+    TXBuffer += F("<span class='enabled off'>&#10060;</span>");
 }
 
 
@@ -3390,7 +3392,7 @@ void handle_login() {
 
   TXBuffer += F("<form method='post'>");
   TXBuffer += F("<table class='normal'><TR><TD>Password<TD>");
-  TXBuffer += F("<input type='password' name='password' value='");
+  TXBuffer += F("<input class='wide' type='password' name='password' value='");
   TXBuffer += webrequest;
   TXBuffer += F("'><TR><TD><TD>");
   addSubmitButton();
@@ -3779,7 +3781,9 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   addRowLabel(weeklabel);
   addSelector(weekid, 5, week, weekValues, NULL, rule.week, false);
+  TXBuffer += F("<BR>");
   addSelector(dowid, 7, dow, dowValues, NULL, rule.dow, false);
+  TXBuffer += F("<BR>");
   addSelector(monthid, 12, month, monthValues, NULL, rule.month, false);
 
   addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
@@ -4692,9 +4696,8 @@ void handle_rules() {
     optionValues[x] = x + 1;
   }
 
-   TXBuffer += F("<TR><TD>Edit: ");
+   TXBuffer += F("<TR><TD>");
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
-  addButton(fileName, F("Download to file"));
   addHelpButton(F("Tutorial_Rules"));
 
   // load form data from flash
@@ -4730,6 +4733,7 @@ void handle_rules() {
 
    TXBuffer += F("<TR><TD>");
   addSubmitButton();
+  addButton(fileName, F("Download to file"));
    TXBuffer += F("</table></form>");
   sendHeadandTail(F("TmplStd"),true);
   TXBuffer.endStream();
@@ -5080,9 +5084,9 @@ String URLEncode(const char* msg)
 
 String getControllerSymbol(byte index)
 {
-  String ret = F("&#");
+  String ret = F("<p style='font-size:20px'>&#");
   ret += 10102 + index;
-  ret += F(";");
+  ret += F(";</p>");
   return ret;
 }
 
