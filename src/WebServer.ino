@@ -2867,7 +2867,7 @@ void addEnabled(boolean enabled)
   if (enabled)
     TXBuffer += F("<span class='enabled on'>&#10004;</span>");
   else
-    TXBuffer += F("<span class='enabled off'>&#10008;</span>");
+    TXBuffer += F("<span class='enabled off'>&#10060;</span>");
 }
 
 
