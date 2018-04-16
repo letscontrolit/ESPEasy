@@ -1,3 +1,9 @@
+void markGotIP() {
+  lastGetIPmoment = millis();
+  wifiStatus = ESPEASY_WIFI_GOT_IP;
+  processedGetIP = false;
+}
+
 //********************************************************************************
 // Functions called on events.
 // Make sure not to call anything in these functions that result in delay() or yield()
@@ -49,12 +55,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   }
 }
 #else
-
-void markGotIP() {
-  lastGetIPmoment = millis();
-  wifiStatus = ESPEASY_WIFI_GOT_IP;
-  processedGetIP = false;
-}
 
 void onConnected(const WiFiEventStationModeConnected& event){
   lastConnectMoment = millis();
