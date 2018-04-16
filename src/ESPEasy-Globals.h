@@ -1183,6 +1183,7 @@ enum WifiState {
 WifiState currentWifiState = WifiStart;
 
 void setWifiState(WifiState state);
+bool useStaticIP();
 
 // WiFi related data
 boolean wifiSetup = false;
