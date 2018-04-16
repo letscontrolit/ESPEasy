@@ -4692,9 +4692,8 @@ void handle_rules() {
     optionValues[x] = x + 1;
   }
 
-   TXBuffer += F("<TR><TD>Edit: ");
+   TXBuffer += F("<TR><TD>");
   addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
-  addButton(fileName, F("Download to file"));
   addHelpButton(F("Tutorial_Rules"));
 
   // load form data from flash
@@ -4730,6 +4729,7 @@ void handle_rules() {
 
    TXBuffer += F("<TR><TD>");
   addSubmitButton();
+  addButton(fileName, F("Download to file"));
    TXBuffer += F("</table></form>");
   sendHeadandTail(F("TmplStd"),true);
   TXBuffer.endStream();
