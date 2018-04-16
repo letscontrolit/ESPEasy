@@ -2,14 +2,13 @@
 //################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
 //################################### Created on the work of  majklovec       ###########################
 //#######################################################################################################
-
-#ifdef PLUGIN_BUILD_TESTING
+#ifdef USES_P075
 
 #include <ESPeasySoftwareSerial.h>
 
 #define PLUGIN_075
-#define PLUGIN_ID_075 075
-#define PLUGIN_NAME_075 "Display: Nextion"
+#define PLUGIN_ID_075 75
+#define PLUGIN_NAME_075 "Display - Nextion [TESTING]"
 #define PLUGIN_VALUENAME1_075 "code"
 
 unsigned long Plugin_075_code = 0;
@@ -187,17 +186,14 @@ boolean Plugin_075(byte function, struct EventStruct *event, String &string) {
       break;
     }
 
-
     case PLUGIN_WEBFORM_LOAD: {
-
       char deviceTemplate[Nlines][64];
       LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
       for (byte varNr = 0; varNr < Nlines; varNr++)
       {
-        addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_075_template")) + (varNr + 1), deviceTemplate[varNr], 64);
+        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_075_template")) + (varNr + 1), deviceTemplate[varNr], 64);
       }
-
 
       success = true;
       break;
@@ -309,4 +305,4 @@ void sendCommand(const char *cmd) {
   nextion->write(0xff);
 }
 
-#endif // PLUGIN_BUILD_TESTING
+#endif // USES_P075

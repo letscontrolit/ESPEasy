@@ -254,6 +254,10 @@ void setup()
  #endif
   addLog(LOG_LEVEL_INFO, log);
 
+  if (deviceCount + 1 >= PLUGIN_MAX) {
+    addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+  }
+
   if (Settings.UseRules)
   {
     String event = F("System#Wake");
