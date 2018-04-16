@@ -1641,7 +1641,9 @@ void handle_hardware() {
     addHtmlError(SaveSettings());
   }
 
-  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH style='width:150px;' align='left'>Hardware Settings<TH><TR><TD>");
+  TXBuffer += F("<form  method='post'><table class='normal'><TR><TH style='width:150px;' align='left'>Hardware Settings<TH align='left'>");
+  addHelpButton(F("ESPEasy#Hardware_page"));
+  TXBuffer += F("<TR><TD>");
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
@@ -1681,7 +1683,6 @@ void handle_hardware() {
 
   TXBuffer += F("<TR><TD><TD>");
   addSubmitButton();
-  addHelpButton(F("ESPEasy#Hardware_page"));
   TXBuffer += F("<TR><TD></table></form>");
 
   sendHeadandTail(F("TmplStd"),_TAIL);
