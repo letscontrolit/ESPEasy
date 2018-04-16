@@ -1952,7 +1952,7 @@ void handle_devices() {
       TXBuffer += F("\">&gt;</a>");
     }
 
-    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:50px;'>Ctr (IDX)<TH style='width:70px;'>GPIO<TH>Values");
+    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:100px;'>Ctr (IDX)<TH style='width:70px;'>GPIO<TH>Values");
 
     String deviceName;
 
