@@ -2817,7 +2817,7 @@ void addFormTextBox(const String& label, const String& id, const String&  value,
 void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength)
 {
   addRowLabel(label);
-  TXBuffer += F("<input type='password' name='");
+  TXBuffer += F("<input class='wide' type='password' name='");
   TXBuffer += id;
   TXBuffer += F("' maxlength=");
   TXBuffer += maxlength;
@@ -3391,7 +3391,7 @@ void handle_login() {
 
   TXBuffer += F("<form method='post'>");
   TXBuffer += F("<table class='normal'><TR><TD>Password<TD>");
-  TXBuffer += F("<input type='password' name='password' value='");
+  TXBuffer += F("<input class='wide' type='password' name='password' value='");
   TXBuffer += webrequest;
   TXBuffer += F("'><TR><TD><TD>");
   addSubmitButton();
