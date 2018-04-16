@@ -393,10 +393,10 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
     ".button:hover {background: #369; }"
     // inputs
-    "input.wide {width:80%;}"
-    "input.widenumber {width:100px;}"
+    "input.wide {max-width: 500px; width:80%;}"
+    "input.widenumber {max-width: 500px; width:100px;}"
     // select
-    "#selectwidth {width:80%;}"
+    "#selectwidth {max-width: 500px; width:80%;}"
     // custom checkboxes
     ".container {display: block; position: relative; padding-left: 35px; margin-bottom: 12px; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
     // Hide the browser's default checkbox
@@ -414,7 +414,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     // Style the checkmark/indicator
     ".container .checkmark:after {left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
     // text textarea
-    "textarea {border:1px solid #999999; width:80%; margin:5px 0; padding:2px; }"
+    "textarea {border:1px solid #999999; max-width: 1000px; width:80%; margin:5px 0; padding:2px; }"
     // tables
     "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
     "table.normal td {padding: 4px; }"
@@ -1952,7 +1952,7 @@ void handle_devices() {
       TXBuffer += F("\">&gt;</a>");
     }
 
-    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:100px;'>Ctr (IDX)<TH style='width:70px;'>GPIO<TH>Values");
+    TXBuffer += F("<TH style='width:50px;'>Task<TH style='width:100px;'>Enabled<TH>Device<TH>Name<TH>Port<TH style='width:100px;'><TH style='width:70px;'>GPIO<TH>Values");
 
     String deviceName;
 
@@ -3781,7 +3781,9 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   addRowLabel(weeklabel);
   addSelector(weekid, 5, week, weekValues, NULL, rule.week, false);
+  TXBuffer += F("<BR>");
   addSelector(dowid, 7, dow, dowValues, NULL, rule.dow, false);
+  TXBuffer += F("<BR>");
   addSelector(monthid, 12, month, monthValues, NULL, rule.month, false);
 
   addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
