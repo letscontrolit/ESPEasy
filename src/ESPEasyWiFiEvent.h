@@ -1,3 +1,9 @@
+void markGotIP() {
+  lastGetIPmoment = millis();
+  wifiStatus = ESPEASY_WIFI_GOT_IP;
+  processedGetIP = false;
+}
+
 //********************************************************************************
 // Functions called on events.
 // Make sure not to call anything in these functions that result in delay() or yield()
@@ -23,9 +29,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       wifiStatus = ESPEASY_WIFI_DISCONNECTED;
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
-      lastGetIPmoment = millis();
-      wifiStatus = ESPEASY_WIFI_GOT_IP;
-      processedGetIP = false;
+      markGotIP();
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
       for (byte i = 0; i < 6; ++i) {
@@ -65,6 +69,9 @@ void onConnected(const WiFiEventStationModeConnected& event){
       lastBSSID[i] = event.bssid[i];
     }
   }
+  if (useStaticIP()) {
+    markGotIP();
+  }
 }
 
 void onDisconnect(const WiFiEventStationModeDisconnected& event){
@@ -80,9 +87,7 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event){
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event){
-  lastGetIPmoment = millis();
-  wifiStatus = ESPEASY_WIFI_GOT_IP;
-  processedGetIP = false;
+  markGotIP();
 }
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {

@@ -410,6 +410,7 @@ To create/register a plugin, you have to :
     #define USES_P072   // HDC1080
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
+    #define USES_P075   // Nextion
 #endif
 
 

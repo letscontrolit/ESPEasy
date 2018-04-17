@@ -240,9 +240,9 @@
 #define CMD_WIFI_DISCONNECT               135
 
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      72
+  #define DEVICES_MAX                      75
 #else
-  #define DEVICES_MAX                      64
+  #define DEVICES_MAX                      50
 #endif
 
 #if defined(ESP8266)
@@ -902,7 +902,11 @@ struct EventStruct
 };
 
 #define LOG_STRUCT_MESSAGE_SIZE 128
-#define LOG_STRUCT_MESSAGE_LINES 20
+#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+  #define LOG_STRUCT_MESSAGE_LINES 10
+#else
+  #define LOG_STRUCT_MESSAGE_LINES 15
+#endif
 
 struct LogStruct {
     LogStruct() : write_idx(0), read_idx(0) {
@@ -1183,6 +1187,7 @@ enum WifiState {
 WifiState currentWifiState = WifiStart;
 
 void setWifiState(WifiState state);
+bool useStaticIP();
 
 // WiFi related data
 boolean wifiSetup = false;

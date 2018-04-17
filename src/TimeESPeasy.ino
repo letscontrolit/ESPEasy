@@ -202,7 +202,7 @@ unsigned long getNtpTime()
     return 0;
   }
   IPAddress timeServerIP;
-  String log = F("NTP  : NTP send to ");
+  String log = F("NTP  : NTP host ");
   if (Settings.NTPHost[0] != 0) {
     WiFi.hostByName(Settings.NTPHost, timeServerIP);
     log += Settings.NTPHost;
@@ -219,7 +219,13 @@ unsigned long getNtpTime()
     nextSyncTime = sysTime + 5;
   }
 
+  log += F(" (");
+  log += timeServerIP.toString();
+  log += F(")");
+
   if (!hostReachable(timeServerIP)) {
+    log += F(" unreachable");
+    addLog(LOG_LEVEL_INFO, log);
     return 0;
   }
 
@@ -229,9 +235,7 @@ unsigned long getNtpTime()
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
   byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-  log += F(" (");
-  log += timeServerIP.toString();
-  log += F(")");
+  log += F(" queried");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
