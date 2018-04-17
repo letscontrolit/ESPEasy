@@ -10,7 +10,7 @@
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
-void syslog(const char *message)
+void syslog(byte logLevel, const char *message)
 {
   if (Settings.Syslog_IP[0] != 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
@@ -18,10 +18,18 @@ void syslog(const char *message)
     portUDP.beginPacket(broadcastIP, 514);
     char str[256];
     str[0] = 0;
+    byte prio = Settings.SyslogFacility * 8;
+    if ( logLevel == LOG_LEVEL_ERROR )
+      prio += 3;  // syslog error
+    else if ( logLevel == LOG_LEVEL_INFO )
+      prio += 5;  // syslog notice
+    else
+      prio += 7;
+
 	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
 
 	// Using Settings.Name as the Hostname (Hostname must NOT content space)
-    snprintf_P(str, sizeof(str), PSTR("<7>%s EspEasy: %s"), Settings.Name, message);
+    snprintf_P(str, sizeof(str), PSTR("<%u>%s EspEasy: %s"), prio, Settings.Name, message);
 
 	// Using Setting.Unit to build a Hostname
     //snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
