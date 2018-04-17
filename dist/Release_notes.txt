@@ -1,4 +1,34 @@
 -------------------------------------------------
+Changes in release mega-20180417 (since mega-20180416)
+-------------------------------------------------
+
+Release date: Tue Apr 17 04:00:09 CEST 2018
+
+Grovkillen (11):
+      Put borders around checkboxes
+      Re-arranged Rules page
+      Moved help button for sleep
+      Moved help button on hardware page
+      Made controller symbols a bit bigger (1)(2)(3)
+      Change enable "off" to a nicer X
+      Made input type password part of "wide"
+      Added number input to CSS (width 100px)
+      Made IDX column wider (device list)
+      Added max widths for inputs
+      "Ctr (IDX)" was accidentally removed, now added
+
+TD-er (5):
+      [wifi] Fix wifi reconnects with static IP
+      [NTP] Add more information in the log when connecting to NTP server fail
+      [issue #1260] parentheses error on the json page
+      [P075] Nextion plugin (testing)
+      [wifi] Fix build error for ESP32
+
+Unknown (1):
+      [Nextion] Initial support for Nextion displays
+
+
+-------------------------------------------------
 Changes in release mega-20180416 (since mega-20180415)
 -------------------------------------------------
 
