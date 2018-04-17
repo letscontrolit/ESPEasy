@@ -1667,7 +1667,6 @@ void handle_hardware() {
 
   TXBuffer += F("<form  method='post'><table class='normal'><TR><TH style='width:150px;' align='left'>Hardware Settings<TH align='left'>");
   addHelpButton(F("ESPEasy#Hardware_page"));
-  TXBuffer += F("<TR><TD>");
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
