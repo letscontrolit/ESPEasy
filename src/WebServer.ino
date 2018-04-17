@@ -417,6 +417,24 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".container input:checked ~ .checkmark:after {display: block; }"
     // Style the checkmark/indicator
     ".container .checkmark:after {left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
+
+    // custom radio buttons
+    ".container2 {display: block; padding-left: 35px; margin-left: 9px; margin-bottom: 20px; position: relative; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
+    // Hide the browser's default radio button
+    ".container2 input {position: absolute; opacity: 0; cursor: pointer;  }"
+    // Create a custom radio button
+    ".dotmark {position: absolute; top: 0; left: 0; height: 26px;  width: 26px;  background-color: #eee; border-style: solid; border-width: 1px; border-color: gray; border-radius: 50%;}"
+    // On mouse-over, add a grey background color
+    ".container2:hover input ~ .dotmark {background-color: #ccc; }"
+    // When the radio button is checked, add a blue background
+    ".container2 input:checked ~ .dotmark { background-color: #07D;}"
+    // Create the dot/indicator (hidden when not checked)
+    ".dotmark:after {content: ''; position: absolute; display: none; }"
+    // Show the dot when checked
+    ".container2 input:checked ~ .dotmark:after {display: block; }"
+    // Style the dot/indicator
+    ".container2 .dotmark:after {top: 8px; left: 8px; width: 8px; height: 8px;	border-radius: 50%;	background: white; }"
+
     // text textarea
     "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
     "textarea:hover {background-color: #ccc; }"
@@ -429,7 +447,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     "table.multirow th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
     "table.multirow td {padding: 4px; text-align: center;  height: 30px;}"
     "table.multirow tr {padding: 4px; }"
-      "table.multirow tr:nth-child(even){background-color: #cfd6e4; }"
+      "table.multirow tr:nth-child(even){background-color: #DEE6FF; }"
     "table.multirow {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
     // inside a form
     ".note {color: #444; font-style: italic; }"
@@ -982,7 +1000,7 @@ void handle_root() {
       String log = F("     : factory reset...");
       addLog(LOG_LEVEL_INFO, log);
       cmd_within_mainloop = CMD_REBOOT;
-      TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point. PW=configesp, URL=192.168.4.1");
+      TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
       ExecuteCommand(VALUE_SOURCE_HTTP, sCommand.c_str());
     }
@@ -4497,7 +4515,7 @@ void handle_setup() {
     TXBuffer += F("</h1><BR><BR>Connect your laptop / tablet / phone<BR>back to your main Wifi network and<BR><BR>");
     TXBuffer += F("<a class='button' href='http://");
     TXBuffer += host;
-    TXBuffer += F("/config'>Proceed to main config</a>");
+    TXBuffer += F("/config'>Proceed to main config</a><BR><BR>");
 
     sendHeadandTail(F("TmplAP"),true);
     TXBuffer.endStream();
@@ -4534,7 +4552,7 @@ void handle_setup() {
     refreshCount = 0;
   }
 
-  TXBuffer += F("<h1>Wifi Setup wizard</h1><BR>");
+  TXBuffer += F("<BR><h1>Wifi Setup wizard</h1>");
   TXBuffer += F("<form name='frmselect' method='post'>");
 
   if (status == 0)  // first step, scan and show access points within reach...
@@ -4547,31 +4565,34 @@ void handle_setup() {
       TXBuffer += F("No Access Points found");
     else
     {
-      TXBuffer += F("<table class='multirow'><TR><TH>SSID<TH>BSSID<TH>info");
+      TXBuffer += F("<table class='multirow' border=1px frame='box'><TR><TH style='width:50px;'>Pick<TH>Network info");
       for (int i = 0; i < n; ++i)
       {
-        TXBuffer += F("<TR><TD>");
+        TXBuffer += F("<TR><TD><label class='container2'>");
         TXBuffer += F("<input type='radio' name='ssid' value='");
         TXBuffer += WiFi.SSID(i);
         TXBuffer += F("'");
         if (WiFi.SSID(i) == ssid)
           TXBuffer += F(" checked ");
-        TXBuffer += F(">");
-        TXBuffer += formatScanResult(i, "<TD>");
-        TXBuffer += F("</input><br>");
+        TXBuffer += F("><span class='dotmark'></span></label><TD>");
+        TXBuffer += formatScanResult(i, "<BR>");
+        TXBuffer += F("");
       }
       TXBuffer += F("</table>");
     }
 
-    TXBuffer += F("<input type='radio' name='ssid' id='other_ssid' value='other' >other SSID:</input>");
-    TXBuffer += F("<input type ='text' name='other' value='");
+    TXBuffer += F("<BR><label class='container2'>other SSID:<input type='radio' name='ssid' id='other_ssid' value='other' ><span class='dotmark'></span></label>");
+    TXBuffer += F("<input class='wide' type ='text' name='other' value='");
     TXBuffer += other;
-    TXBuffer += F("'><br><br>");
-    TXBuffer += F("Password: <input type ='text' name='pass' value='");
-    TXBuffer += password;
-    TXBuffer += F("'><br>");
+    TXBuffer += F("'><BR><BR>");
 
-    TXBuffer += F("<input type='submit' value='Connect'>");
+    addFormSeparator (2);
+
+    TXBuffer += F("<BR>Password:<BR><input class='wide' type ='text' name='pass' value='");
+    TXBuffer += password;
+    TXBuffer += F("'><BR><BR>");
+
+    addSubmitButton(F("Connect"),F(""));
   }
 
   if (status == 1)  // connecting stage...
@@ -4581,20 +4602,20 @@ void handle_setup() {
       status = 0;
 //      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
 //      SecuritySettings.WifiKey[0] = 0;
-      TXBuffer += F("<a class=\"button\" href=\"setup\">Back to Setup</a>");
+      TXBuffer += F("<a class='button' href='setup'>Back to Setup</a>");
     }
     else
     {
       int wait = 20;
       if (refreshCount != 0)
         wait = 3;
-      TXBuffer += F("Please wait for <h1 id=\"countdown\">20..</h1>");
-      TXBuffer += F("<script type=\"text/JavaScript\">");
+      TXBuffer += F("Please wait for <h1 id='countdown'>20..</h1>");
+      TXBuffer += F("<script type='text/JavaScript'>");
       TXBuffer += F("function timedRefresh(timeoutPeriod) {");
       TXBuffer += F("   var timer = setInterval(function() {");
       TXBuffer += F("   if (timeoutPeriod > 0) {");
       TXBuffer += F("       timeoutPeriod -= 1;");
-      TXBuffer += F("       document.getElementById(\"countdown\").innerHTML = timeoutPeriod + \"..\" + \"<br />\";");
+      TXBuffer += F("       document.getElementById('countdown').innerHTML = timeoutPeriod + '..' + '<br />';");
       TXBuffer += F("   } else {");
       TXBuffer += F("       clearInterval(timer);");
       TXBuffer += F("            window.location.href = window.location.href;");
