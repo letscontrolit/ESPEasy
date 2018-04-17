@@ -390,19 +390,23 @@ static const char pgDefaultCSS[] PROGMEM = {
     // buttons
     ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; border: none;}"
     ".button.link { }"
-    ".button.help {padding: 2px 4px; border: solid 1px #FFF; border-radius: 50%; }"
+    ".button.help {padding: 2px 4px; border-style: solid; border-width: 1px; border-color: gray; border-radius: 50%; }"
     ".button:hover {background: #369; }"
+    // inputs, select, tetarea generall
+    "input, select, textarea {margin: 4px; padding: 4px 8px; border-radius: 4px; background-color: #eee; border-style: solid; border-width: 1px; border-color: gray;}"
     // inputs
-    "input.wide {max-width: 500px; width:80%;}"
-    "input.widenumber {max-width: 500px; width:100px;}"
+    "input:hover {background-color: #ccc; }"
+    "input.wide {max-width: 500px; width:80%; }"
+    "input.widenumber {max-width: 500px; width:100px; }"
     // select
-    "#selectwidth {max-width: 500px; width:80%;}"
+    "#selectwidth {max-width: 500px; width:80%; padding: 4px 8px;}"
+    "select:hover {background-color: #ccc; }"
     // custom checkboxes
-    ".container {display: block; position: relative; padding-left: 35px; margin-bottom: 12px; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
+    ".container {display: block; padding-left: 35px; margin-left: 4px; margin-top: 0px; position: relative; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
     // Hide the browser's default checkbox
     ".container input {position: absolute; opacity: 0; cursor: pointer;  }"
     // Create a custom checkbox
-    ".checkmark {position: absolute; top: 0; left: 0; height: 25px;  width: 25px;  background-color: #eee; border-style: solid; border-width: 1px; border-color: gray; }"
+    ".checkmark {position: absolute; top: 0; left: 0; height: 25px;  width: 25px;  background-color: #eee; border-style: solid; border-width: 1px; border-color: gray;  border-radius: 4px;}"
     // On mouse-over, add a grey background color
     ".container:hover input ~ .checkmark {background-color: #ccc; }"
     // When the checkbox is checked, add a blue background
@@ -414,15 +418,16 @@ static const char pgDefaultCSS[] PROGMEM = {
     // Style the checkmark/indicator
     ".container .checkmark:after {left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
     // text textarea
-    "textarea {border:1px solid #999999; max-width: 1000px; width:80%; margin:5px 0; padding:2px; }"
+    "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
+    "textarea:hover {background-color: #ccc; }"
     // tables
     "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
-    "table.normal td {padding: 4px; }"
+    "table.normal td {padding: 4px; height: 30px;}"
     "table.normal tr {padding: 4px; }"
     "table.normal {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
     //every second row
     "table.multirow th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
-    "table.multirow td {padding: 4px; text-align: center; }"
+    "table.multirow td {padding: 4px; text-align: center;  height: 30px;}"
     "table.multirow tr {padding: 4px; }"
       "table.multirow tr:nth-child(even){background-color: #cfd6e4; }"
     "table.multirow {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
@@ -2859,7 +2864,7 @@ void addHelpButton(const String& url)
 {
   TXBuffer += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
   TXBuffer += url;
-  TXBuffer += F("' target='_blank'>&#10068;</a>");
+  TXBuffer += F("' target='_blank'>&#10067;</a>");
 }
 
 
@@ -3751,7 +3756,7 @@ void handle_advanced() {
 
   addFormSeparator(2);
 
-  TXBuffer += F("<TR><TD style='width:150px;' align='left'>");
+  TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
   addSubmitButton();
   TXBuffer += F("<input type='hidden' name='edit' value='1'>");
   TXBuffer += F("</table></form>");
