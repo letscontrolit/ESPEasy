@@ -1,3 +1,30 @@
+//********************************************************************************
+// Work-around for setting _useStaticIP
+// See reported issue: https://github.com/esp8266/Arduino/issues/4114
+//********************************************************************************
+#ifdef ESP32
+class WiFi_Access_Static_IP: public WiFiSTAClass {
+  public:
+    void set_use_static_ip(bool enabled) {
+      _useStaticIp = enabled;
+    }
+};
+#else
+class WiFi_Access_Static_IP: public ESP8266WiFiSTAClass {
+  public:
+    void set_use_static_ip(bool enabled) {
+      _useStaticIp = enabled;
+    }
+};
+#endif
+
+
+void setUseStaticIP(bool enabled) {
+  WiFi_Access_Static_IP tmp_wifi;
+  tmp_wifi.set_use_static_ip(enabled);
+}
+
+
 void markGotIP() {
   lastGetIPmoment = millis();
   wifiStatus = ESPEASY_WIFI_GOT_IP;
