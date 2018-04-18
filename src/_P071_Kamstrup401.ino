@@ -10,7 +10,6 @@
 //Device pin 1 = RX
 //Device pin 2 = TX
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #include <ESPeasySoftwareSerial.h>
 #define PLUGIN_071
@@ -270,5 +269,4 @@ bool parity_check(unsigned input) {
       return(0);
 }
 
-#endif
 #endif // USES_P071

@@ -389,7 +389,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
 
         // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
-        #ifdef PLUGIN_BUILD_TESTING
         //play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more info.
         if (command == F("rtttl"))
         {
@@ -423,7 +422,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
-        #endif
 
         break;
       }

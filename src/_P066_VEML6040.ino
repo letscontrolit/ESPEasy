@@ -10,7 +10,6 @@
 // Application Note: www.vishay.com/doc?84331
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_066
 #define PLUGIN_ID_066         66
@@ -234,5 +233,4 @@ float Plugin_066_CalcRelW(float X, float W)
   return X / W;
 }
 
-#endif
 #endif // USES_P066

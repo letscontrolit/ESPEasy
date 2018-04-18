@@ -10,7 +10,6 @@
 // added lux calculation improvement https://github.com/adafruit/Adafruit_TSL2591_Library/issues/14
 // added fix for issue https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_074
 #define PLUGIN_ID_074        74
@@ -263,5 +262,4 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-#endif
 #endif // USES_P074

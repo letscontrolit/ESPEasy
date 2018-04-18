@@ -10,11 +10,10 @@
 //########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_069
 #define PLUGIN_ID_069         69
-#define PLUGIN_NAME_069       "Environment - LM75A [TESTING]"
+#define PLUGIN_NAME_069       "Environment - LM75A"
 #define PLUGIN_VALUENAME1_069 "Temperature"
 
 
@@ -202,5 +201,4 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P069

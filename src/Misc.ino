@@ -2645,7 +2645,7 @@ void checkRAM( String &a ) {
 }
 
 
-#ifdef PLUGIN_BUILD_TESTING
+//#ifdef PLUGIN_BUILD_TESTING
 
 #define isdigit(n) (n >= '0' && n <= '9')
 
@@ -2653,11 +2653,15 @@ void checkRAM( String &a ) {
   Generate a tone of specified frequency on pin
   \*********************************************************************************************/
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
-  analogWriteFreq(frequency);
-  //NOTE: analogwrite reserves IRAM and uninitalized ram.
-  analogWrite(_pin,100);
-  delay(duration);
-  analogWrite(_pin,0);
+  #ifdef ESP32
+    delay(duration);
+  #else
+    analogWriteFreq(frequency);
+    //NOTE: analogwrite reserves IRAM and uninitalized ram.
+    analogWrite(_pin,100);
+    delay(duration);
+    analogWrite(_pin,0);
+  #endif
 }
 
 /********************************************************************************************\
@@ -2819,7 +2823,7 @@ void play_rtttl(uint8_t _pin, const char *p )
  checkRAM(F("play_rtttl2"));
 }
 
-#endif
+//#endif
 
 
 #ifdef FEATURE_ARDUINO_OTA
