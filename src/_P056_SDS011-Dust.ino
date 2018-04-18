@@ -10,7 +10,6 @@
   DevicePin1 - RX on ESP, TX on SDS
 */
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
@@ -204,5 +203,4 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   addLog(LOG_LEVEL_INFO, log);
 }
 
-#endif   //PLUGIN_BUILD_TESTING
 #endif // USES_P056

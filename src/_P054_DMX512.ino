@@ -50,7 +50,6 @@
 
 //#include <*.h>   //no lib needed
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_054
 #define PLUGIN_ID_054         54
@@ -256,5 +255,4 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif   //PLUGIN_BUILD_TESTING
 #endif // USES_P054

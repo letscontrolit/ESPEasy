@@ -27,7 +27,6 @@
 // Datasheet: https://www.dfrobot.com/wiki/index.php/DFPlayer_Mini_SKU:DFR0299
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_065
 #define PLUGIN_ID_065         65
@@ -227,5 +226,4 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   addLog(LOG_LEVEL_DEBUG, log);
 }
 
-#endif
 #endif // USES_P065
