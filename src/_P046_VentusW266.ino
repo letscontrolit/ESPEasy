@@ -77,6 +77,7 @@
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
+#ifdef PLUGIN_BUILD_DISABLED
 
 #define PLUGIN_046_DEBUG            true                        // Shows received frames and crc in log@INFO
 
@@ -497,4 +498,5 @@ void Plugin_046_ISR_SCLK()                                      // Interrupt on 
       }
     }
   }
+#endif // PLUGIN_BUILD_DISABLED 
 #endif // USES_P046
