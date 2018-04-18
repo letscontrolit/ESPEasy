@@ -122,8 +122,11 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
       //Settings.TaskDevicePluginConfig[event->TaskIndex][x] (custom configuration)
 
       //Use any of the following (defined at WebServer.ino):
+      //addFormNote(F("not editable text added here"));
+      To add some html, which cannot be done in the existing functions, add it in the following way:
+      addHtml(F("<TR><TD>Analog Pin:<TD>"));
 
-      //addFormNote(string, F("not editable text added here"));
+      For strings, always use the F() macro, which stores the string in flash, not in memory.
 
       //String dropdown[5] = { F("option1"), F("option2"), F("option3"), F("option4")};
       //addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
