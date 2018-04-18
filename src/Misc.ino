@@ -1147,6 +1147,7 @@ void ResetFactory(void)
 
 	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
 	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
+	Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
 	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
 	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
 	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
@@ -1298,6 +1299,7 @@ void initLog()
   //make sure addLog doesnt do any stuff before initalisation of Settings is complete.
   Settings.UseSerial=true;
   Settings.SyslogLevel=0;
+  Settings.SyslogFacility=0;
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
@@ -1367,7 +1369,7 @@ void addLog(byte logLevel, const char *line)
     Serial.println(line);
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
-    syslog(line);
+    syslog(logLevel, line);
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(line);

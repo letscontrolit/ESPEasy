@@ -3646,6 +3646,7 @@ void handle_advanced() {
   int dstendhour = WebServer.arg(F("dstendhour")).toInt();
   String dst = WebServer.arg(F("dst"));
   String sysloglevel = WebServer.arg(F("sysloglevel"));
+  String syslogfacility = WebServer.arg(F("syslogfacility"));
   String udpport = WebServer.arg(F("udpport"));
   String useserial = WebServer.arg(F("useserial"));
   String serialloglevel = WebServer.arg(F("serialloglevel"));
@@ -3678,6 +3679,7 @@ void handle_advanced() {
     str2ip(syslogip.c_str(), Settings.Syslog_IP);
     Settings.UDPPort = udpport.toInt();
     Settings.SyslogLevel = sysloglevel.toInt();
+    Settings.SyslogFacility = syslogfacility.toInt();
     Settings.UseSerial = (useserial == "on");
     Settings.SerialLogLevel = serialloglevel.toInt();
     Settings.WebLogLevel = webloglevel.toInt();
@@ -3730,6 +3732,7 @@ void handle_advanced() {
 
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
   addFormLogLevelSelect(F("Syslog Level"),      F("sysloglevel"),    Settings.SyslogLevel);
+  addFormLogFacilitySelect(F("Syslog Facility"),F("syslogfacility"), Settings.SyslogFacility);
   addFormLogLevelSelect(F("Serial log Level"),  F("serialloglevel"), Settings.SerialLogLevel);
   addFormLogLevelSelect(F("Web log Level"),     F("webloglevel"),    Settings.WebLogLevel);
 
@@ -3825,6 +3828,19 @@ void addLogLevelSelect(String name, int choice)
   String options[6] = { F("None"), F("Error"), F("Info"), F("Debug"), F("Debug More"), F("Debug dev")};
   int optionValues[6] = { 0 , LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG, LOG_LEVEL_DEBUG_MORE, LOG_LEVEL_DEBUG_DEV};
   addSelector(name, 6, options, optionValues, NULL, choice, false);
+}
+
+void addFormLogFacilitySelect(const String& label, const String& id, int choice)
+{
+  addRowLabel(label);
+  addLogFacilitySelect(id, choice);
+}
+
+void addLogFacilitySelect(String name, int choice)
+{
+  String options[12] = { F("Kernel"), F("User"), F("Daemon"), F("Message"), F("Local0"), F("Local1"), F("Local2"), F("Local3"), F("Local4"), F("Local5"), F("Local6"), F("Local7")};
+  int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+  addSelector(name, 12, options, optionValues, NULL, choice, false);
 }
 
 
