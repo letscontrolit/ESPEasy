@@ -1225,6 +1225,9 @@ bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
 
+bool webserver_state = false;
+bool webserver_init = false;
+
 unsigned long start = 0;
 unsigned long elapsed = 0;
 unsigned long loopCounter = 0;

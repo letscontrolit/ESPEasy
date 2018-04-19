@@ -283,8 +283,6 @@ void setup()
   ReportStatus();
   #endif
 
-  WebServerInit();
-
   #ifdef FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
   #endif

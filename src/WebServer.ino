@@ -549,11 +549,24 @@ void WebServerInit()
     SSDP_begin();
   }
   #endif
-
-  WebServer.begin();
 }
 
-
+void setWebserverRunning(bool state) {
+  if (webserver_state == state)
+    return;
+  if (state) {
+    if (!webserver_init) {
+      WebServerInit();
+      webserver_init = true;      
+    }
+    WebServer.begin();
+    addLog(LOG_LEVEL_INFO, F("Webserver: start"));
+  } else {
+    WebServer.stop();
+    addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
+  }
+  webserver_state = state;
+}
 
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)

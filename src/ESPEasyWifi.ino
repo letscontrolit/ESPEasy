@@ -168,6 +168,7 @@ void processGotIP() {
   statusLED(true);
 //  WiFi.scanDelete();
   wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
+  setWebserverRunning(true);
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
     wifiSetup = false;
@@ -302,6 +303,7 @@ void setWifiState(WifiState state) {
   currentWifiState = state;
   switch (state) {
     case WifiOff:
+      setWebserverRunning(false);
       WifiDisconnect();
       changeWifiMode(WIFI_OFF);
       break;
@@ -311,6 +313,7 @@ void setWifiState(WifiState state) {
     case WifiConnectionFailed:
       addLog(LOG_LEVEL_INFO, F("WIFI : Connection Failed"));
       if (WIFI_AP != WiFi.getMode()) {
+        setWebserverRunning(false);
         changeWifiMode(WIFI_AP);
         wifiSetup = true;
         timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
@@ -319,6 +322,7 @@ void setWifiState(WifiState state) {
     case WifiClientConnectAP:
       timerAPoff = 0; // Disable timer to switch AP off.
       changeWifiMode(WIFI_AP);
+      setWebserverRunning(true);
       break;
     case WifiClientDisconnectAP:
       if (WifiIsAP(WiFi.getMode())) {
@@ -334,6 +338,7 @@ void setWifiState(WifiState state) {
         timerAPoff = 0; // Disable timer to switch AP off.
         changeWifiMode(WIFI_AP_STA);
       } else {
+        setWebserverRunning(false);
         changeWifiMode(WIFI_STA);
       }
       if (prepareWiFi()) {
@@ -781,35 +786,39 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 
 
 String getLastDisconnectReason() {
+  String reason = F("(");
+  reason += lastDisconnectReason;
+  reason += F(") ");
   switch (lastDisconnectReason) {
-    case WIFI_DISCONNECT_REASON_UNSPECIFIED:                return F("Unspecified");
-    case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                return F("Auth expire");
-    case WIFI_DISCONNECT_REASON_AUTH_LEAVE:                 return F("Auth leave");
-    case WIFI_DISCONNECT_REASON_ASSOC_EXPIRE:               return F("Assoc expire");
-    case WIFI_DISCONNECT_REASON_ASSOC_TOOMANY:              return F("Assoc toomany");
-    case WIFI_DISCONNECT_REASON_NOT_AUTHED:                 return F("Not authed");
-    case WIFI_DISCONNECT_REASON_NOT_ASSOCED:                return F("Not assoced");
-    case WIFI_DISCONNECT_REASON_ASSOC_LEAVE:                return F("Assoc leave");
-    case WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED:           return F("Assoc not authed");
-    case WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD:        return F("Disassoc pwrcap bad");
-    case WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD:       return F("Disassoc supchan bad");
-    case WIFI_DISCONNECT_REASON_IE_INVALID:                 return F("IE invalid");
-    case WIFI_DISCONNECT_REASON_MIC_FAILURE:                return F("Mic failure");
-    case WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT:     return F("4way handshake timeout");
-    case WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT:   return F("Group key update timeout");
-    case WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS:         return F("IE in 4way differs");
-    case WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID:       return F("Group cipher invalid");
-    case WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID:    return F("Pairwise cipher invalid");
-    case WIFI_DISCONNECT_REASON_AKMP_INVALID:               return F("AKMP invalid");
-    case WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION:      return F("Unsupp RSN IE version");
-    case WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP:         return F("Invalid RSN IE cap");
-    case WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED:         return F("802 1X auth failed");
-    case WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED:      return F("Cipher suite rejected");
-    case WIFI_DISCONNECT_REASON_BEACON_TIMEOUT:             return F("Beacon timeout");
-    case WIFI_DISCONNECT_REASON_NO_AP_FOUND:                return F("No AP found");
-    case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  return F("Auth fail");
-    case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 return F("Assoc fail");
-    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          return F("Handshake timeout");
+    case WIFI_DISCONNECT_REASON_UNSPECIFIED:                reason += F("Unspecified");              break;
+    case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                reason += F("Auth expire");              break;
+    case WIFI_DISCONNECT_REASON_AUTH_LEAVE:                 reason += F("Auth leave");               break;
+    case WIFI_DISCONNECT_REASON_ASSOC_EXPIRE:               reason += F("Assoc expire");             break;
+    case WIFI_DISCONNECT_REASON_ASSOC_TOOMANY:              reason += F("Assoc toomany");            break;
+    case WIFI_DISCONNECT_REASON_NOT_AUTHED:                 reason += F("Not authed");               break;
+    case WIFI_DISCONNECT_REASON_NOT_ASSOCED:                reason += F("Not assoced");              break;
+    case WIFI_DISCONNECT_REASON_ASSOC_LEAVE:                reason += F("Assoc leave");              break;
+    case WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED:           reason += F("Assoc not authed");         break;
+    case WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD:        reason += F("Disassoc pwrcap bad");      break;
+    case WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD:       reason += F("Disassoc supchan bad");     break;
+    case WIFI_DISCONNECT_REASON_IE_INVALID:                 reason += F("IE invalid");               break;
+    case WIFI_DISCONNECT_REASON_MIC_FAILURE:                reason += F("Mic failure");              break;
+    case WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT:     reason += F("4way handshake timeout");   break;
+    case WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT:   reason += F("Group key update timeout"); break;
+    case WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS:         reason += F("IE in 4way differs");       break;
+    case WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID:       reason += F("Group cipher invalid");     break;
+    case WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID:    reason += F("Pairwise cipher invalid");  break;
+    case WIFI_DISCONNECT_REASON_AKMP_INVALID:               reason += F("AKMP invalid");             break;
+    case WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION:      reason += F("Unsupp RSN IE version");    break;
+    case WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP:         reason += F("Invalid RSN IE cap");       break;
+    case WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED:         reason += F("802 1X auth failed");       break;
+    case WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED:      reason += F("Cipher suite rejected");    break;
+    case WIFI_DISCONNECT_REASON_BEACON_TIMEOUT:             reason += F("Beacon timeout");           break;
+    case WIFI_DISCONNECT_REASON_NO_AP_FOUND:                reason += F("No AP found");              break;
+    case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  reason += F("Auth fail");                break;
+    case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 reason += F("Assoc fail");               break;
+    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          reason += F("Handshake timeout");        break;
+    default:  reason += F("Unknown"); 	  break;
   }
-  return F("Unknown");
+  return reason;
 }
