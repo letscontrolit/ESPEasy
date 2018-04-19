@@ -39,6 +39,7 @@ void processConnect() {
     log += formatIP(dns);
     addLog(LOG_LEVEL_INFO, log);
     WiFi.config(ip, gw, subnet, dns);
+    markGotIP();
   }
   if (Settings.UseRules && bssid_changed) {
     String event = F("WiFi#ChangedAccesspoint");
@@ -338,7 +339,6 @@ void setWifiState(WifiState state) {
         timerAPoff = 0; // Disable timer to switch AP off.
         changeWifiMode(WIFI_AP_STA);
       } else {
-        setWebserverRunning(false);
         changeWifiMode(WIFI_STA);
       }
       if (prepareWiFi()) {
@@ -611,10 +611,12 @@ bool tryConnectWiFi() {
   }
   if (!wifiConnectTimeoutReached())
     return true;    // timeout not reached yet, thus no need to retry again.
+  setWebserverRunning(false);
   if (!selectValidWiFiSettings()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : No valid WiFi settings!"));
     return false;
   }
+
   const char* ssid = getLastWiFiSettingsSSID();
   const char* passphrase = getLastWiFiSettingsPassphrase();
   String log = F("WIFI : Connecting ");
