@@ -393,6 +393,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     default:
       break;
   }
+  setUseStaticIP(useStaticIP());
   WiFi.mode(wifimode);
 }
 
