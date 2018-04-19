@@ -180,7 +180,6 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
-  setUseStaticIP(useStaticIP());
   setWifiMode(WIFI_STA);
   checkRuleSets();
 
