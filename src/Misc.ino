@@ -2021,7 +2021,8 @@ String rulesProcessingFile(String fileName, String& event)
   boolean conditional = false;
   boolean condition = false;
   boolean ifBranche = false;
-
+  boolean ifBrancheJustMatch = false;
+    
   byte buf[RULES_BUFFER_SIZE];
   int len = 0;
   while (f.available())
@@ -2118,11 +2119,27 @@ String rulesProcessingFile(String fileName, String& event)
             {
               conditional = true;
               String check = lcAction.substring(split + 3);
-              condition = conditionMatchExtended(check);
+              condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+              if(condition == true)
+              {
+                 ifBrancheJustMatch = true;
+              }
               ifBranche = true;
               isCommand = false;
             }
-
+            
+            if(lcAction.startsWith("elseif "))
+            {
+              String check = lcAction.substring(7);
+              condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+              if(condition == true)
+              {
+                 ifBrancheJustMatch = true;
+              }
+              ifBranche = true;
+              isCommand = false;            
+            }
+            
             if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
             {
               ifBranche = false;
@@ -2133,6 +2150,8 @@ String rulesProcessingFile(String fileName, String& event)
             {
               conditional = false;
               isCommand = false;
+              ifBranche = false;
+              ifBrancheJustMatch = false;
             }
 
             // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
@@ -2174,7 +2193,7 @@ String rulesProcessingFile(String fileName, String& event)
             }
           }
         }
-
+        
         line = "";
       }
     }
@@ -2182,7 +2201,7 @@ String rulesProcessingFile(String fileName, String& event)
 
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
-  return (String());
+  return (F(""));
 }
 
 
