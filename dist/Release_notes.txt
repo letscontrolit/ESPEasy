@@ -1,4 +1,31 @@
 -------------------------------------------------
+Changes in release mega-20180419 (since mega-20180417)
+-------------------------------------------------
+
+Release date: Thu Apr 19 04:00:17 CEST 2018
+
+Grovkillen (3):
+      Updated the input, select, textareas with CSS
+      Added CSS radio buttons to WiFi setup wizard
+      Removed unused row on hardware settings page
+
+Hans-Rune Bue (1):
+      Implemented syslog facilities and levels
+
+TD-er (3):
+      [Static IP] Work-around for set _use_static_ip
+      [PR #1257] Make it compile again
+      [ESP32] Add Generic info plugin
+
+sentinel073 (2):
+      Issue #1211: Plugin template file and hints on writing new plugins
+      Issue #1211: Plugin template file and hints on writing new plugins     Added review comments
+
+stefan (1):
+      Changes for use of plugin sets
+
+
+-------------------------------------------------
 Changes in release mega-20180417 (since mega-20180416)
 -------------------------------------------------
 
