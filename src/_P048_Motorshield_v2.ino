@@ -9,7 +9,6 @@
 // written by https://github.com/krikk
 // Currently DC Motors and Steppers are implemented, Servos are in default firmware!!!
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #include <Adafruit_MotorShield.h>
 
@@ -276,5 +275,4 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 }
 
 
-#endif
 #endif // USES_P048

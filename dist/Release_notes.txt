@@ -1,4 +1,74 @@
 -------------------------------------------------
+Changes in release mega-20180419 (since mega-20180417)
+-------------------------------------------------
+
+Release date: Thu Apr 19 04:00:17 CEST 2018
+
+Grovkillen (3):
+      Updated the input, select, textareas with CSS
+      Added CSS radio buttons to WiFi setup wizard
+      Removed unused row on hardware settings page
+
+Hans-Rune Bue (1):
+      Implemented syslog facilities and levels
+
+TD-er (3):
+      [Static IP] Work-around for set _use_static_ip
+      [PR #1257] Make it compile again
+      [ESP32] Add Generic info plugin
+
+sentinel073 (2):
+      Issue #1211: Plugin template file and hints on writing new plugins
+      Issue #1211: Plugin template file and hints on writing new plugins     Added review comments
+
+stefan (1):
+      Changes for use of plugin sets
+
+
+-------------------------------------------------
+Changes in release mega-20180417 (since mega-20180416)
+-------------------------------------------------
+
+Release date: Tue Apr 17 04:00:09 CEST 2018
+
+Grovkillen (11):
+      Put borders around checkboxes
+      Re-arranged Rules page
+      Moved help button for sleep
+      Moved help button on hardware page
+      Made controller symbols a bit bigger (1)(2)(3)
+      Change enable "off" to a nicer X
+      Made input type password part of "wide"
+      Added number input to CSS (width 100px)
+      Made IDX column wider (device list)
+      Added max widths for inputs
+      "Ctr (IDX)" was accidentally removed, now added
+
+TD-er (5):
+      [wifi] Fix wifi reconnects with static IP
+      [NTP] Add more information in the log when connecting to NTP server fail
+      [issue #1260] parentheses error on the json page
+      [P075] Nextion plugin (testing)
+      [wifi] Fix build error for ESP32
+
+Unknown (1):
+      [Nextion] Initial support for Nextion displays
+
+
+-------------------------------------------------
+Changes in release mega-20180416 (since mega-20180415)
+-------------------------------------------------
+
+Release date: Mon Apr 16 04:00:09 CEST 2018
+
+TD-er (4):
+      [wifi] Prevent starting AP+STA mode with correct settings
+      [Wifi] force STA mode at boot
+      [wifi] Proper log of static IP configuration
+      [info] Added FW information to help diagnose issues
+
+
+-------------------------------------------------
 Changes in release mega-20180415 (since mega-20180414)
 -------------------------------------------------
 

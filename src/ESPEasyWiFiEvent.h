@@ -1,4 +1,37 @@
 //********************************************************************************
+// Work-around for setting _useStaticIP
+// See reported issue: https://github.com/esp8266/Arduino/issues/4114
+//********************************************************************************
+#ifdef ESP32
+class WiFi_Access_Static_IP: public WiFiSTAClass {
+  public:
+    void set_use_static_ip(bool enabled) {
+      _useStaticIp = enabled;
+    }
+};
+#else
+class WiFi_Access_Static_IP: public ESP8266WiFiSTAClass {
+  public:
+    void set_use_static_ip(bool enabled) {
+      _useStaticIp = enabled;
+    }
+};
+#endif
+
+
+void setUseStaticIP(bool enabled) {
+  WiFi_Access_Static_IP tmp_wifi;
+  tmp_wifi.set_use_static_ip(enabled);
+}
+
+
+void markGotIP() {
+  lastGetIPmoment = millis();
+  wifiStatus = ESPEASY_WIFI_GOT_IP;
+  processedGetIP = false;
+}
+
+//********************************************************************************
 // Functions called on events.
 // Make sure not to call anything in these functions that result in delay() or yield()
 //********************************************************************************
@@ -23,9 +56,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       wifiStatus = ESPEASY_WIFI_DISCONNECTED;
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
-      lastGetIPmoment = millis();
-      wifiStatus = ESPEASY_WIFI_GOT_IP;
-      processedGetIP = false;
+      markGotIP();
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
       for (byte i = 0; i < 6; ++i) {
@@ -65,6 +96,9 @@ void onConnected(const WiFiEventStationModeConnected& event){
       lastBSSID[i] = event.bssid[i];
     }
   }
+  if (useStaticIP()) {
+    markGotIP();
+  }
 }
 
 void onDisconnect(const WiFiEventStationModeDisconnected& event){
@@ -80,9 +114,7 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event){
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event){
-  lastGetIPmoment = millis();
-  wifiStatus = ESPEASY_WIFI_GOT_IP;
-  processedGetIP = false;
+  markGotIP();
 }
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {

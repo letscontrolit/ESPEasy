@@ -84,6 +84,8 @@
 #define DEFAULT_USE_SERIAL                      true    // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200  // Serial Port Baud Rate
 
+#define DEFAULT_SYSLOG_FACILITY 	0 	// kern
+
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 
@@ -240,9 +242,9 @@
 #define CMD_WIFI_DISCONNECT               135
 
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      72
+  #define DEVICES_MAX                      75
 #else
-  #define DEVICES_MAX                      64
+  #define DEVICES_MAX                      50
 #endif
 
 #if defined(ESP8266)
@@ -593,7 +595,7 @@ struct SettingsStruct
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
-    DST_Start(0), DST_End(0)
+    DST_Start(0), DST_End(0), SyslogFacility(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -699,6 +701,7 @@ struct SettingsStruct
   uint16_t      DST_End;
   boolean       UseRTOSMultitasking;
   int8_t        Pin_Reset;
+  byte          SyslogFacility;
 
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
@@ -902,7 +905,11 @@ struct EventStruct
 };
 
 #define LOG_STRUCT_MESSAGE_SIZE 128
-#define LOG_STRUCT_MESSAGE_LINES 20
+#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+  #define LOG_STRUCT_MESSAGE_LINES 10
+#else
+  #define LOG_STRUCT_MESSAGE_LINES 15
+#endif
 
 struct LogStruct {
     LogStruct() : write_idx(0), read_idx(0) {
@@ -1183,6 +1190,7 @@ enum WifiState {
 WifiState currentWifiState = WifiStart;
 
 void setWifiState(WifiState state);
+bool useStaticIP();
 
 // WiFi related data
 boolean wifiSetup = false;

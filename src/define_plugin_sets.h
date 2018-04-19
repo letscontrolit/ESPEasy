@@ -143,6 +143,7 @@ To create/register a plugin, you have to :
         #undef ESP8266
     #endif
     #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P026   // SysInfo
     #define USES_P036   // FrameOLED
     // TODO : Add list of compatible plugins for ESP32 board.
 #endif
@@ -410,6 +411,7 @@ To create/register a plugin, you have to :
     #define USES_P072   // HDC1080
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
+    #define USES_P075   // Nextion
 #endif
 
 

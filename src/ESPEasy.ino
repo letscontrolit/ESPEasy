@@ -96,7 +96,9 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 void setup()
 {
-
+  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  WiFi.setAutoReconnect(false);
+  setWifiMode(WIFI_OFF);
 
   checkRAM(F("setup"));
   #if defined(ESP32)
@@ -110,6 +112,7 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
+
 
 #if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
@@ -133,6 +136,11 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
+  #if defined(ESP8266)
+     log += F(" (core ");
+     log += ESP.getCoreVersion();
+     log += F(")");
+  #endif
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -168,15 +176,13 @@ void setup()
   saveToRTC();
 
   addLog(LOG_LEVEL_INFO, log);
-  WiFi.setAutoReconnect(false);
 
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  setUseStaticIP(useStaticIP());
+  setWifiMode(WIFI_STA);
   checkRuleSets();
-  if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
-  }
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
@@ -233,13 +239,37 @@ void setup()
   PluginInit();
   CPluginInit();
   NPluginInit();
+  log = F("INFO : Plugins: ");
+  log += deviceCount + 1;
+ #ifdef PLUGIN_BUILD_NORMAL
+    log += F(" [Normal]");
+ #endif
+ #ifdef PLUGIN_BUILD_TESTING
+    log += F(" [Testing]");
+ #endif
+ #ifdef PLUGIN_BUILD_DEV
+    log += F(" [Development]");
+ #endif
+ #if defined(ESP8266)
+    log += F(" (core ");
+    log += ESP.getCoreVersion();
+    log += F(")");
+ #endif
+  addLog(LOG_LEVEL_INFO, log);
+
+  if (deviceCount + 1 >= PLUGIN_MAX) {
+    addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+  }
+
   if (Settings.UseRules)
   {
     String event = F("System#Wake");
     rulesProcessing(event);
   }
 
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  if (!selectValidWiFiSettings()) {
+    wifiSetup = true;
+  }
 /*
   // FIXME TD-er:
   // Async scanning for wifi doesn't work yet like it should.

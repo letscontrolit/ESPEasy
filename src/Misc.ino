@@ -1147,6 +1147,7 @@ void ResetFactory(void)
 
 	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
 	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
+	Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
 	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
 	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
 	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
@@ -1298,6 +1299,7 @@ void initLog()
   //make sure addLog doesnt do any stuff before initalisation of Settings is complete.
   Settings.UseSerial=true;
   Settings.SyslogLevel=0;
+  Settings.SyslogFacility=0;
   Settings.SerialLogLevel=2; //logging during initialisation
   Settings.WebLogLevel=2;
   Settings.SDLogLevel=0;
@@ -1367,7 +1369,7 @@ void addLog(byte logLevel, const char *line)
     Serial.println(line);
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
-    syslog(line);
+    syslog(logLevel, line);
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(line);
@@ -2643,7 +2645,7 @@ void checkRAM( String &a ) {
 }
 
 
-#ifdef PLUGIN_BUILD_TESTING
+//#ifdef PLUGIN_BUILD_TESTING
 
 #define isdigit(n) (n >= '0' && n <= '9')
 
@@ -2651,11 +2653,15 @@ void checkRAM( String &a ) {
   Generate a tone of specified frequency on pin
   \*********************************************************************************************/
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
-  analogWriteFreq(frequency);
-  //NOTE: analogwrite reserves IRAM and uninitalized ram.
-  analogWrite(_pin,100);
-  delay(duration);
-  analogWrite(_pin,0);
+  #ifdef ESP32
+    delay(duration);
+  #else
+    analogWriteFreq(frequency);
+    //NOTE: analogwrite reserves IRAM and uninitalized ram.
+    analogWrite(_pin,100);
+    delay(duration);
+    analogWrite(_pin,0);
+  #endif
 }
 
 /********************************************************************************************\
@@ -2817,7 +2823,7 @@ void play_rtttl(uint8_t _pin, const char *p )
  checkRAM(F("play_rtttl2"));
 }
 
-#endif
+//#endif
 
 
 #ifdef FEATURE_ARDUINO_OTA

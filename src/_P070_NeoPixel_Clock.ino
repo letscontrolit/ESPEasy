@@ -281,5 +281,5 @@ void timeToStrip(int hours, int minutes, int seconds) {
   }
 }
 
-#endif
+#endif // PLUGIN_BUILD_DISABLED 
 #endif // USES_P070
