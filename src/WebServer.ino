@@ -4623,7 +4623,7 @@ void handle_setup() {
       status = 0;
 //      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
 //      SecuritySettings.WifiKey[0] = 0;
-      TXBuffer += F("<a class='button' href='setup'>Back to Setup</a>");
+      TXBuffer += F("<a class='button' href='setup'>Back to Setup</a><BR><BR>");
     }
     else
     {
