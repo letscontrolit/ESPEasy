@@ -4,7 +4,6 @@
 //#######################################################################################################
 
 
-#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRrecv *irReceiver;
@@ -93,5 +92,4 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P016

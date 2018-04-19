@@ -12,7 +12,6 @@
 // Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_067
 #define PLUGIN_ID_067         67
@@ -289,5 +288,4 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P067

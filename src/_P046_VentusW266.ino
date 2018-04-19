@@ -78,7 +78,6 @@
 
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
 #ifdef PLUGIN_BUILD_DISABLED
-// #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_046_DEBUG            true                        // Shows received frames and crc in log@INFO
 
@@ -499,5 +498,5 @@ void Plugin_046_ISR_SCLK()                                      // Interrupt on 
       }
     }
   }
-#endif
+#endif // PLUGIN_BUILD_DISABLED 
 #endif // USES_P046

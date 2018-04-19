@@ -10,7 +10,6 @@
 // of the above library
 //
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #include <AM2320.h>
 
@@ -102,5 +101,4 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
 }
 
 
-#endif
 #endif // USES_P051

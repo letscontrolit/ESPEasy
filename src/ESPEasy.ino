@@ -98,6 +98,7 @@ void setup()
 {
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
+  setWifiMode(WIFI_OFF);
 
   checkRAM(F("setup"));
   #if defined(ESP32)
@@ -111,7 +112,7 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
-  setWifiMode(WIFI_STA);
+
 
 #if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
@@ -179,6 +180,8 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  setUseStaticIP(useStaticIP());
+  setWifiMode(WIFI_STA);
   checkRuleSets();
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot

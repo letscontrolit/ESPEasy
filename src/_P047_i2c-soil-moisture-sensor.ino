@@ -9,7 +9,6 @@
 // this code is based on version 1.1.2 of the above library
 //
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47
@@ -302,5 +301,4 @@ bool Plugin_047_setAddress(int addr) {
 }
 
 
-#endif
 #endif // USES_P047
