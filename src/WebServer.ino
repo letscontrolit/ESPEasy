@@ -381,6 +381,9 @@ void clearAccessBlock()
 #endif
 
 static const char pgDefaultCSS[] PROGMEM = {
+    // body fade in
+    "body { opacity: 0; }"
+    "body.fadeinbody { opacity: 1;  transition: 0.5s opacity; }"
     //color scheme: #07D #D50 #DB0 #A0D
     "* {font-family: sans-serif; font-size: 12pt; margin: 0px; padding: 0px; box-sizing: border-box; }"
     "h1 {font-size: 16pt; color: #07D; margin: 8px 0; font-weight: bold; }"
@@ -565,7 +568,8 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
-              "<body>"
+              "<body onload='fadein()'>"
+                "<script>function fadein() {document.body.className += ' fadeinbody';}</script>"
               "<header class='apheader'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
               "</header>"
@@ -591,7 +595,8 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
-              "<body>"
+              "<body onload='fadein()'>"
+                "<script>function fadein() {document.body.className += ' fadeinbody';}</script>"
               "<header class='headermenu'>"
               "<h1>ESP Easy Mega: {{name}}</h1>"
               "</header>"
@@ -619,7 +624,8 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{js}}"
         "{{css}}"
       "</head>"
-      "<body class='bodymenu'>"
+      "<body class='bodymenu' onload='fadein()'>"
+        "<script>function fadein() {document.body.className += ' fadeinbody';}</script>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
           "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
