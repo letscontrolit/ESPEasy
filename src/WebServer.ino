@@ -510,7 +510,7 @@ void addHtmlError(String error){
   {
     TXBuffer += F("<script>function toasting() {var x = document.getElementById('toastmessage'); x.innerHTML = '");
     // we can push custom messages here in future releases...
-    TXBuffer += F("Settings saved");
+    TXBuffer += F("Submitted");
     TXBuffer += F("'; x.className = 'show'; setTimeout(function(){x.innerHTML = '';  x.className = x.className.replace('show', ''); }, 2000);} </script>");
   }
 }
@@ -953,7 +953,8 @@ void handle_root() {
       TXBuffer += WifiGetHostname();
       TXBuffer += F(".local</a><TD><TD><TD>");
     #endif
-
+    TXBuffer += F("<TR><TD><TD>");
+    addButton(F("sysinfo"), F("More info"));
 
     TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
     for (byte x = 0; x < UNIT_MAX; x++)
@@ -4890,7 +4891,9 @@ void handle_sysinfo() {
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
 
-   TXBuffer += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
+   TXBuffer += F("<TR><TD colspan=2><H3>Network");
+   addHelpButton(F("Wifi"));
+   TXBuffer += F("</H3></TD></TR>");
 
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
@@ -4984,31 +4987,32 @@ void handle_sysinfo() {
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
-  #if defined(ESP8266)
-     TXBuffer += F(" (core ");
-     TXBuffer += ESP.getCoreVersion();
-     TXBuffer += F(")");
-  #endif
+#if defined(ESP32)
+  TXBuffer += F(" (ESP32 SDK ");
+  TXBuffer += ESP.getSdkVersion();
+#else
+  TXBuffer += F(" (ESP82xx Core ");
+  TXBuffer += ESP.getCoreVersion();
+#endif
+  TXBuffer += F(")<TR><TD>GIT version<TD>");
+  TXBuffer += BUILD_GIT;
 
-   TXBuffer += F("<TR><TD>GIT version<TD>");
-   TXBuffer += BUILD_GIT;
-
-   TXBuffer += F("<TR><TD>Plugins<TD>");
-   TXBuffer += deviceCount + 1;
+  TXBuffer += F("<TR><TD>Plugins<TD>");
+  TXBuffer += deviceCount + 1;
 
   #ifdef PLUGIN_BUILD_NORMAL
-     TXBuffer += F(" [Normal]");
+  TXBuffer += F(" [Normal]");
   #endif
 
   #ifdef PLUGIN_BUILD_TESTING
-     TXBuffer += F(" [Testing]");
+  TXBuffer += F(" [Testing]");
   #endif
 
   #ifdef PLUGIN_BUILD_DEV
-     TXBuffer += F(" [Development]");
+  TXBuffer += F(" [Development]");
   #endif
 
-   TXBuffer += F("<TR><TD>Build Md5<TD>");
+  TXBuffer += F("<TR><TD>Build Md5<TD>");
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
 
    TXBuffer += F("<TR><TD>Md5 check<TD>");

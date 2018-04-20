@@ -112,8 +112,6 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
-
-
 #if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
 #else
@@ -136,11 +134,14 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
-  #if defined(ESP8266)
-     log += F(" (core ");
-     log += ESP.getCoreVersion();
-     log += F(")");
-  #endif
+#if defined(ESP32)
+  log += F(" (ESP32 SDK ");
+  log += ESP.getSdkVersion();
+#else
+  log += F(" (ESP82xx Core ");
+  log += ESP.getCoreVersion();
+#endif
+  log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -249,11 +250,14 @@ void setup()
  #ifdef PLUGIN_BUILD_DEV
     log += F(" [Development]");
  #endif
- #if defined(ESP8266)
-    log += F(" (core ");
-    log += ESP.getCoreVersion();
-    log += F(")");
+ #if defined(ESP32)
+   log += F(" (ESP32 SDK ");
+   log += ESP.getSdkVersion();
+ #else
+   log += F(" (ESP82xx Core ");
+   log += ESP.getCoreVersion();
  #endif
+  log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 
   if (deviceCount + 1 >= PLUGIN_MAX) {

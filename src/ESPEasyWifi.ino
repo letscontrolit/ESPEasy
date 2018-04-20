@@ -23,24 +23,6 @@ void processConnect() {
     log += F(" ms");
   }
   addLog(LOG_LEVEL_INFO, log);
-  if (useStaticIP())
-  {
-    const IPAddress ip = Settings.IP;
-    const IPAddress gw = Settings.Gateway;
-    const IPAddress subnet = Settings.Subnet;
-    const IPAddress dns = Settings.DNS;
-    log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
-    WiFi.config(ip, gw, subnet, dns);
-    markGotIP();
-  }
   if (Settings.UseRules && bssid_changed) {
     String event = F("WiFi#ChangedAccesspoint");
     rulesProcessing(event);
@@ -626,6 +608,24 @@ bool tryConnectWiFi() {
   addLog(LOG_LEVEL_INFO, log);
 
   last_wifi_connect_attempt_moment = millis();
+  if (useStaticIP())
+  {
+    const IPAddress ip = Settings.IP;
+    const IPAddress gw = Settings.Gateway;
+    const IPAddress subnet = Settings.Subnet;
+    const IPAddress dns = Settings.DNS;
+    log = F("IP   : Static IP : ");
+    log += formatIP(ip);
+    log += F(" GW: ");
+    log += formatIP(gw);
+    log += F(" SN: ");
+    log += formatIP(subnet);
+    log += F(" DNS: ");
+    log += formatIP(dns);
+    addLog(LOG_LEVEL_INFO, log);
+    WiFi.config(ip, gw, subnet, dns);
+    markGotIP();
+  }
   switch (wifi_connect_attempt) {
     case 0:
       if (lastBSSID[0] == 0)
