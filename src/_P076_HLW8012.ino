@@ -13,9 +13,8 @@
 // HLW8012 IC works with 5VDC (it seems at 3.3V is not stable in reading)
 //
 
-
 #include <HLW8012.h>
-HLW8012 *Plugin_076_hlw;
+HLW8012 *Plugin_076_hlw = NULL;
 
 #define PLUGIN_076
 #define PLUGIN_ID_076        76
@@ -120,7 +119,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String& string)
       }
 
     case PLUGIN_READ:
-      {
+      if (Plugin_076_hlw) {
         Plugin_076_hlw->setMode(MODE_CURRENT); delay(HLW_DELAYREADING); double       hcurrent  = Plugin_076_hlw->getCurrent();
         Plugin_076_hlw->setMode(MODE_VOLTAGE); delay(HLW_DELAYREADING); unsigned int hvoltage  = Plugin_076_hlw->getVoltage();
         unsigned int hpower    = Plugin_076_hlw->getActivePower();
@@ -139,9 +138,9 @@ boolean Plugin_076(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = hpower;
         UserVar[event->BaseVarIndex + 3] = hpowfact;
         //Plugin_076_hlw->toggleMode();
-        success = true;
-        break;
       }
+      success = true;
+      break;
 
     case PLUGIN_INIT:
       {

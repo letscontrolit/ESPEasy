@@ -73,8 +73,25 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW
+    // Undef first to prevent compiler warnings
+    #undef DEFAULT_PIN_I2C_SDA
+    #undef DEFAULT_PIN_I2C_SCL
+    #undef DEFAULT_PIN_STATUS_LED
+
     #define PLUGIN_SET_ONLY_SWITCH
-    #define USES_P075
+    #define USES_P076
+    #define DEFAULT_PIN_I2C_SDA    4
+    #define DEFAULT_PIN_I2C_SCL    2  // GPIO5 conflicts with HLW8012 Sel output
+    #define DEFAULT_PIN_STATUS_LED 15 // GPIO15 Blue Led (0 = On, 1 = Off)
+#endif
+
+#ifdef PLUGIN_SET_SONOFF_POW_R2
+    // Undef first to prevent compiler warnings
+    #undef DEFAULT_PIN_STATUS_LED
+
+    #define PLUGIN_SET_ONLY_SWITCH
+    // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S20
@@ -144,7 +161,6 @@ To create/register a plugin, you have to :
         #undef ESP8266
     #endif
     #define PLUGIN_SET_ONLY_SWITCH
-    #define USES_P026   // SysInfo
     #define USES_P036   // FrameOLED
     // TODO : Add list of compatible plugins for ESP32 board.
 #endif
@@ -173,6 +189,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P003
         #define USES_P003   // pulse
+    #endif
+    #ifndef USES_P026
+      #define USES_P026   // SysInfo
     #endif
     #ifndef USES_P037
         #define USES_P037   // MQTTImport
