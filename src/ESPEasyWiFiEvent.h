@@ -96,9 +96,6 @@ void onConnected(const WiFiEventStationModeConnected& event){
       lastBSSID[i] = event.bssid[i];
     }
   }
-  if (useStaticIP()) {
-    markGotIP();
-  }
 }
 
 void onDisconnect(const WiFiEventStationModeDisconnected& event){

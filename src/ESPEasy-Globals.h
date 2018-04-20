@@ -905,10 +905,14 @@ struct EventStruct
 };
 
 #define LOG_STRUCT_MESSAGE_SIZE 128
-#if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define LOG_STRUCT_MESSAGE_LINES 10
+#ifdef ESP32
+  #define LOG_STRUCT_MESSAGE_LINES 30
 #else
-  #define LOG_STRUCT_MESSAGE_LINES 15
+  #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+    #define LOG_STRUCT_MESSAGE_LINES 10
+  #else
+    #define LOG_STRUCT_MESSAGE_LINES 15
+  #endif
 #endif
 
 struct LogStruct {
@@ -1224,6 +1228,9 @@ bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
+
+bool webserver_state = false;
+bool webserver_init = false;
 
 unsigned long start = 0;
 unsigned long elapsed = 0;

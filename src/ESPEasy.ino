@@ -180,8 +180,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
-  setUseStaticIP(useStaticIP());
-  setWifiMode(WIFI_STA);
+//  setWifiMode(WIFI_STA);
   checkRuleSets();
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
@@ -283,8 +282,6 @@ void setup()
   #ifdef FEATURE_REPORTING
   ReportStatus();
   #endif
-
-  WebServerInit();
 
   #ifdef FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
