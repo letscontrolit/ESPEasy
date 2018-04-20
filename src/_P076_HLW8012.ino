@@ -1,6 +1,6 @@
-#ifdef USES_P075
+#ifdef USES_P076
 //#######################################################################################################
-//#################### Plugin 075 HLW8012 AC Current and Voltage measurement sensor #####################
+//#################### Plugin 076 HLW8012 AC Current and Voltage measurement sensor #####################
 //#######################################################################################################
 //
 // This plugin is interfacing with HLW8012 IC which is use with some commercial devices:
@@ -15,16 +15,16 @@
 
 
 #include <HLW8012.h>
-HLW8012 *Plugin_075_hlw;
+HLW8012 *Plugin_076_hlw;
 
-#define PLUGIN_075
-#define PLUGIN_ID_075        075
-#define PLUGIN_075_DEBUG     true    //activate extra log info in the debug
-#define PLUGIN_NAME_075       "Energy (AC) - HLW8012 [TESTING]"
-#define PLUGIN_VALUENAME1_075 "Voltage (V)"
-#define PLUGIN_VALUENAME2_075 "Current (A)"
-#define PLUGIN_VALUENAME3_075 "Active Power (W)"
-#define PLUGIN_VALUENAME4_075 "Power Factor (%)"
+#define PLUGIN_076
+#define PLUGIN_ID_076        76
+#define PLUGIN_076_DEBUG     true    //activate extra log info in the debug
+#define PLUGIN_NAME_076       "Energy (AC) - HLW8012 [TESTING]"
+#define PLUGIN_VALUENAME1_076 "Voltage (V)"
+#define PLUGIN_VALUENAME2_076 "Current (A)"
+#define PLUGIN_VALUENAME3_076 "Active Power (W)"
+#define PLUGIN_VALUENAME4_076 "Power Factor (%)"
 
 //----------------- HLW8012 Default parameters --------------------------------------------------
 // Set SEL_PIN to HIGH to sample current
@@ -41,7 +41,7 @@ HLW8012 *Plugin_075_hlw;
 
 byte StoredTaskIndex;
 
-boolean Plugin_075(byte function, struct EventStruct *event, String& string)
+boolean Plugin_076(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -49,7 +49,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_075;
+        Device[++deviceCount].Number = PLUGIN_ID_076;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
@@ -65,28 +65,28 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
       {
-        string = F(PLUGIN_NAME_075);
+        string = F(PLUGIN_NAME_076);
         break;
       }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_075));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_075));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_075));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_075));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_076));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_076));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_076));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_076));
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNote(string, F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
-        addFormSubHeader(string, F("Calibration Values"));
+        addFormNote(F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
+        addFormSubHeader(F("Calibration Values"));
         double hlwMultipliers[3];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
-        addFormTextBox(string, F("Current Multiplier"), F("plugin_075_currmult"), String(hlwMultipliers[0], 2), 25);
-        addFormTextBox(string, F("Voltage Multiplier"), F("plugin_075_voltmult"), String(hlwMultipliers[1], 2), 25);
-        addFormTextBox(string, F("Power Multiplier"),   F("plugin_075_powmult"),  String(hlwMultipliers[2], 2), 25);
+        addFormTextBox(F("Current Multiplier"), F("plugin_076_currmult"), String(hlwMultipliers[0], 2), 25);
+        addFormTextBox(F("Voltage Multiplier"), F("plugin_076_voltmult"), String(hlwMultipliers[1], 2), 25);
+        addFormTextBox(F("Power Multiplier"),   F("plugin_076_powmult"),  String(hlwMultipliers[2], 2), 25);
         success = true;
         break;
       }
@@ -95,23 +95,23 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       {
         double hlwMultipliers[3];
         String tmpString, arg1;
-          arg1 = F("plugin_075_currmult"); tmpString = WebServer.arg(arg1);
+          arg1 = F("plugin_076_currmult"); tmpString = WebServer.arg(arg1);
           hlwMultipliers[0] = atof(tmpString.c_str());
-          arg1 = F("plugin_075_voltmult"); tmpString = WebServer.arg(arg1);
+          arg1 = F("plugin_076_voltmult"); tmpString = WebServer.arg(arg1);
           hlwMultipliers[1] = atof(tmpString.c_str());
-          arg1 = F("plugin_075_powmult");  tmpString = WebServer.arg(arg1);
+          arg1 = F("plugin_076_powmult");  tmpString = WebServer.arg(arg1);
           hlwMultipliers[2] = atof(tmpString.c_str());
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
-        if (PLUGIN_075_DEBUG) {
+        if (PLUGIN_076_DEBUG) {
           String log = F("HLW8012: Saved Calibration from Config Page");
           addLog(LOG_LEVEL_INFO, log);
         }
-        if (Plugin_075_hlw) {
-          Plugin_075_hlw->setCurrentMultiplier(hlwMultipliers[0]);
-          Plugin_075_hlw->setVoltageMultiplier(hlwMultipliers[1]);
-          Plugin_075_hlw->setPowerMultiplier(hlwMultipliers[2]);
+        if (Plugin_076_hlw) {
+          Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
+          Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
+          Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
         }
-        if (PLUGIN_075_DEBUG) {
+        if (PLUGIN_076_DEBUG) {
           String log = F("HLW8012: Multipliers Reassigned");
           addLog(LOG_LEVEL_INFO, log);
         }
@@ -121,12 +121,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        Plugin_075_hlw->setMode(MODE_CURRENT); delay(HLW_DELAYREADING); double       hcurrent  = Plugin_075_hlw->getCurrent();
-        Plugin_075_hlw->setMode(MODE_VOLTAGE); delay(HLW_DELAYREADING); unsigned int hvoltage  = Plugin_075_hlw->getVoltage();
-        unsigned int hpower    = Plugin_075_hlw->getActivePower();
-        //unsigned int happpower = Plugin_075_hlw->getApparentPower();
-        unsigned int hpowfact  = (int) (100 * Plugin_075_hlw->getPowerFactor());
-        if (PLUGIN_075_DEBUG) {
+        Plugin_076_hlw->setMode(MODE_CURRENT); delay(HLW_DELAYREADING); double       hcurrent  = Plugin_076_hlw->getCurrent();
+        Plugin_076_hlw->setMode(MODE_VOLTAGE); delay(HLW_DELAYREADING); unsigned int hvoltage  = Plugin_076_hlw->getVoltage();
+        unsigned int hpower    = Plugin_076_hlw->getActivePower();
+        //unsigned int happpower = Plugin_076_hlw->getApparentPower();
+        unsigned int hpowfact  = (int) (100 * Plugin_076_hlw->getPowerFactor());
+        if (PLUGIN_076_DEBUG) {
           String log = F("HLW8012: Read values");
           log += F(" - V="); log += hvoltage;
           log += F(" - A="); log += hcurrent;
@@ -138,33 +138,33 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 1] = hcurrent;
         UserVar[event->BaseVarIndex + 2] = hpower;
         UserVar[event->BaseVarIndex + 3] = hpowfact;
-        //Plugin_075_hlw->toggleMode();
+        //Plugin_076_hlw->toggleMode();
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_075_hlw)
+        if (!Plugin_076_hlw)
         {
-          Plugin_075_hlw = new HLW8012;
+          Plugin_076_hlw = new HLW8012;
           // This initializes the HWL8012 library.
-          Plugin_075_hlw->begin(Settings.TaskDevicePin3[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin1[event->TaskIndex], HLW_CURRENT_MODE, false, 1000000);
-          if (PLUGIN_075_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Init object done"));
-          Plugin_075_hlw->setResistors(HLW_CURRENT_RESISTOR, HLW_VOLTAGE_RESISTOR_UP, HLW_VOLTAGE_RESISTOR_DOWN);
-          if (PLUGIN_075_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Init Basic Resistor Values done"));
+          Plugin_076_hlw->begin(Settings.TaskDevicePin3[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin1[event->TaskIndex], HLW_CURRENT_MODE, false, 1000000);
+          if (PLUGIN_076_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Init object done"));
+          Plugin_076_hlw->setResistors(HLW_CURRENT_RESISTOR, HLW_VOLTAGE_RESISTOR_UP, HLW_VOLTAGE_RESISTOR_DOWN);
+          if (PLUGIN_076_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Init Basic Resistor Values done"));
           // If multipliers are empty load default ones and save all of them as "CustomTaskSettings"
           double hlwMultipliers[3];
           LoadCustomTaskSettings(event->TaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
-            if (hlwMultipliers[0] == 0) { hlwMultipliers[0] = Plugin_075_hlw->getCurrentMultiplier(); }
-            if (hlwMultipliers[1] == 0) { hlwMultipliers[1] = Plugin_075_hlw->getVoltageMultiplier(); }
-            if (hlwMultipliers[2] == 0) { hlwMultipliers[2] = Plugin_075_hlw->getPowerMultiplier();   }
+            if (hlwMultipliers[0] == 0) { hlwMultipliers[0] = Plugin_076_hlw->getCurrentMultiplier(); }
+            if (hlwMultipliers[1] == 0) { hlwMultipliers[1] = Plugin_076_hlw->getVoltageMultiplier(); }
+            if (hlwMultipliers[2] == 0) { hlwMultipliers[2] = Plugin_076_hlw->getPowerMultiplier();   }
           SaveCustomTaskSettings(event->TaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
-          if (PLUGIN_075_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Saved Calibration after INIT"));
-          Plugin_075_hlw->setCurrentMultiplier(hlwMultipliers[0]);
-          Plugin_075_hlw->setVoltageMultiplier(hlwMultipliers[1]);
-          Plugin_075_hlw->setPowerMultiplier(hlwMultipliers[2]);
-          if (PLUGIN_075_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Applied Calibration after INIT"));
+          if (PLUGIN_076_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Saved Calibration after INIT"));
+          Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
+          Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
+          Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
+          if (PLUGIN_076_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Applied Calibration after INIT"));
           StoredTaskIndex = event->TaskIndex; // store task index value in order to use it in the PLUGIN_WRITE routine
         }
         success = true;
@@ -173,7 +173,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        if (Plugin_075_hlw)
+        if (Plugin_076_hlw)
         {
           String tmpString  = string;
           int argIndex = tmpString.indexOf(',');
@@ -182,9 +182,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
           if (tmpString.equalsIgnoreCase(F("hlwreset")))
           {
-            Plugin_075_hlw->resetMultipliers();
-            Plugin075_SaveMultipliers();
-            if (PLUGIN_075_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Reset Multipliers to DEFAULT"));
+            Plugin_076_hlw->resetMultipliers();
+            Plugin076_SaveMultipliers();
+            if (PLUGIN_076_DEBUG) addLog(LOG_LEVEL_INFO, F("HLW8012: Reset Multipliers to DEFAULT"));
             success = true;
           }
 
@@ -209,18 +209,18 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                 CalibAcPwr = tmpStr.substring(comma3+1).toInt();
               }
             }
-            if (PLUGIN_075_DEBUG) {
+            if (PLUGIN_076_DEBUG) {
               String log = F("HLW8012: Calibration to values");
               log += F(" - Expected-V="); log += CalibVolt;
               log += F(" - Expected-A="); log += CalibCurr;
               log += F(" - Expected-W="); log += CalibAcPwr;
               addLog(LOG_LEVEL_INFO, log);
             }
-            if (CalibVolt  != 0) { Plugin_075_hlw->expectedVoltage(CalibVolt); }
-            if (CalibCurr  != 0) { Plugin_075_hlw->expectedCurrent(CalibCurr); }
-            if (CalibAcPwr != 0) { Plugin_075_hlw->expectedActivePower(CalibAcPwr); }
+            if (CalibVolt  != 0) { Plugin_076_hlw->expectedVoltage(CalibVolt); }
+            if (CalibCurr  != 0) { Plugin_076_hlw->expectedCurrent(CalibCurr); }
+            if (CalibAcPwr != 0) { Plugin_076_hlw->expectedActivePower(CalibAcPwr); }
             // if at least one calibration value has been provided then save the new multipliers //
-            if ((CalibVolt + CalibCurr + CalibAcPwr) != 0) { Plugin075_SaveMultipliers(); }
+            if ((CalibVolt + CalibCurr + CalibAcPwr) != 0) { Plugin076_SaveMultipliers(); }
             success = true;
           }
         }
@@ -231,12 +231,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void Plugin075_SaveMultipliers() {
+void Plugin076_SaveMultipliers() {
     double hlwMultipliers[3];
-    hlwMultipliers[0] = Plugin_075_hlw->getCurrentMultiplier();
-    hlwMultipliers[1] = Plugin_075_hlw->getVoltageMultiplier();
-    hlwMultipliers[2] = Plugin_075_hlw->getPowerMultiplier();
+    hlwMultipliers[0] = Plugin_076_hlw->getCurrentMultiplier();
+    hlwMultipliers[1] = Plugin_076_hlw->getVoltageMultiplier();
+    hlwMultipliers[2] = Plugin_076_hlw->getPowerMultiplier();
     SaveCustomTaskSettings(StoredTaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
 }
 
-#endif // USES_P075
+#endif // USES_P076
