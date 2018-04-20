@@ -2115,10 +2115,14 @@ String rulesProcessingFile(String fileName, String& event)
           if (match) // rule matched for one action or a block of actions
           {
             int split = lcAction.indexOf("if "); // check for optional "if" condition
-            if (split != -1)
+            boolean elseif = lcAction.startsWith("elseif ");
+            if (elseif == false && split != -1)
             {
               conditional = true;
               String check = lcAction.substring(split + 3);
+              log = F("[if ");
+              log += check;
+              log += "]=";              
               condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
               if(condition == true)
               {
@@ -2126,24 +2130,34 @@ String rulesProcessingFile(String fileName, String& event)
               }
               ifBranche = true;
               isCommand = false;
+              log += condition ? F("true") : F("false");
+              addLog(LOG_LEVEL_DEBUG, log);
             }
             
-            if(lcAction.startsWith("elseif "))
+            if(elseif)
             {
               String check = lcAction.substring(7);
+              log = F("[elseif ");
+              log += check;
+              log += "]=";			  
               condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
               if(condition == true)
               {
                  ifBrancheJustMatch = true;
               }
               ifBranche = true;
-              isCommand = false;            
+              isCommand = false;  
+              log += condition ? F("true") : F("false");
+              addLog(LOG_LEVEL_DEBUG, log);			  
             }
             
             if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
             {
               ifBranche = false;
               isCommand = false;
+              log = F("else = ");
+              log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
+              addLog(LOG_LEVEL_DEBUG, log);	
             }
 
             if (lcAction == "endif") // conditional block ends here
