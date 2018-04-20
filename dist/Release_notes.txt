@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20180420 (since mega-20180419)
+-------------------------------------------------
+
+Release date: Fri Apr 20 04:00:09 CEST 2018
+
+Grovkillen (3):
+      Added small fade in (0.5s)
+      "bodymenu" was accidentally copied to all body
+      Added extra breaks below "back to setup" button
+
+TD-er (4):
+      [Static IP] Make sure static mode is set correct always
+      [wifi] Restart webserver when connection changes.
+      [log] Make web log 30 lines for ESP32
+      [wifi] Create event 'gotIP' after processing 'connected' event
+
+
+-------------------------------------------------
 Changes in release mega-20180419 (since mega-20180417)
 -------------------------------------------------
 
