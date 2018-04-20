@@ -54,6 +54,13 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
+#define DEFAULT_PIN_I2C_SDA              4
+#define DEFAULT_PIN_I2C_SCL              5
+
+#define DEFAULT_PIN_STATUS_LED           -1
+#define DEFAULT_PIN_STATUS_LED_INVERSED  true
+
+
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
 #if defined(ESP32)
@@ -1109,7 +1116,7 @@ struct rulesTiemerStatus
 {
   unsigned long timestamp;
   unsigned int interval; //interval in millisencond
-  boolean paused; 
+  boolean paused;
 } RulesTimer[RULES_TIMER_MAX];
 
 unsigned long timerSensor[TASKS_MAX];

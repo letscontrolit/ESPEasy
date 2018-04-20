@@ -1108,10 +1108,10 @@ void ResetFactory(void)
   SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
   Settings.Delay           = DEFAULT_DELAY;
-  Settings.Pin_i2c_sda     = 4;
-  Settings.Pin_i2c_scl     = 5;
-  Settings.Pin_status_led  = -1;
-  Settings.Pin_status_led_Inversed  = true;
+  Settings.Pin_i2c_sda     = DEFAULT_PIN_I2C_SDA;
+  Settings.Pin_i2c_scl     = DEFAULT_PIN_I2C_SCL;
+  Settings.Pin_status_led  = DEFAULT_PIN_STATUS_LED;
+  Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
   Settings.Pin_Reset = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
@@ -2022,7 +2022,7 @@ String rulesProcessingFile(String fileName, String& event)
   boolean condition = false;
   boolean ifBranche = false;
   boolean ifBrancheJustMatch = false;
-    
+
   byte buf[RULES_BUFFER_SIZE];
   int len = 0;
   while (f.available())
@@ -2122,7 +2122,7 @@ String rulesProcessingFile(String fileName, String& event)
               String check = lcAction.substring(split + 3);
               log = F("[if ");
               log += check;
-              log += "]=";              
+              log += "]=";
               condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
               if(condition == true)
               {
@@ -2133,31 +2133,31 @@ String rulesProcessingFile(String fileName, String& event)
               log += condition ? F("true") : F("false");
               addLog(LOG_LEVEL_DEBUG, log);
             }
-            
+
             if(elseif)
             {
               String check = lcAction.substring(7);
               log = F("[elseif ");
               log += check;
-              log += "]=";			  
+              log += "]=";
               condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
               if(condition == true)
               {
                  ifBrancheJustMatch = true;
               }
               ifBranche = true;
-              isCommand = false;  
+              isCommand = false;
               log += condition ? F("true") : F("false");
-              addLog(LOG_LEVEL_DEBUG, log);			  
+              addLog(LOG_LEVEL_DEBUG, log);
             }
-            
+
             if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
             {
               ifBranche = false;
               isCommand = false;
               log = F("else = ");
               log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
-              addLog(LOG_LEVEL_DEBUG, log);	
+              addLog(LOG_LEVEL_DEBUG, log);
             }
 
             if (lcAction == "endif") // conditional block ends here
@@ -2207,7 +2207,7 @@ String rulesProcessingFile(String fileName, String& event)
             }
           }
         }
-        
+
         line = "";
       }
     }
