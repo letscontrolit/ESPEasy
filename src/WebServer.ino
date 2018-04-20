@@ -510,7 +510,7 @@ void addHtmlError(String error){
   {
     TXBuffer += F("<script>function toasting() {var x = document.getElementById('toastmessage'); x.innerHTML = '");
     // we can push custom messages here in future releases...
-    TXBuffer += F("Settings saved");
+    TXBuffer += F("Submitted");
     TXBuffer += F("'; x.className = 'show'; setTimeout(function(){x.innerHTML = '';  x.className = x.className.replace('show', ''); }, 2000);} </script>");
   }
 }
