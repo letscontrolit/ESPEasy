@@ -1603,18 +1603,19 @@ String parseTemplate(String &tmpString, byte lineSize)
                             const float valFloat = value.toFloat();
 
                             String tempValueFormat = valueFormat;
+                            const int tempValueFormatLength = tempValueFormat.length();
                             const int invertedIndex = tempValueFormat.indexOf('!');
-                            const int inverted = invertedIndex >= 0 ? 1 : 0;
+                            const bool inverted = invertedIndex >= 0 ? 1 : 0;
                             if (inverted)
                               tempValueFormat.remove(invertedIndex,1);
 
                             const int rightJustifyIndex = tempValueFormat.indexOf('R');
-                            const int rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
+                            const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
                             if (rightJustify)
                               tempValueFormat.remove(rightJustifyIndex,1);
 
                             //Check Transformation syntax
-                            if (tempValueFormat.length() > 0)
+                            if (tempValueFormatLength > 0)
                             {
                               switch (tempValueFormat[0])
                                 {
@@ -1647,37 +1648,28 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 case 'Z' :// return "0" or "1"
                                   value = val == inverted ? "0" : "1";
                                   break;
-                                case '1' :
-                                    value = toString(valFloat,1);
-                                    break;
-                                case '2' :
-                                    value = toString(valFloat,2);
-                                    break;
-                                case '3' :
-                                    value = toString(valFloat,3);
-                                    break;
                                 case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
                                   int x;
                                   int y;
                                   x = 0;
                                   y = 0;
 
-                                  switch (tempValueFormat.length())
+                                  switch (tempValueFormatLength)
                                   {
                                     case 2: //Dx
-                                      if (tempValueFormat[1]>='0' && tempValueFormat[1]<='9')
+                                      if (isDigit(tempValueFormat[1]))
                                       {
                                         x = (int)tempValueFormat[1]-'0';
                                       }
                                       break;
                                     case 3: //D.y
-                                      if (tempValueFormat[1]=='.' && tempValueFormat[2]>='0' && tempValueFormat[2]<='9')
+                                      if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
                                       {
                                         y = (int)tempValueFormat[2]-'0';
                                       }
                                       break;
                                     case 4: //Dx.y
-                                      if (tempValueFormat[1]>='0' && tempValueFormat[1]<='9' && tempValueFormat[2]=='.' && tempValueFormat[3]>='0' && tempValueFormat[3]<='9')
+                                      if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
                                       {
                                         x = (int)tempValueFormat[1]-'0';
                                         y = (int)tempValueFormat[3]-'0';
@@ -1690,7 +1682,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   value = toString(valFloat,y);
                                   int indexDot;
                                   indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
-                                  for (byte f = 0; f < x - indexDot; f++)
+                                  for (byte f = 0; f < (x - indexDot); f++)
                                     value = "0" + value;
                                   break;
                                 case 'F' :// FLOOR (round down)
@@ -1705,14 +1697,15 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 }
 
                                 // Check Justification syntax
-                                if (valueJust.length() > 0) //do the checks only if a Justification is defined to optimize loop
+                                const int valueJustLength = valueJust.length();
+                                if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
                                 {
                                   switch (valueJust[0])
                                   {
                                   case 'P' :// Prefix Fill with n spaces: Pn
-                                    if (valueJust.length() > 1)
+                                    if (valueJustLength > 1)
                                     {
-                                      if (valueJust[1] >= '0' && valueJust[1] <= '9') //Check Pn where n is between 0 and 9
+                                      if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
                                       {
                                         int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
                                         for (byte f = 0; f < filler; f++)
@@ -1721,9 +1714,9 @@ String parseTemplate(String &tmpString, byte lineSize)
                                     }
                                     break;
                                   case 'S' :// Suffix Fill with n spaces: Sn
-                                    if (valueJust.length() > 1)
+                                    if (valueJustLength > 1)
                                     {
-                                      if (valueJust[1] >= '0' && valueJust[1] <= '9') //Check Sn where n is between 0 and 9
+                                      if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
                                       {
                                         int filler = valueJust[1] - value.length() - '0' ; //48
                                         for (byte f = 0; f < filler; f++)
