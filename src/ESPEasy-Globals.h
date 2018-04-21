@@ -54,6 +54,13 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
+#define DEFAULT_PIN_I2C_SDA              4
+#define DEFAULT_PIN_I2C_SCL              5
+
+#define DEFAULT_PIN_STATUS_LED           -1
+#define DEFAULT_PIN_STATUS_LED_INVERSED  true
+
+
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
 #if defined(ESP32)
@@ -529,6 +536,8 @@ enum Command {
   cmd_TaskRun,
   cmd_TaskValueSet,
   cmd_TimerSet,
+  cmd_TimerPause,
+  cmd_TimerResume,
   cmd_udptest,
   cmd_Unit,
   cmd_wdconfig,
@@ -1103,7 +1112,12 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
-unsigned long RulesTimer[RULES_TIMER_MAX];
+struct rulesTiemerStatus
+{
+  unsigned long timestamp;
+  unsigned int interval; //interval in millisencond
+  boolean paused;
+} RulesTimer[RULES_TIMER_MAX];
 
 unsigned long timerSensor[TASKS_MAX];
 unsigned long timer100ms;
