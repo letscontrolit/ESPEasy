@@ -488,6 +488,15 @@ String BuildFixes()
     Serial.println(F("Fix reset Pin"));
     Settings.Pin_Reset = -1;
   }
+  if (Settings.Build < 20102) {
+    // Settings were 'mangled' by using older version
+    // Have to patch settings to make sure no bogus data is being used.
+    Serial.println(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    Settings.UseRTOSMultitasking = false;
+    Settings.Pin_Reset = -1;
+    Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    Settings.StructSize = sizeof(Settings);
+  }
 
   Settings.Build = BUILD;
   return(SaveSettings());
@@ -702,19 +711,25 @@ String SaveSettings(void)
   checkRAM(F("SaveSettings"));
   MD5Builder md5;
   uint8_t tmp_md5[16] = {0};
+  String err;
+
+  Settings.StructSize = sizeof(struct SettingsStruct);
+
+  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
+/*
   memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
   md5.calculate();
   md5.getBytes(tmp_md5);
-  String err;
   if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(Settings.md5, tmp_md5, 16);
-    err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+*/
+    err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(Settings));
     if (err.length())
      return(err);
-  }
+//  }
 
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
@@ -724,7 +739,7 @@ String SaveSettings(void)
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(SecuritySettings.md5, tmp_md5, 16);
-    err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+    err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(SecuritySettings));
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
       wifiSetupConnect = true;
@@ -747,10 +762,14 @@ String LoadSettings()
   if (err.length())
     return(err);
 
-  md5.begin();
-  md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
-  md5.calculate();
-  md5.getBytes(calculatedMd5);
+    // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
+/*
+  if (Settings.StructSize > 16) {
+    md5.begin();
+    md5.add((uint8_t *)&Settings, Settings.StructSize -16);
+    md5.calculate();
+    md5.getBytes(calculatedMd5);
+  }
   if (memcmp (calculatedMd5, Settings.md5,16)==0){
     addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
     if (memcmp(Settings.ProgmemMd5, CRCValues.runTimeMD5, 16)!=0)
@@ -759,7 +778,7 @@ String LoadSettings()
   else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
   }
-
+*/
 
   err=LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof( SecurityStruct));
   md5.begin();
@@ -1622,19 +1641,19 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 case 'V': //value = value without transformations
                                   break;
                                 case 'O':
-                                  value = val == inverted ? "OFF" : "ON"; //(equivalent to XOR operator)
+                                  value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
                                   break;
                                 case 'C':
-                                  value = val == inverted ? "CLOSE" : "OPEN";
+                                  value = val == inverted ? "CLOSE" : " OPEN";
                                   break;
                                 case 'U':
-                                  value = val == inverted ? "DOWN" : "UP";
+                                  value = val == inverted ? "DOWN" : "  UP";
                                   break;
                                 case 'u':
                                   value = val == inverted ? "D" : "U";
                                   break;
                                 case 'Y':
-                                  value = val == inverted ? "NO" : "YES";
+                                  value = val == inverted ? " NO" : "YES";
                                   break;
                                 case 'y':
                                   value = val == inverted ? "N" : "Y";
@@ -1643,7 +1662,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   value = val == inverted ? "O" : "X";
                                   break;
                                 case 'I':
-                                  value = val == inverted ? "OUT" : "IN";
+                                  value = val == inverted ? "OUT" : " IN";
                                   break;
                                 case 'Z' :// return "0" or "1"
                                   value = val == inverted ? "0" : "1";
@@ -1700,6 +1719,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 const int valueJustLength = valueJust.length();
                                 if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
                                 {
+                                  value.trim(); //remove right justification spaces for backward compatibility
                                   switch (valueJust[0])
                                   {
                                   case 'P' :// Prefix Fill with n spaces: Pn

@@ -632,13 +632,21 @@ bool hostReachable(const IPAddress& ip) {
   String log = F("Host unreachable: ");
   log += formatIP(ip);
   addLog(LOG_LEVEL_ERROR, log);
+  if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
+    // Work-around to fix connected but not able to communicate.
+    addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reset wifi."));
+    setWifiState(WifiOff);
+    delay(100);
+    setWifiState(WifiTryConnect);
+  }
   return false;
 }
 
 bool hostReachable(const String& hostname) {
   IPAddress remote_addr;
-  if (WiFi.hostByName(hostname.c_str(), remote_addr))
+  if (WiFi.hostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
+  }
   String log = F("Hostname cannot be resolved: ");
   log += hostname;
   addLog(LOG_LEVEL_ERROR, log);

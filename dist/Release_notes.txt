@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180422 (since mega-20180421)
+-------------------------------------------------
+
+Release date: Sun Apr 22 04:00:09 CEST 2018
+
+Plebs (2):
+      Syntax: [task#value#transformation#justification]
+      Code changed as per TD-er suggestions
+
+TD-er (1):
+      [issue #1292] Remove CRC from settings, init settings and wifi fixes
+
+
+-------------------------------------------------
 Changes in release mega-20180421 (since mega-20180420)
 -------------------------------------------------
 
