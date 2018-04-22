@@ -1641,19 +1641,19 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 case 'V': //value = value without transformations
                                   break;
                                 case 'O':
-                                  value = val == inverted ? "OFF" : "ON"; //(equivalent to XOR operator)
+                                  value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
                                   break;
                                 case 'C':
-                                  value = val == inverted ? "CLOSE" : "OPEN";
+                                  value = val == inverted ? "CLOSE" : " OPEN";
                                   break;
                                 case 'U':
-                                  value = val == inverted ? "DOWN" : "UP";
+                                  value = val == inverted ? "DOWN" : "  UP";
                                   break;
                                 case 'u':
                                   value = val == inverted ? "D" : "U";
                                   break;
                                 case 'Y':
-                                  value = val == inverted ? "NO" : "YES";
+                                  value = val == inverted ? " NO" : "YES";
                                   break;
                                 case 'y':
                                   value = val == inverted ? "N" : "Y";
@@ -1662,7 +1662,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   value = val == inverted ? "O" : "X";
                                   break;
                                 case 'I':
-                                  value = val == inverted ? "OUT" : "IN";
+                                  value = val == inverted ? "OUT" : " IN";
                                   break;
                                 case 'Z' :// return "0" or "1"
                                   value = val == inverted ? "0" : "1";
@@ -1719,6 +1719,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 const int valueJustLength = valueJust.length();
                                 if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
                                 {
+                                  value.trim(); //remove right justification spaces for backward compatibility
                                   switch (valueJust[0])
                                   {
                                   case 'P' :// Prefix Fill with n spaces: Pn
