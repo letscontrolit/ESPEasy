@@ -82,8 +82,10 @@ void processGotIP() {
   if (processedGetIP)
     return;
   processedGetIP = true;
-  if (wifiStatus < ESPEASY_WIFI_GOT_IP)
-    return;
+  // FIXME @TD-er: Disabled this check for now.
+  // It may be a possibility the events are processed out of order
+//  if (wifiStatus < ESPEASY_WIFI_GOT_IP)
+//    return;
   IPAddress ip = WiFi.localIP();
   if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
     return;
