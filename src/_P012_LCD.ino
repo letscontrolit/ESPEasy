@@ -13,6 +13,8 @@
 
 LiquidCrystal_I2C *lcd=NULL;
 bool Plugin_012_ProcessRefresh=0;
+int Plugin_012_cols = 16;
+int Plugin_012_rows = 2;
 
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
@@ -119,6 +121,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_12_timer"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_012_mode"));
 
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2) {
+          Plugin_012_rows = 4;
+          Plugin_012_cols = 20;
+        } else if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 1) {
+          Plugin_012_rows = 2;
+          Plugin_012_cols = 16;
+        }
+
         char deviceTemplate[4][80];
         for (byte varNr = 0; varNr < 4; varNr++)
         {
@@ -131,23 +141,26 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         }
 
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        Plugin_012_ProcessRefresh = 1; //refresh display after save
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        if (!lcd)
-        {
-          byte row = 2;
-          byte col = 16;
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
-          {
-            row = 4;
-            col = 20;
-          }
-          lcd = new LiquidCrystal_I2C(Settings.TaskDevicePluginConfig[event->TaskIndex][0], col, row);
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2) {
+          Plugin_012_rows = 4;
+          Plugin_012_cols = 20;
+        } else if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 1) {
+          Plugin_012_rows = 2;
+          Plugin_012_cols = 16;
         }
+
+        //TODO:LiquidCrystal_I2C class doesn't have destructor. So if LCD type (size) is changed better reboot for changes to take effect.
+        // workaround is to fix the cols and rows at its maximum (20 and 4)
+        if (!lcd)
+          lcd = new LiquidCrystal_I2C(Settings.TaskDevicePluginConfig[event->TaskIndex][0], 20, 4); //Plugin_012_cols, Plugin_012_rows);
+
         // Setup LCD display
         lcd->init();                      // initialize the lcd
         lcd->backlight();
@@ -178,21 +191,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           char deviceTemplate[4][80];
           LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-          byte row = 2;
-          byte col = 16;
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
-          {
-            row = 4;
-            col = 20;
-          }
-
           addLog(LOG_LEVEL_DEBUG,F("P012: DEBUG: Refresh LCD"));
-          for (byte x = 0; x < row; x++)
+          for (byte x = 0; x < Plugin_012_rows; x++)
           {
             String tmpString = deviceTemplate[x];
             if (lcd && tmpString.length())
             {
-              String newString = P012_parseTemplate(tmpString, col);
+              String newString = P012_parseTemplate(tmpString, Plugin_012_cols);
               lcd->setCursor(0, x);
               lcd->print(newString);
               addLog(LOG_LEVEL_DEBUG,newString);
@@ -219,20 +224,12 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[4][80];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        byte row = 2;
-        byte col = 16;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
-        {
-          row = 4;
-          col = 20;
-        }
-
-        for (byte x = 0; x < row; x++)
+        for (byte x = 0; x < Plugin_012_rows; x++)
         {
           String tmpString = deviceTemplate[x];
           if (lcd && tmpString.length())
           {
-            String newString = P012_parseTemplate(tmpString, col);
+            String newString = P012_parseTemplate(tmpString, Plugin_012_cols);
             lcd->setCursor(0, x);
             lcd->print(newString);
           }
@@ -243,13 +240,6 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        byte rows = 2;
-        byte cols = 16;
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2){
-          rows = 4;
-          cols = 20;
-        }
-
         String tmpString  = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
@@ -277,7 +267,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         else if (lcd && tmpString.equalsIgnoreCase(F("LCD")))
         {
           success = true;
-          tmpString = P012_parseTemplate(string, cols);
+          tmpString = P012_parseTemplate(string, Plugin_012_cols);
           argIndex = tmpString.lastIndexOf(',');
           tmpString = tmpString.substring(argIndex + 1);
 
@@ -287,7 +277,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           //clear line before writing new string
           if (Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2){
               lcd->setCursor(colPos, rowPos);
-              for (byte i = colPos; i < cols; i++) {
+              for (byte i = colPos; i < Plugin_012_cols; i++) {
                   lcd->print(F(" "));
               }
           }
@@ -296,7 +286,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           lcd->setCursor(colPos, rowPos);
           if(Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 1 || Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2){
               lcd->setCursor(colPos, rowPos);
-              for (byte i = 0; i < cols - colPos; i++) {
+              for (byte i = 0; i < Plugin_012_cols - colPos; i++) {
                   if(tmpString[i]){
                      lcd->print(tmpString[i]);
                   }
@@ -309,14 +299,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
               boolean stillProcessing = 1;
               byte charCount = 1;
               while(stillProcessing) {
-                   if (++colPos > cols) {    // have we printed 20 characters yet (+1 for the logic)
+                   if (++colPos > Plugin_012_cols) {    // have we printed 20 characters yet (+1 for the logic)
                         rowPos += 1;
                         lcd->setCursor(0,rowPos);   // move cursor down
                         colPos = 1;
                    }
 
                    //dont print if "lower" than the lcd
-                   if(rowPos < rows  ){
+                   if(rowPos < Plugin_012_rows  ){
                        lcd->print(tmpString[charCount - 1]);
                    }
 
