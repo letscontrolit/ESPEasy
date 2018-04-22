@@ -2914,7 +2914,7 @@ void addHelpButton(const String& url)
 {
   TXBuffer += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
   TXBuffer += url;
-  TXBuffer += F("' target='_blank'>&#10067;</a>");
+  TXBuffer += F("' target='_blank'>&#10068;</a>");
 }
 
 
