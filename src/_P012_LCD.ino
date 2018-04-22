@@ -12,6 +12,7 @@
 #include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C *lcd=NULL;
+bool Plugin_012_ProcessRefresh=0;
 
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
@@ -25,7 +26,6 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_012;
@@ -171,6 +171,35 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
             displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
           }
         }
+        if (Plugin_012_ProcessRefresh) {
+          Plugin_012_ProcessRefresh = 0;
+
+          // Refresh screen
+          char deviceTemplate[4][80];
+          LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
+          byte row = 2;
+          byte col = 16;
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
+          {
+            row = 4;
+            col = 20;
+          }
+
+          addLog(LOG_LEVEL_DEBUG,F("P012: DEBUG: Refresh LCD"));
+          for (byte x = 0; x < row; x++)
+          {
+            String tmpString = deviceTemplate[x];
+            if (lcd && tmpString.length())
+            {
+              String newString = P012_parseTemplate(tmpString, col);
+              lcd->setCursor(0, x);
+              lcd->print(newString);
+              addLog(LOG_LEVEL_DEBUG,newString);
+            }
+          }
+
+        }
         break;
       }
 
@@ -198,7 +227,6 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           col = 20;
         }
 
-        lcd->clear();  //added lcd clear before refresh 
         for (byte x = 0; x < row; x++)
         {
           String tmpString = deviceTemplate[x];
@@ -243,28 +271,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           }
           else if (tmpString.equalsIgnoreCase(F("Refresh"))) //giig1967g added command refresh
           {
-              char deviceTemplate[4][80];
-              LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-
-              byte row = 2;
-              byte col = 16;
-              if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
-              {
-                row = 4;
-                col = 20;
-              }
-
-              lcd->clear();
-              for (byte x = 0; x < row; x++)
-              {
-                String tmpString = deviceTemplate[x];
-                if (lcd && tmpString.length())
-                {
-                  String newString = P012_parseTemplate(tmpString, col);
-                  lcd->setCursor(0, x);
-                  lcd->print(newString);
-                }
-              }
+            Plugin_012_ProcessRefresh = 1;
           }
         }
         else if (lcd && tmpString.equalsIgnoreCase(F("LCD")))

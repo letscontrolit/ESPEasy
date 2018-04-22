@@ -17,6 +17,8 @@
 byte Plugin_023_OLED_address = 0x3c;
 byte Plugin_023_OLED_type = 0;
 byte Plugin_023_OLED_font_width = 0;
+bool Plugin_023_ProcessRefresh = 0;
+
 
 enum
 {
@@ -171,6 +173,26 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
             displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
           }
         }
+        if (Plugin_023_ProcessRefresh) {
+          Plugin_023_ProcessRefresh = 0;
+
+            // Refresh screen
+          char deviceTemplate[8][64];
+          LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
+          addLog(LOG_LEVEL_DEBUG,F("P023: DEBUG: Refresh LCD"));
+
+          for (byte x = 0; x < 8; x++)
+          {
+            String tmpString = deviceTemplate[x];
+            if (tmpString.length())
+            {
+              String newString = P023_parseTemplate(tmpString, 16);
+              Plugin_023_sendStrXY(newString.c_str(), x, 0);
+              addLog(LOG_LEVEL_DEBUG,tmpString);
+            }
+          }
+        }
         break;
       }
 
@@ -221,22 +243,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           else if (tmpString.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display();
           else if (tmpString.equalsIgnoreCase(F("Refresh"))) //giig1967g added command refresh
-          {
-            Plugin_023_clear_display();
-
-            char deviceTemplate[8][64];
-            LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-
-            for (byte x = 0; x < 8; x++)
-            {
-              String tmpString = deviceTemplate[x];
-              if (tmpString.length())
-              {
-                String newString = P023_parseTemplate(tmpString, 16);
-                Plugin_023_sendStrXY(newString.c_str(), x, 0);
-              }
-            }
-          }
+            Plugin_023_ProcessRefresh = 1;
         }
         else if (tmpString.equalsIgnoreCase(F("OLED")))
         {
