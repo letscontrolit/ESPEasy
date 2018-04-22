@@ -220,6 +220,23 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
             Plugin_023_displayOn();
           else if (tmpString.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display();
+          else if (tmpString.equalsIgnoreCase(F("Refresh"))) //giig1967g added command refresh
+          {
+            Plugin_023_clear_display();
+
+            char deviceTemplate[8][64];
+            LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+
+            for (byte x = 0; x < 8; x++)
+            {
+              String tmpString = deviceTemplate[x];
+              if (tmpString.length())
+              {
+                String newString = P023_parseTemplate(tmpString, 16);
+                Plugin_023_sendStrXY(newString.c_str(), x, 0);
+              }
+            }
+          }
         }
         else if (tmpString.equalsIgnoreCase(F("OLED")))
         {
