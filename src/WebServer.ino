@@ -2737,11 +2737,11 @@ void addSubmitButton(const String &value, const String &name)
 // add copy to clipboard button
 void addCopyButton(const String &value, const String &name)
 {
-  TXBuffer += F("<script>function setClipboard() { var tempInput = document.createElement('input'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.value = '");
+  TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("'; document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"");
-  TXBuffer += value;
-  TXBuffer += F("\" to clipboard!') }</script>");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else {  clipboard += test.innerHTML + ' '; } }");
+  TXBuffer += F("var tempInput = document.createElement('input'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.value = clipboard;");
+  TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
   TXBuffer += F("</button>");
@@ -4848,45 +4848,7 @@ void handle_sysinfo() {
    // the table header
    TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH align='left'>");
 
-   // value to be copied
-   String copyText = F("FW info: ");
-   copyText += BUILD;
-   copyText += F(" ");
-   copyText += F(BUILD_NOTES);
- #if defined(ESP32)
-   copyText += F(" (ESP32 SDK ");
-   copyText += ESP.getSdkVersion();
- #else
-   copyText += F(" (ESP82xx Core ");
-   copyText += ESP.getCoreVersion();
- #endif
-   copyText += F(") GIT version: ");
-   copyText += BUILD_GIT;
-
-   copyText += F(" Plugins: ");
-   copyText += deviceCount + 1;
-
-   #ifdef PLUGIN_BUILD_NORMAL
-   copyText += F(" [Normal]");
-   #endif
-
-   #ifdef PLUGIN_BUILD_TESTING
-   copyText += F(" [Testing]");
-   #endif
-
-   #ifdef PLUGIN_BUILD_DEV
-   copyText += F(" [Development]");
-   #endif
-
-    copyText += F(" Build time: ");
-    copyText += String(CRCValues.compileDate);
-    copyText += " ";
-    copyText += String(CRCValues.compileTime);
-
-    copyText += F(" Binary filename: ");
-    copyText += String(CRCValues.binaryFilename);
-
-   addCopyButton(copyText , F("Copy info to clipboard"));
+   addCopyButton(F("copyText") , F("Copy info to clipboard") );
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
@@ -5037,7 +4999,7 @@ void handle_sysinfo() {
 
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
-  TXBuffer += F("<TR><TD>Build<TD>");
+  TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
@@ -5048,10 +5010,10 @@ void handle_sysinfo() {
   TXBuffer += F(" (ESP82xx Core ");
   TXBuffer += ESP.getCoreVersion();
 #endif
-  TXBuffer += F(")<TR><TD>GIT version<TD>");
+  TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD>Plugins<TD>");
+  TXBuffer += F("<TR><TD id='copyText_5'>Plugins<TD id='copyText_6'>");
   TXBuffer += deviceCount + 1;
 
   #ifdef PLUGIN_BUILD_NORMAL
@@ -5074,12 +5036,12 @@ void handle_sysinfo() {
      TXBuffer +="<font color = 'red'>fail !</font>";
   else  TXBuffer +="passed.";
 
-   TXBuffer += F("<TR><TD>Build time<TD>");
+   TXBuffer += F("<TR><TD id='copyText_7'>Build time<TD id='copyText_8'>");
    TXBuffer += String(CRCValues.compileDate);
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD>Binary filename<TD>");
+   TXBuffer += F("<TR><TD id='copyText_9'>Binary filename<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.binaryFilename);
 
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
