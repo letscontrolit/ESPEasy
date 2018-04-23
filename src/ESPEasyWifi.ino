@@ -23,24 +23,6 @@ void processConnect() {
     log += F(" ms");
   }
   addLog(LOG_LEVEL_INFO, log);
-  if (useStaticIP())
-  {
-    const IPAddress ip = Settings.IP;
-    const IPAddress gw = Settings.Gateway;
-    const IPAddress subnet = Settings.Subnet;
-    const IPAddress dns = Settings.DNS;
-    log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
-    WiFi.config(ip, gw, subnet, dns);
-    markGotIP();
-  }
   if (Settings.UseRules && bssid_changed) {
     String event = F("WiFi#ChangedAccesspoint");
     rulesProcessing(event);
@@ -100,8 +82,10 @@ void processGotIP() {
   if (processedGetIP)
     return;
   processedGetIP = true;
-  if (wifiStatus < ESPEASY_WIFI_GOT_IP)
-    return;
+  // FIXME @TD-er: Disabled this check for now.
+  // It may be a possibility the events are processed out of order
+//  if (wifiStatus < ESPEASY_WIFI_GOT_IP)
+//    return;
   IPAddress ip = WiFi.localIP();
   if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
     return;
@@ -302,6 +286,8 @@ bool WifiIsSTA(WiFiMode_t wifimode)
 
 void setWifiState(WifiState state) {
   currentWifiState = state;
+  // We are changing the state, so stop retry to connect, unless it is needed.
+  processedTryConnect = true;
   switch (state) {
     case WifiOff:
       setWebserverRunning(false);
@@ -342,7 +328,7 @@ void setWifiState(WifiState state) {
         changeWifiMode(WIFI_STA);
       }
       if (prepareWiFi()) {
-        tryConnectWiFi();
+        processedTryConnect = false;
       } else {
         setWifiState(WifiConnectionFailed);
       }
@@ -603,6 +589,7 @@ bool wifiConnectTimeoutReached() {
 bool tryConnectWiFi() {
 //  if (wifiSetup && !wifiSetupConnect)
 //    return false;
+  if (processedTryConnect) return false;
   if (wifiStatus != ESPEASY_WIFI_DISCONNECTED) {
     if (!WifiIsAP(WiFi.getMode())) {
       // Only when not in AP mode.
@@ -626,6 +613,24 @@ bool tryConnectWiFi() {
   addLog(LOG_LEVEL_INFO, log);
 
   last_wifi_connect_attempt_moment = millis();
+  if (useStaticIP())
+  {
+    const IPAddress ip = Settings.IP;
+    const IPAddress gw = Settings.Gateway;
+    const IPAddress subnet = Settings.Subnet;
+    const IPAddress dns = Settings.DNS;
+    log = F("IP   : Static IP : ");
+    log += formatIP(ip);
+    log += F(" GW: ");
+    log += formatIP(gw);
+    log += F(" SN: ");
+    log += formatIP(subnet);
+    log += F(" DNS: ");
+    log += formatIP(dns);
+    addLog(LOG_LEVEL_INFO, log);
+    WiFi.config(ip, gw, subnet, dns);
+    markGotIP();
+  }
   switch (wifi_connect_attempt) {
     case 0:
       if (lastBSSID[0] == 0)
@@ -653,6 +658,7 @@ bool tryConnectWiFi() {
     default:
      break;
   }
+  processedTryConnect = true;
   return true; // Sent
 }
 
@@ -746,17 +752,11 @@ void WifiCheck()
     }
   }
 
-  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED)
-  {
-    NC_Count++;
-    if (!WifiIsAP(WiFi.getMode()))
-      setWifiState(WifiTryConnect);
-  }
-  //connected
-  else if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
-  {
-    C_Count++;
-    NC_Count = 0;
+  if (!processedTryConnect) {
+    // By running the connect attempts from this function (ran every second)
+    // the retry interval is at a slower pace. Some accesspoints do not react
+    // very well to retry attempts at msec intervals
+    tryConnectWiFi();
   }
 }
 

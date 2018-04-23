@@ -54,6 +54,13 @@
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
 
+#define DEFAULT_PIN_I2C_SDA              4
+#define DEFAULT_PIN_I2C_SCL              5
+
+#define DEFAULT_PIN_STATUS_LED           -1
+#define DEFAULT_PIN_STATUS_LED_INVERSED  true
+
+
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
 #if defined(ESP32)
@@ -156,7 +163,7 @@
   #define VERSION                             3 // Change in config.dat mapping needs a full reset
 #endif
 
-#define BUILD                           20101 // git version 2.1.01
+#define BUILD                           20102 // git version 2.1.02
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif
@@ -529,6 +536,8 @@ enum Command {
   cmd_TaskRun,
   cmd_TaskValueSet,
   cmd_TimerSet,
+  cmd_TimerPause,
+  cmd_TimerResume,
   cmd_udptest,
   cmd_Unit,
   cmd_wdconfig,
@@ -595,7 +604,8 @@ struct SettingsStruct
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
-    DST_Start(0), DST_End(0), SyslogFacility(0)
+    DST_Start(0), DST_End(0), UseRTOSMultitasking(false), Pin_Reset(-1),
+    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -702,14 +712,17 @@ struct SettingsStruct
   boolean       UseRTOSMultitasking;
   int8_t        Pin_Reset;
   byte          SyslogFacility;
-
+  uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
+
+  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
-  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-  uint8_t       md5[16];
+  // Try to extend settings to make the checksum 4-byte aligned.
+//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
+//  uint8_t       md5[16];
 } Settings;
 
 struct ControllerSettingsStruct
@@ -1103,7 +1116,12 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
-unsigned long RulesTimer[RULES_TIMER_MAX];
+struct rulesTiemerStatus
+{
+  unsigned long timestamp;
+  unsigned int interval; //interval in millisencond
+  boolean paused;
+} RulesTimer[RULES_TIMER_MAX];
 
 unsigned long timerSensor[TASKS_MAX];
 unsigned long timer100ms;
@@ -1114,8 +1132,6 @@ unsigned long timermqtt;
 unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
-unsigned int NC_Count = 0;
-unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
@@ -1228,6 +1244,7 @@ bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
+bool processedTryConnect = true;
 
 bool webserver_state = false;
 bool webserver_init = false;

@@ -381,9 +381,6 @@ void clearAccessBlock()
 #endif
 
 static const char pgDefaultCSS[] PROGMEM = {
-    // body fade in
-    "body { opacity: 0; }"
-    "body.fadeinbody { opacity: 1;  transition: 0.5s opacity; }"
     //color scheme: #07D #D50 #DB0 #A0D
     "* {font-family: sans-serif; font-size: 12pt; margin: 0px; padding: 0px; box-sizing: border-box; }"
     "h1 {font-size: 16pt; color: #07D; margin: 8px 0; font-weight: bold; }"
@@ -437,6 +434,18 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".container2 input:checked ~ .dotmark:after {display: block; }"
     // Style the dot/indicator
     ".container2 .dotmark:after {top: 8px; left: 8px; width: 8px; height: 8px;	border-radius: 50%;	background: white; }"
+
+    // toast messsage
+    "#toastmessage {visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #07D;"
+        "color: #fff;  text-align: center;  border-radius: 4px;  padding: 16px;  position: fixed;"
+        "z-index: 1; left: 282px; bottom: 30%;  font-size: 17px;  border-style: solid; border-width: 1px; border-color: gray;}"
+    "#toastmessage.show {visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }"
+    // fade in
+    "@-webkit-keyframes fadein {from {bottom: 20%; opacity: 0;} to {bottom: 30%; opacity: 0.9;} }"
+    "@keyframes fadein {from {bottom: 20%; opacity: 0;} to {bottom: 30%; opacity: 0.9;} }"
+    // fade out
+    "@-webkit-keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
+    "@keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
 
     // text textarea
     "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
@@ -496,6 +505,13 @@ void addHtmlError(String error){
     TXBuffer += F("<div class=\"alert\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
     TXBuffer += error;
     TXBuffer += F("</div>");
+  }
+  else
+  {
+    TXBuffer += F("<script>function toasting() {var x = document.getElementById('toastmessage'); x.innerHTML = '");
+    // we can push custom messages here in future releases...
+    TXBuffer += F("Submitted");
+    TXBuffer += F("'; x.className = 'show'; setTimeout(function(){x.innerHTML = '';  x.className = x.className.replace('show', ''); }, 2000);} </script>");
   }
 }
 
@@ -557,7 +573,7 @@ void setWebserverRunning(bool state) {
   if (state) {
     if (!webserver_init) {
       WebServerInit();
-      webserver_init = true;      
+      webserver_init = true;
     }
     WebServer.begin();
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
@@ -581,8 +597,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
-              "<body onload='fadein()'>"
-                "<script>function fadein() {document.body.className += ' fadeinbody';}</script>"
+              "<body>"
               "<header class='apheader'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>"
               "</header>"
@@ -608,8 +623,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "<title>{{name}}</title>"
               "{{css}}"
               "</head>"
-              "<body onload='fadein()'>"
-                "<script>function fadein() {document.body.className += ' fadeinbody';}</script>"
+              "<body>"
               "<header class='headermenu'>"
               "<h1>ESP Easy Mega: {{name}}</h1>"
               "</header>"
@@ -637,8 +651,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "{{js}}"
         "{{css}}"
       "</head>"
-      "<body class='bodymenu' onload='fadein()'>"
-        "<script>function fadein() {document.body.className += ' fadeinbody';}</script>"
+      "<body class='bodymenu'>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
           "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
@@ -940,7 +953,8 @@ void handle_root() {
       TXBuffer += WifiGetHostname();
       TXBuffer += F(".local</a><TD><TD><TD>");
     #endif
-
+    TXBuffer += F("<TR><TD><TD>");
+    addButton(F("sysinfo"), F("More info"));
 
     TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
     for (byte x = 0; x < UNIT_MAX; x++)
@@ -2482,7 +2496,7 @@ void addPinSelect(boolean forI2C, String name,  int choice)
   optionValues[4] = 3;
   optionValues[5] = 4;
   optionValues[6] = 5;
-  optionValues[7] = 7;
+  optionValues[7] = 6;
   optionValues[8] = 7;
   optionValues[9] = 8;
   optionValues[10] = 9;
@@ -2707,7 +2721,7 @@ void addButton(const String &url, const String &label)
 
 void addSubmitButton()
 {
-  TXBuffer += F("<input class='button link' type='submit' value='Submit'>");
+  TXBuffer += F("<input class='button link' type='submit' value='Submit'><div id='toastmessage'></div></div><script type='text/javascript'>toasting();</script>");
 }
 
 //add submit button with different label and name
@@ -2717,7 +2731,7 @@ void addSubmitButton(const String &value, const String &name)
   TXBuffer += value;
   TXBuffer += F("' name='");
   TXBuffer += name;
-  TXBuffer += F("'>");
+  TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
 }
 
 
@@ -2900,7 +2914,7 @@ void addHelpButton(const String& url)
 {
   TXBuffer += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
   TXBuffer += url;
-  TXBuffer += F("' target='_blank'>&#10067;</a>");
+  TXBuffer += F("' target='_blank'>&#10068;</a>");
 }
 
 
@@ -4877,7 +4891,9 @@ void handle_sysinfo() {
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
 
-   TXBuffer += F("<TR><TD colspan=2><H3>Network</H3></TD></TR>");
+   TXBuffer += F("<TR><TD colspan=2><H3>Network");
+   addHelpButton(F("Wifi"));
+   TXBuffer += F("</H3></TD></TR>");
 
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
@@ -4971,31 +4987,32 @@ void handle_sysinfo() {
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
-  #if defined(ESP8266)
-     TXBuffer += F(" (core ");
-     TXBuffer += ESP.getCoreVersion();
-     TXBuffer += F(")");
-  #endif
+#if defined(ESP32)
+  TXBuffer += F(" (ESP32 SDK ");
+  TXBuffer += ESP.getSdkVersion();
+#else
+  TXBuffer += F(" (ESP82xx Core ");
+  TXBuffer += ESP.getCoreVersion();
+#endif
+  TXBuffer += F(")<TR><TD>GIT version<TD>");
+  TXBuffer += BUILD_GIT;
 
-   TXBuffer += F("<TR><TD>GIT version<TD>");
-   TXBuffer += BUILD_GIT;
-
-   TXBuffer += F("<TR><TD>Plugins<TD>");
-   TXBuffer += deviceCount + 1;
+  TXBuffer += F("<TR><TD>Plugins<TD>");
+  TXBuffer += deviceCount + 1;
 
   #ifdef PLUGIN_BUILD_NORMAL
-     TXBuffer += F(" [Normal]");
+  TXBuffer += F(" [Normal]");
   #endif
 
   #ifdef PLUGIN_BUILD_TESTING
-     TXBuffer += F(" [Testing]");
+  TXBuffer += F(" [Testing]");
   #endif
 
   #ifdef PLUGIN_BUILD_DEV
-     TXBuffer += F(" [Development]");
+  TXBuffer += F(" [Development]");
   #endif
 
-   TXBuffer += F("<TR><TD>Build Md5<TD>");
+  TXBuffer += F("<TR><TD>Build Md5<TD>");
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
 
    TXBuffer += F("<TR><TD>Md5 check<TD>");

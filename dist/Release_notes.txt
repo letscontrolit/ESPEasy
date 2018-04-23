@@ -1,4 +1,60 @@
 -------------------------------------------------
+Changes in release mega-20180423 (since mega-20180422)
+-------------------------------------------------
+
+Release date: Mon Apr 23 04:00:10 CEST 2018
+
+Plebs (1):
+      Fixing #1289 for backwards compatibility
+
+TD-er (1):
+      [wifi] Add delay between connection attempts
+
+
+-------------------------------------------------
+Changes in release mega-20180422 (since mega-20180421)
+-------------------------------------------------
+
+Release date: Sun Apr 22 04:00:09 CEST 2018
+
+Plebs (2):
+      Syntax: [task#value#transformation#justification]
+      Code changed as per TD-er suggestions
+
+TD-er (1):
+      [issue #1292] Remove CRC from settings, init settings and wifi fixes
+
+
+-------------------------------------------------
+Changes in release mega-20180421 (since mega-20180420)
+-------------------------------------------------
+
+Release date: Sat Apr 21 04:00:08 CEST 2018
+
+Grovkillen (1):
+      Removed fade in of body added toast message!
+
+Saverio Cisternino (4):
+      Add Commands timerpause and timerresume
+      Add Trigger Rules#TimerPause= and Rules#TimerResume=
+      Add support at elseif statment
+      Add debug info
+
+TD-er (7):
+      [WiFi] Init static IP before connect to wifi
+      [Toast message] Change "Settings saved" to "Submitted"
+      [info] Add more build related info to the log and wifi info link to wiki
+      [Sonoff Pow] Add support for HLW8012
+      [Sonoff Pow] Add support for HLW8012
+      [Sonoff POW] Change Plugin ID to 76
+      [Sonoff POW] Set some proper defaults for the Sonoff POW
+
+Unknown (2):
+      Merge remote-tracking branch 'papperone/mega' into merge/papperone
+      Merge remote-tracking branch 'papperone/mega' into merge/papperone
+
+
+-------------------------------------------------
 Changes in release mega-20180420 (since mega-20180419)
 -------------------------------------------------
 

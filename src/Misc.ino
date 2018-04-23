@@ -488,6 +488,15 @@ String BuildFixes()
     Serial.println(F("Fix reset Pin"));
     Settings.Pin_Reset = -1;
   }
+  if (Settings.Build < 20102) {
+    // Settings were 'mangled' by using older version
+    // Have to patch settings to make sure no bogus data is being used.
+    Serial.println(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    Settings.UseRTOSMultitasking = false;
+    Settings.Pin_Reset = -1;
+    Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    Settings.StructSize = sizeof(Settings);
+  }
 
   Settings.Build = BUILD;
   return(SaveSettings());
@@ -702,19 +711,25 @@ String SaveSettings(void)
   checkRAM(F("SaveSettings"));
   MD5Builder md5;
   uint8_t tmp_md5[16] = {0};
+  String err;
+
+  Settings.StructSize = sizeof(struct SettingsStruct);
+
+  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
+/*
   memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
   md5.calculate();
   md5.getBytes(tmp_md5);
-  String err;
   if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(Settings.md5, tmp_md5, 16);
-    err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+*/
+    err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(Settings));
     if (err.length())
      return(err);
-  }
+//  }
 
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
@@ -724,7 +739,7 @@ String SaveSettings(void)
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(SecuritySettings.md5, tmp_md5, 16);
-    err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct));
+    err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(SecuritySettings));
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
       wifiSetupConnect = true;
@@ -747,10 +762,14 @@ String LoadSettings()
   if (err.length())
     return(err);
 
-  md5.begin();
-  md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
-  md5.calculate();
-  md5.getBytes(calculatedMd5);
+    // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
+/*
+  if (Settings.StructSize > 16) {
+    md5.begin();
+    md5.add((uint8_t *)&Settings, Settings.StructSize -16);
+    md5.calculate();
+    md5.getBytes(calculatedMd5);
+  }
   if (memcmp (calculatedMd5, Settings.md5,16)==0){
     addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
     if (memcmp(Settings.ProgmemMd5, CRCValues.runTimeMD5, 16)!=0)
@@ -759,7 +778,7 @@ String LoadSettings()
   else{
     addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
   }
-
+*/
 
   err=LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof( SecurityStruct));
   md5.begin();
@@ -1108,10 +1127,10 @@ void ResetFactory(void)
   SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
   Settings.Delay           = DEFAULT_DELAY;
-  Settings.Pin_i2c_sda     = 4;
-  Settings.Pin_i2c_scl     = 5;
-  Settings.Pin_status_led  = -1;
-  Settings.Pin_status_led_Inversed  = true;
+  Settings.Pin_i2c_sda     = DEFAULT_PIN_I2C_SDA;
+  Settings.Pin_i2c_scl     = DEFAULT_PIN_I2C_SCL;
+  Settings.Pin_status_led  = DEFAULT_PIN_STATUS_LED;
+  Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
   Settings.Pin_Reset = -1;
   Settings.Protocol[0]        = DEFAULT_PROTOCOL;
@@ -1581,41 +1600,167 @@ String parseTemplate(String &tmpString, byte lineSize)
                         else
                           value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
 
+                        // start changes by giig1967g - 2018-04-20
+                        // Syntax: [task#value#transformation#justification]
+                        // valueFormat="transformation#justification"
                         if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
                         {
-                          const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
-                          const float valFloat = value.toFloat();
-                          const int inverted = valueFormat.indexOf('!') >= 0 ? 1 : 0;
+                          String valueJust = "";
 
-                          if (valueFormat.indexOf('O') >= 0)
-                            value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
-                          else if (valueFormat.indexOf('C') >= 0)
-                            value = val == inverted ? "CLOSE" : " OPEN";
-                          else if (valueFormat.indexOf('U') >= 0)
-                            value = val == inverted ? "DOWN" : "  UP";
-                          else if (valueFormat.indexOf('Y') >= 0)
-                            value = val == inverted ? " NO" : "YES";
-                          else if (valueFormat.indexOf('y') >= 0)
-                            value = val == inverted ? "N" : "Y";
-                          else if (valueFormat.indexOf('X') >= 0)
-                            value = val == inverted ? "O" : "X";
-                          else if (valueFormat.indexOf('I') >= 0)
-                            value = val == inverted ? "OUT" : " IN";
-                          else if (valueFormat.indexOf('Z') >= 0)  // return "0" or "1"
-                            value = val == inverted ? "0" : "1";
-                          else if (valueFormat.indexOf('D') >= 0)  // round to the nearest integer
-                            value = (int)roundf(valFloat);
-                          else if (valueFormat.indexOf('F') >= 0)  // FLOOR (round down)
-                            value = (int)floorf(valFloat);
-                          else if (valueFormat.indexOf('E') >= 0)  // CEILING (round up)
-                            value = (int)ceilf(valFloat);
+                          hashtagIndex = valueFormat.indexOf('#');
+                          if (hashtagIndex >= 0)
+                          {
+                            valueJust = valueFormat.substring(hashtagIndex + 1); //Justification part
+                            valueFormat = valueFormat.substring(0, hashtagIndex); //Transformation part
+                          }
 
-                          if (valueFormat.indexOf('R') >= 0) {
-                            int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                            for (byte f = 0; f < filler; f++)
-                              newString += " ";
+                          // valueFormat="transformation"
+                          // valueJust="justification"
+                          if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+                          {
+                            const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
+                            const float valFloat = value.toFloat();
+
+                            String tempValueFormat = valueFormat;
+                            const int tempValueFormatLength = tempValueFormat.length();
+                            const int invertedIndex = tempValueFormat.indexOf('!');
+                            const bool inverted = invertedIndex >= 0 ? 1 : 0;
+                            if (inverted)
+                              tempValueFormat.remove(invertedIndex,1);
+
+                            const int rightJustifyIndex = tempValueFormat.indexOf('R');
+                            const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
+                            if (rightJustify)
+                              tempValueFormat.remove(rightJustifyIndex,1);
+
+                            //Check Transformation syntax
+                            if (tempValueFormatLength > 0)
+                            {
+                              switch (tempValueFormat[0])
+                                {
+                                case 'V': //value = value without transformations
+                                  break;
+                                case 'O':
+                                  value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
+                                  break;
+                                case 'C':
+                                  value = val == inverted ? "CLOSE" : " OPEN";
+                                  break;
+                                case 'U':
+                                  value = val == inverted ? "DOWN" : "  UP";
+                                  break;
+                                case 'u':
+                                  value = val == inverted ? "D" : "U";
+                                  break;
+                                case 'Y':
+                                  value = val == inverted ? " NO" : "YES";
+                                  break;
+                                case 'y':
+                                  value = val == inverted ? "N" : "Y";
+                                  break;
+                                case 'X':
+                                  value = val == inverted ? "O" : "X";
+                                  break;
+                                case 'I':
+                                  value = val == inverted ? "OUT" : " IN";
+                                  break;
+                                case 'Z' :// return "0" or "1"
+                                  value = val == inverted ? "0" : "1";
+                                  break;
+                                case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
+                                  int x;
+                                  int y;
+                                  x = 0;
+                                  y = 0;
+
+                                  switch (tempValueFormatLength)
+                                  {
+                                    case 2: //Dx
+                                      if (isDigit(tempValueFormat[1]))
+                                      {
+                                        x = (int)tempValueFormat[1]-'0';
+                                      }
+                                      break;
+                                    case 3: //D.y
+                                      if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
+                                      {
+                                        y = (int)tempValueFormat[2]-'0';
+                                      }
+                                      break;
+                                    case 4: //Dx.y
+                                      if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
+                                      {
+                                        x = (int)tempValueFormat[1]-'0';
+                                        y = (int)tempValueFormat[3]-'0';
+                                      }
+                                      break;
+                                    case 1: //D
+                                    default: //any other combination x=0; y=0;
+                                      break;
+                                  }
+                                  value = toString(valFloat,y);
+                                  int indexDot;
+                                  indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
+                                  for (byte f = 0; f < (x - indexDot); f++)
+                                    value = "0" + value;
+                                  break;
+                                case 'F' :// FLOOR (round down)
+                                  value = (int)floorf(valFloat);
+                                  break;
+                                case 'E' :// CEILING (round up)
+                                  value = (int)ceilf(valFloat);
+                                  break;
+                                default:
+                                  value = "ERR";
+                                  break;
+                                }
+
+                                // Check Justification syntax
+                                const int valueJustLength = valueJust.length();
+                                if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
+                                {
+                                  value.trim(); //remove right justification spaces for backward compatibility
+                                  switch (valueJust[0])
+                                  {
+                                  case 'P' :// Prefix Fill with n spaces: Pn
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
+                                      {
+                                        int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
+                                        for (byte f = 0; f < filler; f++)
+                                          newString += " ";
+                                      }
+                                    }
+                                    break;
+                                  case 'S' :// Suffix Fill with n spaces: Sn
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                                      {
+                                        int filler = valueJust[1] - value.length() - '0' ; //48
+                                        for (byte f = 0; f < filler; f++)
+                                          value += " ";
+                                      }
+                                    }
+                                    break;
+                                  default:
+                                    newString += "ERR";
+                                    break;
+                                }
+                              }
+
+                              if (rightJustify)
+                              {
+                                int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                                for (byte f = 0; f < filler; f++)
+                                  newString += " ";
+                              }
+                            }
                           }
                         }
+                        //end of changes by giig1967g - 2018-04-18
+
                         newString += String(value);
                         break;
                       }
@@ -2021,6 +2166,7 @@ String rulesProcessingFile(String fileName, String& event)
   boolean conditional = false;
   boolean condition = false;
   boolean ifBranche = false;
+  boolean ifBrancheJustMatch = false;
 
   byte buf[RULES_BUFFER_SIZE];
   int len = 0;
@@ -2114,25 +2260,57 @@ String rulesProcessingFile(String fileName, String& event)
           if (match) // rule matched for one action or a block of actions
           {
             int split = lcAction.indexOf("if "); // check for optional "if" condition
-            if (split != -1)
+            boolean elseif = lcAction.startsWith("elseif ");
+            if (elseif == false && split != -1)
             {
               conditional = true;
               String check = lcAction.substring(split + 3);
-              condition = conditionMatchExtended(check);
+              log = F("[if ");
+              log += check;
+              log += "]=";
+              condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+              if(condition == true)
+              {
+                 ifBrancheJustMatch = true;
+              }
               ifBranche = true;
               isCommand = false;
+              log += condition ? F("true") : F("false");
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
+
+            if(elseif)
+            {
+              String check = lcAction.substring(7);
+              log = F("[elseif ");
+              log += check;
+              log += "]=";
+              condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+              if(condition == true)
+              {
+                 ifBrancheJustMatch = true;
+              }
+              ifBranche = true;
+              isCommand = false;
+              log += condition ? F("true") : F("false");
+              addLog(LOG_LEVEL_DEBUG, log);
             }
 
             if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
             {
               ifBranche = false;
               isCommand = false;
+              log = F("else = ");
+              log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
+              addLog(LOG_LEVEL_DEBUG, log);
             }
 
             if (lcAction == "endif") // conditional block ends here
             {
               conditional = false;
               isCommand = false;
+              ifBranche = false;
+              ifBrancheJustMatch = false;
             }
 
             // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
@@ -2182,7 +2360,7 @@ String rulesProcessingFile(String fileName, String& event)
 
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
-  return (String());
+  return (F(""));
 }
 
 
@@ -2449,11 +2627,11 @@ void rulesTimers()
 {
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
   {
-    if (RulesTimer[x] != 0L) // timer active?
+    if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
     {
-      if (timeOutReached(RulesTimer[x])) // timer finished?
+      if (timeOutReached(RulesTimer[x].timestamp)) // timer finished?
       {
-        RulesTimer[x] = 0L; // turn off this timer
+        RulesTimer[x].timestamp = 0L; // turn off this timer
         String event = F("Rules#Timer=");
         event += x + 1;
         rulesProcessing(event);
