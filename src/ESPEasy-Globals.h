@@ -1132,6 +1132,8 @@ unsigned long timermqtt;
 unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
+unsigned int NC_Count = 0;
+unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
@@ -1244,7 +1246,6 @@ bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
-bool processedTryConnect = true;
 
 bool webserver_state = false;
 bool webserver_init = false;
