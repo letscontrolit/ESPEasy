@@ -2734,6 +2734,18 @@ void addSubmitButton(const String &value, const String &name)
   TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
 }
 
+// add copy to clipboard button
+void addCopyButton(const String &value, const String &name)
+{
+  TXBuffer += F("<script>function setClipboard() { var tempInput = document.createElement('input'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.value = '");
+  TXBuffer += value;
+  TXBuffer += F("'; document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"");
+  TXBuffer += value;
+  TXBuffer += F("\" to clipboard!') }</script>");
+  TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
+  TXBuffer += name;
+  TXBuffer += F("</button>");
+}
 
 
 //********************************************************************************
@@ -4832,7 +4844,49 @@ void handle_sysinfo() {
   addHeader(true,  TXBuffer.buf);
    TXBuffer += printWebString;
    TXBuffer += F("<form>");
-   TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH>");
+
+   // the table header
+   TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH align='left'>");
+
+   // value to be copied
+   String copyText = F("FW info: ");
+   copyText += BUILD;
+   copyText += F(" ");
+   copyText += F(BUILD_NOTES);
+ #if defined(ESP32)
+   copyText += F(" (ESP32 SDK ");
+   copyText += ESP.getSdkVersion();
+ #else
+   copyText += F(" (ESP82xx Core ");
+   copyText += ESP.getCoreVersion();
+ #endif
+   copyText += F(") GIT version: ");
+   copyText += BUILD_GIT;
+
+   copyText += F(" Plugins: ");
+   copyText += deviceCount + 1;
+
+   #ifdef PLUGIN_BUILD_NORMAL
+   copyText += F(" [Normal]");
+   #endif
+
+   #ifdef PLUGIN_BUILD_TESTING
+   copyText += F(" [Testing]");
+   #endif
+
+   #ifdef PLUGIN_BUILD_DEV
+   copyText += F(" [Development]");
+   #endif
+
+    copyText += F(" Build time: ");
+    copyText += String(CRCValues.compileDate);
+    copyText += " ";
+    copyText += String(CRCValues.compileTime);
+
+    copyText += F(" Binary filename: ");
+    copyText += String(CRCValues.binaryFilename);
+
+   addCopyButton(copyText , F("Copy info to clipboard"));
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
