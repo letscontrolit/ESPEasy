@@ -286,8 +286,6 @@ bool WifiIsSTA(WiFiMode_t wifimode)
 
 void setWifiState(WifiState state) {
   currentWifiState = state;
-  // We are changing the state, so stop retry to connect, unless it is needed.
-  processedTryConnect = true;
   switch (state) {
     case WifiOff:
       setWebserverRunning(false);
@@ -328,7 +326,7 @@ void setWifiState(WifiState state) {
         changeWifiMode(WIFI_STA);
       }
       if (prepareWiFi()) {
-        processedTryConnect = false;
+        tryConnectWiFi();
       } else {
         setWifiState(WifiConnectionFailed);
       }
@@ -589,7 +587,6 @@ bool wifiConnectTimeoutReached() {
 bool tryConnectWiFi() {
 //  if (wifiSetup && !wifiSetupConnect)
 //    return false;
-  if (processedTryConnect) return false;
   if (wifiStatus != ESPEASY_WIFI_DISCONNECTED) {
     if (!WifiIsAP(WiFi.getMode())) {
       // Only when not in AP mode.
@@ -658,7 +655,6 @@ bool tryConnectWiFi() {
     default:
      break;
   }
-  processedTryConnect = true;
   return true; // Sent
 }
 
@@ -752,11 +748,17 @@ void WifiCheck()
     }
   }
 
-  if (!processedTryConnect) {
-    // By running the connect attempts from this function (ran every second)
-    // the retry interval is at a slower pace. Some accesspoints do not react
-    // very well to retry attempts at msec intervals
-    tryConnectWiFi();
+  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED)
+  {
+    NC_Count++;
+    if (!WifiIsAP(WiFi.getMode()))
+      setWifiState(WifiTryConnect);
+  }
+  //connected
+  else if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+  {
+    C_Count++;
+    NC_Count = 0;
   }
 }
 

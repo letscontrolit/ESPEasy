@@ -1,17 +1,4 @@
 -------------------------------------------------
-Changes in release mega-20180423 (since mega-20180422)
--------------------------------------------------
-
-Release date: Mon Apr 23 04:00:10 CEST 2018
-
-Plebs (1):
-      Fixing #1289 for backwards compatibility
-
-TD-er (1):
-      [wifi] Add delay between connection attempts
-
-
--------------------------------------------------
 Changes in release mega-20180422 (since mega-20180421)
 -------------------------------------------------
 
