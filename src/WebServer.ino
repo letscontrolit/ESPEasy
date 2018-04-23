@@ -3040,13 +3040,14 @@ void handle_log() {
   sendHeadandTail(F("TmplStd"),_HEAD);
 
   TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD>");
+  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD id='copyText_1'>");
   for (int i = 0; i< LOG_STRUCT_MESSAGE_LINES; i++){
     Logging.get(TXBuffer.buf, F("<BR>"),i);
 
   }
   //Logging.getAll(TXBuffer.buf, F("<BR>"));
   TXBuffer += F("</table>");
+  addCopyButton(F("copyText"), F("Copy log to clipboard"));
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
