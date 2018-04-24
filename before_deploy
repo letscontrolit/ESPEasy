@@ -23,7 +23,7 @@ do
   echo
   echo "### Deploying environment $ENV for version $VERSION"
   BIN=.pioenvs/$ENV/firmware.bin
-  cp $BIN "ESP_Easy_$VERSION""_$ENV.bin"
+  cp $BIN .pioenvs/$ENV/"ESP_Easy_$VERSION""_$ENV.bin"
   echo "### Adding CRC check to ESP_Easy_"$VERSION"_"$ENV".bin"
   BIN=.pioenvs/$ENV/"ESP_Easy_$VERSION""_$ENV.bin"
   python2 crc2.py $BIN
