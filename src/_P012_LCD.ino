@@ -14,6 +14,7 @@
 LiquidCrystal_I2C *lcd=NULL;
 int Plugin_012_cols = 16;
 int Plugin_012_rows = 2;
+int Plugin_012_mode = 1;
 
 #define PLUGIN_012
 #define PLUGIN_ID_012         12
@@ -147,6 +148,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           Plugin_012_cols = 16;
         }
 
+        Plugin_012_mode = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+
         //TODO:LiquidCrystal_I2C class doesn't have destructor. So if LCD type (size) is changed better reboot for changes to take effect.
         // workaround is to fix the cols and rows at its maximum (20 and 4)
         if (!lcd)
@@ -241,7 +244,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           int rowPos = event->Par1 - 1;
 
           //clear line before writing new string
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2){
+          if (Plugin_012_mode == 2){
               lcd->setCursor(colPos, rowPos);
               for (byte i = colPos; i < Plugin_012_cols; i++) {
                   lcd->print(F(" "));
@@ -250,7 +253,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
           // truncate message exceeding cols
           lcd->setCursor(colPos, rowPos);
-          if(Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 1 || Settings.TaskDevicePluginConfig[event->TaskIndex][3] == 2){
+          if(Plugin_012_mode == 1 || Plugin_012_mode == 2){
               lcd->setCursor(colPos, rowPos);
               for (byte i = 0; i < Plugin_012_cols - colPos; i++) {
                   if(tmpString[i]){
