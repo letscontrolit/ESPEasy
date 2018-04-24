@@ -2735,12 +2735,14 @@ void addSubmitButton(const String &value, const String &name)
 }
 
 // add copy to clipboard button
-void addCopyButton(const String &value, const String &name)
+void addCopyButton(const String &value, const String &delimiter, const String &name)
 {
   TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else {  clipboard += test.innerHTML + ' '; } }");
-  TXBuffer += F("var tempInput = document.createElement('input'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.value = clipboard;");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += delimiter;
+  TXBuffer += F("'; } }");
+  TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
   TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
@@ -3047,7 +3049,7 @@ void handle_log() {
   }
   //Logging.getAll(TXBuffer.buf, F("<BR>"));
   TXBuffer += F("</table>");
-  addCopyButton(F("copyText"), F("Copy log to clipboard"));
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
@@ -4849,7 +4851,7 @@ void handle_sysinfo() {
    // the table header
    TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH align='left'>");
 
-   addCopyButton(F("copyText") , F("Copy info to clipboard") );
+   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
