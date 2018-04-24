@@ -2734,6 +2734,20 @@ void addSubmitButton(const String &value, const String &name)
   TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
 }
 
+// add copy to clipboard button
+void addCopyButton(const String &value, const String &delimiter, const String &name)
+{
+  TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
+  TXBuffer += value;
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += delimiter;
+  TXBuffer += F("'; } }");
+  TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
+  TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
+  TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
+  TXBuffer += name;
+  TXBuffer += F("</button>");
+}
 
 
 //********************************************************************************
@@ -3028,13 +3042,14 @@ void handle_log() {
   sendHeadandTail(F("TmplStd"),_HEAD);
 
   TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD>");
+  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD id='copyText_1'>");
   for (int i = 0; i< LOG_STRUCT_MESSAGE_LINES; i++){
     Logging.get(TXBuffer.buf, F("<BR>"),i);
 
   }
   //Logging.getAll(TXBuffer.buf, F("<BR>"));
   TXBuffer += F("</table>");
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
@@ -4832,7 +4847,11 @@ void handle_sysinfo() {
   addHeader(true,  TXBuffer.buf);
    TXBuffer += printWebString;
    TXBuffer += F("<form>");
-   TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH>");
+
+   // the table header
+   TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH align='left'>");
+
+   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
@@ -4983,7 +5002,7 @@ void handle_sysinfo() {
 
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
-  TXBuffer += F("<TR><TD>Build<TD>");
+  TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
@@ -4994,10 +5013,10 @@ void handle_sysinfo() {
   TXBuffer += F(" (ESP82xx Core ");
   TXBuffer += ESP.getCoreVersion();
 #endif
-  TXBuffer += F(")<TR><TD>GIT version<TD>");
+  TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD>Plugins<TD>");
+  TXBuffer += F("<TR><TD id='copyText_5'>Plugins<TD id='copyText_6'>");
   TXBuffer += deviceCount + 1;
 
   #ifdef PLUGIN_BUILD_NORMAL
@@ -5020,12 +5039,12 @@ void handle_sysinfo() {
      TXBuffer +="<font color = 'red'>fail !</font>";
   else  TXBuffer +="passed.";
 
-   TXBuffer += F("<TR><TD>Build time<TD>");
+   TXBuffer += F("<TR><TD id='copyText_7'>Build time<TD id='copyText_8'>");
    TXBuffer += String(CRCValues.compileDate);
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD>Binary filename<TD>");
+   TXBuffer += F("<TR><TD id='copyText_9'>Binary filename<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.binaryFilename);
 
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
