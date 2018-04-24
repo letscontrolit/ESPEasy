@@ -3499,6 +3499,14 @@ void handle_control() {
     WebServer.send(200, "text/html", "OK");
     return;
   }
+  else if (command.equalsIgnoreCase(F("taskrun")) ||
+           command.equalsIgnoreCase(F("taskvalueset")) ||
+           command.equalsIgnoreCase(F("rules"))) {
+    addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
+    ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
+    WebServer.send(200, "text/html", "OK");
+    return;
+  }
 
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
