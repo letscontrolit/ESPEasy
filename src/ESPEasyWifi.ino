@@ -757,6 +757,8 @@ void WifiCheck()
     // the retry interval is at a slower pace. Some accesspoints do not react
     // very well to retry attempts at msec intervals
     tryConnectWiFi();
+  } else if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    setWifiState(WifiTryConnect);
   }
 }
 
