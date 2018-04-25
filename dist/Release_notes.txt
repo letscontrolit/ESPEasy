@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20180425 (since mega-20180424)
+-------------------------------------------------
+
+Release date: Wed Apr 25 04:00:08 CEST 2018
+
+Grovkillen (4):
+      Added a void addCopyButton
+      Made copy to clipboard JavaScript based instead
+      Added copy to clipboard on log page
+      Added new lines if BR + delimiter if wanted
+
+Plebs (3):
+      Fix for #1300
+      Adding 3 new http commands: taskrun, taskvalueset and rules
+      Fix another bug in LCD plugin
+
+TD-er (2):
+      [Modbus] PR #1128 made by @s0170071
+      [wifi] More active reconnect to wifi when disconnected
+
+
+-------------------------------------------------
 Changes in release mega-20180424 (since mega-20180423)
 -------------------------------------------------
 
