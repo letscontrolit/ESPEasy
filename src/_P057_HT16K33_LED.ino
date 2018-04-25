@@ -1,3 +1,4 @@
+#ifdef USES_P057
 //#######################################################################################################
 //#################################### Plugin 057: HT16K33 LED ##########################################
 //#######################################################################################################
@@ -44,7 +45,6 @@
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_057
 #define PLUGIN_ID_057         57
@@ -93,23 +93,23 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         byte addr = CONFIG(0);
 
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
-        addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
+        addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
 
 
-        addFormSubHeader(string, F("7-Seg. Clock"));
+        addFormSubHeader(F("7-Seg. Clock"));
 
         int16_t choice = CONFIG(1);
         String options[2] = { F("none"), F("7-Seg. HH:MM") };
-        addFormSelector(string, F("Clock Type"), F("clocktype"), 2, options, NULL, choice);
+        addFormSelector(F("Clock Type"), F("clocktype"), 2, options, NULL, choice);
 
-        addFormNumericBox(string, F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
-        addFormNumericBox(string, F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);
-        addFormNumericBox(string, F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), CONFIG(4), 0, 7);
-        addFormNumericBox(string, F("Seg. for xx:x<b>X</b>"), F("clocksegm1"), CONFIG(5), 0, 7);
+        addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
+        addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);
+        addFormNumericBox(F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), CONFIG(4), 0, 7);
+        addFormNumericBox(F("Seg. for xx:x<b>X</b>"), F("clocksegm1"), CONFIG(5), 0, 7);
 
-        addFormNumericBox(string, F("Seg. for Colon"), F("clocksegcol"), CONFIG(6), -1, 7);
-        string += F(" Value ");
-        addNumericBox(string, F("clocksegcolval"), CONFIG(7), 0, 255);
+        addFormNumericBox(F("Seg. for Colon"), F("clocksegcol"), CONFIG(6), -1, 7);
+        addHtml(F(" Value "));
+        addNumericBox(F("clocksegcolval"), CONFIG(7), 0, 255);
 
         success = true;
         break;
@@ -323,4 +323,4 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
+#endif // USES_P057

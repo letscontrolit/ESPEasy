@@ -1,3 +1,4 @@
+#ifdef USES_P065
 //#######################################################################################################
 //############################# Plugin 065: P065_DFR0299_MP3 ############################################
 //#######################################################################################################
@@ -26,7 +27,6 @@
 // Datasheet: https://www.dfrobot.com/wiki/index.php/DFPlayer_Mini_SKU:DFR0299
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_065
 #define PLUGIN_ID_065         65
@@ -82,7 +82,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-          addFormNumericBox(string, F("Volume"), F("volume"), CONFIG(0), 1, 30);
+          addFormNumericBox(F("Volume"), F("volume"), CONFIG(0), 1, 30);
 
           success = true;
           break;
@@ -226,4 +226,4 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   addLog(LOG_LEVEL_DEBUG, log);
 }
 
-#endif
+#endif // USES_P065

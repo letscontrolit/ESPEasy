@@ -1,7 +1,7 @@
+#ifdef USES_P035
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
-#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRsend *Plugin_035_irSender;
@@ -204,14 +204,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (GetArgv(command, TmpStr1, 5)) IrRepeat = str2int(TmpStr1);
             if (GetArgv(command, TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
-            if (IrType.equalsIgnoreCase("NEC")) Plugin_035_irSender->sendNEC(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("JVC")) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
-            if (IrType.equalsIgnoreCase("RC5")) Plugin_035_irSender->sendRC5(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("RC6")) Plugin_035_irSender->sendRC6(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("SAMSUNG")) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("SONY")) Plugin_035_irSender->sendSony(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("PANASONIC")) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
-            if (IrType.equalsIgnoreCase("PIONEER")) Plugin_035_irSender->sendPioneer(IrCode, IrBits, IrRepeat, IrSecondCode);
+            if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
+            if (IrType.equalsIgnoreCase(F("RC5"))) Plugin_035_irSender->sendRC5(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("RC6"))) Plugin_035_irSender->sendRC6(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("PANASONIC"))) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
+            if (IrType.equalsIgnoreCase(F("PIONEER"))) Plugin_035_irSender->sendPioneer(IrCode, IrBits, IrRepeat, IrSecondCode);
           }
 
           addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
@@ -232,4 +232,4 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
+#endif // USES_P035

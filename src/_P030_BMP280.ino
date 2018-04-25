@@ -1,3 +1,4 @@
+#ifdef USES_P030
 //#######################################################################################################
 //#################### Plugin 030 BMP280 I2C Temp/Barometric Pressure Sensor      #######################
 //#######################################################################################################
@@ -105,11 +106,11 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
         int optionValues[2] = { 0x76, 0x77 };
-        addFormSelectorI2C(string, F("plugin_030_bmp280_i2c"), 2, optionValues, choice);
-        addFormNote(string, F("SDO Low=0x76, High=0x77"));
+        addFormSelectorI2C(F("plugin_030_bmp280_i2c"), 2, optionValues, choice);
+        addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(string, F("Altitude"), F("plugin_030_bmp280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addUnit(string, F("m"));
+        addFormNumericBox(F("Altitude"), F("plugin_030_bmp280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(F("m"));
 
         success = true;
         break;
@@ -394,3 +395,4 @@ float Plugin_030_readAltitude(float seaLevel)
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P030

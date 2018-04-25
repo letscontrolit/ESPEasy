@@ -1,3 +1,4 @@
+#ifdef USES_P063
 //#######################################################################################################
 //#################################### Plugin 063: TTP229 KeyPad ########################################
 //#######################################################################################################
@@ -109,7 +110,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
 
         success = true;
         break;
@@ -204,3 +205,4 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P063

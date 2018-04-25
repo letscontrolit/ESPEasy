@@ -1,3 +1,4 @@
+#ifdef USES_P047
 //#######################################################################################################
 //#################### Plugin 047 Moisture & Temperature & Light I2C Soil moisture sensor  ##############
 //#######################################################################################################
@@ -8,7 +9,6 @@
 // this code is based on version 1.1.2 of the above library
 //
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47
@@ -75,20 +75,20 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormTextBox(string, F("I2C Address (Hex)"), F("plugin_047_i2cSoilMoisture_i2cAddress"), String(F("0x")) +
+      	addFormTextBox(F("I2C Address (Hex)"), F("plugin_047_i2cSoilMoisture_i2cAddress"), String(F("0x")) +
       			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
-        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormCheckBox(F("Send sensor to sleep"), F("plugin_047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-        addFormCheckBox(string, F("Check sensor version") ,F("plugin_047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Check sensor version") ,F("plugin_047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-        addFormSeparator(string);
+        addFormSeparator(2);
 
-        addFormCheckBox(string, F("Change Sensor address"),F("plugin_047_changeAddr"), false);
-      	addFormTextBox(string, F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), String(F("0x")) +
+        addFormCheckBox(F("Change Sensor address"),F("plugin_047_changeAddr"), false);
+      	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), String(F("0x")) +
       			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
-        addFormSeparator(string);
+        addFormSeparator(2);
 
         success = true;
         break;
@@ -301,4 +301,4 @@ bool Plugin_047_setAddress(int addr) {
 }
 
 
-#endif
+#endif // USES_P047

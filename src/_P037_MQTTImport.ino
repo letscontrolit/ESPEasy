@@ -1,3 +1,4 @@
+#ifdef USES_P037
 //#######################################################################################################
 //#################################### Plugin 037: MQTT Import ##########################################
 //#######################################################################################################
@@ -19,8 +20,26 @@
 
 // Declare a Wifi client for this plugin only
 
+// TODO TD-er: These must be kept in some vector to allow multiple instances of MQTT import.
 WiFiClient espclient_037;
-PubSubClient *MQTTclient_037;
+PubSubClient *MQTTclient_037 = NULL;
+bool MQTTclient_037_connected = false;
+
+void Plugin_037_update_connect_status() {
+  bool connected = false;
+  if (MQTTclient_037 != NULL) {
+    connected = MQTTclient_037->connected();
+  }
+  if (MQTTclient_037_connected != connected) {
+    MQTTclient_037_connected = !MQTTclient_037_connected;
+    if (Settings.UseRules) {
+      String event = connected ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected");
+      rulesProcessing(event);
+    }
+    if (!connected)
+      addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
+  }
+}
 
 boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 {
@@ -73,7 +92,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         for (byte varNr = 0; varNr < 4; varNr++)
         {
-        	addFormTextBox(string, String(F("MQTT Topic ")) + (varNr + 1), String(F("Plugin_037_template")) +
+        	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("Plugin_037_template")) +
         			(varNr + 1), deviceTemplate[varNr], 40);
         }
         success = true;
@@ -121,7 +140,9 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        MQTTclient_037->loop();		// Listen out for callbacks
+        if (!MQTTclient_037->loop()) {		// Listen out for callbacks
+          Plugin_037_update_connect_status();
+        }
         success = true;
         break;
       }
@@ -133,13 +154,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         if (!MQTTclient_037->connected() || MQTTclient_should_reconnect) {
           if (MQTTclient_should_reconnect) {
             addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Intentional reconnect"));
-          } else {
-            addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
           }
 
-
           MQTTclient_037->disconnect();
-          delay(1000);
+          Plugin_037_update_connect_status();
+          delay(250);
 
           if (! MQTTConnect_037(ClientName)) {
             success = false;
@@ -338,7 +357,8 @@ boolean MQTTConnect_037(String clientid)
   if (MQTTclient_037->connected()) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
-  if (!WiFiConnected(1000)) {
+  if (!WiFiConnected(100)) {
+    Plugin_037_update_connect_status();
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   ControllerSettingsStruct ControllerSettings;
@@ -379,7 +399,7 @@ boolean MQTTConnect_037(String clientid)
 
     delay(500);
   }
-
+  Plugin_037_update_connect_status();
   return MQTTclient_037->connected();
 }
 
@@ -448,3 +468,4 @@ boolean MQTTCheckSubscription_037(String Topic, String Subscription) {
   }
   return false;
 }
+#endif // USES_P037

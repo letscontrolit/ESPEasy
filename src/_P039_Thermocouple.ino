@@ -1,3 +1,4 @@
+#ifdef USES_P039
 //#######################################################################################################
 //######################## Plugin 039: Thermocouple (MAX6675 / MAX31855) ################################
 //#######################################################################################################
@@ -103,8 +104,8 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNote(string, F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
-        //string += F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)");
+        addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
+        //addHtml(F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2];
@@ -112,7 +113,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         options[1] = F("MAX 31855");
         //options[2] = F("MAX 31865");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(string, F("Adapter IC"), F("plugin_039_maxtype"), 2, options, optionValues, choice);
+        addFormSelector(F("Adapter IC"), F("plugin_039_maxtype"), 2, options, optionValues, choice);
 
         success = true;
         break;
@@ -289,3 +290,4 @@ int Plugin_039_convert_two_complement(uint32_t value, int nr_bits) {
   }
   return nativeInt;
 }
+#endif // USES_P039

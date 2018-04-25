@@ -1,3 +1,4 @@
+#ifdef USES_P005
 //#######################################################################################################
 //######################## Plugin 005: Temperature and Humidity sensor DHT 11/22 ########################
 //#######################################################################################################
@@ -50,7 +51,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
         int indices[] = { 11, 22, 12, 23, 70 };
 
-        addFormSelector(string, F("DHT Type"), F("plugin_005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
+        addFormSelector(F("DHT Type"), F("plugin_005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
 
         success = true;
         break;
@@ -219,3 +220,4 @@ int Plugin_005_read_dht_dat(void)
   }
   return result;
 }
+#endif // USES_P005

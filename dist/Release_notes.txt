@@ -1,4 +1,798 @@
 -------------------------------------------------
+Changes in release mega-20180425 (since mega-20180424)
+-------------------------------------------------
+
+Release date: Wed Apr 25 04:00:08 CEST 2018
+
+Grovkillen (4):
+      Added a void addCopyButton
+      Made copy to clipboard JavaScript based instead
+      Added copy to clipboard on log page
+      Added new lines if BR + delimiter if wanted
+
+Plebs (3):
+      Fix for #1300
+      Adding 3 new http commands: taskrun, taskvalueset and rules
+      Fix another bug in LCD plugin
+
+TD-er (2):
+      [Modbus] PR #1128 made by @s0170071
+      [wifi] More active reconnect to wifi when disconnected
+
+
+-------------------------------------------------
+Changes in release mega-20180424 (since mega-20180423)
+-------------------------------------------------
+
+Release date: Tue Apr 24 04:00:13 CEST 2018
+
+Grovkillen (1):
+      Added note to self compilers
+
+
+-------------------------------------------------
+Changes in release mega-20180423 (since mega-20180422)
+-------------------------------------------------
+
+Release date: Mon Apr 23 04:00:10 CEST 2018
+
+Plebs (1):
+      Fixing #1289 for backwards compatibility
+
+TD-er (1):
+      [wifi] Add delay between connection attempts
+
+
+-------------------------------------------------
+Changes in release mega-20180422 (since mega-20180421)
+-------------------------------------------------
+
+Release date: Sun Apr 22 04:00:09 CEST 2018
+
+Plebs (2):
+      Syntax: [task#value#transformation#justification]
+      Code changed as per TD-er suggestions
+
+TD-er (1):
+      [issue #1292] Remove CRC from settings, init settings and wifi fixes
+
+
+-------------------------------------------------
+Changes in release mega-20180421 (since mega-20180420)
+-------------------------------------------------
+
+Release date: Sat Apr 21 04:00:08 CEST 2018
+
+Grovkillen (1):
+      Removed fade in of body added toast message!
+
+Saverio Cisternino (4):
+      Add Commands timerpause and timerresume
+      Add Trigger Rules#TimerPause= and Rules#TimerResume=
+      Add support at elseif statment
+      Add debug info
+
+TD-er (7):
+      [WiFi] Init static IP before connect to wifi
+      [Toast message] Change "Settings saved" to "Submitted"
+      [info] Add more build related info to the log and wifi info link to wiki
+      [Sonoff Pow] Add support for HLW8012
+      [Sonoff Pow] Add support for HLW8012
+      [Sonoff POW] Change Plugin ID to 76
+      [Sonoff POW] Set some proper defaults for the Sonoff POW
+
+Unknown (2):
+      Merge remote-tracking branch 'papperone/mega' into merge/papperone
+      Merge remote-tracking branch 'papperone/mega' into merge/papperone
+
+
+-------------------------------------------------
+Changes in release mega-20180420 (since mega-20180419)
+-------------------------------------------------
+
+Release date: Fri Apr 20 04:00:09 CEST 2018
+
+Grovkillen (3):
+      Added small fade in (0.5s)
+      "bodymenu" was accidentally copied to all body
+      Added extra breaks below "back to setup" button
+
+TD-er (4):
+      [Static IP] Make sure static mode is set correct always
+      [wifi] Restart webserver when connection changes.
+      [log] Make web log 30 lines for ESP32
+      [wifi] Create event 'gotIP' after processing 'connected' event
+
+
+-------------------------------------------------
+Changes in release mega-20180419 (since mega-20180417)
+-------------------------------------------------
+
+Release date: Thu Apr 19 04:00:17 CEST 2018
+
+Grovkillen (3):
+      Updated the input, select, textareas with CSS
+      Added CSS radio buttons to WiFi setup wizard
+      Removed unused row on hardware settings page
+
+Hans-Rune Bue (1):
+      Implemented syslog facilities and levels
+
+TD-er (3):
+      [Static IP] Work-around for set _use_static_ip
+      [PR #1257] Make it compile again
+      [ESP32] Add Generic info plugin
+
+sentinel073 (2):
+      Issue #1211: Plugin template file and hints on writing new plugins
+      Issue #1211: Plugin template file and hints on writing new plugins     Added review comments
+
+stefan (1):
+      Changes for use of plugin sets
+
+
+-------------------------------------------------
+Changes in release mega-20180417 (since mega-20180416)
+-------------------------------------------------
+
+Release date: Tue Apr 17 04:00:09 CEST 2018
+
+Grovkillen (11):
+      Put borders around checkboxes
+      Re-arranged Rules page
+      Moved help button for sleep
+      Moved help button on hardware page
+      Made controller symbols a bit bigger (1)(2)(3)
+      Change enable "off" to a nicer X
+      Made input type password part of "wide"
+      Added number input to CSS (width 100px)
+      Made IDX column wider (device list)
+      Added max widths for inputs
+      "Ctr (IDX)" was accidentally removed, now added
+
+TD-er (5):
+      [wifi] Fix wifi reconnects with static IP
+      [NTP] Add more information in the log when connecting to NTP server fail
+      [issue #1260] parentheses error on the json page
+      [P075] Nextion plugin (testing)
+      [wifi] Fix build error for ESP32
+
+Unknown (1):
+      [Nextion] Initial support for Nextion displays
+
+
+-------------------------------------------------
+Changes in release mega-20180416 (since mega-20180415)
+-------------------------------------------------
+
+Release date: Mon Apr 16 04:00:09 CEST 2018
+
+TD-er (4):
+      [wifi] Prevent starting AP+STA mode with correct settings
+      [Wifi] force STA mode at boot
+      [wifi] Proper log of static IP configuration
+      [info] Added FW information to help diagnose issues
+
+
+-------------------------------------------------
+Changes in release mega-20180415 (since mega-20180414)
+-------------------------------------------------
+
+Release date: Sun Apr 15 04:00:08 CEST 2018
+
+Gijs Noorlander (1):
+      Added C013
+
+Grovkillen (6):
+      Made checkmarks CSS
+      Fixed missed update.
+      Added column width for separator...
+      Updated some more stuff
+      Made addFormSeparator function a lot cleaner
+      Bumped delay timer for MQTT pub 10mSec
+
+Nuno Sousa (1):
+      Replace ultrasonic plugin with NewPing lib
+
+Susis Strolch (4):
+      add missing USES_XXX to _C*.ino, _N*.ino
+      system variables %sysheap%, %syssec_d
+      ignore power-on reset value (85.0 °C)
+      DS_readTemp: handle power-on reset value
+
+TD-er (4):
+      [WebServer] Cleanup of all functions appending to a big string
+      [PR #1247 ]  Merged PR into the refactoring of Webserver
+      [PR #1248] Fixed textarea sizes
+      [Merge] Easier to merge, rebased on Mega branch.
+
+
+-------------------------------------------------
+Changes in release mega-20180414 (since mega-20180413)
+-------------------------------------------------
+
+Release date: Sat Apr 14 04:00:08 CEST 2018
+
+GHolli (3):
+      Update _P049_MHZ19.ino
+      Change comma to semicolon
+      Downstream updates (#1)
+
+Gerald (1):
+      Update _P049_MHZ19.ino
+
+Grovkillen (4):
+      Added RSSI, BSSID, Channel to WifiScan/Setup
+      Removed the serial print "done."
+      Added better(?) format for tables
+      Fixed main page!
+
+Holli (2):
+      It seems the offsets [3]..[4] for the detection range setting (command byte 0x99) are wrong in the latest online data sheet: http://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19b-co2-ver1_0.pdf     According to the MH-Z19B data sheet version 1.2, valid from: 2017.03.22 (received 2018-03-07), the offset should be [6]..[7] instead.     Fixing the implementation accordingly.
+      Disable detection range commands by default.
+
+Plebs (5):
+      Fixes for #1208 and partial #1196
+      modified float() call
+      new #formats
+      added more formats
+      Added #I
+
+TD-er (1):
+      [issue #1239] %bssid% and %wi_ch% added as variables
+
+clumsy-stefan (1):
+      _P015_TSL2561 added Broadband and IR Values
+
+linuxnico (1):
+      add ds1822 definition to ds_read_temp function
+
+
+-------------------------------------------------
+Changes in release mega-20180413 (since mega-20180412)
+-------------------------------------------------
+
+Release date: Fri Apr 13 04:00:09 CEST 2018
+
+TD-er (1):
+      [wifi] Event based wifi, fix set AP and crash on start
+
+
+-------------------------------------------------
+Changes in release mega-20180412 (since mega-20180410)
+-------------------------------------------------
+
+Release date: Thu Apr 12 04:00:14 CEST 2018
+
+Gijs Noorlander (1):
+      [MQTT] Process MQTT loop on publish
+
+TD-er (7):
+      [issue #1215] Cannot login to accesspoint on new install
+      [issue #1215] Cannot login to accesspoint on new install
+      [Wifi] Use statemachine to move between Wifi states
+      [WiFi] Event based wifi, now AP mode works
+      [wifi] Make it work for ESP32 again
+      [wifi] Fix wifi AP setup mode for ESP32.
+      [wifi] Event based wifi, improve scan information.
+
+flexiti (1):
+      ESP CPU speed and ID
+
+mvdbro (1):
+      Reboot/Reset pin, build 20101 patch
+
+
+-------------------------------------------------
+Changes in release mega-20180410 (since mega-20180409)
+-------------------------------------------------
+
+Release date: Tue Apr 10 04:00:21 CEST 2018
+
+Grovkillen (5):
+      Added comments that will not show up on issues
+      Update issue_template.md
+      Update issue_template.md
+      Update issue_template.md
+      Update issue_template.md
+
+
+-------------------------------------------------
+Changes in release mega-20180409 (since mega-20180407)
+-------------------------------------------------
+
+Release date: Mon Apr  9 04:00:13 CEST 2018
+
+mvdbro (2):
+      Factory Reset (not enabled yet)
+      Both reset/factoryreset option
+
+
+-------------------------------------------------
+Changes in release mega-20180407 (since mega-20180405)
+-------------------------------------------------
+
+Release date: Sat Apr  7 04:00:12 CEST 2018
+
+Grovkillen (1):
+      Fixed clickable link www.letscontrolit.com (#1192)
+
+
+-------------------------------------------------
+Changes in release mega-20180405 (since mega-20180403)
+-------------------------------------------------
+
+Release date: Thu Apr  5 04:00:10 CEST 2018
+
+Grovkillen (4):
+      Updated JSON path for sensor values and names
+      Delete WebServer.ino
+      Moved to correct folder
+      Added value number as discussed.
+
+moi (3):
+      Show CPU Load in JSON page
+      Adds CPU Load LC in JSON page
+      unwanted lib_ignore now properly commented
+
+mvdbro (2):
+      ESP32 RTOS config setting
+      ESP32 RTOS 10 per second
+
+
+-------------------------------------------------
+Changes in release mega-20180403 (since mega-20180402)
+-------------------------------------------------
+
+Release date: Tue Apr  3 04:00:14 CEST 2018
+
+Grovkillen (2):
+      Update _P038_NeoPixel.ino
+      Update _P029_Output.ino
+
+mvdbro (1):
+      ESP32 prep for RTOS multitasking
+
+
+-------------------------------------------------
+Changes in release mega-20180402 (since mega-20180401)
+-------------------------------------------------
+
+Release date: Mon Apr  2 04:00:10 CEST 2018
+
+Gijs Noorlander (1):
+      Revert "Merge pull request #1205 from s0170071/SerialSwap"
+
+
+-------------------------------------------------
+Changes in release mega-20180401 (since mega-20180331)
+-------------------------------------------------
+
+Release date: Sun Apr  1 04:00:08 CEST 2018
+
+Grovkillen (1):
+      P0059 (rotary encoder) and P0063 (ttp229, keypad)
+
+TD-er (3):
+      [issue #1201] MQTT#Disconnected event and MQTT stability improvements
+      [issue #1201] MQTT#Disconnected event and MQTT stability improvements
+      [deepsleep] Allow for some minimum wifi connect time
+
+s0170071 (1):
+      Serial Swap function
+
+
+-------------------------------------------------
+Changes in release mega-20180331 (since mega-20180330)
+-------------------------------------------------
+
+Release date: Sat Mar 31 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build ESP32] Fix for build issues between ESP32 and ESP8266
+      [ESP32] Build errors/warnings
+
+mvdbro (1):
+      ESP32: Fix Wifi Disconnect reason
+
+
+-------------------------------------------------
+Changes in release mega-20180330 (since mega-20180329)
+-------------------------------------------------
+
+Release date: Fri Mar 30 04:00:10 CEST 2018
+
+Gijs Noorlander (1):
+      Build issue with Arduino IDE
+
+
+-------------------------------------------------
+Changes in release mega-20180329 (since mega-20180328)
+-------------------------------------------------
+
+Release date: Thu Mar 29 04:00:11 CEST 2018
+
+TD-er (2):
+      [ESP32] Event driven WiFi for ESP32
+      [Arduino IDE] Revert changes in include paths
+
+
+-------------------------------------------------
+Changes in release mega-20180328 (since mega-20180327)
+-------------------------------------------------
+
+Release date: Wed Mar 28 04:00:09 CEST 2018
+
+TD-er (2):
+      [Build] Cleanup/split builds using defines
+      [build] Disabled a few PlatformIO profiles for now.
+
+mvdbro (1):
+      Fix nesting level check
+
+soif (1):
+      Initial re-organisation of plugin sets (#1019)
+
+
+-------------------------------------------------
+Changes in release mega-20180327 (since mega-20180326)
+-------------------------------------------------
+
+Release date: Tue Mar 27 04:00:09 CEST 2018
+
+TD-er (1):
+      [issue #1174] Show degree sign via external writes to LCD
+
+
+-------------------------------------------------
+Changes in release mega-20180326 (since mega-20180324)
+-------------------------------------------------
+
+Release date: Mon Mar 26 04:00:14 CEST 2018
+
+Bartlomiej Zimon (1):
+      - fix for #1170 - uservar not setted on encwrite
+
+Brian Setz (1):
+      [P1] Support for latest standard
+
+TD-er (3):
+      [Command] Parsing improvement for commands
+      [wifi] Event based connect/reconnect
+      [NTP] Speedup NTP again with async WiFi
+
+
+-------------------------------------------------
+Changes in release mega-20180324 (since mega-20180323)
+-------------------------------------------------
+
+Release date: Sat Mar 24 04:00:10 CET 2018
+
+TD-er (3):
+      [WiFi] Reverted those temp String uses for ssid/pass
+      [issue #1131] Add %unixtime%
+      [issue #1097] Call MQTTclient.loop() during deepsleep
+
+
+-------------------------------------------------
+Changes in release mega-20180323 (since mega-20180322)
+-------------------------------------------------
+
+Release date: Fri Mar 23 04:00:06 CET 2018
+
+mvdbro (1):
+      ESP32 fix
+
+
+-------------------------------------------------
+Changes in release mega-20180322 (since mega-20180321)
+-------------------------------------------------
+
+Release date: Thu Mar 22 04:00:11 CET 2018
+
+Bartlomiej Zimon (7):
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P035 move strings to flash
+      - P048 fetch params only when needed
+      - P012 fix command interpretation
+      - P023 fix command interpretation
+      - P048 fetch params only when needed
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180321
+
+Gijs Noorlander (1):
+      [merge issue] Forgotten #endif in merge
+
+TD-er (6):
+      [wifi] Make more robust checks and increase timeout
+      - P035 move strings to flash
+      [wifi] Make more robust checks and increase timeout
+      [Memory] parseTemplate did not check if markers were found
+      [WiFi] Take much more time for initial WiFi connect during setup
+      [WiFi] Take much more time for initial WiFi connect during setup
+
+Unknown (1):
+      [Memory] parseTemplate did not check if markers were found
+
+s0170071 (2):
+      Serial WD crash
+      Serial WD crash
+
+
+-------------------------------------------------
+Changes in release mega-20180321 (since mega-20180320)
+-------------------------------------------------
+
+Release date: Wed Mar 21 04:00:08 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180320
+
+Unknown (2):
+      [wifi] Setup with factory settings could not complete
+      [wifi] Setup with factory settings could not complete
+
+
+-------------------------------------------------
+Changes in release mega-20180320 (since mega-20180319)
+-------------------------------------------------
+
+Release date: Tue Mar 20 04:00:10 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180319
+
+Gijs Noorlander (1):
+      Revert "Merge pull request #1116 from TD-er/feature/allow_own_defaults"
+
+Unknown (3):
+      Revert "Merge pull request #1116 from TD-er/feature/allow_own_defaults"
+      [issue #1097] WiFi connect with deepsleep enabled trigger watchdog reset
+      [issue #1097] WiFi connect with deepsleep enabled trigger watchdog reset
+
+es-ka (2):
+      Fix wiring description for SN75176 transceiver
+      Fix wiring description for SN75176 transceiver
+
+
+-------------------------------------------------
+Changes in release mega-20180319 (since mega-20180316)
+-------------------------------------------------
+
+Release date: Mon Mar 19 04:00:11 CET 2018
+
+Bartlomiej Zimon (5):
+      Add download button for current rule set
+      - add encoder write #1086
+      - fix success setting
+      - fix P073 success setting in PLUGIN_WRITE callback
+      - initialize pointer in P073
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180316
+
+Gijs Noorlander (6):
+      Add download button for current rule set (#1102)
+      - add encoder write command #1086 (#1103)
+      Changed so that running all tasks immediately with deep sleep enabled… (#1110)
+      Merge pull request #1112 from uzi18/fix-p073
+      Merge pull request #1114 from TD-er/feature/wifi_details_json
+      Merge pull request #1118 from TD-er/bugfix/mqtt_publish_after_deep_sleep
+
+Panayotis Kouvarakis (1):
+      Changed so that running all tasks immediately with deep sleep enabled only happens on first iteration after wake up
+
+Unknown (11):
+      [WiFi] Try to minimize effect of WiFi interruptions
+      [Relaxed WiFi] Perform WiFi initialization in steps
+      [Travis error] Some #include test that wasn't meant to be included
+      [JSON] Add uint name (#1099) and WiFi information (PR #1113)
+      [issue #1007] Allow user specific data in separate file
+      #ifndef instead of #ifdef
+      [issue #1007] Add other defines as suggested by @uzi18
+      [issue #1097] MQTT publish after deep sleep
+      Merge pull request #1113 from TD-er/feature/reduce_impact_wifi_disconnect
+      Merge pull request #1116 from TD-er/feature/allow_own_defaults
+      [merge] MIssing #endif due to merging.
+
+s0170071 (2):
+      changed memory tracker to uint64_t for the ESP32
+      Keep uint. Just change the init value.
+
+
+-------------------------------------------------
+Changes in release mega-20180316 (since mega-20180315)
+-------------------------------------------------
+
+Release date: Fri Mar 16 04:00:11 CET 2018
+
+Bartlomiej Zimon (3):
+      - move all structs from ESPEasy.ino into header file     - add some fix for headers     - add const to rtttl notes array
+      Merge branch 'mega' of github.com:letscontrolit/ESPEasy into mega
+      Merge branch 'mega' of github.com:letscontrolit/ESPEasy into mega
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180313
+
+Gijs Noorlander (3):
+      MCP3221 allow values for calibration (#1073)
+      [issue #1066] Fix Webserver handle_control (#1079)
+      Fixed multi instance problem on SHT3x #433 (#1081)
+
+JK (1):
+      Fixed #433
+
+Unknown (9):
+      [issue #1066] Fix Webserver handle_control
+      - move all structs from ESPEasy.ino into header file
+      [v2.0 split globals] Base split on v2.0 version of ESPEasy.ino
+      [issue #1057] AM PM display issue
+      [issue #993] variable in MQTT subscribe topic
+      [issue #951] Changed System#Initialized  => System#Wake
+      [issue #1057] AM PM display issue
+      [issue #993] variable in MQTT subscribe topic
+      [issue #951] Changed System#Initialized  => System#Wake
+
+mvdbro (4):
+      #893 part1, send messages
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+sassod (1):
+      12bit ADC values acceted up to 4095
+
+
+-------------------------------------------------
+Changes in release mega-20180315 (since mega-20180314)
+-------------------------------------------------
+
+Release date: Thu Mar 15 04:00:08 CET 2018
+
+mvdbro (3):
+      Custom controller GUI option
+      #893, part 2 receiving
+      Rules fix
+
+
+-------------------------------------------------
+Changes in release mega-20180314 (since mega-20180313)
+-------------------------------------------------
+
+Release date: Wed Mar 14 04:00:11 CET 2018
+
+mvdbro (1):
+      #893 part1, send messages
+
+
+-------------------------------------------------
+Changes in release mega-20180313 (since mega-20180312)
+-------------------------------------------------
+
+Release date: Tue Mar 13 04:00:11 CET 2018
+
+Bartlomiej Zimon (4):
+      - fix for #1065
+      - remove double trimm()
+      - fix for #1065
+      - remove double trimm()
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180312
+
+Unknown (1):
+      Rule Engine minor fix and added dev debugging
+
+mvdbro (1):
+      ESP32 C010 fix
+
+
+-------------------------------------------------
+Changes in release mega-20180312 (since mega-20180311)
+-------------------------------------------------
+
+Release date: Mon Mar 12 04:00:07 CET 2018
+
+ESPEasy release bot (1):
+      automaticly updated release notes for v2.0-20180311
+
+Unknown (4):
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+      [issue #1039 ] Change CSS to show topmost SSID on large screens
+      [webserver] Improve chunked transfer
+
+mvdbro (1):
+      Rule Engine minor fix and added dev debugging
+
+
+-------------------------------------------------
+Changes in release mega-20180311 (since mega-20180310)
+-------------------------------------------------
+
+Release date: Sun Mar 11 04:00:06 CET 2018
+
+ESPEasy release bot (2):
+      automaticly updated release notes for v2.0-20180309
+      automaticly updated release notes for v2.0-20180310
+
+Unknown (19):
+      Move plugin init before WiFi init
+      [Conversions] Use more decimals in conversions and add AM/PM for time.
+      Update P07 Plugin
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      [P073] Remove tm1637_bitDelay()
+      Improve flash read performance
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      [AM/PM] Am/Pm notation doesn't have '0' hours
+      Update P07 Plugin
+      [P073] Remove tm1637_bitDelay()
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [deepsleep] Make sure the 'shortcut' of running all services when sleep enabled
+      [OLED] fix drawProgressBar
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [DNS lookup] Controllers sometimes try to connect to 0.0.0.0
+      [issue #1039] Topmost SSID are covered on mobile Browser
+      [issue #1039] Topmost SSID are covered on mobile Browser
+
+mvdbro (5):
+      Improve flash read performance
+      Rule Engine, stop waisting time on non matching rules
+      Add read buffer to rule processing to speedup parsing
+      Final ruleset speed-up
+      Rule Engine, stop waisting time on non matching rules
+
+
+-------------------------------------------------
+Changes in release mega-20180310 (since mega-20180309)
+-------------------------------------------------
+
+Release date: Sat Mar 10 04:00:07 CET 2018
+
+Unknown (2):
+      Move plugin init before WiFi init
+      [Conversions] Use more decimals in conversions and add AM/PM for time.
+
+
+-------------------------------------------------
+Changes in release mega-20180309 (since mega-20180308)
+-------------------------------------------------
+
+Release date: Fri Mar  9 04:00:11 CET 2018
+
+ESPEasy release bot (3):
+      automaticly updated release notes for v2.0-20180305
+      automaticly updated release notes for v2.0-20180306
+      automaticly updated release notes for v2.0-20180307
+
+Gijs Noorlander (2):
+      Fixes P073 plugin for latest TM1637 based 7 segments displays modules (#996) (#1022)
+      [CSS] Quick fix for smaller displays (#1026)
+
+Unknown (5):
+      [issue #1012] Removed Content-Length header + improved webserver speed
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [Rule Events] Add a number of events to handle in rules and awake timer
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+      [issue #1015] Add other simple conversions like Celsius to Fahrenheit, etc.
+
+
+-------------------------------------------------
+Changes in release mega-20180308 (since mega-20180307)
+-------------------------------------------------
+
+Release date: Thu Mar  8 04:00:08 CET 2018
+
+mvdbro (2):
+      First step towards port monitoring without tasks
+      Second step towards port monitoring without tasks
+
+
+-------------------------------------------------
 Changes in release mega-20180307 (since mega-20180305)
 -------------------------------------------------
 

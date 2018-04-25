@@ -1,3 +1,4 @@
+#ifdef USES_P006
 //#######################################################################################################
 //######################## Plugin 006 BMP0685 I2C Barometric Pressure Sensor  ###########################
 //#######################################################################################################
@@ -49,7 +50,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("Altitude [m]"), F("_p006_bmp085_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+      	addFormNumericBox(F("Altitude [m]"), F("_p006_bmp085_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         success = true;
         break;
       }
@@ -287,3 +288,4 @@ float Plugin_006_pressureElevation(float atmospheric, int altitude) {
 /*********************************************************************/
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P006

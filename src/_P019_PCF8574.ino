@@ -1,3 +1,4 @@
+#ifdef USES_P019
 //#######################################################################################################
 //#################################### Plugin 019: PCF8574 ##############################################
 //#######################################################################################################
@@ -46,7 +47,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("Send Boot state"), F("plugin_019_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormCheckBox(F("Send Boot state"), F("plugin_019_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -238,3 +239,4 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
 
   return true;
 }
+#endif // USES_P019

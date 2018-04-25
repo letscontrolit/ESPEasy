@@ -1,3 +1,4 @@
+#ifdef USES_P025
 //#######################################################################################################
 //#################################### Plugin 025: ADS1115 I2C 0x48)  ###############################################
 //#######################################################################################################
@@ -9,7 +10,7 @@
 
 boolean Plugin_025_init = false;
 
-static uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
+uint16_t readRegister025(uint8_t i2cAddress, uint8_t reg) {
   Wire.beginTransmission(i2cAddress);
   Wire.write((0x00));
   Wire.endTransmission();
@@ -66,9 +67,9 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         #define ADS1115_I2C_OPTION 4
         byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
-        addFormSelectorI2C(string, F("plugin_025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+        addFormSelectorI2C(F("plugin_025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
 
-        addFormSubHeader(string, F("Input"));
+        addFormSubHeader(F("Input"));
 
         #define ADS1115_PGA_OPTION 6
         byte pga = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -80,7 +81,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           F("8x gain (FS=0.512V)"),
           F("16x gain (FS=0.256V)")
         };
-        addFormSelector(string, F("Gain"), F("plugin_025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
+        addFormSelector(F("Gain"), F("plugin_025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
 
         #define ADS1115_MUX_OPTION 8
         byte mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -94,19 +95,19 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           F("AIN2 - GND (Single-Ended)"),
           F("AIN3 - GND (Single-Ended)"),
         };
-        addFormSelector(string, F("Input Multiplexer"), F("plugin_025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
+        addFormSelector(F("Input Multiplexer"), F("plugin_025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
 
-        addFormSubHeader(string, F("Two Point Calibration"));
+        addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormCheckBox(F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(string, F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
-        string += F(" &#8793; ");
-        addTextBox(string, F("plugin_025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("plugin_025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(string, F("Point 2"), F("plugin_025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], -32768, 32767);
-        string += F(" &#8793; ");
-        addTextBox(string, F("plugin_025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("plugin_025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], -32768, 32767);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("plugin_025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -202,3 +203,4 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P025

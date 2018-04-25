@@ -8,9 +8,6 @@ void sendData(struct EventStruct *event)
   if (Settings.UseRules)
     createRuleEvents(event->TaskIndex);
 
-  if (Settings.GlobalSync && Settings.TaskDeviceGlobalSync[event->TaskIndex])
-    SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
-
   if (Settings.UseValueLogger && Settings.InitSPI && Settings.Pin_sd_cs >= 0)
     SendValueLogger(event->TaskIndex);
 
@@ -95,11 +92,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   String log;
   log=F("MQTT : Topic: ");
   log+=c_topic;
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   log=F("MQTT : Payload: ");
   log+=c_payload;
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
   // addLog(LOG_LEVEL_DEBUG, log);
@@ -123,8 +120,10 @@ bool MQTTConnect(int controller_idx)
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (!ControllerSettings.checkHostReachable(true))
     return false;
-  if (MQTTclient.connected())
+  if (MQTTclient.connected()) {
     MQTTclient.disconnect();
+    updateMQTTclient_connected();
+  }
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -138,7 +137,7 @@ bool MQTTConnect(int controller_idx)
 
   String LWTTopic = ControllerSettings.Subscribe;
   LWTTopic.replace(F("/#"), F("/status"));
-  LWTTopic.replace(F("%sysname%"), Settings.Name);
+  parseSystemVariables(LWTTopic, false);
   LWTTopic += F("/LWT"); // Extend the topic for status updates of connected/disconnected status.
 
   boolean MQTTresult = false;
@@ -169,6 +168,7 @@ bool MQTTConnect(int controller_idx)
   addLog(LOG_LEVEL_INFO, log);
 
   if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
+    updateMQTTclient_connected();
     statusLED(true);
     return true; // end loop if succesfull
   }
@@ -181,15 +181,17 @@ bool MQTTConnect(int controller_idx)
 \*********************************************************************************************/
 bool MQTTCheck(int controller_idx)
 {
+  if (!WiFiConnected(10)) {
+    return false;
+  }
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controller_idx]);
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    if (MQTTclient_should_reconnect || !WiFiConnected(10) || !MQTTclient.connected())
+    if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
       } else {
-        addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
         connectionFailures += 2;
       }
       return MQTTConnect(controller_idx);
@@ -225,8 +227,10 @@ void SendStatus(byte source, String status)
 
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
-  if (MQTTclient.publish(topic, payload, retained))
+  if (MQTTclient.publish(topic, payload, retained)) {
+    timermqtt = millis() + 10; // Make sure the MQTT is being processed as soon as possible.
     return true;
+  }
   addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
   return false;
 }
@@ -242,7 +246,7 @@ void MQTTStatus(String& status)
     LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
     String pubname = ControllerSettings.Subscribe;
     pubname.replace(F("/#"), F("/status"));
-    pubname.replace(F("%sysname%"), Settings.Name);
+    parseSystemVariables(pubname, false);
     MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(),Settings.MQTTRetainFlag);
   }
 }

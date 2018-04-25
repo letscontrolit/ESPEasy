@@ -1,8 +1,9 @@
+#ifdef USES_C012
 //#######################################################################################################
 //########################### Controller Plugin 012: Blynk  #############################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
+// #ifdef PLUGIN_BUILD_TESTING
 
 #define CPLUGIN_012
 #define CPLUGIN_ID_012         12
@@ -33,7 +34,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 
      case CPLUGIN_PROTOCOL_SEND:
       {
-        if (WiFi.status() != WL_CONNECTED) {
+        if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
           success = false;
           break;
         }
@@ -63,7 +64,7 @@ boolean CPlugin_012_send(struct EventStruct *event, int nrValues) {
 
 boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     return false;
   }
 
