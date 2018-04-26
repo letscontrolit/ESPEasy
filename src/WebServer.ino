@@ -4615,7 +4615,6 @@ void handle_setup() {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
-    setWifiState(WifiCredentialsChanged);
     String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
     reconnectlog += ssid;
     addLog(LOG_LEVEL_INFO, reconnectlog);

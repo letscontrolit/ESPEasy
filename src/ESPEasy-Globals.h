@@ -1193,23 +1193,7 @@ enum WiFiDisconnectReason
 };
 #endif
 
-enum WifiState {
-  WifiOff,
-  WifiStart,
-  WifiTryConnect,
-  WifiConnectionFailed,
-  WifiClientConnectAP,
-  WifiClientDisconnectAP,
-  WifiCredentialsChanged,
-  WifiConnectSuccess,
-  WifiDisableAP,
-  WifiEnableAP,
-  WifiStartScan,
-};
 
-WifiState currentWifiState = WifiStart;
-
-void setWifiState(WifiState state);
 bool useStaticIP();
 
 // WiFi related data
@@ -1244,7 +1228,6 @@ bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
-bool processedTryConnect = true;
 
 bool webserver_state = false;
 bool webserver_init = false;

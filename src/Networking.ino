@@ -607,7 +607,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
   // Apparently something needs network, perform check to see if it is ready now.
 //  if (!tryConnectWiFi())
 //    return false;
-  while (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  while (WiFi.status() != WL_CONNECTED) {
     if (timeOutReached(timer)) {
       return false;
     }
@@ -635,9 +635,7 @@ bool hostReachable(const IPAddress& ip) {
   if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
     // Work-around to fix connected but not able to communicate.
     addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reset wifi."));
-    setWifiState(WifiOff);
-    delay(100);
-    setWifiState(WifiTryConnect);
+    resetWiFi();
   }
   return false;
 }
