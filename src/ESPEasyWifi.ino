@@ -742,8 +742,13 @@ String formatScanResult(int i, const String& separator) {
 //********************************************************************************
 void WifiCheck()
 {
-  if(wifiSetup)
+  // wifiSetupConnect is true if user entered credentials. So go on.
+  if(wifiSetup && !wifiSetupConnect) {
     return;
+  }
+  else {
+    wifiSetupConnect = false;
+  }
 
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout.
