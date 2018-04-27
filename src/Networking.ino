@@ -2,9 +2,9 @@
 // Syslog
 // UDP system messaging
 // SSDP
-  #if LWIP_VERSION_MAJOR == 2
-   #define IP2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
-  #endif
+//  #if LWIP_VERSION_MAJOR == 2
+#define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+//  #endif
 
 
 /*********************************************************************************************\
@@ -442,7 +442,7 @@ void SSDP_send(byte method) {
                      SSDP_INTERVAL,
                      Settings.Build,
                      uuid,
-                     IP2STR(&ip)
+                     IPADDR2STR(&ip)
                     );
 
   _server->append(buffer, len);
@@ -634,8 +634,8 @@ bool hostReachable(const IPAddress& ip) {
   addLog(LOG_LEVEL_ERROR, log);
   if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
     // Work-around to fix connected but not able to communicate.
-    addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reset wifi."));
-    resetWiFi();
+    addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reconnect wifi."));
+    WifiDisconnect();
   }
   return false;
 }
