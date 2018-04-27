@@ -824,6 +824,7 @@ private:
     if (!UseDNS) {
       return true;
     }
+    if (WiFi.status() != WL_CONNECTED) return false;
     IPAddress tmpIP;
     if (WiFi.hostByName(HostName, tmpIP)) {
       for (byte x = 0; x < 4; x++) {

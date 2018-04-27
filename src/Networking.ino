@@ -617,6 +617,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
 }
 
 bool hostReachable(const IPAddress& ip) {
+  if (WiFi.status() != WL_CONNECTED) return false;
   // Only do 1 ping at a time to return early
   byte retry = 3;
   while (retry > 0) {
@@ -641,6 +642,7 @@ bool hostReachable(const IPAddress& ip) {
 }
 
 bool hostReachable(const String& hostname) {
+  if (WiFi.status() != WL_CONNECTED) return false;
   IPAddress remote_addr;
   if (WiFi.hostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
