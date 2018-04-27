@@ -1,3 +1,5 @@
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
@@ -1074,6 +1076,8 @@ struct systemTimerStruct
   byte Par2;
   byte Par3;
 } systemTimers[SYSTEM_TIMER_MAX];
+
+#define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
 
 struct systemCMDTimerStruct
 {
