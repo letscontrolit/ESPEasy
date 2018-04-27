@@ -824,6 +824,7 @@ private:
     if (!UseDNS) {
       return true;
     }
+    if (WiFi.status() != WL_CONNECTED) return false;
     IPAddress tmpIP;
     if (WiFi.hostByName(HostName, tmpIP)) {
       for (byte x = 0; x < 4; x++) {
@@ -1193,23 +1194,7 @@ enum WiFiDisconnectReason
 };
 #endif
 
-enum WifiState {
-  WifiOff,
-  WifiStart,
-  WifiTryConnect,
-  WifiConnectionFailed,
-  WifiClientConnectAP,
-  WifiClientDisconnectAP,
-  WifiCredentialsChanged,
-  WifiConnectSuccess,
-  WifiDisableAP,
-  WifiEnableAP,
-  WifiStartScan,
-};
 
-WifiState currentWifiState = WifiStart;
-
-void setWifiState(WifiState state);
 bool useStaticIP();
 
 // WiFi related data
@@ -1244,7 +1229,6 @@ bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
-bool processedTryConnect = true;
 
 bool webserver_state = false;
 bool webserver_init = false;
