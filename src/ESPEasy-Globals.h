@@ -477,6 +477,7 @@ WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
 bool MQTTclient_connected = false;
+int mqtt_reconnect_count = 0;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
@@ -1198,11 +1199,12 @@ enum WiFiDisconnectReason
 #ifndef ESP32
 // To do some reconnection check.
 #include <Ticker.h>
-bool reconnectChecker = false;
 Ticker connectionCheck;
+#endif
+
+bool reconnectChecker = false;
 void connectionCheckHandler()
 {
-
   if (reconnectChecker == false && WiFi.status() != WL_CONNECTED){
     reconnectChecker = true;
     WiFi.reconnect();
@@ -1211,7 +1213,6 @@ void connectionCheckHandler()
     reconnectChecker = false;
   }
 }
-#endif
 
 bool useStaticIP();
 

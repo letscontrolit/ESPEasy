@@ -116,6 +116,7 @@ void processGotIP() {
   if (Settings.UseNTP) {
     initTime();
   }
+  mqtt_reconnect_count = 0;
   timermqtt_interval = 100;
   timermqtt = millis() + timermqtt_interval;
   if (Settings.UseRules)
@@ -712,6 +713,9 @@ void WifiCheck()
   processDisableAPmode();
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     WiFiConnectRelaxed();
+  }
+  if (mqtt_reconnect_count > 10) {
+    connectionCheckHandler();
   }
 }
 
