@@ -502,6 +502,7 @@ bool wifiConnectTimeoutReached() {
 }
 
 void setupStaticIPconfig() {
+  setUseStaticIP(useStaticIP());
   if (!useStaticIP()) return;
   const IPAddress ip = Settings.IP;
   const IPAddress gw = Settings.Gateway;
@@ -552,7 +553,7 @@ bool tryConnectWiFi() {
   log += F(" attempt #");
   log += wifi_connect_attempt;
   addLog(LOG_LEVEL_INFO, log);
-
+  setupStaticIPconfig();
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
     case 0:
