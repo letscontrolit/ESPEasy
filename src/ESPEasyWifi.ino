@@ -8,6 +8,7 @@
 void processConnect() {
   if (processedConnect) return;
   processedConnect = true;
+  ++wifi_reconnects;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
   String log = F("WIFI : Connected! AP: ");
@@ -375,6 +376,7 @@ void setWifiMode(WiFiMode_t wifimode) {
   }
   setUseStaticIP(useStaticIP());
   WiFi.mode(wifimode);
+  delay(30); // Must allow for some time to init.
 }
 
 

@@ -3613,6 +3613,8 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
     reply += F(",\n");
+    reply += to_json_object_value(F("Number reconnects"), String(wifi_reconnects));
+    reply += F(",\n");
     reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
   }
@@ -5006,6 +5008,9 @@ void handle_sysinfo() {
 
   TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
   TXBuffer += getLastDisconnectReason();
+
+  TXBuffer += F("<TR><TD>Number reconnects<TD>");
+  TXBuffer += wifi_reconnects;
 
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
