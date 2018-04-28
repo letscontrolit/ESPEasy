@@ -2629,7 +2629,7 @@ void rulesTimers()
   {
     if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
     {
-      if (timeOutReached(RulesTimer[x].timestamp)) // timer finished?
+      if (timeOutReached(RulesTimer[x].timestamp - 100)) // timer finished?  (minus 100 ms)
       {
         RulesTimer[x].timestamp = 0L; // turn off this timer
         String event = F("Rules#Timer=");
