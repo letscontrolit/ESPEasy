@@ -638,6 +638,7 @@ bool hostReachable(const IPAddress& ip) {
     addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reconnect wifi."));
     WifiDisconnect();
   }
+  logConnectionStatus();
   return false;
 }
 

@@ -1195,6 +1195,24 @@ enum WiFiDisconnectReason
 #endif
 
 
+#ifndef ESP32
+// To do some reconnection check.
+#include <Ticker.h>
+bool reconnectChecker = false;
+Ticker connectionCheck;
+void connectionCheckHandler()
+{
+
+  if (reconnectChecker == false && WiFi.status() != WL_CONNECTED){
+    reconnectChecker = true;
+    WiFi.reconnect();
+  }
+  else if (WiFi.status() == WL_CONNECTED && reconnectChecker == true){
+    reconnectChecker = false;
+  }
+}
+#endif
+
 bool useStaticIP();
 
 // WiFi related data
@@ -1204,6 +1222,7 @@ uint8_t lastBSSID[6] = {0};
 uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
 unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
+unsigned int wifi_reconnects = 0;
 uint8_t lastWiFiSettings = 0;
 String last_ssid;
 bool bssid_changed = false;

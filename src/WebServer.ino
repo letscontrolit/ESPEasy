@@ -3589,6 +3589,8 @@ void handle_json()
       reply += to_json_object_value(F("Hostname"), WiFi.hostname());
     #endif
     reply += F(",\n");
+    reply += to_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
+    reply += F(",\n");
     reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
     reply += F(",\n");
     reply += to_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
@@ -3612,6 +3614,8 @@ void handle_json()
     reply += to_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
     reply += F(",\n");
     reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Number reconnects"), String(wifi_reconnects));
     reply += F(",\n");
     reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
@@ -4946,6 +4950,8 @@ void handle_sysinfo() {
      TXBuffer += WiFi.RSSI();
      TXBuffer += F(" dB)");
   }
+  TXBuffer += F("<TR><TD>IP config<TD>");
+  TXBuffer += useStaticIP() ? F("Static") : F("DHCP");
 
    TXBuffer += F("<TR><TD>IP / subnet<TD>");
    TXBuffer += formatIP(WiFi.localIP());
@@ -5007,6 +5013,9 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
   TXBuffer += getLastDisconnectReason();
 
+  TXBuffer += F("<TR><TD>Number reconnects<TD>");
+  TXBuffer += wifi_reconnects;
+
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
   TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
@@ -5019,6 +5028,8 @@ void handle_sysinfo() {
 #else
   TXBuffer += F(" (ESP82xx Core ");
   TXBuffer += ESP.getCoreVersion();
+  TXBuffer += F(", NONOS SDK ");
+  TXBuffer += system_get_sdk_version();
 #endif
   TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
   TXBuffer += BUILD_GIT;

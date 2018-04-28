@@ -89,6 +89,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   strncpy(c_payload,(char*)b_payload,length);
   c_payload[length] = 0;
 
+/*
   String log;
   log=F("MQTT : Topic: ");
   log+=c_topic;
@@ -97,6 +98,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   log=F("MQTT : Payload: ");
   log+=c_payload;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
+  */
 
   // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
   // addLog(LOG_LEVEL_DEBUG, log);

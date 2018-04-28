@@ -8,6 +8,7 @@
 void processConnect() {
   if (processedConnect) return;
   processedConnect = true;
+  ++wifi_reconnects;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
   String log = F("WIFI : Connected! AP: ");
@@ -27,8 +28,11 @@ void processConnect() {
     String event = F("WiFi#ChangedAccesspoint");
     rulesProcessing(event);
   }
-  if (useStaticIP())
+  if (useStaticIP()) {
+    setupStaticIPconfig();
     markGotIP();
+  }
+  logConnectionStatus();
 }
 
 void processDisconnect() {
@@ -46,17 +50,18 @@ void processDisconnect() {
     log += format_msec_duration(lastConnectedDuration);
   }
   addLog(LOG_LEVEL_INFO, log);
+  logConnectionStatus();
 }
 
 
 void processGotIP() {
   if (processedGetIP)
     return;
-  processedGetIP = true;
   IPAddress ip = WiFi.localIP();
   if (!useStaticIP())
     if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
       return;
+  processedGetIP = true;
   const IPAddress gw = WiFi.gatewayIP();
   const IPAddress subnet = WiFi.subnetMask();
   String log = F("WIFI : ");
@@ -128,6 +133,7 @@ void processGotIP() {
     wifiSetup = false;
     SaveSettings();
   }
+  logConnectionStatus();
 }
 
 void processConnectAPmode() {
@@ -373,6 +379,7 @@ void setWifiMode(WiFiMode_t wifimode) {
   }
   setUseStaticIP(useStaticIP());
   WiFi.mode(wifimode);
+  delay(30); // Must allow for some time to init.
 }
 
 
@@ -499,6 +506,25 @@ bool wifiConnectTimeoutReached() {
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
 
+void setupStaticIPconfig() {
+  setUseStaticIP(useStaticIP());
+  if (!useStaticIP()) return;
+  const IPAddress ip = Settings.IP;
+  const IPAddress gw = Settings.Gateway;
+  const IPAddress subnet = Settings.Subnet;
+  const IPAddress dns = Settings.DNS;
+  String log = F("IP   : Static IP : ");
+  log += formatIP(ip);
+  log += F(" GW: ");
+  log += formatIP(gw);
+  log += F(" SN: ");
+  log += formatIP(subnet);
+  log += F(" DNS: ");
+  log += formatIP(dns);
+  addLog(LOG_LEVEL_INFO, log);
+  WiFi.config(ip, gw, subnet, dns);
+}
+
 //********************************************************************************
 // Simply start the WiFi connection sequence
 //********************************************************************************
@@ -532,25 +558,8 @@ bool tryConnectWiFi() {
   log += F(" attempt #");
   log += wifi_connect_attempt;
   addLog(LOG_LEVEL_INFO, log);
-
+  setupStaticIPconfig();
   last_wifi_connect_attempt_moment = millis();
-  if (useStaticIP())
-  {
-    const IPAddress ip = Settings.IP;
-    const IPAddress gw = Settings.Gateway;
-    const IPAddress subnet = Settings.Subnet;
-    const IPAddress dns = Settings.DNS;
-    log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
-    WiFi.config(ip, gw, subnet, dns);
-  }
   switch (wifi_connect_attempt) {
     case 0:
       if (lastBSSID[0] == 0)
@@ -562,6 +571,7 @@ bool tryConnectWiFi() {
       WiFi.begin(ssid, passphrase);
   }
   ++wifi_connect_attempt;
+  logConnectionStatus();
   switch (WiFi.status()) {
     case WL_NO_SSID_AVAIL: {
       log = F("WIFI : No SSID found matching: ");
@@ -653,6 +663,41 @@ String formatScanResult(int i, const String& separator) {
       break;
   }
   return result;
+}
+
+void logConnectionStatus() {
+  const uint8_t arduino_corelib_wifistatus = WiFi.status();
+  String log;
+  #ifndef ESP32
+  const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
+  if (arduino_corelib_wifistatus != sdk_wifistatus) {
+    log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
+    log += sdk_wifistatus;
+    log += F(" Arduino status: ");
+    log += arduino_corelib_wifistatus;
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  #endif
+  log = F("WIFI  : Arduino wifi status: ");
+  switch (arduino_corelib_wifistatus) {
+    case WL_IDLE_STATUS:     log += F("WL_IDLE_STATUS"); break;
+    case WL_NO_SSID_AVAIL:   log += F("WL_NO_SSID_AVAIL"); break;
+    case WL_SCAN_COMPLETED:  log += F("WL_SCAN_COMPLETED"); break;
+    case WL_CONNECTED:       log += F("WL_CONNECTED"); break;
+    case WL_CONNECT_FAILED:  log += F("WL_CONNECT_FAILED"); break;
+    case WL_CONNECTION_LOST: log += F("WL_CONNECTION_LOST"); break;
+    case WL_DISCONNECTED:    log += F("WL_DISCONNECTED"); break;
+    default:  log += arduino_corelib_wifistatus; break;
+  }
+  log += F(" ESPeasy internal wifi status: ");
+  switch (wifiStatus) {
+    case ESPEASY_WIFI_DISCONNECTED:         log += F("ESPEASY_WIFI_DISCONNECTED"); break;
+    case ESPEASY_WIFI_CONNECTED:            log += F("ESPEASY_WIFI_CONNECTED"); break;
+    case ESPEASY_WIFI_GOT_IP:               log += F("ESPEASY_WIFI_GOT_IP"); break;
+    case ESPEASY_WIFI_SERVICES_INITIALIZED: log += F("ESPEASY_WIFI_SERVICES_INITIALIZED"); break;
+    default:  log += wifiStatus;
+  }
+  addLog(LOG_LEVEL_DEBUG_MORE, log);
 }
 
 
