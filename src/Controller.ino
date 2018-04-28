@@ -118,6 +118,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 bool MQTTConnect(int controller_idx)
 {
+  ++mqtt_reconnect_count;
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (!ControllerSettings.checkHostReachable(true))
@@ -172,6 +173,7 @@ bool MQTTConnect(int controller_idx)
   if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
     updateMQTTclient_connected();
     statusLED(true);
+    mqtt_reconnect_count = 0;
     return true; // end loop if succesfull
   }
   return false;
