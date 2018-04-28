@@ -27,8 +27,10 @@ void processConnect() {
     String event = F("WiFi#ChangedAccesspoint");
     rulesProcessing(event);
   }
-  if (useStaticIP())
+  if (useStaticIP()) {
+    setupStaticIPconfig();
     markGotIP();
+  }
 }
 
 void processDisconnect() {
@@ -52,11 +54,11 @@ void processDisconnect() {
 void processGotIP() {
   if (processedGetIP)
     return;
-  processedGetIP = true;
   IPAddress ip = WiFi.localIP();
   if (!useStaticIP())
     if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
       return;
+  processedGetIP = true;
   const IPAddress gw = WiFi.gatewayIP();
   const IPAddress subnet = WiFi.subnetMask();
   String log = F("WIFI : ");
@@ -499,6 +501,24 @@ bool wifiConnectTimeoutReached() {
   return timeOutReached(last_wifi_connect_attempt_moment + DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_sec);
 }
 
+void setupStaticIPconfig() {
+  if (!useStaticIP()) return;
+  const IPAddress ip = Settings.IP;
+  const IPAddress gw = Settings.Gateway;
+  const IPAddress subnet = Settings.Subnet;
+  const IPAddress dns = Settings.DNS;
+  String log = F("IP   : Static IP : ");
+  log += formatIP(ip);
+  log += F(" GW: ");
+  log += formatIP(gw);
+  log += F(" SN: ");
+  log += formatIP(subnet);
+  log += F(" DNS: ");
+  log += formatIP(dns);
+  addLog(LOG_LEVEL_INFO, log);
+  WiFi.config(ip, gw, subnet, dns);
+}
+
 //********************************************************************************
 // Simply start the WiFi connection sequence
 //********************************************************************************
@@ -534,23 +554,6 @@ bool tryConnectWiFi() {
   addLog(LOG_LEVEL_INFO, log);
 
   last_wifi_connect_attempt_moment = millis();
-  if (useStaticIP())
-  {
-    const IPAddress ip = Settings.IP;
-    const IPAddress gw = Settings.Gateway;
-    const IPAddress subnet = Settings.Subnet;
-    const IPAddress dns = Settings.DNS;
-    log = F("IP   : Static IP : ");
-    log += formatIP(ip);
-    log += F(" GW: ");
-    log += formatIP(gw);
-    log += F(" SN: ");
-    log += formatIP(subnet);
-    log += F(" DNS: ");
-    log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
-    WiFi.config(ip, gw, subnet, dns);
-  }
   switch (wifi_connect_attempt) {
     case 0:
       if (lastBSSID[0] == 0)
