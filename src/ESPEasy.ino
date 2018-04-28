@@ -324,6 +324,9 @@ void setup()
     }
   #endif
 
+  #ifndef ESP32
+  connectionCheck.attach(240, connectionCheckHandler);
+  #endif
 }
 
 #ifdef USE_RTOS_MULTITASKING

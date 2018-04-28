@@ -1195,6 +1195,24 @@ enum WiFiDisconnectReason
 #endif
 
 
+#ifndef ESP32
+// To do some reconnection check.
+#include <Ticker.h>
+bool reconnectChecker = false;
+Ticker connectionCheck;
+void connectionCheckHandler()
+{
+
+  if (reconnectChecker == false && WiFi.status() != WL_CONNECTED){
+    reconnectChecker = true;
+    WiFi.reconnect();
+  }
+  else if (WiFi.status() == WL_CONNECTED && reconnectChecker == true){
+    reconnectChecker = false;
+  }
+}
+#endif
+
 bool useStaticIP();
 
 // WiFi related data
