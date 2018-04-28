@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180428 (since mega-20180426)
+-------------------------------------------------
+
+Release date: Sat Apr 28 04:00:15 CEST 2018
+
+TD-er (4):
+      [wifi] Attempt to make event based wifi simpler
+      [PlatformIO] Updated core to 2.4.1
+      [wifi] Just disconnect when DNS lookup is not possible
+      [Wifi] Avoid doing network communications when not connected.
+
+
+-------------------------------------------------
 Changes in release mega-20180426 (since mega-20180425)
 -------------------------------------------------
 
