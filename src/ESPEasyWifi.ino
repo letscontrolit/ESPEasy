@@ -666,9 +666,10 @@ String formatScanResult(int i, const String& separator) {
 }
 
 void logConnectionStatus() {
-  const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
   const uint8_t arduino_corelib_wifistatus = WiFi.status();
   String log;
+  #ifndef ESP32
+  const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
   if (arduino_corelib_wifistatus != sdk_wifistatus) {
     log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
     log += sdk_wifistatus;
@@ -676,6 +677,7 @@ void logConnectionStatus() {
     log += arduino_corelib_wifistatus;
     addLog(LOG_LEVEL_ERROR, log);
   }
+  #endif
   log = F("WIFI  : Arduino wifi status: ");
   switch (arduino_corelib_wifistatus) {
     case WL_IDLE_STATUS:     log += F("WL_IDLE_STATUS"); break;
