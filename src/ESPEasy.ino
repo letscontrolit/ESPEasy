@@ -281,7 +281,7 @@ void setup()
     WifiScanAsync();
   }
 */
-  setWifiState(WifiTryConnect);
+  WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -382,7 +382,7 @@ void loop()
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    setWifiState(WifiCredentialsChanged);
+    WiFiConnectRelaxed();
     wifiSetupConnect = false;
   }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
