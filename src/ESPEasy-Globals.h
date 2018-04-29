@@ -1253,8 +1253,9 @@ bool processedScanDone = true;
 bool webserver_state = false;
 bool webserver_init = false;
 
-unsigned long start = 0;
-unsigned long elapsed = 0;
+unsigned long elapsed10ps = 0;
+unsigned long elapsed10psU = 0;
+unsigned long elapsed50ps = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
@@ -1272,6 +1273,8 @@ bool firstLoop=true;
 boolean activeRuleSets[RULESETS_MAX];
 
 boolean       UseRTOSMultitasking;
+
+void (*MainLoopCall_ptr)(void);
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.

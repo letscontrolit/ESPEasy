@@ -380,7 +380,9 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
 \*********************************************************************************************/
 void loop()
 {
-  //checkRAM(F("loop"));
+  if(MainLoopCall_ptr)
+      MainLoopCall_ptr();
+
   loopCounter++;
 
   if (wifiSetupConnect)
@@ -508,9 +510,9 @@ void updateMQTTclient_connected() {
 void run50TimesPerSecond()
 {
   timer20ms = millis() + 20;
+  unsigned long start = micros();
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
-
-  // statusLED(false);
+  elapsed50ps += micros() - start;
 }
 
 /*********************************************************************************************\
@@ -518,16 +520,18 @@ void run50TimesPerSecond()
 \*********************************************************************************************/
 void run10TimesPerSecond()
 {
-  start = micros();
   timer100ms = millis() + 100;
+  unsigned long start = micros();
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  elapsed10ps += micros() - start;
+  start = micros();
   PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+  elapsed10psU += micros() - start;
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
     eventBuffer = "";
   }
-  elapsed = micros() - start;
   #ifndef USE_RTOS_MULTITASKING
     WebServer.handleClient();
   #endif
@@ -585,15 +589,15 @@ void runOncePerSecond()
   if (Settings.UseNTP)
     checkTime();
 
-  unsigned long timer = micros();
+  unsigned long start = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+  unsigned long elapsed = micros() - start;
 
   checkSystemTimers();
 
   if (Settings.UseRules)
     rulesTimers();
 
-  timer = micros() - timer;
 
   if (SecuritySettings.Password[0] != 0)
   {
@@ -611,12 +615,20 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
-  if (Settings.SerialLogLevel == 5)
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
   {
-    Serial.print(F("10 ps:"));
+    Serial.print(F("Plugin calls: 50 ps:"));
+    Serial.print(elapsed50ps);
+    Serial.print(F(" uS, 10 ps:"));
+    Serial.print(elapsed10ps);
+    Serial.print(F(" uS, 10 psU:"));
+    Serial.print(elapsed10psU);
+    Serial.print(F(" uS, 1 ps:"));
     Serial.print(elapsed);
-    Serial.print(F(" uS  1 ps:"));
-    Serial.println(timer);
+    Serial.println(F(" uS"));
+    elapsed50ps=0;
+    elapsed10ps=0;
+    elapsed10psU=0;
   }
   checkResetFactoryPin();
 }
