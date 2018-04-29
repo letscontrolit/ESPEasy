@@ -411,9 +411,17 @@ bool useStaticIP() {
   return (Settings.IP[0] != 0 && Settings.IP[0] != 255);
 }
 
+bool WiFiConnected() {
+  #ifdef ESP32
+  return WiFi.status() == WL_CONNECTED;
+  #else
+  // For ESP82xx, do not rely on WiFi.status() with event based wifi.
+  return wifi_station_get_connect_status() == STATION_GOT_IP;
+  #endif
+}
 
 void WiFiConnectRelaxed() {
-  if (WiFi.status() == WL_CONNECTED)
+  if (WiFiConnected())
     return;   //already connected, need to disconnect first
   if (prepareWiFi()) {
     if (selectValidWiFiSettings()) {
@@ -666,20 +674,22 @@ String formatScanResult(int i, const String& separator) {
   return result;
 }
 
-void logConnectionStatus() {
-  const uint8_t arduino_corelib_wifistatus = WiFi.status();
-  String log;
-  #ifndef ESP32
-  const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
-  if (arduino_corelib_wifistatus != sdk_wifistatus) {
-    log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
-    log += sdk_wifistatus;
-    log += F(" Arduino status: ");
-    log += arduino_corelib_wifistatus;
-    addLog(LOG_LEVEL_ERROR, log);
+#ifndef ESP32
+String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
+  switch (sdk_wifistatus) {
+    case STATION_IDLE:           return F("STATION_IDLE");
+    case STATION_CONNECTING:     return F("STATION_CONNECTING");
+    case STATION_WRONG_PASSWORD: return F("STATION_WRONG_PASSWORD");
+    case STATION_NO_AP_FOUND:    return F("STATION_NO_AP_FOUND");
+    case STATION_CONNECT_FAIL:   return F("STATION_CONNECT_FAIL");
+    case STATION_GOT_IP:         return F("STATION_GOT_IP");
   }
-  #endif
-  log = F("WIFI  : Arduino wifi status: ");
+  return F("Unknown");
+}
+#endif
+
+String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
+  String log;
   switch (arduino_corelib_wifistatus) {
     case WL_IDLE_STATUS:     log += F("WL_IDLE_STATUS"); break;
     case WL_NO_SSID_AVAIL:   log += F("WL_NO_SSID_AVAIL"); break;
@@ -690,7 +700,11 @@ void logConnectionStatus() {
     case WL_DISCONNECTED:    log += F("WL_DISCONNECTED"); break;
     default:  log += arduino_corelib_wifistatus; break;
   }
-  log += F(" ESPeasy internal wifi status: ");
+  return log;
+}
+
+String ESPeasyWifiStatusToString() {
+  String log;
   switch (wifiStatus) {
     case ESPEASY_WIFI_DISCONNECTED:         log += F("ESPEASY_WIFI_DISCONNECTED"); break;
     case ESPEASY_WIFI_CONNECTED:            log += F("ESPEASY_WIFI_CONNECTED"); break;
@@ -698,6 +712,26 @@ void logConnectionStatus() {
     case ESPEASY_WIFI_SERVICES_INITIALIZED: log += F("ESPEASY_WIFI_SERVICES_INITIALIZED"); break;
     default:  log += wifiStatus;
   }
+  return log;
+}
+
+void logConnectionStatus() {
+  const uint8_t arduino_corelib_wifistatus = WiFi.status();
+  String log;
+  #ifndef ESP32
+  const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
+  if ((arduino_corelib_wifistatus == WL_CONNECTED) != (sdk_wifistatus == STATION_GOT_IP)) {
+    log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
+    log += SDKwifiStatusToString(sdk_wifistatus);
+    log += F(" Arduino status: ");
+    log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  #endif
+  log = F("WIFI  : Arduino wifi status: ");
+  log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
+  log += F(" ESPeasy internal wifi status: ");
+  log += ESPeasyWifiStatusToString();
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 }
 

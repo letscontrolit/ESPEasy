@@ -557,6 +557,7 @@ enum Command {
 // Forward declarations.
 Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
+bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
@@ -825,7 +826,7 @@ private:
     if (!UseDNS) {
       return true;
     }
-    if (WiFi.status() != WL_CONNECTED) return false;
+    if (!WiFiConnected()) return false;
     IPAddress tmpIP;
     if (WiFi.hostByName(HostName, tmpIP)) {
       for (byte x = 0; x < 4; x++) {
@@ -1205,11 +1206,11 @@ Ticker connectionCheck;
 bool reconnectChecker = false;
 void connectionCheckHandler()
 {
-  if (reconnectChecker == false && WiFi.status() != WL_CONNECTED){
+  if (reconnectChecker == false && !WiFiConnected()){
     reconnectChecker = true;
     WiFi.reconnect();
   }
-  else if (WiFi.status() == WL_CONNECTED && reconnectChecker == true){
+  else if (WiFiConnected() && reconnectChecker == true){
     reconnectChecker = false;
   }
 }
