@@ -112,8 +112,8 @@ protected:
 
 protected:
 
-  volatile long _counter;
-  volatile bool _bHasChanged;
+  volatile long _counter = 0;
+  volatile bool _bHasChanged = false;
   volatile bool _bIndexTrigger;
 
   int16_t _pinA;
