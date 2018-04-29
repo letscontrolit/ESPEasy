@@ -412,12 +412,8 @@ bool useStaticIP() {
 }
 
 bool WiFiConnected() {
-  #ifdef ESP32
-  return WiFi.status() == WL_CONNECTED;
-  #else
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  return wifi_station_get_connect_status() == STATION_GOT_IP;
-  #endif
+  return wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
 }
 
 void WiFiConnectRelaxed() {
