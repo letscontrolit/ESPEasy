@@ -325,7 +325,7 @@ void setup()
   #endif
 
   #ifndef ESP32
-  connectionCheck.attach(240, connectionCheckHandler);
+  connectionCheck.attach(30, connectionCheckHandler);
   #endif
 }
 
@@ -395,7 +395,7 @@ void loop()
     if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
     if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
-  } else if (WiFi.status() != WL_CONNECTED) {
+  } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
 //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
