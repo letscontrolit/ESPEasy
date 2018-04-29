@@ -4747,9 +4747,16 @@ void handle_rules() {
 
   if (WebServer.args() > 0)
   {
+    String log = F("Rules : Save rulesSet: ");
+    log += rulesSet;
+    log += F(" currentSet: ");
+    log += currentSet;
+
     if (currentSet == rulesSet) // only save when the dropbox was not used to change set
     {
       String rules = WebServer.arg(F("rules"));
+      log += F(" rules.length(): ");
+      log += rules.length();
       if (rules.length() > RULES_MAX_SIZE)
         TXBuffer += F("<span style=\"color:red\">Data was not saved, exceeds web editor limit!</span>");
       else
@@ -4766,6 +4773,8 @@ void handle_rules() {
           fs::File f = SPIFFS.open(fileName, "w");
           if (f)
           {
+            log += F(" Write to file: ");
+            log += fileName;
             f.print(rules);
             f.close();
             // flashCount();
@@ -4777,10 +4786,13 @@ void handle_rules() {
     {
       if (!SPIFFS.exists(fileName))
       {
+        log += F(" Create new file: ");
+        log += fileName;
         fs::File f = SPIFFS.open(fileName, "w");
         f.close();
       }
     }
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   if (rulesSet != currentSet)
