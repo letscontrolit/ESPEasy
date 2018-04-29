@@ -181,6 +181,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
 //  setWifiMode(WIFI_STA);
   checkRuleSets();
 
@@ -281,7 +282,7 @@ void setup()
     WifiScanAsync();
   }
 */
-  setWifiState(WifiTryConnect);
+  WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -323,6 +324,9 @@ void setup()
     }
   #endif
 
+  #ifndef ESP32
+  connectionCheck.attach(30, connectionCheckHandler);
+  #endif
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -376,20 +380,22 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
 \*********************************************************************************************/
 void loop()
 {
-  //checkRAM(F("loop"));
+  if(MainLoopCall_ptr)
+      MainLoopCall_ptr();
+
   loopCounter++;
 
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    setWifiState(WifiCredentialsChanged);
+    WiFiConnectRelaxed();
     wifiSetupConnect = false;
   }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
     if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
-  } else if (WiFi.status() != WL_CONNECTED) {
+  } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
 //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
@@ -504,9 +510,9 @@ void updateMQTTclient_connected() {
 void run50TimesPerSecond()
 {
   timer20ms = millis() + 20;
+  unsigned long start = micros();
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
-
-  // statusLED(false);
+  elapsed50ps += micros() - start;
 }
 
 /*********************************************************************************************\
@@ -514,16 +520,18 @@ void run50TimesPerSecond()
 \*********************************************************************************************/
 void run10TimesPerSecond()
 {
-  start = micros();
   timer100ms = millis() + 100;
+  unsigned long start = micros();
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  elapsed10ps += micros() - start;
+  start = micros();
   PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+  elapsed10psU += micros() - start;
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
     eventBuffer = "";
   }
-  elapsed = micros() - start;
   #ifndef USE_RTOS_MULTITASKING
     WebServer.handleClient();
   #endif
@@ -581,15 +589,15 @@ void runOncePerSecond()
   if (Settings.UseNTP)
     checkTime();
 
-  unsigned long timer = micros();
+  unsigned long start = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+  unsigned long elapsed = micros() - start;
 
   checkSystemTimers();
 
   if (Settings.UseRules)
     rulesTimers();
 
-  timer = micros() - timer;
 
   if (SecuritySettings.Password[0] != 0)
   {
@@ -607,12 +615,20 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
-  if (Settings.SerialLogLevel == 5)
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
   {
-    Serial.print(F("10 ps:"));
+    Serial.print(F("Plugin calls: 50 ps:"));
+    Serial.print(elapsed50ps);
+    Serial.print(F(" uS, 10 ps:"));
+    Serial.print(elapsed10ps);
+    Serial.print(F(" uS, 10 psU:"));
+    Serial.print(elapsed10psU);
+    Serial.print(F(" uS, 1 ps:"));
     Serial.print(elapsed);
-    Serial.print(F(" uS  1 ps:"));
-    Serial.println(timer);
+    Serial.println(F(" uS"));
+    elapsed50ps=0;
+    elapsed10ps=0;
+    elapsed10psU=0;
   }
   checkResetFactoryPin();
 }

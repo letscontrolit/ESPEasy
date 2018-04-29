@@ -1,4 +1,33 @@
 -------------------------------------------------
+Changes in release mega-20180429 (since mega-20180428)
+-------------------------------------------------
+
+Release date: Sun Apr 29 04:00:07 CEST 2018
+
+TD-er (7):
+      [wifi] Setup static IP config after connecting to wifi.
+      [wifi] Set static IP config before and after connect
+      [wifi] Show number of reconnects in the sysinfo
+      [wifi] Add wifi status log (Debug More) and DHCP/Static config to info page
+      [wifi] ESP32 does not know wifi_station_get_connect_status()
+      [wifi] Added connectionCheckHandler() to force reconnect when needed
+      [wifi] Force wifi reconnect at lots of MQTT failed connects.
+
+
+-------------------------------------------------
+Changes in release mega-20180428 (since mega-20180426)
+-------------------------------------------------
+
+Release date: Sat Apr 28 04:00:15 CEST 2018
+
+TD-er (4):
+      [wifi] Attempt to make event based wifi simpler
+      [PlatformIO] Updated core to 2.4.1
+      [wifi] Just disconnect when DNS lookup is not possible
+      [Wifi] Avoid doing network communications when not connected.
+
+
+-------------------------------------------------
 Changes in release mega-20180426 (since mega-20180425)
 -------------------------------------------------
 

@@ -487,7 +487,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
     break;
   }
-  
+
   case cmd_TimerPause:
   {
     if (Par1>=1 && Par1<=RULES_TIMER_MAX)
@@ -500,7 +500,7 @@ void ExecuteCommand(byte source, const char *Line)
           {
             String event = F("Rules#TimerPause=");
             event += Par1;
-            rulesProcessing(event);			  
+            rulesProcessing(event);
             RulesTimer[Par1 - 1].paused = true;
             RulesTimer[Par1 - 1].interval = -delta; // set remaind time
           }
@@ -514,9 +514,9 @@ void ExecuteCommand(byte source, const char *Line)
     {
       addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
     }
-    break;    
+    break;
   }
-  
+
   case cmd_TimerResume:
   {
     if (Par1>=1 && Par1<=RULES_TIMER_MAX)
@@ -528,9 +528,9 @@ void ExecuteCommand(byte source, const char *Line)
           {
             String event = F("Rules#TimerResume=");
             event += Par1;
-            rulesProcessing(event);            
+            rulesProcessing(event);
             RulesTimer[Par1 - 1].timestamp = millis() + (RulesTimer[Par1 - 1].interval);
-            RulesTimer[Par1 - 1].paused = false;   
+            RulesTimer[Par1 - 1].paused = false;
           }
        }
        else
@@ -542,9 +542,9 @@ void ExecuteCommand(byte source, const char *Line)
     {
       addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
     }
-    break;    
+    break;
   }
-  
+
   case cmd_Delay:
   {
     success = true;
@@ -748,7 +748,7 @@ void ExecuteCommand(byte source, const char *Line)
   case cmd_WifiConnect:
   {
     success = true;
-    setWifiState(WifiTryConnect);
+    WiFiConnectRelaxed();
     break;
   }
 
@@ -761,7 +761,7 @@ void ExecuteCommand(byte source, const char *Line)
 
   case cmd_WifiAPMode:
   {
-    setWifiState(WifiEnableAP);
+    setAP(true);
     success = true;
     break;
   }
