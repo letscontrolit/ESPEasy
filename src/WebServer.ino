@@ -529,6 +529,7 @@ void WebServerInit()
   WebServer.on("/devices", handle_devices);
   WebServer.on("/notifications", handle_notifications);
   WebServer.on("/log", handle_log);
+  WebServer.on("/logjson", handle_log_JSON);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/wifiscanner", handle_wifiscanner);
@@ -3052,6 +3053,17 @@ void handle_log() {
   TXBuffer.endStream();
 }
 
+//********************************************************************************
+// Web Interface JSON log page
+//********************************************************************************
+void handle_log_JSON() {
+  String reply = "";
+  reply += F("{\"Log entries\": \"");
+    Logging.getAll(reply, F("<BR>"));
+    reply += F("\"}\n");
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
+  WebServer.send(200, "application/json", reply);
+}
 
 //********************************************************************************
 // Web Interface debug page
@@ -3662,6 +3674,7 @@ void handle_json()
       if (taskNr == 0 )
         reply += F("]\n}");
 
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
   WebServer.send(200, "application/json", reply);
 }
 
