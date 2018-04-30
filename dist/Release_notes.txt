@@ -1,4 +1,20 @@
 -------------------------------------------------
+Changes in release mega-20180430 (since mega-20180429)
+-------------------------------------------------
+
+Release date: Mon Apr 30 04:00:08 CEST 2018
+
+TD-er (4):
+      [wifi] Do not rely on WiFi.status() and better log of status
+      [wifi] Use internal ESPeasy state to check connected status
+      [rules] Add log indicating POST request for update rules
+      [MQTT] Set default timeout to 10 sec, equal to default Mosquito timeout
+
+mvdbro (1):
+      Changed plugin call debug timers
+
+
+-------------------------------------------------
 Changes in release mega-20180429 (since mega-20180428)
 -------------------------------------------------
 
