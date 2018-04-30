@@ -641,6 +641,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</body>"
             );
   }
+  else if (tmplName == F("TmplDsh"))
+  {
+    tmpl += F(
+      "<!DOCTYPE html><html lang='en'>"
+      "<head>"
+        "<meta charset='utf-8'/>"
+        "<title>{{name}}</title>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "{{js}}"
+        "{{css}}"
+        "</head>"
+        "<body>"
+        "{{content}}"
+        "</body></html>"
+            );
+  }
   else   //all other template names e.g. TmplStd
   {
     tmpl += F(
@@ -2736,12 +2752,14 @@ void addSubmitButton(const String &value, const String &name)
 }
 
 // add copy to clipboard button
-void addCopyButton(const String &value, const String &name)
+void addCopyButton(const String &value, const String &delimiter, const String &name)
 {
   TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else {  clipboard += test.innerHTML + ' '; } }");
-  TXBuffer += F("var tempInput = document.createElement('input'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.value = clipboard;");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += delimiter;
+  TXBuffer += F("'; } }");
+  TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
   TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
@@ -3048,7 +3066,7 @@ void handle_log() {
   }
   //Logging.getAll(TXBuffer.buf, F("<BR>"));
   TXBuffer += F("</table>");
-  addCopyButton(F("copyText"), F("Copy log to clipboard"));
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
@@ -3524,6 +3542,14 @@ void handle_control() {
     WebServer.send(200, "text/html", "OK");
     return;
   }
+  else if (command.equalsIgnoreCase(F("taskrun")) ||
+           command.equalsIgnoreCase(F("taskvalueset")) ||
+           command.equalsIgnoreCase(F("rules"))) {
+    addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
+    ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
+    WebServer.send(200, "text/html", "OK");
+    return;
+  }
 
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
@@ -3591,6 +3617,8 @@ void handle_json()
       reply += to_json_object_value(F("Hostname"), WiFi.hostname());
     #endif
     reply += F(",\n");
+    reply += to_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
+    reply += F(",\n");
     reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
     reply += F(",\n");
     reply += to_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
@@ -3614,6 +3642,8 @@ void handle_json()
     reply += to_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
     reply += F(",\n");
     reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Number reconnects"), String(wifi_reconnects));
     reply += F(",\n");
     reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
@@ -4177,19 +4207,19 @@ boolean handle_custom(String path) {
     if (unit && unit != Settings.Unit)
     {
       TXBuffer.startStream();
-      sendHeadandTail(F("TmplStd"),_HEAD);
-      char url[20];
+      sendHeadandTail(F("TmplDsh"),_HEAD);
+      char url[40];
       sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
       TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
       TXBuffer += url;
       TXBuffer += F("\">");
-      sendHeadandTail(F("TmplStd"),_TAIL);
+      sendHeadandTail(F("TmplDsh"),_TAIL);
       TXBuffer.endStream();
       return true;
     }
 
     TXBuffer.startStream();
-    sendHeadandTail(F("TmplStd"),_HEAD);
+    sendHeadandTail(F("TmplDsh"),_HEAD);
     TXBuffer += F("<script><!--\n"
              "function dept_onchange(frmselect) {frmselect.submit();}"
              "\n//--></script>");
@@ -4291,7 +4321,7 @@ boolean handle_custom(String path) {
       }
     }
   }
-  sendHeadandTail(F("TmplStd"),_TAIL);
+  sendHeadandTail(F("TmplDsh"),_TAIL);
   TXBuffer.endStream();
   return true;
 }
@@ -4618,7 +4648,6 @@ void handle_setup() {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
-    setWifiState(WifiCredentialsChanged);
     String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
     reconnectlog += ssid;
     addLog(LOG_LEVEL_INFO, reconnectlog);
@@ -4747,9 +4776,16 @@ void handle_rules() {
 
   if (WebServer.args() > 0)
   {
+    String log = F("Rules : Save rulesSet: ");
+    log += rulesSet;
+    log += F(" currentSet: ");
+    log += currentSet;
+
     if (currentSet == rulesSet) // only save when the dropbox was not used to change set
     {
       String rules = WebServer.arg(F("rules"));
+      log += F(" rules.length(): ");
+      log += rules.length();
       if (rules.length() > RULES_MAX_SIZE)
         TXBuffer += F("<span style=\"color:red\">Data was not saved, exceeds web editor limit!</span>");
       else
@@ -4766,6 +4802,8 @@ void handle_rules() {
           fs::File f = SPIFFS.open(fileName, "w");
           if (f)
           {
+            log += F(" Write to file: ");
+            log += fileName;
             f.print(rules);
             f.close();
             // flashCount();
@@ -4777,10 +4815,13 @@ void handle_rules() {
     {
       if (!SPIFFS.exists(fileName))
       {
+        log += F(" Create new file: ");
+        log += fileName;
         fs::File f = SPIFFS.open(fileName, "w");
         f.close();
       }
     }
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   if (rulesSet != currentSet)
@@ -4862,7 +4903,7 @@ void handle_sysinfo() {
    // the table header
    TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH align='left'>");
 
-   addCopyButton(F("copyText") , F("Copy info to clipboard") );
+   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
@@ -4950,6 +4991,8 @@ void handle_sysinfo() {
      TXBuffer += WiFi.RSSI();
      TXBuffer += F(" dB)");
   }
+  TXBuffer += F("<TR><TD>IP config<TD>");
+  TXBuffer += useStaticIP() ? F("Static") : F("DHCP");
 
    TXBuffer += F("<TR><TD>IP / subnet<TD>");
    TXBuffer += formatIP(WiFi.localIP());
@@ -5011,6 +5054,9 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
   TXBuffer += getLastDisconnectReason();
 
+  TXBuffer += F("<TR><TD>Number reconnects<TD>");
+  TXBuffer += wifi_reconnects;
+
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
   TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
@@ -5023,6 +5069,8 @@ void handle_sysinfo() {
 #else
   TXBuffer += F(" (ESP82xx Core ");
   TXBuffer += ESP.getCoreVersion();
+  TXBuffer += F(", NONOS SDK ");
+  TXBuffer += system_get_sdk_version();
 #endif
   TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
   TXBuffer += BUILD_GIT;
