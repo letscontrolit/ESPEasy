@@ -640,6 +640,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</body>"
             );
   }
+  else if (tmplName == F("TmplDsh"))
+  {
+    tmpl += F(
+      "<!DOCTYPE html><html lang='en'>"
+      "<head>"
+        "<meta charset='utf-8'/>"
+        "<title>{{name}}</title>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "{{js}}"
+        "{{css}}"
+        "</head>"
+        "<body>"
+        "{{content}}"
+        "</body></html>"
+            );
+  }
   else   //all other template names e.g. TmplStd
   {
     tmpl += F(
@@ -4178,19 +4194,19 @@ boolean handle_custom(String path) {
     if (unit && unit != Settings.Unit)
     {
       TXBuffer.startStream();
-      sendHeadandTail(F("TmplStd"),_HEAD);
-      char url[20];
+      sendHeadandTail(F("TmplDsh"),_HEAD);
+      char url[40];
       sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
       TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
       TXBuffer += url;
       TXBuffer += F("\">");
-      sendHeadandTail(F("TmplStd"),_TAIL);
+      sendHeadandTail(F("TmplDsh"),_TAIL);
       TXBuffer.endStream();
       return true;
     }
 
     TXBuffer.startStream();
-    sendHeadandTail(F("TmplStd"),_HEAD);
+    sendHeadandTail(F("TmplDsh"),_HEAD);
     TXBuffer += F("<script><!--\n"
              "function dept_onchange(frmselect) {frmselect.submit();}"
              "\n//--></script>");
@@ -4292,7 +4308,7 @@ boolean handle_custom(String path) {
       }
     }
   }
-  sendHeadandTail(F("TmplStd"),_TAIL);
+  sendHeadandTail(F("TmplDsh"),_TAIL);
   TXBuffer.endStream();
   return true;
 }
