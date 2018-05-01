@@ -3075,10 +3075,14 @@ void handle_log() {
 // Web Interface JSON log page
 //********************************************************************************
 void handle_log_JSON() {
-  String reply = "";
+  // TODO TD-er: This really should use TXBuffer.
+  String reply;
+  reply.reserve(LOG_STRUCT_MESSAGE_SIZE * LOG_STRUCT_MESSAGE_LINES / 2);
   reply += F("{\"Log entries\": \"");
-    Logging.getAll(reply, F("<BR>"));
-    reply += F("\"}\n");
+  while (Logging.get(reply, F("<BR>"))) {
+    // Do we need to do something here and maybe limit number of lines at once?
+  }
+  reply += F("\"}\n");
   WebServer.sendHeader("Access-Control-Allow-Origin","*");
   WebServer.send(200, "application/json", reply);
 }

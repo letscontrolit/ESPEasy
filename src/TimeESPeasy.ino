@@ -286,7 +286,7 @@ unsigned long getNtpTime()
 // Return the time difference as a signed value, taking into account the timers may overflow.
 // Returned timediff is between -24.9 days and +24.9 days.
 // Returned value is positive when "next" is after "prev"
-long timeDiff(unsigned long prev, unsigned long next)
+long timeDiff(const unsigned long prev, const unsigned long next)
 {
   long signed_diff = 0;
   // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
@@ -330,7 +330,21 @@ boolean timeOutReached(unsigned long timer)
   return passed >= 0;
 }
 
-
+void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
+  timer += step;
+  const long passed = timePassedSince(timer);
+  if (passed < 0) {
+    // Event has not yet happened, which is fine.
+    return;
+  }
+  if (static_cast<unsigned long>(passed) > step) {
+    // No need to keep running behind, start again.
+    timer = millis() + step;
+    return;
+  }
+  // Try to get in sync again.
+  timer = millis() + (step - passed);
+}
 
 
 /********************************************************************************************\
