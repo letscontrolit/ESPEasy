@@ -134,13 +134,8 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
-#if defined(ESP32)
-  log += F(" (ESP32 SDK ");
-  log += ESP.getSdkVersion();
-#else
-  log += F(" (ESP82xx Core ");
-  log += ESP.getCoreVersion();
-#endif
+  log += F(" (");
+  log += getSystemLibraryString();
   log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 
@@ -242,22 +237,9 @@ void setup()
   NPluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
- #ifdef PLUGIN_BUILD_NORMAL
-    log += F(" [Normal]");
- #endif
- #ifdef PLUGIN_BUILD_TESTING
-    log += F(" [Testing]");
- #endif
- #ifdef PLUGIN_BUILD_DEV
-    log += F(" [Development]");
- #endif
- #if defined(ESP32)
-   log += F(" (ESP32 SDK ");
-   log += ESP.getSdkVersion();
- #else
-   log += F(" (ESP82xx Core ");
-   log += ESP.getCoreVersion();
- #endif
+  log += getPluginDescriptionString();
+  log += F(" (");
+  log += getSystemLibraryString();
   log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 

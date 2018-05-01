@@ -3580,6 +3580,12 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Git Build"), String(BUILD_GIT));
     reply += F(",\n");
+    reply += to_json_object_value(F("System libraries"), getSystemLibraryString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Plugins"), String(deviceCount + 1));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Plugin description"), getPluginDescriptionString());
+    reply += F(",\n");
     reply += to_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
     reply += F(",\n");
     reply += to_json_object_value(F("Unit"), String(Settings.Unit));
@@ -3587,6 +3593,8 @@ void handle_json()
     reply += to_json_object_value(F("Name"), String(Settings.Name));
     reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last boot cause"), getLastBootCauseString());
     reply += F(",\n");
 
     if (wdcounter > 0)
@@ -4809,6 +4817,17 @@ void handle_rules() {
       }
     }
     addLog(LOG_LEVEL_INFO, log);
+
+    log = F(" Webserver args:");
+    for (int i = 0; i < WebServer.args(); ++i) {
+      log += F(" ");
+      log += i;
+      log += F(": '");
+      log += WebServer.argName(i);
+      log += F("' length: ");
+      log += WebServer.arg(i).length();
+    }
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   if (rulesSet != currentSet)
@@ -4930,21 +4949,7 @@ void handle_sysinfo() {
    TXBuffer += F(")");
 
    TXBuffer += F("<TR><TD>Boot<TD>");
-  switch (lastBootCause)
-  {
-    case BOOT_CAUSE_MANUAL_REBOOT:
-       TXBuffer += F("Manual reboot");
-      break;
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-       TXBuffer += F("Deep sleep");
-      break;
-    case BOOT_CAUSE_COLD_BOOT:
-       TXBuffer += F("Cold boot");
-      break;
-    case BOOT_CAUSE_EXT_WD:
-       TXBuffer += F("External Watchdog");
-      break;
-  }
+   TXBuffer += getLastBootCauseString();
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
@@ -5050,32 +5055,16 @@ void handle_sysinfo() {
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
-#if defined(ESP32)
-  TXBuffer += F(" (ESP32 SDK ");
-  TXBuffer += ESP.getSdkVersion();
-#else
-  TXBuffer += F(" (ESP82xx Core ");
-  TXBuffer += ESP.getCoreVersion();
-  TXBuffer += F(", NONOS SDK ");
-  TXBuffer += system_get_sdk_version();
-#endif
-  TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
+
+  TXBuffer += F("<TR><TD id='copyText_3'>Libraries<TD id='copyText_4'>");
+  TXBuffer += getSystemLibraryString();
+
+  TXBuffer += F("<TR><TD id='copyText_5'>GIT version<TD id='copyText_6'>");
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD id='copyText_5'>Plugins<TD id='copyText_6'>");
+  TXBuffer += F("<TR><TD id='copyText_7'>Plugins<TD id='copyText_8'>");
   TXBuffer += deviceCount + 1;
-
-  #ifdef PLUGIN_BUILD_NORMAL
-  TXBuffer += F(" [Normal]");
-  #endif
-
-  #ifdef PLUGIN_BUILD_TESTING
-  TXBuffer += F(" [Testing]");
-  #endif
-
-  #ifdef PLUGIN_BUILD_DEV
-  TXBuffer += F(" [Development]");
-  #endif
+  TXBuffer += getPluginDescriptionString();
 
   TXBuffer += F("<TR><TD>Build Md5<TD>");
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
@@ -5085,12 +5074,12 @@ void handle_sysinfo() {
      TXBuffer +="<font color = 'red'>fail !</font>";
   else  TXBuffer +="passed.";
 
-   TXBuffer += F("<TR><TD id='copyText_7'>Build time<TD id='copyText_8'>");
+   TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.compileDate);
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD id='copyText_9'>Binary filename<TD id='copyText_10'>");
+   TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
    TXBuffer += String(CRCValues.binaryFilename);
 
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
