@@ -758,7 +758,9 @@ void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte
   // plugin number and par1 form a unique key that can be used to restart a timer
   // first check if a timer is not already running for this request
   boolean reUse = false;
+  byte firstAvailable = SYSTEM_TIMER_MAX;
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
+  {
     if (systemTimers[x].timer != 0)
     {
       if ((systemTimers[x].plugin == plugin) && (systemTimers[x].Par1 == Par1))
@@ -768,20 +770,25 @@ void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte
         break;
       }
     }
-
+    else if(firstAvailable == SYSTEM_TIMER_MAX)
+    {
+      firstAvailable = x;    
+    }
+  }
   if (!reUse)
   {
-    // find a new free timer slot...
-    for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-      if (systemTimers[x].timer == 0)
-      {
-        systemTimers[x].timer = millis() + timer;
-        systemTimers[x].plugin = plugin;
-        systemTimers[x].Par1 = Par1;
-        systemTimers[x].Par2 = Par2;
-        systemTimers[x].Par3 = Par3;
-        break;
-      }
+    if (firstAvailable == SYSTEM_TIMER_MAX )
+    {
+      addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
+    }
+    else
+    {
+      systemTimers[firstAvailable].timer = millis() + timer;
+      systemTimers[firstAvailable].plugin = plugin;
+      systemTimers[firstAvailable].Par1 = Par1;
+      systemTimers[firstAvailable].Par2 = Par2;
+      systemTimers[firstAvailable].Par3 = Par3;      
+    }
   }
 }
 
