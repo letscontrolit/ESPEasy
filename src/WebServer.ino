@@ -3068,7 +3068,7 @@ void handle_log() {
   TXBuffer += F(".catch(function(err) {document.getElementById(\"copyText_1\").innerHTML = err; });	}, 1000); 	})();");
   TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
   TXBuffer += F("<body onblur = \"function() { window.blurred = true; }\" onfocus = \"function() { window.blurred = false; }\">");
-  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD id='copyText_1'>Fetching log enrtries...<BR>");
+  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD>Fetching log enrtries...<BR><div id='copyText_1'></div>");
 
   TXBuffer += F("</table><div id='bottom'></div>");
   addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
