@@ -1,3 +1,5 @@
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
@@ -477,6 +479,7 @@ WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
 bool MQTTclient_connected = false;
+int mqtt_reconnect_count = 0;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
@@ -556,6 +559,7 @@ enum Command {
 // Forward declarations.
 Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
+bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
@@ -824,6 +828,7 @@ private:
     if (!UseDNS) {
       return true;
     }
+    if (!WiFiConnected()) return false;
     IPAddress tmpIP;
     if (WiFi.hostByName(HostName, tmpIP)) {
       for (byte x = 0; x < 4; x++) {
@@ -1072,6 +1077,8 @@ struct systemTimerStruct
   byte Par3;
 } systemTimers[SYSTEM_TIMER_MAX];
 
+#define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
+
 struct systemCMDTimerStruct
 {
   systemCMDTimerStruct() : timer(0) {}
@@ -1193,23 +1200,25 @@ enum WiFiDisconnectReason
 };
 #endif
 
-enum WifiState {
-  WifiOff,
-  WifiStart,
-  WifiTryConnect,
-  WifiConnectionFailed,
-  WifiClientConnectAP,
-  WifiClientDisconnectAP,
-  WifiCredentialsChanged,
-  WifiConnectSuccess,
-  WifiDisableAP,
-  WifiEnableAP,
-  WifiStartScan,
-};
 
-WifiState currentWifiState = WifiStart;
+#ifndef ESP32
+// To do some reconnection check.
+#include <Ticker.h>
+Ticker connectionCheck;
+#endif
 
-void setWifiState(WifiState state);
+bool reconnectChecker = false;
+void connectionCheckHandler()
+{
+  if (reconnectChecker == false && !WiFiConnected()){
+    reconnectChecker = true;
+    WiFi.reconnect();
+  }
+  else if (WiFiConnected() && reconnectChecker == true){
+    reconnectChecker = false;
+  }
+}
+
 bool useStaticIP();
 
 // WiFi related data
@@ -1219,6 +1228,7 @@ uint8_t lastBSSID[6] = {0};
 uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
 unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
+int wifi_reconnects = -1; // First connection attempt is not a reconnect.
 uint8_t lastWiFiSettings = 0;
 String last_ssid;
 bool bssid_changed = false;
@@ -1244,13 +1254,13 @@ bool processedGetIP = true;
 bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
-bool processedTryConnect = true;
 
 bool webserver_state = false;
 bool webserver_init = false;
 
-unsigned long start = 0;
-unsigned long elapsed = 0;
+unsigned long elapsed10ps = 0;
+unsigned long elapsed10psU = 0;
+unsigned long elapsed50ps = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
@@ -1268,6 +1278,8 @@ bool firstLoop=true;
 boolean activeRuleSets[RULESETS_MAX];
 
 boolean       UseRTOSMultitasking;
+
+void (*MainLoopCall_ptr)(void);
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
