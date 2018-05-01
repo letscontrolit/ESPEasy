@@ -1302,12 +1302,13 @@ String getSystemLibraryString() {
     result += ESP.getCoreVersion();
     result += F(", NONOS SDK ");
     result += system_get_sdk_version();
+    result += F(", LWIP: ");
+    result += getLWIPversion();
   #endif
-  result += F(", LWIP: ");
-  result += getLWIPversion();
   return result;
 }
 
+#ifndef ESP32
 String getLWIPversion() {
   String result;
   result += LWIP_VERSION_MAJOR;
@@ -1323,6 +1324,7 @@ String getLWIPversion() {
   }
   return result;
 }
+#endif
 
 /********************************************************************************************\
   Check if string is valid float
