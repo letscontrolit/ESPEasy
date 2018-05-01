@@ -3058,18 +3058,25 @@ void handle_log() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
 
-  TXBuffer += F("<script>function RefreshMe(){window.location = window.location}setTimeout('RefreshMe()', 3000);</script>");
-  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD id='copyText_1'>");
-  for (int i = 0; i< LOG_STRUCT_MESSAGE_LINES; i++){
-    Logging.get(TXBuffer.buf, F("<BR>"),i);
+  TXBuffer += F("<script>(function(){");
+  TXBuffer += F("var i = setInterval(function(){");
+  TXBuffer += F("var url = \"/logjson\";");
+  TXBuffer += F("fetch(url).then(");
+  TXBuffer += F("function(response) {");
+  TXBuffer += F("if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
+  TXBuffer += F("response.json().then(function(data) {document.getElementById(\"copyText_1\").innerHTML += data['Log entries']; document.getElementById(\"bottom\").scrollIntoView(); }); } )");
+  TXBuffer += F(".catch(function(err) {document.getElementById(\"copyText_1\").innerHTML = err; });	}, 1000); 	})();");
+  TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
+  TXBuffer += F("<body onblur = \"function() { window.blurred = true; }\" onfocus = \"function() { window.blurred = false; }\">");
+  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD id='copyText_1'>Fetching log enrtries...<BR>");
 
-  }
-  //Logging.getAll(TXBuffer.buf, F("<BR>"));
-  TXBuffer += F("</table>");
+  TXBuffer += F("</table><div id='bottom'></div>");
   addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
+  TXBuffer += F("</body>");
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
+
 
 //********************************************************************************
 // Web Interface JSON log page
