@@ -180,7 +180,8 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
                 log = String(F("QEI  : ")) + string;
                 addLog(LOG_LEVEL_INFO, log);
                 Plugin_059_QE->write(event->Par1);
-                UserVar[event->BaseVarIndex] = (float) event->Par1;
+                //Removed as inside PLUGIN_WRITE EventStruct there is no taskID nor BaseVarIndex set.
+                //UserVar[event->BaseVarIndex] = (float) event->Par1;
                 success = true;
               }
             }
