@@ -1253,6 +1253,78 @@ unsigned long FreeMem(void)
   #endif
 }
 
+/********************************************************************************************\
+  Get system information
+  \*********************************************************************************************/
+String getLastBootCauseString() {
+  switch (lastBootCause)
+  {
+    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
+    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
+       return F("Deep sleep");
+    case BOOT_CAUSE_COLD_BOOT:
+       return F("Cold boot");
+    case BOOT_CAUSE_EXT_WD:
+       return F("External Watchdog");
+  }
+  return F("Unknown");
+}
+
+String getSystemBuildString() {
+  String result;
+  result += BUILD;
+  result += F(" ");
+  result += F(BUILD_NOTES);
+  return result;
+}
+
+String getPluginDescriptionString() {
+  String result;
+  #ifdef PLUGIN_BUILD_NORMAL
+    result += F(" [Normal]");
+  #endif
+  #ifdef PLUGIN_BUILD_TESTING
+    result += F(" [Testing]");
+  #endif
+  #ifdef PLUGIN_BUILD_DEV
+    result += F(" [Development]");
+  #endif
+  return result;
+}
+
+String getSystemLibraryString() {
+  String result;
+  #if defined(ESP32)
+    result += F("ESP32 SDK ");
+    result += ESP.getSdkVersion();
+  #else
+    result += F("ESP82xx Core ");
+    result += ESP.getCoreVersion();
+    result += F(", NONOS SDK ");
+    result += system_get_sdk_version();
+    result += F(", LWIP: ");
+    result += getLWIPversion();
+  #endif
+  return result;
+}
+
+#ifndef ESP32
+String getLWIPversion() {
+  String result;
+  result += LWIP_VERSION_MAJOR;
+  result += F(".");
+  result += LWIP_VERSION_MINOR;
+  result += F(".");
+  result += LWIP_VERSION_REVISION;
+  if (LWIP_VERSION_IS_RC) {
+    result += F("-RC");
+    result += LWIP_VERSION_RC;
+  } else if (LWIP_VERSION_IS_DEVELOPMENT) {
+    result += F("-dev");
+  }
+  return result;
+}
+#endif
 
 /********************************************************************************************\
   Check if string is valid float
