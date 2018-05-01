@@ -306,9 +306,12 @@ void setup()
     }
   #endif
 
-  #ifndef ESP32
-  connectionCheck.attach(30, connectionCheckHandler);
-  #endif
+//  #ifndef ESP32
+//  connectionCheck.attach(30, connectionCheckHandler);
+//  #endif
+  timer20ms = millis();
+  timer100ms = millis();
+  timer1s = millis();
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -491,7 +494,7 @@ void updateMQTTclient_connected() {
 
 void run50TimesPerSecond()
 {
-  timer20ms = millis() + 20;
+  setNextTimeInterval(timer20ms, 20);
   unsigned long start = micros();
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
   elapsed50ps += micros() - start;
@@ -502,7 +505,7 @@ void run50TimesPerSecond()
 \*********************************************************************************************/
 void run10TimesPerSecond()
 {
-  timer100ms = millis() + 100;
+  setNextTimeInterval(timer100ms, 100);
   unsigned long start = micros();
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
   elapsed10ps += micros() - start;
@@ -525,6 +528,7 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  setNextTimeInterval(timer1s, 1000);
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
   {
@@ -534,8 +538,6 @@ void runOncePerSecond()
     String log = F("SYS  : Reset 24h counters");
     addLog(LOG_LEVEL_INFO, log);
   }
-
-  timer1s = millis() + 1000;
 
   checkSensors();
 
@@ -772,7 +774,7 @@ void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte
     }
     else if(firstAvailable == SYSTEM_TIMER_MAX)
     {
-      firstAvailable = x;    
+      firstAvailable = x;
     }
   }
   if (!reUse)
@@ -787,7 +789,7 @@ void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte
       systemTimers[firstAvailable].plugin = plugin;
       systemTimers[firstAvailable].Par1 = Par1;
       systemTimers[firstAvailable].Par2 = Par2;
-      systemTimers[firstAvailable].Par3 = Par3;      
+      systemTimers[firstAvailable].Par3 = Par3;
     }
   }
 }
