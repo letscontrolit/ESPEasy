@@ -151,7 +151,7 @@ void QEIx4::begin(int16_t pinA, int16_t pinB, int16_t pinI, uint8_t mode)
 	_pinI = pinI;
 
 	_counter = 0;
-	_bHasChanged = true;
+	_bHasChanged = false;
 
 	if (mode == 1)
 		_eventMask = QEIx4_1x_MASK;
