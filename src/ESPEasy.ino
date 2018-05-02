@@ -479,8 +479,9 @@ void updateMQTTclient_connected() {
     }
   }
   if (!MQTTclient_connected) {
-    if (timermqtt_interval < 2000) {
-      timermqtt_interval += 250;
+    // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356
+    if (timermqtt_interval < 30000) {
+      timermqtt_interval += 5000;
     }
   } else {
     timermqtt_interval = 250;
@@ -677,7 +678,7 @@ void checkSensors()
         (isDeepSleep || timeOutReached(timerSensor[x]))
     )
     {
-      timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
+      setNextTimeInterval(timerSensor[x], Settings.TaskDeviceTimer[x] * 1000);
       if (timerSensor[x] == 0) // small fix if result is 0, else timer will be stopped...
         timerSensor[x] = 1;
       SensorSendTask(x);
