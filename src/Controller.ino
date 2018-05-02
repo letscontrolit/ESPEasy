@@ -139,10 +139,14 @@ bool MQTTConnect(int controller_idx)
   String clientid = F("ESPClient_");
   clientid += WiFi.macAddress();
 
-  String LWTTopic = ControllerSettings.Subscribe;
+  String LWTTopic = ControllerSettings.MQTTLwtTopic;
+  if(LWTTopic.length() == 0)
+  {
+    LWTTopic = ControllerSettings.Subscribe;
+    LWTTopic += F("/LWT");
+  }
   LWTTopic.replace(F("/#"), F("/status"));
   parseSystemVariables(LWTTopic, false);
-  LWTTopic += F("/LWT"); // Extend the topic for status updates of connected/disconnected status.
 
   boolean MQTTresult = false;
   uint8_t willQos = 0;

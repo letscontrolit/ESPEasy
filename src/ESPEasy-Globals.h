@@ -74,6 +74,7 @@
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
@@ -232,6 +233,7 @@
 #define CONTROLLER_PASS                     5
 #define CONTROLLER_SUBSCRIBE                6
 #define CONTROLLER_PUBLISH                  7
+#define CONTROLLER_LWT_TOPIC                8
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -755,6 +757,7 @@ struct ControllerSettingsStruct
     memset(HostName, 0, sizeof(HostName));
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
+    memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
   }
   boolean       UseDNS;
   byte          IP[4];
@@ -762,6 +765,7 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+  char          MQTTLwtTopic[129];
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);

@@ -1235,6 +1235,7 @@ void ResetFactory(void)
   ControllerSettingsStruct ControllerSettings;
   strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
   strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
+  strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
   ControllerSettings.HostName[0]=0;
   ControllerSettings.Port = DEFAULT_PORT;
