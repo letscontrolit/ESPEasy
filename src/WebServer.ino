@@ -3060,17 +3060,18 @@ void handle_log() {
 
   TXBuffer += F("<script>(function(){");
   TXBuffer += F("var i = setInterval(function(){");
-  TXBuffer += F("var url = \"/logjson\";");
+  TXBuffer += F("var url = '/logjson';");
   TXBuffer += F("fetch(url).then(");
   TXBuffer += F("function(response) {");
   TXBuffer += F("if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
-  TXBuffer += F("response.json().then(function(data) {document.getElementById(\"copyText_1\").innerHTML += data['Log entries']; document.getElementById(\"bottom\").scrollIntoView(); }); } )");
-  TXBuffer += F(".catch(function(err) {document.getElementById(\"copyText_1\").innerHTML = err; });	}, 1000); 	})();");
+  TXBuffer += F("response.json().then(function(data) {document.getElementById('copyText_1').innerHTML += data['Log entries'].replace(/<br\\s*\\/?>/gim,'\\n');");
+  TXBuffer += F(" document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight }); } )");
+  TXBuffer += F(".catch(function(err) {document.getElementById('copyText_1').innerHTML = err; });	}, 1000); 	})();");
   TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
-  TXBuffer += F("<body onblur = \"function() { window.blurred = true; }\" onfocus = \"function() { window.blurred = false; }\">");
-  TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Log<TR><TD>Fetching log enrtries...<BR><div id='copyText_1'></div>");
+  TXBuffer += F("<body onblur = 'function() { window.blurred = true; }' onfocus = 'function() { window.blurred = false; }'>");
+  TXBuffer += F("<table class='normal'><TR><TH id='headline' style='width:150px;' align='left'>Log<TR><TD><textarea id='copyText_1' placeholder='Fetching log entries...' rows='25' wrap='off' readonly></textarea>");
 
-  TXBuffer += F("</table><div id='bottom'></div>");
+  TXBuffer += F("</table>");
   addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   TXBuffer += F("</body>");
   sendHeadandTail(F("TmplStd"),_TAIL);
