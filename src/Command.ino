@@ -43,6 +43,9 @@ Command commandStringToEnum(const char * cmd) {
   String tmpcmd;
   tmpcmd = cmd;
   tmpcmd.toLowerCase();
+  String log = F("Command: ");
+  log += tmpcmd;
+  addLog(LOG_LEVEL_INFO, log);
   char cmd_lc[INPUT_COMMAND_SIZE];
   tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
@@ -149,8 +152,10 @@ Command commandStringToEnum(const char * cmd) {
       break;
     }
     default:
+      addLog(LOG_LEVEL_INFO, F("Command unknown"));
       return cmd_Unknown;
   }
+  addLog(LOG_LEVEL_INFO, F("Command unknown"));
   return cmd_Unknown;
 }
 
