@@ -529,6 +529,7 @@ void WebServerInit()
   WebServer.on("/devices", handle_devices);
   WebServer.on("/notifications", handle_notifications);
   WebServer.on("/log", handle_log);
+  WebServer.on("/logjson", handle_log_JSON);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/wifiscanner", handle_wifiscanner);
@@ -638,6 +639,22 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
                 "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
               "</footer>"
               "</body>"
+            );
+  }
+  else if (tmplName == F("TmplDsh"))
+  {
+    tmpl += F(
+      "<!DOCTYPE html><html lang='en'>"
+      "<head>"
+        "<meta charset='utf-8'/>"
+        "<title>{{name}}</title>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "{{js}}"
+        "{{css}}"
+        "</head>"
+        "<body>"
+        "{{content}}"
+        "</body></html>"
             );
   }
   else   //all other template names e.g. TmplStd
@@ -2735,12 +2752,14 @@ void addSubmitButton(const String &value, const String &name)
 }
 
 // add copy to clipboard button
-void addCopyButton(const String &value, const String &name)
+void addCopyButton(const String &value, const String &delimiter, const String &name)
 {
   TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else {  clipboard += test.innerHTML + ' '; } }");
-  TXBuffer += F("var tempInput = document.createElement('input'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.value = clipboard;");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += delimiter;
+  TXBuffer += F("'; } }");
+  TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
   TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
@@ -3047,11 +3066,26 @@ void handle_log() {
   }
   //Logging.getAll(TXBuffer.buf, F("<BR>"));
   TXBuffer += F("</table>");
-  addCopyButton(F("copyText"), F("Copy log to clipboard"));
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
 
+//********************************************************************************
+// Web Interface JSON log page
+//********************************************************************************
+void handle_log_JSON() {
+  // TODO TD-er: This really should use TXBuffer.
+  String reply;
+  reply.reserve(LOG_STRUCT_MESSAGE_SIZE * LOG_STRUCT_MESSAGE_LINES / 2);
+  reply += F("{\"Log entries\": \"");
+  while (Logging.get(reply, F("<BR>"))) {
+    // Do we need to do something here and maybe limit number of lines at once?
+  }
+  reply += F("\"}\n");
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
+  WebServer.send(200, "application/json", reply);
+}
 
 //********************************************************************************
 // Web Interface debug page
@@ -3512,6 +3546,14 @@ void handle_control() {
     WebServer.send(200, "text/html", "OK");
     return;
   }
+  else if (command.equalsIgnoreCase(F("taskrun")) ||
+           command.equalsIgnoreCase(F("taskvalueset")) ||
+           command.equalsIgnoreCase(F("rules"))) {
+    addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
+    ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
+    WebServer.send(200, "text/html", "OK");
+    return;
+  }
 
   struct EventStruct TempEvent;
   parseCommandString(&TempEvent, webrequest);
@@ -3554,6 +3596,12 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Git Build"), String(BUILD_GIT));
     reply += F(",\n");
+    reply += to_json_object_value(F("System libraries"), getSystemLibraryString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Plugins"), String(deviceCount + 1));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Plugin description"), getPluginDescriptionString());
+    reply += F(",\n");
     reply += to_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
     reply += F(",\n");
     reply += to_json_object_value(F("Unit"), String(Settings.Unit));
@@ -3561,6 +3609,8 @@ void handle_json()
     reply += to_json_object_value(F("Name"), String(Settings.Name));
     reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last boot cause"), getLastBootCauseString());
     reply += F(",\n");
 
     if (wdcounter > 0)
@@ -3578,6 +3628,8 @@ void handle_json()
     #if defined(ESP8266)
       reply += to_json_object_value(F("Hostname"), WiFi.hostname());
     #endif
+    reply += F(",\n");
+    reply += to_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
     reply += F(",\n");
     reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
     reply += F(",\n");
@@ -3602,6 +3654,8 @@ void handle_json()
     reply += to_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
     reply += F(",\n");
     reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Number reconnects"), String(wifi_reconnects));
     reply += F(",\n");
     reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
     reply += F("\n},\n");
@@ -3662,6 +3716,7 @@ void handle_json()
       if (taskNr == 0 )
         reply += F("]\n}");
 
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
   WebServer.send(200, "application/json", reply);
 }
 
@@ -4164,19 +4219,19 @@ boolean handle_custom(String path) {
     if (unit && unit != Settings.Unit)
     {
       TXBuffer.startStream();
-      sendHeadandTail(F("TmplStd"),_HEAD);
-      char url[20];
+      sendHeadandTail(F("TmplDsh"),_HEAD);
+      char url[40];
       sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
       TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
       TXBuffer += url;
       TXBuffer += F("\">");
-      sendHeadandTail(F("TmplStd"),_TAIL);
+      sendHeadandTail(F("TmplDsh"),_TAIL);
       TXBuffer.endStream();
       return true;
     }
 
     TXBuffer.startStream();
-    sendHeadandTail(F("TmplStd"),_HEAD);
+    sendHeadandTail(F("TmplDsh"),_HEAD);
     TXBuffer += F("<script><!--\n"
              "function dept_onchange(frmselect) {frmselect.submit();}"
              "\n//--></script>");
@@ -4278,7 +4333,7 @@ boolean handle_custom(String path) {
       }
     }
   }
-  sendHeadandTail(F("TmplStd"),_TAIL);
+  sendHeadandTail(F("TmplDsh"),_TAIL);
   TXBuffer.endStream();
   return true;
 }
@@ -4605,7 +4660,6 @@ void handle_setup() {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
-    setWifiState(WifiCredentialsChanged);
     String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
     reconnectlog += ssid;
     addLog(LOG_LEVEL_INFO, reconnectlog);
@@ -4734,9 +4788,16 @@ void handle_rules() {
 
   if (WebServer.args() > 0)
   {
+    String log = F("Rules : Save rulesSet: ");
+    log += rulesSet;
+    log += F(" currentSet: ");
+    log += currentSet;
+
     if (currentSet == rulesSet) // only save when the dropbox was not used to change set
     {
       String rules = WebServer.arg(F("rules"));
+      log += F(" rules.length(): ");
+      log += rules.length();
       if (rules.length() > RULES_MAX_SIZE)
         TXBuffer += F("<span style=\"color:red\">Data was not saved, exceeds web editor limit!</span>");
       else
@@ -4753,6 +4814,8 @@ void handle_rules() {
           fs::File f = SPIFFS.open(fileName, "w");
           if (f)
           {
+            log += F(" Write to file: ");
+            log += fileName;
             f.print(rules);
             f.close();
             // flashCount();
@@ -4764,10 +4827,24 @@ void handle_rules() {
     {
       if (!SPIFFS.exists(fileName))
       {
+        log += F(" Create new file: ");
+        log += fileName;
         fs::File f = SPIFFS.open(fileName, "w");
         f.close();
       }
     }
+    addLog(LOG_LEVEL_INFO, log);
+
+    log = F(" Webserver args:");
+    for (int i = 0; i < WebServer.args(); ++i) {
+      log += F(" ");
+      log += i;
+      log += F(": '");
+      log += WebServer.argName(i);
+      log += F("' length: ");
+      log += WebServer.arg(i).length();
+    }
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   if (rulesSet != currentSet)
@@ -4849,7 +4926,7 @@ void handle_sysinfo() {
    // the table header
    TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>System Info<TH align='left'>");
 
-   addCopyButton(F("copyText") , F("Copy info to clipboard") );
+   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
@@ -4889,21 +4966,7 @@ void handle_sysinfo() {
    TXBuffer += F(")");
 
    TXBuffer += F("<TR><TD>Boot<TD>");
-  switch (lastBootCause)
-  {
-    case BOOT_CAUSE_MANUAL_REBOOT:
-       TXBuffer += F("Manual reboot");
-      break;
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-       TXBuffer += F("Deep sleep");
-      break;
-    case BOOT_CAUSE_COLD_BOOT:
-       TXBuffer += F("Cold boot");
-      break;
-    case BOOT_CAUSE_EXT_WD:
-       TXBuffer += F("External Watchdog");
-      break;
-  }
+   TXBuffer += getLastBootCauseString();
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
@@ -4937,6 +5000,8 @@ void handle_sysinfo() {
      TXBuffer += WiFi.RSSI();
      TXBuffer += F(" dB)");
   }
+  TXBuffer += F("<TR><TD>IP config<TD>");
+  TXBuffer += useStaticIP() ? F("Static") : F("DHCP");
 
    TXBuffer += F("<TR><TD>IP / subnet<TD>");
    TXBuffer += formatIP(WiFi.localIP());
@@ -4998,36 +5063,25 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
   TXBuffer += getLastDisconnectReason();
 
+  TXBuffer += F("<TR><TD>Number reconnects<TD>");
+  TXBuffer += wifi_reconnects;
+
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
   TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
-#if defined(ESP32)
-  TXBuffer += F(" (ESP32 SDK ");
-  TXBuffer += ESP.getSdkVersion();
-#else
-  TXBuffer += F(" (ESP82xx Core ");
-  TXBuffer += ESP.getCoreVersion();
-#endif
-  TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
+
+  TXBuffer += F("<TR><TD id='copyText_3'>Libraries<TD id='copyText_4'>");
+  TXBuffer += getSystemLibraryString();
+
+  TXBuffer += F("<TR><TD id='copyText_5'>GIT version<TD id='copyText_6'>");
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD id='copyText_5'>Plugins<TD id='copyText_6'>");
+  TXBuffer += F("<TR><TD id='copyText_7'>Plugins<TD id='copyText_8'>");
   TXBuffer += deviceCount + 1;
-
-  #ifdef PLUGIN_BUILD_NORMAL
-  TXBuffer += F(" [Normal]");
-  #endif
-
-  #ifdef PLUGIN_BUILD_TESTING
-  TXBuffer += F(" [Testing]");
-  #endif
-
-  #ifdef PLUGIN_BUILD_DEV
-  TXBuffer += F(" [Development]");
-  #endif
+  TXBuffer += getPluginDescriptionString();
 
   TXBuffer += F("<TR><TD>Build Md5<TD>");
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
@@ -5037,12 +5091,12 @@ void handle_sysinfo() {
      TXBuffer +="<font color = 'red'>fail !</font>";
   else  TXBuffer +="passed.";
 
-   TXBuffer += F("<TR><TD id='copyText_7'>Build time<TD id='copyText_8'>");
+   TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.compileDate);
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD id='copyText_9'>Binary filename<TD id='copyText_10'>");
+   TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
    TXBuffer += String(CRCValues.binaryFilename);
 
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
