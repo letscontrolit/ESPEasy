@@ -144,6 +144,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_READ:
         {
+            int logLevel = LOG_LEVEL_INFO;
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0){
                 uint8_t addr[8];
                 Plugin_004_get_addr(addr, event->TaskIndex);
@@ -160,8 +161,12 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 }
                 else
                 {
-                    UserVar[event->BaseVarIndex] = NAN;
-                    log += F("Error!");
+                    // instead of setting NAN we keep the value, but add a log message
+                    if (value == 0)
+                        log += F("CRC ");
+                    else
+                        log += F("PWon ");
+                    logLevel = LOG_LEVEL_ERROR;
                 }
                 Plugin_004_DS_startConvertion(addr);
 
@@ -174,7 +179,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 }
 
                 log += ')';
-                addLog(LOG_LEVEL_INFO, log);
+                addLog(logLevel, log);
             }
             break;
         }
@@ -254,18 +259,18 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
     if ((ROM[0] == 0x28 ) || (ROM[0] == 0x3b) || (ROM[0] == 0x22)) // DS18B20 or DS1825 or DS1822
     {
         DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
+        *value = (float(DSTemp) * 0.0625);
         if (DSTemp == 0x550)      // power-on reset value
            return false;
-        *value = (float(DSTemp) * 0.0625);
     }
     else if (ROM[0] == 0x10) // DS1820 DS18S20
     {
-        if (ScratchPad[0] == 0xaa)        // power-on reset value
-          return false;
         DSTemp = (ScratchPad[1] << 11) | ScratchPad[0] << 3;
         DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
                  (((ScratchPad[7] - ScratchPad[6]) << 7) / ScratchPad[7]);
         *value = float(DSTemp) * 0.0078125;
+        if (ScratchPad[0] == 0xaa)        // power-on reset value
+          return false;
     }
     return true;
 }
