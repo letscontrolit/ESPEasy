@@ -3066,7 +3066,7 @@ void handle_log() {
   TXBuffer += F("if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
   TXBuffer += F("response.json().then(function(data) {document.getElementById('copyText_1').innerHTML += data['Log entries'].replace(/<br\\s*\\/?>/gim,'\\n');");
   TXBuffer += F(" document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight }); } )");
-  TXBuffer += F(".catch(function(err) {document.getElementById('copyText_1').innerHTML += '-------------------------------<BR>' + err + '<BR>-------------------------------'; });	}, 1000); 	})();");
+  TXBuffer += F(".catch(function(err) {document.getElementById('copyText_1').innerHTML += '-------------------------------<BR>' + err + '<BR>-------------------------------<BR>'; });	}, 1000); 	})();");
   TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
   TXBuffer += F("<body onblur = 'function() { window.blurred = true; }' onfocus = 'function() { window.blurred = false; }'>");
   TXBuffer += F("<table class='normal'><TR><TH id='headline' style='width:150px;' align='left'>Log<TR><TD><textarea id='copyText_1' placeholder='Fetching log entries...' rows='25' wrap='off' readonly></textarea>");
