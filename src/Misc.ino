@@ -1647,6 +1647,15 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 case 'C':
                                   value = val == inverted ? "CLOSE" : " OPEN";
                                   break;
+                                case 'A':
+                                  value = val == inverted ? "AUTO" : " MAN";
+                                  break;
+                                case 'a':
+                                  value = val == inverted ? "A" : "M";
+                                  break;
+                                case 'H':
+                                  value = val == inverted ? "COLD" : " HOT";
+                                  break;
                                 case 'U':
                                   value = val == inverted ? "DOWN" : "  UP";
                                   break;
@@ -1726,7 +1735,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   case 'P' :// Prefix Fill with n spaces: Pn
                                     if (valueJustLength > 1)
                                     {
-                                      if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
                                       {
                                         int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
                                         for (byte f = 0; f < filler; f++)
@@ -1737,11 +1746,42 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   case 'S' :// Suffix Fill with n spaces: Sn
                                     if (valueJustLength > 1)
                                     {
-                                      if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
                                       {
                                         int filler = valueJust[1] - value.length() - '0' ; //48
                                         for (byte f = 0; f < filler; f++)
                                           value += " ";
+                                      }
+                                    }
+                                    break;
+                                  case 'L': //left part of the string
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                                      {
+                                        value = value.substring(0,(int)valueJust[1]-'0');
+                                      }
+                                    }
+                                    break;
+                                  case 'R': //Right part of the string
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                                      {
+                                        value = value.substring(value.length()-((int)valueJust[1]-'0'));
+                                      }
+                                    }
+                                    break;
+                                  case 'U': //Substring Ux.y where x=firstChar and y=number of characters
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1]) && valueJust[2]=='.' && isDigit(valueJust[3]) && valueJust[1] > '0' && valueJust[3] > '0')
+                                      {
+                                        value = value.substring((int)valueJust[1]-'0'-1,(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
+                                      }
+                                      else
+                                      {
+                                        newString += "ERR";
                                       }
                                     }
                                     break;
@@ -1760,7 +1800,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                             }
                           }
                         }
-                        //end of changes by giig1967g - 2018-04-18
+                        //end of changes by giig1967g - 2018-04-18 & 2018-05-02
 
                         newString += String(value);
                         break;
