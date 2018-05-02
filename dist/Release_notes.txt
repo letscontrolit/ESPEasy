@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20180502 (since mega-20180501)
+-------------------------------------------------
+
+Release date: Wed May  2 04:00:16 CEST 2018
+
+Grovkillen (1):
+      Added log JSON
+
+Plebs (4):
+      fix for #1170
+      fix for #1142
+      deleted comments
+      Added 2 system variables
+
+Saverio Cisternino (1):
+      Optimize setSystemTimer; Removed the second "for" cycle for checking the availability of timers
+
+TD-er (5):
+      [LWIP 1.4.0] Change to LWIP 1.4.0, to allow large http POST messages
+      [LWIP] fix ESP32 build
+      [timers] Make timers more accurate
+      [wifi] Make retry intervals to connect increase at each attempt.
+      [web log] Read all items from the log buffer
+
+
+-------------------------------------------------
 Changes in release mega-20180501 (since mega-20180430)
 -------------------------------------------------
 
