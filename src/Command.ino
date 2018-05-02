@@ -476,7 +476,7 @@ void ExecuteCommand(byte source, const char *Line)
         //start new timer
         RulesTimer[Par1 - 1].interval = Par2*1000;
         RulesTimer[Par1 - 1].paused = false;
-        RulesTimer[Par1 - 1].timestamp = millis() + (1000 * Par2);
+        setNextTimeInterval(RulesTimer[Par1 - 1].timestamp, (1000 * Par2));
       }
       else
       {

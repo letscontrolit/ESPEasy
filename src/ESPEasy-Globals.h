@@ -45,7 +45,8 @@
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
 #define DEFAULT_PORT        8080                // Enter your Server port value
 
-#define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
+#define DEFAULT_PROTOCOL    0                   // Protocol used for controller communications
+//   0 = Stand-alone (no controller set)
 //   1 = Domoticz HTTP
 //   2 = Domoticz MQTT
 //   3 = Nodo Telnet
