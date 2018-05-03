@@ -464,9 +464,9 @@ static const char pgDefaultCSS[] PROGMEM = {
     // inside a form
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
-    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; }"
+    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; z-index: 1;}"
     ".apheader {padding: 8px 12px; background-color: #F8F8F8;}"
-    ".bodymenu {margin-top: 96px; }"
+    ".bodymenu {margin-top: 96px;}"
     // menu
     ".menubar {position: inherit; top: 55px; }"
     ".menu {float: left; padding: 4px 16px 8px 16px; color: #444; white-space: nowrap; border: solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none; }"
@@ -493,7 +493,7 @@ static const char pgDefaultCSS[] PROGMEM = {
       ".menu_button {display: block; text-align: center;}"
       ".bodymenu{  margin-top: 0px;  }"
       ".menubar{ display: none; top: 0px;   position: relative;   float: left;   width: 100%; }"
-      ".headermenu   {  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; }"
+      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; z-index: 1;}"
       ".headermenu h1{  padding: 8px 12px; }"
       ".headermenu  a{  width: 100%;  padding:7px 10px;  height: auto;   border: 0px;   border-radius:0px; }; }"
     "\0"
