@@ -1,3 +1,5 @@
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
@@ -43,7 +45,8 @@
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
 #define DEFAULT_PORT        8080                // Enter your Server port value
 
-#define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
+#define DEFAULT_PROTOCOL    0                   // Protocol used for controller communications
+//   0 = Stand-alone (no controller set)
 //   1 = Domoticz HTTP
 //   2 = Domoticz MQTT
 //   3 = Nodo Telnet
@@ -1075,6 +1078,8 @@ struct systemTimerStruct
   byte Par3;
 } systemTimers[SYSTEM_TIMER_MAX];
 
+#define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
+
 struct systemCMDTimerStruct
 {
   systemCMDTimerStruct() : timer(0) {}
@@ -1224,7 +1229,7 @@ uint8_t lastBSSID[6] = {0};
 uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
 unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
-unsigned int wifi_reconnects = 0;
+int wifi_reconnects = -1; // First connection attempt is not a reconnect.
 uint8_t lastWiFiSettings = 0;
 String last_ssid;
 bool bssid_changed = false;

@@ -742,7 +742,9 @@ void WifiCheck()
 
   processDisableAPmode();
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    WiFiConnectRelaxed();
+    if (timeOutReached(last_wifi_connect_attempt_moment + (1000 + wifi_connect_attempt * 200))) {
+      WiFiConnectRelaxed();
+    }
   }
   if (mqtt_reconnect_count > 10) {
     connectionCheckHandler();

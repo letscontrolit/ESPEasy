@@ -464,14 +464,15 @@ static const char pgDefaultCSS[] PROGMEM = {
     // inside a form
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
-    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; }"
+    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; z-index: 1;}"
     ".apheader {padding: 8px 12px; background-color: #F8F8F8;}"
-    ".bodymenu {margin-top: 96px; }"
+    ".bodymenu {margin-top: 96px;}"
     // menu
     ".menubar {position: inherit; top: 55px; }"
     ".menu {float: left; padding: 4px 16px 8px 16px; color: #444; white-space: nowrap; border: solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none; }"
     ".menu.active {color: #000; background-color: #FFF; border-color: #07D #DDD #FFF; }"
     ".menu:hover {color: #000; background: #DEF; }"
+    ".menu_button {display: none;}"
     // symbols for enabled
     ".on {color: green; }"
     ".off {color: red; }"
@@ -488,11 +489,13 @@ static const char pgDefaultCSS[] PROGMEM = {
     "section{overflow-x: auto; width: 100%; }"
     // For screens with width less than 960 pixels
     "@media screen and (max-width: 960px) {"
-      ".bodymenu{  margin-top: 0px; }"
-      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; }"
+      "header:hover .menubar {display: block;}"
+      ".menu_button {display: block; text-align: center;}"
+      ".bodymenu{  margin-top: 0px;  }"
+      ".menubar{ display: none; top: 0px;   position: relative;   float: left;   width: 100%; }"
+      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; z-index: 1;}"
       ".headermenu h1{  padding: 8px 12px; }"
-      ".menubar{  top: 0px;   position: relative;   float: left;   width: 100%; }"
-      ".headermenu a{  width: 100%;   padding:7px 10px;   display: block;   height: auto;   border: 0px;   border-radius:0px; }; }"
+      ".headermenu  a{  width: 100%;  padding:7px 10px;  height: auto;   border: 0px;   border-radius:0px; }; }"
     "\0"
 };
 
@@ -529,6 +532,7 @@ void WebServerInit()
   WebServer.on("/devices", handle_devices);
   WebServer.on("/notifications", handle_notifications);
   WebServer.on("/log", handle_log);
+  WebServer.on("/logjson", handle_log_JSON);
   WebServer.on("/tools", handle_tools);
   WebServer.on("/i2cscanner", handle_i2cscanner);
   WebServer.on("/wifiscanner", handle_wifiscanner);
@@ -625,7 +629,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</head>"
               "<body>"
               "<header class='headermenu'>"
-              "<h1>ESP Easy Mega: {{name}}</h1>"
+              "<h1>ESP Easy Mega: {{name}}</h1><div class='menu_button'>&#9776;</div>"
               "</header>"
               "<section>"
               "<span class='message error'>"
@@ -670,7 +674,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<body class='bodymenu'>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
-          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
+          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1><div class='menu_button'>&#9776;</div>"
           "{{menu}}"
         "</header>"
         "<section>"
@@ -687,7 +691,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
             );
   }
 }
-
 
 
 void getErrorNotifications() {
@@ -3070,6 +3073,21 @@ void handle_log() {
   TXBuffer.endStream();
 }
 
+//********************************************************************************
+// Web Interface JSON log page
+//********************************************************************************
+void handle_log_JSON() {
+  // TODO TD-er: This really should use TXBuffer.
+  String reply;
+  reply.reserve(LOG_STRUCT_MESSAGE_SIZE * LOG_STRUCT_MESSAGE_LINES / 2);
+  reply += F("{\"Log entries\": \"");
+  while (Logging.get(reply, F("<BR>"))) {
+    // Do we need to do something here and maybe limit number of lines at once?
+  }
+  reply += F("\"}\n");
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
+  WebServer.send(200, "application/json", reply);
+}
 
 //********************************************************************************
 // Web Interface debug page
@@ -3580,6 +3598,12 @@ void handle_json()
     reply += F(",\n");
     reply += to_json_object_value(F("Git Build"), String(BUILD_GIT));
     reply += F(",\n");
+    reply += to_json_object_value(F("System libraries"), getSystemLibraryString());
+    reply += F(",\n");
+    reply += to_json_object_value(F("Plugins"), String(deviceCount + 1));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Plugin description"), getPluginDescriptionString());
+    reply += F(",\n");
     reply += to_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
     reply += F(",\n");
     reply += to_json_object_value(F("Unit"), String(Settings.Unit));
@@ -3587,6 +3611,8 @@ void handle_json()
     reply += to_json_object_value(F("Name"), String(Settings.Name));
     reply += F(",\n");
     reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
+    reply += F(",\n");
+    reply += to_json_object_value(F("Last boot cause"), getLastBootCauseString());
     reply += F(",\n");
 
     if (wdcounter > 0)
@@ -3692,6 +3718,7 @@ void handle_json()
       if (taskNr == 0 )
         reply += F("]\n}");
 
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
   WebServer.send(200, "application/json", reply);
 }
 
@@ -4809,6 +4836,17 @@ void handle_rules() {
       }
     }
     addLog(LOG_LEVEL_INFO, log);
+
+    log = F(" Webserver args:");
+    for (int i = 0; i < WebServer.args(); ++i) {
+      log += F(" ");
+      log += i;
+      log += F(": '");
+      log += WebServer.argName(i);
+      log += F("' length: ");
+      log += WebServer.arg(i).length();
+    }
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   if (rulesSet != currentSet)
@@ -4930,21 +4968,7 @@ void handle_sysinfo() {
    TXBuffer += F(")");
 
    TXBuffer += F("<TR><TD>Boot<TD>");
-  switch (lastBootCause)
-  {
-    case BOOT_CAUSE_MANUAL_REBOOT:
-       TXBuffer += F("Manual reboot");
-      break;
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-       TXBuffer += F("Deep sleep");
-      break;
-    case BOOT_CAUSE_COLD_BOOT:
-       TXBuffer += F("Cold boot");
-      break;
-    case BOOT_CAUSE_EXT_WD:
-       TXBuffer += F("External Watchdog");
-      break;
-  }
+   TXBuffer += getLastBootCauseString();
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
@@ -5050,32 +5074,16 @@ void handle_sysinfo() {
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
-#if defined(ESP32)
-  TXBuffer += F(" (ESP32 SDK ");
-  TXBuffer += ESP.getSdkVersion();
-#else
-  TXBuffer += F(" (ESP82xx Core ");
-  TXBuffer += ESP.getCoreVersion();
-  TXBuffer += F(", NONOS SDK ");
-  TXBuffer += system_get_sdk_version();
-#endif
-  TXBuffer += F(")<TR><TD id='copyText_3'>GIT version<TD id='copyText_4'>");
+
+  TXBuffer += F("<TR><TD id='copyText_3'>Libraries<TD id='copyText_4'>");
+  TXBuffer += getSystemLibraryString();
+
+  TXBuffer += F("<TR><TD id='copyText_5'>GIT version<TD id='copyText_6'>");
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD id='copyText_5'>Plugins<TD id='copyText_6'>");
+  TXBuffer += F("<TR><TD id='copyText_7'>Plugins<TD id='copyText_8'>");
   TXBuffer += deviceCount + 1;
-
-  #ifdef PLUGIN_BUILD_NORMAL
-  TXBuffer += F(" [Normal]");
-  #endif
-
-  #ifdef PLUGIN_BUILD_TESTING
-  TXBuffer += F(" [Testing]");
-  #endif
-
-  #ifdef PLUGIN_BUILD_DEV
-  TXBuffer += F(" [Development]");
-  #endif
+  TXBuffer += getPluginDescriptionString();
 
   TXBuffer += F("<TR><TD>Build Md5<TD>");
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
@@ -5085,12 +5093,12 @@ void handle_sysinfo() {
      TXBuffer +="<font color = 'red'>fail !</font>";
   else  TXBuffer +="passed.";
 
-   TXBuffer += F("<TR><TD id='copyText_7'>Build time<TD id='copyText_8'>");
+   TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.compileDate);
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD id='copyText_9'>Binary filename<TD id='copyText_10'>");
+   TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
    TXBuffer += String(CRCValues.binaryFilename);
 
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
