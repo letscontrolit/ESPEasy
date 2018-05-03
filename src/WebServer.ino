@@ -472,6 +472,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".menu {float: left; padding: 4px 16px 8px 16px; color: #444; white-space: nowrap; border: solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none; }"
     ".menu.active {color: #000; background-color: #FFF; border-color: #07D #DDD #FFF; }"
     ".menu:hover {color: #000; background: #DEF; }"
+    ".menu_button {display: none;}"
     // symbols for enabled
     ".on {color: green; }"
     ".off {color: red; }"
@@ -488,11 +489,13 @@ static const char pgDefaultCSS[] PROGMEM = {
     "section{overflow-x: auto; width: 100%; }"
     // For screens with width less than 960 pixels
     "@media screen and (max-width: 960px) {"
-      ".bodymenu{  margin-top: 0px;}"
+      "header:hover .menubar {display: block;}"
+      ".menu_button {display: block; text-align: center;}"
+      ".bodymenu{  margin-top: 0px;  }"
+      ".menubar{ display: none; top: 0px;   position: relative;   float: left;   width: 100%; }"
       ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 0px; z-index: 1;}"
       ".headermenu h1{  padding: 8px 12px; }"
-      ".menubar{  top: 0px;   position: relative;   float: left;   width: 100%; }"
-      ".headermenu a{  width: 100%;   padding:7px 10px;   display: block;   height: auto;   border: 0px;   border-radius:0px; }; }"
+      ".headermenu  a{  width: 100%;  padding:7px 10px;  height: auto;   border: 0px;   border-radius:0px; }; }"
     "\0"
 };
 
@@ -626,7 +629,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</head>"
               "<body>"
               "<header class='headermenu'>"
-              "<h1>ESP Easy Mega: {{name}}</h1>"
+              "<h1>ESP Easy Mega: {{name}}</h1><div class='menu_button'>&#9776;</div>"
               "</header>"
               "<section>"
               "<span class='message error'>"
@@ -671,7 +674,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<body class='bodymenu'>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
-          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1>"
+          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1><div class='menu_button'>&#9776;</div>"
           "{{menu}}"
         "</header>"
         "<section>"
@@ -688,7 +691,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
             );
   }
 }
-
 
 
 void getErrorNotifications() {
