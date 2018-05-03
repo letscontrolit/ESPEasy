@@ -1840,7 +1840,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                     {
                                       if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
                                       {
-                                        value = value.substring(max(0,(int)value.length()-((int)valueJust[1]-'0')));
+                                        value = value.substring(std::max(0,(int)value.length()-((int)valueJust[1]-'0')));
                                       }
                                     }
                                     break;
@@ -1849,7 +1849,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                     {
                                       if (isDigit(valueJust[1]) && valueJust[2]=='.' && isDigit(valueJust[3]) && valueJust[1] > '0' && valueJust[3] > '0')
                                       {
-                                        value = value.substring(min((int)value.length(),(int)valueJust[1]-'0'-1),(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
+                                        value = value.substring(std::min((int)value.length(),(int)valueJust[1]-'0'-1),(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
                                       }
                                       else
                                       {
