@@ -43,6 +43,9 @@ Command commandStringToEnum(const char * cmd) {
   String tmpcmd;
   tmpcmd = cmd;
   tmpcmd.toLowerCase();
+  String log = F("Command: ");
+  log += tmpcmd;
+  addLog(LOG_LEVEL_INFO, log);
   char cmd_lc[INPUT_COMMAND_SIZE];
   tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
@@ -149,8 +152,10 @@ Command commandStringToEnum(const char * cmd) {
       break;
     }
     default:
+      addLog(LOG_LEVEL_INFO, F("Command unknown"));
       return cmd_Unknown;
   }
+  addLog(LOG_LEVEL_INFO, F("Command unknown"));
   return cmd_Unknown;
 }
 
@@ -471,7 +476,7 @@ void ExecuteCommand(byte source, const char *Line)
         //start new timer
         RulesTimer[Par1 - 1].interval = Par2*1000;
         RulesTimer[Par1 - 1].paused = false;
-        RulesTimer[Par1 - 1].timestamp = millis() + (1000 * Par2);
+        setNextTimeInterval(RulesTimer[Par1 - 1].timestamp, (1000 * Par2));
       }
       else
       {

@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release mega-20180503 (since mega-20180502)
+-------------------------------------------------
+
+Release date: Thu May  3 04:00:12 CEST 2018
+
+Grovkillen (1):
+      Spelling correction
+
+TD-er (3):
+      [rules] Make rules start working again.
+      [timers] Make rules timers more constant and MQTT reconnect less aggressive
+      [#1353] Remove Domoticz HTTP as default controller
+
+
+-------------------------------------------------
 Changes in release mega-20180502 (since mega-20180501)
 -------------------------------------------------
 

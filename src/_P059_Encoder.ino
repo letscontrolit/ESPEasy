@@ -181,12 +181,11 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
                 addLog(LOG_LEVEL_INFO, log);
                 Plugin_059_QE->write(event->Par1);
               }
+              success = true; // Command is handled.
             }
         }
-        success = true;
         break;
       }
-
   }
   return success;
 }
