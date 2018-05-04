@@ -856,8 +856,7 @@ String ClearCustomTaskSettings(int TaskIndex)
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
   if (TaskIndex >= TASKS_MAX)
     return F("ClearCustomTaskSettings TaskIndex too big");
-
-  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_CUSTOM_SIZE));
 }
 
 /********************************************************************************************\
