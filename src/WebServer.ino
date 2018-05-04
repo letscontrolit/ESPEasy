@@ -3461,7 +3461,7 @@ void handle_wifiscanner() {
   sendHeadandTail(F("TmplStd"),_HEAD);
   TXBuffer += F("<table class='multirow'><TR><TH>SSID<TH>BSSID<TH>info");
 
-  int n = WiFi.scanNetworks();
+  int n = WiFi.scanNetworks(false, true);
   if (n == 0)
     TXBuffer += F("No Access Points found");
   else
@@ -4676,7 +4676,7 @@ void handle_setup() {
   {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     if (n == 0)
-      n = WiFi.scanNetworks();
+      n = WiFi.scanNetworks(false, true);
     setWifiMode(cur_wifimode);
     if (n == 0)
       TXBuffer += F("No Access Points found");

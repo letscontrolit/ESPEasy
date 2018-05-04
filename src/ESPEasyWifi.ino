@@ -618,7 +618,7 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   Serial.println(F("WIFI : SSID Scan start"));
-  int n = WiFi.scanNetworks();
+  int n = WiFi.scanNetworks(false, true);
   if (n == 0)
     Serial.println(F("WIFI : No networks found"));
   else
@@ -641,6 +641,9 @@ void WifiScan()
 
 String formatScanResult(int i, const String& separator) {
   String result = WiFi.SSID(i);
+  if (WiFi.isHidden(i)) {
+    result += F("#Hidden#");
+  }
   result += separator;
   result += WiFi.BSSIDstr(i);
   result += separator;
