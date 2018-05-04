@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180504 (since mega-20180503)
+-------------------------------------------------
+
+Release date: Fri May  4 04:00:10 CEST 2018
+
+Grovkillen (3):
+      Added dropdown for phones
+      [#1363] fixed overlapping checkboxes
+      Added a break under the hamburger
+
+TD-er (3):
+      [rules timer] revert treating the rules timer as periodical timer
+      [Settings] Add checks to investigate issues with overlap in settings
+      [LWIP2] Change LWIP1.4 => LWIP2 Low Memory
+
+
+-------------------------------------------------
 Changes in release mega-20180503 (since mega-20180502)
 -------------------------------------------------
 
