@@ -62,7 +62,25 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String log = "";
-        String command = parseString(string, 1);
+        String line = String(string);
+        String command = "";
+        int dotPos = line.indexOf('.');
+        if(dotPos > -1)
+        {
+          LoadTaskSettings(event->TaskIndex);
+          String name = line.substring(0,dotPos);
+          name.replace(F("["),F(""));
+          name.replace(F("]"),F(""));
+          if(name.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName) == true)
+          {
+            line = line.substring(dotPos + 1);
+          }
+          else
+          {
+             break;
+          }
+        }
+        command = parseString(line, 1);
 
         if (command == F("pcapwm"))
         {
@@ -87,7 +105,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         if (command == F("status"))
         {
-          if (parseString(string, 2) == F("pca"))
+          if (parseString(line, 2) == F("pca"))
           {
             if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
             success = true;
