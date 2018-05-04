@@ -641,9 +641,11 @@ void WifiScan()
 
 String formatScanResult(int i, const String& separator) {
   String result = WiFi.SSID(i);
+  #ifndef ESP32
   if (WiFi.isHidden(i)) {
     result += F("#Hidden#");
   }
+  #endif
   result += separator;
   result += WiFi.BSSIDstr(i);
   result += separator;
