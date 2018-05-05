@@ -129,6 +129,7 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("taskclearall")          ) == 0) return cmd_TaskClearAll;
       else if (strcmp_P(cmd_lc, PSTR("taskrun")               ) == 0) return cmd_TaskRun;
       else if (strcmp_P(cmd_lc, PSTR("taskvalueset")          ) == 0) return cmd_TaskValueSet;
+      else if (strcmp_P(cmd_lc, PSTR("taskvaluesetandrun")    ) == 0) return cmd_TaskValueSetAndRun;
       else if (strcmp_P(cmd_lc, PSTR("timerset")              ) == 0) return cmd_TimerSet;
       else if (strcmp_P(cmd_lc, PSTR("timerpause")            ) == 0) return cmd_TimerPause;
       else if (strcmp_P(cmd_lc, PSTR("timerresume")           ) == 0) return cmd_TimerResume;
@@ -456,6 +457,19 @@ void ExecuteCommand(byte source, const char *Line)
       float result = 0;
       Calculate(TmpStr1, &result);
       UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
+    }
+    break;
+  }
+
+  case cmd_TaskValueSetAndRun:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 4))
+    {
+      float result = 0;
+      Calculate(TmpStr1, &result);
+      UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
+      SensorSendTask(Par1 - 1);
     }
     break;
   }

@@ -541,6 +541,7 @@ enum Command {
   cmd_TaskClearAll,
   cmd_TaskRun,
   cmd_TaskValueSet,
+  cmd_TaskValueSetAndRun,
   cmd_TimerSet,
   cmd_TimerPause,
   cmd_TimerResume,
