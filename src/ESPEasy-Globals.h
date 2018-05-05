@@ -513,6 +513,7 @@ enum Command {
   cmd_i2cscanner,
   cmd_IP,
   cmd_Load,
+  cmd_logentry,
   cmd_lowmem,
   cmd_malloc,
   cmd_meminfo,

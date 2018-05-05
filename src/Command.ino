@@ -84,6 +84,7 @@ Command commandStringToEnum(const char * cmd) {
     }
     case 'l': {
            if (strcmp_P(cmd_lc, PSTR("load")                  ) == 0) return cmd_Load;
+      else if (strcmp_P(cmd_lc, PSTR("logentry")              ) == 0) return cmd_logentry;
       else if (strcmp_P(cmd_lc, PSTR("lowmem")                ) == 0) return cmd_lowmem;
       break;
     }
@@ -456,6 +457,16 @@ void ExecuteCommand(byte source, const char *Line)
       Calculate(TmpStr1, &result);
       UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
     }
+    break;
+  }
+
+  // it does nothing, just print on the log (INFO) the content of the line in the rule:
+  // log example of command: logentry,S=[task#value] T=[task1#value]:
+  // ACT  : logentry,S=24 T=23.1
+  // Command: logentry
+  case cmd_logentry:
+  {
+    success = true;
     break;
   }
 
