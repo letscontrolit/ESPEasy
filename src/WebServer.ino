@@ -3077,16 +3077,48 @@ void handle_log() {
 // Web Interface JSON log page
 //********************************************************************************
 void handle_log_JSON() {
-  // TODO TD-er: This really should use TXBuffer.
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
+  TXBuffer.startJsonStream();
+  TXBuffer += F("{\"Log\": {");
+  TXBuffer += F("\"Entries\": [");
   String reply;
-  reply.reserve(LOG_STRUCT_MESSAGE_SIZE * LOG_STRUCT_MESSAGE_LINES / 2);
-  reply += F("{\"Log entries\": \"");
-  while (Logging.get(reply, F("<BR>"))) {
+  reply.reserve(LOG_STRUCT_MESSAGE_SIZE + 40);
+  bool logLinesAvailable = true;
+  int nrEntries = 0;
+  unsigned long firstTimeStamp = 0;
+  unsigned long lastTimeStamp = 0;
+  while (logLinesAvailable) {
+    logLinesAvailable = Logging.get_logjson_formatted(reply, lastTimeStamp);
+    if (reply.length() > 0) {
+      TXBuffer += reply;
+      if (nrEntries == 0) {
+        firstTimeStamp = lastTimeStamp;
+      }
+      ++nrEntries;
+    }
     // Do we need to do something here and maybe limit number of lines at once?
   }
-  reply += F("\"}\n");
-  WebServer.sendHeader("Access-Control-Allow-Origin","*");
-  WebServer.send(200, "application/json", reply);
+  TXBuffer += F("],\n");
+  long logTimeSpan = timeDiff(firstTimeStamp, lastTimeStamp);
+  long refreshSuggestion = 1000;
+  long newOptimum = 1000;
+  if (nrEntries > 2 && logTimeSpan > 1) {
+    // May need to lower the TTL for refresh when time needed
+    // to fill half the log is lower than current TTL
+    newOptimum = logTimeSpan * (LOG_STRUCT_MESSAGE_LINES / 2);
+    newOptimum = newOptimum / (nrEntries - 1);
+  }
+  if (newOptimum < refreshSuggestion) refreshSuggestion = newOptimum;
+  if (refreshSuggestion < 100) {
+    // Reload times no lower than 100 msec.
+    refreshSuggestion = 100;
+  }
+  stream_next_json_object_value(F("TTL"), String(refreshSuggestion));
+  stream_next_json_object_value(F("timeHalfBuffer"), String(newOptimum));
+  stream_next_json_object_value(F("nrEntries"), String(nrEntries));
+  stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
+  TXBuffer += F("}\n");
+  TXBuffer.endStream();
 }
 
 //********************************************************************************

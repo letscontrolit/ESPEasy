@@ -108,7 +108,13 @@ String to_json_object_value(const String& object, const String& value) {
   result = wrap_String(object, F("\""));
   result += F(":");
   if (value.length() == 0 || !isFloat(value)) {
-    result += wrap_String(value, F("\""));
+    if (value.indexOf('\n') == -1) {
+      result += wrap_String(value, F("\""));
+    } else {
+      String tmpValue(value);
+      tmpValue.replace('\n', '^');
+      result += wrap_String(tmpValue, F("\""));
+    }
   } else {
     result += value;
   }
