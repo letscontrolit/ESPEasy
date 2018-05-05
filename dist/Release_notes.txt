@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180505 (since mega-20180505_TD-er)
+-------------------------------------------------
+
+Release date: Sat May  5 04:00:07 CEST 2018
+
+TD-er (2):
+      [#1337]  Include hidden SSID in wifi scans
+      [#1337] WiFi.isHidden() is unknown to ESP32
+
+
+-------------------------------------------------
 Changes in release mega-20180504 (since mega-20180503)
 -------------------------------------------------
 
