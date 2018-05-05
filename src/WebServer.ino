@@ -3582,6 +3582,35 @@ void handle_control() {
   printToWebJSON = false;
 }
 
+/*********************************************************************************************\
+   Streaming versions directly to TXBuffer
+  \*********************************************************************************************/
+
+void stream_to_json_object_value(const String& object, const String& value) {
+  TXBuffer += F("\"");
+  TXBuffer += object;
+  TXBuffer += F("\":");
+  if (value.length() == 0 || !isFloat(value)) {
+    TXBuffer += F("\"");
+    TXBuffer += value;
+    TXBuffer += F("\"");
+  } else {
+    TXBuffer += value;
+  }
+}
+
+// Add JSON formatted data directly to the TXbuffer, including a trailing comma.
+void stream_next_json_object_value(const String& object, const String& value) {
+  TXBuffer += to_json_object_value(object, value);
+  TXBuffer += ",\n";
+}
+
+// Add JSON formatted data directly to the TXbuffer, including a closing '}'
+void stream_last_json_object_value(const String& object, const String& value) {
+  TXBuffer += to_json_object_value(object, value);
+  TXBuffer += "\n}";
+}
+
 
 //********************************************************************************
 // Web Interface JSON page (no password!)
@@ -3589,78 +3618,52 @@ void handle_control() {
 void handle_json()
 {
   String tasknr = WebServer.arg("tasknr");
-  String reply = "";
+  WebServer.sendHeader("Access-Control-Allow-Origin","*");
+  TXBuffer.startJsonStream();
 
   if (tasknr.length() == 0)
   {
-    reply += F("{\"System\":{\n");
-    reply += to_json_object_value(F("Build"), String(BUILD));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Git Build"), String(BUILD_GIT));
-    reply += F(",\n");
-    reply += to_json_object_value(F("System libraries"), getSystemLibraryString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("Plugins"), String(deviceCount + 1));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Plugin description"), getPluginDescriptionString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Unit"), String(Settings.Unit));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Name"), String(Settings.Name));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Uptime"), String(wdcounter / 2));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Last boot cause"), getLastBootCauseString());
-    reply += F(",\n");
+    TXBuffer += F("{\"System\":{\n");
+    stream_next_json_object_value(F("Build"), String(BUILD));
+    stream_next_json_object_value(F("Git Build"), String(BUILD_GIT));
+    stream_next_json_object_value(F("System libraries"), getSystemLibraryString());
+    stream_next_json_object_value(F("Plugins"), String(deviceCount + 1));
+    stream_next_json_object_value(F("Plugin description"), getPluginDescriptionString());
+    stream_next_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
+    stream_next_json_object_value(F("Unit"), String(Settings.Unit));
+    stream_next_json_object_value(F("Name"), String(Settings.Name));
+    stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
+    stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
 
     if (wdcounter > 0)
     {
-        reply += to_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
-        reply += F(",\n");
-        reply += to_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
-        reply += F(",\n");
+        stream_next_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
+        stream_next_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
     }
 
-    reply += to_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
-    reply += F("\n},\n");
+    stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
+    TXBuffer += F(",\n");
 
-    reply += F("\"WiFi\":{\n");
+    TXBuffer += F("\"WiFi\":{\n");
     #if defined(ESP8266)
-      reply += to_json_object_value(F("Hostname"), WiFi.hostname());
+      stream_next_json_object_value(F("Hostname"), WiFi.hostname());
     #endif
-    reply += F(",\n");
-    reply += to_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
-    reply += F(",\n");
-    reply += to_json_object_value(F("IP"), WiFi.localIP().toString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("Gateway IP"), WiFi.gatewayIP().toString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("MAC address"), WiFi.macAddress());
-    reply += F(",\n");
-    reply += to_json_object_value(F("DNS 1"), WiFi.dnsIP(0).toString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("DNS 2"), WiFi.dnsIP(1).toString());
-    reply += F(",\n");
-    reply += to_json_object_value(F("SSID"), WiFi.SSID());
-    reply += F(",\n");
-    reply += to_json_object_value(F("BSSID"), WiFi.BSSIDstr());
-    reply += F(",\n");
-    reply += to_json_object_value(F("Channel"), String(WiFi.channel()));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
-    reply += F(",\n");
-    reply += to_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
-    reply += F(",\n");
-    reply += to_json_object_value(F("Number reconnects"), String(wifi_reconnects));
-    reply += F(",\n");
-    reply += to_json_object_value(F("RSSI"), String(WiFi.RSSI()));
-    reply += F("\n},\n");
+    stream_next_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
+    stream_next_json_object_value(F("IP"), WiFi.localIP().toString());
+    stream_next_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
+    stream_next_json_object_value(F("Gateway IP"), WiFi.gatewayIP().toString());
+    stream_next_json_object_value(F("MAC address"), WiFi.macAddress());
+    stream_next_json_object_value(F("DNS 1"), WiFi.dnsIP(0).toString());
+    stream_next_json_object_value(F("DNS 2"), WiFi.dnsIP(1).toString());
+    stream_next_json_object_value(F("SSID"), WiFi.SSID());
+    stream_next_json_object_value(F("BSSID"), WiFi.BSSIDstr());
+    stream_next_json_object_value(F("Channel"), String(WiFi.channel()));
+    stream_next_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
+    stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
+    stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
+    stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
+    stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
+    TXBuffer += F(",\n");
   }
 
   byte taskNr = tasknr.toInt();
@@ -3671,55 +3674,47 @@ void handle_json()
     firstTaskIndex = taskNr - 1;
     lastTaskIndex = taskNr - 1;
   }
-   byte lastActiveTaskIndex = 0;
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
+  byte lastActiveTaskIndex = 0;
+  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++) {
     if (Settings.TaskDeviceNumber[TaskIndex])
       lastActiveTaskIndex = TaskIndex;
+  }
 
-      if (taskNr == 0 )
-        reply += F("\"Sensors\":[\n");
-      for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
-      {
-        if (Settings.TaskDeviceNumber[TaskIndex])
+  if (taskNr == 0 ) TXBuffer += F("\"Sensors\":[\n");
+  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
+  {
+    if (Settings.TaskDeviceNumber[TaskIndex])
+    {
+      byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+      byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+      LoadTaskSettings(TaskIndex);
+      TXBuffer += F("{\n");
+      // For simplicity, do the optional values first.
+      if (Device[DeviceIndex].ValueCount != 0) {
+        TXBuffer += F("\"TaskValues\": [\n");
+
+        for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
         {
-          byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-          byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-          LoadTaskSettings(TaskIndex);
-          reply += F("{\n");
-
-          reply += to_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
-          reply += F(",\n");
-          reply += to_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
-          reply += F(",\n");
-          reply += to_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
-          if (Device[DeviceIndex].ValueCount != 0) {
-            reply += F(",\n");
-            reply += F("\"TaskValues\": [\n");
-
-            for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
-            {
-              reply += F("{");
-              reply += to_json_object_value(F("ValueNumber"), String(x + 1));
-              reply += F(",\n");
-              reply += to_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-              reply += F(",\n");
-              reply += to_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-              if (x < (Device[DeviceIndex].ValueCount - 1))
-                reply += F("},\n");
-            }
-            reply += F("}]\n");
-          }
-          reply += F("}");
-          if (TaskIndex != lastActiveTaskIndex)
-            reply += F(",");
-          reply += F("\n");
+          TXBuffer += F("{");
+          stream_next_json_object_value(F("ValueNumber"), String(x + 1));
+          stream_next_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+          stream_last_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+          if (x < (Device[DeviceIndex].ValueCount - 1))
+            TXBuffer += F(",\n");
         }
+        TXBuffer += F("],\n");
       }
-      if (taskNr == 0 )
-        reply += F("]\n}");
+      stream_next_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+      stream_next_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
+      stream_last_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+      if (TaskIndex != lastActiveTaskIndex)
+        TXBuffer += F(",");
+      TXBuffer += F("\n");
+    }
+  }
+  if (taskNr == 0) TXBuffer += F("]\n}");
 
-  WebServer.sendHeader("Access-Control-Allow-Origin","*");
-  WebServer.send(200, "application/json", reply);
+  TXBuffer.endStream();
 }
 
 //********************************************************************************
