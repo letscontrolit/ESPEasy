@@ -3744,6 +3744,9 @@ void handle_json()
         }
         TXBuffer += F("],\n");
       }
+      if (taskNr != 0) {
+        stream_next_json_object_value(F("TTL"), String(ttl_json * 1000));
+      }
       stream_next_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
       stream_next_json_object_value(F("TaskInterval"), String(taskInterval));
@@ -3754,8 +3757,10 @@ void handle_json()
       TXBuffer += F("\n");
     }
   }
-  if (taskNr == 0) TXBuffer += F("],\n");
-  stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
+  if (taskNr == 0) {
+    TXBuffer += F("],\n");
+    stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
+  }
 
   TXBuffer.endStream();
 }
