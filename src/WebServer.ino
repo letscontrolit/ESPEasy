@@ -3631,6 +3631,10 @@ void stream_to_json_object_value(const String& object, const String& value) {
   }
 }
 
+String jsonBool(bool value) {
+  return value ? F("true") : F("false");
+}
+
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
 void stream_next_json_object_value(const String& object, const String& value) {
   TXBuffer += to_json_object_value(object, value);
@@ -3713,18 +3717,22 @@ void handle_json()
   }
 
   if (taskNr == 0 ) TXBuffer += F("\"Sensors\":[\n");
+  unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
   {
     if (Settings.TaskDeviceNumber[TaskIndex])
     {
       byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
       byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+      const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
       TXBuffer += F("{\n");
       // For simplicity, do the optional values first.
       if (Device[DeviceIndex].ValueCount != 0) {
+        if (ttl_json > taskInterval && taskInterval > 0 && Settings.TaskDeviceEnabled[TaskIndex]) {
+          ttl_json = taskInterval;
+        }
         TXBuffer += F("\"TaskValues\": [\n");
-
         for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
         {
           TXBuffer += F("{");
@@ -3737,6 +3745,8 @@ void handle_json()
         TXBuffer += F("],\n");
       }
       stream_next_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+      stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
+      stream_next_json_object_value(F("TaskInterval"), String(taskInterval));
       stream_next_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
       stream_last_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
       if (TaskIndex != lastActiveTaskIndex)
@@ -3744,7 +3754,8 @@ void handle_json()
       TXBuffer += F("\n");
     }
   }
-  if (taskNr == 0) TXBuffer += F("]\n}");
+  if (taskNr == 0) TXBuffer += F("],\n");
+  stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
 
   TXBuffer.endStream();
 }
