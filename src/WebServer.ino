@@ -3063,6 +3063,7 @@ void handle_log() {
   TXBuffer += F("response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
   TXBuffer += F("try { logEntry = data.Log.Entries[c].timestamp; } catch(err) { logEntry = err.name;	} finally {	if (logEntry !== 'TypeError') {");
   TXBuffer += F("document.getElementById('copyText_1').innerHTML += data.Log.Entries[c].timestamp + ': ' + data.Log.Entries[c].text + '\\n';");
+  TXBuffer += F("document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight;");
   TXBuffer += F("timeForNext = data.Log.TTL;	} else { timeForNext = 1000; }	}  }  });	}  )  .catch(function(err) { '----------------------------------\\n' + err + '\\n----------------------------------\\n'; });	}, timeForNext);})();");
   TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
   TXBuffer += F("<table class='normal'><TR><TH id='headline' style='width:150px;' align='left'>Log<TR><TD><textarea id='copyText_1' placeholder='Fetching log entries...' rows='25' wrap='off' readonly></textarea>");
