@@ -3058,26 +3058,21 @@ void handle_log() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
 
-  TXBuffer += F("<script>(function(){");
-  TXBuffer += F("var i = setInterval(function(){");
-  TXBuffer += F("var url = '/logjson';");
-  TXBuffer += F("fetch(url).then(");
-  TXBuffer += F("function(response) {");
-  TXBuffer += F("if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
-  TXBuffer += F("response.json().then(function(data) {document.getElementById('copyText_1').innerHTML += data['Log entries'].replace(/<br\\s*\\/?>/gim,'\\n');");
-  TXBuffer += F(" document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight }); } )");
-  TXBuffer += F(".catch(function(err) {document.getElementById('copyText_1').innerHTML += '----------------------------------\\n' + err + '\\n----------------------------------\\n'; });	}, 1000); 	})();");
+  TXBuffer += F("<script>(function(){var timeForNext = 1000;  var c;	var i = setInterval(function(){ var url = '/logjson'; ");
+  TXBuffer += F("fetch(url).then(function(response) { if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
+  TXBuffer += F("response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
+  TXBuffer += F("try { logEntry = data.Log.Entries[c].timestamp; } catch(err) { logEntry = err.name;	} finally {	if (logEntry !== 'TypeError') {");
+  TXBuffer += F("document.getElementById('copyText_1').innerHTML += data.Log.Entries[c].timestamp + ': ' + data.Log.Entries[c].text + '\\n';");
+  TXBuffer += F("timeForNext = data.Log.TTL;	} else { timeForNext = 1000; }	}  }  });	}  )  .catch(function(err) { '----------------------------------\\n' + err + '\\n----------------------------------\\n'; });	}, timeForNext);})();");
   TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
-  TXBuffer += F("<body onblur = 'function() { window.blurred = true; }' onfocus = 'function() { window.blurred = false; }'>");
   TXBuffer += F("<table class='normal'><TR><TH id='headline' style='width:150px;' align='left'>Log<TR><TD><textarea id='copyText_1' placeholder='Fetching log entries...' rows='25' wrap='off' readonly></textarea>");
 
-  TXBuffer += F("</table>");
-  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
+    TXBuffer += F("</table>");
+    addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   TXBuffer += F("</body>");
-  sendHeadandTail(F("TmplStd"),_TAIL);
-  TXBuffer.endStream();
-}
-
+    sendHeadandTail(F("TmplStd"),_TAIL);
+    TXBuffer.endStream();
+  }
 
 //********************************************************************************
 // Web Interface JSON log page
