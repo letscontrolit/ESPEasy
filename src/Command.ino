@@ -43,6 +43,9 @@ Command commandStringToEnum(const char * cmd) {
   String tmpcmd;
   tmpcmd = cmd;
   tmpcmd.toLowerCase();
+  String log = F("Command: ");
+  log += tmpcmd;
+  addLog(LOG_LEVEL_INFO, log);
   char cmd_lc[INPUT_COMMAND_SIZE];
   tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
@@ -81,6 +84,7 @@ Command commandStringToEnum(const char * cmd) {
     }
     case 'l': {
            if (strcmp_P(cmd_lc, PSTR("load")                  ) == 0) return cmd_Load;
+      else if (strcmp_P(cmd_lc, PSTR("logentry")              ) == 0) return cmd_logentry;
       else if (strcmp_P(cmd_lc, PSTR("lowmem")                ) == 0) return cmd_lowmem;
       break;
     }
@@ -150,8 +154,10 @@ Command commandStringToEnum(const char * cmd) {
       break;
     }
     default:
+      addLog(LOG_LEVEL_INFO, F("Command unknown"));
       return cmd_Unknown;
   }
+  addLog(LOG_LEVEL_INFO, F("Command unknown"));
   return cmd_Unknown;
 }
 
@@ -465,6 +471,16 @@ void ExecuteCommand(byte source, const char *Line)
       UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
       SensorSendTask(Par1 - 1);
     }
+    break;
+  }
+
+  // it does nothing, just print on the log (INFO) the content of the line in the rule:
+  // log example of command: logentry,S=[task#value] T=[task1#value]:
+  // ACT  : logentry,S=24 T=23.1
+  // Command: logentry
+  case cmd_logentry:
+  {
+    success = true;
     break;
   }
 

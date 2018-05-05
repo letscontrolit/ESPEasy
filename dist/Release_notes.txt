@@ -1,4 +1,73 @@
 -------------------------------------------------
+Changes in release mega-20180505 (since mega-20180505_TD-er)
+-------------------------------------------------
+
+Release date: Sat May  5 04:00:07 CEST 2018
+
+TD-er (2):
+      [#1337]  Include hidden SSID in wifi scans
+      [#1337] WiFi.isHidden() is unknown to ESP32
+
+
+-------------------------------------------------
+Changes in release mega-20180504 (since mega-20180503)
+-------------------------------------------------
+
+Release date: Fri May  4 04:00:10 CEST 2018
+
+Grovkillen (3):
+      Added dropdown for phones
+      [#1363] fixed overlapping checkboxes
+      Added a break under the hamburger
+
+TD-er (3):
+      [rules timer] revert treating the rules timer as periodical timer
+      [Settings] Add checks to investigate issues with overlap in settings
+      [LWIP2] Change LWIP1.4 => LWIP2 Low Memory
+
+
+-------------------------------------------------
+Changes in release mega-20180503 (since mega-20180502)
+-------------------------------------------------
+
+Release date: Thu May  3 04:00:12 CEST 2018
+
+Grovkillen (1):
+      Spelling correction
+
+TD-er (3):
+      [rules] Make rules start working again.
+      [timers] Make rules timers more constant and MQTT reconnect less aggressive
+      [#1353] Remove Domoticz HTTP as default controller
+
+
+-------------------------------------------------
+Changes in release mega-20180502 (since mega-20180501)
+-------------------------------------------------
+
+Release date: Wed May  2 04:00:16 CEST 2018
+
+Grovkillen (1):
+      Added log JSON
+
+Plebs (4):
+      fix for #1170
+      fix for #1142
+      deleted comments
+      Added 2 system variables
+
+Saverio Cisternino (1):
+      Optimize setSystemTimer; Removed the second "for" cycle for checking the availability of timers
+
+TD-er (5):
+      [LWIP 1.4.0] Change to LWIP 1.4.0, to allow large http POST messages
+      [LWIP] fix ESP32 build
+      [timers] Make timers more accurate
+      [wifi] Make retry intervals to connect increase at each attempt.
+      [web log] Read all items from the log buffer
+
+
+-------------------------------------------------
 Changes in release mega-20180501 (since mega-20180430)
 -------------------------------------------------
 

@@ -134,13 +134,8 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
-#if defined(ESP32)
-  log += F(" (ESP32 SDK ");
-  log += ESP.getSdkVersion();
-#else
-  log += F(" (ESP82xx Core ");
-  log += ESP.getCoreVersion();
-#endif
+  log += F(" (");
+  log += getSystemLibraryString();
   log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 
@@ -242,22 +237,9 @@ void setup()
   NPluginInit();
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
- #ifdef PLUGIN_BUILD_NORMAL
-    log += F(" [Normal]");
- #endif
- #ifdef PLUGIN_BUILD_TESTING
-    log += F(" [Testing]");
- #endif
- #ifdef PLUGIN_BUILD_DEV
-    log += F(" [Development]");
- #endif
- #if defined(ESP32)
-   log += F(" (ESP32 SDK ");
-   log += ESP.getSdkVersion();
- #else
-   log += F(" (ESP82xx Core ");
-   log += ESP.getCoreVersion();
- #endif
+  log += getPluginDescriptionString();
+  log += F(" (");
+  log += getSystemLibraryString();
   log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 
@@ -324,9 +306,12 @@ void setup()
     }
   #endif
 
-  #ifndef ESP32
-  connectionCheck.attach(30, connectionCheckHandler);
-  #endif
+//  #ifndef ESP32
+//  connectionCheck.attach(30, connectionCheckHandler);
+//  #endif
+  timer20ms = millis();
+  timer100ms = millis();
+  timer1s = millis();
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -494,8 +479,9 @@ void updateMQTTclient_connected() {
     }
   }
   if (!MQTTclient_connected) {
-    if (timermqtt_interval < 2000) {
-      timermqtt_interval += 250;
+    // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356
+    if (timermqtt_interval < 30000) {
+      timermqtt_interval += 5000;
     }
   } else {
     timermqtt_interval = 250;
@@ -509,7 +495,7 @@ void updateMQTTclient_connected() {
 
 void run50TimesPerSecond()
 {
-  timer20ms = millis() + 20;
+  setNextTimeInterval(timer20ms, 20);
   unsigned long start = micros();
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
   elapsed50ps += micros() - start;
@@ -520,7 +506,7 @@ void run50TimesPerSecond()
 \*********************************************************************************************/
 void run10TimesPerSecond()
 {
-  timer100ms = millis() + 100;
+  setNextTimeInterval(timer100ms, 100);
   unsigned long start = micros();
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
   elapsed10ps += micros() - start;
@@ -543,6 +529,7 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  setNextTimeInterval(timer1s, 1000);
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
   {
@@ -552,8 +539,6 @@ void runOncePerSecond()
     String log = F("SYS  : Reset 24h counters");
     addLog(LOG_LEVEL_INFO, log);
   }
-
-  timer1s = millis() + 1000;
 
   checkSensors();
 
@@ -654,11 +639,6 @@ void runEach30Seconds()
   sendSysInfoUDP(1);
   refreshNodeList();
 
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    MQTTCheck(enabledMqttController);
-  }
-
   #if defined(ESP8266)
   if (Settings.UseSSDP)
     SSDP_update();
@@ -693,7 +673,7 @@ void checkSensors()
         (isDeepSleep || timeOutReached(timerSensor[x]))
     )
     {
-      timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
+      setNextTimeInterval(timerSensor[x], Settings.TaskDeviceTimer[x] * 1000);
       if (timerSensor[x] == 0) // small fix if result is 0, else timer will be stopped...
         timerSensor[x] = 1;
       SensorSendTask(x);
@@ -776,7 +756,9 @@ void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte
   // plugin number and par1 form a unique key that can be used to restart a timer
   // first check if a timer is not already running for this request
   boolean reUse = false;
+  byte firstAvailable = SYSTEM_TIMER_MAX;
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
+  {
     if (systemTimers[x].timer != 0)
     {
       if ((systemTimers[x].plugin == plugin) && (systemTimers[x].Par1 == Par1))
@@ -786,20 +768,25 @@ void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte
         break;
       }
     }
-
+    else if(firstAvailable == SYSTEM_TIMER_MAX)
+    {
+      firstAvailable = x;
+    }
+  }
   if (!reUse)
   {
-    // find a new free timer slot...
-    for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-      if (systemTimers[x].timer == 0)
-      {
-        systemTimers[x].timer = millis() + timer;
-        systemTimers[x].plugin = plugin;
-        systemTimers[x].Par1 = Par1;
-        systemTimers[x].Par2 = Par2;
-        systemTimers[x].Par3 = Par3;
-        break;
-      }
+    if (firstAvailable == SYSTEM_TIMER_MAX )
+    {
+      addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
+    }
+    else
+    {
+      systemTimers[firstAvailable].timer = millis() + timer;
+      systemTimers[firstAvailable].plugin = plugin;
+      systemTimers[firstAvailable].Par1 = Par1;
+      systemTimers[firstAvailable].Par2 = Par2;
+      systemTimers[firstAvailable].Par3 = Par3;
+    }
   }
 }
 

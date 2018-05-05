@@ -804,6 +804,11 @@ String LoadSettings()
 String SaveTaskSettings(byte TaskIndex)
 {
   checkRAM(F("SaveTaskSettings"));
+  if (DAT_TASKS_SIZE < sizeof(struct ExtraTaskSettingsStruct))
+    return F("SaveTaskSettings too big");
+  if (TaskIndex >= TASKS_MAX)
+    return F("SaveTaskSettings TaskIndex too big");
+
   ExtraTaskSettings.TaskIndex = TaskIndex;
   return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
 }
@@ -818,6 +823,8 @@ String LoadTaskSettings(byte TaskIndex)
   //already loaded
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String());
+  if (TaskIndex >= TASKS_MAX)
+    return F("LoadTaskSettings TaskIndex too big");
 
   String result = "";
   result = LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
@@ -834,6 +841,9 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   checkRAM(F("SaveCustomTaskSettings"));
   if (datasize > DAT_TASKS_SIZE)
     return F("SaveCustomTaskSettings too big");
+  if (TaskIndex >= TASKS_MAX)
+    return F("SaveCustomTaskSettings TaskIndex too big");
+
   return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
 }
 
@@ -844,7 +854,9 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 String ClearCustomTaskSettings(int TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_SIZE));
+  if (TaskIndex >= TASKS_MAX)
+    return F("ClearCustomTaskSettings TaskIndex too big");
+  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_CUSTOM_SIZE));
 }
 
 /********************************************************************************************\
@@ -855,6 +867,9 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   checkRAM(F("LoadCustomTaskSettings"));
   if (datasize > DAT_TASKS_SIZE)
     return (String(F("LoadCustomTaskSettings too big")));
+  if (TaskIndex >= TASKS_MAX)
+    return F("LoadCustomTaskSettings TaskIndex too big");
+
   return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
 }
 
@@ -971,6 +986,13 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
+  String log = F("SaveToFile: ");
+  log += fname;
+  log += F(" index: ");
+  log += index;
+  log += F(" datasize: ");
+  log += datasize;
+  addLog(LOG_LEVEL_DEBUG, log);
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
@@ -983,7 +1005,7 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     pointerToByteToSave++;
   }
   f.close();
-  String log = F("FILE : Saved ");
+  log = F("FILE : Saved ");
   log=log+fname;
   addLog(LOG_LEVEL_INFO, log);
 
@@ -998,6 +1020,15 @@ String ClearInFile(char* fname, int index, int datasize)
 {
   checkRAM(F("ClearInFile"));
   FLASH_GUARD();
+
+  String log = F("ClearInFile: ");
+  log += fname;
+  log += F(" index: ");
+  log += index;
+  log += F(" datasize: ");
+  log += datasize;
+  addLog(LOG_LEVEL_DEBUG, log);
+
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
@@ -1020,6 +1051,13 @@ String ClearInFile(char* fname, int index, int datasize)
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
   checkRAM(F("LoadFromFile"));
+  String log = F("LoadFromFile: ");
+  log += fname;
+  log += F(" index: ");
+  log += index;
+  log += F(" datasize: ");
+  log += datasize;
+  addLog(LOG_LEVEL_DEBUG, log);
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
@@ -1253,6 +1291,78 @@ unsigned long FreeMem(void)
   #endif
 }
 
+/********************************************************************************************\
+  Get system information
+  \*********************************************************************************************/
+String getLastBootCauseString() {
+  switch (lastBootCause)
+  {
+    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
+    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
+       return F("Deep sleep");
+    case BOOT_CAUSE_COLD_BOOT:
+       return F("Cold boot");
+    case BOOT_CAUSE_EXT_WD:
+       return F("External Watchdog");
+  }
+  return F("Unknown");
+}
+
+String getSystemBuildString() {
+  String result;
+  result += BUILD;
+  result += F(" ");
+  result += F(BUILD_NOTES);
+  return result;
+}
+
+String getPluginDescriptionString() {
+  String result;
+  #ifdef PLUGIN_BUILD_NORMAL
+    result += F(" [Normal]");
+  #endif
+  #ifdef PLUGIN_BUILD_TESTING
+    result += F(" [Testing]");
+  #endif
+  #ifdef PLUGIN_BUILD_DEV
+    result += F(" [Development]");
+  #endif
+  return result;
+}
+
+String getSystemLibraryString() {
+  String result;
+  #if defined(ESP32)
+    result += F("ESP32 SDK ");
+    result += ESP.getSdkVersion();
+  #else
+    result += F("ESP82xx Core ");
+    result += ESP.getCoreVersion();
+    result += F(", NONOS SDK ");
+    result += system_get_sdk_version();
+    result += F(", LWIP: ");
+    result += getLWIPversion();
+  #endif
+  return result;
+}
+
+#ifndef ESP32
+String getLWIPversion() {
+  String result;
+  result += LWIP_VERSION_MAJOR;
+  result += F(".");
+  result += LWIP_VERSION_MINOR;
+  result += F(".");
+  result += LWIP_VERSION_REVISION;
+  if (LWIP_VERSION_IS_RC) {
+    result += F("-RC");
+    result += LWIP_VERSION_RC;
+  } else if (LWIP_VERSION_IS_DEVELOPMENT) {
+    result += F("-dev");
+  }
+  return result;
+}
+#endif
 
 /********************************************************************************************\
   Check if string is valid float
@@ -1392,7 +1502,7 @@ void addLog(byte logLevel, const char *line)
     syslog(logLevel, line);
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
-    Logging.add(line);
+    Logging.add(logLevel, line);
   }
 
 #ifdef FEATURE_SD

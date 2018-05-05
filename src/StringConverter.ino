@@ -108,7 +108,14 @@ String to_json_object_value(const String& object, const String& value) {
   result = wrap_String(object, F("\""));
   result += F(":");
   if (value.length() == 0 || !isFloat(value)) {
-    result += wrap_String(value, F("\""));
+    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1) {
+      result += wrap_String(value, F("\""));
+    } else {
+      String tmpValue(value);
+      tmpValue.replace('\n', '^');
+      tmpValue.replace('"', '\'');
+      result += wrap_String(tmpValue, F("\""));
+    }
   } else {
     result += value;
   }
@@ -283,6 +290,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   #endif
   repl(F("%CR%"), F("\r"), s, useURLencode);
   repl(F("%LF%"), F("\n"), s, useURLencode);
+  repl(F("%SP%"), F(" "), s, useURLencode); //space
+  SMART_REPL(F("%ip4%"),WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.')+1)) //4th IP octet
   SMART_REPL(F("%ip%"),WiFi.localIP().toString())
   SMART_REPL(F("%rssi%"), String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
   SMART_REPL(F("%ssid%"), (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID())
