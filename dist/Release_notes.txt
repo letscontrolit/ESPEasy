@@ -1,4 +1,37 @@
 -------------------------------------------------
+Changes in release mega-20180506 (since mega-20180505)
+-------------------------------------------------
+
+Release date: Sun May  6 04:00:08 CEST 2018
+
+Grovkillen (10):
+      Added javascript to handle the log entries
+      Added div to not copy "Fetching log entries...."
+      Web log now inside a textarea
+      If error make log show this more clear
+      Added break...
+      BR should be \n, now fixed
+      Forgot extra \ for escape in code
+      Added some "-"
+      Updated to compile with TD-er's update on JSON
+      Forgot the auto-scroll function... now added
+
+Plebs (2):
+      fix for #960
+      new command logentry
+
+TD-er (5):
+      [JSON] Use streaming webserver for serving JSON page
+      [JSON] Make proper log JSON output for log viewer
+      [JSON] Sanitize JSON value strings
+      [JSON] Add TTL, task interval and task enabled
+      [JSON] Fix for single task view of json output.
+
+ZericE (1):
+      [#1356] Remove redundant call to MQTTCheck
+
+
+-------------------------------------------------
 Changes in release mega-20180505 (since mega-20180505_TD-er)
 -------------------------------------------------
 
