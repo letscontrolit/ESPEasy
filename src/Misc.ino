@@ -1752,31 +1752,40 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 case 'V': //value = value without transformations
                                   break;
                                 case 'O':
-                                  value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
+                                  value = val == inverted ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
                                   break;
                                 case 'C':
-                                  value = val == inverted ? "CLOSE" : " OPEN";
+                                  value = val == inverted ? F("CLOSE") : F(" OPEN");
+                                  break;
+                                case 'M':
+                                  value = val == inverted ? F("AUTO") : F(" MAN");
+                                  break;
+                                case 'm':
+                                  value = val == inverted ? F("A") : F("M");
+                                  break;
+                                case 'H':
+                                  value = val == inverted ? F("COLD") : F(" HOT");
                                   break;
                                 case 'U':
-                                  value = val == inverted ? "DOWN" : "  UP";
+                                  value = val == inverted ? F("DOWN") : F("  UP");
                                   break;
                                 case 'u':
-                                  value = val == inverted ? "D" : "U";
+                                  value = val == inverted ? F("D") : F("U");
                                   break;
                                 case 'Y':
-                                  value = val == inverted ? " NO" : "YES";
+                                  value = val == inverted ? F(" NO") : F("YES");
                                   break;
                                 case 'y':
-                                  value = val == inverted ? "N" : "Y";
+                                  value = val == inverted ? F("N") : F("Y");
                                   break;
                                 case 'X':
-                                  value = val == inverted ? "O" : "X";
+                                  value = val == inverted ? F("O") : F("X");
                                   break;
                                 case 'I':
-                                  value = val == inverted ? "OUT" : " IN";
+                                  value = val == inverted ? F("OUT") : F(" IN");
                                   break;
                                 case 'Z' :// return "0" or "1"
-                                  value = val == inverted ? "0" : "1";
+                                  value = val == inverted ? F("0") : F("1");
                                   break;
                                 case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
                                   int x;
@@ -1822,7 +1831,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   value = (int)ceilf(valFloat);
                                   break;
                                 default:
-                                  value = "ERR";
+                                  value = F("ERR");
                                   break;
                                 }
 
@@ -1836,7 +1845,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   case 'P' :// Prefix Fill with n spaces: Pn
                                     if (valueJustLength > 1)
                                     {
-                                      if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
                                       {
                                         int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
                                         for (byte f = 0; f < filler; f++)
@@ -1847,7 +1856,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   case 'S' :// Suffix Fill with n spaces: Sn
                                     if (valueJustLength > 1)
                                     {
-                                      if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
                                       {
                                         int filler = valueJust[1] - value.length() - '0' ; //48
                                         for (byte f = 0; f < filler; f++)
@@ -1855,8 +1864,39 @@ String parseTemplate(String &tmpString, byte lineSize)
                                       }
                                     }
                                     break;
+                                  case 'L': //left part of the string
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                                      {
+                                        value = value.substring(0,(int)valueJust[1]-'0');
+                                      }
+                                    }
+                                    break;
+                                  case 'R': //Right part of the string
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                                      {
+                                        value = value.substring(std::max(0,(int)value.length()-((int)valueJust[1]-'0')));
+                                      }
+                                    }
+                                    break;
+                                  case 'U': //Substring Ux.y where x=firstChar and y=number of characters
+                                    if (valueJustLength > 1)
+                                    {
+                                      if (isDigit(valueJust[1]) && valueJust[2]=='.' && isDigit(valueJust[3]) && valueJust[1] > '0' && valueJust[3] > '0')
+                                      {
+                                        value = value.substring(std::min((int)value.length(),(int)valueJust[1]-'0'-1),(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
+                                      }
+                                      else
+                                      {
+                                        newString += F("ERR");
+                                      }
+                                    }
+                                    break;
                                   default:
-                                    newString += "ERR";
+                                    newString += F("ERR");
                                     break;
                                 }
                               }
@@ -1869,10 +1909,12 @@ String parseTemplate(String &tmpString, byte lineSize)
                               }
                             }
                           }
+                          addLog(LOG_LEVEL_DEBUG,"DEBUG: Formatted String='"+newString+value+"'");
                         }
-                        //end of changes by giig1967g - 2018-04-18
+                        //end of changes by giig1967g - 2018-04-18 & 2018-05-02
 
                         newString += String(value);
+                        addLog(LOG_LEVEL_DEBUG_DEV,"DEBUG DEV: Parsed String='"+newString+"'");
                         break;
                       }
                     if (!match) // try if this is a get config request
