@@ -2008,6 +2008,9 @@ void handle_devices() {
   // show all tasks as table
   if (taskIndexNotSet)
   {
+
+    TXBuffer += F("<script>(function(){var max_tasknumber = 12;var max_taskvalues = 4;var timeForNext = 1000;var c;var k;var valueEntry;var url = '/json';var i = setInterval(function(){fetch(url).then(function(response) {if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return;	}response.json().then(function(data) {for (c = 0; c < max_tasknumber; c++) {for (k = 0; k < max_taskvalues; k++) {try {	valueEntry = data.Sensors[c].TaskValues[k].Value;}catch(err) {valueEntry = err.name;}finally {if (valueEntry !== 'TypeError') {	document.getElementById('value_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Value;document.getElementById('valuename_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';timeForNext = data.TTL;}else {timeForNext = 1000;}}}}});})}, timeForNext);})();window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
+
     TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
 
     if (TASKS_MAX != TASKS_PER_PAGE)
@@ -2127,9 +2130,19 @@ void handle_devices() {
         {
           if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
           {
-            TXBuffer  += F("<div class=\"div_l\">");
+            TXBuffer  += F("<div class='div_l' ");
+            TXBuffer  += F("id='valuename_");
+            TXBuffer  += x;
+            TXBuffer  += F("_");
+            TXBuffer  += 0;
+            TXBuffer  += F("'>");
             TXBuffer  += ExtraTaskSettings.TaskDeviceValueNames[0];
-            TXBuffer  += F(":</div><div class=\"div_r\">");
+            TXBuffer  += F(":</div><div class='div_r' ");
+            TXBuffer  += F("id='value_");
+            TXBuffer  += x;
+            TXBuffer  += F("_");
+            TXBuffer  += 0;
+            TXBuffer  += F("'>");
             TXBuffer  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
             TXBuffer  += F("</div>");
           }
@@ -2140,10 +2153,20 @@ void handle_devices() {
               if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
               {
                 if (varNr > 0)
-                  TXBuffer += F("<div class=\"div_br\"></div>");
-                TXBuffer += F("<div class=\"div_l\">");
+                  TXBuffer += F("<div class='div_br'></div>");
+                TXBuffer += F("<div class='div_l' ");
+                TXBuffer  += F("id='valuename_");
+                TXBuffer  += x;
+                TXBuffer  += F("_");
+                TXBuffer  += varNr;
+                TXBuffer  += F("'>");
                 TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                TXBuffer += F(":</div><div class=\"div_r\">");
+                TXBuffer += F(":</div><div class='div_r' ");
+                TXBuffer  += F("id='value_");
+                TXBuffer  += x;
+                TXBuffer  += F("_");
+                TXBuffer  += 0;
+                TXBuffer  += F("'>");
                 TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
                 TXBuffer += "</div>";
               }
@@ -2156,6 +2179,7 @@ void handle_devices() {
 
     } // next
     TXBuffer += F("</table></form>");
+
   }
   // Show edit form if a specific entry is chosen with the edit button
   else
