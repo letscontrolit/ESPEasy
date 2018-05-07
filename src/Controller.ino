@@ -148,15 +148,27 @@ bool MQTTConnect(int controller_idx)
   LWTTopic.replace(F("/#"), F("/status"));
   parseSystemVariables(LWTTopic, false);
 
+  String LWTMessageConnect = ControllerSettings.LWTMessageConnect;
+  if(LWTMessageConnect.length() == 0){
+    LWTMessageConnect = DEFAULT_MQTT_LWT_CONNECT_MESSAGE;
+  }
+  parseSystemVariables(LWTMessageConnect, false);
+
+  String LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
+  if(LWTMessageDisconnect.length() == 0){
+    LWTMessageDisconnect = DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE;
+  }
+  parseSystemVariables(LWTMessageDisconnect, false);
+
   boolean MQTTresult = false;
   uint8_t willQos = 0;
   boolean willRetain = true;
 
   if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
     MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx],
-                                    LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   } else {
-    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   }
   yield();
 
@@ -175,7 +187,7 @@ bool MQTTConnect(int controller_idx)
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
+  if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), 1)) {
     updateMQTTclient_connected();
     statusLED(true);
     mqtt_reconnect_count = 0;

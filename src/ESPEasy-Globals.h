@@ -75,6 +75,8 @@
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
+#define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
+#define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
@@ -234,6 +236,8 @@
 #define CONTROLLER_SUBSCRIBE                6
 #define CONTROLLER_PUBLISH                  7
 #define CONTROLLER_LWT_TOPIC                8
+#define CONTROLLER_LWT_CONNECT_MESSAGE      9
+#define CONTROLLER_LWT_DISCONNECT_MESSAGE  10
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -758,6 +762,8 @@ struct ControllerSettingsStruct
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
     memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
+    memset(LWTMessageConnect, 0, sizeof(LWTMessageConnect));
+    memset(LWTMessageDisconnect, 0, sizeof(LWTMessageDisconnect));
   }
   boolean       UseDNS;
   byte          IP[4];
@@ -766,6 +772,8 @@ struct ControllerSettingsStruct
   char          Publish[129];
   char          Subscribe[129];
   char          MQTTLwtTopic[129];
+  char          LWTMessageConnect[129];
+  char          LWTMessageDisconnect[129];
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
@@ -940,6 +948,8 @@ struct EventStruct
   String String1;
   String String2;
   String String3;
+  String String4;
+  String String5;
   byte *Data;
 };
 

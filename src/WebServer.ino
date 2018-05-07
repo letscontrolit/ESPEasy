@@ -1108,7 +1108,8 @@ void handle_controllers() {
   String controllerpublish = WebServer.arg(F("controllerpublish"));
   String controllerenabled = WebServer.arg(F("controllerenabled"));
   String MQTTLwtTopic = WebServer.arg(F("mqttlwttopic"));
-
+  String lwtmessageconnect = WebServer.arg(F("lwtmessageconnect"));
+  String lwtmessagedisconnect = WebServer.arg(F("lwtmessagedisconnect"));
 
 
   //submitted data
@@ -1132,9 +1133,13 @@ void handle_controllers() {
         strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
         strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
         strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+        strncpy(ControllerSettings.LWTMessageConnect, TempEvent.String4.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+        strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));      
         TempEvent.String1 = "";
         TempEvent.String2 = "";
         TempEvent.String3 = "";
+        TempEvent.String4 = "";
+        TempEvent.String5 = "";                
         //NOTE: do not enable controller by default, give user a change to enter sensible values first
 
         //not resetted to default (for convenience)
@@ -1180,6 +1185,9 @@ void handle_controllers() {
         strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
         strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
         strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+        strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+        strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+
         CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
@@ -1259,7 +1267,8 @@ void handle_controllers() {
       options[1] = F("Use Hostname");
 
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
-      if (!Protocol[ProtocolIndex].Custom){
+      if (!Protocol[ProtocolIndex].Custom)
+      {
 
         addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
 
@@ -1295,29 +1304,48 @@ void handle_controllers() {
 
         if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
         {
-           String protoDisplayName;
+          String protoDisplayName;
           if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_SUBSCRIBE, protoDisplayName)) {
             protoDisplayName = F("Controller Subscribe");
           }
           addFormTextBox(protoDisplayName, F("controllersubscribe"), ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe)-1);
         }
+
         if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
         {
-           String protoDisplayName;
+          String protoDisplayName;
           if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_PUBLISH, protoDisplayName)) {
             protoDisplayName = F("Controller Publish");
           }
           addFormTextBox(protoDisplayName, F("controllerpublish"), ControllerSettings.Publish, sizeof(ControllerSettings.Publish)-1);
         }
+
         if (Protocol[ProtocolIndex].usesMQTT)
         {
-           String protoDisplayName;
+          String protoDisplayName;
           if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_TOPIC, protoDisplayName)) {
             protoDisplayName = F("Controller lwl topic");
           }
           addFormTextBox(protoDisplayName, F("mqttlwttopic"), ControllerSettings.MQTTLwtTopic, sizeof(ControllerSettings.MQTTLwtTopic)-1);
         }
 
+        if (Protocol[ProtocolIndex].usesMQTT)
+        {
+          String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_CONNECT_MESSAGE, protoDisplayName)) {
+            protoDisplayName = F("LWT Connect Message");
+          }
+          addFormTextBox(protoDisplayName, F("lwtmessageconnect"), ControllerSettings.LWTMessageConnect, sizeof(ControllerSettings.LWTMessageConnect)-1);
+        }
+
+        if (Protocol[ProtocolIndex].usesMQTT)
+        {
+          String protoDisplayName;
+          if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_LWT_DISCONNECT_MESSAGE, protoDisplayName)) {
+            protoDisplayName = F("LWT Disconnect Message");
+          }
+          addFormTextBox(protoDisplayName, F("lwtmessagedisconnect"), ControllerSettings.LWTMessageDisconnect, sizeof(ControllerSettings.LWTMessageDisconnect)-1);
+        }
       }
 
       addFormCheckBox(F("Enabled"), F("controllerenabled"), Settings.ControllerEnabled[controllerindex]);
@@ -1335,8 +1363,8 @@ void handle_controllers() {
     TXBuffer += F("</table></form>");
   }
 
-    sendHeadandTail(F("TmplStd"),_TAIL);
-    TXBuffer.endStream();
+  sendHeadandTail(F("TmplStd"),_TAIL);
+  TXBuffer.endStream();
 }
 
 
