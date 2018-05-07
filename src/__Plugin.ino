@@ -1083,10 +1083,47 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
     case PLUGIN_REQUEST:
-      for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
-          if (Plugin_ptr[x](Function, event, str))
-            return true;
+      {
+        for (byte y = 0; y < TASKS_MAX; y++)
+        {
+          if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
+          {
+            if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
+            {
+              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+              TempEvent.Source = event->Source;
+              TempEvent.TaskIndex = y;
+              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+              TempEvent.sensorType = Device[DeviceIndex].VType;
+              TempEvent.OriginTaskIndex = event->TaskIndex;
+              TempEvent.Par1 = event->Par1;
+              TempEvent.Par2 = event->Par2;
+              TempEvent.Par3 = event->Par3;
+              TempEvent.Par4 = event->Par4;
+              TempEvent.Par5 = event->Par5;
+              TempEvent.String1 = event->String1;
+              TempEvent.String2 = event->String2;
+              TempEvent.String3 = event->String3;
+              TempEvent.ControllerIndex = event->ControllerIndex;
+              TempEvent.ProtocolIndex = event->ProtocolIndex;
+              TempEvent.NotificationIndex = event->NotificationIndex;
+              TempEvent.Data = event->Data;
+              TempEvent.idx = event->idx;
+              for (x = 0; x < PLUGIN_MAX; x++)
+              {
+                if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
+                {
+                  checkRAM(F("PluginCall_s"),x);
+                  if(Plugin_ptr[x](Function, &TempEvent, str))
+                  {
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       break;
 
     // Call to all plugins used in a task. Return at first match
