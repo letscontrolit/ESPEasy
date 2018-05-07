@@ -325,6 +325,7 @@
 
 #define DAT_TASKS_SIZE                   2048
 #define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_TASKS_CUSTOM_SIZE            1024
 #define DAT_CUSTOM_CONTROLLER_SIZE       1024
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
@@ -513,6 +514,7 @@ enum Command {
   cmd_i2cscanner,
   cmd_IP,
   cmd_Load,
+  cmd_logentry,
   cmd_lowmem,
   cmd_malloc,
   cmd_meminfo,
@@ -539,6 +541,7 @@ enum Command {
   cmd_TaskClearAll,
   cmd_TaskRun,
   cmd_TaskValueSet,
+  cmd_TaskValueSetAndRun,
   cmd_TimerSet,
   cmd_TimerPause,
   cmd_TimerResume,
@@ -565,6 +568,7 @@ bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
+String to_json_object_value(const String& object, const String& value);
 
 struct SecurityStruct
 {
@@ -939,16 +943,18 @@ struct LogStruct {
       for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
         memset(Message[i], 0, LOG_STRUCT_MESSAGE_SIZE);
         timeStamp[i] = 0;
+        log_level[i] = 0;
       }
     }
 
-    void add(const char *line) {
+    void add(const byte loglevel, const char *line) {
       write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
       if (write_idx == read_idx) {
         // Buffer full, move read_idx to overwrite oldest entry.
         read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
       }
       timeStamp[write_idx] = millis();
+      log_level[write_idx] = loglevel;
       strncpy(Message[write_idx], line, LOG_STRUCT_MESSAGE_SIZE-1);
     }
 
@@ -960,6 +966,19 @@ struct LogStruct {
         output += formatLine(read_idx, lineEnd);
       }
       return !isEmpty();
+    }
+
+    bool get_logjson_formatted(String& output, unsigned long& timestamp) {
+      if (isEmpty()) {
+        output = "";
+        return false;
+      }
+      read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+      output = logjson_formatLine(read_idx);
+      timestamp = timeStamp[read_idx];
+      if (isEmpty()) return false;
+      output += ",\n";
+      return true;
     }
 
     bool get(String& output, const String& lineEnd, int line) {
@@ -997,10 +1016,24 @@ struct LogStruct {
       return output;
     }
 
+    String logjson_formatLine(int index) {
+      String output;
+      output.reserve(LOG_STRUCT_MESSAGE_SIZE + 40);
+      output = "{";
+      output += to_json_object_value("timestamp", String(timeStamp[index]));
+      output += ",\n";
+      output += to_json_object_value("text",  String(Message[index]));
+      output += ",\n";
+      output += to_json_object_value("level", String(log_level[index]));
+      output += "}";
+      return output;
+    }
+
 
     int write_idx;
     int read_idx;
     unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
+    byte log_level[LOG_STRUCT_MESSAGE_LINES];
     char Message[LOG_STRUCT_MESSAGE_LINES][LOG_STRUCT_MESSAGE_SIZE];
 
 } Logging;

@@ -639,11 +639,6 @@ void runEach30Seconds()
   sendSysInfoUDP(1);
   refreshNodeList();
 
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    MQTTCheck(enabledMqttController);
-  }
-
   #if defined(ESP8266)
   if (Settings.UseSSDP)
     SSDP_update();
