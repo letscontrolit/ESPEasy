@@ -2009,7 +2009,14 @@ void handle_devices() {
   if (taskIndexNotSet)
   {
 
-    TXBuffer += F("<script>(function(){var max_tasknumber = 12;var max_taskvalues = 4;var timeForNext = 1000;var c;var k;var valueEntry;var url = '/json';var i = setInterval(function(){fetch(url).then(function(response) {if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return;	}response.json().then(function(data) {for (c = 0; c < max_tasknumber; c++) {for (k = 0; k < max_taskvalues; k++) {try {	valueEntry = data.Sensors[c].TaskValues[k].Value;}catch(err) {valueEntry = err.name;}finally {if (valueEntry !== 'TypeError') {	document.getElementById('value_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Value;document.getElementById('valuename_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';timeForNext = data.TTL;}else {timeForNext = 1000;}}}}});})}, timeForNext);})();window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
+    TXBuffer += F("<script> (function(){ var max_tasknumber = 12; var max_taskvalues = 4; var timeForNext = 1000; var c; var k; var err = ''; var i = setInterval(function(){ var url = '/json';");
+    TXBuffer += F("	fetch(url).then( function(response) {  if (response.status !== 200) { console.log('Looks like there was a problem. Status Code: ' +  response.status); return; } response.json().then(function(data) {");
+    TXBuffer += F("	timeForNext = data.TTL; for (c = 0; c < max_tasknumber; c++) { for (k = 0; k < max_taskvalues; k++) { try {	valueEntry = data.Sensors[c].TaskValues[k].Value; }	catch(err) { valueEntry = err.name;	}");
+    TXBuffer += F("	finally {if (valueEntry !== 'TypeError') {");
+    TXBuffer += F("	document.getElementById('value_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Value;");
+    TXBuffer += F("	document.getElementById('valuename_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';");
+    TXBuffer += F("	}}}}});} ) .catch(function(err) {console.log(err.message); });}, timeForNext);})();");
+    TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
 
     TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
 
@@ -2165,7 +2172,7 @@ void handle_devices() {
                 TXBuffer  += F("id='value_");
                 TXBuffer  += x;
                 TXBuffer  += F("_");
-                TXBuffer  += 0;
+                TXBuffer  += varNr;
                 TXBuffer  += F("'>");
                 TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
                 TXBuffer += "</div>";
