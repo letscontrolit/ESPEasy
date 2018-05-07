@@ -1502,7 +1502,7 @@ void addLog(byte logLevel, const char *line)
     syslog(logLevel, line);
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
-    Logging.add(line);
+    Logging.add(logLevel, line);
   }
 
 #ifdef FEATURE_SD
