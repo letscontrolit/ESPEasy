@@ -2013,8 +2013,8 @@ void handle_devices() {
     TXBuffer += F("	fetch(url).then( function(response) {  if (response.status !== 200) { console.log('Looks like there was a problem. Status Code: ' +  response.status); return; } response.json().then(function(data) {");
     TXBuffer += F("	timeForNext = data.TTL; for (c = 0; c < max_tasknumber; c++) { for (k = 0; k < max_taskvalues; k++) { try {	valueEntry = data.Sensors[c].TaskValues[k].Value; }	catch(err) { valueEntry = err.name;	}");
     TXBuffer += F("	finally {if (valueEntry !== 'TypeError') {");
-    TXBuffer += F("	document.getElementById('value_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Value;");
-    TXBuffer += F("	document.getElementById('valuename_' + c + '_' + k ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';");
+    TXBuffer += F("	document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber -1)).innerHTML = data.Sensors[c].TaskValues[k].Value;");
+    TXBuffer += F("	document.getElementById('valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber -1) ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';");
     TXBuffer += F("	}}}}});} ) .catch(function(err) {console.log(err.message); });}, timeForNext);})();");
     TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
 
