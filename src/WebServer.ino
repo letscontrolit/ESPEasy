@@ -3771,6 +3771,7 @@ void handle_advanced() {
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
   String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
   String UseRTOSMultitasking = WebServer.arg(F("usertosmultitasking"));
+  String MQTTUseUnitNameAsClientId = WebServer.arg(F("mqttuseunitnameasclientid"));
 
 
   if (edit.length() != 0)
@@ -3801,9 +3802,10 @@ void handle_advanced() {
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
     Settings.UseRules = (userules == F("on"));
     Settings.ConnectionFailuresThreshold = cft.toInt();
-    Settings.MQTTRetainFlag = (MQTTRetainFlag == F("on"));
-    Settings.ArduinoOTAEnable = (ArduinoOTAEnable == F("on"));
-    Settings.UseRTOSMultitasking = (UseRTOSMultitasking == F("on"));
+    Settings.MQTTRetainFlag = (MQTTRetainFlag ==  F("on"));
+    Settings.ArduinoOTAEnable = (ArduinoOTAEnable ==  F("on"));
+    Settings.UseRTOSMultitasking = (UseRTOSMultitasking ==  F("on"));
+    Settings.MQTTUseUnitNameAsClientId = (MQTTUseUnitNameAsClientId == F("on"));
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
@@ -3823,6 +3825,8 @@ void handle_advanced() {
   addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
   addFormNumericBox( F("Message Interval"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
   addUnit(F("ms"));
+  addFormCheckBox(F("MQTT usage unit name as ClientId"), F("mqttuseunitnameasclientid"), Settings.MQTTUseUnitNameAsClientId);
+
   addFormSubHeader(F("NTP Settings"));
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP);

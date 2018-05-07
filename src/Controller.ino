@@ -136,8 +136,16 @@ bool MQTTConnect(int controller_idx)
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = F("ESPClient_");
-  clientid += WiFi.macAddress();
+  String clientid;
+  if(Settings.MQTTUseUnitNameAsClientId){
+    clientid = Settings.Name;
+    clientid += F("_");
+    clientid += Settings.Unit;
+  }
+  else{
+    clientid = F("ESPClient_");
+    clientid += WiFi.macAddress();
+  }
 
   String LWTTopic = ControllerSettings.MQTTLwtTopic;
   if(LWTTopic.length() == 0)
