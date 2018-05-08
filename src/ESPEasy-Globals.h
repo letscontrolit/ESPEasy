@@ -1116,11 +1116,11 @@ struct systemTimerStruct
   unsigned long timer;
   byte plugin;
   int16_t TaskIndex;
-  byte Par1;
-  byte Par2;
-  byte Par3;
-  byte Par4;
-  byte Par5;
+  int Par1;
+  int Par2;
+  int Par3;
+  int Par4;
+  int Par5;
 } systemTimers[SYSTEM_TIMER_MAX];
 
 #define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
