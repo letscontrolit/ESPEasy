@@ -67,6 +67,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         String line = String(string);
         String command = "";
         int dotPos = line.indexOf('.');
+        bool istanceCommand = false;
         if(dotPos > -1)
         {
           LoadTaskSettings(event->TaskIndex);
@@ -76,6 +77,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           if(name.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName) == true)
           {
             line = line.substring(dotPos + 1);
+            istanceCommand = true;
           }
           else
           {
@@ -84,7 +86,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
         command = parseString(line, 1);
 
-        if (command == F("pcapwm"))
+        if (command == F("pcapwm") || (istanceCommand && command == F("pwm")))
         {
           success = true;
           log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
