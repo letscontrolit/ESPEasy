@@ -111,7 +111,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
           }
         }
-        if (command == F("pcafrq"))
+        if (command == F("pcafrq") || (istanceCommand && command == F("frq")))
         {
           success = true;
           if(event->Par1 >= PCA9685_MIN_FREQUENCY && event->Par1 <= PCA9685_MAX_FREQUENCY)
