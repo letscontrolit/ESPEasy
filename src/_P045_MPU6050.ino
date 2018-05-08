@@ -225,7 +225,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
 /*      // Uncomment this block if you want to debug your MPU6050, but be prepared for a log overload
         String log = F("MPU6050 : axis values: ");
-        log += _P045_axis[0][3][dev]
+        log += _P045_axis[0][3][dev];
         log += F(", ");
         log += _P045_axis[1][3][dev];
         log += F(", ");
