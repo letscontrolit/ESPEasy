@@ -608,7 +608,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
     else if  (!parenthesis && c == ',' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d >= 33 && d <= 126) {}
     else if  (!parenthesis && c == ',' && d >= 33 && d <= 126) {}
-    else if  (c == '"') {
+    else if  (c == '"' || c == '[') {
       parenthesis = true;
     }
     else
@@ -616,9 +616,9 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
       argv[argv_pos++] = c;
       argv[argv_pos] = 0;
 
-      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && d == '"')) // end of word
+      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == '"' || d == ']'))) // end of word
       {
-        if (d == '"')
+        if (d == '"' || d == ']')
           parenthesis = false;
         argv[argv_pos] = 0;
         argc_pos++;
@@ -2550,6 +2550,10 @@ boolean ruleMatch(String& event, String& rule)
   boolean match = false;
   String tmpEvent = event;
   String tmpRule = rule;
+
+  //Ignore escape char
+  tmpRule.replace(F("["),F(""));
+  tmpRule.replace(F("]"),F(""));
 
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
