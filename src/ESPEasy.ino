@@ -751,17 +751,22 @@ void SensorSendTask(byte TaskIndex)
 /*********************************************************************************************\
  * set global system timer
 \*********************************************************************************************/
-void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3)
+void setSystemTimer(unsigned long timer, byte plugin, int Par1, int Par2, int Par3)
 {
   setSystemTimer(timer, plugin, -1, Par1, Par2, Par3, 0, 0);
 }
 
-void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3, byte Par4)
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3)
 {
-  setSystemTimer(timer, plugin, -1, Par1, Par2, Par3, Par4, 0);
+  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, 0, 0);
 }
 
-void setSystemTimer(unsigned long timer, byte plugin,short taskIndex, byte Par1, byte Par2, byte Par3, byte Par4, byte Par5)
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4)
+{
+  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, Par4, 0);
+}
+
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // first check if a timer is not already running for this request
