@@ -87,8 +87,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         if (command == F("pcapwm"))
         {
           success = true;
-          log = String(F("PCA ")) + String(PCA9685_ADDRESS + port) + String(F(": GPIO ")) + String(event->Par1);
-          if(event->Par1 >=0 && event->Par1 <= PCA9685_MAX_PINS)
+          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
+          if(event->Par1 >= 0 && event->Par1 <= PCA9685_MAX_PINS)
           {
             if(event->Par2 >=0 && event->Par2 <= PCA9685_MAX_PWM)
             {
@@ -96,7 +96,6 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               
               Plugin_022_Write(port, event->Par1, event->Par2);
               setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
-              log += String(F(" Set PWM to ")) + String(event->Par2);
               addLog(LOG_LEVEL_INFO, log);
               SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
             }
@@ -114,7 +113,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           success = true;
           Plugin_022_Frequency(port, event->Par1);
           setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
-          log = String(F("PCA ")) + String(PCA9685_ADDRESS + port) + String(F(": FREQ ")) + String(event->Par1);
+          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": FREQ ")) + String(event->Par1);
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
         }
