@@ -12,6 +12,8 @@
 #define PCA9685_MODE2   0x01  // location for Mode2 register address
 #define PCA9685_LED0    0x06  // location for start of LED0 registers
 #define PCA9685_ADDRESS 0x40  // I2C address
+#define PCA9685_MAX_PINS  15
+#define PCA9685_MAX_PWM 4095
 
 /*
 is bit flag any bit rapresent the initialization state of PCA9685 
@@ -84,13 +86,27 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         if (command == F("pcapwm"))
         {
-          if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
           success = true;
-          Plugin_022_Write(port, event->Par1, event->Par2);
-          setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
-          log = String(F("PCA ")) + String(PCA9685_ADDRESS + port) + String(F(": GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+          log = String(F("PCA ")) + String(PCA9685_ADDRESS + port) + String(F(": GPIO ")) + String(event->Par1);
+          if(event->Par1 >=0 && event->Par1 <= PCA9685_MAX_PINS)
+          {
+            if(event->Par2 >=0 && event->Par2 <= PCA9685_MAX_PWM)
+            {
+              if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
+              
+              Plugin_022_Write(port, event->Par1, event->Par2);
+              setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
+              log += String(F(" Set PWM to ")) + String(event->Par2);
+              addLog(LOG_LEVEL_INFO, log);
+              SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+            }
+            else{
+              addLog(LOG_LEVEL_ERROR, log + String(F(" the pwm value ")) + String(event->Par2) + String(F(" is invalid value.")));
+            }
+          }
+          else{
+            addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
+          }
         }
         if (command == F("pcafrq"))
         {
