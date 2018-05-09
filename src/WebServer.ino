@@ -2774,9 +2774,12 @@ void addCopyButton(const String &value, const String &delimiter, const String &n
 {
   TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n'); + '");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<[Bb][Rr]\\s*\\/?>/gim,'\\n') + '");
   TXBuffer += delimiter;
   TXBuffer += F("'; } }");
+  //Fix HTML
+  TXBuffer += F("clipboard = clipboard.replace(/<\\/[Dd][Ii][Vv]\\s*\\/?>/gim,'\\n');");
+  TXBuffer += F("clipboard = clipboard.replace(/<[^>]*>/gim,'');");
   TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
   TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
