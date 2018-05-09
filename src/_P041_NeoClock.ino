@@ -66,7 +66,6 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         Plugin_041_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Plugin_041_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         Plugin_041_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        Plugin_041_update();
         success = true;
         break;
       }
