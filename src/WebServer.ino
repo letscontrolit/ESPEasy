@@ -446,13 +446,20 @@ static const char pgDefaultCSS[] PROGMEM = {
     // fade out
     "@-webkit-keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
     "@keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
-    // web log viewer
+    // web log viewer and log levels
+    //low level? Not used? white
     ".level_0 { color: #F1F1F1; }"
+    //ERROR yellow
     ".level_1 { color: #FCFF95; }"
+    //INFO blue
     ".level_2 { color: #9DCEFE; }"
+    //DEBUG green
     ".level_3 { color: #A4FC79; }"
-    ".level_4 { color: #FF0033; }"
-    ".level_5 { color: #FF5500; }"
+    //DEBUG_MORE orange
+    ".level_4 { color: #F2AB39; }"
+    //DEBUG_DEV dark orange
+    ".level_9 { color: #FF5500; }"
+    //the cmd window
     ".logviewer {	color: #F1F1F1; background-color: #272727; 	font-family: 'Lucida Console', Monaco, monospace; "
                 " height:  530px; max-width: 1000px; width: 80%; padding: 4px 8px;  overflow: auto;   border-style: solid; border-color: gray; }"
     // text textarea
