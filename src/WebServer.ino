@@ -2382,7 +2382,7 @@ void addDeviceSelect(String name,  int choice)
       deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 #ifdef PLUGIN_BUILD_DEV
-    int num = deviceIndex + 1;
+    int num = Plugin_id[deviceIndex];
     String plugin = F("P");
     if (num < 10) plugin += F("0");
     if (num < 100) plugin += F("0");
