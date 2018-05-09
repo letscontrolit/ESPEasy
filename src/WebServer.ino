@@ -446,7 +446,15 @@ static const char pgDefaultCSS[] PROGMEM = {
     // fade out
     "@-webkit-keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
     "@keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
-
+    // web log viewer
+    ".level_0 { color: #F1F1F1; }"
+    ".level_1 { color: #FCFF95; }"
+    ".level_2 { color: #9DCEFE; }"
+    ".level_3 { color: #A4FC79; }"
+    ".level_4 { color: #FF0033; }"
+    ".level_5 { color: #FF5500; }"
+    ".logviewer {	color: #F1F1F1; background-color: #272727; 	font-family: 'Lucida Console', Monaco, monospace; "
+                " height:  530px; max-width: 1000px; width: 80%; padding: 4px 8px;  overflow: auto;   border-style: solid; border-color: gray; }"
     // text textarea
     "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
     "textarea:hover {background-color: #ccc; }"
@@ -2008,6 +2016,16 @@ void handle_devices() {
   // show all tasks as table
   if (taskIndexNotSet)
   {
+
+    TXBuffer += F("<script> (function(){ var max_tasknumber = 12; var max_taskvalues = 4; var timeForNext = 1000; var c; var k; var err = ''; var i = setInterval(function(){ var url = '/json';");
+    TXBuffer += F("	fetch(url).then( function(response) {  if (response.status !== 200) { console.log('Looks like there was a problem. Status Code: ' +  response.status); return; } response.json().then(function(data) {");
+    TXBuffer += F("	timeForNext = data.TTL; for (c = 0; c < max_tasknumber; c++) { for (k = 0; k < max_taskvalues; k++) { try {	valueEntry = data.Sensors[c].TaskValues[k].Value; }	catch(err) { valueEntry = err.name;	}");
+    TXBuffer += F("	finally {if (valueEntry !== 'TypeError') {");
+    TXBuffer += F("	document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber -1)).innerHTML = data.Sensors[c].TaskValues[k].Value;");
+    TXBuffer += F("	document.getElementById('valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber -1) ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';");
+    TXBuffer += F("	}}}}});} ) .catch(function(err) {console.log(err.message); });}, timeForNext);})();");
+    TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
+
     TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
 
     if (TASKS_MAX != TASKS_PER_PAGE)
@@ -2127,9 +2145,19 @@ void handle_devices() {
         {
           if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
           {
-            TXBuffer  += F("<div class=\"div_l\">");
+            TXBuffer  += F("<div class='div_l' ");
+            TXBuffer  += F("id='valuename_");
+            TXBuffer  += x;
+            TXBuffer  += F("_");
+            TXBuffer  += 0;
+            TXBuffer  += F("'>");
             TXBuffer  += ExtraTaskSettings.TaskDeviceValueNames[0];
-            TXBuffer  += F(":</div><div class=\"div_r\">");
+            TXBuffer  += F(":</div><div class='div_r' ");
+            TXBuffer  += F("id='value_");
+            TXBuffer  += x;
+            TXBuffer  += F("_");
+            TXBuffer  += 0;
+            TXBuffer  += F("'>");
             TXBuffer  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
             TXBuffer  += F("</div>");
           }
@@ -2140,10 +2168,20 @@ void handle_devices() {
               if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
               {
                 if (varNr > 0)
-                  TXBuffer += F("<div class=\"div_br\"></div>");
-                TXBuffer += F("<div class=\"div_l\">");
+                  TXBuffer += F("<div class='div_br'></div>");
+                TXBuffer += F("<div class='div_l' ");
+                TXBuffer  += F("id='valuename_");
+                TXBuffer  += x;
+                TXBuffer  += F("_");
+                TXBuffer  += varNr;
+                TXBuffer  += F("'>");
                 TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                TXBuffer += F(":</div><div class=\"div_r\">");
+                TXBuffer += F(":</div><div class='div_r' ");
+                TXBuffer  += F("id='value_");
+                TXBuffer  += x;
+                TXBuffer  += F("_");
+                TXBuffer  += varNr;
+                TXBuffer  += F("'>");
                 TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
                 TXBuffer += "</div>";
               }
@@ -2156,6 +2194,7 @@ void handle_devices() {
 
     } // next
     TXBuffer += F("</table></form>");
+
   }
   // Show edit form if a specific entry is chosen with the edit button
   else
@@ -2758,7 +2797,7 @@ void addCopyButton(const String &value, const String &delimiter, const String &n
 {
   TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n'); + '");
   TXBuffer += delimiter;
   TXBuffer += F("'; } }");
   TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
@@ -3060,21 +3099,30 @@ void handle_log() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
 
-  TXBuffer += F("<script>(function(){var timeForNext = 1000;  var c;	var i = setInterval(function(){ var url = '/logjson'; ");
-  TXBuffer += F("fetch(url).then(function(response) { if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
-  TXBuffer += F("response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
-  TXBuffer += F("try { logEntry = data.Log.Entries[c].timestamp; } catch(err) { logEntry = err.name;	} finally {	if (logEntry !== 'TypeError') {");
-  TXBuffer += F("document.getElementById('copyText_1').innerHTML += data.Log.Entries[c].timestamp + ': ' + data.Log.Entries[c].text + '\\n';");
-  TXBuffer += F("document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight;");
-  TXBuffer += F("timeForNext = data.Log.TTL;	} else { timeForNext = 1000; }	}  }  });	}  )  .catch(function(err) { '----------------------------------\\n' + err + '\\n----------------------------------\\n'; });	}, timeForNext);})();");
-  TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
-  TXBuffer += F("<table class='normal'><TR><TH id='headline' style='width:150px;' align='left'>Log<TR><TD><textarea id='copyText_1' placeholder='Fetching log entries...' rows='25' wrap='off' readonly></textarea>");
+  TXBuffer += F("<table class=\"normal\"><TR><TH id=\"headline\" align=\"left\">Log");
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
+  TXBuffer += F("</TR></table><BR><div class='logviewer' id='copyText_1'></div>");
+  TXBuffer += F("Autoscroll: ");
+  addCheckBox(F("autoscroll"), true);
+  TXBuffer += F("<BR></body>");
 
-    TXBuffer += F("</table>");
-    addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
-  TXBuffer += F("</body>");
-    sendHeadandTail(F("TmplStd"),_TAIL);
-    TXBuffer.endStream();
+  TXBuffer += F("<script>(function(){var FetchingText = 'Fetching log entries...'; document.getElementById('copyText_1').innerHTML = FetchingText;");
+  TXBuffer += F(" var timeForNext = 1000;	var c; var i = setInterval(function(){var url = '/logjson'; ");
+  TXBuffer += F(" fetch(url).then(function(response) { if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);");
+  TXBuffer += F("	return; }  response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
+  TXBuffer += F(" try { logEntry = data.Log.Entries[c].timestamp;	} catch(err) { logEntry = err.name; }");
+  TXBuffer += F("	finally { if (logEntry !== \"TypeError\") { if (document.getElementById('copyText_1').innerHTML == FetchingText) { document.getElementById('copyText_1').innerHTML = '';}");
+  TXBuffer += F("	document.getElementById('copyText_1').innerHTML += '<div class=level_' + data.Log.Entries[c].level + ' id=' + data.Log.Entries[c].timestamp + '>");
+  TXBuffer += F("<font color=\"gray\">' + data.Log.Entries[c].timestamp + ':</font> ' + data.Log.Entries[c].text + '</div>';");
+  TXBuffer += F("	autoscroll_on = document.getElementById('autoscroll').checked;");
+  TXBuffer += F(" if (autoscroll_on == true) { document.getElementById(data.Log.Entries[c].timestamp).scrollIntoView({behavior: \"smooth\"});}");
+  TXBuffer += F("	timeForNext = data.Log.TTL;	} else {timeForNext = 1000;	}}}});})");
+  TXBuffer += F(" .catch(function(err) {document.getElementById('copyText_1').innerHTML += '<div>>> ' + err.message + ' <<</div>'; });}, timeForNext);})();");
+  TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }</script>");
+  TXBuffer += F("<body onblur = \"function() { window.blurred = true; }\" onfocus = \"function() { window.blurred = false; }\">");
+
+  sendHeadandTail(F("TmplStd"),_TAIL);
+  TXBuffer.endStream();
   }
 
 //********************************************************************************
