@@ -403,7 +403,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             case (4):
             {
               // int strikes = 0;
-              int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
+              unsigned int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
               if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
               if (Plugin_046_laststrikectr > (wdcounter + 10))                   // 5 min interval
               {
@@ -498,5 +498,5 @@ void Plugin_046_ISR_SCLK()                                      // Interrupt on 
       }
     }
   }
-#endif // PLUGIN_BUILD_DISABLED 
+#endif // PLUGIN_BUILD_DISABLED
 #endif // USES_P046
