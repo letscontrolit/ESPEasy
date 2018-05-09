@@ -14,6 +14,8 @@
 #define PCA9685_ADDRESS 0x40  // I2C address
 #define PCA9685_MAX_PINS  15
 #define PCA9685_MAX_PWM 4095
+#define PCA9685_MIN_FREQUENCY   23.0 // Min possible PWM cycle frequency
+#define PCA9685_MAX_FREQUENCY   1500.0 // Max possible PWM cycle frequency
 
 /*
 is bit flag any bit rapresent the initialization state of PCA9685 
@@ -111,13 +113,21 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
         if (command == F("pcafrq"))
         {
-          if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
           success = true;
-          Plugin_022_Frequency(port, event->Par1);
-          setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
-          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": FREQ ")) + String(event->Par1);
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+          if(event->Par1 >= PCA9685_MIN_FREQUENCY && event->Par1 <= PCA9685_MAX_FREQUENCY)
+          {          
+            if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
+
+            Plugin_022_Frequency(port, event->Par1);
+            setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
+            log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port) + String(F(": FREQ ")) + String(event->Par1);
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+          }
+          else{
+            addLog(LOG_LEVEL_ERROR,String(F("PCA ")) + String(PCA9685_ADDRESS + port, HEX) + String(F(" The frequesncy ")) + String(event->Par1) + String(F(" is out of range.")));
+          } 
+
         }
 
         if (command == F("status"))
