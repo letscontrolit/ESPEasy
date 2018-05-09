@@ -446,7 +446,22 @@ static const char pgDefaultCSS[] PROGMEM = {
     // fade out
     "@-webkit-keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
     "@keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
-
+    // web log viewer and log levels
+    //low level? Not used? white
+    ".level_0 { color: #F1F1F1; }"
+    //ERROR yellow
+    ".level_1 { color: #FCFF95; }"
+    //INFO blue
+    ".level_2 { color: #9DCEFE; }"
+    //DEBUG green
+    ".level_3 { color: #A4FC79; }"
+    //DEBUG_MORE orange
+    ".level_4 { color: #F2AB39; }"
+    //DEBUG_DEV dark orange
+    ".level_9 { color: #FF5500; }"
+    //the cmd window
+    ".logviewer {	color: #F1F1F1; background-color: #272727; 	font-family: 'Lucida Console', Monaco, monospace; "
+                " height:  530px; max-width: 1000px; width: 80%; padding: 4px 8px;  overflow: auto;   border-style: solid; border-color: gray; }"
     // text textarea
     "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
     "textarea:hover {background-color: #ccc; }"
@@ -2789,9 +2804,12 @@ void addCopyButton(const String &value, const String &delimiter, const String &n
 {
   TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<br\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<[Bb][Rr]\\s*\\/?>/gim,'\\n') + '");
   TXBuffer += delimiter;
   TXBuffer += F("'; } }");
+  //Fix HTML
+  TXBuffer += F("clipboard = clipboard.replace(/<\\/[Dd][Ii][Vv]\\s*\\/?>/gim,'\\n');");
+  TXBuffer += F("clipboard = clipboard.replace(/<[^>]*>/gim,'');");
   TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
   TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
@@ -3091,21 +3109,30 @@ void handle_log() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
 
-  TXBuffer += F("<script>(function(){var timeForNext = 1000;  var c;	var i = setInterval(function(){ var url = '/logjson'; ");
-  TXBuffer += F("fetch(url).then(function(response) { if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);	return; }");
-  TXBuffer += F("response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
-  TXBuffer += F("try { logEntry = data.Log.Entries[c].timestamp; } catch(err) { logEntry = err.name;	} finally {	if (logEntry !== 'TypeError') {");
-  TXBuffer += F("document.getElementById('copyText_1').innerHTML += data.Log.Entries[c].timestamp + ': ' + data.Log.Entries[c].text + '\\n';");
-  TXBuffer += F("document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight;");
-  TXBuffer += F("timeForNext = data.Log.TTL;	} else { timeForNext = 1000; }	}  }  });	}  )  .catch(function(err) { '----------------------------------\\n' + err + '\\n----------------------------------\\n'; });	}, timeForNext);})();");
-  TXBuffer += F(" window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
-  TXBuffer += F("<table class='normal'><TR><TH id='headline' style='width:150px;' align='left'>Log<TR><TD><textarea id='copyText_1' placeholder='Fetching log entries...' rows='25' wrap='off' readonly></textarea>");
+  TXBuffer += F("<table class=\"normal\"><TR><TH id=\"headline\" align=\"left\">Log");
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
+  TXBuffer += F("</TR></table><BR><div class='logviewer' id='copyText_1'></div>");
+  TXBuffer += F("Autoscroll: ");
+  addCheckBox(F("autoscroll"), true);
+  TXBuffer += F("<BR></body>");
 
-    TXBuffer += F("</table>");
-    addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
-  TXBuffer += F("</body>");
-    sendHeadandTail(F("TmplStd"),_TAIL);
-    TXBuffer.endStream();
+  TXBuffer += F("<script>(function(){var FetchingText = 'Fetching log entries...'; document.getElementById('copyText_1').innerHTML = FetchingText;");
+  TXBuffer += F(" var timeForNext = 1000;	var c; var i = setInterval(function(){var url = '/logjson'; ");
+  TXBuffer += F(" fetch(url).then(function(response) { if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);");
+  TXBuffer += F("	return; }  response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
+  TXBuffer += F(" try { logEntry = data.Log.Entries[c].timestamp;	} catch(err) { logEntry = err.name; }");
+  TXBuffer += F("	finally { if (logEntry !== \"TypeError\") { if (document.getElementById('copyText_1').innerHTML == FetchingText) { document.getElementById('copyText_1').innerHTML = '';}");
+  TXBuffer += F("	document.getElementById('copyText_1').innerHTML += '<div class=level_' + data.Log.Entries[c].level + ' id=' + data.Log.Entries[c].timestamp + '>");
+  TXBuffer += F("<font color=\"gray\">' + data.Log.Entries[c].timestamp + ':</font> ' + data.Log.Entries[c].text + '</div>';");
+  TXBuffer += F("	autoscroll_on = document.getElementById('autoscroll').checked;");
+  TXBuffer += F(" if (autoscroll_on == true) { document.getElementById(data.Log.Entries[c].timestamp).scrollIntoView({behavior: \"smooth\"});}");
+  TXBuffer += F("	timeForNext = data.Log.TTL;	} else {timeForNext = 1000;	}}}});})");
+  TXBuffer += F(" .catch(function(err) {document.getElementById('copyText_1').innerHTML += '<div>>> ' + err.message + ' <<</div>'; });}, timeForNext);})();");
+  TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }</script>");
+  TXBuffer += F("<body onblur = \"function() { window.blurred = true; }\" onfocus = \"function() { window.blurred = false; }\">");
+
+  sendHeadandTail(F("TmplStd"),_TAIL);
+  TXBuffer.endStream();
   }
 
 //********************************************************************************
