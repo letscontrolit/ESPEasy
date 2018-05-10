@@ -340,8 +340,8 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
   "function loopDeLoop(timeForNext) {"
   	"if (timeForNext == null){timeForNext = 1000}"
     //to make sure we don't run to often... JS seems to like it that way.
-    "if (timeForNext <= 250){timeForNext = 250}"
-  	//"console.log('Next fetch in: ' + timeForNext + 'mSec');"
+    "if (timeForNext <= 450){timeForNext = 450}"
+  	"console.log('Next fetch in: ' + timeForNext + 'mSec');"
         "var max_tasknumber = 12;"
         "var max_taskvalues = 4;"
         "var timeForNext = 1000;"
@@ -365,7 +365,11 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
                                 "valueEntry = err.name;"
                             "} finally {"
                                 "if (valueEntry !== 'TypeError') {"
-                                    "document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = data.Sensors[c].TaskValues[k].Value;"
+                                    //to fix trailing zeros (fixed decimals)
+                                    "tempValue = data.Sensors[c].TaskValues[k].Value;"
+                                    //This will place the correct number of decimals, JS.parse JSON removes trailing zeroes.
+                                    //"tempValue = parseFloat(tempValue).toFixed(data.Sensors[c].TaskValues[k].DecimalCount);"
+                                    "document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = tempValue;"
                                     "document.getElementById('valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';"
                                 "}"
                             "}"
@@ -394,7 +398,7 @@ static const char jsFetchAndParseLog[] PROGMEM = {
   "function loopDeLoop(timeForNext) {"
   	"if (timeForNext == null){timeForNext = 1000}"
     //to make sure we don't run to often... JS seems to like it that way.
-    "if (timeForNext <= 250){timeForNext = 250}"
+    "if (timeForNext <= 450){timeForNext = 450}"
   	//"console.log('Next fetch in: * + timeForNext + 'mSec');"
   	"var c;"
   	"var i = setInterval(function() {"
