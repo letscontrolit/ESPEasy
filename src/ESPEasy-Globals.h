@@ -354,7 +354,7 @@
 #include "Custom.h"
 #endif
 
-
+#include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
@@ -570,6 +570,7 @@ bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
+void streamFlashString(PGM_P str);
 
 struct SecurityStruct
 {

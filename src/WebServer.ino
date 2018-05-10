@@ -23,11 +23,13 @@ public:
   uint32_t maxCoreUsage;
   uint32_t maxServerUsage;
   unsigned int sentBytes;
+  uint32_t flashStringCalls;
+  uint32_t flashStringData;
   String buf;
 
   StreamingBuffer(void) : lowMemorySkip(false),
     initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
-    maxServerUsage(0), sentBytes(0)
+    maxServerUsage(0), sentBytes(0), flashStringCalls(0), flashStringData(0)
   {
     buf.reserve(CHUNKED_BUFFER_SIZE + 50);
     buf = "";
@@ -40,6 +42,30 @@ public:
   StreamingBuffer operator+= (int a)                    { return addString(String(a)); }
   StreamingBuffer operator+= (uint32_t a)               { return addString(String(a)); }
   StreamingBuffer operator+= (const String& a)          { return addString(a); }
+
+  StreamingBuffer operator+= (PGM_P str) {
+    ++flashStringCalls;
+    if (!str) return *this; // return if the pointer is void
+    if (lowMemorySkip) return *this;
+    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
+    if (flush_step < 1) flush_step = 0;
+    unsigned int pos = 0;
+    const unsigned int length = strlen_P((PGM_P)str);
+    if (length == 0) return *this;
+    flashStringData += length;
+    while (pos < length) {
+      if (flush_step == 0) {
+        sendContentBlocking(this->buf);
+        flush_step = CHUNKED_BUFFER_SIZE;
+      }
+      this->buf += (char)pgm_read_byte(&str[pos]);
+      ++pos;
+      --flush_step;
+    }
+    checkFull();
+    return *this;
+  }
+
 
   StreamingBuffer addString(const String& a) {
     if (lowMemorySkip) return *this;
@@ -123,7 +149,9 @@ public:
       sendContentBlocking(buf);
       finalRam = ESP.getFreeHeap();
       String log = String("Ram usage: Webserver only: ") + maxServerUsage +
-                   " including Core: " + maxCoreUsage;
+                   " including Core: " + maxCoreUsage +
+                   " flashStringCalls: " + flashStringCalls +
+                   " flashStringData: " + flashStringData;
       addLog(LOG_LEVEL_DEBUG, log);
     } else {
       String log = String("Webpage skipped: low memory: ") + finalRam;
@@ -244,44 +272,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
   }
   if (shouldReboot) {
     //we only add this here as a seperate chucnk to prevent using too much memory at once
-    TXBuffer += F(
-      "<script>"
-        "i=document.getElementById('rbtmsg');"
-        "i.innerHTML=\"Please reboot: <input id='reboot' class='button link' value='Reboot' type='submit' onclick='r()'>\";"
-        "var x = new XMLHttpRequest();"
-
-        //done
-        "function d(){"
-          "i.innerHTML='';"
-          "clearTimeout(t);"
-        "}"
-
-
-        //keep requesting mainpage until no more errors
-        "function c(){"
-          "i.innerHTML+='.';"
-          "x.onload=d;"
-          "x.open('GET', window.location.origin);"
-          "x.send();"
-        "}"
-
-        //rebooting
-        "function b(){"
-          "i.innerHTML='Rebooting..';"
-          "t=setInterval(c,2000);"
-        "}"
-
-
-        //request reboot
-        "function r(){"
-          "i.innerHTML+=' (requesting)';"
-          "x.onload=b;"
-          "x.open('GET', window.location.origin+'/?cmd=reboot');"
-          "x.send();"
-        "}"
-
-      "</script>"
-      );
+    TXBuffer += jsReboot;
   }
 }
 
@@ -381,141 +372,6 @@ void clearAccessBlock()
   #define TASKS_PER_PAGE 32
 #endif
 
-static const char pgDefaultCSS[] PROGMEM = {
-    //color scheme: #07D #D50 #DB0 #A0D
-    "* {font-family: sans-serif; font-size: 12pt; margin: 0px; padding: 0px; box-sizing: border-box; }"
-    "h1 {font-size: 16pt; color: #07D; margin: 8px 0; font-weight: bold; }"
-    "h2 {font-size: 12pt; margin: 0 -4px; padding: 6px; background-color: #444; color: #FFF; font-weight: bold; }"
-    "h3 {font-size: 12pt; margin: 16px -4px 0 -4px; padding: 4px; background-color: #EEE; color: #444; font-weight: bold; }"
-    "h6 {font-size: 10pt; color: #07D; }"
-    // buttons
-    ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; border: none;}"
-    ".button.link { }"
-    ".button.help {padding: 2px 4px; border-style: solid; border-width: 1px; border-color: gray; border-radius: 50%; }"
-    ".button:hover {background: #369; }"
-    // inputs, select, tetarea generall
-    "input, select, textarea {margin: 4px; padding: 4px 8px; border-radius: 4px; background-color: #eee; border-style: solid; border-width: 1px; border-color: gray;}"
-    // inputs
-    "input:hover {background-color: #ccc; }"
-    "input.wide {max-width: 500px; width:80%; }"
-    "input.widenumber {max-width: 500px; width:100px; }"
-    // select
-    "#selectwidth {max-width: 500px; width:80%; padding: 4px 8px;}"
-    "select:hover {background-color: #ccc; }"
-    // custom checkboxes
-    ".container {display: block; padding-left: 35px; margin-left: 4px; margin-top: 0px; position: relative; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
-    // Hide the browser's default checkbox
-    ".container input {position: absolute; opacity: 0; cursor: pointer;  }"
-    // Create a custom checkbox
-    ".checkmark {position: absolute; top: 0; left: 0; height: 25px;  width: 25px;  background-color: #eee; border-style: solid; border-width: 1px; border-color: gray;  border-radius: 4px;}"
-    // On mouse-over, add a grey background color
-    ".container:hover input ~ .checkmark {background-color: #ccc; }"
-    // When the checkbox is checked, add a blue background
-    ".container input:checked ~ .checkmark { background-color: #07D; }"
-    // Create the checkmark/indicator (hidden when not checked)
-    ".checkmark:after {content: ''; position: absolute; display: none; }"
-    // Show the checkmark when checked
-    ".container input:checked ~ .checkmark:after {display: block; }"
-    // Style the checkmark/indicator
-    ".container .checkmark:after {left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }"
-
-    // custom radio buttons
-    ".container2 {display: block; padding-left: 35px; margin-left: 9px; margin-bottom: 20px; position: relative; cursor: pointer; font-size: 12pt; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }"
-    // Hide the browser's default radio button
-    ".container2 input {position: absolute; opacity: 0; cursor: pointer;  }"
-    // Create a custom radio button
-    ".dotmark {position: absolute; top: 0; left: 0; height: 26px;  width: 26px;  background-color: #eee; border-style: solid; border-width: 1px; border-color: gray; border-radius: 50%;}"
-    // On mouse-over, add a grey background color
-    ".container2:hover input ~ .dotmark {background-color: #ccc; }"
-    // When the radio button is checked, add a blue background
-    ".container2 input:checked ~ .dotmark { background-color: #07D;}"
-    // Create the dot/indicator (hidden when not checked)
-    ".dotmark:after {content: ''; position: absolute; display: none; }"
-    // Show the dot when checked
-    ".container2 input:checked ~ .dotmark:after {display: block; }"
-    // Style the dot/indicator
-    ".container2 .dotmark:after {top: 8px; left: 8px; width: 8px; height: 8px;	border-radius: 50%;	background: white; }"
-
-    // toast messsage
-    "#toastmessage {visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #07D;"
-        "color: #fff;  text-align: center;  border-radius: 4px;  padding: 16px;  position: fixed;"
-        "z-index: 1; left: 282px; bottom: 30%;  font-size: 17px;  border-style: solid; border-width: 1px; border-color: gray;}"
-    "#toastmessage.show {visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }"
-    // fade in
-    "@-webkit-keyframes fadein {from {bottom: 20%; opacity: 0;} to {bottom: 30%; opacity: 0.9;} }"
-    "@keyframes fadein {from {bottom: 20%; opacity: 0;} to {bottom: 30%; opacity: 0.9;} }"
-    // fade out
-    "@-webkit-keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
-    "@keyframes fadeout {from {bottom: 30%; opacity: 0.9;} to {bottom: 0; opacity: 0;} }"
-    // web log viewer and log levels
-    //low level? Not used? white
-    ".level_0 { color: #F1F1F1; }"
-    //ERROR yellow
-    ".level_1 { color: #FCFF95; }"
-    //INFO blue
-    ".level_2 { color: #9DCEFE; }"
-    //DEBUG green
-    ".level_3 { color: #A4FC79; }"
-    //DEBUG_MORE orange
-    ".level_4 { color: #F2AB39; }"
-    //DEBUG_DEV dark orange
-    ".level_9 { color: #FF5500; }"
-    //the cmd window
-    ".logviewer {	color: #F1F1F1; background-color: #272727; 	font-family: 'Lucida Console', Monaco, monospace; "
-                " height:  530px; max-width: 1000px; width: 80%; padding: 4px 8px;  overflow: auto;   border-style: solid; border-color: gray; }"
-    // text textarea
-    "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
-    "textarea:hover {background-color: #ccc; }"
-    // tables
-    "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
-    "table.normal td {padding: 4px; height: 30px;}"
-    "table.normal tr {padding: 4px; }"
-    "table.normal {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
-    //every second row
-    "table.multirow th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
-    "table.multirow td {padding: 4px; text-align: center;  height: 30px;}"
-    "table.multirow tr {padding: 4px; }"
-      "table.multirow tr:nth-child(even){background-color: #DEE6FF; }"
-    "table.multirow {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
-    // inside a form
-    ".note {color: #444; font-style: italic; }"
-    //header with title and menu
-    ".headermenu {position: fixed; top: 0; left: 0; right: 0; height: 90px; padding: 8px 12px; background-color: #F8F8F8; border-bottom: 1px solid #DDD; z-index: 1;}"
-    ".apheader {padding: 8px 12px; background-color: #F8F8F8;}"
-    ".bodymenu {margin-top: 96px;}"
-    // menu
-    ".menubar {position: inherit; top: 55px; }"
-    ".menu {float: left; padding: 4px 16px 8px 16px; color: #444; white-space: nowrap; border: solid transparent; border-width: 4px 1px 1px; border-radius: 4px 4px 0 0; text-decoration: none; }"
-    ".menu.active {color: #000; background-color: #FFF; border-color: #07D #DDD #FFF; }"
-    ".menu:hover {color: #000; background: #DEF; }"
-    ".menu_button {display: none;}"
-    // symbols for enabled
-    ".on {color: green; }"
-    ".off {color: red; }"
-    // others
-    ".div_l {float: left; }"
-    ".div_r {float: right; margin: 2px; padding: 1px 10px; border-radius: 4px; background-color: #080; color: white; }"
-    ".div_br {clear: both; }"
-    // The alert message box
-    ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px; }"
-    // The close button
-    ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s; }"
-    // When moving the mouse over the close button
-    ".closebtn:hover {color: black; }"
-    "section{overflow-x: auto; width: 100%; }"
-    // For screens with width less than 960 pixels
-    "@media screen and (max-width: 960px) {"
-      "header:hover .menubar {display: block;}"
-      ".menu_button {display: block; text-align: center;}"
-      ".bodymenu{  margin-top: 0px;  }"
-      ".menubar{ display: none; top: 0px;   position: relative;   float: left;   width: 100%;}"
-      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 5px; z-index: 1;}"
-      ".headermenu h1{  padding: 8px 12px; }"
-      ".headermenu  a{  text-align: center;  width: 100%;  padding:7px 10px;  height: auto;   border: 0px;   border-radius:0px; }; }"
-    "\0"
-};
-
-#define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
 //if there is an error-string, add it to the html code with correct formatting
 void addHtmlError(String error){
@@ -527,10 +383,10 @@ void addHtmlError(String error){
   }
   else
   {
-    TXBuffer += F("<script>function toasting() {var x = document.getElementById('toastmessage'); x.innerHTML = '");
+    TXBuffer += jsToastMessageBegin;
     // we can push custom messages here in future releases...
     TXBuffer += F("Submitted");
-    TXBuffer += F("'; x.className = 'show'; setTimeout(function(){x.innerHTML = '';  x.className = x.className.replace('show', ''); }, 2000);} </script>");
+    TXBuffer += jsToastMessageEnd;
   }
 }
 
@@ -796,25 +652,9 @@ void getWebPageTemplateVar(const String& varName )
    else
     {
       TXBuffer += F("<style>");
-      //TXBuffer += PGMT(pgDefaultCSS);
       // Send CSS per chunk to avoid sending either too short or too large strings.
-      String tmpString;
-      tmpString.reserve(64);
-      uint16_t tmpStringPos = 0;
-      for (unsigned int i = 0; i < strlen(pgDefaultCSS); i++)
-      {
-        tmpString += (char)pgm_read_byte(&pgDefaultCSS[i]);
-        ++tmpStringPos;
-        if (tmpStringPos == 64) {
-          TXBuffer += tmpString;
-          tmpString = "";
-          tmpStringPos = 0;
-        }
-      } // saves 1k of ram
-      if (tmpString.length() > 0) {
-        // Flush left over part.
-        TXBuffer += tmpString;
-      }
+      TXBuffer += pgDefaultCSS;
+//      streamFlashString(pgDefaultCSS);
       TXBuffer += F("</style>");
     }
   }
@@ -2024,15 +1864,7 @@ void handle_devices() {
   // show all tasks as table
   if (taskIndexNotSet)
   {
-
-    TXBuffer += F("<script> (function(){ var max_tasknumber = 12; var max_taskvalues = 4; var timeForNext = 1000; var c; var k; var err = ''; var i = setInterval(function(){ var url = '/json';");
-    TXBuffer += F("	fetch(url).then( function(response) {  if (response.status !== 200) { console.log('Looks like there was a problem. Status Code: ' +  response.status); return; } response.json().then(function(data) {");
-    TXBuffer += F("	timeForNext = data.TTL; for (c = 0; c < max_tasknumber; c++) { for (k = 0; k < max_taskvalues; k++) { try {	valueEntry = data.Sensors[c].TaskValues[k].Value; }	catch(err) { valueEntry = err.name;	}");
-    TXBuffer += F("	finally {if (valueEntry !== 'TypeError') {");
-    TXBuffer += F("	document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber -1)).innerHTML = data.Sensors[c].TaskValues[k].Value;");
-    TXBuffer += F("	document.getElementById('valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber -1) ).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';");
-    TXBuffer += F("	}}}}});} ) .catch(function(err) {console.log(err.message); });}, timeForNext);})();");
-    TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }; </script>");
+    TXBuffer += jsUpdateSensorValuesDevicePage;
 
     TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
 
@@ -2157,17 +1989,15 @@ void handle_devices() {
             {
               if (varNr > 0)
                 TXBuffer += F("<div class='div_br'></div>");
-              TXBuffer += F("<div class='div_l' ");
-              TXBuffer  += F("id='valuename_");
+              TXBuffer += F("<div class='div_l' id='valuename_");
               TXBuffer  += x;
-              TXBuffer  += F("_");
+              TXBuffer  += '_';
               TXBuffer  += varNr;
               TXBuffer  += F("'>");
               TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-              TXBuffer += F(":</div><div class='div_r' ");
-              TXBuffer  += F("id='value_");
+              TXBuffer += F(":</div><div class='div_r' id='value_");
               TXBuffer  += x;
-              TXBuffer  += F("_");
+              TXBuffer  += '_';
               TXBuffer  += varNr;
               TXBuffer  += F("'>");
               TXBuffer += formatUserVarNoCheck(x, varNr);
@@ -2782,16 +2612,12 @@ void addSubmitButton(const String &value, const String &name)
 // add copy to clipboard button
 void addCopyButton(const String &value, const String &delimiter, const String &name)
 {
-  TXBuffer += F("<script>function setClipboard() { var clipboard = ''; max_loop = 100; for (var i = 1; i < max_loop; i++){ var cur_id = '");
+  TXBuffer += jsClipboardCopyPart1;
   TXBuffer += value;
-  TXBuffer += F("_' + i; var test = document.getElementById(cur_id); if (test == null){ i = max_loop + 1;  } else { clipboard += test.innerHTML.replace(/<[Bb][Rr]\\s*\\/?>/gim,'\\n') + '");
+  TXBuffer += jsClipboardCopyPart2;
   TXBuffer += delimiter;
-  TXBuffer += F("'; } }");
+  TXBuffer += jsClipboardCopyPart3;
   //Fix HTML
-  TXBuffer += F("clipboard = clipboard.replace(/<\\/[Dd][Ii][Vv]\\s*\\/?>/gim,'\\n');");
-  TXBuffer += F("clipboard = clipboard.replace(/<[^>]*>/gim,'');");
-  TXBuffer += F("var tempInput = document.createElement('textarea'); tempInput.style = 'position: absolute; left: -1000px; top: -1000px'; tempInput.innerHTML = clipboard;");
-  TXBuffer += F("document.body.appendChild(tempInput); tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); alert('Copied: \"' + clipboard + '\" to clipboard!') }</script>");
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
   TXBuffer += F("</button>");
@@ -3096,20 +2922,7 @@ void handle_log() {
   addCheckBox(F("autoscroll"), true);
   TXBuffer += F("<BR></body>");
 
-  TXBuffer += F("<script>(function(){var FetchingText = 'Fetching log entries...'; document.getElementById('copyText_1').innerHTML = FetchingText;");
-  TXBuffer += F(" var timeForNext = 1000;	var c; var i = setInterval(function(){var url = '/logjson'; ");
-  TXBuffer += F(" fetch(url).then(function(response) { if (response.status !== 200) {console.log('Looks like there was a problem. Status Code: ' +  response.status);");
-  TXBuffer += F("	return; }  response.json().then(function(data) { for (c = 0; c < data.Log.nrEntries + 1; c++) {");
-  TXBuffer += F(" try { logEntry = data.Log.Entries[c].timestamp;	} catch(err) { logEntry = err.name; }");
-  TXBuffer += F("	finally { if (logEntry !== \"TypeError\") { if (document.getElementById('copyText_1').innerHTML == FetchingText) { document.getElementById('copyText_1').innerHTML = '';}");
-  TXBuffer += F("	document.getElementById('copyText_1').innerHTML += '<div class=level_' + data.Log.Entries[c].level + ' id=' + data.Log.Entries[c].timestamp + '>");
-  TXBuffer += F("<font color=\"gray\">' + data.Log.Entries[c].timestamp + ':</font> ' + data.Log.Entries[c].text + '</div>';");
-  TXBuffer += F("	autoscroll_on = document.getElementById('autoscroll').checked;");
-  TXBuffer += F(" if (autoscroll_on == true) { document.getElementById(data.Log.Entries[c].timestamp).scrollIntoView({behavior: \"smooth\"});}");
-  TXBuffer += F("	timeForNext = data.Log.TTL;	} else {timeForNext = 1000;	}}}});})");
-  TXBuffer += F(" .catch(function(err) {document.getElementById('copyText_1').innerHTML += '<div>>> ' + err.message + ' <<</div>'; });}, timeForNext);})();");
-  TXBuffer += F("window.onblur = function() { window.blurred = true; }; window.onfocus = function() { window.blurred = false; }</script>");
-  TXBuffer += F("<body onblur = \"function() { window.blurred = true; }\" onfocus = \"function() { window.blurred = false; }\">");
+  TXBuffer += jsFetchAndParseLog;
 
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
@@ -4117,8 +3930,8 @@ void handle_upload() {
   sendHeadandTail(F("TmplStd"));
 
   TXBuffer += F("<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
-     sendHeadandTail(F("TmplStd"),true);
-    TXBuffer.endStream();
+  sendHeadandTail(F("TmplStd"),true);
+  TXBuffer.endStream();
   printWebString = "";
   printToWeb = false;
 }
@@ -5353,110 +5166,6 @@ String getValueSymbol(byte index)
   return ret;
 }
 
-
-/*********************************************************************************************\
- * ESP Easy logo Favicon.ico 16x16 8 bit
-\*********************************************************************************************/
-// Generated using xxd:   xxd -i favicon.ico > favicon.ino
-static const char favicon_8b_ico[] PROGMEM = {
-  0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 0x00, 0x00, 0x01, 0x00,
-  0x20, 0x00, 0x68, 0x04, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
-  0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x01, 0x00,
-  0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x12, 0x0b,
-  0x00, 0x00, 0x12, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0xef, 0xc0, 0x89, 0x11, 0xfe, 0xfb, 0xf8, 0xac, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 0xf3,
-  0xe9, 0xac, 0xef, 0xc0, 0x89, 0x11, 0xfe, 0xfb, 0xf8, 0xac, 0xf1, 0xc8,
-  0x95, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfc, 0xf3, 0xe9, 0xac, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd9, 0x69,
-  0x00, 0xff, 0xd9, 0x69, 0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd9, 0x69, 0x00, 0xff, 0xd9, 0x69, 0x00, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf1, 0xc8,
-  0x95, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xd8, 0x63, 0x00, 0xff, 0xef, 0xbc,
-  0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xbc, 0x80, 0xff, 0xd8, 0x63,
-  0x00, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb, 0xf1,
-  0xe6, 0xac, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xf1, 0xc8,
-  0x95, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xc2,
-  0x8a, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xef, 0xc2, 0x8a, 0xff, 0xf1, 0xc8, 0x95, 0xff, 0xfe, 0xfb,
-  0xf8, 0xac, 0xef, 0xc0, 0x89, 0x11, 0xfb, 0xf1, 0xe6, 0xac, 0xfe, 0xfa,
-  0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfa,
-  0xf5, 0xff, 0xfe, 0xfa, 0xf5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfb,
-  0xf8, 0xac, 0xef, 0xc0, 0x89, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-unsigned int favicon_8b_ico_len = 1150;
 
 void handle_favicon() {
   checkRAM(F("handle_favicon"));
