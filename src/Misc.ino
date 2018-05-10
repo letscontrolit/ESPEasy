@@ -1438,6 +1438,19 @@ void initLog()
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
+String getLogLevelDisplayString(byte index, int& logLevel) {
+  switch (index) {
+    case 0: logLevel = LOG_LEVEL_ERROR;      return F("Error");
+    case 1: logLevel = LOG_LEVEL_INFO;       return F("Info");
+    case 2: logLevel = LOG_LEVEL_DEBUG;      return F("Debug");
+    case 3: logLevel = LOG_LEVEL_DEBUG_MORE; return F("Debug More");
+    case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  return F("Debug dev");
+
+    default: logLevel = -1; return "";
+  }
+}
+
+
 void addLog(byte loglevel, String& string)
 {
   addLog(loglevel, string.c_str());

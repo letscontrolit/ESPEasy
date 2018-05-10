@@ -247,6 +247,7 @@
 #define LOG_LEVEL_DEBUG                     3
 #define LOG_LEVEL_DEBUG_MORE                4
 #define LOG_LEVEL_DEBUG_DEV                 9 // use for testing/debugging only, not for regular use
+#define LOG_LEVEL_NRELEMENTS                5 // Update this and getLogLevelDisplayString() when new log levels are added
 
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135

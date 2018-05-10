@@ -34,11 +34,12 @@ public:
   }
   StreamingBuffer operator= (String& a)                 { flush(); return addString(a); }
   StreamingBuffer operator= (const String& a)           { flush(); return addString(a); }
+  StreamingBuffer operator+= (char a)                   { return addString(String(a)); }
   StreamingBuffer operator+= (long unsigned int  a)     { return addString(String(a)); }
   StreamingBuffer operator+= (float a)                  { return addString(String(a)); }
   StreamingBuffer operator+= (int a)                    { return addString(String(a)); }
   StreamingBuffer operator+= (uint32_t a)               { return addString(String(a)); }
-  StreamingBuffer operator+=(const String& a)           { return addString(a); }
+  StreamingBuffer operator+= (const String& a)          { return addString(a); }
 
   StreamingBuffer addString(const String& a) {
     if (lowMemorySkip) return *this;
@@ -3120,7 +3121,20 @@ void handle_log() {
 void handle_log_JSON() {
   WebServer.sendHeader("Access-Control-Allow-Origin","*");
   TXBuffer.startJsonStream();
+  String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
+  if (webrequest == F("legend")) {
+    TXBuffer += F("\"Legend\": [");
+    for (byte i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
+      if (i != 0)
+        TXBuffer += ',';
+      TXBuffer += '{';
+      int loglevel;
+      stream_next_json_object_value(F("label"), getLogLevelDisplayString(i, loglevel));
+      stream_last_json_object_value(F("loglevel"), String(loglevel));
+    }
+    TXBuffer += F("],\n");
+  }
   TXBuffer += F("\"Entries\": [");
   String reply;
   reply.reserve(LOG_STRUCT_MESSAGE_SIZE + 40);
@@ -3157,6 +3171,7 @@ void handle_log_JSON() {
   stream_next_json_object_value(F("TTL"), String(refreshSuggestion));
   stream_next_json_object_value(F("timeHalfBuffer"), String(newOptimum));
   stream_next_json_object_value(F("nrEntries"), String(nrEntries));
+  stream_next_json_object_value(F("SettingsWebLogLevel"), String(Settings.WebLogLevel));
   stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
   TXBuffer += F("}\n");
   TXBuffer.endStream();
@@ -3763,7 +3778,6 @@ void handle_json()
   {
     if (Settings.TaskDeviceNumber[TaskIndex])
     {
-      byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
       byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
@@ -4012,9 +4026,14 @@ void addFormLogLevelSelect(const String& label, const String& id, int choice)
 
 void addLogLevelSelect(String name, int choice)
 {
-  String options[6] = { F("None"), F("Error"), F("Info"), F("Debug"), F("Debug More"), F("Debug dev")};
-  int optionValues[6] = { 0 , LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG, LOG_LEVEL_DEBUG_MORE, LOG_LEVEL_DEBUG_DEV};
-  addSelector(name, 6, options, optionValues, NULL, choice, false);
+  String options[LOG_LEVEL_NRELEMENTS + 1];
+  int optionValues[LOG_LEVEL_NRELEMENTS + 1] = {0};
+  options[0] = F("None");
+  optionValues[0] = 0;
+  for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
+    options[i + 1] = getLogLevelDisplayString(i, optionValues[i + 1]);
+  }
+  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice, false);
 }
 
 void addFormLogFacilitySelect(const String& label, const String& id, int choice)
