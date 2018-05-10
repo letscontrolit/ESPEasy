@@ -1704,176 +1704,175 @@ String parseTemplate(String &tmpString, byte lineSize)
                       {
                         // here we know the task and value, so find the uservar
                         match = true;
-                        String value = "";
-                        byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                        if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
-                          value = (unsigned long)UserVar[y * VARS_PER_TASK + z] + ((unsigned long)UserVar[y * VARS_PER_TASK + z + 1] << 16);
-                        else
-                          value = toString(UserVar[y * VARS_PER_TASK + z], ExtraTaskSettings.TaskDeviceValueDecimals[z]);
-
-                        // start changes by giig1967g - 2018-04-20
-                        // Syntax: [task#value#transformation#justification]
-                        // valueFormat="transformation#justification"
-                        if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
-                        {
-                          String valueJust = "";
-
-                          hashtagIndex = valueFormat.indexOf('#');
-                          if (hashtagIndex >= 0)
-                          {
-                            valueJust = valueFormat.substring(hashtagIndex + 1); //Justification part
-                            valueFormat = valueFormat.substring(0, hashtagIndex); //Transformation part
-                          }
-
-                          // valueFormat="transformation"
-                          // valueJust="justification"
+                        bool isvalid;
+                        String value = formatUserVar(y, z, isvalid);
+                        if (isvalid) {
+                          // start changes by giig1967g - 2018-04-20
+                          // Syntax: [task#value#transformation#justification]
+                          // valueFormat="transformation#justification"
                           if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
                           {
-                            const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
-                            const float valFloat = value.toFloat();
+                            String valueJust = "";
 
-                            String tempValueFormat = valueFormat;
-                            const int tempValueFormatLength = tempValueFormat.length();
-                            const int invertedIndex = tempValueFormat.indexOf('!');
-                            const bool inverted = invertedIndex >= 0 ? 1 : 0;
-                            if (inverted)
-                              tempValueFormat.remove(invertedIndex,1);
-
-                            const int rightJustifyIndex = tempValueFormat.indexOf('R');
-                            const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
-                            if (rightJustify)
-                              tempValueFormat.remove(rightJustifyIndex,1);
-
-                            //Check Transformation syntax
-                            if (tempValueFormatLength > 0)
+                            hashtagIndex = valueFormat.indexOf('#');
+                            if (hashtagIndex >= 0)
                             {
-                              switch (tempValueFormat[0])
-                                {
-                                case 'V': //value = value without transformations
-                                  break;
-                                case 'O':
-                                  value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
-                                  break;
-                                case 'C':
-                                  value = val == inverted ? "CLOSE" : " OPEN";
-                                  break;
-                                case 'U':
-                                  value = val == inverted ? "DOWN" : "  UP";
-                                  break;
-                                case 'u':
-                                  value = val == inverted ? "D" : "U";
-                                  break;
-                                case 'Y':
-                                  value = val == inverted ? " NO" : "YES";
-                                  break;
-                                case 'y':
-                                  value = val == inverted ? "N" : "Y";
-                                  break;
-                                case 'X':
-                                  value = val == inverted ? "O" : "X";
-                                  break;
-                                case 'I':
-                                  value = val == inverted ? "OUT" : " IN";
-                                  break;
-                                case 'Z' :// return "0" or "1"
-                                  value = val == inverted ? "0" : "1";
-                                  break;
-                                case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
-                                  int x;
-                                  int y;
-                                  x = 0;
-                                  y = 0;
+                              valueJust = valueFormat.substring(hashtagIndex + 1); //Justification part
+                              valueFormat = valueFormat.substring(0, hashtagIndex); //Transformation part
+                            }
 
-                                  switch (tempValueFormatLength)
-                                  {
-                                    case 2: //Dx
-                                      if (isDigit(tempValueFormat[1]))
-                                      {
-                                        x = (int)tempValueFormat[1]-'0';
-                                      }
-                                      break;
-                                    case 3: //D.y
-                                      if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
-                                      {
-                                        y = (int)tempValueFormat[2]-'0';
-                                      }
-                                      break;
-                                    case 4: //Dx.y
-                                      if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
-                                      {
-                                        x = (int)tempValueFormat[1]-'0';
-                                        y = (int)tempValueFormat[3]-'0';
-                                      }
-                                      break;
-                                    case 1: //D
-                                    default: //any other combination x=0; y=0;
-                                      break;
-                                  }
-                                  value = toString(valFloat,y);
-                                  int indexDot;
-                                  indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
-                                  for (byte f = 0; f < (x - indexDot); f++)
-                                    value = "0" + value;
-                                  break;
-                                case 'F' :// FLOOR (round down)
-                                  value = (int)floorf(valFloat);
-                                  break;
-                                case 'E' :// CEILING (round up)
-                                  value = (int)ceilf(valFloat);
-                                  break;
-                                default:
-                                  value = "ERR";
-                                  break;
-                                }
+                            // valueFormat="transformation"
+                            // valueJust="justification"
+                            if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+                            {
+                              const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
+                              const float valFloat = value.toFloat();
 
-                                // Check Justification syntax
-                                const int valueJustLength = valueJust.length();
-                                if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
-                                {
-                                  value.trim(); //remove right justification spaces for backward compatibility
-                                  switch (valueJust[0])
+                              String tempValueFormat = valueFormat;
+                              const int tempValueFormatLength = tempValueFormat.length();
+                              const int invertedIndex = tempValueFormat.indexOf('!');
+                              const bool inverted = invertedIndex >= 0 ? 1 : 0;
+                              if (inverted)
+                                tempValueFormat.remove(invertedIndex,1);
+
+                              const int rightJustifyIndex = tempValueFormat.indexOf('R');
+                              const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
+                              if (rightJustify)
+                                tempValueFormat.remove(rightJustifyIndex,1);
+
+                              //Check Transformation syntax
+                              if (tempValueFormatLength > 0)
+                              {
+                                switch (tempValueFormat[0])
                                   {
-                                  case 'P' :// Prefix Fill with n spaces: Pn
-                                    if (valueJustLength > 1)
-                                    {
-                                      if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
-                                      {
-                                        int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
-                                        for (byte f = 0; f < filler; f++)
-                                          newString += " ";
-                                      }
-                                    }
+                                  case 'V': //value = value without transformations
                                     break;
-                                  case 'S' :// Suffix Fill with n spaces: Sn
-                                    if (valueJustLength > 1)
+                                  case 'O':
+                                    value = val == inverted ? "OFF" : " ON"; //(equivalent to XOR operator)
+                                    break;
+                                  case 'C':
+                                    value = val == inverted ? "CLOSE" : " OPEN";
+                                    break;
+                                  case 'U':
+                                    value = val == inverted ? "DOWN" : "  UP";
+                                    break;
+                                  case 'u':
+                                    value = val == inverted ? "D" : "U";
+                                    break;
+                                  case 'Y':
+                                    value = val == inverted ? " NO" : "YES";
+                                    break;
+                                  case 'y':
+                                    value = val == inverted ? "N" : "Y";
+                                    break;
+                                  case 'X':
+                                    value = val == inverted ? "O" : "X";
+                                    break;
+                                  case 'I':
+                                    value = val == inverted ? "OUT" : " IN";
+                                    break;
+                                  case 'Z' :// return "0" or "1"
+                                    value = val == inverted ? "0" : "1";
+                                    break;
+                                  case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
                                     {
-                                      if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                                      int x;
+                                      int y;
+                                      x = 0;
+                                      y = 0;
+
+                                      switch (tempValueFormatLength)
                                       {
-                                        int filler = valueJust[1] - value.length() - '0' ; //48
-                                        for (byte f = 0; f < filler; f++)
-                                          value += " ";
+                                        case 2: //Dx
+                                          if (isDigit(tempValueFormat[1]))
+                                          {
+                                            x = (int)tempValueFormat[1]-'0';
+                                          }
+                                          break;
+                                        case 3: //D.y
+                                          if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
+                                          {
+                                            y = (int)tempValueFormat[2]-'0';
+                                          }
+                                          break;
+                                        case 4: //Dx.y
+                                          if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
+                                          {
+                                            x = (int)tempValueFormat[1]-'0';
+                                            y = (int)tempValueFormat[3]-'0';
+                                          }
+                                          break;
+                                        case 1: //D
+                                        default: //any other combination x=0; y=0;
+                                          break;
                                       }
+                                      value = toString(valFloat,y);
+                                      int indexDot;
+                                      indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
+                                      for (byte f = 0; f < (x - indexDot); f++)
+                                        value = "0" + value;
+                                      break;
                                     }
+                                  case 'F' :// FLOOR (round down)
+                                    value = (int)floorf(valFloat);
+                                    break;
+                                  case 'E' :// CEILING (round up)
+                                    value = (int)ceilf(valFloat);
                                     break;
                                   default:
-                                    newString += "ERR";
+                                    value = "ERR";
                                     break;
-                                }
-                              }
+                                  }
 
-                              if (rightJustify)
-                              {
-                                int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                                for (byte f = 0; f < filler; f++)
-                                  newString += " ";
+                                  // Check Justification syntax
+                                  const int valueJustLength = valueJust.length();
+                                  if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
+                                  {
+                                    value.trim(); //remove right justification spaces for backward compatibility
+                                    switch (valueJust[0])
+                                    {
+                                    case 'P' :// Prefix Fill with n spaces: Pn
+                                      if (valueJustLength > 1)
+                                      {
+                                        if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
+                                        {
+                                          int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
+                                          for (byte f = 0; f < filler; f++)
+                                            newString += " ";
+                                        }
+                                      }
+                                      break;
+                                    case 'S' :// Suffix Fill with n spaces: Sn
+                                      if (valueJustLength > 1)
+                                      {
+                                        if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                                        {
+                                          int filler = valueJust[1] - value.length() - '0' ; //48
+                                          for (byte f = 0; f < filler; f++)
+                                            value += " ";
+                                        }
+                                      }
+                                      break;
+                                    default:
+                                      newString += "ERR";
+                                      break;
+                                  }
+                                }
+
+                                if (rightJustify)
+                                {
+                                  int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                                  for (byte f = 0; f < filler; f++)
+                                    newString += " ";
+                                }
                               }
                             }
                           }
-                        }
-                        //end of changes by giig1967g - 2018-04-18
+                          //end of changes by giig1967g - 2018-04-18
 
-                        newString += String(value);
-                        break;
+                          newString += String(value);
+                          break;
+                        }
                       }
                     if (!match) // try if this is a get config request
                     {
@@ -2784,9 +2783,7 @@ void SendValueLogger(byte TaskIndex)
   String logger;
 
   LoadTaskSettings(TaskIndex);
-  byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-  byte sensorType = Device[DeviceIndex].VType;
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
   {
     logger += getDateString('-');
@@ -2799,11 +2796,7 @@ void SendValueLogger(byte TaskIndex)
     logger += F(",");
     logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     logger += F(",");
-
-    if (sensorType == SENSOR_TYPE_LONG)
-      logger += (unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
-    else
-      logger += String(UserVar[BaseVarIndex + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
+    logger += formatUserVarNoCheck(TaskIndex, varNr);
     logger += F("\r\n");
   }
 

@@ -2150,48 +2150,27 @@ void handle_devices() {
         customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent,TXBuffer.buf);
         if (!customValues)
         {
-          if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
           {
-            TXBuffer  += F("<div class='div_l' ");
-            TXBuffer  += F("id='valuename_");
-            TXBuffer  += x;
-            TXBuffer  += F("_");
-            TXBuffer  += 0;
-            TXBuffer  += F("'>");
-            TXBuffer  += ExtraTaskSettings.TaskDeviceValueNames[0];
-            TXBuffer  += F(":</div><div class='div_r' ");
-            TXBuffer  += F("id='value_");
-            TXBuffer  += x;
-            TXBuffer  += F("_");
-            TXBuffer  += 0;
-            TXBuffer  += F("'>");
-            TXBuffer  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
-            TXBuffer  += F("</div>");
-          }
-          else
-          {
-            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+            if (Settings.TaskDeviceNumber[x] != 0)
             {
-              if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
-              {
-                if (varNr > 0)
-                  TXBuffer += F("<div class='div_br'></div>");
-                TXBuffer += F("<div class='div_l' ");
-                TXBuffer  += F("id='valuename_");
-                TXBuffer  += x;
-                TXBuffer  += F("_");
-                TXBuffer  += varNr;
-                TXBuffer  += F("'>");
-                TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                TXBuffer += F(":</div><div class='div_r' ");
-                TXBuffer  += F("id='value_");
-                TXBuffer  += x;
-                TXBuffer  += F("_");
-                TXBuffer  += varNr;
-                TXBuffer  += F("'>");
-                TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
-                TXBuffer += "</div>";
-              }
+              if (varNr > 0)
+                TXBuffer += F("<div class='div_br'></div>");
+              TXBuffer += F("<div class='div_l' ");
+              TXBuffer  += F("id='valuename_");
+              TXBuffer  += x;
+              TXBuffer  += F("_");
+              TXBuffer  += varNr;
+              TXBuffer  += F("'>");
+              TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+              TXBuffer += F(":</div><div class='div_r' ");
+              TXBuffer  += F("id='value_");
+              TXBuffer  += x;
+              TXBuffer  += F("_");
+              TXBuffer  += varNr;
+              TXBuffer  += F("'>");
+              TXBuffer += formatUserVarNoCheck(x, varNr);
+              TXBuffer += "</div>";
             }
           }
         }
@@ -3780,7 +3759,7 @@ void handle_json()
 
   if (taskNr == 0 ) TXBuffer += F("\"Sensors\":[\n");
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
+  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex; TaskIndex++)
   {
     if (Settings.TaskDeviceNumber[TaskIndex])
     {
@@ -3800,7 +3779,7 @@ void handle_json()
           TXBuffer += F("{");
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-          stream_last_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+          stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
           if (x < (Device[DeviceIndex].ValueCount - 1))
             TXBuffer += F(",\n");
         }
