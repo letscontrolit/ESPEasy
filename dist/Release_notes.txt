@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20180510 (since mega-20180507)
+-------------------------------------------------
+
+Release date: Thu May 10 04:00:13 CEST 2018
+
+Grovkillen (7):
+      First draft of auto update of task/device values
+      Values are updated (1-4 values per task)
+      Wrap up for the PR
+      Added div to web log (color scheme)
+      Removed auto update of values... wrong branch
+      Fixed the log level colors
+      Fixed copy to clipboard (handle HTML tags)
+
+Saverio Cisternino (1):
+      Fix plugin_id visualization on devices view that afflict Development build
+
+TD-er (2):
+      [build] Special build config for Ventus W266
+      [Ventus W266] Fix signed/unsigned warning
+
+ZericE (1):
+      [#1368] Remove call to Plugin_041_update causing a hard crash.
+
+
+-------------------------------------------------
 Changes in release mega-20180507 (since mega-20180506)
 -------------------------------------------------
 
