@@ -103,13 +103,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           val[F("deviceName")] = ExtraTaskSettings.TaskDeviceName;
           val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
           val[F("type")]       = event->sensorType;
-
-          if (event->sensorType == SENSOR_TYPE_LONG) {
-            val[F("value")] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-          }
-          else { // All other sensor types
-            val[F("value")] = formatUserVar(event, x);
-          }
+          val[F("value")]      = formatUserVarNoCheck(event, x);
         }
 
         // Create json buffer

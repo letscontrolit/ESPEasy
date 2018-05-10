@@ -34,11 +34,12 @@ public:
   }
   StreamingBuffer operator= (String& a)                 { flush(); return addString(a); }
   StreamingBuffer operator= (const String& a)           { flush(); return addString(a); }
+  StreamingBuffer operator+= (char a)                   { return addString(String(a)); }
   StreamingBuffer operator+= (long unsigned int  a)     { return addString(String(a)); }
   StreamingBuffer operator+= (float a)                  { return addString(String(a)); }
   StreamingBuffer operator+= (int a)                    { return addString(String(a)); }
   StreamingBuffer operator+= (uint32_t a)               { return addString(String(a)); }
-  StreamingBuffer operator+=(const String& a)           { return addString(a); }
+  StreamingBuffer operator+= (const String& a)          { return addString(a); }
 
   StreamingBuffer addString(const String& a) {
     if (lowMemorySkip) return *this;
@@ -2150,48 +2151,27 @@ void handle_devices() {
         customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent,TXBuffer.buf);
         if (!customValues)
         {
-          if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG)
+          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
           {
-            TXBuffer  += F("<div class='div_l' ");
-            TXBuffer  += F("id='valuename_");
-            TXBuffer  += x;
-            TXBuffer  += F("_");
-            TXBuffer  += 0;
-            TXBuffer  += F("'>");
-            TXBuffer  += ExtraTaskSettings.TaskDeviceValueNames[0];
-            TXBuffer  += F(":</div><div class='div_r' ");
-            TXBuffer  += F("id='value_");
-            TXBuffer  += x;
-            TXBuffer  += F("_");
-            TXBuffer  += 0;
-            TXBuffer  += F("'>");
-            TXBuffer  += (unsigned long)UserVar[x * VARS_PER_TASK] + ((unsigned long)UserVar[x * VARS_PER_TASK + 1] << 16);
-            TXBuffer  += F("</div>");
-          }
-          else
-          {
-            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+            if (Settings.TaskDeviceNumber[x] != 0)
             {
-              if ((Settings.TaskDeviceNumber[x] != 0) and (varNr < Device[DeviceIndex].ValueCount))
-              {
-                if (varNr > 0)
-                  TXBuffer += F("<div class='div_br'></div>");
-                TXBuffer += F("<div class='div_l' ");
-                TXBuffer  += F("id='valuename_");
-                TXBuffer  += x;
-                TXBuffer  += F("_");
-                TXBuffer  += varNr;
-                TXBuffer  += F("'>");
-                TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                TXBuffer += F(":</div><div class='div_r' ");
-                TXBuffer  += F("id='value_");
-                TXBuffer  += x;
-                TXBuffer  += F("_");
-                TXBuffer  += varNr;
-                TXBuffer  += F("'>");
-                TXBuffer += String(UserVar[x * VARS_PER_TASK + varNr], ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
-                TXBuffer += "</div>";
-              }
+              if (varNr > 0)
+                TXBuffer += F("<div class='div_br'></div>");
+              TXBuffer += F("<div class='div_l' ");
+              TXBuffer  += F("id='valuename_");
+              TXBuffer  += x;
+              TXBuffer  += F("_");
+              TXBuffer  += varNr;
+              TXBuffer  += F("'>");
+              TXBuffer += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+              TXBuffer += F(":</div><div class='div_r' ");
+              TXBuffer  += F("id='value_");
+              TXBuffer  += x;
+              TXBuffer  += F("_");
+              TXBuffer  += varNr;
+              TXBuffer  += F("'>");
+              TXBuffer += formatUserVarNoCheck(x, varNr);
+              TXBuffer += "</div>";
             }
           }
         }
@@ -3141,7 +3121,20 @@ void handle_log() {
 void handle_log_JSON() {
   WebServer.sendHeader("Access-Control-Allow-Origin","*");
   TXBuffer.startJsonStream();
+  String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
+  if (webrequest == F("legend")) {
+    TXBuffer += F("\"Legend\": [");
+    for (byte i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
+      if (i != 0)
+        TXBuffer += ',';
+      TXBuffer += '{';
+      int loglevel;
+      stream_next_json_object_value(F("label"), getLogLevelDisplayString(i, loglevel));
+      stream_last_json_object_value(F("loglevel"), String(loglevel));
+    }
+    TXBuffer += F("],\n");
+  }
   TXBuffer += F("\"Entries\": [");
   String reply;
   reply.reserve(LOG_STRUCT_MESSAGE_SIZE + 40);
@@ -3178,6 +3171,7 @@ void handle_log_JSON() {
   stream_next_json_object_value(F("TTL"), String(refreshSuggestion));
   stream_next_json_object_value(F("timeHalfBuffer"), String(newOptimum));
   stream_next_json_object_value(F("nrEntries"), String(nrEntries));
+  stream_next_json_object_value(F("SettingsWebLogLevel"), String(Settings.WebLogLevel));
   stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
   TXBuffer += F("}\n");
   TXBuffer.endStream();
@@ -3780,11 +3774,10 @@ void handle_json()
 
   if (taskNr == 0 ) TXBuffer += F("\"Sensors\":[\n");
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
-  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastTaskIndex; TaskIndex++)
+  for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex; TaskIndex++)
   {
     if (Settings.TaskDeviceNumber[TaskIndex])
     {
-      byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
       byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
@@ -3800,7 +3793,7 @@ void handle_json()
           TXBuffer += F("{");
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"), String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-          stream_last_json_object_value(F("Value"), toString(UserVar[BaseVarIndex + x], ExtraTaskSettings.TaskDeviceValueDecimals[x]));
+          stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
           if (x < (Device[DeviceIndex].ValueCount - 1))
             TXBuffer += F(",\n");
         }
@@ -4033,9 +4026,14 @@ void addFormLogLevelSelect(const String& label, const String& id, int choice)
 
 void addLogLevelSelect(String name, int choice)
 {
-  String options[6] = { F("None"), F("Error"), F("Info"), F("Debug"), F("Debug More"), F("Debug dev")};
-  int optionValues[6] = { 0 , LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG, LOG_LEVEL_DEBUG_MORE, LOG_LEVEL_DEBUG_DEV};
-  addSelector(name, 6, options, optionValues, NULL, choice, false);
+  String options[LOG_LEVEL_NRELEMENTS + 1];
+  int optionValues[LOG_LEVEL_NRELEMENTS + 1] = {0};
+  options[0] = F("None");
+  optionValues[0] = 0;
+  for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
+    options[i + 1] = getLogLevelDisplayString(i, optionValues[i + 1]);
+  }
+  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice, false);
 }
 
 void addFormLogFacilitySelect(const String& label, const String& id, int choice)
