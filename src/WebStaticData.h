@@ -341,10 +341,9 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
   	"if (timeForNext == null){timeForNext = 1000}"
     //to make sure we don't run to often... JS seems to like it that way.
     "if (timeForNext <= 450){timeForNext = 450}"
-  	"console.log('Next fetch in: ' + timeForNext + 'mSec');"
+  	//"console.log('Next fetch in: ' + timeForNext + 'mSec');"
         "var max_tasknumber = 12;"
         "var max_taskvalues = 4;"
-        "var timeForNext = 1000;"
         "var c;"
         "var k;"
         "var err = '';"
