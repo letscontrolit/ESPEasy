@@ -77,7 +77,7 @@ String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isv
   isvalid = true;
   const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
   const byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-  if (getValueCountFromSensorType(Device[DeviceIndex].VType) <= rel_index) {
+  if (Device[DeviceIndex].ValueCount <= rel_index) {
     isvalid = false;
     String log = F("No sensor value for TaskIndex: ");
     log += TaskIndex;
