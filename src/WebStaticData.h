@@ -373,7 +373,7 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
                                 "if (valueEntry !== 'TypeError') {"
                                     //to fix trailing zeros (fixed decimals)
                                     "tempValue = data.Sensors[c].TaskValues[k].Value;"
-                                    "decimalsValue = data.Sensors[c].TaskValues[k].NrDecimals"
+                                    "decimalsValue = data.Sensors[c].TaskValues[k].NrDecimals;"
                                     "tempValue = parseFloat(tempValue).toFixed(decimalsValue);"
                                     "document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = tempValue;"
                                     "document.getElementById('valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';"
