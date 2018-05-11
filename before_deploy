@@ -18,7 +18,9 @@ for ENV in \
   dev_ESP8266_4096\
   dev_ESP8285_1024\
   dev_ESP8266PUYA_1024\
-  dev_ESP8266PUYA_1024_VCC;\
+  dev_ESP8266PUYA_1024_VCC\
+  hard_SONOFF_POW\
+  esp32dev;\
 do
   echo
   echo "### Deploying environment $ENV for version $VERSION"
