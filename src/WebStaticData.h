@@ -339,8 +339,6 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
 
   "function loopDeLoop(timeForNext) {"
   	"if (timeForNext == null){timeForNext = 1000;}"
-    //to make sure we don't run to often... JS seems to like it that way.
-    "if (timeForNext <= 450){timeForNext = 450;}"
   	//"console.log('Next fetch in: ' + timeForNext + 'mSec');"
         "var max_tasknumber = 12;"
         "var max_taskvalues = 4;"
@@ -405,7 +403,8 @@ static const char jsFetchAndParseLog[] PROGMEM = {
     "function loopDeLoop(timeForNext) {"
     	"if (timeForNext == null){timeForNext = 1000;}"
       //to make sure we don't run to often... JS seems to like it that way.
-      "if (timeForNext <= 450){"
+      "if (timeForNext <= 800){"
+          "timeForNext = 800;"
           "scrolling_type = 'auto';"
         "} else {"
           "scrolling_type = 'smooth';"
