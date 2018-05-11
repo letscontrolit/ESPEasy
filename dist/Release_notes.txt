@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20180511 (since mega-20180510)
+-------------------------------------------------
+
+Release date: Fri May 11 04:00:08 CEST 2018
+
+TD-er (3):
+      [cleanup] Simplify formatting user variables and allow checking
+      [log JSON] Add log level legend to the logjson output
+      [Web] Improve serving large blobs directly from flash
+
+
+-------------------------------------------------
 Changes in release mega-20180510 (since mega-20180507)
 -------------------------------------------------
 
