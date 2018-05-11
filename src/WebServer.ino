@@ -654,7 +654,6 @@ void getWebPageTemplateVar(const String& varName )
       TXBuffer += F("<style>");
       // Send CSS per chunk to avoid sending either too short or too large strings.
       TXBuffer += pgDefaultCSS;
-//      streamFlashString(pgDefaultCSS);
       TXBuffer += F("</style>");
     }
   }

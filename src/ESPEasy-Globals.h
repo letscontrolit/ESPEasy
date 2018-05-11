@@ -84,10 +84,10 @@
 #define LOG_TO_SYSLOG         2
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
-#define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
+#define DEFAULT_SYSLOG_IP                       ""                      // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL        0                               // Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO                  // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
 
@@ -301,6 +301,7 @@
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
+#define SENSOR_TYPE_NONE                    0
 #define SENSOR_TYPE_SINGLE                  1
 #define SENSOR_TYPE_TEMP_HUM                2
 #define SENSOR_TYPE_TEMP_BARO               3
@@ -570,7 +571,6 @@ bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
-void streamFlashString(PGM_P str);
 
 struct SecurityStruct
 {
