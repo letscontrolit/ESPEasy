@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20180512 (since mega-20180511)
+-------------------------------------------------
+
+Release date: Sat May 12 04:00:06 CEST 2018
+
+Grovkillen (15):
+      Fixed the timers for log + devices
+      Fixed format (I like tabs, Platformio like spaces)
+      Preparation for fixed decimals...
+      Removed a timer reset...
+      Fixed some small syntax missing
+      Added check to stop flooding
+      Fixed scrolling issue when fetch <450mSec
+      Fix for decimals on auto update device page
+      Added ";"
+      [web log] fixed overflow when set to "debug dev"
+      [web log] fixed wait on requests
+      [device page] added max request here too
+      [web log] also taking care of disconnects
+      [device page] added dynamic length to loop
+      [web log] safety net not needed anymore
+
+TD-er (2):
+      [JSON] Add number of decimals to the JSON output
+      [build] Do builds twice on the nightly builds
+
+
+-------------------------------------------------
 Changes in release mega-20180511 (since mega-20180510)
 -------------------------------------------------
 
