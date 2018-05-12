@@ -173,6 +173,12 @@ To create/register a plugin, you have to :
     // TODO : small list of common plugins to fit in 1M
 #endif
 
+// Ventus W266 --------------------------------
+#ifdef PLUGIN_SET_VENTUS_W266
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define PLUGIN_BUILD_DISABLED
+    #define USES_P046      // TESTING	Hardware	P046_VentusW266.ino
+#endif
 
 
 
@@ -192,6 +198,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P026
       #define USES_P026   // SysInfo
+    #endif
+    #ifndef USES_P033
+      #define USES_P033   // Dummy
     #endif
     #ifndef USES_P037
         #define USES_P037   // MQTTImport

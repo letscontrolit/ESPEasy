@@ -31,7 +31,7 @@ int mapVccToDomoticz() {
 
 // Format including trailing semi colon
 String formatUserVarDomoticz(struct EventStruct *event, byte rel_index) {
-  String text = formatUserVar(event, rel_index);
+  String text = formatUserVarNoCheck(event, rel_index);
   text += F(";");
   return text;
 }

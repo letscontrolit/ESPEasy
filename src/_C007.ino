@@ -71,7 +71,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           postDataStr += F("field");
           postDataStr += event->idx + i;
           postDataStr += ":";
-          postDataStr += formatUserVar(event, i);
+          postDataStr += formatUserVarNoCheck(event, i);
         }
         postDataStr += "}";
         postDataStr += F("&apikey=");

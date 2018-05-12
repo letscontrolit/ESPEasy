@@ -55,7 +55,7 @@ boolean CPlugin_012_send(struct EventStruct *event, int nrValues) {
     postDataStr = F("update/V") ;
     postDataStr += event->idx + i;
     postDataStr += F("?value=");
-    postDataStr += formatUserVar(event, i);
+    postDataStr += formatUserVarNoCheck(event, i);
     success = Blynk_get(postDataStr, event->ControllerIndex);
   }
   return success;
