@@ -742,8 +742,13 @@ void logConnectionStatus() {
 //********************************************************************************
 void WifiCheck()
 {
-  if(wifiSetup)
+  // wifiSetupConnect is true if user entered credentials. So go on.
+  if(wifiSetup && !wifiSetupConnect) {
     return;
+  }
+  else {
+    wifiSetupConnect = false;
+  }
 
   processDisableAPmode();
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {

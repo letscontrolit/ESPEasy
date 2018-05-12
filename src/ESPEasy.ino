@@ -370,12 +370,14 @@ void loop()
 
   loopCounter++;
 
-  if (wifiSetupConnect)
+  // Isn't necessary. Already handled in WebServer.ino
+  /*if (wifiSetupConnect)
   {
     // try to connect for setup wizard
     WiFiConnectRelaxed();
     wifiSetupConnect = false;
-  }
+  }*/
+
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
     if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
@@ -383,8 +385,8 @@ void loop()
   } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
-//    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
-//    resetWiFi();
+    //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
+    //    resetWiFi();
   }
   if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();
