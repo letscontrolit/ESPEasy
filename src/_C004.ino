@@ -76,7 +76,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           postDataStr += F("&field");
           postDataStr += event->idx + x;
           postDataStr += "=";
-          postDataStr += formatUserVar(event, x);
+          postDataStr += formatUserVarNoCheck(event, x);
         }
         String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
         if (ControllerSettings.UseDNS)

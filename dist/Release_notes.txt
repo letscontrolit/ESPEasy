@@ -1,4 +1,70 @@
 -------------------------------------------------
+Changes in release mega-20180512 (since mega-20180511)
+-------------------------------------------------
+
+Release date: Sat May 12 04:00:06 CEST 2018
+
+Grovkillen (15):
+      Fixed the timers for log + devices
+      Fixed format (I like tabs, Platformio like spaces)
+      Preparation for fixed decimals...
+      Removed a timer reset...
+      Fixed some small syntax missing
+      Added check to stop flooding
+      Fixed scrolling issue when fetch <450mSec
+      Fix for decimals on auto update device page
+      Added ";"
+      [web log] fixed overflow when set to "debug dev"
+      [web log] fixed wait on requests
+      [device page] added max request here too
+      [web log] also taking care of disconnects
+      [device page] added dynamic length to loop
+      [web log] safety net not needed anymore
+
+TD-er (2):
+      [JSON] Add number of decimals to the JSON output
+      [build] Do builds twice on the nightly builds
+
+
+-------------------------------------------------
+Changes in release mega-20180511 (since mega-20180510)
+-------------------------------------------------
+
+Release date: Fri May 11 04:00:08 CEST 2018
+
+TD-er (3):
+      [cleanup] Simplify formatting user variables and allow checking
+      [log JSON] Add log level legend to the logjson output
+      [Web] Improve serving large blobs directly from flash
+
+
+-------------------------------------------------
+Changes in release mega-20180510 (since mega-20180507)
+-------------------------------------------------
+
+Release date: Thu May 10 04:00:13 CEST 2018
+
+Grovkillen (7):
+      First draft of auto update of task/device values
+      Values are updated (1-4 values per task)
+      Wrap up for the PR
+      Added div to web log (color scheme)
+      Removed auto update of values... wrong branch
+      Fixed the log level colors
+      Fixed copy to clipboard (handle HTML tags)
+
+Saverio Cisternino (1):
+      Fix plugin_id visualization on devices view that afflict Development build
+
+TD-er (2):
+      [build] Special build config for Ventus W266
+      [Ventus W266] Fix signed/unsigned warning
+
+ZericE (1):
+      [#1368] Remove call to Plugin_041_update causing a hard crash.
+
+
+-------------------------------------------------
 Changes in release mega-20180507 (since mega-20180506)
 -------------------------------------------------
 

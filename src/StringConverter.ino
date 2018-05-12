@@ -73,18 +73,52 @@ String toString(float value, byte decimals)
 /*********************************************************************************************\
    Format a value to the set number of decimals
   \*********************************************************************************************/
-String formatUserVar(struct EventStruct *event, byte rel_index)
-{
-  float f(UserVar[event->BaseVarIndex + rel_index]);
-  if (!isValidFloat(f)) {
+String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isvalid) {
+  isvalid = true;
+  const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
+  const byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+  if (Device[DeviceIndex].ValueCount <= rel_index) {
+    isvalid = false;
+    String log = F("No sensor value for TaskIndex: ");
+    log += TaskIndex;
+    log += F(" varnumber: ");
+    log += rel_index;
+    addLog(LOG_LEVEL_ERROR, log);
+    return "";
+  }
+  if (Device[DeviceIndex].VType == SENSOR_TYPE_LONG) {
+    return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
+  }
+  float f(UserVar[BaseVarIndex + rel_index]);
+  if (mustCheck && !isValidFloat(f)) {
+    isvalid = false;
     String log = F("Invalid float value for TaskIndex: ");
-    log += event->TaskIndex;
+    log += TaskIndex;
     log += F(" varnumber: ");
     log += rel_index;
     addLog(LOG_LEVEL_DEBUG, log);
     f = 0;
   }
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+}
+
+String formatUserVarNoCheck(byte TaskIndex, byte rel_index) {
+  bool isvalid;
+  return doFormatUserVar(TaskIndex, rel_index, false, isvalid);
+}
+
+String formatUserVar(byte TaskIndex, byte rel_index, bool& isvalid) {
+  return doFormatUserVar(TaskIndex, rel_index, true, isvalid);
+}
+
+String formatUserVarNoCheck(struct EventStruct *event, byte rel_index)
+{
+  return formatUserVarNoCheck(event->TaskIndex, rel_index);
+}
+
+String formatUserVar(struct EventStruct *event, byte rel_index, bool& isvalid)
+{
+  return formatUserVar(event->TaskIndex, rel_index, isvalid);
 }
 
 /*********************************************************************************************\
@@ -348,10 +382,10 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
     if (event->sensorType == SENSOR_TYPE_LONG) {
       SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
     } else {
-      SMART_REPL(F("%val1%"), formatUserVar(event, 0))
-      SMART_REPL(F("%val2%"), formatUserVar(event, 1))
-      SMART_REPL(F("%val3%"), formatUserVar(event, 2))
-      SMART_REPL(F("%val4%"), formatUserVar(event, 3))
+      SMART_REPL(F("%val1%"), formatUserVarNoCheck(event, 0))
+      SMART_REPL(F("%val2%"), formatUserVarNoCheck(event, 1))
+      SMART_REPL(F("%val3%"), formatUserVarNoCheck(event, 2))
+      SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
 }
