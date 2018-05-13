@@ -68,7 +68,6 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, const String& aMesg) {
 //  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
   boolean myStatus = false;
-//  String msgBody = notificationsettings.Body;
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
@@ -95,7 +94,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
     mailheader.replace(String(F("$subject")), aSub);
     mailheader.replace(String(F("$espeasyversion")), String(BUILD));
     String bMesg = aMesg;
-    bMesg.replace("\r", "<br/>"); // re-write line breaks for text/html
+    bMesg.replace("\r", "<br/>"); // re-write line breaks for Content-type: text/html
 
     // Wait for Client to Start Sending
     // The MTA Exchange
