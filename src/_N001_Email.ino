@@ -65,7 +65,7 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, const String& aMesg) {
+boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String aMesg) {
 //  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
   boolean myStatus = false;
 
@@ -93,6 +93,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
     mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
     mailheader.replace(String(F("$subject")), aSub);
     mailheader.replace(String(F("$espeasyversion")), String(BUILD));
+    aMesg.replace("\r", "<br/>"); // re-write line breaks for Content-type: text/html
 
     // Wait for Client to Start Sending
     // The MTA Exchange
@@ -101,10 +102,10 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
       if (!NPlugin_001_MTA(client, "",                                    F("220 "))) break;
       if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain,          F("250 "))) break;
       if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
-      if (!NPlugin_001_MTA(client, String(F("MAIL FROM:")) + notificationsettings.Sender + "",  F("250 "))) break;
-      if (!NPlugin_001_MTA(client, String(F("RCPT TO:")) + notificationsettings.Receiver + "",      F("250 "))) break;
+      if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;
+      if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + notificationsettings.Receiver + ">", F("250 "))) break;
       if (!NPlugin_001_MTA(client, F("DATA"),                             F("354 "))) break;
-      if (!NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")),   F("250 "))) break;
+      if (!NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")), F("250 "))) break;
 
       myStatus = true;
       break;
