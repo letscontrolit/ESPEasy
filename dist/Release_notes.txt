@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180513 (since mega-20180512)
+-------------------------------------------------
+
+Release date: Sun May 13 04:00:08 CEST 2018
+
+Gijs Noorlander (2):
+      Fix debug code (commented) in _P045_MPU6050.ino
+      [PR #1304] Rename file before running crc2.py
+
+
+-------------------------------------------------
 Changes in release mega-20180512 (since mega-20180511)
 -------------------------------------------------
 
