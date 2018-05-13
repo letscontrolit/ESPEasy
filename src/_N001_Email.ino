@@ -51,9 +51,6 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
         LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
         String subject = NotificationSettings.Subject;
         String body = "";
-        String log = F("String length: ");
-        log += string.length();
-        addLog(LOG_LEVEL_ERROR, log);
         if (string.length() >0)
           body = string;
         else
