@@ -3541,7 +3541,9 @@ void handle_json()
     stream_next_json_object_value(F("Name"), String(Settings.Name));
     stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
     stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
+    #ifndef ESP32
     stream_next_json_object_value(F("Reset Reason"), ESP.getResetReason());
+    #endif
 
     if (wdcounter > 0)
     {
@@ -4892,9 +4894,10 @@ void handle_sysinfo() {
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
-
+#ifndef ESP32
    TXBuffer += F("<TR><TD>Reset Reason<TD>");
    TXBuffer += ESP.getResetReason();
+#endif
 
    TXBuffer += F("<TR><TD colspan=2><H3>Network");
    addHelpButton(F("Wifi"));
