@@ -3171,9 +3171,16 @@ void play_rtttl(uint8_t _pin, const char *p )
 void ArduinoOTAInit()
 {
   checkRAM(F("ArduinoOTAInit"));
+  	
+  #if defined(ESP8266)
   // Default port is 8266
   ArduinoOTA.setPort(8266);
-	ArduinoOTA.setHostname(Settings.Name);
+  #endif
+  #if defined(ESP32)
+  ArduinoOTA.setPort(3232);
+  #endif  
+	
+  ArduinoOTA.setHostname(Settings.Name);
 
   if (SecuritySettings.Password[0]!=0)
     ArduinoOTA.setPassword(SecuritySettings.Password);
