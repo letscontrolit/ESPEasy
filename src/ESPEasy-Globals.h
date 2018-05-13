@@ -84,10 +84,10 @@
 #define LOG_TO_SYSLOG         2
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
-#define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
+#define DEFAULT_SYSLOG_IP                       ""                      // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL        0                               // Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO                  // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
 
@@ -301,6 +301,7 @@
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
+#define SENSOR_TYPE_NONE                    0
 #define SENSOR_TYPE_SINGLE                  1
 #define SENSOR_TYPE_TEMP_HUM                2
 #define SENSOR_TYPE_TEMP_BARO               3
@@ -489,7 +490,7 @@ WiFiUDP portUDP;
 
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
-  char binaryFilename[16+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename...";
+  char binaryFilename[32+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames";
   char compileTime[16]= __TIME__;
   char compileDate[16]= __DATE__;
   uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -570,7 +571,6 @@ bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
-void streamFlashString(PGM_P str);
 
 struct SecurityStruct
 {
@@ -943,7 +943,7 @@ struct EventStruct
 struct LogStruct {
     LogStruct() : write_idx(0), read_idx(0) {
       for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
-        memset(Message[i], 0, LOG_STRUCT_MESSAGE_SIZE);
+        Message[i].reserve(LOG_STRUCT_MESSAGE_SIZE);
         timeStamp[i] = 0;
         log_level[i] = 0;
       }
@@ -957,7 +957,13 @@ struct LogStruct {
       }
       timeStamp[write_idx] = millis();
       log_level[write_idx] = loglevel;
-      strncpy(Message[write_idx], line, LOG_STRUCT_MESSAGE_SIZE-1);
+      unsigned linelength = strlen(line);
+      if (linelength > LOG_STRUCT_MESSAGE_SIZE-1)
+        linelength = LOG_STRUCT_MESSAGE_SIZE-1;
+      Message[write_idx] = "";
+      for (unsigned i = 0; i < linelength; ++i) {
+        Message[write_idx] += *(line + i);
+      }
     }
 
     // Read the next item and append it to the given string.
@@ -970,17 +976,18 @@ struct LogStruct {
       return !isEmpty();
     }
 
-    bool get_logjson_formatted(String& output, unsigned long& timestamp) {
+    String get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp) {
+      logLinesAvailable = false;
       if (isEmpty()) {
-        output = "";
-        return false;
+        return "";
       }
       read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
-      output = logjson_formatLine(read_idx);
       timestamp = timeStamp[read_idx];
-      if (isEmpty()) return false;
+      String output = logjson_formatLine(read_idx);
+      if (isEmpty()) return output;
       output += ",\n";
-      return true;
+      logLinesAvailable = true;
+      return output;
     }
 
     bool get(String& output, const String& lineEnd, int line) {
@@ -1020,11 +1027,11 @@ struct LogStruct {
 
     String logjson_formatLine(int index) {
       String output;
-      output.reserve(LOG_STRUCT_MESSAGE_SIZE + 40);
+      output.reserve(LOG_STRUCT_MESSAGE_SIZE + 64);
       output = "{";
       output += to_json_object_value("timestamp", String(timeStamp[index]));
       output += ",\n";
-      output += to_json_object_value("text",  String(Message[index]));
+      output += to_json_object_value("text",  Message[index]);
       output += ",\n";
       output += to_json_object_value("level", String(log_level[index]));
       output += "}";
@@ -1036,7 +1043,7 @@ struct LogStruct {
     int read_idx;
     unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
     byte log_level[LOG_STRUCT_MESSAGE_LINES];
-    char Message[LOG_STRUCT_MESSAGE_LINES][LOG_STRUCT_MESSAGE_SIZE];
+    String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
 

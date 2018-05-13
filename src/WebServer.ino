@@ -196,16 +196,20 @@ void sendContentBlocking(String& data) {
 
   TXBuffer.sentBytes += length;
   data = "";
+  yield();
 }
 
 void sendHeaderBlocking(bool json) {
   checkRAM(F("sendHeaderBlocking"));
+  WebServer.client().flush();
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
   WebServer.sendHeader(F("Accept-Ranges"), F("none"));
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
+  if (json)
+    WebServer.sendHeader("Access-Control-Allow-Origin","*");
   WebServer.send(200);
 #else
   unsigned int timeout = 0;
@@ -216,6 +220,8 @@ void sendHeaderBlocking(bool json) {
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
+  if (json)
+    WebServer.sendHeader("Access-Control-Allow-Origin","*");
   WebServer.send(200);
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
@@ -224,6 +230,7 @@ void sendHeaderBlocking(bool json) {
     delay(1);
   }
 #endif
+  yield();
 }
 
 void sendHeadandTail(const String& tmplName, boolean Tail = false) {
@@ -654,7 +661,6 @@ void getWebPageTemplateVar(const String& varName )
       TXBuffer += F("<style>");
       // Send CSS per chunk to avoid sending either too short or too large strings.
       TXBuffer += pgDefaultCSS;
-//      streamFlashString(pgDefaultCSS);
       TXBuffer += F("</style>");
     }
   }
@@ -2932,7 +2938,6 @@ void handle_log() {
 // Web Interface JSON log page
 //********************************************************************************
 void handle_log_JSON() {
-  WebServer.sendHeader("Access-Control-Allow-Origin","*");
   TXBuffer.startJsonStream();
   String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
@@ -2949,14 +2954,12 @@ void handle_log_JSON() {
     TXBuffer += F("],\n");
   }
   TXBuffer += F("\"Entries\": [");
-  String reply;
-  reply.reserve(LOG_STRUCT_MESSAGE_SIZE + 40);
   bool logLinesAvailable = true;
   int nrEntries = 0;
   unsigned long firstTimeStamp = 0;
   unsigned long lastTimeStamp = 0;
   while (logLinesAvailable) {
-    logLinesAvailable = Logging.get_logjson_formatted(reply, lastTimeStamp);
+    String reply = Logging.get_logjson_formatted(logLinesAvailable, lastTimeStamp);
     if (reply.length() > 0) {
       TXBuffer += reply;
       if (nrEntries == 0) {
@@ -3523,7 +3526,6 @@ void stream_last_json_object_value(const String& object, const String& value) {
 void handle_json()
 {
   String tasknr = WebServer.arg("tasknr");
-  WebServer.sendHeader("Access-Control-Allow-Origin","*");
   TXBuffer.startJsonStream();
 
   if (tasknr.length() == 0)
@@ -3539,6 +3541,9 @@ void handle_json()
     stream_next_json_object_value(F("Name"), String(Settings.Name));
     stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
     stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
+    #ifndef ESP32
+    stream_next_json_object_value(F("Reset Reason"), ESP.getResetReason());
+    #endif
 
     if (wdcounter > 0)
     {
@@ -4889,6 +4894,10 @@ void handle_sysinfo() {
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
+#ifndef ESP32
+   TXBuffer += F("<TR><TD>Reset Reason<TD>");
+   TXBuffer += ESP.getResetReason();
+#endif
 
    TXBuffer += F("<TR><TD colspan=2><H3>Network");
    addHelpButton(F("Wifi"));
