@@ -65,7 +65,7 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String aMesg) {
+boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg) {
 //  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
   boolean myStatus = false;
 
