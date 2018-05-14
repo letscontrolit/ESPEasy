@@ -1754,7 +1754,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 tempValueFormat.remove(rightJustifyIndex,1);
 
                               //Check Transformation syntax
-                              if (tempValueFormatLength > 0)
+                              if (tempValueFormat.length() > 0)
                               {
                                 switch (tempValueFormat[0])
                                   {
@@ -1911,13 +1911,12 @@ String parseTemplate(String &tmpString, byte lineSize)
                                       break;
                                   }
                                 }
-
-                                if (rightJustify)
-                                {
-                                  int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                                  for (byte f = 0; f < filler; f++)
-                                    newString += " ";
-                                }
+                              }
+                              if (rightJustify)
+                              {
+                                int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+                                for (byte f = 0; f < filler; f++)
+                                  newString += " ";
                               }
                               addLog(LOG_LEVEL_DEBUG,"DEBUG: Formatted String='"+newString+value+"'");
                             }
@@ -3171,15 +3170,15 @@ void play_rtttl(uint8_t _pin, const char *p )
 void ArduinoOTAInit()
 {
   checkRAM(F("ArduinoOTAInit"));
-  	
+
   #if defined(ESP8266)
   // Default port is 8266
   ArduinoOTA.setPort(8266);
   #endif
   #if defined(ESP32)
   ArduinoOTA.setPort(3232);
-  #endif  
-	
+  #endif
+
   ArduinoOTA.setHostname(Settings.Name);
 
   if (SecuritySettings.Password[0]!=0)
