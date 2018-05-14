@@ -420,8 +420,7 @@ static const char jsFetchAndParseLog[] PROGMEM = {
           "scrolling_type = 'smooth';"
         "}"
     	//"console.log('Next fetch in: ' + timeForNext + 'mSec');"
-    	"var c;"
-      "var logEntriesChunk;"
+    	"var c; logEntriesChunk; reRunCount;"
       "var check = 0;"
     	"var i = setInterval(function() {"
       // to handle runs that didn't find any json
