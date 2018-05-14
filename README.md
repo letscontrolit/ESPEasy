@@ -1,6 +1,9 @@
 # ESPEasy (development branch)
 
-Build status: [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy)
+Badge  | Info  |
+-------|-------|
+[![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy) | build status |
+[![GitHub version](https://img.shields.io/github/release/letscontrolit/ESPEasy/all.svg)](https://github.com/letscontrolit/ESPEasy/releases/latest) | latest nightly |
 
 Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction
 
