@@ -173,6 +173,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             if (connectionState == 1) // there was a client connected before...
             {
               connectionState = 0;
+              // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+              ser2netClient = WiFiClient();
               addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
             }
 

@@ -142,12 +142,13 @@ String to_json_object_value(const String& object, const String& value) {
   result = wrap_String(object, F("\""));
   result += F(":");
   if (value.length() == 0 || !isFloat(value)) {
-    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1) {
+    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1 && value.indexOf("Pragma") == -1) {
       result += wrap_String(value, F("\""));
     } else {
       String tmpValue(value);
       tmpValue.replace('\n', '^');
       tmpValue.replace('"', '\'');
+      tmpValue.replace("Pragma", "Bugje!");
       result += wrap_String(tmpValue, F("\""));
     }
   } else {

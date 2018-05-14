@@ -86,12 +86,12 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
 
         Device[++deviceCount].Number = PLUGIN_ID_xxx;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;  //how the device is connected
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH; //type of value the plugin will return
+        Device[deviceCount].VType = SENSOR_TYPE_SWITCH; //type of value the plugin will return, used only for Domoticz
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 0;             //number of output variables. The value shuld match the number of keys PLUGIN_VALUENAME1_xxx
+        Device[deviceCount].ValueCount = 0;             //number of output variables. The value should match the number of keys PLUGIN_VALUENAME1_xxx
         Device[deviceCount].SendDataOption = false;
         Device[deviceCount].TimerOption = false;
         Device[deviceCount].TimerOptional = false;
@@ -121,10 +121,16 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
       //The user's selection will be stored in
       //Settings.TaskDevicePluginConfig[event->TaskIndex][x] (custom configuration)
 
+      // Make sure not to append data to the string variable in this PLUGIN_WEBFORM_LOAD call.
+      // This has changed, so now use the appropriate functions to write directly to the Streaming
+      // WebServer. This takes much less memory and is faster.
+      // There will be an error in the web interface if something is added to the "string" variable.
+
       //Use any of the following (defined at WebServer.ino):
       //addFormNote(F("not editable text added here"));
       To add some html, which cannot be done in the existing functions, add it in the following way:
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
+
 
       For strings, always use the F() macro, which stores the string in flash, not in memory.
 
@@ -133,9 +139,6 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
 
       //number selection (min-value - max-value)
       addFormNumericBox(string, F("description"), F("plugin_xxx_description"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], min-value, max-value);
-
-      //HTML Code can also be added by defining a string variable and adding HTML code as follows:
-      string += F("<TR><TD>Line ");
 
       //after the form has been loaded, set success and break
       success = true;
