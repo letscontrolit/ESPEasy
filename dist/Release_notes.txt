@@ -1,4 +1,35 @@
 -------------------------------------------------
+Changes in release mega-20180514 (since mega-20180513)
+-------------------------------------------------
+
+Release date: Mon May 14 04:00:09 CEST 2018
+
+Plebs (1):
+      Added more #formats transformations
+
+TD-er (5):
+      [#1411] Add SensorTypeNone to indicate no sensor values for Domoticz
+      [memory]  use "-DNDEBUG" to disable ASSERT macros
+      [issue #1380] Prevent memory leaks in WiFiClient
+      [memory corruption] LWIP data corrupts log buffer
+      [ESP32] ESP.getResetReason() is unknown to ESP32
+
+ZericE (6):
+      [#1404] Fix email notification for RFC2821, fix so msg body included.
+      undo unnecessary changes in email body
+      remove debug lines in email notify
+      updated comment
+      remove unneeded use of bMesg to free up mem.
+      use reference to free up mem.
+
+flexiti (4):
+      Improvement in the file platformio.ini
+      OTA check box
+      ESP32 OTA port is set to 3232
+      ESP32 OTA port setting
+
+
+-------------------------------------------------
 Changes in release mega-20180513 (since mega-20180512)
 -------------------------------------------------
 
