@@ -127,6 +127,7 @@ bool MQTTConnect(int controller_idx)
     MQTTclient.disconnect();
     updateMQTTclient_connected();
   }
+  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {

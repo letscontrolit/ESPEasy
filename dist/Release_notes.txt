@@ -1,4 +1,74 @@
 -------------------------------------------------
+Changes in release mega-20180514 (since mega-20180513)
+-------------------------------------------------
+
+Release date: Mon May 14 04:00:09 CEST 2018
+
+Plebs (1):
+      Added more #formats transformations
+
+TD-er (5):
+      [#1411] Add SensorTypeNone to indicate no sensor values for Domoticz
+      [memory]  use "-DNDEBUG" to disable ASSERT macros
+      [issue #1380] Prevent memory leaks in WiFiClient
+      [memory corruption] LWIP data corrupts log buffer
+      [ESP32] ESP.getResetReason() is unknown to ESP32
+
+ZericE (6):
+      [#1404] Fix email notification for RFC2821, fix so msg body included.
+      undo unnecessary changes in email body
+      remove debug lines in email notify
+      updated comment
+      remove unneeded use of bMesg to free up mem.
+      use reference to free up mem.
+
+flexiti (4):
+      Improvement in the file platformio.ini
+      OTA check box
+      ESP32 OTA port is set to 3232
+      ESP32 OTA port setting
+
+
+-------------------------------------------------
+Changes in release mega-20180513 (since mega-20180512)
+-------------------------------------------------
+
+Release date: Sun May 13 04:00:08 CEST 2018
+
+Gijs Noorlander (2):
+      Fix debug code (commented) in _P045_MPU6050.ino
+      [PR #1304] Rename file before running crc2.py
+
+
+-------------------------------------------------
+Changes in release mega-20180512 (since mega-20180511)
+-------------------------------------------------
+
+Release date: Sat May 12 04:00:06 CEST 2018
+
+Grovkillen (15):
+      Fixed the timers for log + devices
+      Fixed format (I like tabs, Platformio like spaces)
+      Preparation for fixed decimals...
+      Removed a timer reset...
+      Fixed some small syntax missing
+      Added check to stop flooding
+      Fixed scrolling issue when fetch <450mSec
+      Fix for decimals on auto update device page
+      Added ";"
+      [web log] fixed overflow when set to "debug dev"
+      [web log] fixed wait on requests
+      [device page] added max request here too
+      [web log] also taking care of disconnects
+      [device page] added dynamic length to loop
+      [web log] safety net not needed anymore
+
+TD-er (2):
+      [JSON] Add number of decimals to the JSON output
+      [build] Do builds twice on the nightly builds
+
+
+-------------------------------------------------
 Changes in release mega-20180511 (since mega-20180510)
 -------------------------------------------------
 
