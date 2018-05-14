@@ -92,10 +92,10 @@ if  fileContent.find( FILENAMEDUMMY) < 0:
     print("ERROR: FILENAMEDUMMY dummy not found in binary")
 else:
 	BinaryFileName=os.path.basename(FileName) +"\0"
-	if len(BinaryFileName) >48:								# check that filename is <48 chars
-		BinaryFileName=BinaryFileName[0:48]					# truncate if necessary. 49th char in ESP is zero already
+	if len(BinaryFileName) >64:								# check that filename is <48 chars
+		BinaryFileName=BinaryFileName[0:64]					# truncate if necessary. 49th char in ESP is zero already
 	else:
-		BinaryFileName= BinaryFileName.ljust(48,'\0');		# pad with zeros.
+		BinaryFileName= BinaryFileName.ljust(64,'\0');		# pad with zeros.
 
 
 if  fileContent.find( MD5DUMMY) < 0:
