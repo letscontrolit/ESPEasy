@@ -1742,7 +1742,7 @@ String parseTemplate(String &tmpString, byte lineSize)
                               const float valFloat = value.toFloat();
 
                               String tempValueFormat = valueFormat;
-                              const int tempValueFormatLength = tempValueFormat.length();
+                              int tempValueFormatLength = tempValueFormat.length();
                               const int invertedIndex = tempValueFormat.indexOf('!');
                               const bool inverted = invertedIndex >= 0 ? 1 : 0;
                               if (inverted)
@@ -1753,8 +1753,10 @@ String parseTemplate(String &tmpString, byte lineSize)
                               if (rightJustify)
                                 tempValueFormat.remove(rightJustifyIndex,1);
 
+                              tempValueFormatLength = tempValueFormat.length(); //needed because could have been changed after '!' and 'R' removal
+
                               //Check Transformation syntax
-                              if (tempValueFormat.length() > 0)
+                              if (tempValueFormatLength > 0)
                               {
                                 switch (tempValueFormat[0])
                                   {
