@@ -2923,7 +2923,7 @@ void handle_log() {
 
   TXBuffer += F("<table class=\"normal\"><TR><TH id=\"headline\" align=\"left\">Log");
   addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
-  TXBuffer += F("</TR></table><BR><div class='logviewer' id='copyText_1'></div>");
+  TXBuffer += F("</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>");
   TXBuffer += F("Autoscroll: ");
   addCheckBox(F("autoscroll"), true);
   TXBuffer += F("<BR></body>");
