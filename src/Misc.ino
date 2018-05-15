@@ -1506,23 +1506,28 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addLog(byte logLevel, const char *line)
 {
+  addLog(logLevel, [&](){return line;});
+}
+
+void addLog(byte logLevel, GetMessageLog get)
+{
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     Serial.print(millis());
     Serial.print(F(" : "));
-    Serial.println(line);
+    Serial.println(get());
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
-    syslog(logLevel, line);
+    syslog(logLevel, get());
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
-    Logging.add(logLevel, line);
+    Logging.add(logLevel, get());
   }
 
 #ifdef FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile)
-      logFile.println(line);
+      logFile.println(get());
     logFile.close();
   }
 #endif

@@ -357,6 +357,7 @@
 
 #include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
+#include <functional>
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #include "core_version.h"
@@ -458,6 +459,8 @@ ADC_MODE(ADC_VCC);
 #define ESPEASY_WIFI_CONNECTED               1
 #define ESPEASY_WIFI_GOT_IP                  2
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    3
+
+typedef  std::function<const char *(void)> GetMessageLog;
 
 #if defined(ESP32)
 void WiFiEvent(system_event_id_t event, system_event_info_t info);
