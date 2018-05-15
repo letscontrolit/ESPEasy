@@ -4852,6 +4852,8 @@ void handle_sysinfo() {
 
    addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
+   TXBuffer += githublogo;
+
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
 
