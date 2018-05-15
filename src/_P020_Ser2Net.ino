@@ -238,7 +238,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Settings.UseRules)
         {
           String message = (char*)serial_buf;
-          int NewLinePos = message.indexOf("\r\n");
+          int NewLinePos = message.indexOf(F("\r\n"));
           if (NewLinePos > 0)
             message = message.substring(0, NewLinePos);
           String eventString = "";

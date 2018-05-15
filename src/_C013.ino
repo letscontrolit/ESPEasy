@@ -180,7 +180,7 @@ void C013_sendUDP(byte unit, byte* data, byte size)
   if (unit != 255)
     if (Nodes[unit].ip[0] == 0)
       return;
-  String log = "C013 : Send UDP message to ";
+  String log = F("C013 : Send UDP message to ");
   log += unit;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 

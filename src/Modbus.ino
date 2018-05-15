@@ -137,7 +137,7 @@ bool Modbus::handle() {
       }
       LogString += F("> ");
       if (payLoad > 8) {
-        LogString += "Payload too large !? ";
+        LogString += F("Payload too large !? ");
         errcnt++;
         TXRXstate = MODBUS_IDLE;
       }

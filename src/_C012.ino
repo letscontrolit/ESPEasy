@@ -104,20 +104,20 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
     safeReadStringUntil(client, line, '\n');
     addLog(LOG_LEVEL_DEBUG_MORE, line);
     // success ?
-    if (line.substring(0, 15) == "HTTP/1.1 200 OK") {
+    if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
       strcpy_P(log, PSTR("HTTP : Success"));
       success = true;
     }
-    else if (line.substring(0, 24) == "HTTP/1.1 400 Bad Request") {
+    else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
       strcpy_P(log, PSTR("HTTP : Unauthorized"));
     }
-    else if (line.substring(0, 25) == "HTTP/1.1 401 Unauthorized") {
+    else if (line.substring(0, 25) == F("HTTP/1.1 401 Unauthorized")) {
       strcpy_P(log, PSTR("HTTP : Unauthorized"));
     }
     addLog(LOG_LEVEL_DEBUG, log);
 
     // data only
-    if (data && line.startsWith("["))
+    if (data && line.startsWith('['))
     {
       String strValue = line;
       byte pos = strValue.indexOf('"',2);

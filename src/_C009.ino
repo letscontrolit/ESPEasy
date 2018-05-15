@@ -80,8 +80,8 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         ESP[F("unit")] = Settings.Unit;
         ESP[F("version")] = Settings.Version;
         ESP[F("build")] = Settings.Build;
-        ESP[F("build_notes")] = BUILD_NOTES;
-        ESP[F("build_git")] = BUILD_GIT;
+        ESP[F("build_notes")] = String(F(BUILD_NOTES));
+        ESP[F("build_git")] = String(F(BUILD_GIT));
         ESP[F("node_type_id")] = NODE_TYPE_ID;
         ESP[F("sleep")] = Settings.deepSleep;
 

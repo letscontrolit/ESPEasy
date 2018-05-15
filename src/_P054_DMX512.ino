@@ -146,10 +146,10 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           byte paramIdx = 2;
           int16_t channel = 1;
           int16_t value = 0;
-
-          lowerString.replace("  ", " ");
-          lowerString.replace(" =", "=");
-          lowerString.replace("= ", "=");
+          //FIXME TD-er: Same code in _P057
+          lowerString.replace(F("  "), " ");
+          lowerString.replace(F(" ="), "=");
+          lowerString.replace(F("= "), "=");
 
           param = parseString(lowerString, paramIdx++);
           if (param.length())
