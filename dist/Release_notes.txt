@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20180515 (since mega-20180514)
+-------------------------------------------------
+
+Release date: Tue May 15 04:00:11 CEST 2018
+
+Grovkillen (6):
+      [web log] Chunk transfer instead of line transfer
+      [web log] Added declaring of reRunCount
+      [web log] added the reRunCout to the function
+      [web log] added warning if IE11 or older is used
+      [fix for crc2.py] truncation corrupted bin file
+      Added latest nightly release badge
+
+Plebs (1):
+      fix for #1426
+
+
+-------------------------------------------------
 Changes in release mega-20180514 (since mega-20180513)
 -------------------------------------------------
 
