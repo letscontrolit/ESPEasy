@@ -117,7 +117,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
     addLog(LOG_LEVEL_DEBUG, log);
 
     // data only
-    if (data && line.startsWith('['))
+    if (data && line.startsWith("["))
     {
       String strValue = line;
       byte pos = strValue.indexOf('"',2);
