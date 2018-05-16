@@ -48,11 +48,11 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         // char tmpString[128];
 
         addHtml(F("<TR><TD>Check Task:<TD>"));
-        addTaskSelect("plugin_021_task", Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addTaskSelect(F("plugin_021_task"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         LoadTaskSettings(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // we need to load the values from another task for selection!
         addHtml(F("<TR><TD>Check Value:<TD>"));
-        addTaskValueSelect("plugin_021_value", Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addTaskValueSelect(F("plugin_021_value"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
       	addFormTextBox(F("Set Level"), F("plugin_021_setvalue"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 8);
 

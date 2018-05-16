@@ -140,8 +140,8 @@ String Plugin_028_getDeviceName() {
   switch (_sensorID[idx]) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
-    case BMP280_DEVICE:  return PLUGIN_028_BMP280_DEVICE;
-    case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
+    case BMP280_DEVICE:  return F(PLUGIN_028_BMP280_DEVICE);
+    case BME280_DEVICE:  return F(PLUGIN_028_BME280_DEVICE);
     default: return F("Unknown");
   }
 

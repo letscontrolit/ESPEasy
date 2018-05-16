@@ -93,7 +93,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
     mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
     mailheader.replace(String(F("$subject")), aSub);
     mailheader.replace(String(F("$espeasyversion")), String(BUILD));
-    aMesg.replace("\r", "<br/>"); // re-write line breaks for Content-type: text/html
+    aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
     // Wait for Client to Start Sending
     // The MTA Exchange

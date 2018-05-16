@@ -324,16 +324,16 @@ void setAP(bool enable) {
     String pwd = SecuritySettings.WifiAPKey;
     IPAddress subnet(DEFAULT_AP_SUBNET);
     if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
-      addLog(LOG_LEVEL_ERROR, "WIFI : [AP] softAPConfig failed!");
+      addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
     }
     if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
-      String log("WIFI : AP Mode ssid will be ");
+      String log(F("WIFI : AP Mode ssid will be "));
       log += softAPSSID;
       log += F(" with address ");
       log += WiFi.softAPIP().toString();
       addLog(LOG_LEVEL_INFO, log);
     } else {
-      String log("WIFI : Error while starting AP Mode with SSID: ");
+      String log(F("WIFI : Error while starting AP Mode with SSID: "));
       log += softAPSSID;
       log += F(" IP: ");
       log += apIP.toString();
@@ -344,7 +344,7 @@ void setAP(bool enable) {
     #else
       if(wifi_softap_dhcps_status() != DHCP_STARTED) {
         if(!wifi_softap_dhcps_start()) {
-          addLog(LOG_LEVEL_ERROR, "WIFI : [AP] wifi_softap_dhcps_start failed!");
+          addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] wifi_softap_dhcps_start failed!"));
         }
       }
     #endif

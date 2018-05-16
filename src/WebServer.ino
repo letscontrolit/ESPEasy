@@ -209,7 +209,7 @@ void sendHeaderBlocking(bool json) {
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
   if (json)
-    WebServer.sendHeader("Access-Control-Allow-Origin","*");
+    WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
   WebServer.send(200);
 #else
   unsigned int timeout = 0;
@@ -221,7 +221,7 @@ void sendHeaderBlocking(bool json) {
   WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   if (json)
-    WebServer.sendHeader("Access-Control-Allow-Origin","*");
+    WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
   WebServer.send(200);
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
@@ -255,12 +255,12 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
   if (Tail) {
     TXBuffer += pageTemplate.substring(
         11 + // Size of "{{content}}"
-        pageTemplate.indexOf("{{content}}"));  // advance beyond content key
+        pageTemplate.indexOf(F("{{content}}")));  // advance beyond content key
   } else {
-    while ((indexStart = pageTemplate.indexOf("{{")) >= 0) {
+    while ((indexStart = pageTemplate.indexOf(F("{{"))) >= 0) {
       TXBuffer += pageTemplate.substring(0, indexStart);
       pageTemplate = pageTemplate.substring(indexStart);
-      if ((indexEnd = pageTemplate.indexOf("}}")) > 0) {
+      if ((indexEnd = pageTemplate.indexOf(F("}}"))) > 0) {
         varName = pageTemplate.substring(2, indexEnd);
         pageTemplate = pageTemplate.substring(indexEnd + 2);
         varName.toLowerCase();
@@ -404,34 +404,34 @@ void addHtml(const String html) {
 void WebServerInit()
 {
   // Prepare webserver pages
-  WebServer.on("/", handle_root);
-  WebServer.on("/config", handle_config);
-  WebServer.on("/controllers", handle_controllers);
-  WebServer.on("/hardware", handle_hardware);
-  WebServer.on("/devices", handle_devices);
-  WebServer.on("/notifications", handle_notifications);
-  WebServer.on("/log", handle_log);
-  WebServer.on("/logjson", handle_log_JSON);
-  WebServer.on("/tools", handle_tools);
-  WebServer.on("/i2cscanner", handle_i2cscanner);
-  WebServer.on("/wifiscanner", handle_wifiscanner);
-  WebServer.on("/login", handle_login);
-  WebServer.on("/control", handle_control);
-  WebServer.on("/download", handle_download);
-  WebServer.on("/upload", HTTP_GET, handle_upload);
-  WebServer.on("/upload", HTTP_POST, handle_upload_post, handleFileUpload);
+  WebServer.on(F("/"), handle_root);
+  WebServer.on(F("/config"), handle_config);
+  WebServer.on(F("/controllers"), handle_controllers);
+  WebServer.on(F("/hardware"), handle_hardware);
+  WebServer.on(F("/devices"), handle_devices);
+  WebServer.on(F("/notifications"), handle_notifications);
+  WebServer.on(F("/log"), handle_log);
+  WebServer.on(F("/logjson"), handle_log_JSON);
+  WebServer.on(F("/tools"), handle_tools);
+  WebServer.on(F("/i2cscanner"), handle_i2cscanner);
+  WebServer.on(F("/wifiscanner"), handle_wifiscanner);
+  WebServer.on(F("/login"), handle_login);
+  WebServer.on(F("/control"), handle_control);
+  WebServer.on(F("/download"), handle_download);
+  WebServer.on(F("/upload"), HTTP_GET, handle_upload);
+  WebServer.on(F("/upload"), HTTP_POST, handle_upload_post, handleFileUpload);
   WebServer.onNotFound(handleNotFound);
-  WebServer.on("/filelist", handle_filelist);
+  WebServer.on(F("/filelist"), handle_filelist);
 #ifdef FEATURE_SD
-  WebServer.on("/SDfilelist", handle_SDfilelist);
+  WebServer.on(F("/SDfilelist"), handle_SDfilelist);
 #endif
-  WebServer.on("/advanced", handle_advanced);
-  WebServer.on("/setup", handle_setup);
-  WebServer.on("/json", handle_json);
-  WebServer.on("/rules", handle_rules);
-  WebServer.on("/sysinfo", handle_sysinfo);
-  WebServer.on("/pinstates", handle_pinstates);
-  WebServer.on("/favicon.ico", handle_favicon);
+  WebServer.on(F("/advanced"), handle_advanced);
+  WebServer.on(F("/setup"), handle_setup);
+  WebServer.on(F("/json"), handle_json);
+  WebServer.on(F("/rules"), handle_rules);
+  WebServer.on(F("/sysinfo"), handle_sysinfo);
+  WebServer.on(F("/pinstates"), handle_pinstates);
+  WebServer.on(F("/favicon.ico"), handle_favicon);
 
   #if defined(ESP8266)
     if (ESP.getFlashChipRealSize() > 524288)
@@ -441,7 +441,7 @@ void WebServerInit()
   #if defined(ESP8266)
   if (Settings.UseSSDP)
   {
-    WebServer.on("/ssdp.xml", HTTP_GET, []() {
+    WebServer.on(F("/ssdp.xml"), HTTP_GET, []() {
       WiFiClient client(WebServer.client());
       SSDP_schema(client);
     });
@@ -643,7 +643,7 @@ void getWebPageTemplateVar(const String& varName )
 
   else if (varName == F("logo"))
   {
-    if (SPIFFS.exists("esp.png"))
+    if (SPIFFS.exists(F("esp.png")))
     {
       TXBuffer = F("<img src=\"esp.png\" width=48 height=48 align=right>");
     }
@@ -651,7 +651,7 @@ void getWebPageTemplateVar(const String& varName )
 
   else if (varName == F("css"))
   {
-    if (SPIFFS.exists("esp.css"))   //now css is written in writeDefaultCSS() to SPIFFS and always present
+    if (SPIFFS.exists(F("esp.css")))   //now css is written in writeDefaultCSS() to SPIFFS and always present
     //if (0) //TODO
     {
       TXBuffer = F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">");
@@ -699,11 +699,11 @@ void writeDefaultCSS(void)
 {
   return; //TODO
 
-  if (!SPIFFS.exists("esp.css"))
+  if (!SPIFFS.exists(F("esp.css")))
   {
     String defaultCSS;
 
-    fs::File f = SPIFFS.open("esp.css", "w");
+    fs::File f = SPIFFS.open(F("esp.css"), "w");
     if (f)
     {
       String log = F("CSS  : Writing default CSS file to SPIFFS (");
@@ -1005,7 +1005,7 @@ void handle_config() {
 
     Settings.Delay = sensordelay.toInt();
     Settings.deepSleep = deepsleep.toInt();
-    Settings.deepSleepOnFail = (deepsleeponfail == "on");
+    Settings.deepSleepOnFail = (deepsleeponfail == F("on"));
     str2ip(espip, Settings.IP);
     str2ip(espgateway, Settings.Gateway);
     str2ip(espsubnet, Settings.Subnet);
@@ -1169,7 +1169,7 @@ void handle_controllers() {
           str2ip(controllerip, ControllerSettings.IP);
         }
         //copy settings to struct
-        Settings.ControllerEnabled[controllerindex] = (controllerenabled == "on");
+        Settings.ControllerEnabled[controllerindex] = (controllerenabled == F("on"));
         ControllerSettings.Port = controllerport.toInt();
         strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
         //strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
@@ -1381,7 +1381,7 @@ void handle_notifications() {
         NotificationSettings.Port = port.toInt();
         NotificationSettings.Pin1 = pin1.toInt();
         NotificationSettings.Pin2 = pin2.toInt();
-        Settings.NotificationEnabled[notificationindex] = (notificationenabled == "on");
+        Settings.NotificationEnabled[notificationindex] = (notificationenabled == F("on"));
         strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
         strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
         strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
@@ -2865,7 +2865,7 @@ void addTaskSelect(String name,  int choice)
 
 bool isFormItemChecked(const String& id)
 {
-  return WebServer.arg(id) == "on";
+  return WebServer.arg(id) == F("on");
 }
 
 int getFormItemInt(const String& id)
@@ -3700,22 +3700,22 @@ void handle_advanced() {
     Settings.UDPPort = udpport.toInt();
     Settings.SyslogLevel = sysloglevel.toInt();
     Settings.SyslogFacility = syslogfacility.toInt();
-    Settings.UseSerial = (useserial == "on");
+    Settings.UseSerial = (useserial == F("on"));
     Settings.SerialLogLevel = serialloglevel.toInt();
     Settings.WebLogLevel = webloglevel.toInt();
     Settings.SDLogLevel = sdloglevel.toInt();
     Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate = baudrate.toInt();
-    Settings.UseNTP = (usentp == "on");
-    Settings.DST = (dst == "on");
+    Settings.UseNTP = (usentp == F("on"));
+    Settings.DST = (dst == F("on"));
     Settings.WDI2CAddress = wdi2caddress.toInt();
-    Settings.UseSSDP = (usessdp == "on");
+    Settings.UseSSDP = (usessdp == F("on"));
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
-    Settings.UseRules = (userules == "on");
+    Settings.UseRules = (userules == F("on"));
     Settings.ConnectionFailuresThreshold = cft.toInt();
-    Settings.MQTTRetainFlag = (MQTTRetainFlag == "on");
-    Settings.ArduinoOTAEnable = (ArduinoOTAEnable == "on");
-    Settings.UseRTOSMultitasking = (UseRTOSMultitasking == "on");
+    Settings.MQTTRetainFlag = (MQTTRetainFlag == F("on"));
+    Settings.ArduinoOTAEnable = (ArduinoOTAEnable == F("on"));
+    Settings.UseRTOSMultitasking = (UseRTOSMultitasking == F("on"));
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
@@ -3918,10 +3918,10 @@ void handle_download()
   {
     str += getDateTimeString('\0', '\0', '\0');
   }
-  str += (".dat");
+  str += F(".dat");
 
-  WebServer.sendHeader("Content-Disposition", str);
-  WebServer.streamFile(dataFile, "application/octet-stream");
+  WebServer.sendHeader(F("Content-Disposition"), str);
+  WebServer.streamFile(dataFile, F("application/octet-stream"));
 }
 
 
@@ -4067,20 +4067,19 @@ bool loadFromFS(boolean spiffs, String path) {
   statusLED(true);
 
   String dataType = F("text/plain");
-  if (path.endsWith("/")) path += F("index.htm");
+  if (path.endsWith(F("/"))) path += F("index.htm");
 
-  if (path.endsWith(".src")) path = path.substring(0, path.lastIndexOf("."));
-  else if (path.endsWith(".htm")) dataType = F("text/html");
-  else if (path.endsWith(".css")) dataType = F("text/css");
-  else if (path.endsWith(".js")) dataType = F("application/javascript");
-  else if (path.endsWith(".png")) dataType = F("image/png");
-  else if (path.endsWith(".gif")) dataType = F("image/gif");
-  else if (path.endsWith(".jpg")) dataType = F("image/jpeg");
-  else if (path.endsWith(".ico")) dataType = F("image/x-icon");
-  else if (path.endsWith(".txt")) dataType = F("application/octet-stream");
-  else if (path.endsWith(".dat")) dataType = F("application/octet-stream");
-  else if (path.endsWith(".esp")) return handle_custom(path);
-
+  if (path.endsWith(F(".src"))) path = path.substring(0, path.lastIndexOf("."));
+  else if (path.endsWith(F(".htm"))) dataType = F("text/html");
+  else if (path.endsWith(F(".css"))) dataType = F("text/css");
+  else if (path.endsWith(F(".js"))) dataType = F("application/javascript");
+  else if (path.endsWith(F(".png"))) dataType = F("image/png");
+  else if (path.endsWith(F(".gif"))) dataType = F("image/gif");
+  else if (path.endsWith(F(".jpg"))) dataType = F("image/jpeg");
+  else if (path.endsWith(F(".ico"))) dataType = F("image/x-icon");
+  else if (path.endsWith(F(".txt"))) dataType = F("application/octet-stream");
+  else if (path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
+  else if (path.endsWith(F(".esp"))) return handle_custom(path);
   String log = F("HTML : Request file ");
   log += path;
 
@@ -4092,12 +4091,12 @@ bool loadFromFS(boolean spiffs, String path) {
       return false;
 
     //prevent reloading stuff on every click
-    WebServer.sendHeader("Cache-Control","max-age=3600, public");
-    WebServer.sendHeader("Vary","*");
-    WebServer.sendHeader("ETag","\"2.0.0\"");
+    WebServer.sendHeader(F("Cache-Control"), F("max-age=3600, public"));
+    WebServer.sendHeader(F("Vary"),"*");
+    WebServer.sendHeader(F("ETag"), F("\"2.0.0\""));
 
-    if (path.endsWith(".dat"))
-      WebServer.sendHeader("Content-Disposition", "attachment;");
+    if (path.endsWith(F(".dat")))
+      WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
   }
@@ -4107,8 +4106,8 @@ bool loadFromFS(boolean spiffs, String path) {
     File dataFile = SD.open(path.c_str());
     if (!dataFile)
       return false;
-    if (path.endsWith(".DAT"))
-      WebServer.sendHeader("Content-Disposition", "attachment;");
+    if (path.endsWith(F(".DAT")))
+      WebServer.sendHeader(F("Content-Disposition"), F("attachment;"));
     WebServer.streamFile(dataFile, dataType);
     dataFile.close();
 #endif
@@ -4292,7 +4291,7 @@ void handle_filelist() {
   while (dir.next())
   {
     TXBuffer += F("<TR><TD>");
-    if (dir.fileName() != FILE_CONFIG && dir.fileName() != FILE_SECURITY && dir.fileName() != FILE_NOTIFICATION)
+    if (dir.fileName() != F(FILE_CONFIG) && dir.fileName() != F(FILE_SECURITY) && dir.fileName() != F(FILE_NOTIFICATION))
     {
       TXBuffer += F("<a class='button link' href=\"filelist?delete=");
       TXBuffer += dir.fileName();
@@ -4377,15 +4376,15 @@ void handle_SDfilelist() {
   char SDcardDir[80];
 
   for (uint8_t i = 0; i < WebServer.args(); i++) {
-    if (WebServer.argName(i) == "delete")
+    if (WebServer.argName(i) == F("delete"))
     {
       fdelete = WebServer.arg(i);
     }
-    if (WebServer.argName(i) == "deletedir")
+    if (WebServer.argName(i) == F("deletedir"))
     {
       ddelete = WebServer.arg(i);
     }
-    if (WebServer.argName(i) == "chgto")
+    if (WebServer.argName(i) == F("chgto"))
     {
       change_to_dir = WebServer.arg(i);
     }
@@ -4512,24 +4511,28 @@ void handleNotFound() {
 
   if (wifiSetup)
   {
-    WebServer.send(200, "text/html", "<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>");
+    WebServer.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
 
   if (!isLoggedIn()) return;
   if (loadFromFS(true, WebServer.uri())) return;
   if (loadFromFS(false, WebServer.uri())) return;
-  String message = "URI: ";
+  String message = F("URI: ");
   message += WebServer.uri();
-  message += "\nMethod: ";
-  message += (WebServer.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
+  message += F("\nMethod: ");
+  message += (WebServer.method() == HTTP_GET) ? F("GET") : F("POST");
+  message += F("\nArguments: ");
   message += WebServer.args();
   message += "\n";
   for (uint8_t i = 0; i < WebServer.args(); i++) {
-    message += " NAME:" + WebServer.argName(i) + "\n VALUE:" + WebServer.arg(i) + "\n";
+    message += F(" NAME:");
+    message += WebServer.argName(i);
+    message += F("\n VALUE:");
+    message += WebServer.arg(i);
+    message += F("\n");
   }
-  WebServer.send(404, "text/plain", message);
+  WebServer.send(404, F("text/plain"), message);
 }
 
 
@@ -5018,8 +5021,8 @@ void handle_sysinfo() {
 
    TXBuffer += F("<TR><TD>Md5 check<TD>");
   if (! CRCValues.checkPassed())
-     TXBuffer +="<font color = 'red'>fail !</font>";
-  else  TXBuffer +="passed.";
+     TXBuffer += F("<font color = 'red'>fail !</font>");
+  else  TXBuffer += F("passed.");
 
    TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.compileDate);

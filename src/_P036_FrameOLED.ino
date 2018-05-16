@@ -473,7 +473,7 @@ void display_header() {
     newString.trim();
     display_title(newString);
   } else {
-    String dtime = "%sysname%";
+    String dtime = F("%sysname%");
     String newString = parseTemplate(dtime, 10);
     newString.trim();
     display_title(newString);
@@ -485,7 +485,7 @@ void display_header() {
 }
 
 void display_time() {
-  String dtime = "%systime%";
+  String dtime = F("%systime%");
   String newString = parseTemplate(dtime, 10);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);

@@ -142,13 +142,13 @@ String to_json_object_value(const String& object, const String& value) {
   result = wrap_String(object, F("\""));
   result += F(":");
   if (value.length() == 0 || !isFloat(value)) {
-    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1 && value.indexOf("Pragma") == -1) {
+    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1 && value.indexOf(F("Pragma")) == -1) {
       result += wrap_String(value, F("\""));
     } else {
       String tmpValue(value);
       tmpValue.replace('\n', '^');
       tmpValue.replace('"', '\'');
-      tmpValue.replace("Pragma", "Bugje!");
+      tmpValue.replace(F("Pragma"), F("Bugje!"));
       result += wrap_String(tmpValue, F("\""));
     }
   } else {
@@ -164,8 +164,8 @@ String to_json_object_value(const String& object, const String& value) {
 String parseString(String& string, byte indexFind)
 {
   String tmpString = string;
-  tmpString += ",";
-  tmpString.replace(" ", ",");
+  tmpString += ',';
+  tmpString.replace(' ', ',');
   String locateString = "";
   byte count = 0;
   int index = tmpString.indexOf(',');
@@ -192,7 +192,7 @@ int getParamStartPos(String& string, byte indexFind)
 {
   String tmpString = string;
   byte count = 0;
-  tmpString.replace(" ", ",");
+  tmpString.replace(' ', ',');
   for (unsigned int x = 0; x < tmpString.length(); x++)
   {
     if (tmpString.charAt(x) == ',')
@@ -208,11 +208,11 @@ int getParamStartPos(String& string, byte indexFind)
 //escapes special characters in strings for use in html-forms
 void htmlEscape(String & html)
 {
-  html.replace("&",  "&amp;");
-  html.replace("\"", "&quot;");
-  html.replace("'",  "&#039;");
-  html.replace("<",  "&lt;");
-  html.replace(">",  "&gt;");
+  html.replace("&",  F("&amp;"));
+  html.replace("\"", F("&quot;"));
+  html.replace("'",  F("&#039;"));
+  html.replace("<",  F("&lt;"));
+  html.replace(">",  F("&gt;"));
 }
 
 /********************************************************************************************\
@@ -368,7 +368,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
-  if (s.indexOf("%vname") != -1) {
+  if (s.indexOf(F("%vname")) != -1) {
     repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
     repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
     repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
@@ -379,7 +379,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
 {
   SMART_REPL(F("%id%"), String(event->idx))
-  if (s.indexOf("%val") != -1) {
+  if (s.indexOf(F("%val")) != -1) {
     if (event->sensorType == SENSOR_TYPE_LONG) {
       SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
     } else {
