@@ -165,8 +165,95 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           else{
             addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
           }
-
         }
+
+        if(dotPos >- 1 && command == F("pulse"))
+        {
+          success = true;
+          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
+          if(event->Par1>=0 && event->Par1 <= PCA9685_MAX_PINS)
+          {
+            if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
+
+            if(event->Par2 == 0)
+            {
+              log += F(" off");
+              Plugin_022_Off(port, event->Par1);
+            }
+            else
+            {
+              log += F(" on");
+              Plugin_022_On(port, event->Par1);
+            }
+            log += String(F(" Pulse set for ")) + event->Par3;
+            log += String(F("ms"));
+            int autoreset = 0;
+            if(event->Par3 > 0)
+            {
+              if(parseString(line, 5) == F("auto"))
+              {
+                autoreset = -1;
+                log += String(F(" with autoreset infinity"));
+              }
+              else
+              {
+                autoreset = event->Par4;
+                if(autoreset > 0)
+                {
+                  log += String(F(" for "));
+                  log += String(autoreset);
+                }
+              }
+              
+            }
+            setSystemTimer(event->Par3 , PLUGIN_ID_022
+              , event->TaskIndex
+              , event->Par1
+              , !event->Par2
+              , event->Par3
+              , autoreset);
+            setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+          }
+          else{
+            addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
+          }
+        }
+
+        break;
+      }
+      case PLUGIN_TIMER_IN:
+      {
+        String log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
+        int autoreset = event->Par4;
+        if(event->Par2 == 0)
+        {
+          log += F(" off");
+          Plugin_022_Off(port, event->Par1);
+        }
+        else
+        {
+          log += F(" on");
+          Plugin_022_On(port, event->Par1);
+        }
+        if(autoreset > 0 || autoreset == -1)
+        {
+          if(autoreset > -1)
+          {
+            log += String(F(" Pulse auto restart for "));
+            log += String(autoreset);
+            autoreset--;
+          }
+          setSystemTimer(event->Par3, PLUGIN_ID_022
+            , event->TaskIndex
+            , event->Par1
+            , !event->Par2
+            , event->Par3
+            , autoreset);
+        }
+        setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+        SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));    
         break;
       }
   }
