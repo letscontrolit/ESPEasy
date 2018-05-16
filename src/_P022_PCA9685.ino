@@ -139,6 +139,34 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
           }
         }
+
+        if(dotPos >- 1 && command == F("gpio"))
+        {
+          success = true;
+          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
+          if(event->Par1>=0 && event->Par1 <= PCA9685_MAX_PINS)
+          {
+            if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
+
+            if(event->Par2 == 0)
+            {
+              log += F(" off");
+              Plugin_022_Off(port, event->Par1);
+            }
+            else
+            {
+              log += F(" on");
+              Plugin_022_On(port, event->Par1);              
+            }
+            setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+          }
+          else{
+            addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
+          }
+
+        }
         break;
       }
   }
@@ -169,6 +197,16 @@ uint8_t Plugin_022_readRegister(int i2cAddress, int regAddress) {
 //********************************************************************************
 // PCA9685 write
 //********************************************************************************
+void Plugin_022_Off(int port, byte pin)
+{
+  Plugin_022_Write(port, pin, 0);
+}
+
+void Plugin_022_On(int port, byte pin)
+{
+  Plugin_022_Write(port, pin, PCA9685_MAX_PWM);
+}
+
 void Plugin_022_Write(int port, byte Par1, int Par2)
 {
   int i2cAddress = PCA9685_ADDRESS + port;
@@ -183,6 +221,7 @@ void Plugin_022_Write(int port, byte Par1, int Par2)
   Wire.write(highByte(LED_OFF));
   Wire.endTransmission();
 }
+
 void Plugin_022_Frequency(int port, uint16_t freq)
 {
   int i2cAddress = PCA9685_ADDRESS + port;
