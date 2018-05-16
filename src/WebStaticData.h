@@ -461,6 +461,8 @@ static const char jsFetchAndParseLog[] PROGMEM = {
     "document.getElementById('copyText_1').innerHTML = textToDisplay;"
     "loopDeLoop(1000, 0, 0);"
 
+    "var logLevel = new Array('Unused','Error','Info','Debug','Debug More','Undefined','Undefined','Undefined','Undefined','Debug Dev');"
+
     "function loopDeLoop(timeForNext, activeRequests, reRunCount) {"
       "var maximumRequests = 1;"
       "var url = '/logjson';"
@@ -475,6 +477,7 @@ static const char jsFetchAndParseLog[] PROGMEM = {
     	//"console.log('Next fetch in: ' + timeForNext + 'mSec');"
     	"var c;"
       "var logEntriesChunk;"
+      "var currentIDtoScrollTo = '';"
       "var check = 0;"
     	"var i = setInterval(function() {"
       // to handle runs that didn't find any json
@@ -526,12 +529,13 @@ static const char jsFetchAndParseLog[] PROGMEM = {
               "logEntriesChunk = '';"
               "reRunCount = 0;"
               "autoscroll_on = document.getElementById('autoscroll').checked;"
-                "if (autoscroll_on == true) {"
+                "if (autoscroll_on == true && currentIDtoScrollTo !== '') {"
                   "document.getElementById(currentIDtoScrollTo).scrollIntoView({"
                     "behavior: scrolling_type"
                     "});"
                   "}"
             "}"
+            "document.getElementById('current_loglevel').innerHTML = 'Logging: ' + logLevel[data.Log.SettingsWebLogLevel] + ' (' + data.Log.SettingsWebLogLevel + ')';"
             //"console.log('Next fetch in: ' + timeForNext + 'mSec, active requests: ' + activeRequests);"
     				"clearInterval(i);"
     				"loopDeLoop(timeForNext, 0, reRunCount);"
