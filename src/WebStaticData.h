@@ -370,7 +370,7 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
         "var c;"
         "var k;"
         "var err = '';"
-        "var url = '/json';"
+        "var url = '/json?view=sensorupdate';"
         "var check = 0;"
         "if (isNaN(activeRequests)){activeRequests = maximumRequests;}"
       	"if (timeForNext == null){timeForNext = 1000;}"
