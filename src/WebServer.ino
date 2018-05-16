@@ -4331,7 +4331,7 @@ void handle_filelist() {
   {
     if(!file.isDirectory()){
       TXBuffer += F("<TR><TD>");
-      if (strcmp(file.name(), F(FILE_CONFIG)) != 0 && strcmp(file.name(), F(FILE_SECURITY)) != 0 && strcmp(file.name(), F(FILE_NOTIFICATION)) != 0)
+      if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
       {
         TXBuffer += F("<a class='button link' href=\"filelist?delete=");
         TXBuffer += file.name();
