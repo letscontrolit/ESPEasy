@@ -366,11 +366,11 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
   "loopDeLoop(1000, 0);"
 
   "function loopDeLoop(timeForNext, activeRequests) {"
-        "var maximumRequests = 1;"
+        "const maximumRequests = 1;"
         "var c;"
         "var k;"
         "var err = '';"
-        "var url = '/json?view=sensorupdate';"
+        "const url = '/json?view=sensorupdate';"
         "var check = 0;"
         "if (isNaN(activeRequests)){activeRequests = maximumRequests;}"
       	"if (timeForNext == null){timeForNext = 1000;}"
@@ -461,11 +461,11 @@ static const char jsFetchAndParseLog[] PROGMEM = {
     "document.getElementById('copyText_1').innerHTML = textToDisplay;"
     "loopDeLoop(1000, 0, 0);"
 
-    "var logLevel = new Array('Unused','Error','Info','Debug','Debug More','Undefined','Undefined','Undefined','Undefined','Debug Dev');"
+    "const logLevel = new Array('Unused','Error','Info','Debug','Debug More','Undefined','Undefined','Undefined','Undefined','Debug Dev');"
 
     "function loopDeLoop(timeForNext, activeRequests, reRunCount) {"
-      "var maximumRequests = 1;"
-      "var url = '/logjson';"
+      "const maximumRequests = 1;"
+      "const url = '/logjson';"
       "if (isNaN(activeRequests)){activeRequests = maximumRequests;}"
     	"if (timeForNext == null){timeForNext = 1000;}"
       //to make sure we don't run to often... JS seems to like it that way.
