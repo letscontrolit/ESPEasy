@@ -16,6 +16,7 @@
 #define PCA9685_MAX_PWM 4095
 #define PCA9685_MIN_FREQUENCY   23.0 // Min possible PWM cycle frequency
 #define PCA9685_MAX_FREQUENCY   1500.0 // Max possible PWM cycle frequency
+#define PCA9685_ALLLED_REG          (byte)0xFA
 
 /*
 is bit flag any bit rapresent the initialization state of PCA9685 
@@ -143,24 +144,33 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         if(dotPos >- 1 && command == F("gpio"))
         {
           success = true;
-          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
+          log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO "));
           if(event->Par1>=0 && event->Par1 <= PCA9685_MAX_PINS)
           {
             if (!IS_INIT(initializeState, port)) Plugin_022_initialize(port);
-
+            int pin = event->Par1;
+            if(parseString(line,2) == "all")
+            {
+              pin = -1;
+              log += String(F("all"));              
+            }
+            else
+            {
+               log += String(pin);
+            }
             if(event->Par2 == 0)
             {
               log += F(" off");
-              Plugin_022_Off(port, event->Par1);
+              Plugin_022_Off(port, pin);
             }
             else
             {
               log += F(" on");
-              Plugin_022_On(port, event->Par1);              
+              Plugin_022_On(port, pin);              
             }
-            setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             addLog(LOG_LEVEL_INFO, log);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+            setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);            
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
           }
           else{
             addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
@@ -284,24 +294,27 @@ uint8_t Plugin_022_readRegister(int i2cAddress, int regAddress) {
 //********************************************************************************
 // PCA9685 write
 //********************************************************************************
-void Plugin_022_Off(int port, byte pin)
+void Plugin_022_Off(int port, int pin)
 {
   Plugin_022_Write(port, pin, 0);
 }
 
-void Plugin_022_On(int port, byte pin)
+void Plugin_022_On(int port, int pin)
 {
   Plugin_022_Write(port, pin, PCA9685_MAX_PWM);
 }
 
-void Plugin_022_Write(int port, byte Par1, int Par2)
+void Plugin_022_Write(int port, int Par1, int Par2)
 {
   int i2cAddress = PCA9685_ADDRESS + port;
   // boolean success = false;
+  int regAddress = Par1 == -1
+    ? PCA9685_ALLLED_REG
+    : PCA9685_LED0 + 4 * Par1;
   uint16_t LED_ON = 0;
   uint16_t LED_OFF = Par2;
   Wire.beginTransmission(i2cAddress);
-  Wire.write(0x06 + 4 * Par1);
+  Wire.write(regAddress);
   Wire.write(lowByte(LED_ON));
   Wire.write(highByte(LED_ON));
   Wire.write(lowByte(LED_OFF));
