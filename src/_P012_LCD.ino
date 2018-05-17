@@ -95,8 +95,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         }
 
 
-        addRowLabel("Display button");
-        addPinSelect(false, "taskdevicepin3", Settings.TaskDevicePin3[event->TaskIndex]);
+        addRowLabel(F("Display button"));
+        addPinSelect(false, F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
 
         char tmpString[128];
@@ -158,7 +158,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         // Setup LCD display
         lcd->init();                      // initialize the lcd
         lcd->backlight();
-        lcd->print("ESP Easy");
+        lcd->print(F("ESP Easy"));
         displayTimer = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
           pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);

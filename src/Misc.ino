@@ -450,10 +450,10 @@ void taskClear(byte taskIndex, boolean save)
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 String FileError(int line, const char * fname)
 {
-   String err("FS   : Error while reading/writing ");
-   err=err+fname;
-   err=err+" in ";
-   err=err+line;
+   String err = F("FS   : Error while reading/writing ");
+   err += fname;
+   err += F(" in ");
+   err += line;
    addLog(LOG_LEVEL_ERROR, err);
    return(err);
 }
@@ -1131,16 +1131,16 @@ void ResetFactory(void)
   //pad files with extra zeros for future extensions
   String fname;
 
-  fname=F(FILE_CONFIG);
+  fname=FILE_CONFIG;
   InitFile(fname.c_str(), CONFIG_FILE_SIZE);
 
-  fname=F(FILE_SECURITY);
+  fname=FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
-  fname=F(FILE_NOTIFICATION);
+  fname=FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
 
-  fname=F(FILE_RULES);
+  fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
   LoadSettings();
@@ -1241,7 +1241,7 @@ void ResetFactory(void)
   SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
   checkRAM(F("ResetFactory2"));
-  Serial.println("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)");
+  Serial.println(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
@@ -1694,10 +1694,10 @@ String parseTemplate(String &tmpString, byte lineSize)
             valueName = valueName.substring(0, hashtagIndex);
           }
 
-          if (deviceName.equalsIgnoreCase("Plugin"))
+          if (deviceName.equalsIgnoreCase(F("Plugin")))
           {
             String tmpString = tmpStringMid.substring(7);
-            tmpString.replace("#", ",");
+            tmpString.replace('#', ',');
             if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
               newString += tmpString;
           }
@@ -1920,13 +1920,24 @@ String parseTemplate(String &tmpString, byte lineSize)
                                 for (byte f = 0; f < filler; f++)
                                   newString += " ";
                               }
-                              addLog(LOG_LEVEL_DEBUG,"DEBUG: Formatted String='"+newString+value+"'");
+                              {
+                                String logFormatted = F("DEBUG: Formatted String='");
+                                logFormatted += newString;
+                                logFormatted += value;
+                                logFormatted += "'";
+                                addLog(LOG_LEVEL_DEBUG, logFormatted);
+                              }
                             }
                           }
                           //end of changes by giig1967g - 2018-04-18
 
                           newString += String(value);
-                          addLog(LOG_LEVEL_DEBUG_DEV,"DEBUG DEV: Parsed String='"+newString+"'");
+                          {
+                            String logParsed = F("DEBUG DEV: Parsed String='");
+                            logParsed += newString;
+                            logParsed += "'";
+                            addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+                          }
                           break;
                         }
                       }
@@ -2349,12 +2360,12 @@ String rulesProcessingFile(String fileName, String& event)
 
       if (data == 10)    // if line complete, parse this rule
       {
-        line.replace("\r", "");
-        if (line.substring(0, 2) != "//" && line.length() > 0)
+        line.replace(F("\r"), "");
+        if (line.substring(0, 2) != F("//") && line.length() > 0)
         {
           isCommand = true;
 
-          int comment = line.indexOf("//");
+          int comment = line.indexOf(F("//"));
           if (comment > 0)
             line = line.substring(0, comment);
 
@@ -2374,10 +2385,10 @@ String rulesProcessingFile(String fileName, String& event)
 
           if (!codeBlock)  // do not check "on" rules if a block of actions is to be processed
           {
-            if (line.startsWith("on "))
+            if (line.startsWith(F("on ")))
             {
               line = line.substring(3);
-              int split = line.indexOf(" do");
+              int split = line.indexOf(F(" do"));
               if (split != -1)
               {
                 eventTrigger = line.substring(0, split);
@@ -2407,7 +2418,7 @@ String rulesProcessingFile(String fileName, String& event)
 
           String lcAction = action;
           lcAction.toLowerCase();
-          if (lcAction == "endon") // Check if action block has ended, then we will wait for a new "on" rule
+          if (lcAction == F("endon")) // Check if action block has ended, then we will wait for a new "on" rule
           {
             isCommand = false;
             codeBlock = false;
@@ -2419,21 +2430,21 @@ String rulesProcessingFile(String fileName, String& event)
             Serial.print(codeBlock);
             Serial.print(match);
             Serial.print(isCommand);
-            Serial.print(": ");
+            Serial.print(F(": "));
             Serial.println(line);
           }
 
           if (match) // rule matched for one action or a block of actions
           {
-            int split = lcAction.indexOf("if "); // check for optional "if" condition
-            boolean elseif = lcAction.startsWith("elseif ");
+            int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+            boolean elseif = lcAction.startsWith(F("elseif "));
             if (elseif == false && split != -1)
             {
               conditional = true;
               String check = lcAction.substring(split + 3);
               log = F("[if ");
               log += check;
-              log += "]=";
+              log += F("]=");
               condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
               if(condition == true)
               {
@@ -2563,7 +2574,7 @@ boolean ruleMatch(String& event, String& rule)
       return false;
   }
 
-  if (event.startsWith("Clock#Time")) // clock events need different handling...
+  if (event.startsWith(F("Clock#Time"))) // clock events need different handling...
   {
     int pos1 = event.indexOf("=");
     int pos2 = rule.indexOf("=");

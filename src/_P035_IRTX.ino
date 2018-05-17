@@ -71,7 +71,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         int argIndex = cmdCode.indexOf(',');
         if (argIndex) cmdCode = cmdCode.substring(0, argIndex);
 
-        if (cmdCode.equalsIgnoreCase("IRSEND") && Plugin_035_irSender != 0)
+        if (cmdCode.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
         {
           success = true;
           #ifdef PLUGIN_016
@@ -80,7 +80,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
 
-          if (IrType.equalsIgnoreCase("RAW")) {
+          if (IrType.equalsIgnoreCase(F("RAW"))) {
             String IrRaw;
             unsigned int IrHz=0;
             unsigned int IrPLen=0;

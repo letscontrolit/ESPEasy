@@ -398,7 +398,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             pinMode(event->Par1, OUTPUT);
             // char sng[1024] ="";
             String tmpString=string;
-            tmpString.replace("-","#");
+            tmpString.replace('-', '#');
             // tmpString.toCharArray(sng, 1024);
             play_rtttl(event->Par1, tmpString.c_str());
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);

@@ -190,10 +190,10 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     unsigned long timer = millis() + Par1;
-    Serial.println("start");
+    Serial.println(F("start"));
     while (!timeOutReached(timer))
       backgroundtasks();
-    Serial.println("end");
+    Serial.println(F("end"));
     break;
   }
 
@@ -597,7 +597,7 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     String event = Line;
     event = event.substring(6);
-    event.replace("$", "#");
+    event.replace('$', '#');
     if (Settings.UseRules)
       rulesProcessing(event);
     break;
@@ -673,9 +673,14 @@ void ExecuteCommand(byte source, const char *Line)
       WiFiClient client;
       if (client.connect(host.c_str(), port.toInt()))
       {
-        client.print(String("GET ") + path + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
-                     "Connection: close\r\n\r\n");
+        String reply = F("GET ");
+        reply += path;
+        reply += F(" HTTP/1.1\r\n");
+        reply += F("Host: ");
+        reply += host;
+        reply += F("\r\n");
+        reply += F("Connection: close\r\n\r\n");
+        client.print(reply);
 
         unsigned long timer = millis() + 200;
         while (!client.available() && !timeOutReached(timer))

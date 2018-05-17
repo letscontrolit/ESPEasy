@@ -186,9 +186,9 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           uint8_t seg = 0;
           uint16_t value = 0;
 
-          lowerString.replace("  ", " ");
-          lowerString.replace(" =", "=");
-          lowerString.replace("= ", "=");
+          lowerString.replace(F("  "), " ");
+          lowerString.replace(F(" ="), "=");
+          lowerString.replace(F("= "), "=");
 
           param = parseString(lowerString, paramIdx++);
           if (param.length())

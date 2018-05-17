@@ -104,7 +104,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String &string) {
 
             String tmpString = __buffer;
 
-            int argIndex = tmpString.indexOf(",i");
+            int argIndex = tmpString.indexOf(F(",i"));
             int argEnd = tmpString.indexOf(',', argIndex + 1);
             if (argIndex)
             Vidx = tmpString.substring(argIndex + 2,argEnd);
@@ -131,9 +131,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String &string) {
                 argEnd = tmpString.indexOf(0x0a);
                 if (argIndex)
                   Nvalue = tmpString.substring(argIndex + 2,argEnd);
-                if (Nvalue=="On")
+                if (Nvalue == F("On"))
                   Svalue='1';
-                if (Nvalue=="Off")
+                if (Nvalue == F("Off"))
                   Svalue='0';
 
                 break;
@@ -242,7 +242,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String &string) {
           String tmpString = deviceTemplate[x];
           if (tmpString.length())
           {
-            int rssiIndex = tmpString.indexOf("rssi");
+            int rssiIndex = tmpString.indexOf(F("rssi"));
             if(rssiIndex >= 0)
             {
               int barVal;
