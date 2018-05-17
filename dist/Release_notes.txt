@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180517 (since mega-20180516)
+-------------------------------------------------
+
+Release date: Thu May 17 04:00:08 CEST 2018
+
+Gijs Noorlander (2):
+      Update _C012.ino
+      Update WebServer.ino
+
+TD-er (1):
+      [Flash strings] Store more strings into flash to keep memory usage low
+
+
+-------------------------------------------------
 Changes in release mega-20180516 (since mega-20180515)
 -------------------------------------------------
 
