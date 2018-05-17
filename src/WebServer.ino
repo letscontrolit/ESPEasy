@@ -3526,54 +3526,72 @@ void stream_last_json_object_value(const String& object, const String& value) {
 void handle_json()
 {
   String tasknr = WebServer.arg("tasknr");
+  bool showSystem = true;
+  bool showWifi = true;
+  bool showDataAcquisition = true;
+  bool showTaskDetails = true;
+  {
+    String view = WebServer.arg("view");
+    if (view.length() != 0) {
+      if (view == F("sensorupdate")) {
+        showSystem = false;
+        showWifi = false;
+        showDataAcquisition = false;
+        showTaskDetails = false;
+      }
+    }
+  }
   TXBuffer.startJsonStream();
-
   if (tasknr.length() == 0)
   {
-    TXBuffer += F("{\"System\":{\n");
-    stream_next_json_object_value(F("Build"), String(BUILD));
-    stream_next_json_object_value(F("Git Build"), String(BUILD_GIT));
-    stream_next_json_object_value(F("System libraries"), getSystemLibraryString());
-    stream_next_json_object_value(F("Plugins"), String(deviceCount + 1));
-    stream_next_json_object_value(F("Plugin description"), getPluginDescriptionString());
-    stream_next_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
-    stream_next_json_object_value(F("Unit"), String(Settings.Unit));
-    stream_next_json_object_value(F("Name"), String(Settings.Name));
-    stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
-    stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
-    #ifndef ESP32
-    stream_next_json_object_value(F("Reset Reason"), ESP.getResetReason());
-    #endif
+    TXBuffer += '{';
+    if (showSystem) {
+      TXBuffer += F("\"System\":{\n");
+      stream_next_json_object_value(F("Build"), String(BUILD));
+      stream_next_json_object_value(F("Git Build"), String(BUILD_GIT));
+      stream_next_json_object_value(F("System libraries"), getSystemLibraryString());
+      stream_next_json_object_value(F("Plugins"), String(deviceCount + 1));
+      stream_next_json_object_value(F("Plugin description"), getPluginDescriptionString());
+      stream_next_json_object_value(F("Local time"), getDateTimeString('-',':',' '));
+      stream_next_json_object_value(F("Unit"), String(Settings.Unit));
+      stream_next_json_object_value(F("Name"), String(Settings.Name));
+      stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
+      stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
+      #ifndef ESP32
+      stream_next_json_object_value(F("Reset Reason"), ESP.getResetReason());
+      #endif
 
-    if (wdcounter > 0)
-    {
-        stream_next_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
-        stream_next_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+      if (wdcounter > 0)
+      {
+          stream_next_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
+          stream_next_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+      }
+
+      stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
+      TXBuffer += F(",\n");
     }
-
-    stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
-    TXBuffer += F(",\n");
-
-    TXBuffer += F("\"WiFi\":{\n");
-    #if defined(ESP8266)
-      stream_next_json_object_value(F("Hostname"), WiFi.hostname());
-    #endif
-    stream_next_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
-    stream_next_json_object_value(F("IP"), WiFi.localIP().toString());
-    stream_next_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
-    stream_next_json_object_value(F("Gateway IP"), WiFi.gatewayIP().toString());
-    stream_next_json_object_value(F("MAC address"), WiFi.macAddress());
-    stream_next_json_object_value(F("DNS 1"), WiFi.dnsIP(0).toString());
-    stream_next_json_object_value(F("DNS 2"), WiFi.dnsIP(1).toString());
-    stream_next_json_object_value(F("SSID"), WiFi.SSID());
-    stream_next_json_object_value(F("BSSID"), WiFi.BSSIDstr());
-    stream_next_json_object_value(F("Channel"), String(WiFi.channel()));
-    stream_next_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
-    stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
-    stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
-    stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
-    stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
-    TXBuffer += F(",\n");
+    if (showWifi) {
+      TXBuffer += F("\"WiFi\":{\n");
+      #if defined(ESP8266)
+        stream_next_json_object_value(F("Hostname"), WiFi.hostname());
+      #endif
+      stream_next_json_object_value(F("IP config"), useStaticIP() ? F("Static") : F("DHCP"));
+      stream_next_json_object_value(F("IP"), WiFi.localIP().toString());
+      stream_next_json_object_value(F("Subnet Mask"), WiFi.subnetMask().toString());
+      stream_next_json_object_value(F("Gateway IP"), WiFi.gatewayIP().toString());
+      stream_next_json_object_value(F("MAC address"), WiFi.macAddress());
+      stream_next_json_object_value(F("DNS 1"), WiFi.dnsIP(0).toString());
+      stream_next_json_object_value(F("DNS 2"), WiFi.dnsIP(1).toString());
+      stream_next_json_object_value(F("SSID"), WiFi.SSID());
+      stream_next_json_object_value(F("BSSID"), WiFi.BSSIDstr());
+      stream_next_json_object_value(F("Channel"), String(WiFi.channel()));
+      stream_next_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
+      stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
+      stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
+      stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
+      stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
+      TXBuffer += F(",\n");
+    }
   }
 
   byte taskNr = tasknr.toInt();
@@ -3621,11 +3639,26 @@ void handle_json()
       if (taskNr != 0) {
         stream_next_json_object_value(F("TTL"), String(ttl_json * 1000));
       }
-      stream_next_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+      if (showDataAcquisition) {
+        TXBuffer += F("\"DataAcquisition\": [\n");
+        for (byte x = 0; x < CONTROLLER_MAX; x++)
+        {
+          TXBuffer += F("{");
+          stream_next_json_object_value(F("Controller"), String(x + 1));
+          stream_next_json_object_value(F("IDX"), String(Settings.TaskDeviceID[x][TaskIndex]));
+          stream_last_json_object_value(F("Enabled"), jsonBool(Settings.TaskDeviceSendData[x][TaskIndex]));
+          if (x < (CONTROLLER_MAX - 1))
+            TXBuffer += F(",\n");
+        }
+        TXBuffer += F("],\n");
+      }
+      if (showTaskDetails) {
+        stream_next_json_object_value(F("TaskInterval"), String(taskInterval));
+        stream_next_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
+        stream_next_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+      }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
-      stream_next_json_object_value(F("TaskInterval"), String(taskInterval));
-      stream_next_json_object_value(F("Type"), getPluginNameFromDeviceIndex(DeviceIndex));
-      stream_last_json_object_value(F("TaskName"), String(ExtraTaskSettings.TaskDeviceName));
+      stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
       if (TaskIndex != lastActiveTaskIndex)
         TXBuffer += F(",");
       TXBuffer += F("\n");
