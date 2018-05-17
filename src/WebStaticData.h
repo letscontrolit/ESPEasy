@@ -146,7 +146,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     // buttons
     ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; border: none;}"
     ".button.link { }"
-    ".button.link.wide {width: 100%;}"
+    ".button.link.wide {display: inline-block; width: 100%; text-align: center;}"
     ".button.link.wide.red {background-color: red;}"
     ".button.help {padding: 2px 4px; border-style: solid; border-width: 1px; border-color: gray; border-radius: 50%; }"
     ".button:hover {background: #369; }"
