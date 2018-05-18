@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release mega-20180518 (since mega-20180517)
+-------------------------------------------------
+
+Release date: Fri May 18 04:00:07 CEST 2018
+
+Grovkillen (3):
+      [JavaScript] made static variables "const"
+      [tools page] wider buttons
+      [tools page] Center text, factory reset is red
+
+TD-er (1):
+      [#1431] Add DataAcquisition to /json and reduce json for sensor updates
+
+
+-------------------------------------------------
 Changes in release mega-20180517 (since mega-20180516)
 -------------------------------------------------
 
