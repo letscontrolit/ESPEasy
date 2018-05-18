@@ -153,7 +153,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         //addHtml(F("<TR><TD><TD>"));
-        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"), F(""));
+        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] && !Settings.UseNTP)
           addFormNote(F("Enable and configure NTP!"));
