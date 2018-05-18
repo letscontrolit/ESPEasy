@@ -835,7 +835,7 @@ void handle_root() {
       TXBuffer += F(".local</a><TD><TD><TD>");
     #endif
     TXBuffer += F("<TR><TD><TD>");
-    addButton(F("sysinfo"), F("More info"));
+    addButton(F("sysinfo"), F("More info"), F(""));
 
     TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
     for (byte x = 0; x < UNIT_MAX; x++)
@@ -2591,9 +2591,11 @@ void addRowLabel(const String& label)
   TXBuffer += F(":<TD>");
 }
 
-void addButton(const String &url, const String &label)
+void addButton(const String &url, const String &label, const String &wide)
 {
-  TXBuffer += F("<a class='button link' href='");
+  TXBuffer += F("<a class='button link");
+  TXBuffer += wide;
+  TXBuffer += F("' href='");
   TXBuffer += url;
   TXBuffer += F("'>");
   TXBuffer += label;
@@ -3042,69 +3044,69 @@ void handle_tools() {
   addFormSubHeader(F("System"));
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("/?cmd=reboot"), F("Reboot"));
+  addButton(F("/?cmd=reboot"), F("Reboot"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Reboots ESP");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("log"), F("Log"));
+  addButton(F("log"), F("Log"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Open log output");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("sysinfo"), F("Info"));
+  addButton(F("sysinfo"), F("Info"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Open system info page");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("advanced"), F("Advanced"));
+  addButton(F("advanced"), F("Advanced"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Open advanced settings");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("json"), F("Show JSON"));
+  addButton(F("json"), F("Show JSON"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Open JSON output");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("pinstates"), F("Pin state buffer"));
+  addButton(F("pinstates"), F("Pin state buffer"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Show Pin state buffer");
 
   addFormSubHeader(F("Wifi"));
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("/?cmd=wificonnect"), F("Connect"));
+  addButton(F("/?cmd=wificonnect"), F("Connect"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Connects to known Wifi network");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("/?cmd=wifidisconnect"), F("Disconnect"));
+  addButton(F("/?cmd=wifidisconnect"), F("Disconnect"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Disconnect from wifi network");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("wifiscanner"), F("Scan"));
+  addButton(F("wifiscanner"), F("Scan"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Scan for wifi networks");
 
   addFormSubHeader(F("Interfaces"));
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("i2cscanner"), F("I2C Scan"));
+  addButton(F("i2cscanner"), F("I2C Scan"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Scan for I2C devices");
 
   addFormSubHeader(F("Settings"));
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("upload"), F("Load"));
+  addButton(F("upload"), F("Load"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Loads a settings file");
   addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("download"), F("Save"));
+  addButton(F("download"), F("Save"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Saves a settings file");
 
@@ -3113,7 +3115,7 @@ void handle_tools() {
   {
     addFormSubHeader(F("Firmware"));
     TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-    addButton(F("update"), F("Load"));
+    addButton(F("update"), F("Load"), F(" wide"));
     addHelpButton(F("EasyOTA"));
     TXBuffer += F("<TD>");
     TXBuffer += F("Load a new firmware");
@@ -3123,18 +3125,18 @@ void handle_tools() {
   addFormSubHeader(F("Filesystem"));
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("filelist"), F("Flash"));
+  addButton(F("filelist"), F("Flash"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Show files on internal flash");
 
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("/?cmd=reset"), F("Factory Reset"));
+  addButton(F("/?cmd=reset"), F("Factory Reset"), F(" wide red"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Erase all settings files");
 
 #ifdef FEATURE_SD
   TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-  addButton(F("SDfilelist"), F("SD Card"));
+  addButton(F("SDfilelist"), F("SD Card"), F(" wide"));
   TXBuffer += F("<TD>");
   TXBuffer += F("Show files on SD-Card");
 #endif
@@ -4859,7 +4861,7 @@ void handle_rules() {
 
    TXBuffer += F("<TR><TD>");
   addSubmitButton();
-  addButton(fileName, F("Download to file"));
+  addButton(fileName, F("Download to file"), F(""));
    TXBuffer += F("</table></form>");
   sendHeadandTail(F("TmplStd"),true);
   TXBuffer.endStream();
