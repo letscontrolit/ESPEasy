@@ -69,12 +69,18 @@ Command commandStringToEnum(const char * cmd) {
            if (strcmp_P(cmd_lc, PSTR("debug")                 ) == 0) return cmd_Debug;
       else if (strcmp_P(cmd_lc, PSTR("delay")                 ) == 0) return cmd_Delay;
       else if (strcmp_P(cmd_lc, PSTR("deepsleep")             ) == 0) return cmd_deepSleep;
+      else if (strcmp_P(cmd_lc, PSTR("dns")                   ) == 0) return cmd_DNS;
+      else if (strcmp_P(cmd_lc, PSTR("dst")                   ) == 0) return cmd_DST;
       break;
     }
     case 'e': {
            if (strcmp_P(cmd_lc, PSTR("erase")                 ) == 0) return cmd_Erase;
       else if (strcmp_P(cmd_lc, PSTR("event")                 ) == 0) return cmd_Event;
       else if (strcmp_P(cmd_lc, PSTR("executerules")          ) == 0) return cmd_executeRules;
+      break;
+    }
+    case 'g': {
+           if (strcmp_P(cmd_lc, PSTR("gateway")               ) == 0) return cmd_gateway;
       break;
     }
     case 'i': {
@@ -91,12 +97,15 @@ Command commandStringToEnum(const char * cmd) {
     case 'm': {
            if (strcmp_P(cmd_lc, PSTR("malloc")                ) == 0) return cmd_malloc;
       else if (strcmp_P(cmd_lc, PSTR("meminfo")               ) == 0) return cmd_meminfo;
+      else if (strcmp_P(cmd_lc, PSTR("mqttretainflag")        ) == 0) return cmd_MQTTRetainFlag;
+      else if (strcmp_P(cmd_lc, PSTR("messagedelay")          ) == 0) return cmd_messageDelay;
       break;
     }
     case 'n': {
            if (strcmp_P(cmd_lc, PSTR("name")                  ) == 0) return cmd_Name;
       else if (strcmp_P(cmd_lc, PSTR("notify")                ) == 0) return cmd_notify;
       else if (strcmp_P(cmd_lc, PSTR("nosleep")               ) == 0) return cmd_NoSleep;
+      else if (strcmp_P(cmd_lc, PSTR("ntphost")               ) == 0) return cmd_NTPHost;
       break;
     }
     case 'p': {
@@ -122,6 +131,7 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("sendtoudp")             ) == 0) return cmd_SendToUDP;
       else if (strcmp_P(cmd_lc, PSTR("serialfloat")           ) == 0) return cmd_SerialFloat;
       else if (strcmp_P(cmd_lc, PSTR("settings")              ) == 0) return cmd_Settings;
+      else if (strcmp_P(cmd_lc, PSTR("subnet")                ) == 0) return cmd_subnet;
       break;
     }
     case 't': {
@@ -133,11 +143,14 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("timerset")              ) == 0) return cmd_TimerSet;
       else if (strcmp_P(cmd_lc, PSTR("timerpause")            ) == 0) return cmd_TimerPause;
       else if (strcmp_P(cmd_lc, PSTR("timerresume")           ) == 0) return cmd_TimerResume;
+      else if (strcmp_P(cmd_lc, PSTR("timezone")              ) == 0) return cmd_TimeZone;
       break;
     }
     case 'u': {
            if (strcmp_P(cmd_lc, PSTR("udptest")               ) == 0) return cmd_udptest;
+      else if (strcmp_P(cmd_lc, PSTR("udpport")               ) == 0) return cmd_UDPPort;
       else if (strcmp_P(cmd_lc, PSTR("unit")                  ) == 0) return cmd_Unit;
+      else if (strcmp_P(cmd_lc, PSTR("usentp")                ) == 0) return cmd_useNTP;
       break;
     }
     case 'w': {
@@ -894,6 +907,85 @@ void ExecuteCommand(byte source, const char *Line)
       if (!str2ip(TmpStr1, Settings.IP))
         Serial.println("?");
     }
+    break;
+  }
+
+  case cmd_DNS:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2)) {
+      if (!str2ip(TmpStr1, Settings.DNS))
+        Serial.println("?");
+    }
+    break;
+  }
+
+  case cmd_gateway:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2)) {
+      if (!str2ip(TmpStr1, Settings.Gateway))
+        Serial.println("?");
+    }
+    break;
+  }
+
+  case cmd_subnet:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2)) {
+      if (!str2ip(TmpStr1, Settings.Subnet))
+        Serial.println("?");
+    }
+    break;
+  }
+
+  case cmd_DST:
+  {
+    success = true;
+    Settings.DST=Par1;
+    break;
+  }
+
+  case cmd_MQTTRetainFlag:
+  {
+    success = true;
+    Settings.MQTTRetainFlag=Par1;
+    break;
+  }
+
+  case cmd_messageDelay:
+  {
+    success = true;
+    Settings.MessageDelay=Par1;
+    break;
+  }
+
+  case cmd_NTPHost:
+  {
+    success = true;
+    strcpy(Settings.NTPHost, Line + 8);
+    break;
+  }
+
+  case cmd_TimeZone:
+  {
+    success = true;
+    Settings.TimeZone=Par1;
+    break;
+  }
+
+  case cmd_useNTP:
+  {
+    success = true;
+    Settings.UseNTP=Par1;
+    break;
+  }
+
+  case cmd_UDPPort:
+  {
+    success = true;
+    Settings.UDPPort=Par1;
     break;
   }
 
