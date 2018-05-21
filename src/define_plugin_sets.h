@@ -91,6 +91,7 @@ To create/register a plugin, you have to :
 
     #define PLUGIN_SET_ONLY_SWITCH
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+    #define USES_P134	// CSE7766
     #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
 #endif
 
@@ -498,6 +499,7 @@ To create/register a plugin, you have to :
 	#define USES_P130	// VEML6075
 	#define USES_P131	// SHT3X
 	#define USES_P133	// VL53L0X
+	#define USES_P134	// CSE7766
 	#define USES_P141	// LedStrip
 	#define USES_P142	// RGB-Strip
 	#define USES_P143	// AnyonePresent
