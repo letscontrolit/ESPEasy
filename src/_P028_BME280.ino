@@ -1,3 +1,4 @@
+#ifdef USES_P028
 //#######################################################################################################
 //#################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 //#######################################################################################################
@@ -139,8 +140,8 @@ String Plugin_028_getDeviceName() {
   switch (_sensorID[idx]) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
-    case BMP280_DEVICE:  return PLUGIN_028_BMP280_DEVICE;
-    case BME280_DEVICE:  return PLUGIN_028_BME280_DEVICE;
+    case BMP280_DEVICE:  return F(PLUGIN_028_BMP280_DEVICE);
+    case BME280_DEVICE:  return F(PLUGIN_028_BME280_DEVICE);
     default: return F("Unknown");
   }
 
@@ -212,25 +213,25 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
-        addFormSelectorI2C(string, F("plugin_028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
+        addFormSelectorI2C(F("plugin_028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
         const uint8_t idx = Plugin_028_device_index(i2cAddress);
         if (_sensorID[idx] != Unknown_DEVICE) {
           String detectedString = F("Detected: ");
           detectedString += Plugin_028_getFullDeviceName();
-          addUnit(string, detectedString);
+          addUnit(detectedString);
         }
-        addFormNote(string, F("SDO Low=0x76, High=0x77"));
+        addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(string, F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addUnit(string, F("m"));
+        addFormNumericBox(F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(F("m"));
 
-        addFormNumericBox(string, F("Temperature offset"), F("plugin_028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        addUnit(string, F("x 0.1C"));
+        addFormNumericBox(F("Temperature offset"), F("plugin_028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addUnit(F("x 0.1C"));
         String offsetNote = F("Offset in units of 0.1 degree Celcius");
         if (Plugin_028_hasHumidity()) {
           offsetNote += F(" (also correct humidity)");
         }
-        addFormNote(string, offsetNote);
+        addFormNote(offsetNote);
 
         success = true;
         break;
@@ -667,3 +668,4 @@ float Plugin_028_readAltitude(float seaLevel)
 float Plugin_028_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P028

@@ -1,8 +1,9 @@
+#ifdef USES_C011
 //#######################################################################################################
 //########################### Controller Plugin 011: Generic HTTP #######################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
+// #ifdef PLUGIN_BUILD_TESTING
 
 #define CPLUGIN_011
 #define CPLUGIN_ID_011         11
@@ -120,6 +121,9 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend011(struct EventStruct *event)
 {
+  if (!WiFiConnected(100)) {
+    return false;
+  }
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
@@ -139,15 +143,12 @@ boolean HTTPSend011(struct EventStruct *event)
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
 
   boolean success = false;
-
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
   addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
-  		(ControllerSettings.UseDNS ? ControllerSettings.HostName : host.toString() ) +":"+ControllerSettings.Port);
+      ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-   if (ControllerSettings.UseDNS ? !client.connect(ControllerSettings.HostName, ControllerSettings.Port) : !client.connect(host, ControllerSettings.Port))
+  if (!ControllerSettings.connectToHost(client))
   {
     connectionFailures++;
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
@@ -160,15 +161,11 @@ boolean HTTPSend011(struct EventStruct *event)
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-  String hostName = host.toString();
-  if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName;
-
   String payload = String(customConfig.HttpMethod) + " /";
   payload += customConfig.HttpUri;
   payload += F(" HTTP/1.1\r\n");
   payload += F("Host: ");
-  payload += hostName + ":" + ControllerSettings.Port;
+  payload += ControllerSettings.getHostPortString();
   payload += F("\r\n");
   payload += authHeader;
   payload += F("Connection: close\r\n");
@@ -193,7 +190,7 @@ boolean HTTPSend011(struct EventStruct *event)
   addLog(LOG_LEVEL_DEBUG_MORE, payload);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial
@@ -274,77 +271,17 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname% Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
-
-	switch (event->sensorType)
-	{
-		case SENSOR_TYPE_SINGLE:
-		case SENSOR_TYPE_SWITCH:
-		case SENSOR_TYPE_DIMMER:
-		case SENSOR_TYPE_WIND:
-		case SENSOR_TYPE_LONG:
-		{
-			DeleteNotNeededValues(s,1);
-			break;
-		}
-		case SENSOR_TYPE_DUAL:
-		case SENSOR_TYPE_TEMP_HUM:
-		case SENSOR_TYPE_TEMP_BARO:
-		{
-			DeleteNotNeededValues(s,2);
-			break;
-		}
-		case SENSOR_TYPE_TRIPLE:
-		case SENSOR_TYPE_TEMP_HUM_BARO:
-		{
-			DeleteNotNeededValues(s,3);
-			break;
-		}
-		case SENSOR_TYPE_QUAD:
-		{
-			DeleteNotNeededValues(s,4);
-			break;
-		}
-	}
+  const byte valueCount = getValueCountFromSensorType(event->sensorType);
+  DeleteNotNeededValues(s,valueCount);
 
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-  //NOTE: cant we just call parseTemplate() for all the standard stuff??
+  parseControllerVariables(s, event, true);
 
-  s.replace(F("%systime%"), getTimeString(':'));
-
-	#if FEATURE_ADC_VCC
-		s.replace(F("%vcc%"), String(vcc));
-	#endif
-
-  // IPAddress ip = WiFi.localIP();
-  // char strIP[20];
-  // sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  s.replace(F("%ip%"),WiFi.localIP().toString());
-
-  s.replace(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)));
-  s.replace(F("%uptime%"), String(wdcounter / 2));
-
-  s.replace(F("%CR%"), F("\r"));
-  s.replace(F("%LF%"), F("\n"));
-  s.replace(F("%sysname%"), URLEncode(Settings.Name));
-  s.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
-  s.replace(F("%id%"), String(event->idx));
-  s.replace(F("%vname1%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[0]));
-  s.replace(F("%vname2%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[1]));
-  s.replace(F("%vname3%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[2]));
-  s.replace(F("%vname4%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[3]));
-
-  if (event->sensorType == SENSOR_TYPE_LONG)
-    s.replace(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)));
-  else {
-    s.replace(F("%val1%"), formatUserVar(event, 0));
-    s.replace(F("%val2%"), formatUserVar(event, 1));
-    s.replace(F("%val3%"), formatUserVar(event, 2));
-    s.replace(F("%val4%"), formatUserVar(event, 3));
-  }
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 }
 
 #endif
+

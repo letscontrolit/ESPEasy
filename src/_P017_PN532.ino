@@ -1,3 +1,4 @@
+#ifdef USES_P017
 //#######################################################################################################
 //#################################### Plugin-017: PN532 RFID reader ####################################
 //#######################################################################################################
@@ -66,7 +67,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormPinSelect(string, F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+      	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
         success = true;
         break;
       }
@@ -401,3 +402,4 @@ int8_t Plugin_017_readAckFrame()
 
   return 0;
 }
+#endif // USES_P017

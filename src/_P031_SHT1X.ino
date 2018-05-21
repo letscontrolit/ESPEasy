@@ -1,3 +1,4 @@
+#ifdef USES_P031
 //#######################################################################################################
 //#################### Plugin 031: SHT10/SHT11/SHT15 Temp/Humidity Sensor ###############################
 //#######################################################################################################
@@ -76,11 +77,11 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         String log = F("SHT1X : Status byte: ");
         log += String(status, HEX);
         log += F(" - resolution: ");
-        log += (status & 1 ? "low" : "high");
+        log += (status & 1 ? F("low") : F("high"));
         log += F(" reload from OTP: ");
-        log += ((status >> 1) & 1 ? "yes" : "no");
+        log += ((status >> 1) & 1 ? F("yes") : F("no"));
         log += F(", heater: ");
-        log += ((status >> 2) & 1 ? "on" : "off");
+        log += ((status >> 2) & 1 ? F("on") : F("off"));
         addLog(LOG_LEVEL_DEBUG, log);
         success = true;
         break;
@@ -117,7 +118,7 @@ float Plugin_031_readTemperature()
 
   String log = F("SHT1X : Read temperature (raw): ");
   log += String(tempRaw);
-  log += " (Celcius): ";
+  log += F(" (Celcius): ");
   log += String(tempC);
   addLog(LOG_LEVEL_DEBUG, log);
 
@@ -144,9 +145,9 @@ float Plugin_031_readRelHumidity(float tempC)
 
   String log = F("SHT1X : Read humidity (raw): ");
   log += String(raw);
-  log += " (Linear): ";
+  log += F(" (Linear): ");
   log += String(rhLinear);
-  log += " (True): ";
+  log += F(" (True): ");
   log += String(rhTrue);
   addLog(LOG_LEVEL_DEBUG, log);
 
@@ -242,3 +243,4 @@ int Plugin_031_readData(const int bits)
 
   return val;
 }
+#endif // USES_P031

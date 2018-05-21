@@ -22,6 +22,10 @@ SOFTWARE.
 
 See more at http://blog.squix.ch
 */
+
+#ifndef DIALOG_PLAIN_FONT_H
+#define DIALOG_PLAIN_FONT_H
+
 // OLED library version >= 3.0.0
 // Created by http://oleddisplay.squix.ch/ Consider a donation
 // In case of problems make sure that you are using the font file with the correct version!
@@ -481,3 +485,6 @@ const char Dialog_plain_12[] PROGMEM = {
 	0x00,0x00,0xFC,0x7F,0x40,0x04,0x20,0x08,0x20,0x08,0x60,0x0C,0xC0,0x07,	// 254
 	0x00,0x00,0xE0,0x40,0x04,0x47,0x00,0x38,0x84,0x07,0xE0	// 255
 };
+
+#endif
+

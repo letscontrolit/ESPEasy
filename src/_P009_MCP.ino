@@ -1,3 +1,4 @@
+#ifdef USES_P009
 //#######################################################################################################
 //#################################### Plugin 009: MCP23017 input #######################################
 //#######################################################################################################
@@ -46,7 +47,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("Send Boot state") ,F("plugin_009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormCheckBox(F("Send Boot state") ,F("plugin_009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -306,3 +307,4 @@ void Plugin_009_Config(byte Par1, byte Par2)
     Wire.endTransmission();
   }
 }
+#endif // USES_P009

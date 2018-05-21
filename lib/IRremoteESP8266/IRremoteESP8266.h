@@ -53,6 +53,7 @@ enum decode_type_t {
   RC5,
   RC6,
   NEC,
+  PIONEER,
   SONY,
   PANASONIC,
   JVC,
@@ -92,6 +93,7 @@ public:
 #define REPEAT 0xffffffff
 
 #define SEND_PROTOCOL_NEC      case NEC: sendNEC(data, nbits); break;
+#define SEND_PROTOCOL_PIONEER  case PIONEER: sendPioneer(data, nbits, 1, 0ul); break;
 #define SEND_PROTOCOL_SONY     case SONY: sendSony(data, nbits); break;
 #define SEND_PROTOCOL_RC5      case RC5: sendRC5(data, nbits); break;
 #define SEND_PROTOCOL_RC6      case RC6: sendRC6(data, nbits); break;
@@ -162,6 +164,7 @@ public:
   void send(int type, unsigned long data, int nbits) {
     switch (type) {
         SEND_PROTOCOL_NEC
+        SEND_PROTOCOL_PIONEER
         SEND_PROTOCOL_SONY
         SEND_PROTOCOL_RC5
         SEND_PROTOCOL_RC6
@@ -179,6 +182,7 @@ public:
   void sendCOOLIX(unsigned long data, int nbits);
   void sendWhynter(unsigned long data, int nbits);
   void sendNEC(unsigned long data, int nbits=32, unsigned int repeat=0);
+  void sendPioneer(unsigned long data, int nbits=32, unsigned int repeat=0, unsigned long secondData=0ul);
   void sendLG(unsigned long data, int nbits=28, unsigned int repeat=0);
   // sendSony() should typically be called with repeat=2 as Sony devices
   // expect the code to be sent at least 3 times. (code + 2 repeats = 3 codes)

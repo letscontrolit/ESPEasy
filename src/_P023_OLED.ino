@@ -1,3 +1,4 @@
+#ifdef USES_P023
 //#######################################################################################################
 //#################################### Plugin 023: OLED SSD1306 display #################################
 //#######################################################################################################
@@ -42,7 +43,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_023;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -70,33 +71,33 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("3C"), F("3D") };*/
         int optionValues[2] = { 0x3C, 0x3D };
-        addFormSelectorI2C(string, F("plugin_023_adr"), 2, optionValues, choice);
+        addFormSelectorI2C(F("plugin_023_adr"), 2, optionValues, choice);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[2] = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
-        addFormSelector(string, F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
+        addFormSelector(F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
         String options3[3] = { F("128x64"), F("128x32"), F("64x48") };
         int optionValues3[3] = { 1, 3, 2 };
-        addFormSelector(string, F("Display Size"), F("plugin_023_size"), 3, options3, optionValues3, choice3);
+        addFormSelector(F("Display Size"), F("plugin_023_size"), 3, options3, optionValues3, choice3);
 
         byte choice4 = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
         String options4[2] = { F("Normal"), F("Optimized") };
         int optionValues4[2] = { 1, 2 };
-        addFormSelector(string, F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
+        addFormSelector(F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
 
         char deviceTemplate[8][64];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-        	addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
+        	addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
-        addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-        addFormNumericBox(string, F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;
@@ -194,7 +195,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           String tmpString = deviceTemplate[x];
           if (tmpString.length())
           {
-            String newString = parseTemplate(tmpString, 16);
+            String newString = P023_parseTemplate(tmpString, 16);
             Plugin_023_sendStrXY(newString.c_str(), x, 0);
           }
         }
@@ -208,13 +209,6 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         int argIndex = tmpString.indexOf(',');
         if (argIndex)
           tmpString = tmpString.substring(0, argIndex);
-        if (tmpString.equalsIgnoreCase(F("OLED")))
-        {
-          success = true;
-          argIndex = string.lastIndexOf(',');
-          tmpString = string.substring(argIndex + 1);
-          Plugin_023_sendStrXY(tmpString.c_str(), event->Par1 - 1, event->Par2 - 1);
-        }
         if (tmpString.equalsIgnoreCase(F("OLEDCMD")))
         {
           success = true;
@@ -227,9 +221,16 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           else if (tmpString.equalsIgnoreCase(F("Clear")))
             Plugin_023_clear_display();
         }
+        else if (tmpString.equalsIgnoreCase(F("OLED")))
+        {
+          success = true;
+          argIndex = string.lastIndexOf(',');
+          tmpString = string.substring(argIndex + 1);
+          String newString = P023_parseTemplate(tmpString, 16);
+          Plugin_023_sendStrXY(newString.c_str(), event->Par1 - 1, event->Par2 - 1);
+        }
         break;
       }
-
   }
   return success;
 }
@@ -333,6 +334,17 @@ const char Plugin_023_myFont_Size[] PROGMEM = {
   0x08   // DEL
 };
 
+// Perform some specific changes for OLED display
+String P023_parseTemplate(String &tmpString, byte lineSize) {
+  String result = parseTemplate(tmpString, lineSize);
+  const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+  const char degree_oled[2] = {0x7F, 0};  // P023_OLED degree symbol
+  result.replace(degree, degree_oled);
+  return result;
+}
+
+
+
 const char Plugin_023_myFont[][8] PROGMEM = {
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  // SPACE
   {0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00},  // !
@@ -432,7 +444,7 @@ const char Plugin_023_myFont[][8] PROGMEM = {
   {0x00, 0x02, 0x05, 0x05, 0x02, 0x00, 0x00, 0x00}   // DEL
 };
 
-static void Plugin_023_reset_display(void)
+void Plugin_023_reset_display(void)
 {
   Plugin_023_displayOff();
   Plugin_023_clear_display();
@@ -463,7 +475,7 @@ void Plugin_023_displayOff(void)
 }
 
 
-static void Plugin_023_clear_display(void)
+void Plugin_023_clear_display(void)
 {
   unsigned char i, k;
   for (k = 0; k < 8; k++)
@@ -480,7 +492,7 @@ static void Plugin_023_clear_display(void)
 
 
 // Actually this sends a byte, not a char to draw in the display.
-static void Plugin_023_SendChar(unsigned char data)
+void Plugin_023_SendChar(unsigned char data)
 {
   Wire.beginTransmission(Plugin_023_OLED_address);  // begin transmitting
   Wire.write(0x40);                      //data mode
@@ -491,7 +503,7 @@ static void Plugin_023_SendChar(unsigned char data)
 
 // Prints a display char (not just a byte) in coordinates X Y,
 //currently unused:
-// static void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
+// void Plugin_023_sendCharXY(unsigned char data, int X, int Y)
 // {
 //   //if (interrupt && !doing_menu) return; // Stop printing only if interrupt is call but not in button functions
 //   Plugin_023_setXY(X, Y);
@@ -505,7 +517,7 @@ static void Plugin_023_SendChar(unsigned char data)
 // }
 
 
-static void Plugin_023_sendcommand(unsigned char com)
+void Plugin_023_sendcommand(unsigned char com)
 {
   Wire.beginTransmission(Plugin_023_OLED_address);     //begin transmitting
   Wire.write(0x80);                          //command mode
@@ -516,7 +528,7 @@ static void Plugin_023_sendcommand(unsigned char com)
 
 // Set the cursor position in a 16 COL * 8 ROW map (128x64 pixels)
 // or 8 COL * 5 ROW map (64x48 pixels)
-static void Plugin_023_setXY(unsigned char row, unsigned char col)
+void Plugin_023_setXY(unsigned char row, unsigned char col)
 {
   switch (Plugin_023_OLED_type)
   {
@@ -536,7 +548,7 @@ static void Plugin_023_setXY(unsigned char row, unsigned char col)
 
 // Prints a string regardless the cursor position.
 // unused:
-// static void Plugin_023_sendStr(unsigned char *string)
+// void Plugin_023_sendStr(unsigned char *string)
 // {
 //   unsigned char i = 0;
 //   while (*string)
@@ -552,7 +564,7 @@ static void Plugin_023_setXY(unsigned char row, unsigned char col)
 
 // Prints a string in coordinates X Y, being multiples of 8.
 // This means we have 16 COLS (0-15) and 8 ROWS (0-7).
-static void Plugin_023_sendStrXY(const char *string, int X, int Y)
+void Plugin_023_sendStrXY(const char *string, int X, int Y)
 {
   Plugin_023_setXY(X, Y);
   unsigned char i = 0;
@@ -578,7 +590,7 @@ static void Plugin_023_sendStrXY(const char *string, int X, int Y)
 }
 
 
-static void Plugin_023_init_OLED(void)
+void Plugin_023_init_OLED(void)
 {
   unsigned char multiplex;
   unsigned char compins;
@@ -624,3 +636,4 @@ static void Plugin_023_init_OLED(void)
   Plugin_023_sendcommand(0x00);            //Set Memory Addressing Mode ab Horizontal addressing mode
 
 }
+#endif // USES_P023

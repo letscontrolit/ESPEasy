@@ -1,3 +1,4 @@
+#ifdef USES_P032
 //#######################################################################################################
 //################ Plugin 032 MS5611 (GY-63) I2C Temp/Barometric Pressure Sensor  #######################
 //#######################################################################################################
@@ -72,9 +73,9 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
         int optionValues[2] = { 0x77, 0x76 };
-        addFormSelectorI2C(string, F("plugin_032_ms5611_i2c"), 2, optionValues, choice);
+        addFormSelectorI2C(F("plugin_032_ms5611_i2c"), 2, optionValues, choice);
 
-        addFormNumericBox(string, F("Altitude [m]"), F("plugin_032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude [m]"), F("plugin_032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         success = true;
         break;
@@ -252,3 +253,4 @@ void Plugin_032_readout() {
 double Plugin_032_pressureElevation(double atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P032

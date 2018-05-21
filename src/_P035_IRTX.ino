@@ -1,7 +1,7 @@
+#ifdef USES_P035
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
-#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRsend *Plugin_035_irSender;
@@ -71,7 +71,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
         int argIndex = cmdCode.indexOf(',');
         if (argIndex) cmdCode = cmdCode.substring(0, argIndex);
 
-        if (cmdCode.equalsIgnoreCase("IRSEND") && Plugin_035_irSender != 0)
+        if (cmdCode.equalsIgnoreCase(F("IRSEND")) && Plugin_035_irSender != 0)
         {
           success = true;
           #ifdef PLUGIN_016
@@ -80,7 +80,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
 
-          if (IrType.equalsIgnoreCase("RAW")) {
+          if (IrType.equalsIgnoreCase(F("RAW"))) {
             String IrRaw;
             unsigned int IrHz=0;
             unsigned int IrPLen=0;
@@ -137,14 +137,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                     for (uint t = 0; t < c0; t++)
                       printWebString += F("0");
                   }
-                  //So, as we recieve a "1", and processed the counted 0s
+                  //So, as we receive a "1", and processed the counted 0s
                   //sending them as a ms timing into the buffer, we clear
                   //the 0s counter
                   c0 = 0;
                 } else {
                   //So, bit is 0
 
-                  //On first call, ignore 0s (supress left-most 0s)
+                  //On first call, ignore 0s (suppress left-most 0s)
                   if (c0+c1 != 0) {
                     //add 1 to counter c0
                     c0++;
@@ -154,11 +154,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                       //add the total ms into the buffer (number of 1s
                       //multiplied by defined pulse length ms)
                       buf[idx++] = c1 * IrPLen;
-                      //print the number of 1s just for debuging/info purpouses
+                      //print the number of 1s just for debugging/info purposes
                       for (uint t = 0; t < c1; t++)
                         printWebString += F("1");
                     }
-                    //So, as we recieve a "0", and processed the counted 1s
+                    //So, as we receive a "0", and processed the counted 1s
                     //sending them as a ms timing into the buffer, we clear
                     //the 1s counter
                     c1 = 0;
@@ -195,17 +195,23 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
             //addLog(LOG_LEVEL_INFO, log);
           } else {
+            unsigned int IrRepeat=0;
+            unsigned long IrSecondCode=0UL;
+
             if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
             if (GetArgv(command, TmpStr1, 3)) IrCode = strtoul(TmpStr1, NULL, 16); //(long) TmpStr1
             if (GetArgv(command, TmpStr1, 4)) IrBits = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 5)) IrRepeat = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
-            if (IrType.equalsIgnoreCase("NEC")) Plugin_035_irSender->sendNEC(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("JVC")) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
-            if (IrType.equalsIgnoreCase("RC5")) Plugin_035_irSender->sendRC5(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("RC6")) Plugin_035_irSender->sendRC6(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("SAMSUNG")) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("SONY")) Plugin_035_irSender->sendSony(IrCode, IrBits);
-            if (IrType.equalsIgnoreCase("PANASONIC")) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
+            if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);
+            if (IrType.equalsIgnoreCase(F("RC5"))) Plugin_035_irSender->sendRC5(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("RC6"))) Plugin_035_irSender->sendRC6(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode, IrBits);
+            if (IrType.equalsIgnoreCase(F("PANASONIC"))) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
+            if (IrType.equalsIgnoreCase(F("PIONEER"))) Plugin_035_irSender->sendPioneer(IrCode, IrBits, IrRepeat, IrSecondCode);
           }
 
           addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
@@ -226,4 +232,4 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
+#endif // USES_P035

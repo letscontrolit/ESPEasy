@@ -1,3 +1,4 @@
+#ifdef USES_P044
 //#################################### Plugin 044: P1WifiGateway ########################################
 //
 //  based on P020 Ser2Net, extended by Ronald Leenes romix/-at-/macuser.nl
@@ -65,9 +66,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(string, F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(string, F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -75,13 +76,13 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         options[1] = F("Even");
         options[2] = F("Odd");
         int optionValues[3] = { 0, 2, 3 };
-        addFormSelector(string, F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(string, F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-      	addFormPinSelect(string, F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(string, F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -108,12 +109,22 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
         {
-          byte serialconfig = 0x10;
+          #if defined(ESP8266)
+            byte serialconfig = 0x10;
+          #endif
+          #if defined(ESP32)
+            uint32_t serialconfig = 0x8000010;
+          #endif
           serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];
           serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;
           if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
             serialconfig += 0x20;
-          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+          #if defined(ESP8266)
+            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+          #endif
+          #if defined(ESP32)
+            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
+          #endif
           if (P1GatewayServer) P1GatewayServer->close();
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           P1GatewayServer->begin();
@@ -153,6 +164,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (P1GatewayServer) {
           P1GatewayServer->close();
+          //FIXME: shouldnt P1P1GatewayServer be deleted?
           P1GatewayServer = NULL;
         }
         success = true;
@@ -336,7 +348,7 @@ void blinkLED() {
        checks whether the incoming character is a valid one for a P1 datagram. Returns false if not, which signals corrupt datagram
 */
 bool validP1char(char ch) {
-  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch == '.') || (ch == '!') || (ch == 92) || (ch == 13) || (ch == '\n') || (ch == '(') || (ch == ')') || (ch == '-') || (ch == '*') || (ch == ':') )
+  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch == '.') || (ch == '!') || (ch == ' ') || (ch == 92) || (ch == 13) || (ch == '\n') || (ch == '(') || (ch == ')') || (ch == '-') || (ch == '*') || (ch == ':') )
   {
     return true;
   } else {
@@ -425,3 +437,4 @@ bool checkDatagram(int len) {
   }
   return validCRCFound;
 }
+#endif // USES_P044

@@ -1,3 +1,4 @@
+#ifdef USES_P063
 //#######################################################################################################
 //#################################### Plugin 063: TTP229 KeyPad ########################################
 //#######################################################################################################
@@ -5,8 +6,8 @@
 // ESPEasy Plugin to scan a 16 key touch pad chip TTP229
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-// Important: There are several types of TTP299 chips with different features available. They are namead all TTP229 but differ in the letter(s) followed.
-// On the china boards (found on eBay and AliExpress) the TTP229-B is used which has NO! I2C-interface. It uses a properitary serial protocol with clock (SCL) and bidirectional data (SDO)
+// Important: There are several types of TTP299 chips with different features available. They are named all TTP229 but differ in the letter(s) followed.
+// On the china boards (found on eBay and AliExpress) the TTP229-B is used which has NO! I2C-interface. It uses a proprietary serial protocol with clock (SCL) and bidirectional data (SDO)
 
 // ScanCode;
 // Value 1...16 for the key number
@@ -19,15 +20,12 @@
 // Electronics:
 // Connect SCL to 1st GPIO and SDO to 2nd GPIO. Use 3.3 volt for VCC.
 // Set the jumper for 16 key mode (TP2=jumper3). Additional set jumper for multi-key (TP3=jumper4, TP4=jumper5).
-// Scematics: https://www.openimpulse.com/blog/wp-content/uploads/wpsc/downloadables/TTP229B-Schematic-Diagram.pdf
+// Schematics: https://www.openimpulse.com/blog/wp-content/uploads/wpsc/downloadables/TTP229B-Schematic-Diagram.pdf
 // Datasheet: http://www.datasheet4u.com/download_new.php?id=996751
-
-
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_063
 #define PLUGIN_ID_063         63
-#define PLUGIN_NAME_063       "Keypad - TTP229 Touch [TESTING]"
+#define PLUGIN_NAME_063       "Keypad - TTP229 Touch"
 #define PLUGIN_VALUENAME1_063 "ScanCode"
 
 // #include <*.h>   no lib required
@@ -112,7 +110,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
 
         success = true;
         break;
@@ -207,5 +205,4 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-#endif
+#endif // USES_P063

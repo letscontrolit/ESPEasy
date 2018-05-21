@@ -1,3 +1,4 @@
+#ifdef USES_P060
 //#######################################################################################################
 //#################################### Plugin 060: MCP3221 ##############################################
 //#######################################################################################################
@@ -5,7 +6,6 @@
 // Plugin to read 12-bit-values from ADC chip MCP3221. It is used e.g. in MinipH pH interface to sample a pH probe in an aquarium
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_060
 #define PLUGIN_ID_060         60
@@ -73,21 +73,21 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
         byte addr = CONFIG(0);
 
         int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
-        addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
+        addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
 
-        addFormCheckBox(string, F("Oversampling"), F("plugin_060_oversampling"), CONFIG(1));
+        addFormCheckBox(F("Oversampling"), F("plugin_060_oversampling"), CONFIG(1));
 
-        addFormSubHeader(string, F("Two Point Calibration"));
+        addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_060_cal"), CONFIG(3));
+        addFormCheckBox(F("Calibration Enabled"), F("plugin_060_cal"), CONFIG(3));
 
-        addFormNumericBox(string, F("Point 1"), F("plugin_060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
-        string += F(" &#8793; ");
-        addTextBox(string, F("plugin_060_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("plugin_060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 4095);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("plugin_060_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(string, F("Point 2"), F("plugin_060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 1023);
-        string += F(" &#8793; ");
-        addTextBox(string, F("plugin_060_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("plugin_060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 4095);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("plugin_060_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -166,4 +166,4 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
+#endif // USES_P060

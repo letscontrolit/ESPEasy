@@ -27,13 +27,16 @@
 #define _jkSDS011_H_
 
 #include "Arduino.h"
-#include "SensorSerial.h"
+//#include "SensorSerial.h"
 #include "SensorSerialBuffer.h"
+#include "ESPeasySoftwareSerial.h"
+
 
 class CjkSDS011
 {
 public:
   CjkSDS011(int16_t pinRX, int16_t pinTX);
+  virtual ~CjkSDS011();
 
   void Process();
 
@@ -42,11 +45,28 @@ public:
   float GetPM2_5() { return _pm2_5; };
   float GetPM10_() { return _pm10_; };
 
-  void ReadAverage(float &pm25, float &pm10);
+  // Return true when there are valid samples.
+  boolean ReadAverage(float &pm25, float &pm10);
+
+  void SetSleepMode(bool enabled);
+
+  // Set interval to get new data, 0 .. 30 minutes.
+  // Minutes = 0 => continous mode.
+  // The setting is still effective after power off(factory default is continuous measurement)
+  void SetWorkingPeriod(int minutes);
+
+  // Get the working period in minutes (0 = continuous reading)
+  // Negative return value indicates error during communication.
+  int GetWorkingPeriod();
 
 private:
-  SensorSerial _serial;
+  void SendCommand(byte byte1, byte byte2, byte byte3);
+  void ParseCommandReply();
+
+//  SensorSerial _serial;
+  ESPeasySoftwareSerial *_serial;
   CSensorSerialBuffer _data;
+  CSensorSerialBuffer _command;
   float _pm2_5;
   float _pm10_;
   float _pm2_5avr;
@@ -54,6 +74,8 @@ private:
   uint16_t _avr;
   boolean _available;
   boolean _sws;
+  int _working_period;
+  boolean _sleepmode_active;
 };
 
 #endif

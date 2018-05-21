@@ -20,6 +20,9 @@ Examples:
 Build, flash and connect to serial for node 1:
     ./espcli node 1 bfs
 
+Build and flash all configured nodes:
+    ./espcli node all bf
+
 Configure wifi settings for node:
     ./espcli node 0 wificonfig
 
@@ -29,7 +32,7 @@ Configure node 0, controller 1 as domoticz mqtt:
     """
     return(docs)
 
-parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog=get_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter)
+parser = argparse.ArgumentParser(description='ESPEasy testing CLI', epilog=get_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter)
 
 # parser.add_argument('--url', default='http://localhost:8080/rpc', help='url of rpc server to connect to. default: %(default)s')
 # parser.add_argument('--user', default=None, help='user to login.')
@@ -43,43 +46,50 @@ parser = argparse.ArgumentParser(description='ESPEasy testing framework', epilog
 parser.add_argument('--debug', action='store_true', help='enable http debugging output')
 
 parser.add_argument('module',      nargs=1, help='Module to use (node or espeasy)')
-parser.add_argument('node',         type=int,nargs=1, help='Node number (from config)')
+
+node_choices=['all']
+for node_choice in range(0,len(config.nodes)):
+    node_choices.append(str(node_choice))
+parser.add_argument('node',   choices=node_choices,nargs=1, help='Node number (from config)')
+
 parser.add_argument('command',      nargs=1, help='Function from the module (help below)')
 parser.add_argument('params',  default=[], nargs='*', help='command parameters. in foo=bar form ')
 
 args = parser.parse_args()
 
 try:
-    if args.node[0]<0:
-        raise(Exception("node number should be 0 or higher"))
 
     if args.debug:
         util.enable_http_debug()
 
 
-    node_index=args.node[0]
-
-
-    #we always need a node instance
-    node_instance=node.Node(config.nodes[node_index], "node"+str(node_index))
-
-
-    #determine rpc parameters
-    params={}
-    for param in args.params:
-        (key,value)=param.split("=")
-        params[key]=value
-
-    if args.module[0]=='node':
-        command = getattr(node_instance, args.command[0])
-        command(**params)
-
-    elif args.module[0]=='espeasy':
-        espeasy_instance=espeasy.EspEasy(node_instance)
-        command = getattr(espeasy_instance, args.command[0])
-        command(**params)
+    #which node to process? all or a specific one?
+    if args.node[0]=='all':
+        node_indexes=range(0,len(config.nodes))
     else:
-        raise(Exception("Unknown module:"+args.module[0]))
+        node_indexes=[int(args.node[0])]
+
+    #traverse selected nodes
+    for node_index in node_indexes:
+        node_instance=node.Node(config.nodes[node_index], "node"+str(node_index))
+
+
+        #determine rpc parameters
+        params={}
+        for param in args.params:
+            (key,value)=param.split("=")
+            params[key]=value
+
+        if args.module[0]=='node':
+            command = getattr(node_instance, args.command[0])
+            command(**params)
+
+        elif args.module[0]=='espeasy':
+            espeasy_instance=espeasy.EspEasy(node_instance)
+            command = getattr(espeasy_instance, args.command[0])
+            command(**params)
+        else:
+            raise(Exception("Unknown module:"+args.module[0]))
 
     sys.exit(0)
 

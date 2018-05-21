@@ -1,3 +1,4 @@
+#ifdef USES_C009
 //#######################################################################################################
 //########################### Controller Plugin 009: FHEM HTTP ##########################################
 //#######################################################################################################
@@ -20,7 +21,7 @@
  - moved on/off translation for SENSOR_TYPE_SWITCH/DIMMER to FHEM module
  - v1.03
  - changed http request from GET to POST (RFC conform)
- - removed obsolet http get url code
+ - removed obsolete http get url code
  - v1.04
  - added build options and node_type_id to JSON/device
  /******************************************************************************/
@@ -56,7 +57,10 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-
+        if (!WiFiConnected(100)) {
+          success = false;
+          break;
+        }
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
@@ -76,8 +80,8 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         ESP[F("unit")] = Settings.Unit;
         ESP[F("version")] = Settings.Version;
         ESP[F("build")] = Settings.Build;
-        ESP[F("build_notes")] = BUILD_NOTES;
-        ESP[F("build_git")] = BUILD_GIT;
+        ESP[F("build_notes")] = String(F(BUILD_NOTES));
+        ESP[F("build_git")] = String(F(BUILD_GIT));
         ESP[F("node_type_id")] = NODE_TYPE_ID;
         ESP[F("sleep")] = Settings.deepSleep;
 
@@ -99,13 +103,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           val[F("deviceName")] = ExtraTaskSettings.TaskDeviceName;
           val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
           val[F("type")]       = event->sensorType;
-
-          if (event->sensorType == SENSOR_TYPE_LONG) {
-            val[F("value")] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-          }
-          else { // All other sensor types
-            val[F("value")] = formatUserVar(event, x);
-          }
+          val[F("value")]      = formatUserVarNoCheck(event, x);
         }
 
         // Create json buffer
@@ -142,21 +140,11 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
     authHeader = String(F("Authorization: Basic ")) + encoder.encode(auth) + " \r\n";
   }
 
-  // char log[80];
-  // url.toCharArray(log, 80);
-  // addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-  // char host[20];
-  // sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  // sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+host.toString()+":"+ControllerSettings.Port);
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!client.connect(host, ControllerSettings.Port)) {
+  if (!ControllerSettings.connectToHost(client)) {
     connectionFailures++;
     // strcpy_P(log, PSTR("HTTP : connection failed"));
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
@@ -171,12 +159,12 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
   int len = buffer.length();
   client.print(String("POST ") + url + F(" HTTP/1.1\r\n") +
               F("Content-Length: ")+ len + F("\r\n") +
-              F("Host: ") + host + F("\r\n") + authHeader +
+              F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
               F("Connection: close\r\n\r\n")
               + buffer);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
+  while (!client.available() && !timeOutReached(timer))
     yield();
 
   // Read all the lines of the reply from server and print them to Serial
@@ -204,3 +192,4 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
   client.flush();
   client.stop();
 }
+#endif

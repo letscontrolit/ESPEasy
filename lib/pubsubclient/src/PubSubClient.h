@@ -27,8 +27,9 @@
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds
+// Keepalive timeout for default MQTT Broker is 10s
 #ifndef MQTT_KEEPALIVE
-#define MQTT_KEEPALIVE 15
+#define MQTT_KEEPALIVE 10
 #endif
 
 // MQTT_SOCKET_TIMEOUT: socket timeout interval in Seconds
@@ -73,7 +74,7 @@
 #define MQTTQOS1        (1 << 1)
 #define MQTTQOS2        (2 << 1)
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 #include <functional>
 #define MQTT_CALLBACK_SIGNATURE std::function<void(char*, uint8_t*, unsigned int)> callback
 #else
@@ -95,7 +96,7 @@ private:
    boolean write(uint8_t header, uint8_t* buf, uint16_t length);
    uint16_t writeString(const char* string, uint8_t* buf, uint16_t pos);
    IPAddress ip;
-   const char* domain;
+   String domain;
    uint16_t port;
    Stream* stream;
    int _state;
@@ -114,6 +115,7 @@ public:
    PubSubClient(const char*, uint16_t, Client& client, Stream&);
    PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client);
    PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client, Stream&);
+   virtual ~PubSubClient() {}
 
    PubSubClient& setServer(IPAddress ip, uint16_t port);
    PubSubClient& setServer(uint8_t * ip, uint16_t port);

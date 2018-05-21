@@ -1,3 +1,4 @@
+#ifdef USES_P027
 //#######################################################################################################
 //######################### Plugin 027: INA219 DC Voltage/Current sensor ################################
 //#######################################################################################################
@@ -137,13 +138,13 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         optionValuesMode[0] = 0;
         optionValuesMode[1] = 1;
         optionValuesMode[2] = 2;
-        addFormSelector(string, F("Measure range"), F("plugin_027_range"), 3, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Measure range"), F("plugin_027_range"), 3, optionsMode, optionValuesMode, choiceMode);
 
-        addFormSelectorI2C(string, F("plugin_027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
+        addFormSelectorI2C(F("plugin_027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
 
         byte choiceMeasureType = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(string, F("Measurement Type"), F("plugin_027_measuretype"), 4, options, NULL, choiceMeasureType );
+        addFormSelector(F("Measurement Type"), F("plugin_027_measuretype"), 4, options, NULL, choiceMeasureType );
 
         success = true;
         break;
@@ -426,3 +427,4 @@ float Plugin_027_getCurrent_mA(uint8_t i2caddr) {
   valueDec /= _ina219_data[idx].currentDivider_mA;
   return valueDec;
 }
+#endif // USES_P027

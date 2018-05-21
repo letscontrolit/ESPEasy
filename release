@@ -4,7 +4,16 @@ NEW="$1"
 
 [ "$NEW" != "" ] || exit 1
 
-PREV=`git tag --sort=creatordate|tail -1`
+echo "Creating release $NEW"
+
+
+if git describe "$NEW" &>/dev/null; then
+  echo "Release already exists"
+  exit 1
+fi
+
+NEWBASE=`echo "$NEW"|cut -f1 -d'-'`
+PREV=`git tag --sort=creatordate|grep "^$NEWBASE"|tail -1`
 
 ############## update Release_notes.txt
 NOTES="dist/Release_notes.txt"
@@ -20,7 +29,7 @@ cat "$NOTES" >> "$NOTES.new"
 mv "$NOTES.new" "$NOTES"
 
 git add "$NOTES"
-git commit -m "automaticly updated release notes for $NEW"
+git commit -m "automatically updated release notes for $NEW"
 
 
 ################ tag and add tag message
@@ -34,5 +43,5 @@ git tag -a "$NEW" -m "`cat /tmp/tagmessage`"
 
 
 ################ push everything
-git push
+git push origin HEAD
 git push --tags

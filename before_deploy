@@ -1,24 +1,35 @@
 #!/bin/bash
 
 VERSION=$(git describe)
-echo "Creating release archives for $VERSION ..."
-#binaries
 
-#ESP_Easy_v[version]-[build type]-dev[dev number]-ESP[chip type]-[size].bin
+#Naming convention:
+# ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
 
-#cp .pioenvs/mini_512/firmware.bin dist/"ESPEasy_$VERSION""_mini_512.bin"
 
-cp .pioenvs/normal_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_normal_ESP8266_1024.bin"
-cp .pioenvs/normal_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_normal_ESP8266_4096.bin"
-cp .pioenvs/normal_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_normal_ESP8285_1024.bin"
+for ENV in \
+  normal_ESP8266_1024 \
+  normal_ESP8266_4096 \
+  normal_ESP8285_1024 \
+  test_ESP8266_1024\
+  test_ESP8266_4096\
+  test_ESP8266_4096_VCC\
+  test_ESP8285_1024\
+  dev_ESP8266_1024\
+  dev_ESP8266_4096\
+  dev_ESP8285_1024\
+  dev_ESP8266PUYA_1024\
+  dev_ESP8266PUYA_1024_VCC\
+  hard_SONOFF_POW\
+  esp32dev;\
+do
+  echo
+  echo "### Deploying environment $ENV for version $VERSION"
+  BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+  cp .pioenvs/${ENV}/firmware.bin $BIN
+  python2 crc2.py $BIN
+  mv $BIN "dist/ESP_Easy_${VERSION}_${ENV}.bin"
+done
 
-cp .pioenvs/test_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_test_ESP8266_1024.bin"
-cp .pioenvs/test_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_test_ESP8266_4096.bin"
-cp .pioenvs/test_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_test_ESP8285_1024.bin"
-
-cp .pioenvs/dev_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266_1024.bin"
-cp .pioenvs/dev_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266_4096.bin"
-cp .pioenvs/dev_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8285_1024.bin"
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 rm -rf dist/Source 2>/dev/null
@@ -28,4 +39,7 @@ cp -r src dist/Source/
 cp platformio.ini dist/Source/
 
 cd dist
+
+echo
+echo "### Creating zip archive"
 zip ../ESPEasy_$VERSION.zip -r .

@@ -1,19 +1,19 @@
+#ifdef USES_P013
 //#######################################################################################################
-//#################################### Plugin 013: HC-SR04 ##############################################
+//############################### Plugin 013: HC-SR04, RCW-0001, etc. ###################################
 //#######################################################################################################
 
 #define PLUGIN_013
 #define PLUGIN_ID_013        13
-#define PLUGIN_NAME_013       "Distance - HC-SR04"
+#define PLUGIN_NAME_013       "Distance - HC-SR04, RCW-0001, etc."
 #define PLUGIN_VALUENAME1_013 "Distance"
 
-void Plugin_013_interrupt() ICACHE_RAM_ATTR;
+#include <NewPing.h>
 
 boolean Plugin_013_init = false;
-volatile unsigned long Plugin_013_timer = 0;
-volatile unsigned long Plugin_013_state = 0;
 byte Plugin_013_TRIG_Pin = 0;
 byte Plugin_013_IRQ_Pin = 0;
+NewPing *sonar = NULL;
 
 boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 {
@@ -58,11 +58,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         options[0] = F("Value");
         options[1] = F("State");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(string, F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
+        addFormSelector(F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
-        	addFormNumericBox(string, F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        	addFormNumericBox(F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         }
         success = true;
         break;
@@ -82,11 +82,28 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_013_init = true;
-        pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-        pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
+
+        Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
-        attachInterrupt(Settings.TaskDevicePin2[event->TaskIndex], Plugin_013_interrupt, CHANGE);
+
+        if (sonar)
+        {
+          delete sonar;
+          sonar=NULL;
+        }
+
+        sonar = new NewPing(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin);
         success = true;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (sonar)
+        {
+          delete sonar;
+          sonar=NULL;
+        }
         break;
       }
 
@@ -96,7 +113,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         {
           Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
           float value = Plugin_013_read();
-          String log = F("SR04 : Distance: ");
+          String log = F("ULTRASONIC : Distance: ");
           if (value > 0)
           {
             UserVar[event->BaseVarIndex] = value;
@@ -124,7 +141,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               state = 1;
             if (state != switchstate[event->TaskIndex])
             {
-              String log = F("SR04 : State ");
+              String log = F("ULTRASONIC : State ");
               log += state;
               addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
@@ -145,38 +162,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 float Plugin_013_read()
 /*********************************************************************/
 {
-  float value = -1;
-  Plugin_013_timer = 0;
-  Plugin_013_state = 0;
-  noInterrupts();
-  digitalWrite(Plugin_013_TRIG_Pin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(Plugin_013_TRIG_Pin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(Plugin_013_TRIG_Pin, LOW);
-  interrupts();
+  if (!sonar)
+  {
+    return 0;
+  }
 
-  delay(25);  // wait for measurement to finish (max 400 cm * 58 uSec = 23uSec)
-  if (Plugin_013_state == 2)
-  {
-    value = (float)Plugin_013_timer / 58;
-  }
-  return value;
+  return sonar->ping_cm();
 }
-
-/*********************************************************************/
-void Plugin_013_interrupt()
-/*********************************************************************/
-{
-  byte pinState = digitalRead(Plugin_013_IRQ_Pin);
-  if (pinState == 1) // Start of pulse
-  {
-    Plugin_013_state = 1;
-    Plugin_013_timer = micros();
-  }
-  else // End of pulse, calculate timelapse between start & end
-  {
-    Plugin_013_state = 2;
-    Plugin_013_timer = micros() - Plugin_013_timer;
-  }
-}
+#endif // USES_P013

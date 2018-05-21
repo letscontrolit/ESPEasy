@@ -1,3 +1,4 @@
+#ifdef USES_P045
 //#######################################################################################################
 //#################################### Plugin 045: MPU6050 [Testing] ####################################
 //#######################################################################################################
@@ -17,23 +18,23 @@
 // included in all copies or substantial portions of the Software.
 
 
-// This plugin enables the use of a MPU6050 sensor as e.g. used in the breakoutboard GY-521.
+// This plugin enables the use of a MPU6050 sensor as e.g. used in the breakout-board GY-521.
 // Using the webform you can set thresholds for the x-y-z axis and timeout values. If the thresholds are
 // exceeded the sensor is on, if the thresholds are not met during the timeout period the sensor is off.
 
-// Using this plugin you can get a notification from your home automationsystem when the monitored machine or
-// device is no longer vibrating and thus this can be used as a signaling device for the end of a (dish)washer
+// Using this plugin you can get a notification from your home automation system when the monitored machine or
+// device is no longer vibrating and thus this can be used as a signalling device for the end of a (dish)washer
 // or dryer cycle.
 
-// You can also use the plugin to read raw sensorvalues. You can use more then one instance of the plugin and
+// You can also use the plugin to read raw sensor values. You can use more then one instance of the plugin and
 // you can set multiple movement alarms by giving each instance other threshold values if needed.
 
-// Best practise: Create three custom sensors in your homecontroller (like domoticz) and let it plot the x, y and
-// z range. Plot the sensorvalues while you use the washingmachine and/or dryer. Also keep monitoring when they
+// Best practise: Create three custom sensors in your home controller (like domoticz) and let it plot the x, y and
+// z range. Plot the sensor values while you use the washing machine and/or dryer. Also keep monitoring when they
 // are not in use so you can determine the needed thresholds. When you have these you can select the movement
 // detection function to setup the plugin for further use.
 
-// The plugin can simultanious be used with two MPU6050 devices by adding multiple instances.
+// The plugin can be used simultaneously with two MPU6050 devices by adding multiple instances.
 // Originally released in the PlayGround as Plugin 118.
 
 // Plugin var usage:
@@ -54,7 +55,6 @@
 //              Settings.TaskDevicePluginConfigLong[x][0] - Minimal detection threshold counter
 //              Settings.TaskDevicePluginConfigLong[x][1] - Detection threshold window counter
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define MPU6050_RA_GYRO_CONFIG              0x1B
 #define MPU6050_RA_ACCEL_CONFIG             0x1C
@@ -122,8 +122,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         int optionValues[2];
         optionValues[0] = 0x68;
         optionValues[1] = 0x69;
-        addFormSelectorI2C(string, F("plugin_045_address"), 2, optionValues, choice);
-        addFormNote(string, F("ADDR Low=0x68, High=0x69"));
+        addFormSelectorI2C(F("plugin_045_address"), 2, optionValues, choice);
+        addFormNote(F("ADDR Low=0x68, High=0x69"));
 
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options[10];
@@ -137,28 +137,28 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         options[7] = F("G-force X");
         options[8] = F("G-force Y");
         options[9] = F("G-force Z");
-        addFormSelector(string, F("Function"), F("plugin_045_function"), 10, options, NULL, choice);
+        addFormSelector(F("Function"), F("plugin_045_function"), 10, options, NULL, choice);
 
         if (choice == 0) {
           // If this is instance function 0, setup webform for additional vars
           // Show some user information about the webform and what the vars mean.
-          string += F("<TR><TD><TD>The thresholdvalues (0-65535) can be used to set a threshold for one or more<br>");
-          string += F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>");
-          string += F("value. A value of 0 disables movement detection for that axis.");
+          addHtml(F("<TR><TD><TD>The thresholdvalues (0-65535) can be used to set a threshold for one or more<br>"));
+          addHtml(F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>"));
+          addHtml(F("value. A value of 0 disables movement detection for that axis."));
 
-        	addFormNumericBox(string, F("Detection threshold X"), F("plugin_045_threshold_x"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 65535);
-        	addFormNumericBox(string, F("Detection threshold Y"), F("plugin_045_threshold_y"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], 0, 65535);
-        	addFormNumericBox(string, F("Detection threshold Z"), F("plugin_045_threshold_z"), Settings.TaskDevicePluginConfig[event->TaskIndex][4], 0, 65535);
+        	addFormNumericBox(F("Detection threshold X"), F("plugin_045_threshold_x"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 65535);
+        	addFormNumericBox(F("Detection threshold Y"), F("plugin_045_threshold_y"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], 0, 65535);
+        	addFormNumericBox(F("Detection threshold Z"), F("plugin_045_threshold_z"), Settings.TaskDevicePluginConfig[event->TaskIndex][4], 0, 65535);
 
-          string += F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>");
-          string += F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>");
-          string += F("Each period, defined by the [detection window], the counter is checked against<br>");
-          string += F("the [min. detection count] and if found equal or larger, movement is detected.<br>");
-          string += F("If in the next window the [min. detection count] value is not met, movement has stopped.");
-          string += F("The [detection window] cannot be smaller than the [min. detection count].");
+          addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
+          addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
+          addHtml(F("Each period, defined by the [detection window], the counter is checked against<br>"));
+          addHtml(F("the [min. detection count] and if found equal or larger, movement is detected.<br>"));
+          addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped."));
+          addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
 
-        	addFormNumericBox(string, F("Min. detection count"), F("plugin_045_threshold_counter"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 0, 999999);
-        	addFormNumericBox(string, F("Detection window"), F("plugin_045_threshold_window"), Settings.TaskDevicePluginConfig[event->TaskIndex][6], 0, 999999);
+        	addFormNumericBox(F("Min. detection count"), F("plugin_045_threshold_counter"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 0, 999999);
+        	addFormNumericBox(F("Detection window"), F("plugin_045_threshold_window"), Settings.TaskDevicePluginConfig[event->TaskIndex][6], 0, 999999);
 
         }
         success = true;
@@ -225,7 +225,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
 /*      // Uncomment this block if you want to debug your MPU6050, but be prepared for a log overload
         String log = F("MPU6050 : axis values: ");
-        log += _P045_axis[0][3][dev]
+        log += _P045_axis[0][3][dev];
         log += F(", ");
         log += _P045_axis[1][3][dev];
         log += F(", ");
@@ -239,7 +239,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO,log);
 */
         // Run this bit every 5 seconds per deviceaddress (not per instance)
-        if ((_P045_time[dev] + 5000) < millis())
+        if (timeOutReached(_P045_time[dev] + 5000))
         {
           _P045_time[dev] = millis();
 
@@ -400,4 +400,4 @@ void _P045_writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t
       Wire.endTransmission();
     }
 }
-#endif
+#endif // USES_P045

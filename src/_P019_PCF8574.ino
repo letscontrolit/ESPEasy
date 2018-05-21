@@ -1,3 +1,4 @@
+#ifdef USES_P019
 //#######################################################################################################
 //#################################### Plugin 019: PCF8574 ##############################################
 //#######################################################################################################
@@ -46,7 +47,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("Send Boot state"), F("plugin_019_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormCheckBox(F("Send Boot state"), F("plugin_019_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -112,9 +113,17 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         if (command == F("pcfgpio"))
         {
           success = true;
-          Plugin_019_Write(event->Par1, event->Par2);
-          setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+          if (event->Par2 == 2) { //INPUT
+        	  // PCF8574 specific: only can read 0/low state, so we must send 1
+        	  setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_INPUT, 1);
+        	  Plugin_019_Write(event->Par1,1);
+        	  log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Set to 1"));
+          }
+          else { // OUTPUT
+        	  setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+        	  Plugin_019_Write(event->Par1, event->Par2);
+        	  log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+          }
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
         }
@@ -200,28 +209,34 @@ int Plugin_019_Read(byte Par1)
 //********************************************************************************
 boolean Plugin_019_Write(byte Par1, byte Par2)
 {
-  boolean success = false;
-  byte portvalue = 0;
   byte unit = (Par1 - 1) / 8;
   byte port = Par1 - (unit * 8);
   uint8_t address = 0x20 + unit;
   if (unit > 7) address += 0x10;
 
-  // get the current pin status
-  Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
-  {
-    portvalue = Wire.read();
-    if (Par2 == 1)
-      portvalue |= (1 << (port - 1));
-    else
-      portvalue &= ~(1 << (port - 1));
-
-    // write back new data
-    Wire.beginTransmission(address);
-    Wire.write(portvalue);
-    Wire.endTransmission();
-    success = true;
+  //generate bitmask
+  int i = 0;
+  byte portmask = 0;
+  byte mode = 0;
+  uint16_t value = 0;
+  unit *= 8; // calculate first pin
+  unit += 1;
+  for(i =0;i<8;i++){
+	  mode =0;
+	  if(!getPinState(PLUGIN_ID_019, unit, &mode, &value) || mode == PIN_MODE_INPUT || (mode == PIN_MODE_OUTPUT && value == 1))
+		  portmask |= (1 << i);
+	  unit++;
   }
-  return(success);
+
+  if (Par2 == 1)
+    portmask |= (1 << (port - 1));
+  else
+    portmask &= ~(1 << (port - 1));
+
+  Wire.beginTransmission(address);
+  Wire.write(portmask);
+  Wire.endTransmission();
+
+  return true;
 }
+#endif // USES_P019
