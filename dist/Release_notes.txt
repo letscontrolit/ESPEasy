@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20180522 (since mega-20180519)
+-------------------------------------------------
+
+Release date: Tue May 22 04:00:14 CEST 2018
+
+Daniel Tedenljung (1):
+      Add note for PulseCounter
+
+Plebs (1):
+      Added 10 new commands for serial port configuration
+
+TD-er (1):
+      [P077] CSE7766 - Energy (Sonoff S31 and Sonoff Pow R2)
+
+stefan (1):
+      Add CSE7766 for Sonoff POW R2 to plugin_sets
+
+
+-------------------------------------------------
 Changes in release mega-20180519 (since mega-20180518)
 -------------------------------------------------
 
