@@ -122,22 +122,22 @@ uint16_t ac4, ac5, ac6;
 boolean Plugin_006_bmp085_begin()
 /*********************************************************************/
 {
-  if (Plugin_006_bmp085_read8(0xD0) != 0x55) return false;
+  if (I2C_read8_reg(BMP085_I2CADDR, 0xD0) != 0x55) return false;
 
   /* read calibration data */
-  ac1 = Plugin_006_bmp085_read16(BMP085_CAL_AC1);
-  ac2 = Plugin_006_bmp085_read16(BMP085_CAL_AC2);
-  ac3 = Plugin_006_bmp085_read16(BMP085_CAL_AC3);
-  ac4 = Plugin_006_bmp085_read16(BMP085_CAL_AC4);
-  ac5 = Plugin_006_bmp085_read16(BMP085_CAL_AC5);
-  ac6 = Plugin_006_bmp085_read16(BMP085_CAL_AC6);
+  ac1 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_AC1);
+  ac2 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_AC2);
+  ac3 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_AC3);
+  ac4 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_AC4);
+  ac5 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_AC5);
+  ac6 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_AC6);
 
-  b1 = Plugin_006_bmp085_read16(BMP085_CAL_B1);
-  b2 = Plugin_006_bmp085_read16(BMP085_CAL_B2);
+  b1 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_B1);
+  b2 = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_B2);
 
-  mb = Plugin_006_bmp085_read16(BMP085_CAL_MB);
-  mc = Plugin_006_bmp085_read16(BMP085_CAL_MC);
-  md = Plugin_006_bmp085_read16(BMP085_CAL_MD);
+  mb = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_MB);
+  mc = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_MC);
+  md = I2C_read16_reg(BMP085_I2CADDR, BMP085_CAL_MD);
 
   return(true);
 }
@@ -146,9 +146,9 @@ boolean Plugin_006_bmp085_begin()
 uint16_t Plugin_006_bmp085_readRawTemperature(void)
 /*********************************************************************/
 {
-  Plugin_006_bmp085_write8(BMP085_CONTROL, BMP085_READTEMPCMD);
+  I2C_write8_reg(BMP085_I2CADDR, BMP085_CONTROL, BMP085_READTEMPCMD);
   delay(5);
-  return Plugin_006_bmp085_read16(BMP085_TEMPDATA);
+  return I2C_read16_reg(BMP085_I2CADDR, BMP085_TEMPDATA);
 }
 
 /*********************************************************************/
@@ -157,13 +157,13 @@ uint32_t Plugin_006_bmp085_readRawPressure(void)
 {
   uint32_t raw;
 
-  Plugin_006_bmp085_write8(BMP085_CONTROL, BMP085_READPRESSURECMD + (oversampling << 6));
+  I2C_write8_reg(BMP085_I2CADDR, BMP085_CONTROL, BMP085_READPRESSURECMD + (oversampling << 6));
 
   delay(26);
 
-  raw = Plugin_006_bmp085_read16(BMP085_PRESSUREDATA);
+  raw = I2C_read16_reg(BMP085_I2CADDR, BMP085_PRESSUREDATA);
   raw <<= 8;
-  raw |= Plugin_006_bmp085_read8(BMP085_PRESSUREDATA + 2);
+  raw |= I2C_read8_reg(BMP085_I2CADDR, BMP085_PRESSUREDATA + 2);
   raw >>= (8 - oversampling);
 
   return raw;
@@ -230,57 +230,6 @@ float Plugin_006_bmp085_readTemperature(void)
   temp /= 10;
 
   return temp;
-}
-
-/*********************************************************************/
-uint8_t Plugin_006_bmp085_read8(uint8_t a)
-/*********************************************************************/
-{
-  uint8_t ret;
-
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
-  Wire.write(a); // sends register address to read from
-  Wire.endTransmission(); // end transmission
-
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
-  Wire.requestFrom(BMP085_I2CADDR, 1);// send data n-bytes read
-  ret = Wire.read(); // receive DATA
-  Wire.endTransmission(); // end transmission
-
-  return ret;
-}
-
-/*********************************************************************/
-uint16_t Plugin_006_bmp085_read16(uint8_t a)
-/*********************************************************************/
-{
-  uint16_t ret;
-
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
-  Wire.write(a); // sends register address to read from
-  Wire.endTransmission(); // end transmission
-
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
-  Wire.requestFrom(BMP085_I2CADDR, 2);// send data n-bytes read
-  ret = Wire.read(); // receive DATA
-  ret <<= 8;
-  ret |= Wire.read(); // receive DATA
-  Wire.endTransmission(); // end transmission
-
-  return ret;
-}
-
-/*********************************************************************/
-boolean Plugin_006_bmp085_write8(uint8_t a, uint8_t d)
-/*********************************************************************/
-{
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
-  Wire.write(a); // sends register address to read from
-  Wire.write(d);  // write data
-  if(Wire.endTransmission() != 0)
-    return false;
-
-  return true;
 }
 
 /*********************************************************************/

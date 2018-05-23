@@ -350,10 +350,7 @@ void _P045_getMotion6(uint8_t devAddr, int16_t* ax, int16_t* ay, int16_t* az, in
     // From I2Cdev::readBytes and MPU6050::getMotion6, both by Jeff Rowberg
     uint8_t buffer[14];
     uint8_t count = 0;
-    Wire.beginTransmission(devAddr);
-    Wire.write(MPU6050_RA_ACCEL_XOUT_H);
-    Wire.endTransmission();
-    Wire.beginTransmission(devAddr);
+    I2C_write8(devAddr, MPU6050_RA_ACCEL_XOUT_H);
     Wire.requestFrom(devAddr, (uint8_t)14);
     for (; Wire.available(); count++) {
         buffer[count] = Wire.read();
@@ -382,22 +379,15 @@ void _P045_writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t
     // 10101111 original value (sample)
     // 10100011 original & ~mask
     // 10101011 masked | value
-    uint8_t b;
-    Wire.beginTransmission(devAddr);
-    Wire.write(regAddr);
-    Wire.endTransmission();
-    Wire.requestFrom(devAddr, uint8_t(1));
-    if (Wire.available()) {
-      b = Wire.read();
+    bool is_ok = true;
+    uint8_t b = I2C_read8_reg(devAddr, regAddr, &is_ok);
+    if (is_ok) {
       uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
       data <<= (bitStart - length + 1); // shift data into correct position
       data &= mask; // zero all non-important bits in data
       b &= ~(mask); // zero all important bits in existing byte
       b |= data; // combine data with existing byte
-      Wire.beginTransmission(devAddr);
-      Wire.write(regAddr);
-      Wire.write(b);
-      Wire.endTransmission();
+      I2C_write8_reg(devAddr, regAddr, b);
     }
 }
 #endif // USES_P045
