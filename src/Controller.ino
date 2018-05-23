@@ -136,13 +136,37 @@ bool MQTTConnect(int controller_idx)
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = F("ESPClient_");
-  clientid += WiFi.macAddress();
+  String clientid;
+  if(Settings.MQTTUseUnitNameAsClientId){
+    clientid = Settings.Name;
+    clientid += F("_");
+    clientid += Settings.Unit;
+  }
+  else{
+    clientid = F("ESPClient_");
+    clientid += WiFi.macAddress();
+  }
 
-  String LWTTopic = ControllerSettings.Subscribe;
+  String LWTTopic = ControllerSettings.MQTTLwtTopic;
+  if(LWTTopic.length() == 0)
+  {
+    LWTTopic = ControllerSettings.Subscribe;
+    LWTTopic += F("/LWT");
+  }
   LWTTopic.replace(F("/#"), F("/status"));
   parseSystemVariables(LWTTopic, false);
-  LWTTopic += F("/LWT"); // Extend the topic for status updates of connected/disconnected status.
+
+  String LWTMessageConnect = ControllerSettings.LWTMessageConnect;
+  if(LWTMessageConnect.length() == 0){
+    LWTMessageConnect = DEFAULT_MQTT_LWT_CONNECT_MESSAGE;
+  }
+  parseSystemVariables(LWTMessageConnect, false);
+
+  String LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
+  if(LWTMessageDisconnect.length() == 0){
+    LWTMessageDisconnect = DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE;
+  }
+  parseSystemVariables(LWTMessageDisconnect, false);
 
   boolean MQTTresult = false;
   uint8_t willQos = 0;
@@ -150,9 +174,9 @@ bool MQTTConnect(int controller_idx)
 
   if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
     MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx],
-                                    LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   } else {
-    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   }
   yield();
 
@@ -171,7 +195,7 @@ bool MQTTConnect(int controller_idx)
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
+  if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), 1)) {
     updateMQTTclient_connected();
     statusLED(true);
     mqtt_reconnect_count = 0;

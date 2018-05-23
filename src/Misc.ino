@@ -495,6 +495,7 @@ String BuildFixes()
     Settings.UseRTOSMultitasking = false;
     Settings.Pin_Reset = -1;
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
     Settings.StructSize = sizeof(Settings);
   }
 
@@ -1195,6 +1196,7 @@ void ResetFactory(void)
 
 	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
 	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
+	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
 
     Settings.UseNTP			= DEFAULT_USE_NTP;
 	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
@@ -1235,6 +1237,9 @@ void ResetFactory(void)
   ControllerSettingsStruct ControllerSettings;
   strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
   strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
+  strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
+  strcpy_P(ControllerSettings.LWTMessageConnect, PSTR(DEFAULT_MQTT_LWT_CONNECT_MESSAGE));
+  strcpy_P(ControllerSettings.LWTMessageDisconnect, PSTR(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE));
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
   ControllerSettings.HostName[0]=0;
   ControllerSettings.Port = DEFAULT_PORT;

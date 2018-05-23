@@ -74,6 +74,10 @@
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
+#define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
+#define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
+#define DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID   0
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
@@ -232,6 +236,9 @@
 #define CONTROLLER_PASS                     5
 #define CONTROLLER_SUBSCRIBE                6
 #define CONTROLLER_PUBLISH                  7
+#define CONTROLLER_LWT_TOPIC                8
+#define CONTROLLER_LWT_CONNECT_MESSAGE      9
+#define CONTROLLER_LWT_DISCONNECT_MESSAGE  10
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -626,7 +633,7 @@ struct SettingsStruct
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
     DST_Start(0), DST_End(0), UseRTOSMultitasking(false), Pin_Reset(-1),
-    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0)
+    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0), MQTTUseUnitNameAsClientId(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -734,6 +741,7 @@ struct SettingsStruct
   int8_t        Pin_Reset;
   byte          SyslogFacility;
   uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
+  boolean       MQTTUseUnitNameAsClientId;
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
@@ -755,6 +763,9 @@ struct ControllerSettingsStruct
     memset(HostName, 0, sizeof(HostName));
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
+    memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
+    memset(LWTMessageConnect, 0, sizeof(LWTMessageConnect));
+    memset(LWTMessageDisconnect, 0, sizeof(LWTMessageDisconnect));
   }
   boolean       UseDNS;
   byte          IP[4];
@@ -762,6 +773,9 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+  char          MQTTLwtTopic[129];
+  char          LWTMessageConnect[129];
+  char          LWTMessageDisconnect[129];
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
@@ -943,6 +957,8 @@ struct EventStruct
   String String1;
   String String2;
   String String3;
+  String String4;
+  String String5;
   byte *Data;
 };
 
