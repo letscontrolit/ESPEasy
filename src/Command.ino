@@ -186,11 +186,15 @@ void ExecuteCommand(byte source, const char *Line)
   int Par1 = 0;
   int Par2 = 0;
   int Par3 = 0;
+  int Par4 = 0;
+  int Par5 = 0;
 
   GetArgv(Line, cmd, 1);
   if (GetArgv(Line, TmpStr1, 2)) Par1 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 4)) Par3 = str2int(TmpStr1);
+  if (GetArgv(Line, TmpStr1, 5)) Par4 = str2int(TmpStr1);
+  if (GetArgv(Line, TmpStr1, 6)) Par5 = str2int(TmpStr1);
 
   const Command cmd_enum = commandStringToEnum(cmd);
   switch (cmd_enum) {
