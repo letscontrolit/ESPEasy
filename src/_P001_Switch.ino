@@ -69,13 +69,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         options[1] = F("Dimmer");
         int optionValues[2] = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const byte switchtype = P001_getSwitchType(event);
-        addFormSelector(string, F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
+        addFormSelector(F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
           char tmpString[128];
           sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-          string += tmpString;
+          addHtml(tmpString);
         }
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -84,9 +84,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
         int buttonOptionValues[3] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH};
-        addFormSelector(string, F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
-        addFormCheckBox(string, F("Send Boot state"),F("plugin_001_boot"),
+        addFormCheckBox(F("Send Boot state"),F("plugin_001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
@@ -149,7 +149,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
-      
+
     case PLUGIN_UNCONDITIONAL_POLL:
       {
         // port monitoring, on request by rule command
@@ -389,7 +389,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         }
 
         // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
-        #ifdef PLUGIN_BUILD_TESTING
         //play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more info.
         if (command == F("rtttl"))
         {
@@ -399,7 +398,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             pinMode(event->Par1, OUTPUT);
             // char sng[1024] ="";
             String tmpString=string;
-            tmpString.replace("-","#");
+            tmpString.replace('-', '#');
             // tmpString.toCharArray(sng, 1024);
             play_rtttl(event->Par1, tmpString.c_str());
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
@@ -423,7 +422,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
-        #endif
 
         break;
       }

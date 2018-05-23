@@ -47,16 +47,16 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       {
         // char tmpString[128];
 
-        string += F("<TR><TD>Check Task:<TD>");
-        addTaskSelect(string, "plugin_021_task", Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addHtml(F("<TR><TD>Check Task:<TD>"));
+        addTaskSelect(F("plugin_021_task"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         LoadTaskSettings(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // we need to load the values from another task for selection!
-        string += F("<TR><TD>Check Value:<TD>");
-        addTaskValueSelect(string, "plugin_021_value", Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addHtml(F("<TR><TD>Check Value:<TD>"));
+        addTaskValueSelect(F("plugin_021_value"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-      	addFormTextBox(string, F("Set Level"), F("plugin_021_setvalue"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 8);
+      	addFormTextBox(F("Set Level"), F("plugin_021_setvalue"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 8);
 
-      	addFormTextBox(string, F("Hysteresis"), F("plugin_021_hyst"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), 8);
+      	addFormTextBox(F("Hysteresis"), F("plugin_021_hyst"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), 8);
 
         LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
         success = true;

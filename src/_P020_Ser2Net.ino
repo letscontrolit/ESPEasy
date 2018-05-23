@@ -46,9 +46,9 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("TCP Port"), F("plugin_020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(string, F("Baud Rate"), F("plugin_020_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(string, F("Data bits"), F("plugin_020_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("plugin_020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("plugin_020_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("plugin_020_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -59,13 +59,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         optionValues[0] = 0;
         optionValues[1] = 2;
         optionValues[2] = 3;
-        addFormSelector(string, F("Parity"), F("plugin_020_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("plugin_020_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(string, F("Stop bits"), F("plugin_020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("plugin_020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-      	addFormPinSelect(string, F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(string, F("RX Receive Timeout (mSec)"), F("plugin_020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("plugin_020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -73,7 +73,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         options2[0] = F("None");
         options2[1] = F("Generic");
         options2[2] = F("RFLink");
-        addFormSelector(string, F("Event processing"), F("plugin_020_events"), 3, options2, NULL, choice2);
+        addFormSelector(F("Event processing"), F("plugin_020_events"), 3, options2, NULL, choice2);
 
         success = true;
         break;
@@ -173,6 +173,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             if (connectionState == 1) // there was a client connected before...
             {
               connectionState = 0;
+              // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+              ser2netClient = WiFiClient();
               addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
             }
 
@@ -236,7 +238,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Settings.UseRules)
         {
           String message = (char*)serial_buf;
-          int NewLinePos = message.indexOf("\r\n");
+          int NewLinePos = message.indexOf(F("\r\n"));
           if (NewLinePos > 0)
             message = message.substring(0, NewLinePos);
           String eventString = "";

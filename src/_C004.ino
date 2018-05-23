@@ -1,3 +1,4 @@
+#ifdef USES_C004
 //#######################################################################################################
 //########################### Controller Plugin 004: ThingSpeak #########################################
 //#######################################################################################################
@@ -75,7 +76,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           postDataStr += F("&field");
           postDataStr += event->idx + x;
           postDataStr += "=";
-          postDataStr += formatUserVar(event, x);
+          postDataStr += formatUserVarNoCheck(event, x);
         }
         String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
         if (ControllerSettings.UseDNS)
@@ -127,3 +128,4 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif

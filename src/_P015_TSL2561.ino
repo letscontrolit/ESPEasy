@@ -346,7 +346,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         optionValues1[0] = TSL2561_ADDR;
         optionValues1[1] = TSL2561_ADDR_1;
         optionValues1[2] = TSL2561_ADDR_0;
-				addFormSelectorI2C(string, F("plugin_015_tsl2561_i2c"), 3, optionValues1, choice1);
+				addFormSelectorI2C(F("plugin_015_tsl2561_i2c"), 3, optionValues1, choice1);
 
         #define TSL2561_INTEGRATION_OPTION 3
 
@@ -359,12 +359,12 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         options2[1] = F("101 ms");
         optionValues2[2] = 0x02;
         options2[2] = F("402 ms");
-				addFormSelector(string, F("Integration time"), F("plugin_015_integration"), TSL2561_INTEGRATION_OPTION, options2, optionValues2, choice2);
+				addFormSelector(F("Integration time"), F("plugin_015_integration"), TSL2561_INTEGRATION_OPTION, options2, optionValues2, choice2);
 
-        addFormCheckBox(string, F("Send sensor to sleep:"), F("plugin_015_sleep"),
+        addFormCheckBox(F("Send sensor to sleep:"), F("plugin_015_sleep"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-        addFormCheckBox(string, F("Enable 16x Gain:"), F("plugin_015_gain"),
+        addFormCheckBox(F("Enable 16x Gain:"), F("plugin_015_gain"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;

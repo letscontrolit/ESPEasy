@@ -96,7 +96,9 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 void setup()
 {
-
+  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  WiFi.setAutoReconnect(false);
+  setWifiMode(WIFI_OFF);
 
   checkRAM(F("setup"));
   #if defined(ESP32)
@@ -110,7 +112,6 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
-
 #if defined(ESP32)
   WiFi.onEvent((WiFiEventFullCb)WiFiEvent);
 #else
@@ -133,6 +134,9 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
+  log += F(" (");
+  log += getSystemLibraryString();
+  log += F(")");
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -168,15 +172,13 @@ void setup()
   saveToRTC();
 
   addLog(LOG_LEVEL_INFO, log);
-  WiFi.setAutoReconnect(false);
 
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+
+//  setWifiMode(WIFI_STA);
   checkRuleSets();
-  if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
-  }
 
   ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
 
@@ -233,13 +235,27 @@ void setup()
   PluginInit();
   CPluginInit();
   NPluginInit();
+  log = F("INFO : Plugins: ");
+  log += deviceCount + 1;
+  log += getPluginDescriptionString();
+  log += F(" (");
+  log += getSystemLibraryString();
+  log += F(")");
+  addLog(LOG_LEVEL_INFO, log);
+
+  if (deviceCount + 1 >= PLUGIN_MAX) {
+    addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+  }
+
   if (Settings.UseRules)
   {
     String event = F("System#Wake");
     rulesProcessing(event);
   }
 
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  if (!selectValidWiFiSettings()) {
+    wifiSetup = true;
+  }
 /*
   // FIXME TD-er:
   // Async scanning for wifi doesn't work yet like it should.
@@ -248,13 +264,11 @@ void setup()
     WifiScanAsync();
   }
 */
-  setWifiState(WifiTryConnect);
+  WiFiConnectRelaxed();
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
   #endif
-
-  WebServerInit();
 
   #ifdef FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
@@ -292,6 +306,12 @@ void setup()
     }
   #endif
 
+//  #ifndef ESP32
+//  connectionCheck.attach(30, connectionCheckHandler);
+//  #endif
+  timer20ms = millis();
+  timer100ms = millis();
+  timer1s = millis();
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -345,20 +365,22 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
 \*********************************************************************************************/
 void loop()
 {
-  //checkRAM(F("loop"));
+  if(MainLoopCall_ptr)
+      MainLoopCall_ptr();
+
   loopCounter++;
 
   if (wifiSetupConnect)
   {
     // try to connect for setup wizard
-    setWifiState(WifiCredentialsChanged);
+    WiFiConnectRelaxed();
     wifiSetupConnect = false;
   }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
     if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();
-  } else if (WiFi.status() != WL_CONNECTED) {
+  } else if (!WiFiConnected()) {
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
 //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
@@ -457,8 +479,9 @@ void updateMQTTclient_connected() {
     }
   }
   if (!MQTTclient_connected) {
-    if (timermqtt_interval < 2000) {
-      timermqtt_interval += 250;
+    // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356
+    if (timermqtt_interval < 30000) {
+      timermqtt_interval += 5000;
     }
   } else {
     timermqtt_interval = 250;
@@ -472,10 +495,10 @@ void updateMQTTclient_connected() {
 
 void run50TimesPerSecond()
 {
-  timer20ms = millis() + 20;
+  setNextTimeInterval(timer20ms, 20);
+  unsigned long start = micros();
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
-
-  // statusLED(false);
+  elapsed50ps += micros() - start;
 }
 
 /*********************************************************************************************\
@@ -483,16 +506,18 @@ void run50TimesPerSecond()
 \*********************************************************************************************/
 void run10TimesPerSecond()
 {
-  start = micros();
-  timer100ms = millis() + 100;
+  setNextTimeInterval(timer100ms, 100);
+  unsigned long start = micros();
   PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+  elapsed10ps += micros() - start;
+  start = micros();
   PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+  elapsed10psU += micros() - start;
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
     eventBuffer = "";
   }
-  elapsed = micros() - start;
   #ifndef USE_RTOS_MULTITASKING
     WebServer.handleClient();
   #endif
@@ -504,6 +529,7 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  setNextTimeInterval(timer1s, 1000);
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
   {
@@ -513,8 +539,6 @@ void runOncePerSecond()
     String log = F("SYS  : Reset 24h counters");
     addLog(LOG_LEVEL_INFO, log);
   }
-
-  timer1s = millis() + 1000;
 
   checkSensors();
 
@@ -550,15 +574,15 @@ void runOncePerSecond()
   if (Settings.UseNTP)
     checkTime();
 
-  unsigned long timer = micros();
+  unsigned long start = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
+  unsigned long elapsed = micros() - start;
 
   checkSystemTimers();
 
   if (Settings.UseRules)
     rulesTimers();
 
-  timer = micros() - timer;
 
   if (SecuritySettings.Password[0] != 0)
   {
@@ -576,12 +600,20 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
-  if (Settings.SerialLogLevel == 5)
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
   {
-    Serial.print(F("10 ps:"));
+    Serial.print(F("Plugin calls: 50 ps:"));
+    Serial.print(elapsed50ps);
+    Serial.print(F(" uS, 10 ps:"));
+    Serial.print(elapsed10ps);
+    Serial.print(F(" uS, 10 psU:"));
+    Serial.print(elapsed10psU);
+    Serial.print(F(" uS, 1 ps:"));
     Serial.print(elapsed);
-    Serial.print(F(" uS  1 ps:"));
-    Serial.println(timer);
+    Serial.println(F(" uS"));
+    elapsed50ps=0;
+    elapsed10ps=0;
+    elapsed10psU=0;
   }
   checkResetFactoryPin();
 }
@@ -606,11 +638,6 @@ void runEach30Seconds()
   addLog(LOG_LEVEL_INFO, log);
   sendSysInfoUDP(1);
   refreshNodeList();
-
-  int enabledMqttController = firstEnabledMQTTController();
-  if (enabledMqttController >= 0) {
-    MQTTCheck(enabledMqttController);
-  }
 
   #if defined(ESP8266)
   if (Settings.UseSSDP)
@@ -646,7 +673,7 @@ void checkSensors()
         (isDeepSleep || timeOutReached(timerSensor[x]))
     )
     {
-      timerSensor[x] = millis() + Settings.TaskDeviceTimer[x] * 1000;
+      setNextTimeInterval(timerSensor[x], Settings.TaskDeviceTimer[x] * 1000);
       if (timerSensor[x] == 0) // small fix if result is 0, else timer will be stopped...
         timerSensor[x] = 1;
       SensorSendTask(x);
@@ -724,38 +751,60 @@ void SensorSendTask(byte TaskIndex)
 /*********************************************************************************************\
  * set global system timer
 \*********************************************************************************************/
-void setSystemTimer(unsigned long timer, byte plugin, byte Par1, byte Par2, byte Par3)
+void setSystemTimer(unsigned long timer, byte plugin, int Par1, int Par2, int Par3)
+{
+  setSystemTimer(timer, plugin, -1, Par1, Par2, Par3, 0, 0);
+}
+
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3)
+{
+  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, 0, 0);
+}
+
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4)
+{
+  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, Par4, 0);
+}
+
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // first check if a timer is not already running for this request
-  boolean reUse = false;
+  byte firstAvailable = SYSTEM_TIMER_MAX;
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
+  {
     if (systemTimers[x].timer != 0)
     {
-      if ((systemTimers[x].plugin == plugin) && (systemTimers[x].Par1 == Par1))
-      {
-        systemTimers[x].timer = millis() + timer;
-        reUse = true;
+      if ((systemTimers[x].plugin == plugin) && systemTimers[x].TaskIndex == taskIndex && (systemTimers[x].Par1 == Par1))
+      {        
+        firstAvailable = x;
         break;
       }
     }
-
-  if (!reUse)
-  {
-    // find a new free timer slot...
-    for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-      if (systemTimers[x].timer == 0)
-      {
-        systemTimers[x].timer = millis() + timer;
-        systemTimers[x].plugin = plugin;
-        systemTimers[x].Par1 = Par1;
-        systemTimers[x].Par2 = Par2;
-        systemTimers[x].Par3 = Par3;
-        break;
-      }
+    else if(firstAvailable == SYSTEM_TIMER_MAX)
+    {
+      firstAvailable = x;
+    }
   }
+  if (firstAvailable == SYSTEM_TIMER_MAX )
+  {
+    addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
+  }
+  else
+  {    
+    systemTimers[firstAvailable].plugin = plugin;
+    systemTimers[firstAvailable].TaskIndex = taskIndex;
+    systemTimers[firstAvailable].Par1 = Par1;
+    systemTimers[firstAvailable].Par2 = Par2;
+    systemTimers[firstAvailable].Par3 = Par3;
+    systemTimers[firstAvailable].Par4 = Par4;
+    systemTimers[firstAvailable].Par5 = Par5;
+    systemTimers[firstAvailable].timer = timer > 0
+      ? millis() + timer
+      : 0;
+  }
+  
 }
-
 
 //EDWIN: this function seems to be unused?
 /*********************************************************************************************\
@@ -784,13 +833,16 @@ void checkSystemTimers()
       if (timeOutReached(systemTimers[x].timer))
       {
         struct EventStruct TempEvent;
+        TempEvent.TaskIndex = systemTimers[x].TaskIndex;
         TempEvent.Par1 = systemTimers[x].Par1;
         TempEvent.Par2 = systemTimers[x].Par2;
         TempEvent.Par3 = systemTimers[x].Par3;
+        TempEvent.Par4 = systemTimers[x].Par4;
+        TempEvent.Par5 = systemTimers[x].Par5;
+        systemTimers[x].timer = 0;
         for (byte y = 0; y < PLUGIN_MAX; y++)
           if (Plugin_id[y] == systemTimers[x].plugin)
             Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
-        systemTimers[x].timer = 0;
       }
     }
 

@@ -1,3 +1,4 @@
+#ifdef USES_C003
 //#######################################################################################################
 //########################### Controller Plugin 003: Nodo Telnet  #######################################
 //#######################################################################################################
@@ -54,7 +55,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         String url = F("variableset ");
         url += event->idx;
         url += ",";
-        url += formatUserVar(event, 0);
+        url += formatUserVarNoCheck(event, 0);
         url += "\n";
 
         // strcpy_P(log, PSTR("TELNT: Sending enter"));
@@ -107,3 +108,4 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif

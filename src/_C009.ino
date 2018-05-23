@@ -1,3 +1,4 @@
+#ifdef USES_C009
 //#######################################################################################################
 //########################### Controller Plugin 009: FHEM HTTP ##########################################
 //#######################################################################################################
@@ -79,8 +80,8 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         ESP[F("unit")] = Settings.Unit;
         ESP[F("version")] = Settings.Version;
         ESP[F("build")] = Settings.Build;
-        ESP[F("build_notes")] = BUILD_NOTES;
-        ESP[F("build_git")] = BUILD_GIT;
+        ESP[F("build_notes")] = String(F(BUILD_NOTES));
+        ESP[F("build_git")] = String(F(BUILD_GIT));
         ESP[F("node_type_id")] = NODE_TYPE_ID;
         ESP[F("sleep")] = Settings.deepSleep;
 
@@ -102,13 +103,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           val[F("deviceName")] = ExtraTaskSettings.TaskDeviceName;
           val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
           val[F("type")]       = event->sensorType;
-
-          if (event->sensorType == SENSOR_TYPE_LONG) {
-            val[F("value")] = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-          }
-          else { // All other sensor types
-            val[F("value")] = formatUserVar(event, x);
-          }
+          val[F("value")]      = formatUserVarNoCheck(event, x);
         }
 
         // Create json buffer
@@ -197,3 +192,4 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
   client.flush();
   client.stop();
 }
+#endif

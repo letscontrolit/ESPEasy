@@ -18,13 +18,16 @@ for ENV in \
   dev_ESP8266_4096\
   dev_ESP8285_1024\
   dev_ESP8266PUYA_1024\
-  dev_ESP8266PUYA_1024_VCC;\
+  dev_ESP8266PUYA_1024_VCC\
+  hard_SONOFF_POW\
+  esp32dev;\
 do
   echo
   echo "### Deploying environment $ENV for version $VERSION"
-  BIN=.pioenvs/$ENV/firmware.bin
+  BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+  cp .pioenvs/${ENV}/firmware.bin $BIN
   python2 crc2.py $BIN
-  cp $BIN dist/"ESP_Easy_$VERSION""_$ENV.bin"
+  mv $BIN "dist/ESP_Easy_${VERSION}_${ENV}.bin"
 done
 
 

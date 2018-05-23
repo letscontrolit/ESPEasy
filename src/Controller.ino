@@ -89,6 +89,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   strncpy(c_payload,(char*)b_payload,length);
   c_payload[length] = 0;
 
+/*
   String log;
   log=F("MQTT : Topic: ");
   log+=c_topic;
@@ -97,6 +98,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   log=F("MQTT : Payload: ");
   log+=c_payload;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
+  */
 
   // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
   // addLog(LOG_LEVEL_DEBUG, log);
@@ -116,6 +118,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 \*********************************************************************************************/
 bool MQTTConnect(int controller_idx)
 {
+  ++mqtt_reconnect_count;
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (!ControllerSettings.checkHostReachable(true))
@@ -124,6 +127,7 @@ bool MQTTConnect(int controller_idx)
     MQTTclient.disconnect();
     updateMQTTclient_connected();
   }
+  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -132,13 +136,37 @@ bool MQTTConnect(int controller_idx)
   MQTTclient.setCallback(callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = F("ESPClient_");
-  clientid += WiFi.macAddress();
+  String clientid;
+  if(Settings.MQTTUseUnitNameAsClientId){
+    clientid = Settings.Name;
+    clientid += F("_");
+    clientid += Settings.Unit;
+  }
+  else{
+    clientid = F("ESPClient_");
+    clientid += WiFi.macAddress();
+  }
 
-  String LWTTopic = ControllerSettings.Subscribe;
+  String LWTTopic = ControllerSettings.MQTTLwtTopic;
+  if(LWTTopic.length() == 0)
+  {
+    LWTTopic = ControllerSettings.Subscribe;
+    LWTTopic += F("/LWT");
+  }
   LWTTopic.replace(F("/#"), F("/status"));
   parseSystemVariables(LWTTopic, false);
-  LWTTopic += F("/LWT"); // Extend the topic for status updates of connected/disconnected status.
+
+  String LWTMessageConnect = ControllerSettings.LWTMessageConnect;
+  if(LWTMessageConnect.length() == 0){
+    LWTMessageConnect = DEFAULT_MQTT_LWT_CONNECT_MESSAGE;
+  }
+  parseSystemVariables(LWTMessageConnect, false);
+
+  String LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
+  if(LWTMessageDisconnect.length() == 0){
+    LWTMessageDisconnect = DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE;
+  }
+  parseSystemVariables(LWTMessageDisconnect, false);
 
   boolean MQTTresult = false;
   uint8_t willQos = 0;
@@ -146,9 +174,9 @@ bool MQTTConnect(int controller_idx)
 
   if ((SecuritySettings.ControllerUser[controller_idx] != 0) && (SecuritySettings.ControllerPassword[controller_idx] != 0)) {
     MQTTresult = MQTTclient.connect(clientid.c_str(), SecuritySettings.ControllerUser[controller_idx], SecuritySettings.ControllerPassword[controller_idx],
-                                    LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+                                    LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   } else {
-    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, "Connection Lost");
+    MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   }
   yield();
 
@@ -167,9 +195,10 @@ bool MQTTConnect(int controller_idx)
   log += subscribeTo;
   addLog(LOG_LEVEL_INFO, log);
 
-  if (MQTTclient.publish(LWTTopic.c_str(), "Connected", 1)) {
+  if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), 1)) {
     updateMQTTclient_connected();
     statusLED(true);
+    mqtt_reconnect_count = 0;
     return true; // end loop if succesfull
   }
   return false;
@@ -228,7 +257,7 @@ void SendStatus(byte source, String status)
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
   if (MQTTclient.publish(topic, payload, retained)) {
-    timermqtt = millis(); // Make sure the MQTT is being processed as soon as possible.
+    timermqtt = millis() + 10; // Make sure the MQTT is being processed as soon as possible.
     return true;
   }
   addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));

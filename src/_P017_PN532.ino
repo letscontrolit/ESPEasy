@@ -67,7 +67,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormPinSelect(string, F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+      	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
         success = true;
         break;
       }

@@ -1,3 +1,4 @@
+<!--- If you self compile, please state this and PLEASE try to ONLY REPORT ISSUES WITH OFFICIAL BUILDS!  --->
 <!--- NOTE: This is not a support forum! For questions and support go here: --->
 <!--- https://www.letscontrolit.com/forum/viewforum.php?f=1 --->
 <!--- Remove topics that are not applicable to your feature request of issue --->
@@ -28,6 +29,7 @@ YOUR TEXT GOES HERE
 Hardware:
 
 <!--- You should also provide links to hardware pages etc where we can find more info  --->
+<!--- If you self compile, please state this and PLEASE try to ONLY REPORT ISSUES WITH OFFICIAL BUILDS!  --->
 ESP Easy version: 
 
 <!--- In order to have a better readablity of your issue then you should place screenshots here  --->

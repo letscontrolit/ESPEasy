@@ -5,10 +5,10 @@ import struct
 import md5
 import os
 MD5DUMMY      = "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere..." #48 chars
-FILENAMEDUMMY = "ThisIsTheDummyPlaceHolderForTheBinaryFilename..." #48 chars
+FILENAMEDUMMY = "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames" #64 chars
 
 MemorySegmentStart,MemorySegmentEnd,MemoryContent=[],[],[]
- 
+
 ##################################################################
 # this subroutine shows the segments of a  part
 ##################################################################
@@ -18,7 +18,7 @@ def showSegments (fileContent,offset):
     herestr =""
     herestr2 =""
     MemorySegmentStart.append(struct.pack("I",header[0]))
-    MemorySegmentEnd.append(struct.pack("I",header[0]+header[1])) 
+    MemorySegmentEnd.append(struct.pack("I",header[0]+header[1]))
     MemoryContent.append(fileContent[offset+8:offset+8+header[1]])
     if  fileContent.find( MD5DUMMY, offset+8, offset+8+header[1]) >0 :
         herestr= " <-- CRC is here."
@@ -42,7 +42,7 @@ def showParts(fileContent, offset):
     return nextSegmentOffset
 
 ##################################################################
-# MAIN 
+# MAIN
 ##################################################################
 
 #if len(sys.argv) !=2 :
@@ -71,46 +71,46 @@ includeStr = "hash includes segments:"
 # 4: RAM
 
 for i in (1,2 ):     # use only stable segments, must be 4 in total. We use 2.
-    startArray =startArray + MemorySegmentStart[i] 
-    endArray =  endArray   + MemorySegmentEnd[i] 
+    startArray =startArray + MemorySegmentStart[i]
+    endArray =  endArray   + MemorySegmentEnd[i]
     hashString =hashString + MemoryContent[i]
     with open(FileName+str(i), mode='wb') as file: # b is important -> binary
       file.write(MemoryContent[i])
     includeStr = includeStr +" "+ str(i)
 print (includeStr)
-# IMPORTANT: pad array with zeros if you use only 3 segments (see above)    
-while len(startArray) < 16 : 
-	startArray =startArray + struct.pack("I",0) 
-	endArray =  endArray   + struct.pack("I",0) 
-# debug print (binascii.hexlify(startArray)) 
+# IMPORTANT: pad array with zeros if you use only 3 segments (see above)
+while len(startArray) < 16 :
+	startArray =startArray + struct.pack("I",0)
+	endArray =  endArray   + struct.pack("I",0)
+# debug print (binascii.hexlify(startArray))
 # debug print (binascii.hexlify(endArray))
 if (len(endArray) + len (startArray)) != 32 :
-    print("ERROR: please make sure you add / remove padding if you change the semgents.") 
+    print("ERROR: please make sure you add / remove padding if you change the semgents.")
 
 BinaryFileName = "";
 if  fileContent.find( FILENAMEDUMMY) < 0:
     print("ERROR: FILENAMEDUMMY dummy not found in binary")
 else:
 	BinaryFileName=os.path.basename(FileName) +"\0"
-	if len(BinaryFileName) >48:								# check that filename is <48 chars
-		BinaryFileName=BinaryFileName[0:48]					# truncate if necessary. 49th char in ESP is zero already
+	if len(BinaryFileName) >64:								# check that filename is <48 chars
+		BinaryFileName=BinaryFileName[0:64]					# truncate if necessary. 49th char in ESP is zero already
 	else:
-		BinaryFileName= BinaryFileName.ljust(48,'\0');		# pad with zeros. 	
-			
+		BinaryFileName= BinaryFileName.ljust(64,'\0');		# pad with zeros.
+
 
 if  fileContent.find( MD5DUMMY) < 0:
     print("ERROR: MD5 dummy not found in binary")
 else:
-    hashString=hashString.replace (MD5DUMMY,"",1) 
+    hashString=hashString.replace (MD5DUMMY,"",1)
     m = md5.new()
     m.update (hashString) #use segment 1
     md5hash = m.digest()
     print("MD5 hash: "+ m.hexdigest())
     print("\nwriting output file:\n" + FileName)
-	
+
     fileContent=fileContent.replace(MD5DUMMY,md5hash+startArray+endArray)
     fileContent=fileContent.replace(FILENAMEDUMMY,BinaryFileName)
 
     with open(FileName, mode='wb') as file: # b is important -> binary
       file.write(fileContent)
-#k=input("press close to exit") 
+#k=input("press close to exit")

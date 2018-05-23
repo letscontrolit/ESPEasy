@@ -10,7 +10,6 @@
   DevicePin1 - RX on ESP, TX on SDS
 */
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
@@ -63,11 +62,11 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         if (Plugin_056_hasTxPin(event)) {
-          addFormNumericBox(string, F("Sleep time"), F("plugin_056_sleeptime"),
+          addFormNumericBox(F("Sleep time"), F("plugin_056_sleeptime"),
                             Settings.TaskDevicePluginConfig[event->TaskIndex][0],
                             0, 30);
-          addUnit(string, F("Minutes"));
-          addFormNote(string, F("0 = continous, 1..30 = Work 30 seconds and sleep n*60-30 seconds"));
+          addUnit(F("Minutes"));
+          addFormNote(F("0 = continous, 1..30 = Work 30 seconds and sleep n*60-30 seconds"));
         }
         break;
       }
@@ -204,5 +203,4 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   addLog(LOG_LEVEL_INFO, log);
 }
 
-#endif   //PLUGIN_BUILD_TESTING
 #endif // USES_P056

@@ -1,4 +1,593 @@
 -------------------------------------------------
+Changes in release mega-20180522 (since mega-20180519)
+-------------------------------------------------
+
+Release date: Tue May 22 04:00:14 CEST 2018
+
+Daniel Tedenljung (1):
+      Add note for PulseCounter
+
+Plebs (1):
+      Added 10 new commands for serial port configuration
+
+TD-er (1):
+      [P077] CSE7766 - Energy (Sonoff S31 and Sonoff Pow R2)
+
+stefan (1):
+      Add CSE7766 for Sonoff POW R2 to plugin_sets
+
+
+-------------------------------------------------
+Changes in release mega-20180519 (since mega-20180518)
+-------------------------------------------------
+
+Release date: Sat May 19 04:00:07 CEST 2018
+
+Grovkillen (1):
+      [tools page] added a function for wide buttons
+
+
+-------------------------------------------------
+Changes in release mega-20180518 (since mega-20180517)
+-------------------------------------------------
+
+Release date: Fri May 18 04:00:07 CEST 2018
+
+Grovkillen (3):
+      [JavaScript] made static variables "const"
+      [tools page] wider buttons
+      [tools page] Center text, factory reset is red
+
+TD-er (1):
+      [#1431] Add DataAcquisition to /json and reduce json for sensor updates
+
+
+-------------------------------------------------
+Changes in release mega-20180517 (since mega-20180516)
+-------------------------------------------------
+
+Release date: Thu May 17 04:00:08 CEST 2018
+
+Gijs Noorlander (2):
+      Update _C012.ino
+      Update WebServer.ino
+
+TD-er (1):
+      [Flash strings] Store more strings into flash to keep memory usage low
+
+
+-------------------------------------------------
+Changes in release mega-20180516 (since mega-20180515)
+-------------------------------------------------
+
+Release date: Wed May 16 04:00:09 CEST 2018
+
+Grovkillen (7):
+      Added Github logo (for button)
+      [sysinfo page] added GitHub copy
+      [sysinfo page] added CSS to GitHub copy button
+      [sysinfo page] Added GitHub button to TXBuffer
+      [sysinfo page] fixed layout of button
+      [web log] bugfix for empty logJSON stings
+      [web log] error capture of lower log levels
+
+Plebs (1):
+      Another small fix for #1426
+
+
+-------------------------------------------------
+Changes in release mega-20180515 (since mega-20180514)
+-------------------------------------------------
+
+Release date: Tue May 15 04:00:11 CEST 2018
+
+Grovkillen (6):
+      [web log] Chunk transfer instead of line transfer
+      [web log] Added declaring of reRunCount
+      [web log] added the reRunCout to the function
+      [web log] added warning if IE11 or older is used
+      [fix for crc2.py] truncation corrupted bin file
+      Added latest nightly release badge
+
+Plebs (1):
+      fix for #1426
+
+
+-------------------------------------------------
+Changes in release mega-20180514 (since mega-20180513)
+-------------------------------------------------
+
+Release date: Mon May 14 04:00:09 CEST 2018
+
+Plebs (1):
+      Added more #formats transformations
+
+TD-er (5):
+      [#1411] Add SensorTypeNone to indicate no sensor values for Domoticz
+      [memory]  use "-DNDEBUG" to disable ASSERT macros
+      [issue #1380] Prevent memory leaks in WiFiClient
+      [memory corruption] LWIP data corrupts log buffer
+      [ESP32] ESP.getResetReason() is unknown to ESP32
+
+ZericE (6):
+      [#1404] Fix email notification for RFC2821, fix so msg body included.
+      undo unnecessary changes in email body
+      remove debug lines in email notify
+      updated comment
+      remove unneeded use of bMesg to free up mem.
+      use reference to free up mem.
+
+flexiti (4):
+      Improvement in the file platformio.ini
+      OTA check box
+      ESP32 OTA port is set to 3232
+      ESP32 OTA port setting
+
+
+-------------------------------------------------
+Changes in release mega-20180513 (since mega-20180512)
+-------------------------------------------------
+
+Release date: Sun May 13 04:00:08 CEST 2018
+
+Gijs Noorlander (2):
+      Fix debug code (commented) in _P045_MPU6050.ino
+      [PR #1304] Rename file before running crc2.py
+
+
+-------------------------------------------------
+Changes in release mega-20180512 (since mega-20180511)
+-------------------------------------------------
+
+Release date: Sat May 12 04:00:06 CEST 2018
+
+Grovkillen (15):
+      Fixed the timers for log + devices
+      Fixed format (I like tabs, Platformio like spaces)
+      Preparation for fixed decimals...
+      Removed a timer reset...
+      Fixed some small syntax missing
+      Added check to stop flooding
+      Fixed scrolling issue when fetch <450mSec
+      Fix for decimals on auto update device page
+      Added ";"
+      [web log] fixed overflow when set to "debug dev"
+      [web log] fixed wait on requests
+      [device page] added max request here too
+      [web log] also taking care of disconnects
+      [device page] added dynamic length to loop
+      [web log] safety net not needed anymore
+
+TD-er (2):
+      [JSON] Add number of decimals to the JSON output
+      [build] Do builds twice on the nightly builds
+
+
+-------------------------------------------------
+Changes in release mega-20180511 (since mega-20180510)
+-------------------------------------------------
+
+Release date: Fri May 11 04:00:08 CEST 2018
+
+TD-er (3):
+      [cleanup] Simplify formatting user variables and allow checking
+      [log JSON] Add log level legend to the logjson output
+      [Web] Improve serving large blobs directly from flash
+
+
+-------------------------------------------------
+Changes in release mega-20180510 (since mega-20180507)
+-------------------------------------------------
+
+Release date: Thu May 10 04:00:13 CEST 2018
+
+Grovkillen (7):
+      First draft of auto update of task/device values
+      Values are updated (1-4 values per task)
+      Wrap up for the PR
+      Added div to web log (color scheme)
+      Removed auto update of values... wrong branch
+      Fixed the log level colors
+      Fixed copy to clipboard (handle HTML tags)
+
+Saverio Cisternino (1):
+      Fix plugin_id visualization on devices view that afflict Development build
+
+TD-er (2):
+      [build] Special build config for Ventus W266
+      [Ventus W266] Fix signed/unsigned warning
+
+ZericE (1):
+      [#1368] Remove call to Plugin_041_update causing a hard crash.
+
+
+-------------------------------------------------
+Changes in release mega-20180507 (since mega-20180506)
+-------------------------------------------------
+
+Release date: Mon May  7 04:00:08 CEST 2018
+
+Grovkillen (1):
+      [issue template] extra reminder to self compilers
+
+
+-------------------------------------------------
+Changes in release mega-20180506 (since mega-20180505)
+-------------------------------------------------
+
+Release date: Sun May  6 04:00:08 CEST 2018
+
+Grovkillen (10):
+      Added javascript to handle the log entries
+      Added div to not copy "Fetching log entries...."
+      Web log now inside a textarea
+      If error make log show this more clear
+      Added break...
+      BR should be \n, now fixed
+      Forgot extra \ for escape in code
+      Added some "-"
+      Updated to compile with TD-er's update on JSON
+      Forgot the auto-scroll function... now added
+
+Plebs (2):
+      fix for #960
+      new command logentry
+
+TD-er (5):
+      [JSON] Use streaming webserver for serving JSON page
+      [JSON] Make proper log JSON output for log viewer
+      [JSON] Sanitize JSON value strings
+      [JSON] Add TTL, task interval and task enabled
+      [JSON] Fix for single task view of json output.
+
+ZericE (1):
+      [#1356] Remove redundant call to MQTTCheck
+
+
+-------------------------------------------------
+Changes in release mega-20180505 (since mega-20180505_TD-er)
+-------------------------------------------------
+
+Release date: Sat May  5 04:00:07 CEST 2018
+
+TD-er (2):
+      [#1337]  Include hidden SSID in wifi scans
+      [#1337] WiFi.isHidden() is unknown to ESP32
+
+
+-------------------------------------------------
+Changes in release mega-20180504 (since mega-20180503)
+-------------------------------------------------
+
+Release date: Fri May  4 04:00:10 CEST 2018
+
+Grovkillen (3):
+      Added dropdown for phones
+      [#1363] fixed overlapping checkboxes
+      Added a break under the hamburger
+
+TD-er (3):
+      [rules timer] revert treating the rules timer as periodical timer
+      [Settings] Add checks to investigate issues with overlap in settings
+      [LWIP2] Change LWIP1.4 => LWIP2 Low Memory
+
+
+-------------------------------------------------
+Changes in release mega-20180503 (since mega-20180502)
+-------------------------------------------------
+
+Release date: Thu May  3 04:00:12 CEST 2018
+
+Grovkillen (1):
+      Spelling correction
+
+TD-er (3):
+      [rules] Make rules start working again.
+      [timers] Make rules timers more constant and MQTT reconnect less aggressive
+      [#1353] Remove Domoticz HTTP as default controller
+
+
+-------------------------------------------------
+Changes in release mega-20180502 (since mega-20180501)
+-------------------------------------------------
+
+Release date: Wed May  2 04:00:16 CEST 2018
+
+Grovkillen (1):
+      Added log JSON
+
+Plebs (4):
+      fix for #1170
+      fix for #1142
+      deleted comments
+      Added 2 system variables
+
+Saverio Cisternino (1):
+      Optimize setSystemTimer; Removed the second "for" cycle for checking the availability of timers
+
+TD-er (5):
+      [LWIP 1.4.0] Change to LWIP 1.4.0, to allow large http POST messages
+      [LWIP] fix ESP32 build
+      [timers] Make timers more accurate
+      [wifi] Make retry intervals to connect increase at each attempt.
+      [web log] Read all items from the log buffer
+
+
+-------------------------------------------------
+Changes in release mega-20180501 (since mega-20180430)
+-------------------------------------------------
+
+Release date: Tue May  1 04:00:17 CEST 2018
+
+mvdbro (1):
+      Fix broken Mini Dashboard feature
+
+
+-------------------------------------------------
+Changes in release mega-20180430 (since mega-20180429)
+-------------------------------------------------
+
+Release date: Mon Apr 30 04:00:08 CEST 2018
+
+TD-er (4):
+      [wifi] Do not rely on WiFi.status() and better log of status
+      [wifi] Use internal ESPeasy state to check connected status
+      [rules] Add log indicating POST request for update rules
+      [MQTT] Set default timeout to 10 sec, equal to default Mosquito timeout
+
+mvdbro (1):
+      Changed plugin call debug timers
+
+
+-------------------------------------------------
+Changes in release mega-20180429 (since mega-20180428)
+-------------------------------------------------
+
+Release date: Sun Apr 29 04:00:07 CEST 2018
+
+TD-er (7):
+      [wifi] Setup static IP config after connecting to wifi.
+      [wifi] Set static IP config before and after connect
+      [wifi] Show number of reconnects in the sysinfo
+      [wifi] Add wifi status log (Debug More) and DHCP/Static config to info page
+      [wifi] ESP32 does not know wifi_station_get_connect_status()
+      [wifi] Added connectionCheckHandler() to force reconnect when needed
+      [wifi] Force wifi reconnect at lots of MQTT failed connects.
+
+
+-------------------------------------------------
+Changes in release mega-20180428 (since mega-20180426)
+-------------------------------------------------
+
+Release date: Sat Apr 28 04:00:15 CEST 2018
+
+TD-er (4):
+      [wifi] Attempt to make event based wifi simpler
+      [PlatformIO] Updated core to 2.4.1
+      [wifi] Just disconnect when DNS lookup is not possible
+      [Wifi] Avoid doing network communications when not connected.
+
+
+-------------------------------------------------
+Changes in release mega-20180426 (since mega-20180425)
+-------------------------------------------------
+
+Release date: Thu Apr 26 04:00:14 CEST 2018
+
+Gijs Noorlander (1):
+      Change use of core 2_4_0  to 2_3_0
+
+
+-------------------------------------------------
+Changes in release mega-20180425 (since mega-20180424)
+-------------------------------------------------
+
+Release date: Wed Apr 25 04:00:08 CEST 2018
+
+Grovkillen (4):
+      Added a void addCopyButton
+      Made copy to clipboard JavaScript based instead
+      Added copy to clipboard on log page
+      Added new lines if BR + delimiter if wanted
+
+Plebs (3):
+      Fix for #1300
+      Adding 3 new http commands: taskrun, taskvalueset and rules
+      Fix another bug in LCD plugin
+
+TD-er (2):
+      [Modbus] PR #1128 made by @s0170071
+      [wifi] More active reconnect to wifi when disconnected
+
+
+-------------------------------------------------
+Changes in release mega-20180424 (since mega-20180423)
+-------------------------------------------------
+
+Release date: Tue Apr 24 04:00:13 CEST 2018
+
+Grovkillen (1):
+      Added note to self compilers
+
+
+-------------------------------------------------
+Changes in release mega-20180423 (since mega-20180422)
+-------------------------------------------------
+
+Release date: Mon Apr 23 04:00:10 CEST 2018
+
+Plebs (1):
+      Fixing #1289 for backwards compatibility
+
+TD-er (1):
+      [wifi] Add delay between connection attempts
+
+
+-------------------------------------------------
+Changes in release mega-20180422 (since mega-20180421)
+-------------------------------------------------
+
+Release date: Sun Apr 22 04:00:09 CEST 2018
+
+Plebs (2):
+      Syntax: [task#value#transformation#justification]
+      Code changed as per TD-er suggestions
+
+TD-er (1):
+      [issue #1292] Remove CRC from settings, init settings and wifi fixes
+
+
+-------------------------------------------------
+Changes in release mega-20180421 (since mega-20180420)
+-------------------------------------------------
+
+Release date: Sat Apr 21 04:00:08 CEST 2018
+
+Grovkillen (1):
+      Removed fade in of body added toast message!
+
+Saverio Cisternino (4):
+      Add Commands timerpause and timerresume
+      Add Trigger Rules#TimerPause= and Rules#TimerResume=
+      Add support at elseif statment
+      Add debug info
+
+TD-er (7):
+      [WiFi] Init static IP before connect to wifi
+      [Toast message] Change "Settings saved" to "Submitted"
+      [info] Add more build related info to the log and wifi info link to wiki
+      [Sonoff Pow] Add support for HLW8012
+      [Sonoff Pow] Add support for HLW8012
+      [Sonoff POW] Change Plugin ID to 76
+      [Sonoff POW] Set some proper defaults for the Sonoff POW
+
+Unknown (2):
+      Merge remote-tracking branch 'papperone/mega' into merge/papperone
+      Merge remote-tracking branch 'papperone/mega' into merge/papperone
+
+
+-------------------------------------------------
+Changes in release mega-20180420 (since mega-20180419)
+-------------------------------------------------
+
+Release date: Fri Apr 20 04:00:09 CEST 2018
+
+Grovkillen (3):
+      Added small fade in (0.5s)
+      "bodymenu" was accidentally copied to all body
+      Added extra breaks below "back to setup" button
+
+TD-er (4):
+      [Static IP] Make sure static mode is set correct always
+      [wifi] Restart webserver when connection changes.
+      [log] Make web log 30 lines for ESP32
+      [wifi] Create event 'gotIP' after processing 'connected' event
+
+
+-------------------------------------------------
+Changes in release mega-20180419 (since mega-20180417)
+-------------------------------------------------
+
+Release date: Thu Apr 19 04:00:17 CEST 2018
+
+Grovkillen (3):
+      Updated the input, select, textareas with CSS
+      Added CSS radio buttons to WiFi setup wizard
+      Removed unused row on hardware settings page
+
+Hans-Rune Bue (1):
+      Implemented syslog facilities and levels
+
+TD-er (3):
+      [Static IP] Work-around for set _use_static_ip
+      [PR #1257] Make it compile again
+      [ESP32] Add Generic info plugin
+
+sentinel073 (2):
+      Issue #1211: Plugin template file and hints on writing new plugins
+      Issue #1211: Plugin template file and hints on writing new plugins     Added review comments
+
+stefan (1):
+      Changes for use of plugin sets
+
+
+-------------------------------------------------
+Changes in release mega-20180417 (since mega-20180416)
+-------------------------------------------------
+
+Release date: Tue Apr 17 04:00:09 CEST 2018
+
+Grovkillen (11):
+      Put borders around checkboxes
+      Re-arranged Rules page
+      Moved help button for sleep
+      Moved help button on hardware page
+      Made controller symbols a bit bigger (1)(2)(3)
+      Change enable "off" to a nicer X
+      Made input type password part of "wide"
+      Added number input to CSS (width 100px)
+      Made IDX column wider (device list)
+      Added max widths for inputs
+      "Ctr (IDX)" was accidentally removed, now added
+
+TD-er (5):
+      [wifi] Fix wifi reconnects with static IP
+      [NTP] Add more information in the log when connecting to NTP server fail
+      [issue #1260] parentheses error on the json page
+      [P075] Nextion plugin (testing)
+      [wifi] Fix build error for ESP32
+
+Unknown (1):
+      [Nextion] Initial support for Nextion displays
+
+
+-------------------------------------------------
+Changes in release mega-20180416 (since mega-20180415)
+-------------------------------------------------
+
+Release date: Mon Apr 16 04:00:09 CEST 2018
+
+TD-er (4):
+      [wifi] Prevent starting AP+STA mode with correct settings
+      [Wifi] force STA mode at boot
+      [wifi] Proper log of static IP configuration
+      [info] Added FW information to help diagnose issues
+
+
+-------------------------------------------------
+Changes in release mega-20180415 (since mega-20180414)
+-------------------------------------------------
+
+Release date: Sun Apr 15 04:00:08 CEST 2018
+
+Gijs Noorlander (1):
+      Added C013
+
+Grovkillen (6):
+      Made checkmarks CSS
+      Fixed missed update.
+      Added column width for separator...
+      Updated some more stuff
+      Made addFormSeparator function a lot cleaner
+      Bumped delay timer for MQTT pub 10mSec
+
+Nuno Sousa (1):
+      Replace ultrasonic plugin with NewPing lib
+
+Susis Strolch (4):
+      add missing USES_XXX to _C*.ino, _N*.ino
+      system variables %sysheap%, %syssec_d
+      ignore power-on reset value (85.0 °C)
+      DS_readTemp: handle power-on reset value
+
+TD-er (4):
+      [WebServer] Cleanup of all functions appending to a big string
+      [PR #1247 ]  Merged PR into the refactoring of Webserver
+      [PR #1248] Fixed textarea sizes
+      [Merge] Easier to merge, rebased on Mega branch.
+
+
+-------------------------------------------------
 Changes in release mega-20180414 (since mega-20180413)
 -------------------------------------------------
 

@@ -1,3 +1,5 @@
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
@@ -43,7 +45,8 @@
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
 #define DEFAULT_PORT        8080                // Enter your Server port value
 
-#define DEFAULT_PROTOCOL    1                   // Protocol used for controller communications
+#define DEFAULT_PROTOCOL    0                   // Protocol used for controller communications
+//   0 = Stand-alone (no controller set)
 //   1 = Domoticz HTTP
 //   2 = Domoticz MQTT
 //   3 = Nodo Telnet
@@ -53,6 +56,13 @@
 //   7 = EmonCMS
 //   8 = Generic HTTP
 //   9 = FHEM HTTP
+
+#define DEFAULT_PIN_I2C_SDA              4
+#define DEFAULT_PIN_I2C_SCL              5
+
+#define DEFAULT_PIN_STATUS_LED           -1
+#define DEFAULT_PIN_STATUS_LED_INVERSED  true
+
 
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
@@ -64,6 +74,10 @@
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
+#define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
+#define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
+#define DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID   0
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
@@ -74,15 +88,17 @@
 #define LOG_TO_SYSLOG         2
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
-#define DEFAULT_SYSLOG_IP                       ""                              // Syslog IP Address
+#define DEFAULT_SYSLOG_IP                       ""                      // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL        LOG_LEVEL_INFO  // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO  // Web Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL        0                               // Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO                  // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
 
 #define DEFAULT_USE_SERIAL                      true    // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200  // Serial Port Baud Rate
+
+#define DEFAULT_SYSLOG_FACILITY 	0 	// kern
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
@@ -154,7 +170,7 @@
   #define VERSION                             3 // Change in config.dat mapping needs a full reset
 #endif
 
-#define BUILD                           20101 // git version 2.1.01
+#define BUILD                           20102 // git version 2.1.02
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif
@@ -220,6 +236,9 @@
 #define CONTROLLER_PASS                     5
 #define CONTROLLER_SUBSCRIBE                6
 #define CONTROLLER_PUBLISH                  7
+#define CONTROLLER_LWT_TOPIC                8
+#define CONTROLLER_LWT_CONNECT_MESSAGE      9
+#define CONTROLLER_LWT_DISCONNECT_MESSAGE  10
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -235,14 +254,15 @@
 #define LOG_LEVEL_DEBUG                     3
 #define LOG_LEVEL_DEBUG_MORE                4
 #define LOG_LEVEL_DEBUG_DEV                 9 // use for testing/debugging only, not for regular use
+#define LOG_LEVEL_NRELEMENTS                5 // Update this and getLogLevelDisplayString() when new log levels are added
 
 #define CMD_REBOOT                         89
 #define CMD_WIFI_DISCONNECT               135
 
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      72
+  #define DEVICES_MAX                      75
 #else
-  #define DEVICES_MAX                      64
+  #define DEVICES_MAX                      50
 #endif
 
 #if defined(ESP8266)
@@ -288,6 +308,7 @@
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
+#define SENSOR_TYPE_NONE                    0
 #define SENSOR_TYPE_SINGLE                  1
 #define SENSOR_TYPE_TEMP_HUM                2
 #define SENSOR_TYPE_TEMP_BARO               3
@@ -313,6 +334,7 @@
 
 #define DAT_TASKS_SIZE                   2048
 #define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_TASKS_CUSTOM_SIZE            1024
 #define DAT_CUSTOM_CONTROLLER_SIZE       1024
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
@@ -340,7 +362,7 @@
 #include "Custom.h"
 #endif
 
-
+#include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
@@ -468,13 +490,14 @@ WiFiClient mqtt;
 PubSubClient MQTTclient(mqtt);
 bool MQTTclient_should_reconnect = true;
 bool MQTTclient_connected = false;
+int mqtt_reconnect_count = 0;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
-  char binaryFilename[16+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename...";
+  char binaryFilename[32+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames";
   char compileTime[16]= __TIME__;
   char compileDate[16]= __DATE__;
   uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -494,18 +517,25 @@ enum Command {
   cmd_Debug,
   cmd_Delay,
   cmd_deepSleep,
+  cmd_DNS,
+  cmd_DST,
   cmd_Erase,
   cmd_Event,
   cmd_executeRules,
+  cmd_gateway,
   cmd_i2cscanner,
   cmd_IP,
   cmd_Load,
+  cmd_logentry,
   cmd_lowmem,
   cmd_malloc,
   cmd_meminfo,
+  cmd_MQTTRetainFlag,
+  cmd_messageDelay,
   cmd_Name,
   cmd_notify,
   cmd_NoSleep,
+  cmd_NTPHost,
   cmd_Password,
   cmd_Publish,
   cmd_Reboot,
@@ -522,13 +552,20 @@ enum Command {
   cmd_SendToUDP,
   cmd_SerialFloat,
   cmd_Settings,
+  cmd_subnet,
   cmd_TaskClear,
   cmd_TaskClearAll,
   cmd_TaskRun,
   cmd_TaskValueSet,
+  cmd_TaskValueSetAndRun,
   cmd_TimerSet,
+  cmd_TimerPause,
+  cmd_TimerResume,
+  cmd_TimeZone,
   cmd_udptest,
   cmd_Unit,
+  cmd_useNTP,
+  cmd_UDPPort,
   cmd_wdconfig,
   cmd_wdread,
   cmd_WifiAPMode,
@@ -545,10 +582,12 @@ enum Command {
 // Forward declarations.
 Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
+bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
+String to_json_object_value(const String& object, const String& value);
 
 struct SecurityStruct
 {
@@ -593,7 +632,8 @@ struct SettingsStruct
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
-    DST_Start(0), DST_End(0)
+    DST_Start(0), DST_End(0), UseRTOSMultitasking(false), Pin_Reset(-1),
+    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0), MQTTUseUnitNameAsClientId(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -699,14 +739,19 @@ struct SettingsStruct
   uint16_t      DST_End;
   boolean       UseRTOSMultitasking;
   int8_t        Pin_Reset;
-
+  byte          SyslogFacility;
+  uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
+  boolean       MQTTUseUnitNameAsClientId;
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
+
+  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
-  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
-  uint8_t       md5[16];
+  // Try to extend settings to make the checksum 4-byte aligned.
+//  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
+//  uint8_t       md5[16];
 } Settings;
 
 struct ControllerSettingsStruct
@@ -718,6 +763,9 @@ struct ControllerSettingsStruct
     memset(HostName, 0, sizeof(HostName));
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
+    memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
+    memset(LWTMessageConnect, 0, sizeof(LWTMessageConnect));
+    memset(LWTMessageDisconnect, 0, sizeof(LWTMessageDisconnect));
   }
   boolean       UseDNS;
   byte          IP[4];
@@ -725,6 +773,9 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+  char          MQTTLwtTopic[129];
+  char          LWTMessageConnect[129];
+  char          LWTMessageDisconnect[129];
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
@@ -808,6 +859,7 @@ private:
     if (!UseDNS) {
       return true;
     }
+    if (!WiFiConnected()) return false;
     IPAddress tmpIP;
     if (WiFi.hostByName(HostName, tmpIP)) {
       for (byte x = 0; x < 4; x++) {
@@ -879,6 +931,13 @@ struct EventStruct
     Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
     BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     OriginTaskIndex(0), Data(NULL) {}
+  EventStruct(const struct EventStruct& event):
+        Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
+        , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
+        , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
+        , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
+        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {}
+
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
   byte ControllerIndex; // index position in Settings.Controller, 0-3
@@ -898,28 +957,46 @@ struct EventStruct
   String String1;
   String String2;
   String String3;
+  String String4;
+  String String5;
   byte *Data;
 };
 
 #define LOG_STRUCT_MESSAGE_SIZE 128
-#define LOG_STRUCT_MESSAGE_LINES 20
+#ifdef ESP32
+  #define LOG_STRUCT_MESSAGE_LINES 30
+#else
+  #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+    #define LOG_STRUCT_MESSAGE_LINES 10
+  #else
+    #define LOG_STRUCT_MESSAGE_LINES 15
+  #endif
+#endif
 
 struct LogStruct {
     LogStruct() : write_idx(0), read_idx(0) {
       for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
-        memset(Message[i], 0, LOG_STRUCT_MESSAGE_SIZE);
+        Message[i].reserve(LOG_STRUCT_MESSAGE_SIZE);
         timeStamp[i] = 0;
+        log_level[i] = 0;
       }
     }
 
-    void add(const char *line) {
+    void add(const byte loglevel, const char *line) {
       write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
       if (write_idx == read_idx) {
         // Buffer full, move read_idx to overwrite oldest entry.
         read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
       }
       timeStamp[write_idx] = millis();
-      strncpy(Message[write_idx], line, LOG_STRUCT_MESSAGE_SIZE-1);
+      log_level[write_idx] = loglevel;
+      unsigned linelength = strlen(line);
+      if (linelength > LOG_STRUCT_MESSAGE_SIZE-1)
+        linelength = LOG_STRUCT_MESSAGE_SIZE-1;
+      Message[write_idx] = "";
+      for (unsigned i = 0; i < linelength; ++i) {
+        Message[write_idx] += *(line + i);
+      }
     }
 
     // Read the next item and append it to the given string.
@@ -930,6 +1007,20 @@ struct LogStruct {
         output += formatLine(read_idx, lineEnd);
       }
       return !isEmpty();
+    }
+
+    String get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp) {
+      logLinesAvailable = false;
+      if (isEmpty()) {
+        return "";
+      }
+      read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
+      timestamp = timeStamp[read_idx];
+      String output = logjson_formatLine(read_idx);
+      if (isEmpty()) return output;
+      output += ",\n";
+      logLinesAvailable = true;
+      return output;
     }
 
     bool get(String& output, const String& lineEnd, int line) {
@@ -967,11 +1058,25 @@ struct LogStruct {
       return output;
     }
 
+    String logjson_formatLine(int index) {
+      String output;
+      output.reserve(LOG_STRUCT_MESSAGE_SIZE + 64);
+      output = "{";
+      output += to_json_object_value("timestamp", String(timeStamp[index]));
+      output += ",\n";
+      output += to_json_object_value("text",  Message[index]);
+      output += ",\n";
+      output += to_json_object_value("level", String(log_level[index]));
+      output += "}";
+      return output;
+    }
+
 
     int write_idx;
     int read_idx;
     unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
-    char Message[LOG_STRUCT_MESSAGE_LINES][LOG_STRUCT_MESSAGE_SIZE];
+    byte log_level[LOG_STRUCT_MESSAGE_LINES];
+    String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
 
@@ -1039,14 +1144,19 @@ struct NodeStruct
 struct systemTimerStruct
 {
   systemTimerStruct() :
-    timer(0), plugin(0), Par1(0), Par2(0), Par3(0) {}
+    timer(0), plugin(0), TaskIndex(-1), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0) {}
 
   unsigned long timer;
   byte plugin;
-  byte Par1;
-  byte Par2;
-  byte Par3;
+  int16_t TaskIndex;
+  int Par1;
+  int Par2;
+  int Par3;
+  int Par4;
+  int Par5;
 } systemTimers[SYSTEM_TIMER_MAX];
+
+#define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
 
 struct systemCMDTimerStruct
 {
@@ -1092,7 +1202,12 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
-unsigned long RulesTimer[RULES_TIMER_MAX];
+struct rulesTiemerStatus
+{
+  unsigned long timestamp;
+  unsigned int interval; //interval in millisencond
+  boolean paused;
+} RulesTimer[RULES_TIMER_MAX];
 
 unsigned long timerSensor[TASKS_MAX];
 unsigned long timer100ms;
@@ -1103,8 +1218,6 @@ unsigned long timermqtt;
 unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
-unsigned int NC_Count = 0;
-unsigned int C_Count = 0;
 byte cmd_within_mainloop = 0;
 unsigned long connectionFailures;
 unsigned long wdcounter = 0;
@@ -1166,23 +1279,26 @@ enum WiFiDisconnectReason
 };
 #endif
 
-enum WifiState {
-  WifiOff,
-  WifiStart,
-  WifiTryConnect,
-  WifiConnectionFailed,
-  WifiClientConnectAP,
-  WifiClientDisconnectAP,
-  WifiCredentialsChanged,
-  WifiConnectSuccess,
-  WifiDisableAP,
-  WifiEnableAP,
-  WifiStartScan,
-};
 
-WifiState currentWifiState = WifiStart;
+#ifndef ESP32
+// To do some reconnection check.
+#include <Ticker.h>
+Ticker connectionCheck;
+#endif
 
-void setWifiState(WifiState state);
+bool reconnectChecker = false;
+void connectionCheckHandler()
+{
+  if (reconnectChecker == false && !WiFiConnected()){
+    reconnectChecker = true;
+    WiFi.reconnect();
+  }
+  else if (WiFiConnected() && reconnectChecker == true){
+    reconnectChecker = false;
+  }
+}
+
+bool useStaticIP();
 
 // WiFi related data
 boolean wifiSetup = false;
@@ -1191,6 +1307,7 @@ uint8_t lastBSSID[6] = {0};
 uint8_t wifiStatus = ESPEASY_WIFI_DISCONNECTED;
 unsigned long last_wifi_connect_attempt_moment = 0;
 unsigned int wifi_connect_attempt = 0;
+int wifi_reconnects = -1; // First connection attempt is not a reconnect.
 uint8_t lastWiFiSettings = 0;
 String last_ssid;
 bool bssid_changed = false;
@@ -1217,8 +1334,12 @@ bool processedConnectAPmode = true;
 bool processedDisconnectAPmode = true;
 bool processedScanDone = true;
 
-unsigned long start = 0;
-unsigned long elapsed = 0;
+bool webserver_state = false;
+bool webserver_init = false;
+
+unsigned long elapsed10ps = 0;
+unsigned long elapsed10psU = 0;
+unsigned long elapsed50ps = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
@@ -1236,6 +1357,8 @@ bool firstLoop=true;
 boolean activeRuleSets[RULESETS_MAX];
 
 boolean       UseRTOSMultitasking;
+
+void (*MainLoopCall_ptr)(void);
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.

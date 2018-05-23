@@ -9,7 +9,6 @@
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
 //
-#ifdef PLUGIN_BUILD_DEV
 
 #include "Adafruit_TCS34725.h"
 
@@ -79,7 +78,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
         optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
         optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
-        addFormSelector(string, F("Integration Time"), F("plugin_050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Integration Time"), F("plugin_050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
 
         byte choiceMode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String optionsMode2[4];
@@ -92,7 +91,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         optionValuesMode2[1] = TCS34725_GAIN_4X;
         optionValuesMode2[2] = TCS34725_GAIN_16X;
         optionValuesMode2[3] = TCS34725_GAIN_60X;
-        addFormSelector(string, F("Gain"), F("plugin_050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+        addFormSelector(F("Gain"), F("plugin_050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
 
         success = true;
         break;
@@ -176,5 +175,4 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 }
 
 
-#endif
 #endif // USES_P050

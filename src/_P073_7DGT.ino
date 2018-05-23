@@ -23,7 +23,6 @@
 //  - "7db,<0-15> -- set brightness to specific value between 0 and 15
 //
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_073
 #define PLUGIN_ID_073        73
@@ -74,7 +73,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_073;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -95,13 +94,13 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNote(string, F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
-        addFormNote(string, F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
+        addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
+        addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
         String displtype[5] = { F("TM1637 - 4 digit (colon)"), F("TM1637 - 4 digit (dots)"), F("TM1637 - 6 digit"), F("MAX7219 - 8 digit")};
-        addFormSelector(string, F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
         String displout[4] = { F("Manual"), F("Clock - Blink"), F("Clock - No Blink"), F("Date")  };
-        addFormSelector(string, F("Display Output"), F("plugin_073_displout"), 4, displout, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addFormNumericBox(string, F("Brightness"), F("plugin_073_brightness"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 15);
+        addFormSelector(F("Display Output"), F("plugin_073_displout"), 4, displout, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 15);
         success = true;
         break;
       }
@@ -786,5 +785,4 @@ void max7219_ShowBuffer(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
     max7219_SetDigit(din_pin, clk_pin, cs_pin, i, p073_showbuffer[7-i], dotflags[7-i]);
 }
 
-#endif
 #endif // USES_P073

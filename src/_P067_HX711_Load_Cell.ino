@@ -12,7 +12,6 @@
 // Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_067
 #define PLUGIN_ID_067         67
@@ -122,28 +121,28 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormSubHeader(string, F("Measurement"));
+        addFormSubHeader(F("Measurement"));
 
-        addFormCheckBox(string, F("Oversampling"), F("oversampling"), CONFIG(0));
+        addFormCheckBox(F("Oversampling"), F("oversampling"), CONFIG(0));
 
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
-        addFormSelector(string, F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
 
-        addFormTextBox(string, F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
-        string += F(" &nbsp; &nbsp; &#8617; Tare: ");
-        addCheckBox(string, F("tare"), 0);   //always off
+        addFormTextBox(F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
+        addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));
+        addCheckBox(F("tare"), 0);   //always off
 
-        addFormSubHeader(string, F("Two Point Calibration"));
+        addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("Plugin_067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormCheckBox(F("Calibration Enabled"), F("Plugin_067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(string, F("Point 1"), F("Plugin_067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
-        string += F(" &#8793; ");
-        addTextBox(string, F("Plugin_067_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("Plugin_067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("Plugin_067_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(string, F("Point 2"), F("Plugin_067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-        string += F(" &#8793; ");
-        addTextBox(string, F("Plugin_067_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("Plugin_067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("Plugin_067_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -289,5 +288,4 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P067

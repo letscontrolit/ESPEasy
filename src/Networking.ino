@@ -2,15 +2,15 @@
 // Syslog
 // UDP system messaging
 // SSDP
-  #if LWIP_VERSION_MAJOR == 2
-   #define IP2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
-  #endif
+//  #if LWIP_VERSION_MAJOR == 2
+#define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+//  #endif
 
 
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
-void syslog(const char *message)
+void syslog(byte logLevel, const char *message)
 {
   if (Settings.Syslog_IP[0] != 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
@@ -18,10 +18,18 @@ void syslog(const char *message)
     portUDP.beginPacket(broadcastIP, 514);
     char str[256];
     str[0] = 0;
+    byte prio = Settings.SyslogFacility * 8;
+    if ( logLevel == LOG_LEVEL_ERROR )
+      prio += 3;  // syslog error
+    else if ( logLevel == LOG_LEVEL_INFO )
+      prio += 5;  // syslog notice
+    else
+      prio += 7;
+
 	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
 
 	// Using Settings.Name as the Hostname (Hostname must NOT content space)
-    snprintf_P(str, sizeof(str), PSTR("<7>%s EspEasy: %s"), Settings.Name, message);
+    snprintf_P(str, sizeof(str), PSTR("<%u>%s EspEasy: %s"), prio, Settings.Name, message);
 
 	// Using Setting.Unit to build a Hostname
     //snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
@@ -173,7 +181,7 @@ void sendUDP(byte unit, byte* data, byte size)
   if (unit != 255)
     if (Nodes[unit].ip[0] == 0)
       return;
-  String log = "UDP  : Send UDP message to ";
+  String log = F("UDP  : Send UDP message to ");
   log += unit;
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
@@ -434,7 +442,7 @@ void SSDP_send(byte method) {
                      SSDP_INTERVAL,
                      Settings.Build,
                      uuid,
-                     IP2STR(&ip)
+                     IPADDR2STR(&ip)
                     );
 
   _server->append(buffer, len);
@@ -599,7 +607,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
   // Apparently something needs network, perform check to see if it is ready now.
 //  if (!tryConnectWiFi())
 //    return false;
-  while (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  while (!WiFiConnected()) {
     if (timeOutReached(timer)) {
       return false;
     }
@@ -609,6 +617,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
 }
 
 bool hostReachable(const IPAddress& ip) {
+  if (!WiFiConnected()) return false;
   // Only do 1 ping at a time to return early
   byte retry = 3;
   while (retry > 0) {
@@ -624,13 +633,21 @@ bool hostReachable(const IPAddress& ip) {
   String log = F("Host unreachable: ");
   log += formatIP(ip);
   addLog(LOG_LEVEL_ERROR, log);
+  if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
+    // Work-around to fix connected but not able to communicate.
+    addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reconnect wifi."));
+    WifiDisconnect();
+  }
+  logConnectionStatus();
   return false;
 }
 
 bool hostReachable(const String& hostname) {
+  if (!WiFiConnected()) return false;
   IPAddress remote_addr;
-  if (WiFi.hostByName(hostname.c_str(), remote_addr))
+  if (WiFi.hostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
+  }
   String log = F("Hostname cannot be resolved: ");
   log += hostname;
   addLog(LOG_LEVEL_ERROR, log);

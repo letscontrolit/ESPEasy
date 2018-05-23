@@ -4,7 +4,6 @@
 //#######################################################################################################
 
 
-#ifdef PLUGIN_BUILD_NORMAL
 
 #include <IRremoteESP8266.h>
 IRrecv *irReceiver;
@@ -54,13 +53,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (irReceiver == 0 && irPin != -1)
         {
-          Serial.println("IR Init");
+          Serial.println(F("IR Init"));
           irReceiver= new IRrecv(irPin);
           irReceiver->enableIRIn(); // Start the receiver
         }
         if (irReceiver != 0 && irPin == -1)
         {
-          Serial.println("IR Removed");
+          Serial.println(F("IR Removed"));
           irReceiver->disableIRIn();
           delete irReceiver;
           irReceiver=0;
@@ -93,5 +92,4 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P016

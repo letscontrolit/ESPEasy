@@ -46,7 +46,6 @@
 // Use a power-FET or an ULN2003 to switch on the bells coil with 12 or 24 volts
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 //#include <*.h>   - no external lib required
 
@@ -102,7 +101,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_055;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
@@ -136,29 +135,28 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] <= 0)   //Plugin_055_millisPauseTime
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = 400;
 
-        addFormPinSelect(string, F("GPIO &rarr; Driver#8"), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
+        addFormPinSelect(F("GPIO &rarr; Driver#8"), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
 
 
-        addFormSubHeader(string, F("Timing"));
+        addFormSubHeader(F("Timing"));
 
-        addFormNumericBox(string, F("Chiming/Strike Time (ct)"), F("chimetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        addUnit(string, F("ms"));
+        addFormNumericBox(F("Chiming/Strike Time (ct)"), F("chimetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addUnit(F("ms"));
 
-        addFormNumericBox(string, F("Normal Pause Time (t)"), F("pausetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addUnit(string, F("ms"));
+        addFormNumericBox(F("Normal Pause Time (t)"), F("pausetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(F("ms"));
 
-        addFormNote(string, F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
+        addFormNote(F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
 
 
-        addFormSubHeader(string, F("Chiming Clock"));
+        addFormSubHeader(F("Chiming Clock"));
 
-        addFormCheckBox(string, F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        //string += F("<TR><TD><TD>");
-        string += F(" ");
-        addButton(string, F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
+        addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        //addHtml(F("<TR><TD><TD>"));
+        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] && !Settings.UseNTP)
-          addFormNote(string, F("Enable and configure NTP!"));
+          addFormNote(F("Enable and configure NTP!"));
 
         success = true;
         break;
@@ -501,5 +499,4 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
   return tokens.length();
 }
 
-#endif
 #endif // USES_P055

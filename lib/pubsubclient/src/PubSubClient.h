@@ -27,8 +27,9 @@
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds
+// Keepalive timeout for default MQTT Broker is 10s
 #ifndef MQTT_KEEPALIVE
-#define MQTT_KEEPALIVE 15
+#define MQTT_KEEPALIVE 10
 #endif
 
 // MQTT_SOCKET_TIMEOUT: socket timeout interval in Seconds

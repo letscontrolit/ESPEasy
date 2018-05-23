@@ -15,7 +15,6 @@
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
 
-#ifdef PLUGIN_BUILD_DEV
 
 #define PLUGIN_064
 #define PLUGIN_ID_064         64
@@ -85,7 +84,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         byte addr = 0x39;   // CONFIG(0); chip has only 1 address
 
         int optionValues[1] = { 0x39 };
-        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
+        addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
 
         success = true;
         break;
@@ -215,5 +214,4 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P064

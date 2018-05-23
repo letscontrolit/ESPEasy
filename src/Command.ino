@@ -43,6 +43,9 @@ Command commandStringToEnum(const char * cmd) {
   String tmpcmd;
   tmpcmd = cmd;
   tmpcmd.toLowerCase();
+  String log = F("Command: ");
+  log += tmpcmd;
+  addLog(LOG_LEVEL_INFO, log);
   char cmd_lc[INPUT_COMMAND_SIZE];
   tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
@@ -66,12 +69,18 @@ Command commandStringToEnum(const char * cmd) {
            if (strcmp_P(cmd_lc, PSTR("debug")                 ) == 0) return cmd_Debug;
       else if (strcmp_P(cmd_lc, PSTR("delay")                 ) == 0) return cmd_Delay;
       else if (strcmp_P(cmd_lc, PSTR("deepsleep")             ) == 0) return cmd_deepSleep;
+      else if (strcmp_P(cmd_lc, PSTR("dns")                   ) == 0) return cmd_DNS;
+      else if (strcmp_P(cmd_lc, PSTR("dst")                   ) == 0) return cmd_DST;
       break;
     }
     case 'e': {
            if (strcmp_P(cmd_lc, PSTR("erase")                 ) == 0) return cmd_Erase;
       else if (strcmp_P(cmd_lc, PSTR("event")                 ) == 0) return cmd_Event;
       else if (strcmp_P(cmd_lc, PSTR("executerules")          ) == 0) return cmd_executeRules;
+      break;
+    }
+    case 'g': {
+           if (strcmp_P(cmd_lc, PSTR("gateway")               ) == 0) return cmd_gateway;
       break;
     }
     case 'i': {
@@ -81,18 +90,22 @@ Command commandStringToEnum(const char * cmd) {
     }
     case 'l': {
            if (strcmp_P(cmd_lc, PSTR("load")                  ) == 0) return cmd_Load;
+      else if (strcmp_P(cmd_lc, PSTR("logentry")              ) == 0) return cmd_logentry;
       else if (strcmp_P(cmd_lc, PSTR("lowmem")                ) == 0) return cmd_lowmem;
       break;
     }
     case 'm': {
            if (strcmp_P(cmd_lc, PSTR("malloc")                ) == 0) return cmd_malloc;
       else if (strcmp_P(cmd_lc, PSTR("meminfo")               ) == 0) return cmd_meminfo;
+      else if (strcmp_P(cmd_lc, PSTR("mqttretainflag")        ) == 0) return cmd_MQTTRetainFlag;
+      else if (strcmp_P(cmd_lc, PSTR("messagedelay")          ) == 0) return cmd_messageDelay;
       break;
     }
     case 'n': {
            if (strcmp_P(cmd_lc, PSTR("name")                  ) == 0) return cmd_Name;
       else if (strcmp_P(cmd_lc, PSTR("notify")                ) == 0) return cmd_notify;
       else if (strcmp_P(cmd_lc, PSTR("nosleep")               ) == 0) return cmd_NoSleep;
+      else if (strcmp_P(cmd_lc, PSTR("ntphost")               ) == 0) return cmd_NTPHost;
       break;
     }
     case 'p': {
@@ -118,6 +131,7 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("sendtoudp")             ) == 0) return cmd_SendToUDP;
       else if (strcmp_P(cmd_lc, PSTR("serialfloat")           ) == 0) return cmd_SerialFloat;
       else if (strcmp_P(cmd_lc, PSTR("settings")              ) == 0) return cmd_Settings;
+      else if (strcmp_P(cmd_lc, PSTR("subnet")                ) == 0) return cmd_subnet;
       break;
     }
     case 't': {
@@ -125,12 +139,18 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("taskclearall")          ) == 0) return cmd_TaskClearAll;
       else if (strcmp_P(cmd_lc, PSTR("taskrun")               ) == 0) return cmd_TaskRun;
       else if (strcmp_P(cmd_lc, PSTR("taskvalueset")          ) == 0) return cmd_TaskValueSet;
+      else if (strcmp_P(cmd_lc, PSTR("taskvaluesetandrun")    ) == 0) return cmd_TaskValueSetAndRun;
       else if (strcmp_P(cmd_lc, PSTR("timerset")              ) == 0) return cmd_TimerSet;
+      else if (strcmp_P(cmd_lc, PSTR("timerpause")            ) == 0) return cmd_TimerPause;
+      else if (strcmp_P(cmd_lc, PSTR("timerresume")           ) == 0) return cmd_TimerResume;
+      else if (strcmp_P(cmd_lc, PSTR("timezone")              ) == 0) return cmd_TimeZone;
       break;
     }
     case 'u': {
            if (strcmp_P(cmd_lc, PSTR("udptest")               ) == 0) return cmd_udptest;
+      else if (strcmp_P(cmd_lc, PSTR("udpport")               ) == 0) return cmd_UDPPort;
       else if (strcmp_P(cmd_lc, PSTR("unit")                  ) == 0) return cmd_Unit;
+      else if (strcmp_P(cmd_lc, PSTR("usentp")                ) == 0) return cmd_useNTP;
       break;
     }
     case 'w': {
@@ -147,8 +167,10 @@ Command commandStringToEnum(const char * cmd) {
       break;
     }
     default:
+      addLog(LOG_LEVEL_INFO, F("Command unknown"));
       return cmd_Unknown;
   }
+  addLog(LOG_LEVEL_INFO, F("Command unknown"));
   return cmd_Unknown;
 }
 
@@ -164,11 +186,17 @@ void ExecuteCommand(byte source, const char *Line)
   int Par1 = 0;
   int Par2 = 0;
   int Par3 = 0;
+  // Par4 & Par5 not yet used.
+  // int Par4 = 0;
+  // int Par5 = 0;
 
   GetArgv(Line, cmd, 1);
   if (GetArgv(Line, TmpStr1, 2)) Par1 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
   if (GetArgv(Line, TmpStr1, 4)) Par3 = str2int(TmpStr1);
+  // Par4 & Par5 not yet used.
+  // if (GetArgv(Line, TmpStr1, 5)) Par4 = str2int(TmpStr1);
+  // if (GetArgv(Line, TmpStr1, 6)) Par5 = str2int(TmpStr1);
 
   const Command cmd_enum = commandStringToEnum(cmd);
   switch (cmd_enum) {
@@ -181,10 +209,10 @@ void ExecuteCommand(byte source, const char *Line)
   {
     success = true;
     unsigned long timer = millis() + Par1;
-    Serial.println("start");
+    Serial.println(F("start"));
     while (!timeOutReached(timer))
       backgroundtasks();
-    Serial.println("end");
+    Serial.println(F("end"));
     break;
   }
 
@@ -452,6 +480,29 @@ void ExecuteCommand(byte source, const char *Line)
     break;
   }
 
+  case cmd_TaskValueSetAndRun:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 4))
+    {
+      float result = 0;
+      Calculate(TmpStr1, &result);
+      UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
+      SensorSendTask(Par1 - 1);
+    }
+    break;
+  }
+
+  // it does nothing, just print on the log (INFO) the content of the line in the rule:
+  // log example of command: logentry,S=[task#value] T=[task1#value]:
+  // ACT  : logentry,S=24 T=23.1
+  // Command: logentry
+  case cmd_logentry:
+  {
+    success = true;
+    break;
+  }
+
   case cmd_TaskRun:
   {
     success = true;
@@ -465,11 +516,76 @@ void ExecuteCommand(byte source, const char *Line)
     {
       success = true;
       if (Par2)
+      {
         //start new timer
-        RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
+        RulesTimer[Par1 - 1].interval = Par2*1000;
+        RulesTimer[Par1 - 1].paused = false;
+        RulesTimer[Par1 - 1].timestamp = millis() + (1000 * Par2);
+      }
       else
+      {
         //disable existing timer
-        RulesTimer[Par1 - 1] = 0L;
+        RulesTimer[Par1 - 1].interval = 0;
+        RulesTimer[Par1 - 1].paused = false;
+        RulesTimer[Par1 - 1].timestamp = 0L;
+      }
+    }
+    else
+    {
+      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
+    }
+    break;
+  }
+
+  case cmd_TimerPause:
+  {
+    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
+    {
+       success = true;
+       if (RulesTimer[Par1 - 1].paused == false)
+       {
+          long delta = timePassedSince(RulesTimer[Par1 - 1].timestamp);
+          if(RulesTimer[Par1 - 1].timestamp != 0L && delta < 0)
+          {
+            String event = F("Rules#TimerPause=");
+            event += Par1;
+            rulesProcessing(event);
+            RulesTimer[Par1 - 1].paused = true;
+            RulesTimer[Par1 - 1].interval = -delta; // set remaind time
+          }
+       }
+       else
+       {
+         addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
+       }
+    }
+    else
+    {
+      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
+    }
+    break;
+  }
+
+  case cmd_TimerResume:
+  {
+    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
+    {
+       success = true;
+       if (RulesTimer[Par1 - 1].paused == true)
+       {
+          if(RulesTimer[Par1 - 1].interval > 0 && RulesTimer[Par1 - 1].timestamp != 0L)
+          {
+            String event = F("Rules#TimerResume=");
+            event += Par1;
+            rulesProcessing(event);
+            RulesTimer[Par1 - 1].timestamp = millis() + (RulesTimer[Par1 - 1].interval);
+            RulesTimer[Par1 - 1].paused = false;
+          }
+       }
+       else
+       {
+         addLog(LOG_LEVEL_INFO, F("TIMER: already resumed"));
+       }
     }
     else
     {
@@ -500,7 +616,7 @@ void ExecuteCommand(byte source, const char *Line)
     success = true;
     String event = Line;
     event = event.substring(6);
-    event.replace("$", "#");
+    event.replace('$', '#');
     if (Settings.UseRules)
       rulesProcessing(event);
     break;
@@ -576,9 +692,14 @@ void ExecuteCommand(byte source, const char *Line)
       WiFiClient client;
       if (client.connect(host.c_str(), port.toInt()))
       {
-        client.print(String("GET ") + path + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
-                     "Connection: close\r\n\r\n");
+        String reply = F("GET ");
+        reply += path;
+        reply += F(" HTTP/1.1\r\n");
+        reply += F("Host: ");
+        reply += host;
+        reply += F("\r\n");
+        reply += F("Connection: close\r\n\r\n");
+        client.print(reply);
 
         unsigned long timer = millis() + 200;
         while (!client.available() && !timeOutReached(timer))
@@ -681,7 +802,7 @@ void ExecuteCommand(byte source, const char *Line)
   case cmd_WifiConnect:
   {
     success = true;
-    setWifiState(WifiTryConnect);
+    WiFiConnectRelaxed();
     break;
   }
 
@@ -694,7 +815,7 @@ void ExecuteCommand(byte source, const char *Line)
 
   case cmd_WifiAPMode:
   {
-    setWifiState(WifiEnableAP);
+    setAP(true);
     success = true;
     break;
   }
@@ -792,6 +913,85 @@ void ExecuteCommand(byte source, const char *Line)
       if (!str2ip(TmpStr1, Settings.IP))
         Serial.println("?");
     }
+    break;
+  }
+
+  case cmd_DNS:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2)) {
+      if (!str2ip(TmpStr1, Settings.DNS))
+        Serial.println("?");
+    }
+    break;
+  }
+
+  case cmd_gateway:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2)) {
+      if (!str2ip(TmpStr1, Settings.Gateway))
+        Serial.println("?");
+    }
+    break;
+  }
+
+  case cmd_subnet:
+  {
+    success = true;
+    if (GetArgv(Line, TmpStr1, 2)) {
+      if (!str2ip(TmpStr1, Settings.Subnet))
+        Serial.println("?");
+    }
+    break;
+  }
+
+  case cmd_DST:
+  {
+    success = true;
+    Settings.DST=Par1;
+    break;
+  }
+
+  case cmd_MQTTRetainFlag:
+  {
+    success = true;
+    Settings.MQTTRetainFlag=Par1;
+    break;
+  }
+
+  case cmd_messageDelay:
+  {
+    success = true;
+    Settings.MessageDelay=Par1;
+    break;
+  }
+
+  case cmd_NTPHost:
+  {
+    success = true;
+    strcpy(Settings.NTPHost, Line + 8);
+    break;
+  }
+
+  case cmd_TimeZone:
+  {
+    success = true;
+    Settings.TimeZone=Par1;
+    break;
+  }
+
+  case cmd_useNTP:
+  {
+    success = true;
+    Settings.UseNTP=Par1;
+    break;
+  }
+
+  case cmd_UDPPort:
+  {
+    success = true;
+    Settings.UDPPort=Par1;
     break;
   }
 

@@ -1,3 +1,4 @@
+#ifdef USES_C007
 //#######################################################################################################
 //########################### Controller Plugin 007: Emoncms ############################################
 //#######################################################################################################
@@ -70,7 +71,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           postDataStr += F("field");
           postDataStr += event->idx + i;
           postDataStr += ":";
-          postDataStr += formatUserVar(event, i);
+          postDataStr += formatUserVarNoCheck(event, i);
         }
         postDataStr += "}";
         postDataStr += F("&apikey=");
@@ -122,3 +123,4 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif

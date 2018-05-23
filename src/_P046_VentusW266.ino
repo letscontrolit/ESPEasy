@@ -78,7 +78,6 @@
 
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
 #ifdef PLUGIN_BUILD_DISABLED
-// #ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_046_DEBUG            true                        // Shows received frames and crc in log@INFO
 
@@ -155,74 +154,74 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         options[7] = F("Unknown 2, byte 16");
         options[8] = F("Unknown 3, byte 19");
 
-        addFormSelector(string, F("Plugin function"), F("plugin_046"), nrchoices, options, NULL, choice);
+        addFormSelector(F("Plugin function"), F("plugin_046"), nrchoices, options, NULL, choice);
 
         if (choice==0) {
-          string += F("<TR><TD>1st GPIO (5-MOSI):<TD>");
-          addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-          string += F("<TR><TD>2nd GPIO (6-SCLK):<TD>");
-          addPinSelect(false, string, "taskdevicepin2", Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-          string += F("<TR><TD>3rd GPIO (7-nSEL):<TD>");
-          addPinSelect(false, string, "taskdevicepin3", Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
-          string += F("<TR><TD>4th GPIO (8-MISO):<TD>");
-          addPinSelect(false, string, "taskdeviceport", Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+          addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));
+          addPinSelect(false, "taskdevicepin1", Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+          addHtml(F("<TR><TD>2nd GPIO (6-SCLK):<TD>"));
+          addPinSelect(false, "taskdevicepin2", Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+          addHtml(F("<TR><TD>3rd GPIO (7-nSEL):<TD>"));
+          addPinSelect(false, "taskdevicepin3", Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+          addHtml(F("<TR><TD>4th GPIO (8-MISO):<TD>"));
+          addPinSelect(false, "taskdeviceport", Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
         }
 
         switch (choice)
         {
           case (0):
           {
-            string += F("<TR><TD><B>Be sure you only have 1 main plugin!</B></TD>");
-            string += F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals");
-            string += F("<BR>Value 3: not used</TD>");
+            addHtml(F("<TR><TD><B>Be sure you only have 1 main plugin!</B></TD>"));
+            addHtml(F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals"));
+            addHtml(F("<BR>Value 3: not used</TD>"));
             break;
           }
           case (1):
           {
-            string += F("<TR><TD>Value 1: Direction, 0 decimals<BR>");
-            string += F("Value 2: Average, 1 decimal<Br>Value 3: Gust, 1 decimal</TD>");
+            addHtml(F("<TR><TD>Value 1: Direction, 0 decimals<BR>"));
+            addHtml(F("Value 2: Average, 1 decimal<Br>Value 3: Gust, 1 decimal</TD>"));
             break;
           }
           case (2):
           {
-            string += F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm");
-            string += F("<BR>Value 3: not used</TD>");
+            addHtml(F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm"));
+            addHtml(F("<BR>Value 3: not used</TD>"));
             break;
           }
           case (3):
           {
-            string += F("<TR><TD>Value 1: UV, 1 decimal");
-            string += F("<BR>Values 2, 3</TD>");
+            addHtml(F("<TR><TD>Value 1: UV, 1 decimal"));
+            addHtml(F("<BR>Values 2, 3</TD>"));
             break;
           }
           case (4):
           {
-            string += F("<TR><TD>Value 1: Strikes this hour, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");
+            addHtml(F("<TR><TD>Value 1: Strikes this hour, 0 decimals"));
+            addHtml(F("<BR>Values 2, 3: not used</TD>"));
             break;
           }
           case (5):
           {
-            string += F("<TR><TD>Value 1: Distance in km, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");
+            addHtml(F("<TR><TD>Value 1: Distance in km, 0 decimals"));
+            addHtml(F("<BR>Values 2, 3: not used</TD>"));
             break;
           }
           case (6):
           {
-            string += F("<TR><TD>Value 1: Batterybyte, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");
+            addHtml(F("<TR><TD>Value 1: Batterybyte, 0 decimals"));
+            addHtml(F("<BR>Values 2, 3: not used</TD>"));
             break;
           }
           case (7):
           {
-            string += F("<TR><TD>Value 1: Last rainbyte, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");
+            addHtml(F("<TR><TD>Value 1: Last rainbyte, 0 decimals"));
+            addHtml(F("<BR>Values 2, 3: not used</TD>"));
             break;
           }
           case (8):
           {
-            string += F("<TR><TD>Value 1: Last lightningbyte, 0 decimals");
-            string += F("<BR>Values 2, 3: not used</TD>");
+            addHtml(F("<TR><TD>Value 1: Last lightningbyte, 0 decimals"));
+            addHtml(F("<BR>Values 2, 3: not used</TD>"));
             break;
           }
         }
@@ -404,7 +403,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             case (4):
             {
               // int strikes = 0;
-              int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
+              unsigned int strikesnow = int((Plugin_046_databuffer[21]) * 256 + Plugin_046_databuffer[20]);
               if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
               if (Plugin_046_laststrikectr > (wdcounter + 10))                   // 5 min interval
               {
@@ -499,5 +498,5 @@ void Plugin_046_ISR_SCLK()                                      // Interrupt on 
       }
     }
   }
-#endif
+#endif // PLUGIN_BUILD_DISABLED
 #endif // USES_P046

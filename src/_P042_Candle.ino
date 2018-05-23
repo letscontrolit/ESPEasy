@@ -135,7 +135,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        string += F("<script src=\"jscolor.min.js\"></script>\n");
+        addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
         char tmpString[128];
         String options[8];
@@ -157,25 +157,25 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         }
 
         // Candle Type Selection
-        addFormSelector(string, F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+        addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
 
         // Advanced Color options
         Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];
-        string += F("<TR><TD>Color Handling:<TD>"); // checked
-        string += F("<input type='radio' id='web_Color_Default' name='web_Color_Type' value='0'");
+        addHtml(F("<TR><TD>Color Handling:<TD>")); // checked
+        addHtml(F("<input type='radio' id='web_Color_Default' name='web_Color_Type' value='0'"));
         if (Candle_color == ColorDefault) {
-          string += F(" checked>");
+          addHtml(F(" checked>"));
         } else {
-          string += F(">");
+          addHtml(F(">"));
         }
-        string += F("<label for='web_Color_Default'> Use default color</label><br>");
-        string += F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'");
+        addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
+        addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
         if (Candle_color == ColorSelected) {
-          string += F(" checked>");
+          addHtml(F(" checked>"));
         } else {
-          string += F(">");
+          addHtml(F(">"));
         }
-        string += F("<label for='web_Color_Selected'> Use selected color</label><br>");
+        addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
 
         // Color Selection
         char hexvalue[7] = {0};
@@ -185,36 +185,36 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
                 Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         // http://jscolor.com/examples/
-        string += F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='");
-        string += hexvalue;
-        string += F("'>");
-        addFormNumericBox(string, F("RGB Color"), F("web_RGB_Red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
-        addNumericBox(string, F("web_RGB_Green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
-        addNumericBox(string, F("web_RGB_Blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
+        addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
+        addHtml(hexvalue);
+        addHtml(F("'>"));
+        addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+        addNumericBox(F("web_RGB_Green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+        addNumericBox(F("web_RGB_Blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
 
         // Brightness Selection
-        string += F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        string += F("'> max");
+        addHtml(F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='"));
+        addHtml(String(Settings.TaskDevicePluginConfig[event->TaskIndex][3]));
+        addHtml(F("'> max"));
 
         sprintf_P(tmpString, PSTR("<TR><TD>Brightness Value:<TD><input type='text' name='web_Bright_Text' id='web_Bright_Text' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
-        string += tmpString;
+        addHtml(tmpString);
 
         // Some Javascript we need to update the items
-        string += F("<script script type='text/javascript'>");
-        string += F("function update(picker) {");
-        string += F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);");
-        string += F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);");
-        string += F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);");
-        string += F("}");
-        string += F("</script>");
+        addHtml(F("<script script type='text/javascript'>"));
+        addHtml(F("function update(picker) {"));
+        addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
+        addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
+        addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
+        addHtml(F("}"));
+        addHtml(F("</script>"));
 
-        string += F("<script type='text/javascript'>window.addEventListener('load', function(){");
-        string += F("var slider = document.getElementById('web_Bright_Slide');");
-        string += F("slider.addEventListener('change', function(){");
-        string += F("document.getElementById('web_Bright_Text').value = this.value;");
-        string += F("});");
-        string += F("});</script>");
+        addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));
+        addHtml(F("var slider = document.getElementById('web_Bright_Slide');"));
+        addHtml(F("slider.addEventListener('change', function(){"));
+        addHtml(F("document.getElementById('web_Bright_Text').value = this.value;"));
+        addHtml(F("});"));
+        addHtml(F("});</script>"));
 
         success = true;
         break;
@@ -382,7 +382,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         //            CANDLE:0::              Candle OFF
         //            CANDLE:1::255           Candle ON - White and full brigthness
 
-        if (tmpString.startsWith("CANDLE:")){
+        if (tmpString.startsWith(F("CANDLE:"))){
           int idx1 = tmpString.indexOf(':');
           int idx2 = tmpString.indexOf(':', idx1+1);
           int idx3 = tmpString.indexOf(':', idx2+1);

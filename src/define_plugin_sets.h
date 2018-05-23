@@ -73,7 +73,26 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW
+    // Undef first to prevent compiler warnings
+    #undef DEFAULT_PIN_I2C_SDA
+    #undef DEFAULT_PIN_I2C_SCL
+    #undef DEFAULT_PIN_STATUS_LED
+
     #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P076
+    #define DEFAULT_PIN_I2C_SDA    4
+    #define DEFAULT_PIN_I2C_SCL    2  // GPIO5 conflicts with HLW8012 Sel output
+    #define DEFAULT_PIN_STATUS_LED 15 // GPIO15 Blue Led (0 = On, 1 = Off)
+#endif
+
+#ifdef PLUGIN_SET_SONOFF_POW_R2
+    // Undef first to prevent compiler warnings
+    #undef DEFAULT_PIN_STATUS_LED
+
+    #define PLUGIN_SET_ONLY_SWITCH
+    // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+    #define USES_P077	// CSE7766
+    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S20
@@ -155,6 +174,12 @@ To create/register a plugin, you have to :
     // TODO : small list of common plugins to fit in 1M
 #endif
 
+// Ventus W266 --------------------------------
+#ifdef PLUGIN_SET_VENTUS_W266
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define PLUGIN_BUILD_DISABLED
+    #define USES_P046      // TESTING	Hardware	P046_VentusW266.ino
+#endif
 
 
 
@@ -171,6 +196,12 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P003
         #define USES_P003   // pulse
+    #endif
+    #ifndef USES_P026
+      #define USES_P026   // SysInfo
+    #endif
+    #ifndef USES_P033
+      #define USES_P033   // Dummy
     #endif
     #ifndef USES_P037
         #define USES_P037   // MQTTImport
@@ -368,6 +399,7 @@ To create/register a plugin, you have to :
     #define USES_C008   // Generic HTTP
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
+    #define USES_C013   // ESPEasy P2P network
 #endif
 
 
@@ -409,6 +441,7 @@ To create/register a plugin, you have to :
     #define USES_P072   // HDC1080
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
+    #define USES_P075   // Nextion
 #endif
 
 
@@ -427,6 +460,8 @@ To create/register a plugin, you have to :
     #define USES_P046   // VentusW266
     #define USES_P050   // TCS34725 RGB Color Sensor with IR filter and White LED
     #define USES_P064   // APDS9960 Gesture
+    #define USES_P077	// CSE7766   Was P134 on Playground
+
 
     // [copied from Playground as of 6 March 2018]
     // It needs some cleanup as some are ALSO in the main repo,

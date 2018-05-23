@@ -27,7 +27,6 @@
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_058
 #define PLUGIN_ID_058         58
@@ -83,7 +82,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
         byte addr = CONFIG(0);
 
         int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
-        addFormSelectorI2C(string, F("i2c_addr"), 8, optionValues, addr);
+        addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
 
         success = true;
         break;
@@ -149,5 +148,4 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P058

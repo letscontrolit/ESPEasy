@@ -57,8 +57,8 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         int optionValues[2];
         optionValues[0] = BH1750_DEFAULT_I2CADDR;
         optionValues[1] = BH1750_SECOND_I2CADDR;
-        addFormSelectorI2C(string, F("plugin_010"), 2, optionValues, choice);
-        addFormNote(string, F("ADDR Low=0x23, High=0x5c"));
+        addFormSelectorI2C(F("plugin_010"), 2, optionValues, choice);
+        addFormNote(F("ADDR Low=0x23, High=0x5c"));
 
         byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String optionsMode[4];
@@ -71,9 +71,9 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         optionValuesMode[1] = RESOLUTION_NORMAL;
         optionValuesMode[2] = RESOLUTION_HIGH;
         optionValuesMode[3] = RESOLUTION_AUTO_HIGH;
-        addFormSelector(string, F("Measurement mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Measurement mode"), F("plugin_010_mode"), 4, optionsMode, optionValuesMode, choiceMode);
 
-        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Send sensor to sleep"), F("plugin_010_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         success = true;
         break;

@@ -51,7 +51,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
         int indices[] = { 11, 22, 12, 23, 70 };
 
-        addFormSelector(string, F("DHT Type"), F("plugin_005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
+        addFormSelector(F("DHT Type"), F("plugin_005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
 
         success = true;
         break;
@@ -102,7 +102,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         {
             byte data = Plugin_005_read_dht_dat();
             if(data == -1)
-            {   logError(event, "DHT  : protocol timeout!");
+            {   logError(event, F("DHT  : protocol timeout!"));
                 break;
             }
             dht_dat[i] = data;
@@ -113,7 +113,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
         if (dht_dat[4] != dht_check_sum)
         {
-            logError(event, "DHT  : checksum error!");
+            logError(event, F("DHT  : checksum error!"));
             break;
         }
 
@@ -140,7 +140,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         }
 
         if (temperature == NAN || humidity == NAN)
-        {     logError(event, "DHT  : invalid NAN reading !");
+        {     logError(event, F("DHT  : invalid NAN reading !"));
               break;
         }
 

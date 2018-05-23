@@ -78,7 +78,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
         options[0] = F("IR object temperature");
         optionValues[1] = (0x06);
         options[1] = F("Ambient temperature");
-        addFormSelector(string, F("Option"), F("plugin_024_option"), MLX90614_OPTION, options, optionValues, choice);
+        addFormSelector(F("Option"), F("plugin_024_option"), MLX90614_OPTION, options, optionValues, choice);
 
         success = true;
         break;

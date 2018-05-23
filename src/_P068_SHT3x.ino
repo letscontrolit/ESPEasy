@@ -10,7 +10,6 @@
 //########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_068
 #define PLUGIN_ID_068         68
@@ -133,7 +132,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 		case PLUGIN_WEBFORM_LOAD:
 		{
 			int optionValues[2] = { 0x44, 0x45 };
-			addFormSelectorI2C(string, F("i2c_addr"), 2, optionValues, CONFIG(0));
+			addFormSelectorI2C(F("i2c_addr"), 2, optionValues, CONFIG(0));
 
 			success = true;
 			break;
@@ -178,5 +177,4 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 	return success;
 }
 
-#endif
 #endif // USES_P068

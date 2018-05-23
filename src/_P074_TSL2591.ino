@@ -10,7 +10,6 @@
 // added lux calculation improvement https://github.com/adafruit/Adafruit_TSL2591_Library/issues/14
 // added fix for issue https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_074
 #define PLUGIN_ID_074        74
@@ -72,7 +71,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         int optionValues[1] = { TSL2591_ADDR };
-        addFormSelectorI2C(string, F("plugin_074_i2c_addr"), 1, optionValues, TSL2591_ADDR);   //Only for display I2C address
+        addFormSelectorI2C(F("plugin_074_i2c_addr"), 1, optionValues, TSL2591_ADDR);   //Only for display I2C address
 
 
 //        tsl.setTiming(TSL2591_INTEGRATIONTIME_100MS);  // shortest integration time (bright light)
@@ -83,7 +82,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
         // tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS);  // longest integration time (dim light)
 
         String optionsMode[6] = { F("100ms"), F("200ms"), F("300ms"), F("400ms"), F("500ms"), F("600ms") };
-        addFormSelector(string, F("Integration Time"), F("plugin_074_itime"), 6, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Integration Time"), F("plugin_074_itime"), 6, optionsMode, NULL, CONFIG(1));
 
 
 //        TSL2591_GAIN_LOW                  = 0x00,    // low gain (1x)
@@ -96,7 +95,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
           F("medium gain (25x)"),
           F("medium gain (428x)"),
           F("max gain (9876x)") };
-        addFormSelector(string, F("Value Mapping"), F("plugin_074_gain"), 4, optionsGain, NULL, CONFIG(2));
+        addFormSelector(F("Value Mapping"), F("plugin_074_gain"), 4, optionsGain, NULL, CONFIG(2));
 
         success = true;
         break;
@@ -263,5 +262,4 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-#endif
 #endif // USES_P074

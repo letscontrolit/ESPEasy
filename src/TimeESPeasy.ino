@@ -202,7 +202,7 @@ unsigned long getNtpTime()
     return 0;
   }
   IPAddress timeServerIP;
-  String log = F("NTP  : NTP send to ");
+  String log = F("NTP  : NTP host ");
   if (Settings.NTPHost[0] != 0) {
     WiFi.hostByName(Settings.NTPHost, timeServerIP);
     log += Settings.NTPHost;
@@ -219,7 +219,13 @@ unsigned long getNtpTime()
     nextSyncTime = sysTime + 5;
   }
 
+  log += F(" (");
+  log += timeServerIP.toString();
+  log += F(")");
+
   if (!hostReachable(timeServerIP)) {
+    log += F(" unreachable");
+    addLog(LOG_LEVEL_INFO, log);
     return 0;
   }
 
@@ -229,9 +235,7 @@ unsigned long getNtpTime()
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
   byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-  log += F(" (");
-  log += timeServerIP.toString();
-  log += F(")");
+  log += F(" queried");
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 
   while (udp.parsePacket() > 0) ; // discard any previously received packets
@@ -282,7 +286,7 @@ unsigned long getNtpTime()
 // Return the time difference as a signed value, taking into account the timers may overflow.
 // Returned timediff is between -24.9 days and +24.9 days.
 // Returned value is positive when "next" is after "prev"
-long timeDiff(unsigned long prev, unsigned long next)
+long timeDiff(const unsigned long prev, const unsigned long next)
 {
   long signed_diff = 0;
   // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
@@ -326,7 +330,21 @@ boolean timeOutReached(unsigned long timer)
   return passed >= 0;
 }
 
-
+void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
+  timer += step;
+  const long passed = timePassedSince(timer);
+  if (passed < 0) {
+    // Event has not yet happened, which is fine.
+    return;
+  }
+  if (static_cast<unsigned long>(passed) > step) {
+    // No need to keep running behind, start again.
+    timer = millis() + step;
+    return;
+  }
+  // Try to get in sync again.
+  timer = millis() + (step - passed);
+}
 
 
 /********************************************************************************************\

@@ -15,7 +15,6 @@
 // If more than one key is pressed, the value is sum of all KeyMap-values
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_062
 #define PLUGIN_ID_062         62
@@ -71,9 +70,9 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         byte addr = CONFIG(0);
 
         int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
-        addFormSelectorI2C(string, F("i2c_addr"), 4, optionValues, addr);
+        addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
 
-        addFormCheckBox(string, F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
 
         success = true;
         break;
@@ -159,5 +158,4 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
 #endif // USES_P062

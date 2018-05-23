@@ -1,3 +1,4 @@
+#ifdef USES_C006
 //#######################################################################################################
 //########################### Controller Plugin 006: PiDome MQTT ########################################
 //#######################################################################################################
@@ -98,10 +99,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
         {
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          if (event->sensorType == SENSOR_TYPE_LONG)
-            value = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-          else
-            value = formatUserVar(event, x);
+          value = formatUserVarNoCheck(event, x);
           MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
         }
         break;
@@ -109,3 +107,4 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif

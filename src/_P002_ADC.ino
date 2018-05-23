@@ -49,23 +49,23 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         #if defined(ESP32)
-          string += F("<TR><TD>Analog Pin:<TD>");
-          addPinSelect(false, string, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+          addHtml(F("<TR><TD>Analog Pin:<TD>"));
+          addPinSelect(false, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
         #endif
-        
-        addFormCheckBox(string, F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-        addFormSubHeader(string, F("Two Point Calibration"));
+        addFormCheckBox(F("Oversampling"), F("plugin_002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-        addFormCheckBox(string, F("Calibration Enabled"), F("plugin_002_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormSubHeader(F("Two Point Calibration"));
 
-        addFormNumericBox(string, F("Point 1"), F("plugin_002_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
-        string += F(" &#8793; ");
-        addTextBox(string, F("plugin_002_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormCheckBox(F("Calibration Enabled"), F("plugin_002_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(string, F("Point 2"), F("plugin_002_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 1023);
-        string += F(" &#8793; ");
-        addTextBox(string, F("plugin_002_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 1"), F("plugin_002_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 1023);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("plugin_002_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+
+        addFormNumericBox(F("Point 2"), F("plugin_002_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 1023);
+        addHtml(F(" &#8793; "));
+        addTextBox(F("plugin_002_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;

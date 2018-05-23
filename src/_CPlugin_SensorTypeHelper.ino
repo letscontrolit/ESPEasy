@@ -6,11 +6,13 @@ byte getValueCountFromSensorType(byte sensorType)
 {
   switch (sensorType)
   {
-    case SENSOR_TYPE_SINGLE:                      // single value sensor, used for Dallas, BH1750, etc
+    case SENSOR_TYPE_NONE:
+      return 0;
+    case SENSOR_TYPE_SINGLE: // single value sensor, used for Dallas, BH1750, etc
     case SENSOR_TYPE_SWITCH:
     case SENSOR_TYPE_DIMMER:
       return 1;
-    case SENSOR_TYPE_LONG:                      // single LONG value, stored in two floats (rfid tags)
+    case SENSOR_TYPE_LONG:   // single LONG value, stored in two floats (rfid tags)
       return 1;
     case SENSOR_TYPE_TEMP_HUM:
     case SENSOR_TYPE_TEMP_BARO:

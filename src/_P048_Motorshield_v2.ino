@@ -9,7 +9,6 @@
 // written by https://github.com/krikk
 // Currently DC Motors and Steppers are implemented, Servos are in default firmware!!!
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #include <Adafruit_MotorShield.h>
 
@@ -35,7 +34,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		case PLUGIN_DEVICE_ADD: {
 			Device[++deviceCount].Number = PLUGIN_ID_048;
 			Device[deviceCount].Type = DEVICE_TYPE_I2C;
-			Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+			Device[deviceCount].VType = SENSOR_TYPE_NONE;
 			Device[deviceCount].Ports = 0;
 			Device[deviceCount].PullUpOption = false;
 			Device[deviceCount].InverseLogicOption = false;
@@ -59,13 +58,13 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-    	addFormTextBox(string, F("I2C Address (Hex)"), F("plugin_048_adr"), String(F("0x")) +
+    	addFormTextBox(F("I2C Address (Hex)"), F("plugin_048_adr"), String(F("0x")) +
     			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
-    	addFormNumericBox(string, F("Stepper: steps per revolution"), F("plugin_048_MotorStepsPerRevolution")
+    	addFormNumericBox(F("Stepper: steps per revolution"), F("plugin_048_MotorStepsPerRevolution")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-    	addFormNumericBox(string, F("Stepper speed (rpm)"), F("plugin_048_StepperSpeed")
+    	addFormNumericBox(F("Stepper speed (rpm)"), F("plugin_048_StepperSpeed")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
 			success = true;
@@ -276,5 +275,4 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 }
 
 
-#endif
 #endif // USES_P048

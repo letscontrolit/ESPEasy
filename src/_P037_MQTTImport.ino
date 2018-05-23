@@ -36,8 +36,11 @@ void Plugin_037_update_connect_status() {
       String event = connected ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected");
       rulesProcessing(event);
     }
-    if (!connected)
+    if (!connected) {
+      // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+      espclient_037 = WiFiClient();
       addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Connection lost"));
+    }
   }
 }
 
@@ -49,7 +52,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
   //
   // Generate the MQTT import client name from the system name and a suffix
   //
-  String tmpClientName = "%sysname%-Import";
+  String tmpClientName = F("%sysname%-Import");
   String ClientName = parseTemplate(tmpClientName, 20);
 
   switch (function)
@@ -92,7 +95,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         for (byte varNr = 0; varNr < 4; varNr++)
         {
-        	addFormTextBox(string, String(F("MQTT Topic ")) + (varNr + 1), String(F("Plugin_037_template")) +
+        	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("Plugin_037_template")) +
         			(varNr + 1), deviceTemplate[varNr], 40);
         }
         success = true;
@@ -118,8 +121,9 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!MQTTclient_037)
+        if (!MQTTclient_037) {
           MQTTclient_037 = new PubSubClient(espclient_037);
+        }
 
         //    When we edit the subscription data from the webserver, the plugin is called again with init.
         //    In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions

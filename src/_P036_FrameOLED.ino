@@ -26,10 +26,10 @@
 #define P36_CONTRAST_HIGH 0xFF
 
 
-#include "SSD1306.h" 
-#include "SH1106Wire.h" 
-#include "OLED_SSD1306_SH1106_images.h" 
-#include "Dialog_Plain_12_font.h" 
+#include "SSD1306.h"
+#include "SH1106Wire.h"
+#include "OLED_SSD1306_SH1106_images.h"
+#include "Dialog_Plain_12_font.h"
 
 #define P36_WIFI_STATE_UNSET          -2
 #define P36_WIFI_STATE_NOT_CONNECTED  -1
@@ -62,7 +62,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_036;
         Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -94,7 +94,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         options5[0] = F("SSD1306");
         options5[1] = F("SH1106");
         int optionValues5[2] = { 1, 2 };
-        addFormSelector(string, F("Controler"), F("plugin_036_controler"), 2, options5, optionValues5, choice5);
+        addFormSelector(F("Controler"), F("plugin_036_controler"), 2, options5, optionValues5, choice5);
 
         byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*
@@ -105,14 +105,14 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         int optionValues0[2];
         optionValues0[0] = 0x3C;
         optionValues0[1] = 0x3D;
-        addFormSelectorI2C(string, F("plugin_036_adr"), 2, optionValues0, choice0);
+        addFormSelectorI2C(F("plugin_036_adr"), 2, optionValues0, choice0);
 
         byte choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options1[2];
         options1[0] = F("Normal");
         options1[1] = F("Rotated");
         int optionValues1[2] = { 1, 2 };
-        addFormSelector(string, F("Rotation"), F("plugin_036_rotate"), 2, options1, optionValues1, choice1);
+        addFormSelector(F("Rotation"), F("plugin_036_rotate"), 2, options1, optionValues1, choice1);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options2[4];
@@ -121,7 +121,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         options2[2] = F("3");
         options2[3] = F("4");
         int optionValues2[4] = { 1, 2, 3, 4 };
-        addFormSelector(string, F("Lines per Frame"), F("plugin_036_nlines"), 4, options2, optionValues2, choice2);
+        addFormSelector(F("Lines per Frame"), F("plugin_036_nlines"), 4, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
         String options3[5];
@@ -136,18 +136,18 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[2] = 4;
         optionValues3[3] = 8;
         optionValues3[4] = 32;
-        addFormSelector(string, F("Scroll"), F("plugin_036_scroll"), 5, options3, optionValues3, choice3);
+        addFormSelector(F("Scroll"), F("plugin_036_scroll"), 5, options3, optionValues3, choice3);
 
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
 
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(string, String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), P036_deviceTemplate[varNr], P36_Nchars);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_036_template")) + (varNr + 1), P036_deviceTemplate[varNr], P36_Nchars);
         }
 
-        addFormPinSelect(string, F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+        addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-        addFormNumericBox(string, F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        addFormNumericBox(F("Display Timeout"), F("plugin_036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
 
         byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
         if (choice6 == 0) choice6 = P36_CONTRAST_HIGH;
@@ -159,7 +159,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues6[0] = P36_CONTRAST_LOW;
         optionValues6[1] = P36_CONTRAST_MED;
         optionValues6[2] = P36_CONTRAST_HIGH;
-        addFormSelector(string, F("Contrast"), F("plugin_036_contrast"), 3, options6, optionValues6, choice6);
+        addFormSelector(F("Contrast"), F("plugin_036_contrast"), 3, options6, optionValues6, choice6);
 
         success = true;
         break;
@@ -473,7 +473,7 @@ void display_header() {
     newString.trim();
     display_title(newString);
   } else {
-    String dtime = "%sysname%";
+    String dtime = F("%sysname%");
     String newString = parseTemplate(dtime, 10);
     newString.trim();
     display_title(newString);
@@ -485,7 +485,7 @@ void display_header() {
 }
 
 void display_time() {
-  String dtime = "%systime%";
+  String dtime = F("%systime%");
   String newString = parseTemplate(dtime, 10);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
