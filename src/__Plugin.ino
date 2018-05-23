@@ -1068,6 +1068,8 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
   if (event == 0)
     event = &TempEvent;
+  else
+    TempEvent = (*event);
 
   switch (Function)
   {
@@ -1083,10 +1085,32 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
     case PLUGIN_REQUEST:
-      for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
-          if (Plugin_ptr[x](Function, event, str))
-            return true;
+      {
+        for (byte y = 0; y < TASKS_MAX; y++)
+        {
+          if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
+          {
+            if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
+            {
+              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+              TempEvent.TaskIndex = y;
+              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+              TempEvent.sensorType = Device[DeviceIndex].VType;
+              for (x = 0; x < PLUGIN_MAX; x++)
+              {
+                if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
+                {
+                  checkRAM(F("PluginCall_s"),x);
+                  if(Plugin_ptr[x](Function, &TempEvent, str))
+                  {
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       break;
 
     // Call to all plugins used in a task. Return at first match

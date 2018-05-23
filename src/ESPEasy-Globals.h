@@ -917,6 +917,13 @@ struct EventStruct
     Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
     BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     OriginTaskIndex(0), Data(NULL) {}
+  EventStruct(const struct EventStruct& event):
+        Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
+        , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
+        , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
+        , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
+        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {}
+
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
   byte ControllerIndex; // index position in Settings.Controller, 0-3
@@ -1121,13 +1128,16 @@ struct NodeStruct
 struct systemTimerStruct
 {
   systemTimerStruct() :
-    timer(0), plugin(0), Par1(0), Par2(0), Par3(0) {}
+    timer(0), plugin(0), TaskIndex(-1), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0) {}
 
   unsigned long timer;
   byte plugin;
-  byte Par1;
-  byte Par2;
-  byte Par3;
+  int16_t TaskIndex;
+  int Par1;
+  int Par2;
+  int Par3;
+  int Par4;
+  int Par5;
 } systemTimers[SYSTEM_TIMER_MAX];
 
 #define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
