@@ -1,0 +1,21 @@
+#!/bin/bash
+# build an include file to select plugins
+#
+WORKDIR=ESPEasy
+CUSTOM_H=${WORKDIR}/Custom.h
+GLOBAL_H=${WORKDIR}/ESPEasy-Globals.h
+
+[[ -L ${WORKDIR} ]] || (
+  ln -s src ${WORKDIR}
+)
+
+# we expect that ${CUSTOM_H} always contains a "#define BUILD_GIT" macro
+[[ -f ${CUSTOM_H} ]] && (
+echo "post_merge: change BUILD_GIT"
+sed -i.bak -e "s/\(#define BUILD_GIT\).*/\1 \"$(git log -1 --pretty=format:%h HEAD)\"/" ${CUSTOM_H}
+)
+
+# uncomment if you don't want to use the Custom.h include
+grep -q "^#define USE_CUSTOM_H" ${GLOBAL_H} || (
+sed -i -e "/[ \t]*#define ESPEASY_GLOBALS_H_/a #define USE_CUSTOM_H" ${GLOBAL_H}
+)
