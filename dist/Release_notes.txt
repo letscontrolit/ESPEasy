@@ -1,4 +1,46 @@
 -------------------------------------------------
+Changes in release mega-20180524 (since mega-20180522)
+-------------------------------------------------
+
+Release date: Thu May 24 04:00:14 CEST 2018
+
+Saverio Cisternino (25):
+      Allows plugin to intercept PLUGIN_WRITE and PLUGIN_REQUEST, when there is more tasks of same plugin type but different configuration.
+      Allow escape char [ and ] for use with comannd and rule containde space es [Extra 2]#Go
+      Allow PLUGIN_TIMER_IN TaskIndex
+      -Arminizze type of ParX of systemTimerStruct with EventStruct to prevent truncation issue     -Add setSystemTimer overload
+      EventStruct  copy ctor
+      Allow using two oled at same time.
+      Allow custom mqtt lwt topic
+      Allow custom lwt message
+      Allow use Unit Name as MQTT ClientId
+      Allows plugin to intercept PLUGIN_WRITE and PLUGIN_REQUEST, when there is more tasks of same plugin type but different configuration.
+      Allow escape char [ and ] for use with comannd and rule containde space es [Extra 2]#Go
+      Allow PLUGIN_TIMER_IN TaskIndex
+      -Arminizze type of ParX of systemTimerStruct with EventStruct to prevent truncation issue     -Add setSystemTimer overload
+      EventStruct  copy ctor
+      ExecuteCommand intercept Par4 and Par5
+      PCA9685: Allow select address.
+      PCA9685: Allow named istance commands for execute command on specific task when there is more PCA9685 task.
+      PCA9685: Add Pin e PWM validation
+      PCA9685: show address in hex.
+      PCA9685: Allow use pwm alias when call instance command es: Extender.pwm 1, 1000
+      PCA9685: Add pcafrq arg validation
+      PCA9685: Allow use frq alias when call instance command es: Extender.frq 100
+      PCA9685: Add support at commad gpio on name instance call
+      PCA9685: Add named istance pulse command. Es: Extend.pulse 0,1,50,auto gnenerate pulse on gpio 0 with duration of 50 ms an autorestart after 50 ms
+      PCA9685: Add support at command [TaskName].gpio all,1 | 0 which allows you to turn on (1) or turn off (0) all gpio of expander.
+
+Susis Strolch (3):
+      GIT hooks: post-merge, post-commit, post-checkout
+      add missing &amp; around value, add README
+      add missing &amp; around value
+
+TD-er (1):
+      [CI build] Small fix to prevent Travis CI build errors.
+
+
+-------------------------------------------------
 Changes in release mega-20180522 (since mega-20180519)
 -------------------------------------------------
 
