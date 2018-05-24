@@ -1,7 +1,24 @@
 //**************************************************************************/
 // Central functions for I2C data transfers
 //**************************************************************************/
+bool I2C_read_bytes(uint8_t i2caddr, I2Cdata_bytes& data) {
+  const uint8_t size = data.getSize();
+  return size == i2cdev.readBytes(i2caddr, data.getRegister(), size, data.get());
+}
 
+bool I2C_read_words(uint8_t i2caddr, I2Cdata_words& data) {
+  const uint8_t size = data.getSize();
+  return size == i2cdev.readWords(i2caddr, data.getRegister(), size, data.get());
+}
+
+
+//**************************************************************************/
+// Wake up I2C device
+//**************************************************************************/
+void I2C_wakeup(uint8_t i2caddr) {
+  Wire.beginTransmission(i2caddr);
+  Wire.endTransmission();
+}
 
 //**************************************************************************/
 // Writes an 8 bit value over I2C

@@ -364,6 +364,9 @@
 
 #include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
+#include "I2CTypes.h"
+#include <I2Cdev.h>
+
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #include "core_version.h"
@@ -589,6 +592,8 @@ void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
 
+
+bool I2C_read_bytes(uint8_t i2caddr, I2Cdata_bytes& data);
 bool I2C_write8_reg(uint8_t i2caddr, byte reg, byte value);
 uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok = NULL);
 uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg);
@@ -596,6 +601,8 @@ int32_t I2C_read24_reg(uint8_t i2caddr, byte reg);
 uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg);
+I2Cdev i2cdev;
+
 
 struct SecurityStruct
 {
