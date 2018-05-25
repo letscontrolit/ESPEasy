@@ -556,6 +556,7 @@ To create/register a plugin, you have to :
     #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P079   // Wemos Motoshield
     #define USES_P080   // iButton Sensor  DS1990A
+    #define USES_P081   // Cron
 #endif
 
 

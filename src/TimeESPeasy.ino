@@ -559,7 +559,10 @@ String getDateString(char delimiter)
 {
   return getDateString(tm, delimiter);
 }
-
+String getDateString(const struct tm& ts)
+{
+  return getDateString(tm, ':');
+}
 // returns the current Date without delimiter
 // date format example: 20161231 (YYYYMMDD)
 String getDateString()
@@ -627,6 +630,11 @@ String getDateTimeString(const struct tm& ts, char dateDelimiter, char timeDelim
     ret += dateTimeDelimiter;
   ret += getTimeString(ts, timeDelimiter, am_pm, true);
   return ret;
+}
+
+String getDateTimeString(const struct tm& ts)
+{
+  return getDateTimeString(ts,'-', ':', ' ', false);
 }
 
 String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {

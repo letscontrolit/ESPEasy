@@ -304,7 +304,7 @@
 #define CMD_WIFI_DISCONNECT               135
 
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      75
+  #define DEVICES_MAX                      85
 #else
   #ifdef ESP32
     #define DEVICES_MAX                      75
