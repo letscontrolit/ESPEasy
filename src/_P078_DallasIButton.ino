@@ -3,7 +3,6 @@
 // #################################### Plugin 078: iButton Sensor  DS1990A    ###########################
 // #######################################################################################################
 
-
 // Maxim Integrated
 
 #if defined(ESP32)
@@ -55,7 +54,6 @@ boolean Plugin_078(byte function, struct EventStruct * event, String& string)
         case PLUGIN_WEBFORM_LOAD:
         {
             uint8_t savedAddress[8];
-
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
             Plugin_078_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
 
@@ -90,16 +88,6 @@ boolean Plugin_078(byte function, struct EventStruct * event, String& string)
                   count ++;
               }
               addSelector_Foot();
-
-
-
-
-
-
-
-
-
-
             }
             success = true;
             break;
@@ -116,7 +104,6 @@ boolean Plugin_078(byte function, struct EventStruct * event, String& string)
               Plugin_078_DS_scan(getFormItemInt(F("plugin_078_dev")), addr);
               for (byte x = 0; x < 8; x++)
                   ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
-
 
               Plugin_078_DS_startConvertion(addr);
             }
@@ -154,10 +141,6 @@ boolean Plugin_078(byte function, struct EventStruct * event, String& string)
                 uint8_t addr[8];
                 Plugin_078_get_addr(addr, event->TaskIndex);
 
-
-
-
-
                 Plugin_078_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
                 String log  = F("DS   : iButton: ");
 
@@ -171,22 +154,11 @@ boolean Plugin_078(byte function, struct EventStruct * event, String& string)
                 {
 
 
-
-
-
-
-
-
-
-
-
-
                     UserVar[event->BaseVarIndex] = 0;
                     log += F("Not Present!");
                 }
                 Plugin_078_DS_startConvertion(addr);
-
-                addLog(LOG_LEVEL_INFO, log);
+                addLog(LOG_LEVEL_DEBUG, log);
             }
             break;
         }
@@ -213,7 +185,6 @@ byte Plugin_078_DS_scan(byte getDeviceROM, uint8_t* ROM)
     Plugin_078_DS_reset();
 
     Plugin_078_DS_reset_search();
-
     while (Plugin_078_DS_search(tmpaddr))
     {
         if (getDeviceROM == devCount)
@@ -232,161 +203,13 @@ byte Plugin_078_DS_scan(byte getDeviceROM, uint8_t* ROM)
 *   12 bits resolution -> 750 ms
 \*********************************************************************************************/
 void Plugin_078_DS_startConvertion(uint8_t ROM[8])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 {
-
-
-
-
-
     Plugin_078_DS_reset();
     Plugin_078_DS_write(0x55); // Choose ROM
     for (byte i = 0; i < 8; i++)
         Plugin_078_DS_write(ROM[i]);
-
     Plugin_078_DS_write(0x44); // Take temperature mesurement
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -425,8 +248,6 @@ uint8_t Plugin_078_DS_reset()
 #define TRUE  1
 
 unsigned char ROM_NBR[8];
-
-
 uint8_t LastDiscrep;
 uint8_t LastFamilyDiscrep;
 uint8_t LastDeviceFlg;
@@ -438,9 +259,6 @@ uint8_t LastDeviceFlg;
 void Plugin_078_DS_reset_search()
 {
     // reset the search state
-
-
-
     LastDiscrep       = 0;
     LastDeviceFlg        = FALSE;
     LastFamilyDiscrep = 0;
@@ -467,16 +285,12 @@ uint8_t Plugin_078_DS_search(uint8_t * newAddr)
     search_result   = 0;
 
     // if the last call was not the last one
-
     if (!LastDeviceFlg)
     {
         // 1-Wire reset
         if (!Plugin_078_DS_reset())
         {
             // reset the search
-
-
-
             LastDiscrep       = 0;
             LastDeviceFlg        = FALSE;
             LastFamilyDiscrep = 0;
@@ -505,7 +319,6 @@ uint8_t Plugin_078_DS_search(uint8_t * newAddr)
                 {
                     // if this discrepancy if before the Last Discrepancy
                     // on a previous next then pick the same as last time
-
                     if (id_bit_number < LastDiscrep)
                         search_direction = ((ROM_NBR[rom_byte_number] & rom_byte_mask) > 0);
                     else
@@ -519,7 +332,6 @@ uint8_t Plugin_078_DS_search(uint8_t * newAddr)
 
                         // check for Last discrepancy in family
                         if (last_zero < 9)
-
                             LastFamilyDiscrep = last_zero;
                     }
                 }
@@ -553,12 +365,9 @@ uint8_t Plugin_078_DS_search(uint8_t * newAddr)
         if (!(id_bit_number < 65))
         {
             // search successful so set LastDiscrep,LastDeviceFlg,search_result
-
             LastDiscrep = last_zero;
 
             // check for last device
-
-
             if (LastDiscrep == 0)
                 LastDeviceFlg = TRUE;
 
@@ -569,9 +378,6 @@ uint8_t Plugin_078_DS_search(uint8_t * newAddr)
     // if no device found then reset counters so next 'search' will be like a first
     if (!search_result || !ROM_NBR[0])
     {
-
-
-
         LastDiscrep       = 0;
         LastDeviceFlg        = FALSE;
         LastFamilyDiscrep = 0;
