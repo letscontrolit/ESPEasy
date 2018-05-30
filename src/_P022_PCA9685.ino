@@ -141,7 +141,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if(dotPos >- 1 && command == F("gpio"))
+        if(istanceCommand && command == F("gpio"))
         {
           success = true;
           log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO "));
@@ -177,7 +177,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if(dotPos >- 1 && command == F("pulse"))
+        if(istanceCommand && command == F("pulse"))
         {
           success = true;
           log = String(F("PCA 0x")) + String(PCA9685_ADDRESS + port, HEX) + String(F(": GPIO ")) + String(event->Par1);
