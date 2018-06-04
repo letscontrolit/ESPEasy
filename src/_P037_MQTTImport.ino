@@ -219,7 +219,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
           if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
-
+          parseSystemVariables(subscriptionTopic, false);
           if (MQTTCheckSubscription_037(Topic, subscriptionTopic))
           {
             UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
@@ -282,6 +282,7 @@ boolean MQTTSubscribe_037()
 
         if (subscribeTo.length() > 0)
         {
+          parseSystemVariables(subscribeTo, false);
           if (MQTTclient_037->subscribe(subscribeTo.c_str()))
           {
             String log = F("IMPT : [");
