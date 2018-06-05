@@ -1110,6 +1110,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             }
           }
         }
+        // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
+        for (x = 0; x < PLUGIN_MAX; x++)
+          if (Plugin_id[x] != 0)
+            if (Plugin_ptr[x](Function, event, str))
+              return true;
       }
       break;
 
