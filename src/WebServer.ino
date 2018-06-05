@@ -2659,7 +2659,7 @@ void addWideButton(const String &url, const String &label, const String &color)
 
 void addSubmitButton()
 {
-  TXBuffer += F("<input class='button link' type='submit' value='Submit'><div id='toastmessage'></div></div><script type='text/javascript'>toasting();</script>");
+  TXBuffer += F("<input class='button link' type='submit' value='Submit'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
 }
 
 //add submit button with different label and name
