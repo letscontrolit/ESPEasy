@@ -221,7 +221,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".logviewer {	color: #F1F1F1; background-color: #272727; 	font-family: 'Lucida Console', Monaco, monospace; "
                 " height:  530px; max-width: 1000px; width: 80%; padding: 4px 8px;  overflow: auto;   border-style: solid; border-color: gray; }"
     // text textarea
-    "textarea {max-width: 1000px; width:80%; padding: 4px 8px;}"
+    "textarea {max-width: 1000px; width:80%; padding: 4px 8px; font-family: 'Lucida Console', Monaco, monospace; }"
     "textarea:hover {background-color: #ccc; }"
     // tables
     "table.normal th {padding: 6px; background-color: #444; color: #FFF; border-color: #888; font-weight: bold; }"
