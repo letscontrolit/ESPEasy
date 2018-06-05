@@ -34,7 +34,7 @@ byte _error;
 
 boolean plugin_015_begin()
 {
-	Wire.begin();
+	//Wire.begin();   called in ESPEasy framework
 	return(true);
 }
 

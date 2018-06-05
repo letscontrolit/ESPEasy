@@ -119,7 +119,7 @@ void Adafruit_TCS34725::enable(void)
 {
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON);
   delay(3);
-  write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);  
+  write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);
 }
 
 /**************************************************************************/
@@ -144,7 +144,7 @@ void Adafruit_TCS34725::disable(void)
     Constructor
 */
 /**************************************************************************/
-Adafruit_TCS34725::Adafruit_TCS34725(tcs34725IntegrationTime_t it, tcs34725Gain_t gain) 
+Adafruit_TCS34725::Adafruit_TCS34725(tcs34725IntegrationTime_t it, tcs34725Gain_t gain)
 {
   _tcs34725Initialised = false;
   _tcs34725IntegrationTime = it;
@@ -161,10 +161,10 @@ Adafruit_TCS34725::Adafruit_TCS34725(tcs34725IntegrationTime_t it, tcs34725Gain_
     doing anything else)
 */
 /**************************************************************************/
-boolean Adafruit_TCS34725::begin(void) 
+boolean Adafruit_TCS34725::begin(void)
 {
-  Wire.begin();
-  
+  //Wire.begin();   called in ESPEasy framework
+
   /* Make sure we're actually connected */
   uint8_t x = read8(TCS34725_ID);
   if ((x != 0x44) && (x != 0x10))
@@ -182,7 +182,7 @@ boolean Adafruit_TCS34725::begin(void)
 
   return true;
 }
-  
+
 /**************************************************************************/
 /*!
     Sets the integration time for the TC34725
@@ -228,7 +228,7 @@ void Adafruit_TCS34725::getRawData (uint16_t *r, uint16_t *g, uint16_t *b, uint1
   *r = read16(TCS34725_RDATAL);
   *g = read16(TCS34725_GDATAL);
   *b = read16(TCS34725_BDATAL);
-  
+
   /* Set a delay for the integration time */
   switch (_tcs34725IntegrationTime)
   {

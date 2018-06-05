@@ -1,24 +1,24 @@
 /*
  This is a (Arduino) library for the BH1750FVI Digital Light Sensor.
- 
+
  Description:
  http://www.rohm.com/web/global/products/-/product/BH1750FVI
- 
+
  Datasheet:
  http://rohmfs.rohm.com/en/products/databook/datasheet/ic/sensor/light/bh1750fvi-e.pdf
- 
+
  Copyright (c) 2013 Alexander Schulz.  All right reserved.
- 
+
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
  License as published by the Free Software Foundation; either
  version 2.1 of the License, or (at your option) any later version.
- 
+
  This library is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
  Lesser General Public License for more details.
- 
+
  You should have received a copy of the GNU Lesser General Public
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA	 02110-1301	 USA
@@ -31,10 +31,10 @@
 
 /**
  * Constructor.
- * Erlaubt die I2C-Adresse des Sensors zu ändern. 
- * Standardadresse: 0x23, Alternativadresse: 0x5C. 
+ * Erlaubt die I2C-Adresse des Sensors zu ändern.
+ * Standardadresse: 0x23, Alternativadresse: 0x5C.
  * Es sind entsprechende Konstanten definiert: BH1750_DEFAULT_I2CADDR  und BH1750_SECOND_I2CADDR.
- * Bei Nichtangabe wird die Standardadresse verwendet. 
+ * Bei Nichtangabe wird die Standardadresse verwendet.
  * Um die Alternativadresse zu nutzen, muss der Sensorpin 'ADR' des Chips auf VCC gelegt werden.
  */
 AS_BH1750::AS_BH1750(uint8_t address) {
@@ -44,23 +44,23 @@ AS_BH1750::AS_BH1750(uint8_t address) {
 
 /**
  * Führt die anfängliche Initialisierung des Sensors.
- * Mögliche Parameter: 
+ * Mögliche Parameter:
  *  - Modus für die Sensorauflösung:
  *    -- RESOLUTION_LOW:         Physische Sensormodus mit 4 lx Auflösung. Messzeit ca. 16ms. Bereich 0-54612.
  *    -- RESOLUTION_NORMAL:      Physische Sensormodus mit 1 lx Auflösung. Messzeit ca. 120ms. Bereich 0-54612.
  *    -- RESOLUTION_HIGH:        Physische Sensormodus mit 0,5 lx Auflösung. Messzeit ca. 120ms. Bereich 0-54612.
  *                               (Die Messbereiche können durch Änderung des MTreg verschoben werden.)
- *    -- RESOLUTION_AUTO_HIGH:   Die Werte im MTreg werden je nach Helligkeit automatisch so angepasst, 
+ *    -- RESOLUTION_AUTO_HIGH:   Die Werte im MTreg werden je nach Helligkeit automatisch so angepasst,
  *                               dass eine maximalmögliche Auflösung und Messbereich erziehlt werden.
  *                               Die messbaren Werte fangen von 0,11 lx und gehen bis über 100000 lx.
- *                               (ich weis nicht, wie genau die Werte in Grenzbereichen sind, 
+ *                               (ich weis nicht, wie genau die Werte in Grenzbereichen sind,
  *                               besonders bei hohen Werte habe ich da meine Zweifel.
  *                               Die Werte scheinen jedoch weitgehend linear mit der steigenden Helligkeit zu wachsen.)
  *                               Auflösung im Unteren Bereich ca. 0,13 lx, im mittleren 0,5 lx, im oberen etwa 1-2 lx.
- *                               Die Messzeiten verlängern sich durch mehrfache Messungen und 
+ *                               Die Messzeiten verlängern sich durch mehrfache Messungen und
  *                               die Änderungen von Measurement Time (MTreg) bis max. ca. 500 ms.
- *   
- * - AutoPowerDown: true = Der Sensor wird nach der Messung in den Stromsparmodus versetzt. 
+ *
+ * - AutoPowerDown: true = Der Sensor wird nach der Messung in den Stromsparmodus versetzt.
  *   Das spätere Aufwecken wird ggf. automatisch vorgenommen, braucht jedoch geringfügig mehr Zeit.
  *
  * Defaultwerte: RESOLUTION_AUTO_HIGH, true
@@ -73,8 +73,8 @@ bool AS_BH1750::begin(sensors_resolution_t mode, bool autoPowerDown) {
 #endif
   _virtualMode = mode;
   _autoPowerDown = autoPowerDown;
-  
-  Wire.begin();
+
+  //Wire.begin();   called in ESPEasy framework
 
   defineMTReg(BH1750_MTREG_DEFAULT); // eigentlich normalerweise unnötig, da standard
 
@@ -132,7 +132,7 @@ bool AS_BH1750::isPresent() {
   // Check I2C Adresse
   Wire.beginTransmission(_address);
   if(Wire.endTransmission()!=0) {
-    return false; 
+    return false;
   }
 
   // Check device: ist es ein BH1750
@@ -141,10 +141,10 @@ bool AS_BH1750::isPresent() {
     //write8(BH1750_POWER_ON);
     selectResolutionMode(BH1750_ONE_TIME_LOW_RES_MODE);
     _hardwareMode=255;
-  } 
+  }
   else {
     // falls einmal-modus aktiv war, muss der Sensor geweckt werden
-    powerOn(); 
+    powerOn();
   }
 
   // Prüfen, ob Werte auch wirklich geliefert werden (letztes Modus, ggf. wird auto-PowerDown ausgeführt)
@@ -189,9 +189,9 @@ void AS_BH1750::powerDown() {
  * Sendet zum Sensor ein Befehl zum Auswahl von HardwareMode.
  *
  * Parameter:
- * - mode: s.o. 
+ * - mode: s.o.
  * - DelayFuncPtr: delay(n) Möglichkeit, eigene Delay-Funktion mitzugeben (z.B. um sleep-Modus zu verwenden).
- * 
+ *
  * Defaultwerte: delay()
  *
  */
@@ -256,17 +256,17 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
     return -1;
   }
 
-  // ggf. PowerOn  
+  // ggf. PowerOn
   if(_autoPowerDown && _valueReaded){
     powerOn();
   }
 
   // Das Automatische Modus benötigt eine Sonderbehandlung.
-  // Zuerst wird die Helligkeit im LowRes-Modus gelesen, 
+  // Zuerst wird die Helligkeit im LowRes-Modus gelesen,
   // je nach Bereich (dunkel, normal, sehr hell) werden die Werte von MTreg gesetzt und
   // danach wird die eigentliche Messung vorgenommen.
   /*
-     Die feste Grenzwerte verursachen möglicherweise einen 'Sprung' in der Messkurve. 
+     Die feste Grenzwerte verursachen möglicherweise einen 'Sprung' in der Messkurve.
    In diesem Fall wäre eine laufende Anpassung von MTreg in Grenzbereichen vermutlich besser.
    Für meine Zwecke ist das jedoch ohne Bedeutung.
    */
@@ -282,8 +282,8 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
     if(level<10) {
 #if BH1750_DEBUG == 1
     Serial.println("level 0: dark");
-#endif    
-      // Dunkel, Empfindlichkeit auf Maximum. 
+#endif
+      // Dunkel, Empfindlichkeit auf Maximum.
       // Der Wert ist zufällig. Ab ca. 16000 wäre diese Vorgehnsweise möglich.
       // Ich brauche diese Genauigkeit aber nur in den ganz dunklen Bereichen (zu erkennen, wann wirklich 'dunkel' ist).
       defineMTReg(BH1750_MTREG_MAX);
@@ -294,16 +294,16 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
     else if(level<32767) {
 #if BH1750_DEBUG == 1
     Serial.println("level 1: normal");
-#endif    
+#endif
       // Bis hierher reicht die 0,5 lx Modus. Normale Empfindlichkeit.
       defineMTReg(BH1750_MTREG_DEFAULT);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE_2:BH1750_CONTINUOUS_HIGH_RES_MODE_2, fDelayPtr);
       fDelayPtr(120); // TODO: Wert prüfen
-    } 
+    }
     else if(level<60000) {
 #if BH1750_DEBUG == 1
     Serial.println("level 2: bright");
-#endif    
+#endif
       // hoher Bereich, 1 lx Modus, normale Empfindlichkeit. Der Wert von 60000 ist mehr oder weniger zufällig, es mus einfach ein hoher Wert, nah an der Grenze sein.
       defineMTReg(BH1750_MTREG_DEFAULT);
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE:BH1750_CONTINUOUS_HIGH_RES_MODE, fDelayPtr);
@@ -312,29 +312,29 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
     else {
 #if BH1750_DEBUG == 1
     Serial.println("level 3: very bright");
-#endif    
+#endif
       // sehr hoher Bereich, Empfindlichkeit verringern
       defineMTReg(32); // Min+1, bei dem Minimum aus Doku spielt der Sensor (zumindest meiner) verrückt: Die Werte sind ca. 1/10 von den Erwarteten.
       selectResolutionMode(_autoPowerDown?BH1750_ONE_TIME_HIGH_RES_MODE:BH1750_CONTINUOUS_HIGH_RES_MODE, fDelayPtr);
       fDelayPtr(120); // TODO: Wert prüfen
     }
-  } 
+  }
 
   // Hardware Wert lesen und in Lux umrechnen.
   uint16_t raw = readRawLevel();
   if(raw==65535) {
-    // Wert verdächtig hoch. Sensor prüfen. 
+    // Wert verdächtig hoch. Sensor prüfen.
     // Check I2C Adresse
     Wire.beginTransmission(_address);
     if(Wire.endTransmission()!=0) {
-      return -1; 
+      return -1;
     }
   }
-  return convertRawValue(raw); 
+  return convertRawValue(raw);
 }
 
 /**
- * Roh-Wert der Helligkeit auslesen. 
+ * Roh-Wert der Helligkeit auslesen.
  * Wertebereich 0-65535.
  */
 uint16_t AS_BH1750::readRawLevel(void) {
@@ -457,7 +457,7 @@ void AS_BH1750::defineMTReg(uint8_t val) {
  * Gibt an, ob der Sensor initialisiert ist.
  */
 bool AS_BH1750::isInitialized() {
-  return _hardwareMode!=255; 
+  return _hardwareMode!=255;
 }
 
 /**
