@@ -112,6 +112,8 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
+  Register_Commands();
+  
 #if defined(ESP32)
   WiFi.onEvent(WiFiEvent);
 #else
@@ -914,4 +916,12 @@ void backgroundtasks()
   statusLED(false);
 
   runningBackgroundTasks=false;
+}
+
+/*********************************************************************************************\
+ * Registers command
+\*********************************************************************************************/
+void Register_Commands()
+{
+
 }
