@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180606 (since mega-20180524)
+-------------------------------------------------
+
+Release date: Wed Jun  6 04:00:17 CEST 2018
+
+Gijs Noorlander (1):
+      [GPIO command] work-around as long as gpio command is still performed in P001_switch.
+
+
+-------------------------------------------------
 Changes in release mega-20180524 (since mega-20180522)
 -------------------------------------------------
 
