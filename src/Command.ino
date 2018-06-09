@@ -1,4 +1,4 @@
-char* ramtest;
+
 
 //Reads a string from a stream until a terminator-character.
 //We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.

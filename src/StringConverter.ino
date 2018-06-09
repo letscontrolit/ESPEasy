@@ -70,6 +70,29 @@ String toString(float value, byte decimals)
   return sValue;
 }
 
+String toString(WiFiMode_t mode)
+{
+  String result = F("Undefinited");
+  switch (mode)
+  {
+    case WIFI_OFF:
+      result = F("Off");
+      break;
+    case WIFI_STA:
+      result = F("STA");
+      break;
+    case WIFI_AP:
+      result = F("AP");
+      break;
+    case WIFI_AP_STA:
+      result = F("AP+STA");
+      break;    
+    default:
+      break;
+  }  
+  return result;
+}
+
 /*********************************************************************************************\
    Format a value to the set number of decimals
   \*********************************************************************************************/
