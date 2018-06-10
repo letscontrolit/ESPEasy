@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// NewPing Library - v1.8 - 07/30/2016
+// NewPingESP8266 Library - v1.8 - 07/30/2016
 //
 // AUTHOR/LICENSE:
 // Created by Tim Eckel - teckel@leethost.com
@@ -16,7 +16,7 @@
 // BACKGROUND:
 // When I first received an ultrasonic sensor I was not happy with how poorly
 // it worked. Quickly I realized the problem wasn't the sensor, it was the
-// available ping and ultrasonic libraries causing the problem. The NewPing
+// available ping and ultrasonic libraries causing the problem. The NewPingESP8266
 // library totally fixes these problems, adds many new features, and breaths
 // new life into these very affordable distance sensors.
 //
@@ -36,7 +36,7 @@
 // * Actively developed with features being added and bugs/issues addressed.
 //
 // CONSTRUCTOR:
-//   NewPing sonar(trigger_pin, echo_pin [, max_cm_distance])
+//   NewPingESP8266 sonar(trigger_pin, echo_pin [, max_cm_distance])
 //     trigger_pin & echo_pin - Arduino pins connected to sensor trigger and echo.
 //       NOTE: To use the same Arduino pin for trigger and echo, specify the same pin for both values.
 //     max_cm_distance - [Optional] Maximum distance you wish to sense. Default=500cm.
@@ -46,13 +46,13 @@
 //   sonar.ping_in([max_cm_distance]) - Send a ping and get the distance in whole inches. [max_cm_distance] allows you to optionally set a new max distance.
 //   sonar.ping_cm([max_cm_distance]) - Send a ping and get the distance in whole centimeters. [max_cm_distance] allows you to optionally set a new max distance.
 //   sonar.ping_median(iterations [, max_cm_distance]) - Do multiple pings (default=5), discard out of range pings and return median in microseconds. [max_cm_distance] allows you to optionally set a new max distance.
-//   NewPing::convert_in(echoTime) - Convert echoTime from microseconds to inches (rounds to nearest inch).
-//   NewPing::convert_cm(echoTime) - Convert echoTime from microseconds to centimeters (rounds to nearest cm).
+//   NewPingESP8266::convert_in(echoTime) - Convert echoTime from microseconds to inches (rounds to nearest inch).
+//   NewPingESP8266::convert_cm(echoTime) - Convert echoTime from microseconds to centimeters (rounds to nearest cm).
 //   sonar.ping_timer(function [, max_cm_distance]) - Send a ping and call function to test if ping is complete. [max_cm_distance] allows you to optionally set a new max distance.
 //   sonar.check_timer() - Check if ping has returned within the set distance limit.
-//   NewPing::timer_us(frequency, function) - Call function every frequency microseconds.
-//   NewPing::timer_ms(frequency, function) - Call function every frequency milliseconds.
-//   NewPing::timer_stop() - Stop the timer.
+//   NewPingESP8266::timer_us(frequency, function) - Call function every frequency microseconds.
+//   NewPingESP8266::timer_ms(frequency, function) - Call function every frequency milliseconds.
+//   NewPingESP8266::timer_stop() - Stop the timer.
 //
 // HISTORY:
 // 07/30/2016 v1.8 - Added support for non-AVR microcontrollers. For non-AVR
@@ -63,7 +63,7 @@
 //   you to set a new maximum distance for each ping. Added support for the
 //   ATmega16, ATmega32 and ATmega8535 microcontrollers. Changed convert_cm()
 //   and convert_in() methods to static members. You can now call them without
-//   an object. For example: cm = NewPing::convert_cm(distance);
+//   an object. For example: cm = NewPingESP8266::convert_cm(distance);
 //
 // 09/29/2015 v1.7 - Removed support for the Arduino Due and Zero because
 //   they're both 3.3 volt boards and are not 5 volt tolerant while the HC-SR04
@@ -101,7 +101,7 @@
 //   may cause (namely PWM on pins 3 & 11 on Arduino, PWM on pins 9 and 10 on
 //   Mega, and Tone library). Simple to use timer interrupt functions you can
 //   use in your sketches totally unrelated to ultrasonic sensors (don't use if
-//   you're also using NewPing's ping_timer because both use Timer2 interrupts).
+//   you're also using NewPingESP8266's ping_timer because both use Timer2 interrupts).
 //   Loop counting ping method deleted in favor of timing ping method after
 //   inconsistent results kept surfacing with the loop timing ping method.
 //   Conversion to cm and inches now rounds to the nearest cm or inch. Code
@@ -111,7 +111,7 @@
 //
 // 05/25/2012 v1.2 - Lots of code clean-up thanks to Arduino Forum members.
 //   Rebuilt the ping timing code from scratch, ditched the pulseIn code as it
-//   doesn't give correct results (at least with ping sensors). The NewPing
+//   doesn't give correct results (at least with ping sensors). The NewPingESP8266
 //   library is now VERY accurate and the code was simplified as a bonus.
 //   Smaller and faster code as well. Fixed some issues with very close ping
 //   results when converting to inches. All functions now return 0 only when
@@ -128,8 +128,8 @@
 // 05/15/2012 v1.0 - Initial release.
 // ---------------------------------------------------------------------------
 
-#ifndef NewPing_h
-#define NewPing_h
+#ifndef NewPingESP8266_h
+#define NewPingESP8266_h
 
 #if defined (ARDUINO) && ARDUINO >= 100
 	#include <Arduino.h>
@@ -150,7 +150,6 @@
 #define ONE_PIN_ENABLED true    // Set to "false" to disable one pin mode which saves around 14-26 bytes of binary size. Default=true
 #define ROUNDING_ENABLED false  // Set to "true" to enable distance rounding which also adds 64 bytes to binary size. Default=false
 #define URM37_ENABLED false     // Set to "true" to enable support for the URM37 sensor in PWM mode. Default=false
-#define TIMER_ENABLED true      // Set to "false" to disable the timer ISR (if getting "__vector_7" compile errors set this to false). Default=true
 
 // Probably shouldn't change these values unless you really know what you're doing.
 #define NO_ECHO 0               // Value returned if there's no ping echo within the specified MAX_SENSOR_DISTANCE or max_cm_distance. Default=0
@@ -167,7 +166,7 @@
 #endif
 
 // Conversion from uS to distance (round result to nearest cm or inch).
-#define NewPingConvert(echoTime, conversionFactor) (max(((unsigned int)echoTime + conversionFactor / 2) / conversionFactor, (echoTime ? 1 : 0)))
+#define NewPingESP8266Convert(echoTime, conversionFactor) (max(((unsigned int)echoTime + conversionFactor / 2) / conversionFactor, (echoTime ? 1 : 0)))
 
 // Detect non-AVR microcontrollers (Teensy 3.x, Arduino DUE, etc.) and don't use port registers or timer interrupts as required.
 #if (defined (__arm__) && defined (TEENSYDUINO))
@@ -181,17 +180,9 @@
 	#define PING_OVERHEAD 1
 	#undef  PING_TIMER_OVERHEAD
 	#define PING_TIMER_OVERHEAD 1
-	#undef  TIMER_ENABLED
-	#define TIMER_ENABLED false
 	#define DO_BITWISE false
 #else
 	#define DO_BITWISE true
-#endif
-
-// Disable the timer interrupts when using ATmega128 and all ATtiny microcontrollers.
-#if defined (__AVR_ATmega128__) || defined (__AVR_ATtiny24__) || defined (__AVR_ATtiny44__) || defined (__AVR_ATtiny84__) || defined (__AVR_ATtiny25__) || defined (__AVR_ATtiny45__) || defined (__AVR_ATtiny85__) || defined (__AVR_ATtiny261__) || defined (__AVR_ATtiny461__) || defined (__AVR_ATtiny861__) || defined (__AVR_ATtiny43U__)
-	#undef  TIMER_ENABLED
-	#define TIMER_ENABLED false
 #endif
 
 // Define timers when using ATmega8, ATmega16, ATmega32 and ATmega8535 microcontrollers.
@@ -201,41 +192,29 @@
 	#define OCIE2A OCIE2
 #endif
 
-class NewPing {
+class NewPingESP8266 {
 	public:
-		NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_distance = MAX_SENSOR_DISTANCE);
+		NewPingESP8266(uint32_t trigger_pin, uint32_t echo_pin, unsigned int max_cm_distance = MAX_SENSOR_DISTANCE);
 		unsigned int ping(unsigned int max_cm_distance = 0);
 		unsigned long ping_cm(unsigned int max_cm_distance = 0);
 		unsigned long ping_in(unsigned int max_cm_distance = 0);
-		unsigned long ping_median(uint8_t it = 5, unsigned int max_cm_distance = 0);
+		unsigned long ping_median(uint32_t it = 5, unsigned int max_cm_distance = 0);
 		static unsigned int convert_cm(unsigned int echoTime);
 		static unsigned int convert_in(unsigned int echoTime);
-#if TIMER_ENABLED == true
-		void ping_timer(void (*userFunc)(void), unsigned int max_cm_distance = 0);
-		boolean check_timer();
-		unsigned long ping_result;
-		static void timer_us(unsigned int frequency, void (*userFunc)(void));
-		static void timer_ms(unsigned long frequency, void (*userFunc)(void));
-		static void timer_stop();
-#endif
+
+		unsigned int getMaxEchoTime() { return _maxEchoTime; }
 	private:
 		boolean ping_trigger();
 		void set_max_distance(unsigned int max_cm_distance);
-#if TIMER_ENABLED == true
-		boolean ping_trigger_timer(unsigned int trigger_delay);
-		boolean ping_wait_timer();
-		static void timer_setup();
-		static void timer_ms_cntdwn();
-#endif
 #if DO_BITWISE == true
-		uint8_t _triggerBit;
-		uint8_t _echoBit;
-		volatile uint8_t *_triggerOutput;
-		volatile uint8_t *_echoInput;
-		volatile uint8_t *_triggerMode;
+		uint32_t _triggerBit;
+		uint32_t _echoBit;
+		volatile uint32_t *_triggerOutput;
+		volatile uint32_t *_echoInput;
+		volatile uint32_t *_triggerMode;
 #else
-		uint8_t _triggerPin;
-		uint8_t _echoPin;
+		uint32_t _triggerPin;
+		uint32_t _echoPin;
 #endif
 		unsigned int _maxEchoTime;
 		unsigned long _max_time;

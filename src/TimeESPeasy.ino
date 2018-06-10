@@ -323,10 +323,18 @@ long timePassedSince(unsigned long timestamp) {
   return timeDiff(timestamp, millis());
 }
 
+long usecPassedSince(unsigned long timestamp) {
+  return timeDiff(timestamp, micros());
+}
+
 // Check if a certain timeout has been reached.
-boolean timeOutReached(unsigned long timer)
-{
+boolean timeOutReached(unsigned long timer) {
   const long passed = timePassedSince(timer);
+  return passed >= 0;
+}
+
+boolean usecTimeOutReached(unsigned long timer) {
+  const long passed = usecPassedSince(timer);
   return passed >= 0;
 }
 

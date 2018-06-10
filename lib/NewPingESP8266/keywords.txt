@@ -1,12 +1,12 @@
 ###################################
-# Syntax Coloring Map For NewPing
+# Syntax Coloring Map For NewPingESP8266
 ###################################
 
 ###################################
 # Datatypes (KEYWORD1)
 ###################################
 
-NewPing	KEYWORD1
+NewPingESP8266	KEYWORD1
 
 ###################################
 # Methods and Functions (KEYWORD2)
@@ -27,3 +27,4 @@ convert_cm	KEYWORD2
 ###################################
 # Constants (LITERAL1)
 ###################################
+
