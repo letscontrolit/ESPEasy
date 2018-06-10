@@ -20,7 +20,7 @@ Adafruit_MPR121::Adafruit_MPR121() {
 }
 
 boolean Adafruit_MPR121::begin(uint8_t i2caddr) {
-  Wire.begin();
+  //Wire.begin();   called in ESPEasy framework
 
   _i2caddr = i2caddr;
 
