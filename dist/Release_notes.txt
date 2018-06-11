@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20180611 (since mega-20180606)
+-------------------------------------------------
+
+Release date: Mon Jun 11 04:00:21 CEST 2018
+
+Saverio Cisternino (1):
+      Fixed issue when there is more PCA9685
+
+TD-er (6):
+      [#1417] Move I2C functions to a separate file
+      [I2Cdev] Add I2Cdevlib library
+      [I2C] Disable calls to wire.begin() from libraries
+      [#1484] Multiple instances of ultrasonic sensors
+      [PlatformIO] Added libraries to be able to use std::map
+      [BME/BMP280] Improve temperature/humidity readout
+
+Tempura San (1):
+      [MQTT Import] system variables support for topics
+
+
+-------------------------------------------------
 Changes in release mega-20180606 (since mega-20180524)
 -------------------------------------------------
 
