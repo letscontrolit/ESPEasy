@@ -1134,12 +1134,12 @@ void handle_controllers() {
         strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
         strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
         strncpy(ControllerSettings.LWTMessageConnect, TempEvent.String4.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
-        strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));      
+        strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
         TempEvent.String1 = "";
         TempEvent.String2 = "";
         TempEvent.String3 = "";
         TempEvent.String4 = "";
-        TempEvent.String5 = "";                
+        TempEvent.String5 = "";
         //NOTE: do not enable controller by default, give user a change to enter sensible values first
 
         //not resetted to default (for convenience)
@@ -3612,9 +3612,7 @@ void handle_json()
       stream_next_json_object_value(F("Name"), String(Settings.Name));
       stream_next_json_object_value(F("Uptime"), String(wdcounter / 2));
       stream_next_json_object_value(F("Last boot cause"), getLastBootCauseString());
-      #ifndef ESP32
-      stream_next_json_object_value(F("Reset Reason"), ESP.getResetReason());
-      #endif
+      stream_next_json_object_value(F("Reset Reason"), getResetReasonString());
 
       if (wdcounter > 0)
       {
@@ -4990,10 +4988,8 @@ void handle_sysinfo() {
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
-#ifndef ESP32
    TXBuffer += F("<TR><TD>Reset Reason<TD>");
-   TXBuffer += ESP.getResetReason();
-#endif
+   TXBuffer += getResetReasonString();
 
    TXBuffer += F("<TR><TD colspan=2><H3>Network");
    addHelpButton(F("Wifi"));

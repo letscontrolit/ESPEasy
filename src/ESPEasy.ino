@@ -167,6 +167,8 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
+  log += F(" - Restart Reason: ");
+  log += getResetReasonString();
 
   RTC.deepSleepState=0;
   saveToRTC();
@@ -776,7 +778,7 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
     if (systemTimers[x].timer != 0)
     {
       if ((systemTimers[x].plugin == plugin) && systemTimers[x].TaskIndex == taskIndex && (systemTimers[x].Par1 == Par1))
-      {        
+      {
         firstAvailable = x;
         break;
       }
@@ -791,7 +793,7 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
     addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
   }
   else
-  {    
+  {
     systemTimers[firstAvailable].plugin = plugin;
     systemTimers[firstAvailable].TaskIndex = taskIndex;
     systemTimers[firstAvailable].Par1 = Par1;
@@ -803,7 +805,7 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
       ? millis() + timer
       : 0;
   }
-  
+
 }
 
 //EDWIN: this function seems to be unused?
