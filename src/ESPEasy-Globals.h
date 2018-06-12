@@ -435,6 +435,7 @@
   #include  "esp32_ping.h"
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
+  #include <rom/rtc.h>
   ESP32WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>

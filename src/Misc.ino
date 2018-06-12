@@ -1313,6 +1313,51 @@ String getLastBootCauseString() {
   return F("Unknown");
 }
 
+#ifdef ESP32
+// See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
+String getResetReasonString(byte icore) {
+  bool isDEEPSLEEP_RESET(false);
+  switch (rtc_get_reset_reason( (RESET_REASON) icore)) {
+    case NO_MEAN                : return F("NO_MEAN");
+    case POWERON_RESET          : return F("Vbat power on reset");
+    case SW_RESET               : return F("Software reset digital core");
+    case OWDT_RESET             : return F("Legacy watch dog reset digital core");
+    case DEEPSLEEP_RESET        : isDEEPSLEEP_RESET = true; break;
+    case SDIO_RESET             : return F("Reset by SLC module, reset digital core");
+    case TG0WDT_SYS_RESET       : return F("Timer Group0 Watch dog reset digital core");
+    case TG1WDT_SYS_RESET       : return F("Timer Group1 Watch dog reset digital core");
+    case RTCWDT_SYS_RESET       : return F("RTC Watch dog Reset digital core");
+    case INTRUSION_RESET        : return F("Instrusion tested to reset CPU");
+    case TGWDT_CPU_RESET        : return F("Time Group reset CPU");
+    case SW_CPU_RESET           : return F("Software reset CPU");
+    case RTCWDT_CPU_RESET       : return F("RTC Watch dog Reset CPU");
+    case EXT_CPU_RESET          : return F("for APP CPU, reseted by PRO CPU");
+    case RTCWDT_BROWN_OUT_RESET : return F("Reset when the vdd voltage is not stable");
+    case RTCWDT_RTC_RESET       : return F("RTC Watch dog reset digital core and rtc module");
+    default: break;
+  }
+  if (isDEEPSLEEP_RESET) {
+    String reason = F("Deep Sleep, Wakeup reason (");
+    reason += rtc_get_wakeup_cause();
+    reason += ')';
+    return reason;
+  }
+  return F("Unknown");
+}
+#endif
+
+String getResetReasonString() {
+  #ifdef ESP32
+  String reason = F("CPU0: ");
+  reason += getResetReasonString(0);
+  reason += F(" CPU1: ");
+  reason += getResetReasonString(1);
+  return reason;
+  #else
+  return ESP.getResetReason();
+  #endif
+}
+
 String getSystemBuildString() {
   String result;
   result += BUILD;
