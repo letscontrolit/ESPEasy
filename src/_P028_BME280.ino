@@ -279,6 +279,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           success = false;
           break;
         }
+        if (!sensor.hasHumidity()) {
+          // Patch the sensor type to output only the measured values.
+          event->sensorType = SENSOR_TYPE_TEMP_EMPTY_BARO;
+        }
         UserVar[event->BaseVarIndex] = sensor.last_temp_val;
         UserVar[event->BaseVarIndex + 1] = sensor.last_hum_val;
         const int elev = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -382,6 +386,8 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset) 
         log += F("% => ");
         log += sensor.last_hum_val;
         log += F("%");
+      } else {
+        sensor.last_hum_val = 0.0;
       }
       log += F(" temperature ");
       log += sensor.last_temp_val;
