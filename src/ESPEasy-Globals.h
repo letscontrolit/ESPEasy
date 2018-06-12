@@ -316,6 +316,7 @@
 #define SENSOR_TYPE_DUAL                    5
 #define SENSOR_TYPE_TRIPLE                  6
 #define SENSOR_TYPE_QUAD                    7
+#define SENSOR_TYPE_TEMP_EMPTY_BARO         8
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20

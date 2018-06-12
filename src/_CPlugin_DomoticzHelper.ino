@@ -82,6 +82,14 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += formatUserVarDomoticz(0);         // BAR_FOR = Barometer forecast
       values += formatUserVarDomoticz(0);         // ALTITUDE= Not used at the moment, can be 0
       break;
+    case SENSOR_TYPE_TEMP_EMPTY_BARO:
+      // temp + bar + bar_fore, used for BMP280
+      // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fbarometer
+      values  = formatUserVarDomoticz(event, 0);  // TEMP = Temperature
+      values += formatUserVarDomoticz(event, 2);  // BAR = Barometric pressure
+      values += formatUserVarDomoticz(0);         // BAR_FOR = Barometer forecast
+      values += formatUserVarDomoticz(0);         // ALTITUDE= Not used at the moment, can be 0
+      break;
     case SENSOR_TYPE_TRIPLE:
       values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);

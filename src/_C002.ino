@@ -175,6 +175,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
             case SENSOR_TYPE_QUAD:
             case SENSOR_TYPE_TEMP_HUM:
             case SENSOR_TYPE_TEMP_BARO:
+            case SENSOR_TYPE_TEMP_EMPTY_BARO:
             case SENSOR_TYPE_TEMP_HUM_BARO:
             case SENSOR_TYPE_WIND:
             default:
