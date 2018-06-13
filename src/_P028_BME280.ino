@@ -328,9 +328,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset) {
   P028_sensordata& sensor = P028_sensors[i2cAddress];
   const unsigned long current_time = millis();
-  if ((sensor.last_measurement > BMx280_MEASUREMENT_INTERVAL_MSEC) &&
-      (current_time < (sensor.last_measurement + BMx280_MEASUREMENT_INTERVAL_MSEC)) &&
-      (current_time > sensor.last_measurement)) {
+  if (!timeOutReached(sensor.last_measurement + BMx280_MEASUREMENT_INTERVAL_MSEC)) {
     // Timeout has not yet been reached.
     return false;
   }
