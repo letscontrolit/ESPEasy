@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180613 (since mega-20180611)
+-------------------------------------------------
+
+Release date: Wed Jun 13 04:00:15 CEST 2018
+
+Gijs Noorlander (1):
+      [BMx280] Correct nr values for special sensor type
+
+TD-er (2):
+      [Diag] Log Reset Reason at boot for ESP8266 and ESP32
+      [BMx280] Send data from BMP280 as temp_baro, not temp_hum_baro
+
+
+-------------------------------------------------
 Changes in release mega-20180611 (since mega-20180606)
 -------------------------------------------------
 
