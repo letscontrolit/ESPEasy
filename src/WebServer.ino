@@ -434,7 +434,7 @@ void WebServerInit()
   WebServer.on(F("/favicon.ico"), handle_favicon);
 
   #if defined(ESP8266)
-    if (ESP.getFlashChipRealSize() > 524288)
+    if (getFlashRealSizeInBytes() > 524288)
       httpUpdater.setup(&WebServer);
   #endif
 
@@ -3164,14 +3164,20 @@ void handle_tools() {
   TXBuffer += F("Saves a settings file");
 
 #if defined(ESP8266)
-  if (ESP.getFlashChipRealSize() > 524288)
   {
-    addFormSubHeader(F("Firmware"));
-    TXBuffer += F("<TR><TD HEIGHT=\"30\">");
-    addWideButton(F("update"), F("Load"), F(""));
-    addHelpButton(F("EasyOTA"));
-    TXBuffer += F("<TD>");
-    TXBuffer += F("Load a new firmware");
+    const uint32_t flashSize = getFlashRealSizeInBytes();
+    if (flashSize > 524288)
+    {
+      addFormSubHeader(F("Firmware"));
+      TXBuffer += F("<TR><TD HEIGHT=\"30\">");
+      addWideButton(F("update"), F("Load"), F(""));
+      addHelpButton(F("EasyOTA"));
+      TXBuffer += F("<TD>");
+      TXBuffer += F("Load a new firmware");
+      if (flashSize <= 1048576) {
+        TXBuffer += F(" <b>WARNING</b> only use 2-step OTA update and sketch < 604 kB");
+      }
+    }
   }
 #endif
 
@@ -5171,13 +5177,7 @@ void handle_sysinfo() {
     flashDeviceString.toUpperCase();
      TXBuffer += flashDeviceString;
   #endif
-  uint32_t realSize = 0;
-  #if defined(ESP8266)
-    realSize = ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
-  #endif
-  #if defined(ESP32)
-    realSize = ESP.getFlashChipSize();
-  #endif
+  uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();
 
    TXBuffer += F("<TR><TD>Flash Chip Real Size:<TD>");
