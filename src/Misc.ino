@@ -1358,6 +1358,14 @@ String getResetReasonString() {
   #endif
 }
 
+uint32_t getFlashRealSizeInBytes() {
+  #if defined(ESP32)
+    return ESP.getFlashChipSize();
+  #else
+    return ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+  #endif
+}
+
 String getSystemBuildString() {
   String result;
   result += BUILD;
