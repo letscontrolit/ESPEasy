@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180614 (since mega-20180613)
+-------------------------------------------------
+
+Release date: Thu Jun 14 04:00:11 CEST 2018
+
+Gijs Noorlander (2):
+      [#1502] Change wait-to-connect timeout to 12 sec.
+      [#1503] Use proper timeout on BME280/BMP280
+
+
+-------------------------------------------------
 Changes in release mega-20180613 (since mega-20180611)
 -------------------------------------------------
 
