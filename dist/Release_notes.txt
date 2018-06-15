@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180615 (since mega-20180614)
+-------------------------------------------------
+
+Release date: Fri Jun 15 04:00:11 CEST 2018
+
+TD-er (1):
+      [1M flash warning] Warn for OTA when 1M flash present
+
+
+-------------------------------------------------
 Changes in release mega-20180614 (since mega-20180613)
 -------------------------------------------------
 
