@@ -17,8 +17,62 @@ uint32_t syncInterval = 3600;  // time sync will be attempted after this many se
 uint32_t sysTime = 0;
 uint32_t prevMillis = 0;
 uint32_t nextSyncTime = 0;
+timeStruct sunRise;
+timeStruct sunSet;
 
 byte PrevMinutes = 0;
+
+float sunDeclination(int doy) {
+	// Declination of the sun in radians
+	// Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average declinations (2008-2027)
+	return 0.409526325277017 * sin(0.0169060504029192 * (doy - 80.0856919827619));
+}
+
+float diurnalArc(float dec, float lat) {
+	// Duration of the half sun path in hours (time from sunrise to the highest level in the south)
+	float rad = 0.0174532925; // = pi/180.0
+	float height = -50.0 / 60.0 * rad;
+	float latRad = lat * rad;
+	return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536;
+}
+
+float equationOfTime(int doy) {
+	// Difference between apparent and mean solar time
+	// Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average equation of time (2008-2027)
+	return -0.170869921174742 * sin(0.0336997028793971 * doy + 0.465419984181394) - 0.129890681040717 * sin(0.0178674832556871 * doy - 0.167936777524864);
+}
+
+int dayOfYear(int year, int month, int day) {
+	// Algorithm borrowed from DateToOrdinal by Ritchie Lawrence, www.commandline.co.uk
+	int z = 14 - month;
+	z /= 12;
+	int y = year + 4800 - z;
+	int m = month + 12 * z - 3;
+	int j = 153 * m + 2;
+	j = j / 5 + day + y * 365 + y / 4 - y / 100 + y / 400 - 32045;
+	y = year + 4799;
+	int k = y * 365 + y / 4 - y / 100 + y / 400 - 31738;
+	return j - k + 1;
+}
+
+void calcSunRiseAndSet() {
+	int doy = dayOfYear(tm.Year, tm.Month, tm.Day);
+	float eqt = equationOfTime(doy);
+	float dec = sunDeclination(doy);
+	float da = diurnalArc(dec, Settings.Latitude);
+	float rise = 12 - da - eqt - Settings.Longitude / 15.0;
+	float set = 12 + da - eqt - Settings.Longitude / 15.0;
+  timeStruct tsRise, tsSet;
+  tsRise.Hour = (int)rise;
+  tsRise.Minute = (rise - (int)rise) * 60.0;
+  tsSet.Hour = (int)set;
+  tsSet.Minute = (set - (int)set) * 60.0;
+  tsRise.Day = tsSet.Day = tm.Day;
+  tsRise.Month = tsSet.Month = tm.Month;
+  tsRise.Year = tsSet.Year = tm.Year;
+  breakTime(toLocal(makeTime(tsRise)), sunRise);
+  breakTime(toLocal(makeTime(tsSet)), sunSet);
+}
 
 void breakTime(unsigned long timeInput, struct timeStruct &tm) {
   uint8_t year;
@@ -88,8 +142,17 @@ uint32_t getUnixTime() {
   return sysTime;
 }
 
+String getSunriseTimeString(char delimiter) {
+  return getTimeString(sunRise, delimiter, false, false);
+}
+
+String getSunsetTimeString(char delimiter) {
+  return getTimeString(sunSet, delimiter, false, false);
+}
+
 unsigned long now() {
   // calculate number of seconds passed since last call to now()
+  bool timeSynced = false;
   const long msec_passed = timePassedSince(prevMillis);
   const long seconds_passed = msec_passed / 1000;
   sysTime += seconds_passed;
@@ -98,11 +161,15 @@ unsigned long now() {
     // nextSyncTime & sysTime are in seconds
     unsigned long  t = getNtpTime();
     if (t != 0) {
+      timeSynced = true;
       setTime(t);
     }
   }
   uint32_t localSystime = toLocal(sysTime);
   breakTime(localSystime, tm);
+  if (timeSynced) {
+    calcSunRiseAndSet();
+  }
   return (unsigned long)localSystime;
 }
 

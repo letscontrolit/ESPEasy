@@ -2799,6 +2799,26 @@ void addFormNumericBox(const String& label, const String& id, int value)
   addFormNumericBox(label, id, value, INT_MIN, INT_MAX);
 }
 
+void addFloatNumberBox(const String& id, float value, float min, float max)
+{
+  TXBuffer += F("<input type='number' name='");
+  TXBuffer += id;
+  TXBuffer += F("'");
+  TXBuffer += F(" min=");
+  TXBuffer += min;
+  TXBuffer += F(" max=");
+  TXBuffer += max;
+  TXBuffer += F(" step=0.01");
+  TXBuffer += F(" style='width:5em;' value=");
+  TXBuffer += value;
+  TXBuffer += F(">");
+}
+
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max)
+{
+  addRowLabel(label);
+  addFloatNumberBox(id, value, min, max);
+}
 
 
 void addTextBox(const String& id, const String&  value, int maxlength)
@@ -3776,6 +3796,8 @@ void handle_advanced() {
   String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
   String UseRTOSMultitasking = WebServer.arg(F("usertosmultitasking"));
   String MQTTUseUnitNameAsClientId = WebServer.arg(F("mqttuseunitnameasclientid"));
+  String latitude = WebServer.arg(F("latitude"));
+  String longitude = WebServer.arg(F("longitude"));
 
 
   if (edit.length() != 0)
@@ -3810,6 +3832,8 @@ void handle_advanced() {
     Settings.ArduinoOTAEnable = (ArduinoOTAEnable ==  F("on"));
     Settings.UseRTOSMultitasking = (UseRTOSMultitasking ==  F("on"));
     Settings.MQTTUseUnitNameAsClientId = (MQTTUseUnitNameAsClientId == F("on"));
+    Settings.Latitude = latitude.toFloat();
+    Settings.Longitude = longitude.toFloat();
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
@@ -3842,6 +3866,12 @@ void handle_advanced() {
   addFormNumericBox(F("Timezone Offset (UTC +)"), F("timezone"), Settings.TimeZone, -720, 840);   // UTC-12H ... UTC+14h
   addUnit(F("minutes"));
   addFormCheckBox(F("DST"), F("dst"), Settings.DST);
+
+  addFormSubHeader(F("Location Settings"));
+  addFormFloatNumberBox(F("Latitude"), F("latitude"), Settings.Latitude, -90.0, 90.0);
+  addUnit(F("&deg;"));
+  addFormFloatNumberBox(F("Longitude"), F("longitude"), Settings.Longitude, -180.0, 180.0);
+  addUnit(F("&deg;"));
 
   addFormSubHeader(F("Log Settings"));
 
