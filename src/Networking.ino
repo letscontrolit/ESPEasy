@@ -618,6 +618,11 @@ bool WiFiConnected(uint32_t timeout_ms) {
 
 bool hostReachable(const IPAddress& ip) {
   if (!WiFiConnected()) return false;
+
+  return true; // Disabled ping as requested here:
+  // https://github.com/letscontrolit/ESPEasy/issues/1494#issuecomment-397872538
+
+/*
   // Only do 1 ping at a time to return early
   byte retry = 3;
   while (retry > 0) {
@@ -640,6 +645,7 @@ bool hostReachable(const IPAddress& ip) {
   }
   logConnectionStatus();
   return false;
+*/
 }
 
 bool hostReachable(const String& hostname) {
