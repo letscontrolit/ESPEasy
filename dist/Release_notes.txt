@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180618 (since mega-20180615)
+-------------------------------------------------
+
+Release date: Mon Jun 18 04:00:12 CEST 2018
+
+Steffen Lange (2):
+      Add GPS coordinates to Advanced Settings
+      Add %sunrise% and %sunset% variables
+
+TD-er (1):
+      [#1494] Disabled ping to check if host is reachable
+
+stefan (1):
+      Ammended central I2C fuctions (#1417)
+
+
+-------------------------------------------------
 Changes in release mega-20180615 (since mega-20180614)
 -------------------------------------------------
 
