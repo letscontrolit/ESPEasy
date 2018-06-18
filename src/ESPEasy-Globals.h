@@ -121,6 +121,11 @@
   #define FEATURE_ADC_VCC                  false
 #endif
 
+#if defined(ESP32)
+#define ARDUINO_OTA_PORT  3232
+#else
+#define ARDUINO_OTA_PORT  8266
+#endif
 
 #if defined(ESP8266)
   //enable Arduino OTA updating.
