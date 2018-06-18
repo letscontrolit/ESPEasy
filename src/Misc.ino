@@ -1253,12 +1253,7 @@ void ResetFactory(void)
   intent_to_reboot = true;
   WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  #if defined(ESP8266)
-    ESP.reset();
-  #endif
-  #if defined(ESP32)
-    ESP.restart();
-  #endif
+  reboot();
 }
 
 
@@ -1600,12 +1595,15 @@ void delayedReboot(int rebootDelay)
     rebootDelay--;
     delay(1000);
   }
-   #if defined(ESP8266)
-     ESP.reset();
-   #endif
-   #if defined(ESP32)
-     ESP.restart();
-   #endif
+  reboot();
+}
+
+void reboot() {
+  #if defined(ESP32)
+    ESP.restart();
+  #else
+    ESP.reset();
+  #endif
 }
 
 
@@ -3246,16 +3244,8 @@ void ArduinoOTAInit()
 {
   checkRAM(F("ArduinoOTAInit"));
 
-  #if defined(ESP8266)
-  // Default port is 8266
-  ArduinoOTA.setPort(8266);
-  #endif
-  #if defined(ESP32)
-  ArduinoOTA.setPort(3232);
-  #endif
-
+  ArduinoOTA.setPort(ARDUINO_OTA_PORT);
   ArduinoOTA.setHostname(Settings.Name);
-
   if (SecuritySettings.Password[0]!=0)
     ArduinoOTA.setPassword(SecuritySettings.Password);
 
@@ -3270,12 +3260,7 @@ void ArduinoOTAInit()
       //so dont touch device until restart is complete
       Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
       delay(100);
-      #if defined(ESP8266)
-        ESP.reset();
-      #endif
-      #if defined(ESP32)
-        ESP.restart();
-      #endif
+      reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 
@@ -3291,16 +3276,12 @@ void ArduinoOTAInit()
       else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
 
       delay(100);
-      #if defined(ESP8266)
-       ESP.reset();
-      #endif
-      #if defined(ESP32)
-        ESP.restart();
-      #endif
+      reboot();
   });
   ArduinoOTA.begin();
 
-  String log = F("OTA  : Arduino OTA enabled on port 8266");
+  String log = F("OTA  : Arduino OTA enabled on port ");
+  log += ARDUINO_OTA_PORT;
   addLog(LOG_LEVEL_INFO, log);
 
 }
