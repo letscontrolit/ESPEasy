@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180619 (since mega-20180618)
+-------------------------------------------------
+
+Release date: Tue Jun 19 04:00:10 CEST 2018
+
+TD-er (4):
+      [ESP32] Allow flashing to ESP32 again from PlatformIO
+      [ESP32] Set build to @0.12.0
+      [OTA] Output proper port number when ARDUINO_FEATURE_OTA is set
+      [ESP8285] PlatformIO set max upload size limit
+
+
+-------------------------------------------------
 Changes in release mega-20180618 (since mega-20180615)
 -------------------------------------------------
 
