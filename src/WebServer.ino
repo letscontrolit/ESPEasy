@@ -1962,7 +1962,7 @@ void handle_devices() {
         customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent,TXBuffer.buf);
         if (!customConfig)
           if (Device[DeviceIndex].Ports != 0)
-            TXBuffer += Settings.TaskDevicePort[x];
+            TXBuffer += String(F("0x")) + String(Settings.TaskDevicePort[x],HEX);
 
         TXBuffer += F("<TD>");
 
