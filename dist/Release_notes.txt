@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180621 (since mega-20180619)
+-------------------------------------------------
+
+Release date: Thu Jun 21 04:00:14 CEST 2018
+
+Saverio Cisternino (2):
+      Fixed Issue #1489
+      Show in devices list port number in hex
+
+
+-------------------------------------------------
 Changes in release mega-20180619 (since mega-20180618)
 -------------------------------------------------
 
