@@ -316,7 +316,13 @@ void setAP(bool enable) {
     default:
       break;
   }
-  if (enable) {
+  setAPinternal(enable);
+}
+
+//Only internal scope
+void setAPinternal(bool enable)
+{
+    if (enable) {
     timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
