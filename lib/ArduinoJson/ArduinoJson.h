@@ -1,8 +1,5 @@
-// Copyright Benoit Blanchon 2014-2016
+// ArduinoJson - arduinojson.org
+// Copyright Benoit Blanchon 2014-2018
 // MIT License
-//
-// Arduino JSON library
-// https://github.com/bblanchon/ArduinoJson
-// If you like this project, please add a star!
 
-#include "include/ArduinoJson.h"
+#include "src/ArduinoJson.h"
