@@ -148,11 +148,13 @@ public:
       buf = "";
       sendContentBlocking(buf);
       finalRam = ESP.getFreeHeap();
+      /*
       String log = String("Ram usage: Webserver only: ") + maxServerUsage +
                    " including Core: " + maxCoreUsage +
                    " flashStringCalls: " + flashStringCalls +
                    " flashStringData: " + flashStringData;
       addLog(LOG_LEVEL_DEBUG, log);
+      */
     } else {
       String log = String("Webpage skipped: low memory: ") + finalRam;
       addLog(LOG_LEVEL_DEBUG, log);

@@ -163,6 +163,9 @@ To create/register a plugin, you have to :
     #endif
     #define PLUGIN_SET_ONLY_SWITCH
     #define USES_P036   // FrameOLED
+    #define USES_P027   // INA219
+    #define USES_P028   // BME280
+
     // TODO : Add list of compatible plugins for ESP32 board.
 #endif
 
@@ -381,7 +384,7 @@ To create/register a plugin, you have to :
     #define USES_P049   // MHZ19
 
     #define USES_P052   // SenseAir
-
+    #define USES_P056   // SDS011-Dust
     #define USES_P059   // Encoder
 
     #define USES_P063   // TTP229_KeyPad
@@ -421,7 +424,6 @@ To create/register a plugin, you have to :
     #define USES_P053   // PMSx003
     #define USES_P054   // DMX512
     #define USES_P055   // Chiming
-    #define USES_P056   // SDS011-Dust
     #define USES_P057   // HT16K33_LED
     #define USES_P058   // HT16K33_KeyPad
 
