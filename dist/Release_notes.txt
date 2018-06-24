@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20180624 (since mega-20180621)
+-------------------------------------------------
+
+Release date: Sun Jun 24 04:00:29 CEST 2018
+
+Saverio Cisternino (2):
+      Implement CommandsManager
+      Migration core command
+
+TD-er (8):
+      [AM2320] Explicit use boolean in Wire.endTransmission
+      [JavaScript]  Device measurement value update may sometimes fail
+      [ArduinoJson] Update external library ArduinoJson.
+      [SDS011] Set SDS011 Dust plugin to normal from testing
+      [PlatformIO.ini] VScode needs `monitor_speed` and update ESP8266 platform
+      [web log] Disable excessive web log about RAM usage
+      [Cmd Exec] Add #ifndef #def statements to prevent multiple includes
+      [Cmd Exec] Use switch statement instead of lookup map
+
+
+-------------------------------------------------
 Changes in release mega-20180621 (since mega-20180619)
 -------------------------------------------------
 
