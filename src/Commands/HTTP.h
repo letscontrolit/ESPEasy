@@ -1,3 +1,7 @@
+#ifndef COMMAND_HTTP_H
+#define COMMAND_HTTP_H
+
+
 bool Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
@@ -38,3 +42,5 @@ bool Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
     }
     return true;
 }
+
+#endif // COMMAND_HTTP_H

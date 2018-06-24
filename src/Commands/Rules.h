@@ -1,3 +1,7 @@
+#ifndef COMMAND_RULES_H
+#define COMMAND_RTC_H
+
+
 #include "ESPEasy-Globals.h"
 
 bool Command_Rules_Execute (struct EventStruct *event, const char* Line)
@@ -31,3 +35,5 @@ bool Command_Rules_Events(struct EventStruct *event, const char* Line)
     rulesProcessing(eventName);
   return true;
 }
+
+#endif // COMMAND_RULES_H

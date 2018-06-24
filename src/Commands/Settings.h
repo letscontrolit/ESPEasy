@@ -1,3 +1,7 @@
+#ifndef COMMAND_SETTINGS_H
+#define COMMAND_SETTINGS_H
+
+
 bool Command_Settings_Build(struct EventStruct *event, const char* Line)
 {
   char TmpStr1[INPUT_COMMAND_SIZE];
@@ -90,3 +94,6 @@ bool Command_Settings_Reset(struct EventStruct *event, const char* Line)
   #endif
   return true;
 }
+
+
+#endif // COMMAND_SETTINGS_H

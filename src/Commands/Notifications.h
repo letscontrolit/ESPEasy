@@ -1,3 +1,7 @@
+#ifndef COMMAND_NOTIFICATIONS_H
+#define COMMAND_NOTIFICATIONS_H
+
+
 bool Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 {
   char TmpStr1[INPUT_COMMAND_SIZE];
@@ -23,3 +27,4 @@ bool Command_Notifications_Notify(struct EventStruct *event, const char* Line)
   return true;
 }
 
+#endif // COMMAND_NOTIFICATIONS_H

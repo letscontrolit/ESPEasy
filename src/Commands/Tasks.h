@@ -1,3 +1,7 @@
+#ifndef COMMAND_TASKS_H
+#define COMMAND_TASKS_H
+
+
 bool Command_Task_Clear(struct EventStruct *event, const char* Line)
 {
   bool success = true;
@@ -59,3 +63,5 @@ bool Command_Task_RemoteConfig(struct EventStruct *event, const char* Line)
   remoteConfig(&TempEvent, request);
   return true;
 }
+
+#endif // COMMAND_TASKS_H

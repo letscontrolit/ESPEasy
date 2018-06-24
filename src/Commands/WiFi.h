@@ -1,3 +1,7 @@
+#ifndef COMMAND_WIFI_H
+#define COMMAND_WIFI_H
+
+
 #define WIFI_MODE_MAX (WiFiMode_t)4
 
 bool Command_Wifi_SSID (struct EventStruct *event, const char* Line)
@@ -108,3 +112,5 @@ bool Command_WiFi_Erase(struct EventStruct *event, const char* Line)
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   return true;
 }
+
+#endif // COMMAND_WIFI_H

@@ -1,11 +1,15 @@
-bool Command_Systen_NoSleep(struct EventStruct *event, const char* Line)
+#ifndef COMMAND_SYSTEM_H
+#define COMMAND_SYSTEM_H
+
+
+bool Command_System_NoSleep(struct EventStruct *event, const char* Line)
 {
   bool success = true;
   Settings.deepSleep = 0;
   return success;
 }
 
-bool Command_Systen_deepSleep(struct EventStruct *event, const char* Line)
+bool Command_System_deepSleep(struct EventStruct *event, const char* Line)
 {
   bool success = true;
   if (event->Par1 > 0)
@@ -13,7 +17,7 @@ bool Command_Systen_deepSleep(struct EventStruct *event, const char* Line)
   return success;
 }
 
-bool Command_Systen_Reboot(struct EventStruct *event, const char* Line)
+bool Command_System_Reboot(struct EventStruct *event, const char* Line)
 {
     pinMode(0, INPUT);
     pinMode(2, INPUT);
@@ -27,9 +31,10 @@ bool Command_Systen_Reboot(struct EventStruct *event, const char* Line)
     return true;
 }
 
-bool Command_Systen_Restart(struct EventStruct *event, const char* Line)
+bool Command_System_Restart(struct EventStruct *event, const char* Line)
 {
     ESP.restart();
     return true;
 }
 
+#endif // COMMAND_SYSTEM_H

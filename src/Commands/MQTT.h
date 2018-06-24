@@ -1,3 +1,7 @@
+#ifndef COMMAND_MQTT_H
+#define COMMAND_MQTT_H
+
+
 bool Command_MQTT_Retain(struct EventStruct *event, const char* Line)
 {
   return Command_GetORSetBool(F("MQTT Retain:"),
@@ -50,3 +54,4 @@ bool Command_MQTT_Publish(struct EventStruct *event, const char* Line)
   return success;
 }
 
+#endif // COMMAND_MQTT_H

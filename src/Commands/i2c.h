@@ -1,3 +1,7 @@
+#ifndef COMMAND_I2C_H
+#define COMMAND_I2C_H
+
+
 bool Command_i2c_Scanner(struct EventStruct *event, const char* Line)
 {
   bool success = true;
@@ -20,3 +24,4 @@ bool Command_i2c_Scanner(struct EventStruct *event, const char* Line)
   return success;
 }
 
+#endif // COMMAND_I2C_H

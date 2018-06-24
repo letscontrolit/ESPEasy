@@ -1,3 +1,7 @@
+#ifndef COMMAND_TIMER_H
+#define COMMAND_TIMER_H
+
+
 bool Command_Timer_Set (struct EventStruct *event, const char* Line)
 {
   bool success = false;
@@ -94,3 +98,4 @@ bool Command_Delay (struct EventStruct *event, const char* Line)
   return true;
 }
  
+#endif // COMMAND_TIMER_H
