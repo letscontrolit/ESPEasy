@@ -2,7 +2,7 @@
 #define COMMAND_NETWORKS_H
 
 
-#include "ESPEasy-Globals.h"
+#include "../ESPEasy-Globals.h"
 
 bool Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
 {
