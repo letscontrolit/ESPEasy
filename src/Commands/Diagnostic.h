@@ -1,3 +1,7 @@
+#ifndef COMMAND_DIAGNOSTIC_H
+#define COMMAND_DIAGNOSTIC_H
+
+
 bool Command_Lowmem(struct EventStruct *event, const char* Line)
 {
   bool success = true;
@@ -79,3 +83,4 @@ bool Command_logentry(struct EventStruct *event, const char* Line)
   return true;
 }
 
+#endif // COMMAND_DIAGNOSTIC_H

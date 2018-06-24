@@ -1,3 +1,6 @@
+#ifndef COMMAND_BLYNK_H
+#define COMMAND_BLYNK_H
+
 #ifdef CPLUGIN_012
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
 bool Command_Blynk_Get(struct EventStruct *event, const char* Line)
@@ -33,3 +36,5 @@ bool Command_Blynk_Get(struct EventStruct *event, const char* Line)
   return true;
 }
 #endif
+
+#endif // COMMAND_BLYNK_H

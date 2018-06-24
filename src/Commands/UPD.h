@@ -1,3 +1,6 @@
+#ifndef COMMAND_UDP_H
+#define COMMAND_UDP_H
+
 
 bool Command_UDP_Test (struct EventStruct *event, const char* Line)
 {
@@ -57,4 +60,4 @@ bool Command_UDP_SendToUPD(struct EventStruct *event, const char* Line)
   return success;  
 }
 
-  
+#endif // COMMAND_UDP_H

@@ -1,3 +1,7 @@
+#ifndef COMMAND_SDCARD_H
+#define COMMAND_SDCARD_H
+
+
 #ifdef FEATURE_SD
 bool Command_SD_LS(struct EventStruct *event, const char* Line)
 {
@@ -20,3 +24,5 @@ bool Command_SD_Remove(struct EventStruct *event, const char* Line)
   return success;
 }
 #endif
+
+#endif // COMMAND_SDCARD_H

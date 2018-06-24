@@ -1,3 +1,7 @@
+#ifndef COMMAND_WD_H
+#define COMMAND_WD_H
+
+
 bool Command_WD_Config(struct EventStruct *event, const char* Line)
 {
   bool success = true;
@@ -26,3 +30,5 @@ bool Command_WD_Read(struct EventStruct *event, const char* Line)
   }
   return success;
 }
+
+#endif // COMMAND_WD_H

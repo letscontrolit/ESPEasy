@@ -1,3 +1,6 @@
+#ifndef COMMAND_COMMON_H
+#define COMMAND_COMMON_H
+
 #include <ctype.h>
 #include <Arduino.h>
 
@@ -174,3 +177,4 @@ bool Command_GetORSetString(const __FlashStringHelper *targetDescription,
    return success;
   }
 
+#endif // COMMAND_COMMON_H

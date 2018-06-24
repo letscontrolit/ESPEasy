@@ -1,3 +1,7 @@
+#ifndef COMMAND_TIME_H
+#define COMMAND_TIME_H
+
+
 bool Command_NTPHost (struct EventStruct *event, const char* Line)
 {
   return Command_GetORSetString(F("NTPHost:"), 
@@ -49,3 +53,4 @@ bool Command_DST (struct EventStruct *event, const char* Line)
   return true;
 }
 
+#endif // COMMAND_TIME_H

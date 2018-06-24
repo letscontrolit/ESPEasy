@@ -1,3 +1,7 @@
+#ifndef COMMAND_NETWORKS_H
+#define COMMAND_NETWORKS_H
+
+
 #include "ESPEasy-Globals.h"
 
 bool Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
@@ -37,3 +41,4 @@ bool Command_Subnet (struct EventStruct *event, const char* Line)
   return Command_GetORSetIP(F("Subnet:"), Line, Settings.Subnet,WiFi.subnetMask(),1);
 }
 
+#endif // COMMAND_NETWORKS_H
