@@ -112,8 +112,7 @@ void setup()
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
-  Register_Commands();
-  
+
 #if defined(ESP32)
   WiFi.onEvent(WiFiEvent);
 #else
@@ -140,6 +139,7 @@ void setup()
   log += getSystemLibraryString();
   log += F(")");
   addLog(LOG_LEVEL_INFO, log);
+
 
 
   //warm boot
@@ -916,128 +916,4 @@ void backgroundtasks()
   statusLED(false);
 
   runningBackgroundTasks=false;
-}
-#include "Commands/Common.h"
-#include "Commands/Blynk.h"
-#include "Commands/Diagnostic.h"
-#include "Commands/HTTP.h"
-#include "Commands/i2c.h"
-#include "Commands/MQTT.h"
-#include "Commands/Networks.h"
-#include "Commands/Notifications.h"
-#include "Commands/RTC.h"
-#include "Commands/Rules.h"
-#include "Commands/SDCARD.h"
-#include "Commands/Settings.h"
-#include "Commands/System.h"
-#include "Commands/Tasks.h"
-#include "Commands/Time.h"
-#include "Commands/Timer.h"
-#include "Commands/UPD.h"
-#include "Commands/wd.h"
-#include "Commands/WiFi.h"
-
-
-/*********************************************************************************************\
- * Registers command
-\*********************************************************************************************/
-void Register_Commands()
-{
-  //Blink
-  #ifdef CPLUGIN_012
-  cmdManager.Register(("blynkget")              , &Command_Blynk_Get);
-  #endif
-  
-  //Network command
-  cmdManager.Register(("accessinfo")            , &Command_AccessInfo_Ls);
-  cmdManager.Register(("clearaccessblock")      , &Command_AccessInfo_Clear);
-  cmdManager.Register(("dns")                   , &Command_DNS);
-  cmdManager.Register(("ip")                    , &Command_IP);  
-  cmdManager.Register(("gateway")               , &Command_Gateway);
-  cmdManager.Register(("subnet")                , &Command_Subnet);
-  //Diagnostic.h
-  cmdManager.Register(("background")            , &Command_Background);
-  cmdManager.Register(("debug")                 , &Command_Debug);
-  cmdManager.Register(("logentry")              , &Command_logentry);
-  cmdManager.Register(("lowmem")                , &Command_Lowmem);
-  cmdManager.Register(("malloc")                , &Command_Malloc);
-  cmdManager.Register(("meminfo")               , &Command_MenInfo);
-  cmdManager.Register(("sysload")               , &Command_SysLoad);
-  cmdManager.Register(("serialfloat")           , &Command_SerialFloat);
-  //HTTP.h
-  cmdManager.Register(("sendtohttp")            , &Command_HTTP_SendToHTTP);
-  //i2c.h
-  cmdManager.Register(("i2cscanner")            , &Command_i2c_Scanner);
-  //MQTT.h
-  cmdManager.Register(("mqttretainflag")        , &Command_MQTT_Retain);
-  cmdManager.Register(("messagedelay")          , &Command_MQTT_messageDelay);
-  cmdManager.Register(("publish")               , &Command_MQTT_Publish);
-  //Notifications.h
-  cmdManager.Register(("notify")                , &Command_Notifications_Notify);
-  //RTC.h
-  cmdManager.Register(("clearrtcram")           , &Command_RTC_Clear);
-  cmdManager.Register(("resetflashwritecounter"), &Command_RTC_resetFlashWriteCounter);
-  //Rule.h
-  cmdManager.Register(("event")                 , &Command_Rules_Events);
-  cmdManager.Register(("executerules")          , &Command_Rules_Execute);
-  cmdManager.Register(("rules")                 , &Command_Rules_UseRules);
-  //SDCARDS.h
-  #if FEATURE_SD
-  cmdManager.Register(("sdcard")                , &Command_SD_LS);
-  cmdManager.Register(("sdremove")              , &Command_SD_Remove);
-  #endif
-  //Settings.h
-  cmdManager.Register(("build")                 , &Command_Settings_Build);
-  cmdManager.Register(("load")                  , &Command_Settings_Load);
-  cmdManager.Register(("name")                  , &Command_Settings_Name);
-  cmdManager.Register(("password")              , &Command_Settings_Password);
-  cmdManager.Register(("reset")                 , &Command_Settings_Reset);
-  cmdManager.Register(("save")                  , &Command_Settings_Save);
-  cmdManager.Register(("settings")              , &Command_Settings_Print);
-  cmdManager.Register(("unit")                  , &Command_Settings_Unit);
-  //Systen.h
-  cmdManager.Register(("deepsleep")             , &Command_Systen_deepSleep);
-  cmdManager.Register(("nosleep")               , &Command_Systen_NoSleep);
-  cmdManager.Register(("reboot")                , &Command_Systen_Reboot);
-  cmdManager.Register(("restart")               , &Command_Systen_Restart);
-  //Tasks.h
-  cmdManager.Register(("config")                , &Command_Task_RemoteConfig);
-  cmdManager.Register(("taskclear")             , &Command_Task_Clear);
-  cmdManager.Register(("taskclearall")          , &Command_Task_ClearAll);
-  cmdManager.Register(("taskrun")               , &Command_Task_Run);
-  cmdManager.Register(("taskvalueset")          , &Command_Task_ValueSet);
-  cmdManager.Register(("taskvaluesetandrun")    , &Command_Task_ValueSetAndRun);
-  //Time.h
-  cmdManager.Register(("dst")                   , &Command_DST);
-  cmdManager.Register(("ntphost")               , &Command_NTPHost);
-  cmdManager.Register(("timezone")              , &Command_TimeZone);
-  cmdManager.Register(("usentp")                , &Command_useNTP);
-  //Timers.h
-  cmdManager.Register(("delay")                 , &Command_Delay);
-  cmdManager.Register(("timerset")              , &Command_Timer_Set);
-  cmdManager.Register(("timerpause")            , &Command_Timer_Pause);
-  cmdManager.Register(("timerresume")           , &Command_Timer_Resume); 
-  //UPD.h
-  cmdManager.Register(("sendto")                , &Command_UPD_SendTo);
-  cmdManager.Register(("sendtoudp")             , &Command_UDP_SendToUPD);
-  cmdManager.Register(("udptest")               , &Command_UDP_Test);
-  cmdManager.Register(("udpport")               , &Command_UDP_Port);
-  //WD.h
-  cmdManager.Register(("wdconfig")              , &Command_WD_Config);
-  cmdManager.Register(("wdread")                , &Command_WD_Read);
-  //WiFi.h
-  cmdManager.Register(("erase")                 , &Command_WiFi_Erase);
-  cmdManager.Register(("wifiapmode")            , &Command_Wifi_APMode);
-  cmdManager.Register(("wificonnect")           , &Command_Wifi_Connect);
-  cmdManager.Register(("wifidisconnect")        , &Command_Wifi_Disconnect);
-  cmdManager.Register(("wifikey")               , &Command_Wifi_Key);
-  cmdManager.Register(("wifikey2")              , &Command_Wifi_Key2);
-  cmdManager.Register(("wifimode")              , &Command_Wifi_Mode);
-  
-  cmdManager.Register("wifiscan"              , &Command_Wifi_Scan);
-  
-  cmdManager.Register(("wifissid")              , &Command_Wifi_SSID);
-  cmdManager.Register(("wifissid2")             , &Command_Wifi_SSID2);
-  cmdManager.Register(("wifistamode")           , &Command_Wifi_STAMode);
-  
 }
