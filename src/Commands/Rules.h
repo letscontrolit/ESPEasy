@@ -2,7 +2,7 @@
 #define COMMAND_RTC_H
 
 
-#include "ESPEasy-Globals.h"
+#include "../ESPEasy-Globals.h"
 
 bool Command_Rules_Execute (struct EventStruct *event, const char* Line)
 {
