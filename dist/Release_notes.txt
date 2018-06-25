@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180625 (since mega-20180624)
+-------------------------------------------------
+
+Release date: Mon Jun 25 04:00:08 CEST 2018
+
+TD-er (2):
+      [Arduino IDE] Fix build include path ESPEasy-Globals.h
+      [PIO update] platform to espressif8266@1.7.3
+
+
+-------------------------------------------------
 Changes in release mega-20180624 (since mega-20180621)
 -------------------------------------------------
 
