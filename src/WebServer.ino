@@ -805,9 +805,9 @@ void handle_root() {
     TXBuffer += F("<TR><TD>Load:<TD>");
     if (wdcounter > 0)
     {
-      TXBuffer += String(100 - (100 * loopCounterLast / loopCounterMax));
+      TXBuffer += String(getCPUload());
       TXBuffer += F("% (LC=");
-      TXBuffer += String(int(loopCounterLast / 30));
+      TXBuffer += String(getLoopCountPerSec());
       TXBuffer += F(")");
     }
 
@@ -3644,8 +3644,8 @@ void handle_json()
 
       if (wdcounter > 0)
       {
-          stream_next_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
-          stream_next_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+          stream_next_json_object_value(F("Load"), String(getCPUload()));
+          stream_next_json_object_value(F("Load LC"), String(getLoopCountPerSec()));
       }
 
       stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
@@ -5007,9 +5007,9 @@ void handle_sysinfo() {
    TXBuffer += F("<TR><TD>Load<TD>");
   if (wdcounter > 0)
   {
-     TXBuffer += 100 - (100 * loopCounterLast / loopCounterMax);
+     TXBuffer += getCPUload();
      TXBuffer += F("% (LC=");
-     TXBuffer += int(loopCounterLast / 30);
+     TXBuffer += getLoopCountPerSec();
      TXBuffer += F(")");
   }
 

@@ -100,6 +100,9 @@ void setup()
   WiFi.setAutoReconnect(false);
   setWifiMode(WIFI_OFF);
 
+  Plugin_id.resize(PLUGIN_MAX);
+  Task_id_to_Plugin_id.resize(TASKS_MAX);
+
   checkRAM(F("setup"));
   #if defined(ESP32)
     for(byte x = 0; x < 16; x++)
@@ -364,6 +367,66 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
   return CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
 }
 
+void updateLoopStats() {
+  ++loopCounter;
+  ++loopCounter_full;
+  if (lastLoopStart == 0) {
+    lastLoopStart = micros();
+    return;
+  }
+  const long usecSince = usecPassedSince(lastLoopStart);
+  loop_usec_duration_total += usecSince;
+  lastLoopStart = micros();
+  if (usecSince <= 0 || usecSince > 10000000) 
+    return; // No loop should take > 1 sec.
+  if (shortestLoop > usecSince) {
+    shortestLoop = usecSince;
+    loopCounterMax = 30 * 1000000 / usecSince;
+  }
+  if (longestLoop < usecSince)
+    longestLoop = usecSince;
+}
+
+void updateLoopStats_30sec() {
+  loopCounterLast = loopCounter;
+  loopCounter = 0;
+  if (loopCounterLast > loopCounterMax)
+    loopCounterMax = loopCounterLast;
+
+  String log = F("LoopStats: shortestLoop: ");
+  log += shortestLoop;
+  log += F(" longestLoop: ");
+  log += longestLoop;
+  log += F(" avgLoopDuration: ");
+  log += loop_usec_duration_total / loopCounter_full;
+  log += F(" systemTimerDuration: ");
+  log += systemTimerDurationTotal / systemTimerCalls;
+  log += F(" systemTimerCalls: ");
+  log += systemTimerCalls;
+  log += F(" loopCounterMax: ");
+  log += loopCounterMax;
+  log += F(" loopCounterLast: ");
+  log += loopCounterLast;
+  log += F(" countFindPluginId: ");
+  log += countFindPluginId;
+  addLog(LOG_LEVEL_INFO, log);
+  countFindPluginId = 0;
+  loop_usec_duration_total = 0;
+  loopCounter_full = 1;
+  systemTimerDurationTotal = 0;
+  systemTimerCalls = 1;
+}
+
+int getCPUload() {
+  return 100 - (100 * loopCounterLast / loopCounterMax);
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+
+
 /*********************************************************************************************\
  * MAIN LOOP
 \*********************************************************************************************/
@@ -372,7 +435,7 @@ void loop()
   if(MainLoopCall_ptr)
       MainLoopCall_ptr();
 
-  loopCounter++;
+  updateLoopStats();
 
   if (wifiSetupConnect)
   {
@@ -629,6 +692,7 @@ void runEach30Seconds()
 {
    extern void checkRAMtoLog();
   checkRAMtoLog();
+  updateLoopStats_30sec();
   wdcounter++;
   timerwd = millis() + 30000;
   String log;
@@ -650,10 +714,6 @@ void runEach30Seconds()
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
-  loopCounterLast = loopCounter;
-  loopCounter = 0;
-  if (loopCounterLast > loopCounterMax)
-    loopCounterMax = loopCounterLast;
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -831,6 +891,7 @@ void setSystemCMDTimer(unsigned long timer, String& action)
 \*********************************************************************************************/
 void checkSystemTimers()
 {
+  unsigned long start = micros();
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
     if (systemTimers[x].timer != 0)
     {
@@ -844,9 +905,10 @@ void checkSystemTimers()
         TempEvent.Par4 = systemTimers[x].Par4;
         TempEvent.Par5 = systemTimers[x].Par5;
         systemTimers[x].timer = 0;
-        for (byte y = 0; y < PLUGIN_MAX; y++)
-          if (Plugin_id[y] == systemTimers[x].plugin)
-            Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
+        const int y = getPluginId(systemTimers[x].TaskIndex); 
+        if (y >= 0) { 
+          Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
+        }
       }
     }
 
@@ -861,6 +923,10 @@ void checkSystemTimers()
         systemCMDTimers[x].timer = 0;
         systemCMDTimers[x].action = "";
       }
+
+  ++systemTimerCalls;
+  systemTimerDurationTotal += usecPassedSince(start);;
+
 }
 
 

@@ -1182,7 +1182,8 @@ boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;
 
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte Plugin_id[PLUGIN_MAX];
+std::vector<byte> Plugin_id;
+std::vector<int> Task_id_to_Plugin_id;
 
 boolean (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte CPlugin_id[CPLUGIN_MAX];
@@ -1293,6 +1294,15 @@ unsigned long elapsed50ps = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
+unsigned long lastLoopStart = 0;
+unsigned long shortestLoop = 10000000;
+unsigned long longestLoop = 0;
+unsigned long loopCounter_full = 1;
+float loop_usec_duration_total = 0.0;
+unsigned long countFindPluginId = 0;
+
+unsigned long systemTimerCalls = 1;
+float systemTimerDurationTotal = 0.0;
 
 unsigned long dailyResetCounter = 0;
 
