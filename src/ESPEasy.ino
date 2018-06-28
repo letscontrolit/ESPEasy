@@ -563,9 +563,9 @@ void updateMQTTclient_connected() {
 void run50TimesPerSecond()
 {
   setNextTimeInterval(timer20ms, 20);
-  unsigned long start = micros();
+  START_TIMER;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
-  elapsed50ps += micros() - start;
+  STOP_TIMER(PLUGIN_CALL_50PS);
 }
 
 /*********************************************************************************************\
@@ -574,12 +574,16 @@ void run50TimesPerSecond()
 void run10TimesPerSecond()
 {
   setNextTimeInterval(timer100ms, 100);
-  unsigned long start = micros();
-  PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-  elapsed10ps += micros() - start;
-  start = micros();
-  PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
-  elapsed10psU += micros() - start;
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+    STOP_TIMER(PLUGIN_CALL_10PS);
+  }
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+    STOP_TIMER(PLUGIN_CALL_10PSU);
+  }
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
@@ -596,6 +600,7 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  START_TIMER;
   setNextTimeInterval(timer1s, 1000);
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
@@ -667,6 +672,7 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
+/*
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
   {
     Serial.print(F("Plugin calls: 50 ps:"));
@@ -682,7 +688,9 @@ void runOncePerSecond()
     elapsed10ps=0;
     elapsed10psU=0;
   }
+  */
   checkResetFactoryPin();
+  STOP_TIMER(PLUGIN_CALL_1PS);
 }
 
 /*********************************************************************************************\
@@ -693,6 +701,7 @@ void runEach30Seconds()
    extern void checkRAMtoLog();
   checkRAMtoLog();
   updateLoopStats_30sec();
+  logStatistics(true);
   wdcounter++;
   timerwd = millis() + 30000;
   String log;
@@ -727,6 +736,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 void checkSensors()
 {
+  START_TIMER;
   checkRAM(F("checkSensors"));
   bool isDeepSleep = isDeepSleepEnabled();
   //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
@@ -744,6 +754,7 @@ void checkSensors()
     }
   }
   saveUserVarToRTC();
+  STOP_TIMER(CHECK_SENSORS);
 }
 
 

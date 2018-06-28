@@ -506,6 +506,16 @@ int mqtt_reconnect_count = 0;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
+class TimingStats;
+
+#define LOADFILE_STATS  0
+#define LOOP_STATS      1
+
+#define START_TIMER const unsigned statisticsTimerStart(micros());
+#define STOP_TIMER_TASK(T)  pluginStats[T].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_LOOP     miscStats[LOOP_STATS].add(usecPassedSince(statisticsTimerStart));
+
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
   char binaryFilename[32+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames";
@@ -1320,9 +1330,176 @@ boolean       UseRTOSMultitasking;
 
 void (*MainLoopCall_ptr)(void);
 
+#include <map>
+
+class TimingStats {
+    public:
+      TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
+
+      void add(unsigned long time) {
+          _timeTotal += time;
+          ++_count;
+          if (time > _maxVal) _maxVal = time;
+          if (time < _minVal) _minVal = time;
+      }
+
+      void reset() {
+          _timeTotal = 0.0;
+          _count = 0;
+          _maxVal = 0;
+          _minVal = 4294967295;
+      }
+
+      bool isEmpty() const {
+          return _count == 0;
+      }
+
+      float getAvg() const {
+        if (_count == 0) return 0.0;
+        return _timeTotal / _count;
+      }
+
+      unsigned int getMinMax(unsigned long& minVal, unsigned long& maxVal) const {
+          if (_count == 0) {
+              minVal = 0;
+              maxVal = 0;
+              return 0;
+          }
+          minVal = _minVal;
+          maxVal = _maxVal;
+          return _count;
+      }
+
+    private:
+      float _timeTotal;
+      unsigned int _count;
+      unsigned long _maxVal;
+      unsigned long _minVal;
+};
+
+String getLogLine(const TimingStats& stats) {
+    unsigned long minVal, maxVal;
+    unsigned int c = stats.getMinMax(minVal, maxVal);
+    String log;
+    log.reserve(64);
+    log += F("Count: ");
+    log += c;
+    log += F(" Avg/min/max ");
+    log += stats.getAvg();
+    log += '/';
+    log += minVal;
+    log += '/';
+    log += maxVal;
+    log += F(" usec");
+    return log;
+}
+
+
+
+String getPluginFunctionName(int function) {
+    switch(function) {
+        case PLUGIN_INIT_ALL:              return F("INIT_ALL            ");
+        case PLUGIN_INIT:                  return F("INIT                ");
+        case PLUGIN_READ:                  return F("READ                ");
+        case PLUGIN_ONCE_A_SECOND:         return F("ONCE_A_SECOND       ");
+        case PLUGIN_TEN_PER_SECOND:        return F("TEN_PER_SECOND      ");
+        case PLUGIN_DEVICE_ADD:            return F("DEVICE_ADD          ");
+        case PLUGIN_EVENTLIST_ADD:         return F("EVENTLIST_ADD       ");
+        case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE        ");
+        case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD        ");
+        case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES ");
+        case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME      ");
+        case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
+        case PLUGIN_WRITE:                 return F("WRITE               ");
+        case PLUGIN_EVENT_OUT:             return F("EVENT_OUT           ");
+        case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG ");
+        case PLUGIN_SERIAL_IN:             return F("SERIAL_IN           ");
+        case PLUGIN_UDP_IN:                return F("UDP_IN              ");
+        case PLUGIN_CLOCK_IN:              return F("CLOCK_IN            ");
+        case PLUGIN_TIMER_IN:              return F("TIMER_IN            ");
+        case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND    ");
+        case PLUGIN_SET_CONFIG:            return F("SET_CONFIG          ");
+        case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES ");
+        case PLUGIN_EXIT:                  return F("EXIT                ");
+        case PLUGIN_GET_CONFIG:            return F("GET_CONFIG          ");
+        case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL  ");
+        case PLUGIN_REQUEST:               return F("REQUEST             ");
+    }
+    return F("Unknown");
+}
+
+bool mustLog(int function) {
+    switch(function) {
+        case PLUGIN_INIT_ALL:              return false;
+        case PLUGIN_INIT:                  return false;
+        case PLUGIN_READ:                  return true;
+        case PLUGIN_ONCE_A_SECOND:         return true;
+        case PLUGIN_TEN_PER_SECOND:        return true;
+        case PLUGIN_DEVICE_ADD:            return false;
+        case PLUGIN_EVENTLIST_ADD:         return false;
+        case PLUGIN_WEBFORM_SAVE:          return false;
+        case PLUGIN_WEBFORM_LOAD:          return false;
+        case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
+        case PLUGIN_GET_DEVICENAME:        return false;
+        case PLUGIN_GET_DEVICEVALUENAMES:  return false;
+        case PLUGIN_WRITE:                 return true;
+        case PLUGIN_EVENT_OUT:             return true;
+        case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
+        case PLUGIN_SERIAL_IN:             return true;
+        case PLUGIN_UDP_IN:                return true;
+        case PLUGIN_CLOCK_IN:              return false;
+        case PLUGIN_TIMER_IN:              return false;
+        case PLUGIN_FIFTY_PER_SECOND:      return true;
+        case PLUGIN_SET_CONFIG:            return false;
+        case PLUGIN_GET_DEVICEGPIONAMES:   return false;
+        case PLUGIN_EXIT:                  return false;
+        case PLUGIN_GET_CONFIG:            return false;
+        case PLUGIN_UNCONDITIONAL_POLL:    return false;
+        case PLUGIN_REQUEST:               return true;
+    }
+    return false;
+}
+
+std::map<int,TimingStats> pluginStats;
+std::map<int,TimingStats> miscStats;
+
+#define LOADFILE_STATS    0
+#define LOOP_STATS        1
+#define PLUGIN_CALL_50PS  2
+#define PLUGIN_CALL_10PS  3
+#define PLUGIN_CALL_10PSU 4
+#define PLUGIN_CALL_1PS   5
+#define CHECK_SENSORS     6
+#define SEND_DATA_STATS   7
+
+
+
+
+
+#define START_TIMER const unsigned statisticsTimerStart(micros());
+#define STOP_TIMER_TASK(T,F)  if (mustLog(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER(L)       miscStats[L].add(usecPassedSince(statisticsTimerStart));
+
+
+String getMiscStatsName(int stat) {
+    switch (stat) {
+        case LOADFILE_STATS: return F("Load File");
+        case LOOP_STATS:     return F("Loop");
+        case PLUGIN_CALL_50PS  : return F("Plugin call 50 p/s  ");
+        case PLUGIN_CALL_10PS  : return F("Plugin call 10 p/s  ");
+        case PLUGIN_CALL_10PSU : return F("Plugin call 10 p/s U");
+        case PLUGIN_CALL_1PS   : return F("Plugin call  1 p/s  ");
+        case CHECK_SENSORS:      return F("checkSensors()      ");
+        case SEND_DATA_STATS:    return F("sendData()          ");
+    }
+    return F("Unknown");
+}
+
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.
 #include "ESPEasyWiFiEvent.h"
+
 
 #endif /* ESPEASY_GLOBALS_H_ */

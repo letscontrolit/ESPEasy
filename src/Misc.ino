@@ -1051,6 +1051,8 @@ String ClearInFile(char* fname, int index, int datasize)
   \*********************************************************************************************/
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
+  START_TIMER;
+
   checkRAM(F("LoadFromFile"));
   String log = F("LoadFromFile: ");
   log += fname;
@@ -1065,6 +1067,8 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
   SPIFFS_CHECK(f.read(memAddress,datasize), fname);
   f.close();
+
+  STOP_TIMER(LOADFILE_STATS);
 
   return(String());
 }

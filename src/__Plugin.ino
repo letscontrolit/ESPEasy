@@ -1109,9 +1109,13 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     // Unconditional calls to all plugins
     case PLUGIN_DEVICE_ADD:
     case PLUGIN_UNCONDITIONAL_POLL:
-      for (byte x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
+      for (byte x = 0; x < PLUGIN_MAX; x++) {
+        if (Plugin_id[x] != 0){
+          START_TIMER;
           Plugin_ptr[x](Function, event, str);
+          STOP_TIMER_TASK(x,Function);
+        }
+      }
       return true;
       break;
 
@@ -1132,10 +1136,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.BaseVarIndex = y * VARS_PER_TASK;
                 TempEvent.sensorType = Device[DeviceIndex].VType;
                 checkRAM(F("PluginCall_s"),x);
-                if(Plugin_ptr[x](Function, &TempEvent, str))
-                {
-                  return true;
-                }
+                START_TIMER;
+                bool retval = (Plugin_ptr[x](Function, event, str));
+                STOP_TIMER_TASK(x,Function);
+                if (retval) return true; 
               }
             }
           }
@@ -1163,7 +1167,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               TempEvent.BaseVarIndex = y * VARS_PER_TASK;
               //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
               TempEvent.sensorType = Device[DeviceIndex].VType;
-              if (Plugin_ptr[x](Function, event, str)){
+              START_TIMER;
+              bool retval =  (Plugin_ptr[x](Function, event, str));
+              STOP_TIMER_TASK(x,Function);
+              if (retval){
                 checkRAM(F("PluginCallUDP"),x);
                 return true;
               }
@@ -1199,7 +1206,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.sensorType = Device[DeviceIndex].VType;
                 TempEvent.OriginTaskIndex = event->TaskIndex;
                 checkRAM(F("PluginCall_s"),x);
+                START_TIMER;
                 Plugin_ptr[x](Function, &TempEvent, str);
+                STOP_TIMER_TASK(x,Function);
               }
             }
           }
@@ -1226,7 +1235,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         if (Plugin_id[x] != 0 ) {
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
-          return Plugin_ptr[x](Function, event, str);
+          START_TIMER;
+          bool retval =  Plugin_ptr[x](Function, event, str);
+          STOP_TIMER_TASK(x,Function);
+          return retval; 
         }
       }
       return false;
