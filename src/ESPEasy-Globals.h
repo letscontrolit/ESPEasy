@@ -73,7 +73,7 @@
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
-#define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_DELAY                      100    // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
@@ -510,11 +510,6 @@ class TimingStats;
 
 #define LOADFILE_STATS  0
 #define LOOP_STATS      1
-
-#define START_TIMER const unsigned statisticsTimerStart(micros());
-#define STOP_TIMER_TASK(T)  pluginStats[T].add(usecPassedSince(statisticsTimerStart));
-#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
-#define STOP_TIMER_LOOP     miscStats[LOOP_STATS].add(usecPassedSince(statisticsTimerStart));
 
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
@@ -1428,7 +1423,7 @@ String getPluginFunctionName(int function) {
     return F("Unknown");
 }
 
-bool mustLog(int function) {
+bool mustLogFunction(int function) {
     switch(function) {
         case PLUGIN_INIT_ALL:              return false;
         case PLUGIN_INIT:                  return false;
@@ -1471,13 +1466,14 @@ std::map<int,TimingStats> miscStats;
 #define PLUGIN_CALL_1PS   5
 #define CHECK_SENSORS     6
 #define SEND_DATA_STATS   7
+#define COMPUTE_FORMULA_STATS 8
 
 
 
 
 
 #define START_TIMER const unsigned statisticsTimerStart(micros());
-#define STOP_TIMER_TASK(T,F)  if (mustLog(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_TASK(T,F)  if (mustLogFunction(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER(L)       miscStats[L].add(usecPassedSince(statisticsTimerStart));
 
@@ -1492,6 +1488,7 @@ String getMiscStatsName(int stat) {
         case PLUGIN_CALL_1PS   : return F("Plugin call  1 p/s  ");
         case CHECK_SENSORS:      return F("checkSensors()      ");
         case SEND_DATA_STATS:    return F("sendData()          ");
+        case COMPUTE_FORMULA_STATS: return F("Compute formula  ");
     }
     return F("Unknown");
 }

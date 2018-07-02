@@ -378,12 +378,12 @@ void updateLoopStats() {
   loop_usec_duration_total += usecSince;
   lastLoopStart = micros();
   if (usecSince <= 0 || usecSince > 10000000) 
-    return; // No loop should take > 1 sec.
-  if (shortestLoop > usecSince) {
+    return; // No loop should take > 10 sec.
+  if (shortestLoop > static_cast<unsigned long>(usecSince)) {
     shortestLoop = usecSince;
     loopCounterMax = 30 * 1000000 / usecSince;
   }
-  if (longestLoop < usecSince)
+  if (longestLoop < static_cast<unsigned long>(usecSince))
     longestLoop = usecSince;
 }
 
@@ -646,9 +646,9 @@ void runOncePerSecond()
   if (Settings.UseNTP)
     checkTime();
 
-  unsigned long start = micros();
+//  unsigned long start = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
-  unsigned long elapsed = micros() - start;
+//  unsigned long elapsed = micros() - start;
 
   checkSystemTimers();
 
@@ -801,6 +801,7 @@ void SensorSendTask(byte TaskIndex)
 
     if (success)
     {
+      START_TIMER;
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
       {
         if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
@@ -817,6 +818,7 @@ void SensorSendTask(byte TaskIndex)
             UserVar[varIndex + varNr] = result;
         }
       }
+      STOP_TIMER(COMPUTE_FORMULA_STATS);
       sendData(&TempEvent);
     }
   }
