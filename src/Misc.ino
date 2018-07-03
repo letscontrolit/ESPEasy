@@ -1442,11 +1442,13 @@ boolean isInt(const String& tBuf) {
 }
 
 boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+  const unsigned int bufLength = tBuf.length();
+  if (bufLength == 0) return false;
   boolean decPt = false;
   int firstDec = 0;
   if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
     firstDec = 1;
-  for(unsigned int x=firstDec; x < tBuf.length(); ++x) {
+  for(unsigned int x=firstDec; x < bufLength; ++x) {
     if(tBuf.charAt(x) == '.') {
       if (mustBeInteger) return false;
       // Only one decimal point allowed
