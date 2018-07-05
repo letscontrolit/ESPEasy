@@ -174,7 +174,7 @@ void sendContentBlocking(String& data) {
     TXBuffer.beforeTXRam = freeBeforeSend;
   TXBuffer.duringTXRam = freeBeforeSend;
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  String size = String(length, HEX) + "\r\n";
+  String size = formatToHex(length) + "\r\n";
   // do chunked transfer encoding ourselves (WebServer doesn't support it)
   WebServer.sendContent(size);
   if (length > 0) WebServer.sendContent(data);
@@ -380,6 +380,45 @@ void clearAccessBlock()
 #if defined(ESP32)
   #define TASKS_PER_PAGE 32
 #endif
+
+int getFormItemInt(const String &key, int defaultValue) {
+  int value = defaultValue;
+  getCheckWebserverArg_int(key, value);
+  return value;
+}
+
+bool getCheckWebserverArg_int(const String &key, int& value) {
+  String valueStr = WebServer.arg(key);
+  if (!isInt(valueStr)) return false;
+  value = valueStr.toInt();
+  return true;
+}
+
+#define update_whenset_FormItemInt(K,V) { int tmpVal; if (getCheckWebserverArg_int(K, tmpVal)) V=tmpVal;}
+
+
+bool isFormItemChecked(const String& id)
+{
+  return WebServer.arg(id) == F("on");
+}
+
+int getFormItemInt(const String& id)
+{
+  return getFormItemInt(id, 0);
+}
+
+float getFormItemFloat(const String& id)
+{
+  String val = WebServer.arg(id);
+  if (!isFloat(val)) return 0.0;
+  return val.toFloat();
+}
+
+bool isFormItem(const String& id)
+{
+  return (WebServer.arg(id).length() != 0);
+}
+
 
 
 //if there is an error-string, add it to the html code with correct formatting
@@ -805,9 +844,9 @@ void handle_root() {
     TXBuffer += F("<TR><TD>Load:<TD>");
     if (wdcounter > 0)
     {
-      TXBuffer += String(100 - (100 * loopCounterLast / loopCounterMax));
+      TXBuffer += String(getCPUload());
       TXBuffer += F("% (LC=");
-      TXBuffer += String(int(loopCounterLast / 30));
+      TXBuffer += String(getLoopCountPerSec());
       TXBuffer += F(")");
     }
 
@@ -953,14 +992,13 @@ void handle_config() {
   String iprangelow = WebServer.arg(F("iprangelow"));
   String iprangehigh = WebServer.arg(F("iprangehigh"));
 
-  String sensordelay = WebServer.arg(F("delay"));
-  String deepsleep = WebServer.arg(F("deepsleep"));
-  String deepsleeponfail = WebServer.arg(F("deepsleeponfail"));
+  Settings.Delay = getFormItemInt(F("delay"), Settings.Delay);
+  Settings.deepSleep = getFormItemInt(F("deepsleep"), Settings.deepSleep);
   String espip = WebServer.arg(F("espip"));
   String espgateway = WebServer.arg(F("espgateway"));
   String espsubnet = WebServer.arg(F("espsubnet"));
   String espdns = WebServer.arg(F("espdns"));
-  String unit = WebServer.arg(F("unit"));
+  Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
   //String apkey = WebServer.arg(F("apkey"));
 
 
@@ -1005,14 +1043,11 @@ void handle_config() {
         break;
     }
 
-    Settings.Delay = sensordelay.toInt();
-    Settings.deepSleep = deepsleep.toInt();
-    Settings.deepSleepOnFail = (deepsleeponfail == F("on"));
+    Settings.deepSleepOnFail = isFormItemChecked(F("deepsleeponfail"));
     str2ip(espip, Settings.IP);
     str2ip(espgateway, Settings.Gateway);
     str2ip(espsubnet, Settings.Subnet);
     str2ip(espdns, Settings.DNS);
-    Settings.Unit = unit.toInt();
     addHtmlError(SaveSettings());
   }
 
@@ -1095,34 +1130,33 @@ void handle_controllers() {
 
   struct EventStruct TempEvent;
 
-  byte controllerindex = WebServer.arg(F("index")).toInt();
+  byte controllerindex = getFormItemInt(F("index"), 0);
   boolean controllerNotSet = controllerindex == 0;
   --controllerindex;
 
   String usedns = WebServer.arg(F("usedns"));
   String controllerip = WebServer.arg(F("controllerip"));
   String controllerhostname = WebServer.arg(F("controllerhostname"));
-  String controllerport = WebServer.arg(F("controllerport"));
-  String protocol = WebServer.arg(F("protocol"));
+  const int controllerport = getFormItemInt(F("controllerport"), 0);
+  const int protocol = getFormItemInt(F("protocol"), -1);
   String controlleruser = WebServer.arg(F("controlleruser"));
   String controllerpassword = WebServer.arg(F("controllerpassword"));
   String controllersubscribe = WebServer.arg(F("controllersubscribe"));
   String controllerpublish = WebServer.arg(F("controllerpublish"));
-  String controllerenabled = WebServer.arg(F("controllerenabled"));
   String MQTTLwtTopic = WebServer.arg(F("mqttlwttopic"));
   String lwtmessageconnect = WebServer.arg(F("lwtmessageconnect"));
   String lwtmessagedisconnect = WebServer.arg(F("lwtmessagedisconnect"));
 
 
   //submitted data
-  if (protocol.length() != 0 && !controllerNotSet)
+  if (protocol != -1 && !controllerNotSet)
   {
     ControllerSettingsStruct ControllerSettings;
     //submitted changed protocol
-    if (Settings.Protocol[controllerindex] != protocol.toInt())
+    if (Settings.Protocol[controllerindex] != protocol)
     {
 
-      Settings.Protocol[controllerindex] = protocol.toInt();
+      Settings.Protocol[controllerindex] = protocol;
 
       //there is a protocol selected?
       if (Settings.Protocol[controllerindex]!=0)
@@ -1179,8 +1213,8 @@ void handle_controllers() {
           str2ip(controllerip, ControllerSettings.IP);
         }
         //copy settings to struct
-        Settings.ControllerEnabled[controllerindex] = (controllerenabled == F("on"));
-        ControllerSettings.Port = controllerport.toInt();
+        Settings.ControllerEnabled[controllerindex] = isFormItemChecked(F("controllerenabled"));
+        ControllerSettings.Port = controllerport;
         strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
         //strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
@@ -1384,33 +1418,30 @@ void handle_notifications() {
   // char tmpString[64];
 
 
-  byte notificationindex = WebServer.arg(F("index")).toInt();
+  byte notificationindex = getFormItemInt(F("index"), 0);
   boolean notificationindexNotSet = notificationindex == 0;
   --notificationindex;
 
-  String notification = WebServer.arg(F("notification"));
+  const int notification = getFormItemInt(F("notification"), -1);
   String domain = WebServer.arg(F("domain"));
   String server = WebServer.arg(F("server"));
-  String port = WebServer.arg(F("port"));
   String sender = WebServer.arg(F("sender"));
   String receiver = WebServer.arg(F("receiver"));
   String subject = WebServer.arg(F("subject"));
   String user = WebServer.arg(F("user"));
   String pass = WebServer.arg(F("pass"));
   String body = WebServer.arg(F("body"));
-  String pin1 = WebServer.arg(F("pin1"));
-  String pin2 = WebServer.arg(F("pin2"));
   String notificationenabled = WebServer.arg(F("notificationenabled"));
 
 
 
 
-  if (notification.length() != 0 && !notificationindexNotSet)
+  if (notification != -1 && !notificationindexNotSet)
   {
     NotificationSettingsStruct NotificationSettings;
-    if (Settings.Notification[notificationindex] != notification.toInt())
+    if (Settings.Notification[notificationindex] != notification)
     {
-      Settings.Notification[notificationindex] = notification.toInt();
+      Settings.Notification[notificationindex] = notification;
     }
     else
     {
@@ -1419,10 +1450,10 @@ void handle_notifications() {
         byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
         if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
           NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
-        NotificationSettings.Port = port.toInt();
-        NotificationSettings.Pin1 = pin1.toInt();
-        NotificationSettings.Pin2 = pin2.toInt();
-        Settings.NotificationEnabled[notificationindex] = (notificationenabled == F("on"));
+        NotificationSettings.Port = getFormItemInt(F("port"), 0);
+        NotificationSettings.Pin1 = getFormItemInt(F("pin1"), 0);
+        NotificationSettings.Pin2 = getFormItemInt(F("pin2"), 0);
+        Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
         strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
         strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
         strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
@@ -1722,10 +1753,10 @@ void handle_devices() {
   if (WebServer.hasArg(F("del")))
     taskdevicenumber=0;
   else
-    taskdevicenumber = WebServer.arg(F("TDNUM")).toInt();
+    taskdevicenumber = getFormItemInt(F("TDNUM"), 0);
 
 
-  unsigned long taskdevicetimer = WebServer.arg(F("TDT")).toInt();
+  unsigned long taskdevicetimer = getFormItemInt(F("TDT"),0);
   // String taskdeviceid[CONTROLLER_MAX];
   // String taskdevicepin1 = WebServer.arg(F("taskdevicepin1"));   // "taskdevicepin*" should not be changed because it is uses by plugins and expected to be saved by this code
   // String taskdevicepin2 = WebServer.arg(F("taskdevicepin2"));
@@ -1774,14 +1805,10 @@ void handle_devices() {
   //   taskdevicesenddata[controllerNr] = WebServer.arg(argc);
   // }
 
-  String edit = WebServer.arg(F("edit"));
-
-
-
-  byte page = WebServer.arg(F("page")).toInt();
+  byte page = getFormItemInt(F("page"), 0);
   if (page == 0)
     page = 1;
-  byte setpage = WebServer.arg(F("setpage")).toInt();
+  byte setpage = getFormItemInt(F("setpage"), 0);
   if (setpage > 0)
   {
     if (setpage <= (TASKS_MAX / TASKS_PER_PAGE))
@@ -1789,17 +1816,15 @@ void handle_devices() {
     else
       page = TASKS_MAX / TASKS_PER_PAGE;
   }
+  const int edit = getFormItemInt(F("edit"), 0);
 
-
-
-
-  byte taskIndex = WebServer.arg(F("index")).toInt();
+  byte taskIndex = getFormItemInt(F("index"), 0);
   boolean taskIndexNotSet = taskIndex == 0;
   --taskIndex;
 
   byte DeviceIndex = 0;
 
-  if (edit.toInt() != 0  && !taskIndexNotSet) // when form submitted
+  if (edit != 0  && !taskIndexNotSet) // when form submitted
   {
     if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber) // change of device: cleanup old device and reset default settings
     {
@@ -1834,37 +1859,32 @@ void handle_devices() {
           Settings.TaskDeviceTimer[taskIndex] = 0;
       }
 
-      Settings.TaskDeviceEnabled[taskIndex] = (WebServer.arg(F("TDE")) == F("on"));
+      Settings.TaskDeviceEnabled[taskIndex] = isFormItemChecked(F("TDE"));
       strcpy(ExtraTaskSettings.TaskDeviceName, WebServer.arg(F("TDN")).c_str());
-      Settings.TaskDevicePort[taskIndex] =  WebServer.arg(F("TDP")).toInt();
+      Settings.TaskDevicePort[taskIndex] =  getFormItemInt(F("TDP"), 0);
 
       for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
       {
 
-        Settings.TaskDeviceID[controllerNr][taskIndex] = WebServer.arg(String(F("TDID")) + (controllerNr + 1)).toInt();
-        Settings.TaskDeviceSendData[controllerNr][taskIndex] = (WebServer.arg(String(F("TDSD")) + (controllerNr + 1)) == F("on"));
+        Settings.TaskDeviceID[controllerNr][taskIndex] = getFormItemInt(String(F("TDID")) + (controllerNr + 1));
+        Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(String(F("TDSD")) + (controllerNr + 1));
       }
 
-      if (WebServer.arg(F("taskdevicepin1")).length() != 0)
-        Settings.TaskDevicePin1[taskIndex] = WebServer.arg(F("taskdevicepin1")).toInt();
-
-      if (WebServer.arg(F("taskdevicepin2")).length() != 0)
-        Settings.TaskDevicePin2[taskIndex] = WebServer.arg(F("taskdevicepin2")).toInt();
-
-      if (WebServer.arg(F("taskdevicepin3")).length() != 0)
-        Settings.TaskDevicePin3[taskIndex] = WebServer.arg(F("taskdevicepin3")).toInt();
+      update_whenset_FormItemInt(F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
+      update_whenset_FormItemInt(F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
+      update_whenset_FormItemInt(F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
 
       if (Device[DeviceIndex].PullUpOption)
-        Settings.TaskDevicePin1PullUp[taskIndex] = (WebServer.arg(F("TDPPU")) == F("on"));
+        Settings.TaskDevicePin1PullUp[taskIndex] = isFormItemChecked(F("TDPPU"));
 
       if (Device[DeviceIndex].InverseLogicOption)
-        Settings.TaskDevicePin1Inversed[taskIndex] = (WebServer.arg(F("TDPI")) == F("on"));
+        Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
 
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
 
         strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], WebServer.arg(String(F("TDF")) + (varNr + 1)).c_str());
-        ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = WebServer.arg(String(F("TDVD")) + (varNr + 1)).toInt();
+        ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = getFormItemInt(String(F("TDVD")) + (varNr + 1));
         strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], WebServer.arg(String(F("TDVN")) + (varNr + 1)).c_str());
 
         // taskdeviceformula[varNr].toCharArray(tmpString, 41);
@@ -1964,7 +1984,7 @@ void handle_devices() {
         customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent,TXBuffer.buf);
         if (!customConfig)
           if (Device[DeviceIndex].Ports != 0)
-            TXBuffer += String(F("0x")) + String(Settings.TaskDevicePort[x],HEX);
+            TXBuffer += formatToHex_decimal(Settings.TaskDevicePort[x]);
 
         TXBuffer += F("<TD>");
 
@@ -2535,8 +2555,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   String options[addressCount];
   for (byte x = 0; x < addressCount; x++)
   {
-    options[x] = F("0x");
-    options[x] += String(addresses[x], HEX);
+    options[x] = formatToHex_decimal(addresses[x]);
     if (x == 0)
       options[x] += F(" - (default)");
   }
@@ -2883,11 +2902,13 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(const String& url)
 {
-  TXBuffer += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
+  TXBuffer += F(" <a class='button help' href='");
+  if (!url.startsWith(F("http"))) {
+    TXBuffer += F("http://www.letscontrolit.com/wiki/index.php/");
+  }
   TXBuffer += url;
   TXBuffer += F("' target='_blank'>&#10068;</a>");
 }
-
 
 void addEnabled(boolean enabled)
 {
@@ -2938,29 +2959,6 @@ void addTaskSelect(String name,  int choice)
   }
 }
 
-
-
-bool isFormItemChecked(const String& id)
-{
-  return WebServer.arg(id) == F("on");
-}
-
-int getFormItemInt(const String& id)
-{
-  String val = WebServer.arg(id);
-  return val.toInt();
-}
-
-float getFormItemFloat(const String& id)
-{
-  String val = WebServer.arg(id);
-  return val.toFloat();
-}
-
-bool isFormItem(const String& id)
-{
-  return (WebServer.arg(id).length() != 0);
-}
 
 
 //********************************************************************************
@@ -3319,8 +3317,8 @@ void handle_i2cscanner() {
     error = Wire.endTransmission();
     if (error == 0)
     {
-      TXBuffer += "<TR><TD>0x";
-      TXBuffer += String(address, HEX);
+      TXBuffer += "<TR><TD>";
+      TXBuffer += formatToHex(address);
       TXBuffer += "<TD>";
       switch (address)
       {
@@ -3422,8 +3420,8 @@ void handle_i2cscanner() {
     }
     else if (error == 4)
     {
-      TXBuffer += F("<TR><TD>Unknown error at address 0x");
-      TXBuffer += String(address, HEX);
+      TXBuffer += F("<TR><TD>Unknown error at address ");
+      TXBuffer += formatToHex(address);
     }
   }
 
@@ -3608,7 +3606,7 @@ void stream_last_json_object_value(const String& object, const String& value) {
 //********************************************************************************
 void handle_json()
 {
-  String tasknr = WebServer.arg("tasknr");
+  const int taskNr = getFormItemInt(F("tasknr"), -1);
   bool showSystem = true;
   bool showWifi = true;
   bool showDataAcquisition = true;
@@ -3625,7 +3623,7 @@ void handle_json()
     }
   }
   TXBuffer.startJsonStream();
-  if (tasknr.length() == 0)
+  if (taskNr == -1)
   {
     TXBuffer += '{';
     if (showSystem) {
@@ -3644,8 +3642,8 @@ void handle_json()
 
       if (wdcounter > 0)
       {
-          stream_next_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
-          stream_next_json_object_value(F("Load LC"), String( int(loopCounterLast / 30) ));
+          stream_next_json_object_value(F("Load"), String(getCPUload()));
+          stream_next_json_object_value(F("Load LC"), String(getLoopCountPerSec()));
       }
 
       stream_last_json_object_value(F("Free RAM"), String(ESP.getFreeHeap()));
@@ -3675,10 +3673,9 @@ void handle_json()
     }
   }
 
-  byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
-  if (taskNr != 0 )
+  if (taskNr > 0 )
   {
     firstTaskIndex = taskNr - 1;
     lastTaskIndex = taskNr - 1;
@@ -3765,46 +3762,24 @@ void handle_advanced() {
 
   char tmpString[81];
 
-  String messagedelay = WebServer.arg(F("messagedelay"));
   String ip = WebServer.arg(F("ip"));
   String syslogip = WebServer.arg(F("syslogip"));
   String ntphost = WebServer.arg(F("ntphost"));
-  int timezone = WebServer.arg(F("timezone")).toInt();
-  int dststartweek = WebServer.arg(F("dststartweek")).toInt();
-  int dststartdow = WebServer.arg(F("dststartdow")).toInt();
-  int dststartmonth = WebServer.arg(F("dststartmonth")).toInt();
-  int dststarthour = WebServer.arg(F("dststarthour")).toInt();
-  int dstendweek = WebServer.arg(F("dstendweek")).toInt();
-  int dstenddow = WebServer.arg(F("dstenddow")).toInt();
-  int dstendmonth = WebServer.arg(F("dstendmonth")).toInt();
-  int dstendhour = WebServer.arg(F("dstendhour")).toInt();
-  String dst = WebServer.arg(F("dst"));
-  String sysloglevel = WebServer.arg(F("sysloglevel"));
-  String syslogfacility = WebServer.arg(F("syslogfacility"));
-  String udpport = WebServer.arg(F("udpport"));
-  String useserial = WebServer.arg(F("useserial"));
-  String serialloglevel = WebServer.arg(F("serialloglevel"));
-  String webloglevel = WebServer.arg(F("webloglevel"));
-  String sdloglevel = WebServer.arg(F("sdloglevel"));
-  String baudrate = WebServer.arg(F("baudrate"));
-  String usentp = WebServer.arg(F("usentp"));
-  String wdi2caddress = WebServer.arg(F("wdi2caddress"));
-  String usessdp = WebServer.arg(F("usessdp"));
+  int timezone = getFormItemInt(F("timezone"));
+  int dststartweek = getFormItemInt(F("dststartweek"));
+  int dststartdow = getFormItemInt(F("dststartdow"));
+  int dststartmonth = getFormItemInt(F("dststartmonth"));
+  int dststarthour = getFormItemInt(F("dststarthour"));
+  int dstendweek = getFormItemInt(F("dstendweek"));
+  int dstenddow = getFormItemInt(F("dstenddow"));
+  int dstendmonth = getFormItemInt(F("dstendmonth"));
+  int dstendhour = getFormItemInt(F("dstendhour"));
   String edit = WebServer.arg(F("edit"));
-  String wireclockstretchlimit = WebServer.arg(F("wireclockstretchlimit"));
-  String userules = WebServer.arg(F("userules"));
-  String cft = WebServer.arg(F("cft"));
-  String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
-  String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
-  String UseRTOSMultitasking = WebServer.arg(F("usertosmultitasking"));
-  String MQTTUseUnitNameAsClientId = WebServer.arg(F("mqttuseunitnameasclientid"));
-  String latitude = WebServer.arg(F("latitude"));
-  String longitude = WebServer.arg(F("longitude"));
 
 
   if (edit.length() != 0)
   {
-    Settings.MessageDelay = messagedelay.toInt();
+    Settings.MessageDelay = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet = ip.toInt();
     ntphost.toCharArray(tmpString, 64);
     strcpy(Settings.NTPHost, tmpString);
@@ -3814,28 +3789,28 @@ void handle_advanced() {
     TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     str2ip(syslogip.c_str(), Settings.Syslog_IP);
-    Settings.UDPPort = udpport.toInt();
-    Settings.SyslogLevel = sysloglevel.toInt();
-    Settings.SyslogFacility = syslogfacility.toInt();
-    Settings.UseSerial = (useserial == F("on"));
-    Settings.SerialLogLevel = serialloglevel.toInt();
-    Settings.WebLogLevel = webloglevel.toInt();
-    Settings.SDLogLevel = sdloglevel.toInt();
+    Settings.UDPPort = getFormItemInt(F("udpport"));
+    Settings.SyslogLevel = getFormItemInt(F("sysloglevel"));
+    Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
+    Settings.UseSerial = isFormItemChecked(F("useserial"));
+    Settings.SerialLogLevel = getFormItemInt(F("serialloglevel"));
+    Settings.WebLogLevel = getFormItemInt(F("webloglevel"));
+    Settings.SDLogLevel = getFormItemInt(F("sdloglevel"));
     Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
-    Settings.BaudRate = baudrate.toInt();
-    Settings.UseNTP = (usentp == F("on"));
-    Settings.DST = (dst == F("on"));
-    Settings.WDI2CAddress = wdi2caddress.toInt();
-    Settings.UseSSDP = (usessdp == F("on"));
-    Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
-    Settings.UseRules = (userules == F("on"));
-    Settings.ConnectionFailuresThreshold = cft.toInt();
-    Settings.MQTTRetainFlag = (MQTTRetainFlag ==  F("on"));
-    Settings.ArduinoOTAEnable = (ArduinoOTAEnable ==  F("on"));
-    Settings.UseRTOSMultitasking = (UseRTOSMultitasking ==  F("on"));
-    Settings.MQTTUseUnitNameAsClientId = (MQTTUseUnitNameAsClientId == F("on"));
-    Settings.Latitude = latitude.toFloat();
-    Settings.Longitude = longitude.toFloat();
+    Settings.BaudRate = getFormItemInt(F("baudrate"));
+    Settings.UseNTP = isFormItemChecked(F("usentp"));
+    Settings.DST = isFormItemChecked(F("dst"));
+    Settings.WDI2CAddress = getFormItemInt(F("wdi2caddress"));
+    Settings.UseSSDP = isFormItemChecked(F("usessdp"));
+    Settings.WireClockStretchLimit = getFormItemInt(F("wireclockstretchlimit"));
+    Settings.UseRules = isFormItemChecked(F("userules"));
+    Settings.ConnectionFailuresThreshold = getFormItemInt(F("cft"));
+    Settings.MQTTRetainFlag = isFormItemChecked(F("mqttretainflag"));
+    Settings.ArduinoOTAEnable = isFormItemChecked(F("arduinootaenable"));
+    Settings.UseRTOSMultitasking = isFormItemChecked(F("usertosmultitasking"));
+    Settings.MQTTUseUnitNameAsClientId = isFormItemChecked(F("mqttuseunitnameasclientid"));
+    Settings.Latitude = getFormItemFloat(F("latitude"));
+    Settings.Longitude = getFormItemFloat(F("longitude"));
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
@@ -4263,8 +4238,8 @@ boolean handle_custom(String path) {
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
-    byte unit = WebServer.arg(F("unit")).toInt();
-    byte btnunit = WebServer.arg(F("btnunit")).toInt();
+    byte unit = getFormItemInt(F("unit"));
+    byte btnunit = getFormItemInt(F("btnunit"));
     if(!unit) unit = btnunit; // unit element prevails, if not used then set to btnunit
     if (unit && unit != Settings.Unit)
     {
@@ -4818,13 +4793,7 @@ void handle_rules() {
   sendHeadandTail(F("TmplStd"));
   static byte currentSet = 1;
 
-
-  String set = WebServer.arg(F("set"));
-  byte rulesSet = 1;
-  if (set.length() > 0)
-  {
-    rulesSet = set.toInt();
-  }
+  const byte rulesSet = getFormItemInt(F("set"), 1);
 
   #if defined(ESP8266)
     String fileName = F("rules");
@@ -5007,9 +4976,9 @@ void handle_sysinfo() {
    TXBuffer += F("<TR><TD>Load<TD>");
   if (wdcounter > 0)
   {
-     TXBuffer += 100 - (100 * loopCounterLast / loopCounterMax);
+     TXBuffer += getCPUload();
      TXBuffer += F("% (LC=");
-     TXBuffer += int(loopCounterLast / 30);
+     TXBuffer += getLoopCountPerSec();
      TXBuffer += F(")");
   }
 
@@ -5199,15 +5168,11 @@ void handle_sysinfo() {
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
-     TXBuffer += F("Vendor: 0x");
-    String flashVendor(flashChipId & 0xFF, HEX);
-    flashVendor.toUpperCase();
-     TXBuffer += flashVendor;
-     TXBuffer += F(" Device: 0x");
-    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-    String flashDeviceString(flashDevice, HEX);
-    flashDeviceString.toUpperCase();
-     TXBuffer += flashDeviceString;
+     TXBuffer += F("Vendor: ");
+     TXBuffer += formatToHex(flashChipId & 0xFF);
+     TXBuffer += F(" Device: ");
+     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+     TXBuffer += formatToHex(flashDevice);
   #endif
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();
@@ -5250,6 +5215,22 @@ void handle_sysinfo() {
    TXBuffer += F(" kB (");
    TXBuffer += ESP.getFreeSketchSpace() / 1024;
    TXBuffer += F(" kB free)");
+  #endif
+
+  #ifdef ESP32
+   TXBuffer += F("<TR><TD colspan=2><H3>Partitions");
+   addHelpButton(F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
+   TXBuffer += F("</H3></TD></TR>");
+
+   TXBuffer += F("<TR><TD>Data Partition Table<TD><tt>");
+   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
+   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_DATA, F(" - "), F("<BR>"));
+   TXBuffer += F("</tt>");
+
+   TXBuffer += F("<TR><TD>App Partition Table<TD><tt>");
+   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
+   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
+   TXBuffer += F("</tt>");
   #endif
 
    TXBuffer += F("</table></form>");

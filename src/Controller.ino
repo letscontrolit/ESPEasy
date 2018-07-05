@@ -3,6 +3,7 @@
 //********************************************************************************
 void sendData(struct EventStruct *event)
 {
+  START_TIMER;
   checkRAM(F("sendData"));
  LoadTaskSettings(event->TaskIndex);
   if (Settings.UseRules)
@@ -55,6 +56,7 @@ void sendData(struct EventStruct *event)
 
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
+  STOP_TIMER(SEND_DATA_STATS);
 }
 
 boolean validUserVar(struct EventStruct *event) {

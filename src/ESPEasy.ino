@@ -100,6 +100,9 @@ void setup()
   WiFi.setAutoReconnect(false);
   setWifiMode(WIFI_OFF);
 
+  Plugin_id.resize(PLUGIN_MAX);
+  Task_id_to_Plugin_id.resize(TASKS_MAX);
+
   checkRAM(F("setup"));
   #if defined(ESP32)
     for(byte x = 0; x < 16; x++)
@@ -364,6 +367,66 @@ bool getControllerProtocolDisplayName(byte ProtocolIndex, byte parameterIdx, Str
   return CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, protoDisplayName);
 }
 
+void updateLoopStats() {
+  ++loopCounter;
+  ++loopCounter_full;
+  if (lastLoopStart == 0) {
+    lastLoopStart = micros();
+    return;
+  }
+  const long usecSince = usecPassedSince(lastLoopStart);
+  loop_usec_duration_total += usecSince;
+  lastLoopStart = micros();
+  if (usecSince <= 0 || usecSince > 10000000) 
+    return; // No loop should take > 10 sec.
+  if (shortestLoop > static_cast<unsigned long>(usecSince)) {
+    shortestLoop = usecSince;
+    loopCounterMax = 30 * 1000000 / usecSince;
+  }
+  if (longestLoop < static_cast<unsigned long>(usecSince))
+    longestLoop = usecSince;
+}
+
+void updateLoopStats_30sec() {
+  loopCounterLast = loopCounter;
+  loopCounter = 0;
+  if (loopCounterLast > loopCounterMax)
+    loopCounterMax = loopCounterLast;
+
+  String log = F("LoopStats: shortestLoop: ");
+  log += shortestLoop;
+  log += F(" longestLoop: ");
+  log += longestLoop;
+  log += F(" avgLoopDuration: ");
+  log += loop_usec_duration_total / loopCounter_full;
+  log += F(" systemTimerDuration: ");
+  log += systemTimerDurationTotal / systemTimerCalls;
+  log += F(" systemTimerCalls: ");
+  log += systemTimerCalls;
+  log += F(" loopCounterMax: ");
+  log += loopCounterMax;
+  log += F(" loopCounterLast: ");
+  log += loopCounterLast;
+  log += F(" countFindPluginId: ");
+  log += countFindPluginId;
+  addLog(LOG_LEVEL_INFO, log);
+  countFindPluginId = 0;
+  loop_usec_duration_total = 0;
+  loopCounter_full = 1;
+  systemTimerDurationTotal = 0;
+  systemTimerCalls = 1;
+}
+
+int getCPUload() {
+  return 100 - (100 * loopCounterLast / loopCounterMax);
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+
+
 /*********************************************************************************************\
  * MAIN LOOP
 \*********************************************************************************************/
@@ -372,7 +435,7 @@ void loop()
   if(MainLoopCall_ptr)
       MainLoopCall_ptr();
 
-  loopCounter++;
+  updateLoopStats();
 
   if (wifiSetupConnect)
   {
@@ -500,9 +563,9 @@ void updateMQTTclient_connected() {
 void run50TimesPerSecond()
 {
   setNextTimeInterval(timer20ms, 20);
-  unsigned long start = micros();
+  START_TIMER;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
-  elapsed50ps += micros() - start;
+  STOP_TIMER(PLUGIN_CALL_50PS);
 }
 
 /*********************************************************************************************\
@@ -511,12 +574,16 @@ void run50TimesPerSecond()
 void run10TimesPerSecond()
 {
   setNextTimeInterval(timer100ms, 100);
-  unsigned long start = micros();
-  PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
-  elapsed10ps += micros() - start;
-  start = micros();
-  PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
-  elapsed10psU += micros() - start;
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
+    STOP_TIMER(PLUGIN_CALL_10PS);
+  }
+  {
+    START_TIMER;
+    PluginCall(PLUGIN_UNCONDITIONAL_POLL, 0, dummyString);
+    STOP_TIMER(PLUGIN_CALL_10PSU);
+  }
   if (Settings.UseRules && eventBuffer.length() > 0)
   {
     rulesProcessing(eventBuffer);
@@ -533,6 +600,7 @@ void run10TimesPerSecond()
 \*********************************************************************************************/
 void runOncePerSecond()
 {
+  START_TIMER;
   setNextTimeInterval(timer1s, 1000);
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
@@ -578,9 +646,9 @@ void runOncePerSecond()
   if (Settings.UseNTP)
     checkTime();
 
-  unsigned long start = micros();
+//  unsigned long start = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
-  unsigned long elapsed = micros() - start;
+//  unsigned long elapsed = micros() - start;
 
   checkSystemTimers();
 
@@ -604,6 +672,7 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
+/*
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV)
   {
     Serial.print(F("Plugin calls: 50 ps:"));
@@ -619,7 +688,9 @@ void runOncePerSecond()
     elapsed10ps=0;
     elapsed10psU=0;
   }
+  */
   checkResetFactoryPin();
+  STOP_TIMER(PLUGIN_CALL_1PS);
 }
 
 /*********************************************************************************************\
@@ -629,6 +700,8 @@ void runEach30Seconds()
 {
    extern void checkRAMtoLog();
   checkRAMtoLog();
+  updateLoopStats_30sec();
+  logStatistics(true);
   wdcounter++;
   timerwd = millis() + 30000;
   String log;
@@ -650,10 +723,6 @@ void runEach30Seconds()
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0;
 #endif
-  loopCounterLast = loopCounter;
-  loopCounter = 0;
-  if (loopCounterLast > loopCounterMax)
-    loopCounterMax = loopCounterLast;
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -667,6 +736,7 @@ void runEach30Seconds()
 \*********************************************************************************************/
 void checkSensors()
 {
+  START_TIMER;
   checkRAM(F("checkSensors"));
   bool isDeepSleep = isDeepSleepEnabled();
   //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
@@ -684,6 +754,7 @@ void checkSensors()
     }
   }
   saveUserVarToRTC();
+  STOP_TIMER(CHECK_SENSORS);
 }
 
 
@@ -730,6 +801,7 @@ void SensorSendTask(byte TaskIndex)
 
     if (success)
     {
+      START_TIMER;
       for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
       {
         if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
@@ -746,6 +818,7 @@ void SensorSendTask(byte TaskIndex)
             UserVar[varIndex + varNr] = result;
         }
       }
+      STOP_TIMER(COMPUTE_FORMULA_STATS);
       sendData(&TempEvent);
     }
   }
@@ -831,6 +904,7 @@ void setSystemCMDTimer(unsigned long timer, String& action)
 \*********************************************************************************************/
 void checkSystemTimers()
 {
+  unsigned long start = micros();
   for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
     if (systemTimers[x].timer != 0)
     {
@@ -844,9 +918,10 @@ void checkSystemTimers()
         TempEvent.Par4 = systemTimers[x].Par4;
         TempEvent.Par5 = systemTimers[x].Par5;
         systemTimers[x].timer = 0;
-        for (byte y = 0; y < PLUGIN_MAX; y++)
-          if (Plugin_id[y] == systemTimers[x].plugin)
-            Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
+        const int y = getPluginId(systemTimers[x].TaskIndex); 
+        if (y >= 0) { 
+          Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
+        }
       }
     }
 
@@ -861,6 +936,10 @@ void checkSystemTimers()
         systemCMDTimers[x].timer = 0;
         systemCMDTimers[x].action = "";
       }
+
+  ++systemTimerCalls;
+  systemTimerDurationTotal += usecPassedSince(start);;
+
 }
 
 

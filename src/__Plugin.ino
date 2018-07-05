@@ -29,6 +29,11 @@ void PluginInit(void)
     Plugin_ptr[x] = 0;
     Plugin_id[x] = 0;
   }
+  // Clear the cache.
+  for (x = 0; x < TASKS_MAX; x++)
+  {
+    Task_id_to_Plugin_id[x] = -1;
+  }
 
   x = 0;
 
@@ -1057,13 +1062,41 @@ void PluginInit(void)
 
 }
 
+int getPluginId(byte taskId) {
+  int retry = 1;
+  while (retry >= 0) {
+    int plugin = Task_id_to_Plugin_id[taskId];
+    if (plugin >= 0 && plugin < PLUGIN_MAX) {
+      if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskId])
+        return plugin;
+    }
+    updateTaskPluginCache();
+    --retry;
+  }
+  return -1;
+}
+
+void updateTaskPluginCache() {
+  ++countFindPluginId;
+  Task_id_to_Plugin_id.resize(TASKS_MAX +1);
+  for (byte y = 0; y < TASKS_MAX; ++y) {
+    Task_id_to_Plugin_id[y] = -1;
+    bool foundPlugin = false;
+    for (byte x = 0; x < PLUGIN_MAX && !foundPlugin; ++x) {
+      if (Plugin_id[x] != 0 && Plugin_id[x] == Settings.TaskDeviceNumber[y]) {
+        foundPlugin = true;
+        Task_id_to_Plugin_id[y] = x;
+      }
+    }
+  }
+}
+
 
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
 byte PluginCall(byte Function, struct EventStruct *event, String& str)
 {
-  int x;
   struct EventStruct TempEvent;
 
   if (event == 0)
@@ -1076,9 +1109,13 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     // Unconditional calls to all plugins
     case PLUGIN_DEVICE_ADD:
     case PLUGIN_UNCONDITIONAL_POLL:
-      for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
+      for (byte x = 0; x < PLUGIN_MAX; x++) {
+        if (Plugin_id[x] != 0){
+          START_TIMER;
           Plugin_ptr[x](Function, event, str);
+          STOP_TIMER_TASK(x,Function);
+        }
+      }
       return true;
       break;
 
@@ -1092,26 +1129,23 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           {
             if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
             {
-              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-              TempEvent.TaskIndex = y;
-              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-              TempEvent.sensorType = Device[DeviceIndex].VType;
-              for (x = 0; x < PLUGIN_MAX; x++)
-              {
-                if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
-                {
-                  checkRAM(F("PluginCall_s"),x);
-                  if(Plugin_ptr[x](Function, &TempEvent, str))
-                  {
-                    return true;
-                  }
-                }
+              const int x = getPluginId(y);
+              if (x >= 0) {
+                byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                TempEvent.TaskIndex = y;
+                TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+                TempEvent.sensorType = Device[DeviceIndex].VType;
+                checkRAM(F("PluginCall_s"),x);
+                START_TIMER;
+                bool retval = (Plugin_ptr[x](Function, event, str));
+                STOP_TIMER_TASK(x,Function);
+                if (retval) return true; 
               }
             }
           }
         }
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-        for (x = 0; x < PLUGIN_MAX; x++)
+        for (byte x = 0; x < PLUGIN_MAX; x++)
           if (Plugin_id[x] != 0)
             if (Plugin_ptr[x](Function, event, str))
               return true;
@@ -1126,19 +1160,19 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         {
           if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
           {
-            for (x = 0; x < PLUGIN_MAX; x++)
-            {
-              if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
-              {
-                byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                TempEvent.TaskIndex = y;
-                TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-                //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
-                TempEvent.sensorType = Device[DeviceIndex].VType;
-                if (Plugin_ptr[x](Function, event, str)){
-                  checkRAM(F("PluginCallUDP"),x);
-                  return true;
-                }
+            const int x = getPluginId(y);
+            if (x >= 0) {
+              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+              TempEvent.TaskIndex = y;
+              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+              //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
+              TempEvent.sensorType = Device[DeviceIndex].VType;
+              START_TIMER;
+              bool retval =  (Plugin_ptr[x](Function, event, str));
+              STOP_TIMER_TASK(x,Function);
+              if (retval){
+                checkRAM(F("PluginCallUDP"),x);
+                return true;
               }
             }
           }
@@ -1163,19 +1197,18 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           {
             if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
             {
-              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-              TempEvent.TaskIndex = y;
-              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-              //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
-              TempEvent.sensorType = Device[DeviceIndex].VType;
-              TempEvent.OriginTaskIndex = event->TaskIndex;
-              for (x = 0; x < PLUGIN_MAX; x++)
-              {
-                if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
-                {
-                  checkRAM(F("PluginCall_s"),x);
-                  Plugin_ptr[x](Function, &TempEvent, str);
-                }
+              const int x = getPluginId(y);
+              if (x >= 0) {
+                byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
+                TempEvent.TaskIndex = y;
+                TempEvent.BaseVarIndex = y * VARS_PER_TASK;
+                //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
+                TempEvent.sensorType = Device[DeviceIndex].VType;
+                TempEvent.OriginTaskIndex = event->TaskIndex;
+                checkRAM(F("PluginCall_s"),x);
+                START_TIMER;
+                Plugin_ptr[x](Function, &TempEvent, str);
+                STOP_TIMER_TASK(x,Function);
               }
             }
           }
@@ -1195,18 +1228,22 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_READ:
     case PLUGIN_SET_CONFIG:
-    case PLUGIN_GET_CONFIG:
-      for (x = 0; x < PLUGIN_MAX; x++)
-      {
-        if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))
-        {
+    case PLUGIN_GET_CONFIG: 
+    {
+      const int x = getPluginId(event->TaskIndex);
+      if (x >= 0) {
+        if (Plugin_id[x] != 0 ) {
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
-          return Plugin_ptr[x](Function, event, str);
+          START_TIMER;
+          bool retval =  Plugin_ptr[x](Function, event, str);
+          STOP_TIMER_TASK(x,Function);
+          return retval; 
         }
       }
       return false;
       break;
+    }
 
   }// case
   return false;

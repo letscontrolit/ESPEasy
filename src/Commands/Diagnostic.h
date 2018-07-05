@@ -22,9 +22,9 @@ bool Command_Malloc(struct EventStruct *event, const char* Line)
 bool Command_SysLoad(struct EventStruct *event, const char* Line)
 {
   bool success = true;
-  Serial.print(100 - (100 * loopCounterLast / loopCounterMax));
+  Serial.print(getCPUload());
   Serial.print(F("% (LC="));
-  Serial.print(int(loopCounterLast / 30));
+  Serial.print(getCPUload());
   Serial.println(F(")"));
   return success;
 }

@@ -58,8 +58,8 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-    	addFormTextBox(F("I2C Address (Hex)"), F("plugin_048_adr"), String(F("0x")) +
-    			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
+    	addFormTextBox(F("I2C Address (Hex)"), F("plugin_048_adr"),
+		               formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
     	addFormNumericBox(F("Stepper: steps per revolution"), F("plugin_048_MotorStepsPerRevolution")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);

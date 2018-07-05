@@ -60,6 +60,55 @@ String formatMAC(const uint8_t* mac) {
   return String(str);
 }
 
+String formatToHex(unsigned long value) {
+  String result = F("0x");
+  String hex(value, HEX);
+  hex.toUpperCase();
+  result += hex;
+  return result;
+}
+
+String formatHumanReadable(unsigned long value, unsigned long factor) {
+  float floatValue(value);
+  byte steps = 0;
+  while (value >= factor) {
+    value /= factor;
+    ++steps;
+    floatValue /= float(factor);
+  }
+  String result = toString(floatValue, 2);
+  switch (steps) {
+    case 0: return String(value);
+    case 1: result += 'k'; break;
+    case 2: result += 'M'; break;
+    case 3: result += 'G'; break;
+    case 4: result += 'T'; break;
+    default: 
+      result += '*';
+      result += factor;
+      result += '^';
+      result += steps;
+      break;
+  }
+  return result;
+}
+
+String formatToHex_decimal(unsigned long value) {
+  return formatToHex_decimal(value, 1);
+}
+
+String formatToHex_decimal(unsigned long value, unsigned long factor) {
+  String result = formatToHex(value);
+  result += F(" (");
+  if (factor > 1) {
+    result += formatHumanReadable(value, factor);
+  } else {
+    result += value;
+  }
+  result += ')';
+  return result;
+}
+
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
   \*********************************************************************************************/
@@ -362,7 +411,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   #endif
 
   if (s.indexOf(F("%sys")) != -1) {
-    SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
+    SMART_REPL(F("%sysload%"), String(getCPUload()))
     SMART_REPL(F("%sysheap%"), String(ESP.getFreeHeap()));
     SMART_REPL(F("%systm_hm%"), getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))

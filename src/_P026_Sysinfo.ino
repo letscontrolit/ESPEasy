@@ -96,7 +96,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           }
           case 4:
           {
-            value = (100 - (100 * loopCounterLast / loopCounterMax));
+            value = getCPUload();
             break;
           }
           case 5:
