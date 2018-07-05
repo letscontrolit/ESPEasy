@@ -1,4 +1,30 @@
 -------------------------------------------------
+Changes in release mega-20180705 (since mega-20180625)
+-------------------------------------------------
+
+Release date: Thu Jul  5 04:00:18 CEST 2018
+
+Bartłomiej Zimoń (1):
+      Update _C005.ino
+
+TD-er (10):
+      [CPU usage] Increase loop count
+      [loop times] New timer statistics class to monitor performance
+      [BMx280] Do not wait for measurements, collect async
+      [Timing stats] Allow computing timing to estimate performance.
+      [ESP32] Upgrade to new ESpressif32 version
+      [PIO build] Use newer flag syntax for Travis
+      [Stability] Add check for string length to isNumerical()
+      [Stability] Use functions to get Webserver Arguments from POST messages.
+      [PlatformIO] Update to Espressif32@1.1.1
+      [info] Display ESP32 partition table
+
+Tempura San (2):
+      [WebUI] font-family set to monospace for TEXTAREA
+      [WebUI] removed stray </div>
+
+
+-------------------------------------------------
 Changes in release mega-20180625 (since mega-20180624)
 -------------------------------------------------
 
