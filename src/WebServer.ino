@@ -174,7 +174,7 @@ void sendContentBlocking(String& data) {
     TXBuffer.beforeTXRam = freeBeforeSend;
   TXBuffer.duringTXRam = freeBeforeSend;
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  String size = String(length, HEX) + "\r\n";
+  String size = formatToHex(length) + "\r\n";
   // do chunked transfer encoding ourselves (WebServer doesn't support it)
   WebServer.sendContent(size);
   if (length > 0) WebServer.sendContent(data);
@@ -1984,7 +1984,7 @@ void handle_devices() {
         customConfig = PluginCall(PLUGIN_WEBFORM_SHOW_CONFIG, &TempEvent,TXBuffer.buf);
         if (!customConfig)
           if (Device[DeviceIndex].Ports != 0)
-            TXBuffer += String(F("0x")) + String(Settings.TaskDevicePort[x],HEX);
+            TXBuffer += formatToHex_decimal(Settings.TaskDevicePort[x]);
 
         TXBuffer += F("<TD>");
 
@@ -2555,8 +2555,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   String options[addressCount];
   for (byte x = 0; x < addressCount; x++)
   {
-    options[x] = F("0x");
-    options[x] += String(addresses[x], HEX);
+    options[x] = formatToHex_decimal(addresses[x]);
     if (x == 0)
       options[x] += F(" - (default)");
   }
@@ -2903,11 +2902,13 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 // adds a Help Button with points to the the given Wiki Subpage
 void addHelpButton(const String& url)
 {
-  TXBuffer += F(" <a class='button help' href='http://www.letscontrolit.com/wiki/index.php/");
+  TXBuffer += F(" <a class='button help' href='");
+  if (!url.startsWith(F("http"))) {
+    TXBuffer += F("http://www.letscontrolit.com/wiki/index.php/");
+  }
   TXBuffer += url;
   TXBuffer += F("' target='_blank'>&#10068;</a>");
 }
-
 
 void addEnabled(boolean enabled)
 {
@@ -3316,8 +3317,8 @@ void handle_i2cscanner() {
     error = Wire.endTransmission();
     if (error == 0)
     {
-      TXBuffer += "<TR><TD>0x";
-      TXBuffer += String(address, HEX);
+      TXBuffer += "<TR><TD>";
+      TXBuffer += formatToHex(address);
       TXBuffer += "<TD>";
       switch (address)
       {
@@ -3419,8 +3420,8 @@ void handle_i2cscanner() {
     }
     else if (error == 4)
     {
-      TXBuffer += F("<TR><TD>Unknown error at address 0x");
-      TXBuffer += String(address, HEX);
+      TXBuffer += F("<TR><TD>Unknown error at address ");
+      TXBuffer += formatToHex(address);
     }
   }
 
@@ -5167,15 +5168,11 @@ void handle_sysinfo() {
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
-     TXBuffer += F("Vendor: 0x");
-    String flashVendor(flashChipId & 0xFF, HEX);
-    flashVendor.toUpperCase();
-     TXBuffer += flashVendor;
-     TXBuffer += F(" Device: 0x");
-    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-    String flashDeviceString(flashDevice, HEX);
-    flashDeviceString.toUpperCase();
-     TXBuffer += flashDeviceString;
+     TXBuffer += F("Vendor: ");
+     TXBuffer += formatToHex(flashChipId & 0xFF);
+     TXBuffer += F(" Device: ");
+     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+     TXBuffer += formatToHex(flashDevice);
   #endif
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();
@@ -5218,6 +5215,22 @@ void handle_sysinfo() {
    TXBuffer += F(" kB (");
    TXBuffer += ESP.getFreeSketchSpace() / 1024;
    TXBuffer += F(" kB free)");
+  #endif
+
+  #ifdef ESP32
+   TXBuffer += F("<TR><TD colspan=2><H3>Partitions");
+   addHelpButton(F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
+   TXBuffer += F("</H3></TD></TR>");
+
+   TXBuffer += F("<TR><TD>Data Partition Table<TD><tt>");
+   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
+   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_DATA, F(" - "), F("<BR>"));
+   TXBuffer += F("</tt>");
+
+   TXBuffer += F("<TR><TD>App Partition Table<TD><tt>");
+   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
+   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
+   TXBuffer += F("</tt>");
   #endif
 
    TXBuffer += F("</table></form>");

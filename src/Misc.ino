@@ -1421,6 +1421,86 @@ String getLWIPversion() {
 }
 #endif
 
+#ifdef ESP32
+
+/********************************************************************************************\
+  Get partition table information
+  \*********************************************************************************************/
+
+String getPartitionType(esp_partition_type_t partitionType, esp_partition_subtype_t partitionSubType) {
+  if (partitionType == ESP_PARTITION_TYPE_APP) {
+    if (partitionSubType >= ESP_PARTITION_SUBTYPE_APP_OTA_MIN &&
+        partitionSubType < ESP_PARTITION_SUBTYPE_APP_OTA_MAX) {
+        String result = F("OTA partition ");
+        result += (partitionSubType - ESP_PARTITION_SUBTYPE_APP_OTA_MIN);
+        return result;
+    }
+
+    switch (partitionSubType) {
+      case ESP_PARTITION_SUBTYPE_APP_FACTORY: return F("Factory application");
+      case ESP_PARTITION_SUBTYPE_APP_TEST:    return F("Test application");
+      default: break;
+    }
+  }
+  if (partitionType == ESP_PARTITION_TYPE_DATA) {
+    switch (partitionSubType) {
+        case ESP_PARTITION_SUBTYPE_DATA_OTA:      return F("OTA selection");
+        case ESP_PARTITION_SUBTYPE_DATA_PHY:      return F("PHY init data");
+        case ESP_PARTITION_SUBTYPE_DATA_NVS:      return F("NVS");
+        case ESP_PARTITION_SUBTYPE_DATA_COREDUMP: return F("COREDUMP");
+        case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: return F("ESPHTTPD");
+        case ESP_PARTITION_SUBTYPE_DATA_FAT:      return F("FAT");
+        case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:   return F("SPIFFS");
+        default: break;
+    }
+  }
+  String result = F("Unknown(");
+  result += partitionSubType;
+  result += ')';
+  return result;
+}
+
+String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
+  String result;
+  result += F("Address");
+  result += itemSep;
+  result += F("Size");
+  result += itemSep;
+  result += F("Label");
+  result += itemSep;
+  result += F("Partition Type");
+  result += itemSep;
+  result += F("Encrypted");
+  result += lineEnd;
+  return result;
+}
+
+String getPartitionTable(esp_partition_type_t partitionType, const String& itemSep, const String& lineEnd) {
+  String result;
+  const esp_partition_t * _mypart;
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  if (_mypartiterator) {
+    do {
+      _mypart = esp_partition_get(_mypartiterator);
+      result += formatToHex(_mypart->address);
+      result += itemSep;
+      result += formatToHex_decimal(_mypart->size, 1024);
+      result += itemSep;
+      result += _mypart->label;
+      result += itemSep;
+      result += getPartitionType(_mypart->type, _mypart->subtype);
+      result += itemSep;
+      result += (_mypart->encrypted ? F("Yes") : F("-"));
+      result += lineEnd;
+    } while (_mypartiterator = esp_partition_next(_mypartiterator));
+  }
+  esp_partition_iterator_release(_mypartiterator);
+  return result;
+}
+
+#endif
+
+
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/

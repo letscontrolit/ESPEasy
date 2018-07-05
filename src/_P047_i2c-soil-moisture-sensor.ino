@@ -75,8 +75,8 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormTextBox(F("I2C Address (Hex)"), F("plugin_047_i2cSoilMoisture_i2cAddress"), String(F("0x")) +
-      			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
+      	addFormTextBox(F("I2C Address (Hex)"), F("plugin_047_i2cSoilMoisture_i2cAddress"), 
+            formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
         addFormCheckBox(F("Send sensor to sleep"), F("plugin_047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
@@ -85,8 +85,8 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         addFormSeparator(2);
 
         addFormCheckBox(F("Change Sensor address"),F("plugin_047_changeAddr"), false);
-      	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), String(F("0x")) +
-      			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
+      	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), 
+            formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
         addFormSeparator(2);
 
