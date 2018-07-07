@@ -18,7 +18,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
+#ifdef ESP8266  // Needed for precompile issues.
 #include <Arduino.h>
 
 // The Arduino standard GPIO routines are not enough,
@@ -239,3 +239,4 @@ void ICACHE_RAM_ATTR ESPeasySoftwareSerial::rxRead() {
    // it gets set even when interrupts are disabled
    GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, 1 << m_rxPin);
 }
+#endif

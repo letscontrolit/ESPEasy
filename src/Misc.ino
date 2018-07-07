@@ -1421,13 +1421,14 @@ String getLWIPversion() {
 }
 #endif
 
-#ifdef ESP32
 
 /********************************************************************************************\
   Get partition table information
   \*********************************************************************************************/
-
-String getPartitionType(esp_partition_type_t partitionType, esp_partition_subtype_t partitionSubType) {
+#ifdef ESP32
+String getPartitionType(byte pType, byte pSubType) {
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
+  esp_partition_subtype_t partitionSubType = static_cast<esp_partition_subtype_t>(pSubType);
   if (partitionType == ESP_PARTITION_TYPE_APP) {
     if (partitionSubType >= ESP_PARTITION_SUBTYPE_APP_OTA_MIN &&
         partitionSubType < ESP_PARTITION_SUBTYPE_APP_OTA_MAX) {
@@ -1475,7 +1476,8 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
   return result;
 }
 
-String getPartitionTable(esp_partition_type_t partitionType, const String& itemSep, const String& lineEnd) {
+String getPartitionTable(byte pType, const String& itemSep, const String& lineEnd) {
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   String result;
   const esp_partition_t * _mypart;
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
@@ -1492,12 +1494,11 @@ String getPartitionTable(esp_partition_type_t partitionType, const String& itemS
       result += itemSep;
       result += (_mypart->encrypted ? F("Yes") : F("-"));
       result += lineEnd;
-    } while (_mypartiterator = esp_partition_next(_mypartiterator));
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
   }
   esp_partition_iterator_release(_mypartiterator);
   return result;
 }
-
 #endif
 
 

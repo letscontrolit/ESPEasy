@@ -4,8 +4,10 @@
 //#######################################################################################################
 
 
-
+#ifdef ESP8266  // Needed for precompile issues.
 #include <IRremoteESP8266.h>
+#endif
+
 IRrecv *irReceiver;
 decode_results results;
 

@@ -5,6 +5,14 @@
 #pragma GCC diagnostic warning "-Wall"
 #endif
 
+// Needed due to preprocessor issues.
+#ifdef PLUGIN_SET_GENERIC_ESP32
+  #ifndef ESP32
+    #define ESP32
+  #endif
+#endif
+
+
 /****************************************************************************************************************************\
  * Arduino project "ESP Easy" © Copyright www.letscontrolit.com
  *
@@ -377,7 +385,7 @@ void updateLoopStats() {
   const long usecSince = usecPassedSince(lastLoopStart);
   loop_usec_duration_total += usecSince;
   lastLoopStart = micros();
-  if (usecSince <= 0 || usecSince > 10000000) 
+  if (usecSince <= 0 || usecSince > 10000000)
     return; // No loop should take > 10 sec.
   if (shortestLoop > static_cast<unsigned long>(usecSince)) {
     shortestLoop = usecSince;
@@ -918,8 +926,8 @@ void checkSystemTimers()
         TempEvent.Par4 = systemTimers[x].Par4;
         TempEvent.Par5 = systemTimers[x].Par5;
         systemTimers[x].timer = 0;
-        const int y = getPluginId(systemTimers[x].TaskIndex); 
-        if (y >= 0) { 
+        const int y = getPluginId(systemTimers[x].TaskIndex);
+        if (y >= 0) {
           Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
         }
       }

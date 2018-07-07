@@ -9,7 +9,7 @@
   This plugin reads the particle concentration from SDS011 Sensor
   DevicePin1 - RX on ESP, TX on SDS
 */
-
+#ifdef ESP8266  // Needed for precompile issues.
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
@@ -204,3 +204,4 @@ void Plugin_056_setWorkingPeriod(int minutes) {
 }
 
 #endif // USES_P056
+#endif

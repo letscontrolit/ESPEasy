@@ -3,7 +3,9 @@
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
 
+#ifdef ESP8266  // Needed for precompile issues.
 #include <IRremoteESP8266.h>
+#endif
 IRsend *Plugin_035_irSender;
 
 #define PLUGIN_035
