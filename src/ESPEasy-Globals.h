@@ -188,7 +188,7 @@
 #endif
 
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
-#define INPUT_COMMAND_SIZE                 80 
+#define INPUT_COMMAND_SIZE                 80
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
@@ -392,7 +392,7 @@
     #include <lwip/tcp_impl.h>
   #endif
   #include <ESP8266WiFi.h>
-  #include <ESP8266Ping.h>
+  //#include <ESP8266Ping.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
   #include <DNSServer.h>

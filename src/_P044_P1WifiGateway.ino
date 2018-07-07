@@ -14,14 +14,14 @@
 #define PLUGIN_NAME_044       "Communication - P1 Wifi Gateway"
 #define PLUGIN_VALUENAME1_044 "P1WifiGateway"
 
-#define STATUS_LED 12
+#define P044_STATUS_LED 12
 #define P044_BUFFER_SIZE 1024
-#define NETBUF_SIZE 600
-#define DISABLED 0
-#define WAITING 1
-#define READING 2
-#define CHECKSUM 3
-#define DONE 4
+#define P044_NETBUF_SIZE 600
+#define P044_DISABLED 0
+#define P044_WAITING 1
+#define P044_READING 2
+#define P044_CHECKSUM 3
+#define P044_DONE 4
 
 boolean Plugin_044_init = false;
 boolean serialdebug = false;
@@ -38,7 +38,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   static byte connectionState = 0;
-  static int state = DISABLED;
+  static int state = P044_DISABLED;
 
   switch (function)
   {
@@ -103,8 +103,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        pinMode(STATUS_LED, OUTPUT);
-        digitalWrite(STATUS_LED, 0);
+        pinMode(P044_STATUS_LED, OUTPUT);
+        digitalWrite(P044_STATUS_LED, 0);
 
         LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
@@ -155,7 +155,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         }
 
 
-        state = WAITING;
+        state = P044_WAITING;
         success = true;
         break;
       }
@@ -237,26 +237,26 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             int timeOut = RXWait;
             while (timeOut > 0)
             {
-              while (Serial.available() && state != DONE) {
+              while (Serial.available() && state != P044_DONE) {
                 if (bytes_read < P044_BUFFER_SIZE - 5) {
                   char  ch = Serial.read();
-                  digitalWrite(STATUS_LED, 1);
+                  digitalWrite(P044_STATUS_LED, 1);
                   switch (state) {
-                    case DISABLED: //ignore incoming data
+                    case P044_DISABLED: //ignore incoming data
                       break;
-                    case WAITING:
+                    case P044_WAITING:
                       if (ch == '/')  {
                         Plugin_044_serial_buf[0] = ch;
                         bytes_read=1;
-                        state = READING;
+                        state = P044_READING;
                       } // else ignore data
                       break;
-                    case READING:
+                    case P044_READING:
                       if (ch == '!') {
                         if (CRCcheck) {
-                          state = CHECKSUM;
+                          state = P044_CHECKSUM;
                         } else {
-                          state = DONE;
+                          state = P044_DONE;
                         }
                       }
                       if (validP1char(ch)) {
@@ -270,19 +270,19 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
                         Serial.flush();
                         bytes_read = 0;
-                        state = WAITING;
+                        state = P044_WAITING;
                       }
                       break;
-                    case CHECKSUM:
+                    case P044_CHECKSUM:
                       checkI ++;
                       if (checkI == 4) {
                         checkI = 0;
-                        state = DONE;
+                        state = P044_DONE;
                       }
                       Plugin_044_serial_buf[bytes_read] = ch;
                       bytes_read++;
                       break;
-                    case DONE:
+                    case P044_DONE:
                       // Plugin_044_serial_buf[bytes_read]= '\n';
                       // bytes_read++;
                       // Plugin_044_serial_buf[bytes_read] = 0;
@@ -293,16 +293,16 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 {
                   Serial.read();      // when the buffer is full, just read remaining input, but do not store...
                   bytes_read = 0;
-                  state = WAITING;    // reset
+                  state = P044_WAITING;    // reset
                 }
-                digitalWrite(STATUS_LED, 0);
+                digitalWrite(P044_STATUS_LED, 0);
                 timeOut = RXWait; // if serial received, reset timeout counter
               }
               delay(1);
               timeOut--;
             }
 
-            if (state == DONE) {
+            if (state == P044_DONE) {
               if (checkDatagram(bytes_read)) {
                 Plugin_044_serial_buf[bytes_read] = '\r';
                 bytes_read++;
@@ -327,8 +327,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
               }
 
               bytes_read = 0;
-              state = WAITING;
-            }   // state == DONE
+              state = P044_WAITING;
+            }   // state == P044_DONE
           }
           success = true;
         }
@@ -339,9 +339,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
   return success;
 }
 void blinkLED() {
-  digitalWrite(STATUS_LED, 1);
+  digitalWrite(P044_STATUS_LED, 1);
   delay(500);
-  digitalWrite(STATUS_LED, 0);
+  digitalWrite(P044_STATUS_LED, 0);
 }
 /*
    validP1char
@@ -396,7 +396,7 @@ unsigned int CRC16(unsigned int crc, unsigned char *buf, int len)
 }
 
 /*  checkDatagram
-      checks whether the checksum of the data received from P1 matches the checksum attached to the
+      checks whether the P044_CHECKSUM of the data received from P1 matches the P044_CHECKSUM attached to the
       telegram
      based on code written by Jan ten Hove
      https://github.com/jantenhove/P1-Meter-ESP8266

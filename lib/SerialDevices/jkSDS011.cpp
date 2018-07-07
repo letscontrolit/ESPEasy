@@ -22,7 +22,7 @@
   License along with MechInputs.  If not, see
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
-
+#ifdef ESP8266  // Needed for precompile issues.
 #include "jkSDS011.h"
 
 CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
@@ -186,3 +186,4 @@ boolean CjkSDS011::ReadAverage(float &pm25, float &pm10)
   pm10 = NAN;
   return false;
 }
+#endif
