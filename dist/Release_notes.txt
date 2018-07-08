@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20180708 (since mega-20180705)
+-------------------------------------------------
+
+Release date: Sun Jul  8 04:00:08 CEST 2018
+
+TD-er (1):
+      [PIO build] Build issues caused by incorrect precompile processing
+
+
+-------------------------------------------------
 Changes in release mega-20180705 (since mega-20180625)
 -------------------------------------------------
 
