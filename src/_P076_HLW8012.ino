@@ -138,8 +138,8 @@ boolean Plugin_076(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = hpower;
         UserVar[event->BaseVarIndex + 3] = hpowfact;
         //Plugin_076_hlw->toggleMode();
+        success = true;
       }
-      success = true;
       break;
 
     case PLUGIN_INIT:
