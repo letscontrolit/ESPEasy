@@ -81,6 +81,7 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
           	addLog(LOG_LEVEL_ERROR, F("AM2320: Sensor offline"));
             break;
           case 0:
+          {
           	UserVar[event->BaseVarIndex] = th.t;
           	UserVar[event->BaseVarIndex + 1] = th.h;
 
@@ -92,6 +93,7 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
           	addLog(LOG_LEVEL_INFO, log);
             success = true;
             break;
+          }
         }
 
 

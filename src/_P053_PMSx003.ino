@@ -296,6 +296,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         // When new data is available, return true
         success = values_received;
         values_received = false;
+        break;
       }
   }
   return success;

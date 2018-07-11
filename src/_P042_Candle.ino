@@ -359,6 +359,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = Candle_type;
 
         success = true;
+        break;
       }
 
     case PLUGIN_WRITE:
