@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180712 (since mega-20180710)
+-------------------------------------------------
+
+Release date: Thu Jul 12 04:00:12 CEST 2018
+
+TD-er (2):
+      [#1555] Fix TSL2591 values are not transferred to controller
+      [#1542] Fix  Domoticz IDX more than 4 characters
+
+
+-------------------------------------------------
 Changes in release mega-20180710 (since mega-20180708)
 -------------------------------------------------
 
