@@ -215,9 +215,11 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (command == F("chime"))
         {
           int paramPos = getParamStartPos(string, 2);
-          String param = string.substring(paramPos);
-          Plugin_055_AddStringFIFO(param);
-          success = true;
+          if (paramPos >= 0) {
+            String param = string.substring(paramPos);
+            Plugin_055_AddStringFIFO(param);
+            success = true;
+          }
         }
         if (command == F("chimeplay"))
         {
@@ -231,10 +233,12 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         {
           String name = parseString(string, 2);
           int paramPos = getParamStartPos(string, 3);
-          String param = string.substring(paramPos);
-          Plugin_055_WriteChime(name, param);
-          Plugin_055_AddStringFIFO(F("1"));
-          success = true;
+          if (paramPos >= 0) {
+            String param = string.substring(paramPos);
+            Plugin_055_WriteChime(name, param);
+            Plugin_055_AddStringFIFO(F("1"));
+            success = true;
+          }
         }
 
         break;

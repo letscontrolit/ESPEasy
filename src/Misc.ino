@@ -100,7 +100,7 @@ void deepSleepStart(int delay)
   #endif
 }
 
-boolean remoteConfig(struct EventStruct *event, String& string)
+boolean remoteConfig(struct EventStruct *event, const String& string)
 {
   checkRAM(F("remoteConfig"));
   boolean success = false;
@@ -112,7 +112,9 @@ boolean remoteConfig(struct EventStruct *event, String& string)
     if (parseString(string, 2) == F("task"))
     {
       int configCommandPos1 = getParamStartPos(string, 3);
+      if (configCommandPos1 < 0) return success; // TD-er: Should this be return false?
       int configCommandPos2 = getParamStartPos(string, 4);
+      if (configCommandPos2 < 0 || (configCommandPos2 - configCommandPos1) < 1) return success; // TD-er: Should this be return false?
 
       String configTaskName = string.substring(configCommandPos1, configCommandPos2 - 1);
       String configCommand = string.substring(configCommandPos2);

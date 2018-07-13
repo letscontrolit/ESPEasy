@@ -8,8 +8,11 @@ bool Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
       String strLine = Line;
       String host = parseString(strLine, 2);
       String port = parseString(strLine, 3);
+      if (!isInt(port)) return false;
       int pathpos = getParamStartPos(strLine, 4);
-      String path = strLine.substring(pathpos);
+      String path;
+      if (pathpos >= 0) 
+        path = strLine.substring(pathpos);
       WiFiClient client;
       if (client.connect(host.c_str(), port.toInt()))
       {
@@ -20,6 +23,7 @@ bool Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
         reply += host;
         reply += F("\r\n");
         reply += F("Connection: close\r\n\r\n");
+        addLog(LOG_LEVEL_DEBUG, reply);
         client.print(reply);
 
         unsigned long timer = millis() + 200;

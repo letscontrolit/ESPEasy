@@ -157,25 +157,29 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (command == F("mprint"))
         {
           int paramPos = getParamStartPos(lowerString, 2);
-          String text = lowerString.substring(paramPos);
-          byte seg = 0;
+          if (paramPos >= 0) {
+            String text = lowerString.substring(paramPos);
+            byte seg = 0;
 
-          Plugin_057_M->ClearRowBuffer();
-          while (text[seg] && seg < 8)
-          {
-            // uint16_t value = 0;
-            char c = text[seg];
-            Plugin_057_M->SetDigit(seg, c);
-            seg++;
+            Plugin_057_M->ClearRowBuffer();
+            while (text[seg] && seg < 8)
+            {
+              // uint16_t value = 0;
+              char c = text[seg];
+              Plugin_057_M->SetDigit(seg, c);
+              seg++;
+            }
+            Plugin_057_M->TransmitRowBuffer();
+            success = true;
           }
-          Plugin_057_M->TransmitRowBuffer();
-          success = true;
         }
         else if (command == F("mbr")) {
           int paramPos = getParamStartPos(lowerString, 2);
-          uint8_t brightness = lowerString.substring(paramPos).toInt();
-          Plugin_057_M->SetBrightness(brightness);
-          success = true;
+          if (paramPos >= 0) {
+            uint8_t brightness = lowerString.substring(paramPos).toInt();
+            Plugin_057_M->SetBrightness(brightness);
+            success = true;
+          }
         }
         else if (command == F("m") || command == F("mx") || command == F("mnum"))
         {
