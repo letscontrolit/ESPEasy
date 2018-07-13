@@ -60,7 +60,8 @@ void sendData(struct EventStruct *event)
 }
 
 boolean validUserVar(struct EventStruct *event) {
-  for (int i = 0; i < VARS_PER_TASK; ++i) {
+  byte valueCount = getValueCountFromSensorType(event->sensorType);
+  for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
     if (!isValidFloat(f)) return false;
   }
