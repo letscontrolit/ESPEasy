@@ -1,10 +1,10 @@
-void logStatistics(bool clearLog) {
+void logStatistics(byte loglevel, bool clearLog) {
     String log;
     log.reserve(80);
     for (auto& x: pluginStats) {
         if (!x.second.isEmpty()) {
             const int pluginId = x.first/32;
-            String P_name = ""; 
+            String P_name = "";
             Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
             log = F("PluginStats P_");
             log += pluginId + 1;
@@ -14,7 +14,7 @@ void logStatistics(bool clearLog) {
             log += getPluginFunctionName(x.first%32);
             log += ' ';
             log += getLogLine(x.second);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLog(loglevel, log);
             if (clearLog) x.second.reset();
         }
     }
@@ -23,7 +23,7 @@ void logStatistics(bool clearLog) {
             log = getMiscStatsName(x.first);
             log += F(" stats: ");
             log += getLogLine(x.second);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLog(loglevel, log);
             if (clearLog) x.second.reset();
         }
     }

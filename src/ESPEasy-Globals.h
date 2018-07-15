@@ -196,6 +196,13 @@
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
+#define TIMER_20MSEC                        1
+#define TIMER_100MSEC                       2
+#define TIMER_1SEC                          3
+#define TIMER_30SEC                         4
+#define TIMER_MQTT                          5
+#define TIMER_STATISTICS                    6
+
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
 #define PLUGIN_READ                         3
@@ -1157,19 +1164,16 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
-struct rulesTiemerStatus
+struct rulesTimerStatus
 {
   unsigned long timestamp;
-  unsigned int interval; //interval in millisencond
+  unsigned int interval; //interval in milliseconds
   boolean paused;
 } RulesTimer[RULES_TIMER_MAX];
 
+msecTimerHandlerStruct msecTimerHandler;
+
 unsigned long timerSensor[TASKS_MAX];
-unsigned long timer100ms;
-unsigned long timer20ms;
-unsigned long timer1s;
-unsigned long timerwd;
-unsigned long timermqtt;
 unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
@@ -1293,6 +1297,7 @@ bool processedScanDone = true;
 bool webserver_state = false;
 bool webserver_init = false;
 
+unsigned long idle_msec_per_sec = 0;
 unsigned long elapsed10ps = 0;
 unsigned long elapsed10psU = 0;
 unsigned long elapsed50ps = 0;

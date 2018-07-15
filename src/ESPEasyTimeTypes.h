@@ -2,6 +2,7 @@
 #define ESPEASY_TIMETYPES_H_
 
 #include <stdint.h>
+#include <list>
 
 struct  timeStruct {
   timeStruct() : Second(0), Minute(0), Hour(0), Wday(0), Day(0), Month(0), Year(0) {}
@@ -65,6 +66,144 @@ uint32_t calcTimeChangeForRule(const TimeChangeRule& r, int yr);
 String getTimeString(char delimiter, bool show_seconds=true);
 String getTimeString_ampm(char delimiter, bool show_seconds=true);
 long timeDiff(unsigned long prev, unsigned long next);
+long timePassedSince(unsigned long timestamp);
+boolean timeOutReached(unsigned long timer);
+long usecPassedSince(unsigned long timestamp);
+boolean usecTimeOutReached(unsigned long timer);
+
+
+
+
+/*********************************************************************************************\
+ * TimerHandler Used by the Scheduler
+\*********************************************************************************************/
+
+struct timer_id_couple {
+  timer_id_couple(unsigned long id, unsigned long newtimer) : _id(id), _timer(newtimer) {}
+
+  timer_id_couple(unsigned long id) : _id(id) {
+    _timer = millis();
+  }
+
+  bool operator<(const timer_id_couple& other) {
+    const unsigned long now(millis());
+    // timediff > 0, means timer has already passed
+    return (timeDiff(_timer, now) > timeDiff(other._timer, now));
+  }
+
+  unsigned long _id;
+  unsigned long _timer;
+};
+
+struct msecTimerHandlerStruct {
+
+  msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
+      last_exec_time_usec(0), total_idle_time_usec(0), is_idle(false), idle_time_pct(0.0)
+  {
+    last_log_start_time = millis();
+  }
+
+  void registerAt(unsigned long id, unsigned long timer) {
+    timer_id_couple item(id, timer);
+    insert(item);
+  }
+
+  void registerFromNow(unsigned long id, unsigned long msecFromNow) {
+    registerAt(id, millis() + msecFromNow);
+  }
+
+  // Check if timeout has been reached and also return its set timer.
+  // Return 0 if no item has reached timeout moment.
+  unsigned long getNextId(unsigned long& timer) {
+    ++get_called;
+    if (_timer_ids.empty()) {
+      recordIdle();
+      return 0;
+    }
+    timer_id_couple item = _timer_ids.front();
+    if (!timeOutReached(item._timer)) {
+      recordIdle();
+      return 0;
+    }
+    recordRunning();
+    unsigned long size = _timer_ids.size();
+    if (size > max_queue_length) max_queue_length = size;
+    _timer_ids.pop_front();
+    timer = item._timer;
+    ++get_called_ret_id;
+    return item._id;
+  }
+
+  String getQueueStats() {
+
+    String result;
+    result += get_called;
+    result += '/';
+    result += get_called_ret_id;
+    result += '/';
+    result += max_queue_length;
+    result += '/';
+    result += idle_time_pct;
+    get_called = 0;
+    get_called_ret_id = 0;
+    //max_queue_length = 0;
+    return result;
+  }
+
+  void updateIdleTimeStats() {
+    const long duration = timePassedSince(last_log_start_time);
+    last_log_start_time = millis();
+    idle_time_pct = total_idle_time_usec / duration / 10.0;
+    total_idle_time_usec = 0;
+  }
+
+  float getIdleTimePct() {
+    return idle_time_pct;
+  }
+
+private:
+  struct match_id {
+    match_id(unsigned long id) : _id(id) {}
+    bool operator() (const timer_id_couple& item) { return _id == item._id; }
+    unsigned long _id;
+  };
+
+  void insert(const timer_id_couple& item) {
+    if (item._id == 0) return;
+
+    // Make sure only one is present with the same id.
+    _timer_ids.remove_if(match_id(item._id));
+    _timer_ids.push_front(item);
+    if (_timer_ids.empty()) {
+      return;
+    }
+    _timer_ids.sort();
+  }
+
+  void recordIdle() {
+    if (is_idle) return;
+    last_exec_time_usec = micros();
+    is_idle = true;
+  }
+
+  void recordRunning() {
+    if (!is_idle) return;
+    is_idle = false;
+    total_idle_time_usec += usecPassedSince(last_exec_time_usec);
+  }
+
+
+  unsigned long get_called;
+  unsigned long get_called_ret_id;
+  unsigned long max_queue_length;
+  unsigned long last_exec_time_usec;
+  unsigned long total_idle_time_usec;
+  unsigned long last_log_start_time;
+  bool is_idle;
+  float idle_time_pct;
+  std::list<timer_id_couple> _timer_ids;
+};
+
 
 
 #endif /* ESPEASY_TIMETYPES_H_ */
