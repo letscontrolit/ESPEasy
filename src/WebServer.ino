@@ -3607,6 +3607,7 @@ void stream_last_json_object_value(const String& object, const String& value) {
 void handle_json()
 {
   const int taskNr = getFormItemInt(F("tasknr"), -1);
+  const bool showSpecificTask = taskNr > 0;
   bool showSystem = true;
   bool showWifi = true;
   bool showDataAcquisition = true;
@@ -3623,7 +3624,7 @@ void handle_json()
     }
   }
   TXBuffer.startJsonStream();
-  if (taskNr == -1)
+  if (!showSpecificTask)
   {
     TXBuffer += '{';
     if (showSystem) {
@@ -3675,7 +3676,7 @@ void handle_json()
 
   byte firstTaskIndex = 0;
   byte lastTaskIndex = TASKS_MAX - 1;
-  if (taskNr > 0 )
+  if (showSpecificTask)
   {
     firstTaskIndex = taskNr - 1;
     lastTaskIndex = taskNr - 1;
@@ -3686,7 +3687,7 @@ void handle_json()
       lastActiveTaskIndex = TaskIndex;
   }
 
-  if (taskNr == 0 ) TXBuffer += F("\"Sensors\":[\n");
+  if (!showSpecificTask) TXBuffer += F("\"Sensors\":[\n");
   unsigned long ttl_json = 60; // The shortest interval per enabled task (with output values) in seconds
   for (byte TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex; TaskIndex++)
   {
@@ -3714,7 +3715,7 @@ void handle_json()
         }
         TXBuffer += F("],\n");
       }
-      if (taskNr != 0) {
+      if (showSpecificTask) {
         stream_next_json_object_value(F("TTL"), String(ttl_json * 1000));
       }
       if (showDataAcquisition) {
@@ -3742,7 +3743,7 @@ void handle_json()
       TXBuffer += F("\n");
     }
   }
-  if (taskNr == 0) {
+  if (!showSpecificTask) {
     TXBuffer += F("],\n");
     stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
   }
