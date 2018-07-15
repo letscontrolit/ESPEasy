@@ -83,7 +83,7 @@ String formatHumanReadable(unsigned long value, unsigned long factor) {
     case 2: result += 'M'; break;
     case 3: result += 'G'; break;
     case 4: result += 'T'; break;
-    default: 
+    default:
       result += '*';
       result += factor;
       result += '^';
@@ -234,10 +234,13 @@ String to_json_object_value(const String& object, const String& value) {
    Parse a string and get the xth command or parameter in lower case
   \*********************************************************************************************/
 String parseString(const String& string, byte indexFind) {
-  const int startpos = getParamStartPos(string, indexFind);
-  if (startpos < 0) return "";
-  const int endpos = getParamStartPos(string, indexFind + 1);
-  String result = (endpos < 0) ? string.substring(startpos) : string.substring(startpos, endpos);
+  int startpos = 0;
+  if (indexFind > 0) {
+    startpos = getParamStartPos(string, indexFind - 1);
+    if (startpos < 0) return string;
+  }
+  const int endpos = getParamStartPos(string, indexFind);
+  String result = (endpos <= 0) ? string.substring(startpos) : string.substring(startpos, endpos - 1);
   result.toLowerCase();
   return result;
 }
