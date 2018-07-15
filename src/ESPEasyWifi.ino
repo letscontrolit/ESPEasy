@@ -118,7 +118,7 @@ void processGotIP() {
   }
   mqtt_reconnect_count = 0;
   timermqtt_interval = 100;
-  timermqtt = millis() + timermqtt_interval;
+  setIntervalTimer(TIMER_MQTT);
   if (Settings.UseRules)
   {
     String event = F("WiFi#Connected");
