@@ -1438,8 +1438,8 @@ String getPartitionType(byte pType, byte pSubType) {
     }
 
     switch (partitionSubType) {
-      case ESP_PARTITION_SUBTYPE_APP_FACTORY: return F("Factory application");
-      case ESP_PARTITION_SUBTYPE_APP_TEST:    return F("Test application");
+      case ESP_PARTITION_SUBTYPE_APP_FACTORY: return F("Factory app");
+      case ESP_PARTITION_SUBTYPE_APP_TEST:    return F("Test app");
       default: break;
     }
   }

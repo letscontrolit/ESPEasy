@@ -60,12 +60,16 @@ String formatMAC(const uint8_t* mac) {
   return String(str);
 }
 
-String formatToHex(unsigned long value) {
-  String result = F("0x");
+String formatToHex(unsigned long value, const String& prefix) {
+  String result = prefix;
   String hex(value, HEX);
   hex.toUpperCase();
   result += hex;
   return result;
+}
+
+String formatToHex(unsigned long value) {
+  return formatToHex(value, F("0x"));
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -83,7 +87,7 @@ String formatHumanReadable(unsigned long value, unsigned long factor) {
     case 2: result += 'M'; break;
     case 3: result += 'G'; break;
     case 4: result += 'T'; break;
-    default: 
+    default:
       result += '*';
       result += factor;
       result += '^';
@@ -135,10 +139,10 @@ String toString(WiFiMode_t mode)
       break;
     case WIFI_AP_STA:
       result = F("AP+STA");
-      break;    
+      break;
     default:
       break;
-  }  
+  }
   return result;
 }
 
