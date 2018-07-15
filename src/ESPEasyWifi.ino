@@ -752,6 +752,16 @@ void WifiCheck()
     return;
 
   processDisableAPmode();
+  IPAddress ip = WiFi.localIP();
+  if (!useStaticIP()) {
+    if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
+      if (WiFiConnected()) {
+        // Some strange situation where the DHCP renew probably has failed and erased the config.
+        resetWiFi();
+      }
+    }
+  }
+
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     if (timeOutReached(last_wifi_connect_attempt_moment + (1000 + wifi_connect_attempt * 200))) {
       WiFiConnectRelaxed();
