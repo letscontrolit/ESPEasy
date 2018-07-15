@@ -5223,15 +5223,15 @@ void handle_sysinfo() {
    addHelpButton(F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
    TXBuffer += F("</H3></TD></TR>");
 
-   TXBuffer += F("<TR><TD>Data Partition Table<TD><tt>");
-   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
-   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_DATA, F(" - "), F("<BR>"));
-   TXBuffer += F("</tt>");
+   TXBuffer += F("<TR><TD>Data Partition Table<TD>");
+//   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
+//   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_DATA, F(" - "), F("<BR>"));
+   getPartitionTableSVG(ESP_PARTITION_TYPE_DATA, 0x5856e6);
 
-   TXBuffer += F("<TR><TD>App Partition Table<TD><tt>");
-   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
-   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
-   TXBuffer += F("</tt>");
+   TXBuffer += F("<TR><TD>App Partition Table<TD>");
+//   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
+//   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
+   getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
   #endif
 
    TXBuffer += F("</table></form>");
@@ -5287,3 +5287,88 @@ void handle_favicon() {
   checkRAM(F("handle_favicon"));
   WebServer.send_P(200, PSTR("image/x-icon"), favicon_8b_ico, favicon_8b_ico_len);
 }
+
+#ifdef ESP32
+
+void createSvgRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float svgBarWidth) {
+  float width = svgBarWidth * size / range;
+  if (width < 2) width = 2;
+  TXBuffer += formatToHex(color, F("<path fill=\"#"));
+  TXBuffer += F("\" d=\"M");
+  TXBuffer += toString(svgBarWidth * xoffset / range, 2);
+  TXBuffer += ' ';
+  TXBuffer += yoffset;
+  TXBuffer += 'h';
+  TXBuffer += toString(width, 2);
+  TXBuffer += 'v';
+  TXBuffer += height;
+  TXBuffer += 'H';
+  TXBuffer += toString(svgBarWidth * xoffset / range, 2);
+  TXBuffer += F("z\"/>\n");
+}
+
+int getPartionCount(byte pType) {
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  int nrPartitions = 0;
+  if (_mypartiterator) {
+    do {
+      ++nrPartitions;
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+  }
+  esp_partition_iterator_release(_mypartiterator);
+  return nrPartitions;
+}
+
+void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
+  TXBuffer += F("<text style=\"line-height:1.25\" x=\"");
+  TXBuffer += toString(textXoffset, 2);
+  TXBuffer += F("\" y=\"");
+  TXBuffer += toString(textYoffset, 2);
+  TXBuffer += F("\" stroke-width=\".3\" font-family=\"sans-serif\" font-size=\"8\" letter-spacing=\"0\" word-spacing=\"0\">\n");
+  TXBuffer += F("<tspan x=\"");
+  TXBuffer += toString(textXoffset, 2);
+  TXBuffer += F("\" y=\"");
+  TXBuffer += toString(textYoffset, 2);
+  TXBuffer += F("\">");
+  TXBuffer += text;
+  TXBuffer += F("</tspan>\n</text>");
+}
+
+void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
+  int nrPartitions = getPartionCount(pType);
+  if (nrPartitions == 0) return;
+
+  const int barHeight = 16;
+  const int svgBarWidth = 200;
+  const int shiftY = 2;
+
+  uint32_t realSize = getFlashRealSizeInBytes();
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
+  const esp_partition_t * _mypart;
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  TXBuffer += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" height=\"");
+  TXBuffer += nrPartitions * barHeight + shiftY;
+  TXBuffer += F("\">");
+  int partNr = 0;
+  if (_mypartiterator) {
+    do {
+      _mypart = esp_partition_get(_mypartiterator);
+      float yOffset = partNr * barHeight + shiftY;
+      createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, barHeight - 2, realSize, svgBarWidth);
+      createSvgRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, barHeight - 2, realSize, svgBarWidth);
+      float textXoffset = svgBarWidth + 2;
+      float textYoffset = yOffset + 0.9 * barHeight;
+      createSvgTextElement(formatHumanReadable(_mypart->size, 1024), textXoffset, textYoffset);
+      textXoffset = svgBarWidth + 60;
+      createSvgTextElement(_mypart->label, textXoffset, textYoffset);
+      textXoffset = svgBarWidth + 130;
+      createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
+      ++partNr;
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+  }
+  TXBuffer += F("</svg>\n");
+  esp_partition_iterator_release(_mypartiterator);
+}
+
+#endif
