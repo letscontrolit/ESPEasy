@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180716 (since mega-20180714)
+-------------------------------------------------
+
+Release date: Mon Jul 16 04:00:09 CEST 2018
+
+TD-er (4):
+      [WiFi] Reset wifi when IP is set to 0.0.0.0
+      [Scheduler] Complete rewrite of time based scheduling
+      [JSON] Fixed broken JSON output on /json URL
+      [ESP32] Show partition table on sysinfo page
+
+
+-------------------------------------------------
 Changes in release mega-20180714 (since mega-20180712)
 -------------------------------------------------
 

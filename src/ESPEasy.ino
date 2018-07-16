@@ -240,10 +240,6 @@ void setup()
     if (Settings.TaskDeviceTimer[x] !=0)
       timerSensor[x] = millis() + (x * Settings.MessageDelay);
 
-  timer100ms = 0; // timer for periodic actions 10 x per/sec
-  timer1s = 0; // timer for periodic actions once per/sec
-  timerwd = 0; // timer for watchdog once per 30 sec
-  timermqtt = 10000; // Timer for the MQTT keep alive loop, initial value can be high, since it will be set as soon as IP is set.
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
 
@@ -324,9 +320,12 @@ void setup()
 //  #ifndef ESP32
 //  connectionCheck.attach(30, connectionCheckHandler);
 //  #endif
-  timer20ms = millis();
-  timer100ms = millis();
-  timer1s = millis();
+  setIntervalTimer(TIMER_20MSEC);  // timer for periodic actions 50 x per/sec
+  setIntervalTimer(TIMER_100MSEC); // timer for periodic actions 10 x per/sec
+  setIntervalTimer(TIMER_1SEC);    // timer for periodic actions once per/sec
+  setIntervalTimer(TIMER_30SEC);   // timer for watchdog once per 30 sec
+  setIntervalTimer(TIMER_MQTT);    // timer for interaction with MQTT
+  setIntervalTimer(TIMER_STATISTICS);
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -395,29 +394,33 @@ void updateLoopStats() {
     longestLoop = usecSince;
 }
 
-void updateLoopStats_30sec() {
+void updateLoopStats_30sec(byte loglevel) {
   loopCounterLast = loopCounter;
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
     loopCounterMax = loopCounterLast;
 
-  String log = F("LoopStats: shortestLoop: ");
-  log += shortestLoop;
-  log += F(" longestLoop: ");
-  log += longestLoop;
-  log += F(" avgLoopDuration: ");
-  log += loop_usec_duration_total / loopCounter_full;
-  log += F(" systemTimerDuration: ");
-  log += systemTimerDurationTotal / systemTimerCalls;
-  log += F(" systemTimerCalls: ");
-  log += systemTimerCalls;
-  log += F(" loopCounterMax: ");
-  log += loopCounterMax;
-  log += F(" loopCounterLast: ");
-  log += loopCounterLast;
-  log += F(" countFindPluginId: ");
-  log += countFindPluginId;
-  addLog(LOG_LEVEL_INFO, log);
+  msecTimerHandler.updateIdleTimeStats();
+
+  {
+    String log = F("LoopStats: shortestLoop: ");
+    log += shortestLoop;
+    log += F(" longestLoop: ");
+    log += longestLoop;
+    log += F(" avgLoopDuration: ");
+    log += loop_usec_duration_total / loopCounter_full;
+    log += F(" systemTimerDuration: ");
+    log += systemTimerDurationTotal / systemTimerCalls;
+    log += F(" systemTimerCalls: ");
+    log += systemTimerCalls;
+    log += F(" loopCounterMax: ");
+    log += loopCounterMax;
+    log += F(" loopCounterLast: ");
+    log += loopCounterLast;
+    log += F(" countFindPluginId: ");
+    log += countFindPluginId;
+    addLog(loglevel, log);
+  }
   countFindPluginId = 0;
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
@@ -425,13 +428,14 @@ void updateLoopStats_30sec() {
   systemTimerCalls = 1;
 }
 
-int getCPUload() {
-  return 100 - (100 * loopCounterLast / loopCounterMax);
+float getCPUload() {
+  return 100.0 - msecTimerHandler.getIdleTimePct();
 }
 
 int getLoopCountPerSec() {
   return loopCounterLast / 30;
 }
+
 
 
 
@@ -484,23 +488,7 @@ void loop()
   //normal mode, run each task when its time
   else
   {
-
-    if (timeOutReached(timer20ms))
-      run50TimesPerSecond();
-
-    if (timeOutReached(timer100ms))
-      if(!UseRTOSMultitasking)
-        run10TimesPerSecond();
-
-    if (timeOutReached(timerwd))
-      runEach30Seconds();
-
-    if (timeOutReached(timer1s))
-      runOncePerSecond();
-
-    if (timeOutReached(timermqtt)) {
-      runPeriodicalMQTT();
-    }
+    handle_schedule();
   }
 
   backgroundtasks();
@@ -561,16 +549,14 @@ void updateMQTTclient_connected() {
   } else {
     timermqtt_interval = 250;
   }
-  timermqtt = millis() + timermqtt_interval;
+  setIntervalTimer(TIMER_MQTT);
 }
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
 \*********************************************************************************************/
 
-void run50TimesPerSecond()
-{
-  setNextTimeInterval(timer20ms, 20);
+void run50TimesPerSecond() {
   START_TIMER;
   PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummyString);
   STOP_TIMER(PLUGIN_CALL_50PS);
@@ -579,9 +565,7 @@ void run50TimesPerSecond()
 /*********************************************************************************************\
  * Tasks that run 10 times per second
 \*********************************************************************************************/
-void run10TimesPerSecond()
-{
-  setNextTimeInterval(timer100ms, 100);
+void run10TimesPerSecond() {
   {
     START_TIMER;
     PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummyString);
@@ -609,7 +593,6 @@ void run10TimesPerSecond()
 void runOncePerSecond()
 {
   START_TIMER;
-  setNextTimeInterval(timer1s, 1000);
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
   {
@@ -701,6 +684,15 @@ void runOncePerSecond()
   STOP_TIMER(PLUGIN_CALL_1PS);
 }
 
+void logTimerStatistics() {
+  byte loglevel = LOG_LEVEL_DEBUG;
+  updateLoopStats_30sec(loglevel);
+  logStatistics(loglevel, true);
+  String queueLog = F("Scheduler stats: (called/tasks/max_length/idle_msec) ");
+  queueLog += msecTimerHandler.getQueueStats();
+  addLog(loglevel, queueLog);
+}
+
 /*********************************************************************************************\
  * Tasks each 30 seconds
 \*********************************************************************************************/
@@ -708,10 +700,7 @@ void runEach30Seconds()
 {
    extern void checkRAMtoLog();
   checkRAMtoLog();
-  updateLoopStats_30sec();
-  logStatistics(true);
   wdcounter++;
-  timerwd = millis() + 30000;
   String log;
   log.reserve(60);
   log = F("WD   : Uptime ");
