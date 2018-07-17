@@ -142,8 +142,10 @@ bool MQTTConnect(int controller_idx)
   String clientid;
   if(Settings.MQTTUseUnitNameAsClientId){
     clientid = Settings.Name;
-    clientid += F("_");
-    clientid += Settings.Unit;
+    if (Settings.Unit != 0) { // only append non-zero unit number
+      clientid += F("_");
+      clientid += Settings.Unit;
+    }
   }
   else{
     clientid = F("ESPClient_");
