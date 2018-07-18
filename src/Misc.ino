@@ -1522,21 +1522,48 @@ boolean isInt(const String& tBuf) {
   return isNumerical(tBuf, true);
 }
 
+String getNumerical(const String& tBuf, bool mustBeInteger) {
+  String result = "";
+  const unsigned int bufLength = tBuf.length();
+  if (bufLength == 0) return result;
+  boolean decPt = false;
+  int firstDec = 0;
+  char c = tBuf.charAt(0);
+  if(c == '+' || c == '-') {
+    result += c;
+    firstDec = 1;
+  }
+  for(unsigned int x=firstDec; x < bufLength; ++x) {
+    c = tBuf.charAt(x);
+    if(c == '.') {
+      if (mustBeInteger) return result;
+      // Only one decimal point allowed
+      if(decPt) return result;
+      else decPt = true;
+    }
+    else if(c < '0' || c > '9') return result;
+    result += c;
+  }
+  return result;
+}
+
 boolean isNumerical(const String& tBuf, bool mustBeInteger) {
   const unsigned int bufLength = tBuf.length();
   if (bufLength == 0) return false;
   boolean decPt = false;
   int firstDec = 0;
-  if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
+  char c = tBuf.charAt(0);
+  if(c == '+' || c == '-')
     firstDec = 1;
   for(unsigned int x=firstDec; x < bufLength; ++x) {
-    if(tBuf.charAt(x) == '.') {
+    c = tBuf.charAt(x);
+    if(c == '.') {
       if (mustBeInteger) return false;
       // Only one decimal point allowed
       if(decPt) return false;
       else decPt = true;
     }
-    else if(tBuf.charAt(x) < '0' || tBuf.charAt(x) > '9') return false;
+    else if(c < '0' || c > '9') return false;
   }
   return true;
 }

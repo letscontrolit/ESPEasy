@@ -390,6 +390,7 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
 
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T,S) if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode);}
+#define SMART_REPL_T(T,S) if (s.indexOf(T) != -1) { (S((T), s, useURLencode));}
 void parseSystemVariables(String& s, boolean useURLencode)
 {
   parseSpecialCharacters(s, useURLencode);
@@ -442,8 +443,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-',':',' '))
   SMART_REPL(F("%uptime%"), String(wdcounter / 2))
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
-  SMART_REPL(F("%sunrise%"), getSunriseTimeString(':'))
-  SMART_REPL(F("%sunset%"), getSunsetTimeString(':'))
+  SMART_REPL_T(F("%sunset"), replSunSetTimeString)
+  SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   if (s.indexOf(F("%vname")) != -1) {
@@ -452,6 +453,28 @@ void parseSystemVariables(String& s, boolean useURLencode)
     repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
     repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
   }
+}
+
+String getReplacementString(const String& format, String& s) {
+  int startpos = s.indexOf(format);
+  int endpos = s.indexOf('%', startpos + 1);
+  String R = s.substring(startpos, endpos + 1);
+  String log = F("ReplacementString SunTime: ");
+  log += R;
+  log += F(" offset: ");
+  log += getSecOffset(R);
+  addLog(LOG_LEVEL_DEBUG, log);
+  return R;
+}
+
+void replSunRiseTimeString(const String& format, String& s, boolean useURLencode) {
+  String R = getReplacementString(format, s);
+  repl(R, getSunriseTimeString(':', getSecOffset(R)), s, useURLencode);
+}
+
+void replSunSetTimeString(const String& format, String& s, boolean useURLencode) {
+  String R = getReplacementString(format, s);
+  repl(R, getSunsetTimeString(':', getSecOffset(R)), s, useURLencode);
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
@@ -468,6 +491,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
     }
   }
 }
+#undef SMART_REPL_T
 #undef SMART_REPL
 
 bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {
