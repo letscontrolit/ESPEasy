@@ -3,9 +3,10 @@
 //#################################### Plugin 035: Output IR ############################################
 //#######################################################################################################
 
-#ifdef ESP8266  // Needed for precompile issues.
 #include <IRremoteESP8266.h>
-#endif
+#include <IRsend.h>
+#include <IRutils.h>
+
 IRsend *Plugin_035_irSender;
 
 #define PLUGIN_035
@@ -84,7 +85,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (IrType.equalsIgnoreCase(F("RAW"))) {
             String IrRaw;
-            unsigned int IrHz=0;
+            uint16_t IrHz=0;
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
@@ -109,8 +110,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += IrBLen;
             printWebString += F("<BR>");
 
-            unsigned int buf[200];
-            unsigned int idx = 0;
+            uint16_t buf[200];
+            uint16_t idx = 0;
             unsigned int c0 = 0; //count consecutives 0s
             unsigned int c1 = 0; //count consecutives 1s
 
@@ -213,7 +214,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode, IrBits);
             if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode, IrBits);
             if (IrType.equalsIgnoreCase(F("PANASONIC"))) Plugin_035_irSender->sendPanasonic(IrBits, IrCode);
-            if (IrType.equalsIgnoreCase(F("PIONEER"))) Plugin_035_irSender->sendPioneer(IrCode, IrBits, IrRepeat, IrSecondCode);
+            //if (IrType.equalsIgnoreCase(F("PIONEER"))) Plugin_035_irSender->sendPioneer(IrCode, IrBits, IrRepeat, IrSecondCode);
+            if (IrType.equalsIgnoreCase(F("GREE"))) Plugin_035_irSender->sendGree(IrCode, IrBits);
           }
 
           addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
