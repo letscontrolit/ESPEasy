@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20180719 (since mega-20180716)
+-------------------------------------------------
+
+Release date: Thu Jul 19 04:00:14 CEST 2018
+
+Benno Eigenmann (1):
+      lib_archive already exists & Implicit dependency not found
+
+TD-er (1):
+      [sunrise/sunset] Allow offset from sunrise/sunset
+
+denisfrench (1):
+      When clientid = %sysname%, only add %unit% if non-zero
+
+stefan (1):
+      Fix for P077 crashes
+
+
+-------------------------------------------------
 Changes in release mega-20180716 (since mega-20180714)
 -------------------------------------------------
 
