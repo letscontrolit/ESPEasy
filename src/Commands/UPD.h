@@ -39,12 +39,14 @@ bool Command_UDP_SendToUPD(struct EventStruct *event, const char* Line)
 {
   bool success = false;
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    success = true;
     String strLine = Line;
     String ip = parseString(strLine, 2);
     String port = parseString(strLine, 3);
+    if (!isInt(port)) return success;
     int msgpos = getParamStartPos(strLine, 4);
-    String message = strLine.substring(msgpos);
+    String message;
+    if (msgpos >= 0)
+      message = strLine.substring(msgpos);
     IPAddress UDP_IP;
     if(UDP_IP.fromString(ip)) {
       portUDP.beginPacket(UDP_IP, port.toInt());
@@ -56,6 +58,7 @@ bool Command_UDP_SendToUPD(struct EventStruct *event, const char* Line)
       #endif
       portUDP.endPacket();
     }
+    success = true;
   }
   return success;  
 }

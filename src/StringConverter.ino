@@ -235,47 +235,38 @@ String to_json_object_value(const String& object, const String& value) {
 
 
 /*********************************************************************************************\
-   Parse a string and get the xth command or parameter
+   Parse a string and get the xth command or parameter in lower case
   \*********************************************************************************************/
-String parseString(String& string, byte indexFind)
-{
-  String tmpString = string;
-  tmpString += ',';
-  tmpString.replace(' ', ',');
-  String locateString = "";
-  byte count = 0;
-  int index = tmpString.indexOf(',');
-  while (index > 0)
-  {
-    count++;
-    locateString = tmpString.substring(0, index);
-    tmpString = tmpString.substring(index + 1);
-    index = tmpString.indexOf(',');
-    if (count == indexFind)
-    {
-      locateString.toLowerCase();
-      return locateString;
-    }
+String parseString(const String& string, byte indexFind) {
+  int startpos = 0;
+  if (indexFind > 0) {
+    startpos = getParamStartPos(string, indexFind - 1);
+    if (startpos < 0) return string;
   }
-  return "";
+  const int endpos = getParamStartPos(string, indexFind);
+  String result = (endpos <= 0) ? string.substring(startpos) : string.substring(startpos, endpos - 1);
+  result.toLowerCase();
+  return result;
 }
-
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
-int getParamStartPos(String& string, byte indexFind)
+int getParamStartPos(const String& string, byte indexFind)
 {
-  String tmpString = string;
-  byte count = 0;
-  tmpString.replace(' ', ',');
-  for (unsigned int x = 0; x < tmpString.length(); x++)
+  if (indexFind == 0) return 0;
+  byte count = 1;
+  const unsigned int strlength = string.length();
+  if (strlength <= indexFind) return -1;
+  for (unsigned int x = 0; x < (strlength - 1); ++x)
   {
-    if (tmpString.charAt(x) == ',')
+    const char c = string.charAt(x);
+    if (c == ',' || c == ' ')
     {
-      count++;
-      if (count == (indexFind - 1))
+      if (count == indexFind) {
         return x + 1;
+      }
+      ++count;
     }
   }
   return -1;
