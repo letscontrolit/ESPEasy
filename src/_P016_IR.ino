@@ -8,6 +8,8 @@
 #include <IRremoteESP8266.h>
 #endif
 
+#include <IRrecv.h>
+
 IRrecv *irReceiver;
 decode_results results;
 
