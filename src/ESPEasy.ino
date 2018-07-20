@@ -641,8 +641,6 @@ void runOncePerSecond()
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
 //  unsigned long elapsed = micros() - start;
 
-  checkSystemTimers();
-
   if (Settings.UseRules)
     rulesTimers();
 
@@ -688,7 +686,7 @@ void logTimerStatistics() {
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
   logStatistics(loglevel, true);
-  String queueLog = F("Scheduler stats: (called/tasks/max_length/idle_msec) ");
+  String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
   queueLog += msecTimerHandler.getQueueStats();
   addLog(loglevel, queueLog);
 }
@@ -822,64 +820,6 @@ void SensorSendTask(byte TaskIndex)
 }
 
 
-/*********************************************************************************************\
- * set global system timer
-\*********************************************************************************************/
-void setSystemTimer(unsigned long timer, byte plugin, int Par1, int Par2, int Par3)
-{
-  setSystemTimer(timer, plugin, -1, Par1, Par2, Par3, 0, 0);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3)
-{
-  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, 0, 0);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4)
-{
-  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, Par4, 0);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
-{
-  // plugin number and par1 form a unique key that can be used to restart a timer
-  // first check if a timer is not already running for this request
-  byte firstAvailable = SYSTEM_TIMER_MAX;
-  for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-  {
-    if (systemTimers[x].timer != 0)
-    {
-      if ((systemTimers[x].plugin == plugin) && systemTimers[x].TaskIndex == taskIndex && (systemTimers[x].Par1 == Par1))
-      {
-        firstAvailable = x;
-        break;
-      }
-    }
-    else if(firstAvailable == SYSTEM_TIMER_MAX)
-    {
-      firstAvailable = x;
-    }
-  }
-  if (firstAvailable == SYSTEM_TIMER_MAX )
-  {
-    addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
-  }
-  else
-  {
-    systemTimers[firstAvailable].plugin = plugin;
-    systemTimers[firstAvailable].TaskIndex = taskIndex;
-    systemTimers[firstAvailable].Par1 = Par1;
-    systemTimers[firstAvailable].Par2 = Par2;
-    systemTimers[firstAvailable].Par3 = Par3;
-    systemTimers[firstAvailable].Par4 = Par4;
-    systemTimers[firstAvailable].Par5 = Par5;
-    systemTimers[firstAvailable].timer = timer > 0
-      ? millis() + timer
-      : 0;
-  }
-
-}
-
 //EDWIN: this function seems to be unused?
 /*********************************************************************************************\
  * set global system command timer
@@ -902,25 +842,6 @@ void setSystemCMDTimer(unsigned long timer, String& action)
 void checkSystemTimers()
 {
   unsigned long start = micros();
-  for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-    if (systemTimers[x].timer != 0)
-    {
-      if (timeOutReached(systemTimers[x].timer))
-      {
-        struct EventStruct TempEvent;
-        TempEvent.TaskIndex = systemTimers[x].TaskIndex;
-        TempEvent.Par1 = systemTimers[x].Par1;
-        TempEvent.Par2 = systemTimers[x].Par2;
-        TempEvent.Par3 = systemTimers[x].Par3;
-        TempEvent.Par4 = systemTimers[x].Par4;
-        TempEvent.Par5 = systemTimers[x].Par5;
-        systemTimers[x].timer = 0;
-        const int y = getPluginId(systemTimers[x].TaskIndex);
-        if (y >= 0) {
-          Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
-        }
-      }
-    }
 
   for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
     if (systemCMDTimers[x].timer != 0)

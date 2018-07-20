@@ -324,11 +324,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
+            const bool pinStateHigh = event->Par2 != 0;
+            const uint16_t pinStateValue = pinStateHigh ? 1 : 0;
+            const uint16_t inversePinStateValue = pinStateHigh ? 0 : 1;
             pinMode(event->Par1, OUTPUT);
-            digitalWrite(event->Par1, event->Par2);
-            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            setSystemTimer(time_in_msec ? event->Par3 : event->Par3 * 1000,
-                           PLUGIN_ID_001, event->Par1, !event->Par2, 0);
+            digitalWrite(event->Par1, pinStateValue);
+            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, pinStateValue);
+            unsigned long timer = time_in_msec ? event->Par3 : event->Par3 * 1000;
+            // Create a future system timer call to set the GPIO pin back to its normal value.
+            setSystemTimer(timer, PLUGIN_ID_001, event->TaskIndex, event->Par1, inversePinStateValue);
             log = String(F("SW   : GPIO ")) + String(event->Par1) +
                   String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
             addLog(LOG_LEVEL_INFO, log);

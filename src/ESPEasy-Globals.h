@@ -297,7 +297,6 @@
 #define NPLUGIN_MAX                         4
 #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
 #define RULES_TIMER_MAX                     8
-#define SYSTEM_TIMER_MAX                    8
 #define SYSTEM_CMD_TIMER_MAX                2
 #define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
@@ -380,6 +379,7 @@
 #include "ESPEasyTimeTypes.h"
 #include "I2CTypes.h"
 #include <I2Cdev.h>
+#include <map>
 
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
@@ -1116,9 +1116,8 @@ struct systemTimerStruct
   int Par3;
   int Par4;
   int Par5;
-} systemTimers[SYSTEM_TIMER_MAX];
-
-#define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
+};
+std::map<unsigned long, systemTimerStruct> systemTimers;
 
 struct systemCMDTimerStruct
 {
@@ -1330,8 +1329,6 @@ boolean       UseRTOSMultitasking;
 
 void (*MainLoopCall_ptr)(void);
 
-#include <map>
-
 class TimingStats {
     public:
       TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
@@ -1448,7 +1445,7 @@ bool mustLogFunction(int function) {
         case PLUGIN_SERIAL_IN:             return true;
         case PLUGIN_UDP_IN:                return true;
         case PLUGIN_CLOCK_IN:              return false;
-        case PLUGIN_TIMER_IN:              return false;
+        case PLUGIN_TIMER_IN:              return true;
         case PLUGIN_FIFTY_PER_SECOND:      return true;
         case PLUGIN_SET_CONFIG:            return false;
         case PLUGIN_GET_DEVICEGPIONAMES:   return false;
@@ -1472,6 +1469,7 @@ std::map<int,TimingStats> miscStats;
 #define CHECK_SENSORS     6
 #define SEND_DATA_STATS   7
 #define COMPUTE_FORMULA_STATS 8
+#define PROC_SYS_TIMER    9
 
 
 
@@ -1494,6 +1492,7 @@ String getMiscStatsName(int stat) {
         case CHECK_SENSORS:      return F("checkSensors()      ");
         case SEND_DATA_STATS:    return F("sendData()          ");
         case COMPUTE_FORMULA_STATS: return F("Compute formula  ");
+        case PROC_SYS_TIMER:     return F("proc_system_timer() ");
     }
     return F("Unknown");
 }
