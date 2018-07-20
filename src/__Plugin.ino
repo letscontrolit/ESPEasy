@@ -1206,6 +1206,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.sensorType = Device[DeviceIndex].VType;
                 TempEvent.OriginTaskIndex = event->TaskIndex;
                 checkRAM(F("PluginCall_s"),x);
+                if (Function == PLUGIN_INIT) {
+                  // Schedule the plugin to be read.
+                  schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+                }
                 START_TIMER;
                 Plugin_ptr[x](Function, &TempEvent, str);
                 STOP_TIMER_TASK(x,Function);
@@ -1233,6 +1237,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       const int x = getPluginId(event->TaskIndex);
       if (x >= 0) {
         if (Plugin_id[x] != 0 ) {
+          if (Function == PLUGIN_INIT) {
+            // Schedule the plugin to be read.
+            schedule_task_device_timer_at_init(event->TaskIndex);
+          }
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
           START_TIMER;

@@ -1164,7 +1164,6 @@ struct rulesTimerStatus
 
 msecTimerHandlerStruct msecTimerHandler;
 
-unsigned long timerSensor[TASKS_MAX];
 unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
@@ -1449,17 +1448,17 @@ bool mustLogFunction(int function) {
 std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> miscStats;
 
-#define LOADFILE_STATS    0
-#define LOOP_STATS        1
-#define PLUGIN_CALL_50PS  2
-#define PLUGIN_CALL_10PS  3
-#define PLUGIN_CALL_10PSU 4
-#define PLUGIN_CALL_1PS   5
-#define CHECK_SENSORS     6
-#define SEND_DATA_STATS   7
+#define LOADFILE_STATS        0
+#define LOOP_STATS            1
+#define PLUGIN_CALL_50PS      2
+#define PLUGIN_CALL_10PS      3
+#define PLUGIN_CALL_10PSU     4
+#define PLUGIN_CALL_1PS       5
+#define SENSOR_SEND_TASK      6
+#define SEND_DATA_STATS       7
 #define COMPUTE_FORMULA_STATS 8
-#define PROC_SYS_TIMER    9
-#define SET_NEW_TIMER    10
+#define PROC_SYS_TIMER        9
+#define SET_NEW_TIMER        10
 
 
 
@@ -1475,15 +1474,15 @@ String getMiscStatsName(int stat) {
     switch (stat) {
         case LOADFILE_STATS: return F("Load File");
         case LOOP_STATS:     return F("Loop");
-        case PLUGIN_CALL_50PS  : return F("Plugin call 50 p/s  ");
-        case PLUGIN_CALL_10PS  : return F("Plugin call 10 p/s  ");
-        case PLUGIN_CALL_10PSU : return F("Plugin call 10 p/s U");
-        case PLUGIN_CALL_1PS   : return F("Plugin call  1 p/s  ");
-        case CHECK_SENSORS:      return F("checkSensors()      ");
-        case SEND_DATA_STATS:    return F("sendData()          ");
-        case COMPUTE_FORMULA_STATS: return F("Compute formula  ");
-        case PROC_SYS_TIMER:     return F("proc_system_timer() ");
-        case SET_NEW_TIMER:      return F("setNewTimerAt()     ");
+        case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s  ");
+        case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s  ");
+        case PLUGIN_CALL_10PSU:     return F("Plugin call 10 p/s U");
+        case PLUGIN_CALL_1PS:       return F("Plugin call  1 p/s  ");
+        case SENSOR_SEND_TASK:      return F("SensorSendTask()    ");
+        case SEND_DATA_STATS:       return F("sendData()          ");
+        case COMPUTE_FORMULA_STATS: return F("Compute formula     ");
+        case PROC_SYS_TIMER:        return F("proc_system_timer() ");
+        case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
     }
     return F("Unknown");
 }

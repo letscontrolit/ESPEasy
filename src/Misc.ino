@@ -73,7 +73,7 @@ void deepSleep(int delay)
       return;
     }
   }
-
+  saveUserVarToRTC();
   deepSleepStart(delay); // Call deepSleepStart function after these checks
 }
 

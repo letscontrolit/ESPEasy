@@ -233,13 +233,6 @@ void setup()
   checkRAM(F("hardwareInit"));
   hardwareInit();
 
-  //After booting, we want all the tasks to run without delaying more than neccesary.
-  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
-  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
-  for (byte x = 0; x < TASKS_MAX; x++)
-    if (Settings.TaskDeviceTimer[x] !=0)
-      timerSensor[x] = millis() + (x * Settings.MessageDelay);
-
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
 
@@ -320,12 +313,16 @@ void setup()
 //  #ifndef ESP32
 //  connectionCheck.attach(30, connectionCheckHandler);
 //  #endif
-  setIntervalTimer(TIMER_20MSEC);  // timer for periodic actions 50 x per/sec
-  setIntervalTimer(TIMER_100MSEC); // timer for periodic actions 10 x per/sec
-  setIntervalTimer(TIMER_1SEC);    // timer for periodic actions once per/sec
-  setIntervalTimer(TIMER_30SEC);   // timer for watchdog once per 30 sec
-  setIntervalTimer(TIMER_MQTT);    // timer for interaction with MQTT
-  setIntervalTimer(TIMER_STATISTICS);
+
+  // Start the interval timers at N msec from now.
+  // Make sure to start them at some time after eachother,
+  // since they will keep running at the same interval.
+  setIntervalTimerOverride(TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
+  setIntervalTimerOverride(TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
+  setIntervalTimerOverride(TIMER_1SEC,    777); // timer for periodic actions once per/sec
+  setIntervalTimerOverride(TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
+  setIntervalTimerOverride(TIMER_MQTT,    88); // timer for interaction with MQTT
+  setIntervalTimerOverride(TIMER_STATISTICS, 2222);
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -597,8 +594,6 @@ void runOncePerSecond()
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  checkSensors();
-
   if (Settings.ConnectionFailuresThreshold)
     if (connectionFailures > Settings.ConnectionFailuresThreshold)
       delayedReboot(60);
@@ -717,33 +712,6 @@ void runEach30Seconds()
   ReportStatus();
   #endif
 
-}
-
-
-/*********************************************************************************************\
- * Check sensor timers
-\*********************************************************************************************/
-void checkSensors()
-{
-  START_TIMER;
-  checkRAM(F("checkSensors"));
-  bool isDeepSleep = isDeepSleepEnabled();
-  //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
-  for (byte x = 0; x < TASKS_MAX; x++)
-  {
-    if (
-        (Settings.TaskDeviceTimer[x] != 0) &&
-        (isDeepSleep || timeOutReached(timerSensor[x]))
-    )
-    {
-      setNextTimeInterval(timerSensor[x], Settings.TaskDeviceTimer[x] * 1000);
-      if (timerSensor[x] == 0) // small fix if result is 0, else timer will be stopped...
-        timerSensor[x] = 1;
-      SensorSendTask(x);
-    }
-  }
-  saveUserVarToRTC();
-  STOP_TIMER(CHECK_SENSORS);
 }
 
 

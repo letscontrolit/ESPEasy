@@ -3,6 +3,7 @@
 #define CONST_INTERVAL_TIMER 1
 #define GENERIC_TIMER        2
 #define SYSTEM_TIMER         3
+#define TASK_DEVICE_TIMER    4
 
 void setTimer(unsigned long id) {
   setTimer(GENERIC_TIMER, id, 0);
@@ -41,7 +42,6 @@ void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromN
 void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
-  // first check if a timer is not already running for this request
   const unsigned long systemTimerId = createSystemTimerId(plugin, Par1);
   systemTimerStruct timer_data;
   timer_data.TaskIndex = taskIndex;
@@ -63,23 +63,16 @@ void setNewTimerAt(unsigned long id, unsigned long timer) {
 unsigned long createSystemTimerId(byte plugin, int Par1) {
   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
   const unsigned long mixed = (Par1 << 8) + plugin;
-/*
-  if (mixed & !mask) {
-    String error = F("createSystemTimerId: Information lost for Par1: ");
-    error += Par1;
-    error += F(" with plugin: ");
-    error += plugin;
-    addLog(LOG_LEVEL_ERROR, error);
-  }
-*/
   return (mixed & mask);
 }
 
+/* // Not (yet) used
 void splitSystemTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
   plugin = mixed_id & 0xFF;
   Par1 = (mixed_id & mask) >> 8;
 }
+*/
 
 unsigned long getMixedId(unsigned long timerType, unsigned long id) {
   return (timerType << TIMER_ID_SHIFT) + id;
@@ -100,6 +93,9 @@ void handle_schedule() {
       break;
     case SYSTEM_TIMER:
       process_system_timer(id);
+      break;
+    case TASK_DEVICE_TIMER:
+      process_task_device_timer(id, timer);
       break;
   }
 }
@@ -141,6 +137,7 @@ void process_system_timer(unsigned long id) {
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = VALUE_SOURCE_SYSTEM;
   const int y = getPluginId(timer_data.TaskIndex);
+/*
   String log = F("proc_system_timer: Pluginid: ");
   log += y;
   log += F(" taskIndex: ");
@@ -148,10 +145,50 @@ void process_system_timer(unsigned long id) {
   log += F(" sysTimerID: ");
   log += id;
   addLog(LOG_LEVEL_INFO, log);
+*/
   if (y >= 0) {
     String dummy;
     Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummy);
   }
   systemTimers.erase(id);
   STOP_TIMER(PROC_SYS_TIMER);
+}
+
+void schedule_task_device_timer_at_init(unsigned long task_index) {
+  unsigned long runAt = millis();
+  if (!isDeepSleepEnabled()) {
+    // Deepsleep is not enabled, add some offset based on the task index
+    // to make sure not all are run at the same time.
+    // This scheduled time may be overriden by the plugin's own init.
+    runAt += (task_index * 37) + Settings.MessageDelay;
+  }
+  schedule_task_device_timer(task_index, runAt);
+}
+
+void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
+/*
+  String log = F("schedule_task_device_timer: task: ");
+  log += task_index;
+  log += F(" @ ");
+  log += runAt;
+  if (Settings.TaskDeviceEnabled[task_index]) {
+    log += F(" (enabled)");
+  }
+  addLog(LOG_LEVEL_INFO, log);
+*/
+  if (task_index >= TASKS_MAX) return;
+  if (Settings.TaskDeviceEnabled[task_index]) {
+    setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
+  }
+}
+
+void process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+  unsigned long newtimer = Settings.TaskDeviceTimer[task_index];
+  if (newtimer != 0) {
+    newtimer = lasttimer + (newtimer * 1000);
+    schedule_task_device_timer(task_index, newtimer);
+  }
+  START_TIMER;
+  SensorSendTask(task_index);
+  STOP_TIMER(SENSOR_SEND_TASK);
 }
