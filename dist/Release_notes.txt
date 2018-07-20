@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20180720 (since mega-20180719)
+-------------------------------------------------
+
+Release date: Fri Jul 20 04:00:16 CEST 2018
+
+TD-er (2):
+      [ParseString] Make ParseString more efficient and check results before use
+      [ParseString] Fix getting the right part of the command line
+
+
+-------------------------------------------------
 Changes in release mega-20180719 (since mega-20180716)
 -------------------------------------------------
 
