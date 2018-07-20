@@ -15,7 +15,7 @@ void setIntervalTimer(unsigned long id) {
 void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
   unsigned long timer = millis();
   setNextTimeInterval(timer, msecFromNow);
-  msecTimerHandler.registerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
 void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
@@ -31,11 +31,11 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   }
   unsigned long timer = lasttimer;
   setNextTimeInterval(timer, interval);
-  msecTimerHandler.registerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
 void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromNow) {
-  msecTimerHandler.registerFromNow(getMixedId(timerType, id), msecFromNow);
+  setNewTimerAt(getMixedId(timerType, id), millis() + msecFromNow);
 }
 
 void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
@@ -52,6 +52,12 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
   timer_data.Par5 = Par5;
   systemTimers[systemTimerId] = timer_data;
   setTimer(SYSTEM_TIMER, systemTimerId, timer);
+}
+
+void setNewTimerAt(unsigned long id, unsigned long timer) {
+  START_TIMER;
+  msecTimerHandler.registerAt(id, timer);
+  STOP_TIMER(SET_NEW_TIMER);
 }
 
 unsigned long createSystemTimerId(byte plugin, int Par1) {

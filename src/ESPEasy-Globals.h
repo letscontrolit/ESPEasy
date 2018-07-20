@@ -297,7 +297,6 @@
 #define NPLUGIN_MAX                         4
 #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
 #define RULES_TIMER_MAX                     8
-#define SYSTEM_CMD_TIMER_MAX                2
 #define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
@@ -1119,13 +1118,6 @@ struct systemTimerStruct
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 
-struct systemCMDTimerStruct
-{
-  systemCMDTimerStruct() : timer(0) {}
-  unsigned long timer;
-  String action;
-} systemCMDTimers[SYSTEM_CMD_TIMER_MAX];
-
 struct pinStatesStruct
 {
   byte plugin;
@@ -1310,9 +1302,6 @@ unsigned long loopCounter_full = 1;
 float loop_usec_duration_total = 0.0;
 unsigned long countFindPluginId = 0;
 
-unsigned long systemTimerCalls = 1;
-float systemTimerDurationTotal = 0.0;
-
 unsigned long dailyResetCounter = 0;
 
 String eventBuffer = "";
@@ -1470,6 +1459,7 @@ std::map<int,TimingStats> miscStats;
 #define SEND_DATA_STATS   7
 #define COMPUTE_FORMULA_STATS 8
 #define PROC_SYS_TIMER    9
+#define SET_NEW_TIMER    10
 
 
 
@@ -1493,6 +1483,7 @@ String getMiscStatsName(int stat) {
         case SEND_DATA_STATS:    return F("sendData()          ");
         case COMPUTE_FORMULA_STATS: return F("Compute formula  ");
         case PROC_SYS_TIMER:     return F("proc_system_timer() ");
+        case SET_NEW_TIMER:      return F("setNewTimerAt()     ");
     }
     return F("Unknown");
 }

@@ -409,10 +409,6 @@ void updateLoopStats_30sec(byte loglevel) {
     log += longestLoop;
     log += F(" avgLoopDuration: ");
     log += loop_usec_duration_total / loopCounter_full;
-    log += F(" systemTimerDuration: ");
-    log += systemTimerDurationTotal / systemTimerCalls;
-    log += F(" systemTimerCalls: ");
-    log += systemTimerCalls;
     log += F(" loopCounterMax: ");
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
@@ -424,8 +420,6 @@ void updateLoopStats_30sec(byte loglevel) {
   countFindPluginId = 0;
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
-  systemTimerDurationTotal = 0;
-  systemTimerCalls = 1;
 }
 
 float getCPUload() {
@@ -817,47 +811,6 @@ void SensorSendTask(byte TaskIndex)
       sendData(&TempEvent);
     }
   }
-}
-
-
-//EDWIN: this function seems to be unused?
-/*********************************************************************************************\
- * set global system command timer
-\*********************************************************************************************/
-void setSystemCMDTimer(unsigned long timer, String& action)
-{
-  for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
-    if (systemCMDTimers[x].timer == 0)
-    {
-      systemCMDTimers[x].timer = millis() + timer;
-      systemCMDTimers[x].action = action;
-      break;
-    }
-}
-
-
-/*********************************************************************************************\
- * check global system timers
-\*********************************************************************************************/
-void checkSystemTimers()
-{
-  unsigned long start = micros();
-
-  for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
-    if (systemCMDTimers[x].timer != 0)
-      if (timeOutReached(systemCMDTimers[x].timer))
-      {
-        struct EventStruct TempEvent;
-        parseCommandString(&TempEvent, systemCMDTimers[x].action);
-        if (!PluginCall(PLUGIN_WRITE, &TempEvent, systemCMDTimers[x].action))
-          ExecuteCommand(VALUE_SOURCE_SYSTEM, systemCMDTimers[x].action.c_str());
-        systemCMDTimers[x].timer = 0;
-        systemCMDTimers[x].action = "";
-      }
-
-  ++systemTimerCalls;
-  systemTimerDurationTotal += usecPassedSince(start);;
-
 }
 
 

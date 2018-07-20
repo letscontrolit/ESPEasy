@@ -110,10 +110,6 @@ struct msecTimerHandlerStruct {
     insert(item);
   }
 
-  void registerFromNow(unsigned long id, unsigned long msecFromNow) {
-    registerAt(id, millis() + msecFromNow);
-  }
-
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
   unsigned long getNextId(unsigned long& timer) {
