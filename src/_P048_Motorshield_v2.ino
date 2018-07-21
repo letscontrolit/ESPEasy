@@ -167,11 +167,13 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 						Adafruit_StepperMotor *myStepper;
 						myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, param2.toInt());
 						myStepper->setSpeed(Plugin_048_StepperSpeed);
-						String log = F("MotorShield: StepsPerRevolution: ");
-						log += String(Plugin_048_MotorStepsPerRevolution);
-						log += F(" Stepperspeed: ");
-						log += String(Plugin_048_StepperSpeed);
-						addLog(LOG_LEVEL_DEBUG_MORE, log);
+						if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+							String log = F("MotorShield: StepsPerRevolution: ");
+							log += String(Plugin_048_MotorStepsPerRevolution);
+							log += F(" Stepperspeed: ");
+							log += String(Plugin_048_StepperSpeed);
+							addLog(LOG_LEVEL_DEBUG_MORE, log);
+						}
 
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{

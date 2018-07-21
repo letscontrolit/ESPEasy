@@ -100,7 +100,6 @@ boolean PacketAvailable(void)
 }
 
 boolean Plugin_053_process_data(struct EventStruct *event) {
-  String log;
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength = 0;
   uint16 packet_header = 0;
@@ -113,9 +112,11 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   SerialRead16(&framelength, &checksum);
   if (framelength != (PMSx003_SIZE - 4))
   {
-    log = F("PMSx003 : invalid framelength - ");
-    log += framelength;
-    addLog(LOG_LEVEL_ERROR, log);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("PMSx003 : invalid framelength - ");
+      log += framelength;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
     return false;
   }
 
@@ -123,33 +124,37 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   for (int i = 0; i < 13; i++)
     SerialRead16(&data[i], &checksum);
 
-  log = F("PMSx003 : pm1.0=");
-  log += data[0];
-  log += F(", pm2.5=");
-  log += data[1];
-  log += F(", pm10=");
-  log += data[2];
-  log += F(", pm1.0a=");
-  log += data[3];
-  log += F(", pm2.5a=");
-  log += data[4];
-  log += F(", pm10a=");
-  log += data[5];
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("PMSx003 : pm1.0=");
+    log += data[0];
+    log += F(", pm2.5=");
+    log += data[1];
+    log += F(", pm10=");
+    log += data[2];
+    log += F(", pm1.0a=");
+    log += data[3];
+    log += F(", pm2.5a=");
+    log += data[4];
+    log += F(", pm10a=");
+    log += data[5];
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 
-  log = F("PMSx003 : count/0.1L : 0.3um=");
-  log += data[6];
-  log += F(", 0.5um=");
-  log += data[7];
-  log += F(", 1.0um=");
-  log += data[8];
-  log += F(", 2.5um=");
-  log += data[9];
-  log += F(", 5.0um=");
-  log += data[10];
-  log += F(", 10um=");
-  log += data[11];
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    String log = F("PMSx003 : count/0.1L : 0.3um=");
+    log += data[6];
+    log += F(", 0.5um=");
+    log += data[7];
+    log += F(", 1.0um=");
+    log += data[8];
+    log += F(", 2.5um=");
+    log += data[9];
+    log += F(", 5.0um=");
+    log += data[10];
+    log += F(", 10um=");
+    log += data[11];
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
+  }
 
   // Compare checksums
   SerialRead16(&checksum2, NULL);

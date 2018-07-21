@@ -387,16 +387,17 @@ unsigned long getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      log = F("NTP  : NTP replied: ");
-      log += timePassedSince(beginWait);
-      log += F(" mSec");
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
+			if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+	      String log = F("NTP  : NTP replied: ");
+	      log += timePassedSince(beginWait);
+	      log += F(" mSec");
+	      addLog(LOG_LEVEL_DEBUG_MORE, log);
+			}
       return secsSince1900 - 2208988800UL;
     }
     delay(10);
   }
-  log = F("NTP  : No reply");
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
   return 0;
 }
 
