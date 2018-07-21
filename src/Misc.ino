@@ -1619,17 +1619,16 @@ String getLogLevelDisplayString(byte index, int& logLevel) {
   }
 }
 
-
-void addLog(byte loglevel, String& string)
+void addToLog(byte loglevel, String& string)
 {
-  addLog(loglevel, string.c_str());
+  addToLog(loglevel, string.c_str());
 }
 
-void addLog(byte logLevel, const __FlashStringHelper* flashString)
+void addToLog(byte logLevel, const __FlashStringHelper* flashString)
 {
-    checkRAM(F("addLog"));
+    checkRAM(F("addToLog"));
     String s(flashString);
-    addLog(logLevel, s.c_str());
+    addToLog(logLevel, s.c_str());
 }
 
 bool SerialAvailableForWrite() {
@@ -1662,6 +1661,10 @@ void setLogLevelFor(byte destination, byte logLevel) {
   max_lvl = _max(max_lvl, Settings.WebLogLevel);
   max_lvl = _max(max_lvl, Settings.SDLogLevel);
   highest_active_log_level = max_lvl;
+}
+
+bool loglevelActiveFor(byte logLevel) {
+  return loglevelActive(logLevel, highest_active_log_level);
 }
 
 boolean loglevelActiveFor(byte destination, byte logLevel) {
@@ -1697,7 +1700,7 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
-void addLog(byte logLevel, const char *line)
+void addToLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     Serial.print(millis());
