@@ -1137,9 +1137,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.sensorType = Device[DeviceIndex].VType;
                 checkRAM(F("PluginCall_s"),x);
                 START_TIMER;
-                bool retval = (Plugin_ptr[x](Function, event, str));
+                bool retval = (Plugin_ptr[x](Function, &TempEvent, str));
                 STOP_TIMER_TASK(x,Function);
-                if (retval) return true; 
+                if (retval) return true;
               }
             }
           }
@@ -1168,7 +1168,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
               TempEvent.sensorType = Device[DeviceIndex].VType;
               START_TIMER;
-              bool retval =  (Plugin_ptr[x](Function, event, str));
+              bool retval =  (Plugin_ptr[x](Function, &TempEvent, str));
               STOP_TIMER_TASK(x,Function);
               if (retval){
                 checkRAM(F("PluginCallUDP"),x);
@@ -1206,6 +1206,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 TempEvent.sensorType = Device[DeviceIndex].VType;
                 TempEvent.OriginTaskIndex = event->TaskIndex;
                 checkRAM(F("PluginCall_s"),x);
+                if (Function == PLUGIN_INIT) {
+                  // Schedule the plugin to be read.
+                  schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+                }
                 START_TIMER;
                 Plugin_ptr[x](Function, &TempEvent, str);
                 STOP_TIMER_TASK(x,Function);
@@ -1228,17 +1232,21 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_READ:
     case PLUGIN_SET_CONFIG:
-    case PLUGIN_GET_CONFIG: 
+    case PLUGIN_GET_CONFIG:
     {
       const int x = getPluginId(event->TaskIndex);
       if (x >= 0) {
         if (Plugin_id[x] != 0 ) {
+          if (Function == PLUGIN_INIT) {
+            // Schedule the plugin to be read.
+            schedule_task_device_timer_at_init(event->TaskIndex);
+          }
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
           START_TIMER;
           bool retval =  Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x,Function);
-          return retval; 
+          return retval;
         }
       }
       return false;

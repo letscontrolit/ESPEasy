@@ -168,7 +168,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         //update now
-        timerSensor[event->TaskIndex] = millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000);
+        schedule_task_device_timer(event->TaskIndex,
+           millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000));
         frameCounter=0;
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_036_adr"));

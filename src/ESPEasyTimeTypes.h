@@ -70,6 +70,8 @@ long timePassedSince(unsigned long timestamp);
 boolean timeOutReached(unsigned long timer);
 long usecPassedSince(unsigned long timestamp);
 boolean usecTimeOutReached(unsigned long timer);
+void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
+  int Par2 = 0, int Par3 = 0, int Par4 = 0, int Par5 = 0);
 
 
 
@@ -106,10 +108,6 @@ struct msecTimerHandlerStruct {
   void registerAt(unsigned long id, unsigned long timer) {
     timer_id_couple item(id, timer);
     insert(item);
-  }
-
-  void registerFromNow(unsigned long id, unsigned long msecFromNow) {
-    registerAt(id, millis() + msecFromNow);
   }
 
   // Check if timeout has been reached and also return its set timer.
@@ -173,11 +171,13 @@ private:
 
     // Make sure only one is present with the same id.
     _timer_ids.remove_if(match_id(item._id));
+    const bool mustSort = !_timer_ids.empty();
     _timer_ids.push_front(item);
-    if (_timer_ids.empty()) {
-      return;
-    }
-    _timer_ids.sort();
+    if (mustSort)
+      _timer_ids.sort(); // TD-er: Must check if this is an expensive operation.
+    // It should be a relative light operation, to insert into a sorted list.
+    // Perhaps it is better to use std::set ????
+    // Keep in mind: order is based on timer, uniqueness is based on id.
   }
 
   void recordIdle() {
@@ -192,15 +192,19 @@ private:
     total_idle_time_usec += usecPassedSince(last_exec_time_usec);
   }
 
-
+  // Statistics
   unsigned long get_called;
   unsigned long get_called_ret_id;
   unsigned long max_queue_length;
+
+  // Compute idle system time
   unsigned long last_exec_time_usec;
   unsigned long total_idle_time_usec;
   unsigned long last_log_start_time;
   bool is_idle;
   float idle_time_pct;
+
+  // The list of set timers
   std::list<timer_id_couple> _timer_ids;
 };
 

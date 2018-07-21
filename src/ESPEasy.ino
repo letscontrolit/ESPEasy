@@ -233,13 +233,6 @@ void setup()
   checkRAM(F("hardwareInit"));
   hardwareInit();
 
-  //After booting, we want all the tasks to run without delaying more than neccesary.
-  //Plugins that need an initial startup delay need to overwrite their initial timerSensor value in PLUGIN_INIT
-  //They should also check if we returned from deep sleep so that they can skip the delay in that case.
-  for (byte x = 0; x < TASKS_MAX; x++)
-    if (Settings.TaskDeviceTimer[x] !=0)
-      timerSensor[x] = millis() + (x * Settings.MessageDelay);
-
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
 
@@ -320,12 +313,16 @@ void setup()
 //  #ifndef ESP32
 //  connectionCheck.attach(30, connectionCheckHandler);
 //  #endif
-  setIntervalTimer(TIMER_20MSEC);  // timer for periodic actions 50 x per/sec
-  setIntervalTimer(TIMER_100MSEC); // timer for periodic actions 10 x per/sec
-  setIntervalTimer(TIMER_1SEC);    // timer for periodic actions once per/sec
-  setIntervalTimer(TIMER_30SEC);   // timer for watchdog once per 30 sec
-  setIntervalTimer(TIMER_MQTT);    // timer for interaction with MQTT
-  setIntervalTimer(TIMER_STATISTICS);
+
+  // Start the interval timers at N msec from now.
+  // Make sure to start them at some time after eachother,
+  // since they will keep running at the same interval.
+  setIntervalTimerOverride(TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
+  setIntervalTimerOverride(TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
+  setIntervalTimerOverride(TIMER_1SEC,    777); // timer for periodic actions once per/sec
+  setIntervalTimerOverride(TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
+  setIntervalTimerOverride(TIMER_MQTT,    88); // timer for interaction with MQTT
+  setIntervalTimerOverride(TIMER_STATISTICS, 2222);
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -409,10 +406,6 @@ void updateLoopStats_30sec(byte loglevel) {
     log += longestLoop;
     log += F(" avgLoopDuration: ");
     log += loop_usec_duration_total / loopCounter_full;
-    log += F(" systemTimerDuration: ");
-    log += systemTimerDurationTotal / systemTimerCalls;
-    log += F(" systemTimerCalls: ");
-    log += systemTimerCalls;
     log += F(" loopCounterMax: ");
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
@@ -424,8 +417,6 @@ void updateLoopStats_30sec(byte loglevel) {
   countFindPluginId = 0;
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
-  systemTimerDurationTotal = 0;
-  systemTimerCalls = 1;
 }
 
 float getCPUload() {
@@ -603,8 +594,6 @@ void runOncePerSecond()
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  checkSensors();
-
   if (Settings.ConnectionFailuresThreshold)
     if (connectionFailures > Settings.ConnectionFailuresThreshold)
       delayedReboot(60);
@@ -640,8 +629,6 @@ void runOncePerSecond()
 //  unsigned long start = micros();
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummyString);
 //  unsigned long elapsed = micros() - start;
-
-  checkSystemTimers();
 
   if (Settings.UseRules)
     rulesTimers();
@@ -688,7 +675,7 @@ void logTimerStatistics() {
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
   logStatistics(loglevel, true);
-  String queueLog = F("Scheduler stats: (called/tasks/max_length/idle_msec) ");
+  String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
   queueLog += msecTimerHandler.getQueueStats();
   addLog(loglevel, queueLog);
 }
@@ -725,33 +712,6 @@ void runEach30Seconds()
   ReportStatus();
   #endif
 
-}
-
-
-/*********************************************************************************************\
- * Check sensor timers
-\*********************************************************************************************/
-void checkSensors()
-{
-  START_TIMER;
-  checkRAM(F("checkSensors"));
-  bool isDeepSleep = isDeepSleepEnabled();
-  //check all the devices and only run the sendtask if its time, or we if we used deep sleep mode
-  for (byte x = 0; x < TASKS_MAX; x++)
-  {
-    if (
-        (Settings.TaskDeviceTimer[x] != 0) &&
-        (isDeepSleep || timeOutReached(timerSensor[x]))
-    )
-    {
-      setNextTimeInterval(timerSensor[x], Settings.TaskDeviceTimer[x] * 1000);
-      if (timerSensor[x] == 0) // small fix if result is 0, else timer will be stopped...
-        timerSensor[x] = 1;
-      SensorSendTask(x);
-    }
-  }
-  saveUserVarToRTC();
-  STOP_TIMER(CHECK_SENSORS);
 }
 
 
@@ -819,124 +779,6 @@ void SensorSendTask(byte TaskIndex)
       sendData(&TempEvent);
     }
   }
-}
-
-
-/*********************************************************************************************\
- * set global system timer
-\*********************************************************************************************/
-void setSystemTimer(unsigned long timer, byte plugin, int Par1, int Par2, int Par3)
-{
-  setSystemTimer(timer, plugin, -1, Par1, Par2, Par3, 0, 0);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3)
-{
-  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, 0, 0);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4)
-{
-  setSystemTimer(timer, plugin, taskIndex , Par1, Par2, Par3, Par4, 0);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
-{
-  // plugin number and par1 form a unique key that can be used to restart a timer
-  // first check if a timer is not already running for this request
-  byte firstAvailable = SYSTEM_TIMER_MAX;
-  for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-  {
-    if (systemTimers[x].timer != 0)
-    {
-      if ((systemTimers[x].plugin == plugin) && systemTimers[x].TaskIndex == taskIndex && (systemTimers[x].Par1 == Par1))
-      {
-        firstAvailable = x;
-        break;
-      }
-    }
-    else if(firstAvailable == SYSTEM_TIMER_MAX)
-    {
-      firstAvailable = x;
-    }
-  }
-  if (firstAvailable == SYSTEM_TIMER_MAX )
-  {
-    addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
-  }
-  else
-  {
-    systemTimers[firstAvailable].plugin = plugin;
-    systemTimers[firstAvailable].TaskIndex = taskIndex;
-    systemTimers[firstAvailable].Par1 = Par1;
-    systemTimers[firstAvailable].Par2 = Par2;
-    systemTimers[firstAvailable].Par3 = Par3;
-    systemTimers[firstAvailable].Par4 = Par4;
-    systemTimers[firstAvailable].Par5 = Par5;
-    systemTimers[firstAvailable].timer = timer > 0
-      ? millis() + timer
-      : 0;
-  }
-
-}
-
-//EDWIN: this function seems to be unused?
-/*********************************************************************************************\
- * set global system command timer
-\*********************************************************************************************/
-void setSystemCMDTimer(unsigned long timer, String& action)
-{
-  for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
-    if (systemCMDTimers[x].timer == 0)
-    {
-      systemCMDTimers[x].timer = millis() + timer;
-      systemCMDTimers[x].action = action;
-      break;
-    }
-}
-
-
-/*********************************************************************************************\
- * check global system timers
-\*********************************************************************************************/
-void checkSystemTimers()
-{
-  unsigned long start = micros();
-  for (byte x = 0; x < SYSTEM_TIMER_MAX; x++)
-    if (systemTimers[x].timer != 0)
-    {
-      if (timeOutReached(systemTimers[x].timer))
-      {
-        struct EventStruct TempEvent;
-        TempEvent.TaskIndex = systemTimers[x].TaskIndex;
-        TempEvent.Par1 = systemTimers[x].Par1;
-        TempEvent.Par2 = systemTimers[x].Par2;
-        TempEvent.Par3 = systemTimers[x].Par3;
-        TempEvent.Par4 = systemTimers[x].Par4;
-        TempEvent.Par5 = systemTimers[x].Par5;
-        systemTimers[x].timer = 0;
-        const int y = getPluginId(systemTimers[x].TaskIndex);
-        if (y >= 0) {
-          Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummyString);
-        }
-      }
-    }
-
-  for (byte x = 0; x < SYSTEM_CMD_TIMER_MAX; x++)
-    if (systemCMDTimers[x].timer != 0)
-      if (timeOutReached(systemCMDTimers[x].timer))
-      {
-        struct EventStruct TempEvent;
-        parseCommandString(&TempEvent, systemCMDTimers[x].action);
-        if (!PluginCall(PLUGIN_WRITE, &TempEvent, systemCMDTimers[x].action))
-          ExecuteCommand(VALUE_SOURCE_SYSTEM, systemCMDTimers[x].action.c_str());
-        systemCMDTimers[x].timer = 0;
-        systemCMDTimers[x].action = "";
-      }
-
-  ++systemTimerCalls;
-  systemTimerDurationTotal += usecPassedSince(start);;
-
 }
 
 
