@@ -504,7 +504,7 @@ static const char jsFetchAndParseLog[] PROGMEM = {
             "if (logEntriesChunk == null) {"
               "logEntriesChunk = '';"
             "}"
-    				"for (c = 0; c < data.Log.nrEntries + 1; c++) {"
+    				"for (c = 0; c < data.Log.nrEntries; ++c) {"
     					"try {"
     						"logEntry = data.Log.Entries[c].timestamp;"
     					"} catch (err) {"
