@@ -1062,7 +1062,7 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   log += index;
   log += F(" datasize: ");
   log += datasize;
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG_DEV, log);
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
