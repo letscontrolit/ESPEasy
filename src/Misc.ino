@@ -519,11 +519,13 @@ void fileSystemCheck()
       fs::FSInfo fs_info;
       SPIFFS.info(fs_info);
 
-      String log = F("FS   : Mount successful, used ");
-      log=log+fs_info.usedBytes;
-      log=log+F(" bytes of ");
-      log=log+fs_info.totalBytes;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("FS   : Mount successful, used ");
+        log=log+fs_info.usedBytes;
+        log=log+F(" bytes of ");
+        log=log+fs_info.totalBytes;
+        addLog(LOG_LEVEL_INFO, log);
+      }
     #endif
 
     fs::File f = SPIFFS.open(FILE_CONFIG, "r");
@@ -1056,13 +1058,15 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-  String log = F("LoadFromFile: ");
-  log += fname;
-  log += F(" index: ");
-  log += index;
-  log += F(" datasize: ");
-  log += datasize;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String log = F("LoadFromFile: ");
+    log += fname;
+    log += F(" index: ");
+    log += index;
+    log += F(" datasize: ");
+    log += datasize;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+  }
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
@@ -2120,11 +2124,13 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   newString += " ";
                               }
                               {
-                                String logFormatted = F("DEBUG: Formatted String='");
-                                logFormatted += newString;
-                                logFormatted += value;
-                                logFormatted += "'";
-                                addLog(LOG_LEVEL_DEBUG, logFormatted);
+                                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                                  String logFormatted = F("DEBUG: Formatted String='");
+                                  logFormatted += newString;
+                                  logFormatted += value;
+                                  logFormatted += "'";
+                                  addLog(LOG_LEVEL_DEBUG, logFormatted);
+                                }
                               }
                             }
                           }
@@ -2132,10 +2138,12 @@ String parseTemplate(String &tmpString, byte lineSize)
 
                           newString += String(value);
                           {
-                            String logParsed = F("DEBUG DEV: Parsed String='");
-                            logParsed += newString;
-                            logParsed += "'";
-                            addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+                            if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+                              String logParsed = F("DEBUG DEV: Parsed String='");
+                              logParsed += newString;
+                              logParsed += "'";
+                              addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+                            }
                           }
                           break;
                         }
@@ -2480,11 +2488,11 @@ void rulesProcessing(String& event)
 {
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
-  String log = "";
-
-  log = F("EVENT: ");
-  log += event;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("EVENT: ");
+    log += event;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   for (byte x = 0; x < RULESETS_MAX; x++)
   {
@@ -2500,10 +2508,14 @@ void rulesProcessing(String& event)
       rulesProcessingFile(fileName, event);
   }
 
-  log += F(" Processing time:");
-  log += timePassedSince(timer);
-  log += F(" milliSeconds");
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("EVENT: ");
+    log += event;
+    log += F(" Processing time:");
+    log += timePassedSince(timer);
+    log += F(" milliSeconds");
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 
 }
 
@@ -2526,8 +2538,7 @@ String rulesProcessingFile(String fileName, String& event)
   nestingLevel++;
   if (nestingLevel > RULES_MAX_NESTING_LEVEL)
   {
-    log = F("EVENT: Error: Nesting level exceeded!");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
     return (log);
   }
@@ -2641,6 +2652,8 @@ String rulesProcessingFile(String fileName, String& event)
             {
               conditional = true;
               String check = lcAction.substring(split + 3);
+
+
               log = F("[if ");
               log += check;
               log += F("]=");
@@ -2676,9 +2689,11 @@ String rulesProcessingFile(String fileName, String& event)
             {
               ifBranche = false;
               isCommand = false;
-              log = F("else = ");
-              log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
-              addLog(LOG_LEVEL_DEBUG, log);
+              if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                String log = F("else = ");
+                log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
+                addLog(LOG_LEVEL_DEBUG, log);
+              }
             }
 
             if (lcAction == "endif") // conditional block ends here
@@ -2705,9 +2720,12 @@ String rulesProcessingFile(String fileName, String& event)
                   action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
                 }
               }
-              log = F("ACT  : ");
-              log += action;
-              addLog(LOG_LEVEL_INFO, log);
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ACT  : ");
+                log += action;
+                addLog(LOG_LEVEL_INFO, log);
+              }
 
               struct EventStruct TempEvent;
               parseCommandString(&TempEvent, action);
@@ -2716,11 +2734,13 @@ String rulesProcessingFile(String fileName, String& event)
               String tmpAction(action);
               if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
                 if (!tmpAction.equals(action)) {
-                  String log = F("PLUGIN_WRITE altered the string: ");
-                  log += action;
-                  log += F(" to: ");
-                  log += tmpAction;
-                  addLog(LOG_LEVEL_ERROR, log);
+                  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                    String log = F("PLUGIN_WRITE altered the string: ");
+                    log += action;
+                    log += F(" to: ");
+                    log += tmpAction;
+                    addLog(LOG_LEVEL_ERROR, log);
+                  }
                 }
                 ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
               }
@@ -3050,27 +3070,33 @@ void createRuleEvents(byte TaskIndex)
 
 void SendValueLogger(byte TaskIndex)
 {
+  bool featureSD = false;
+  #ifdef FEATURE_SD
+    featureSD = true;
+  #endif
+
   String logger;
+  if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    LoadTaskSettings(TaskIndex);
+    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+    {
+      logger += getDateString('-');
+      logger += F(" ");
+      logger += getTimeString(':');
+      logger += F(",");
+      logger += Settings.Unit;
+      logger += F(",");
+      logger += ExtraTaskSettings.TaskDeviceName;
+      logger += F(",");
+      logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+      logger += F(",");
+      logger += formatUserVarNoCheck(TaskIndex, varNr);
+      logger += F("\r\n");
+    }
 
-  LoadTaskSettings(TaskIndex);
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-  {
-    logger += getDateString('-');
-    logger += F(" ");
-    logger += getTimeString(':');
-    logger += F(",");
-    logger += Settings.Unit;
-    logger += F(",");
-    logger += ExtraTaskSettings.TaskDeviceName;
-    logger += F(",");
-    logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-    logger += F(",");
-    logger += formatUserVarNoCheck(TaskIndex, varNr);
-    logger += F("\r\n");
+    addLog(LOG_LEVEL_DEBUG, logger);
   }
-
-  addLog(LOG_LEVEL_DEBUG, logger);
 
 #ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
@@ -3143,15 +3169,17 @@ class RamTracker{
        if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
     };
    void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
-      String retval="Memtrace\n";
-      for (int i = 0; i< TRACES; i++){
-        retval += String(i);
-        retval += ": lowest: ";
-        retval += String(tracesMemory[i]);
-        retval += "  ";
-        retval += traces[i];
-        addLog(LOG_LEVEL_DEBUG_DEV, retval);
-        retval="";
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+        String retval="Memtrace\n";
+        for (int i = 0; i< TRACES; i++){
+          retval += String(i);
+          retval += ": lowest: ";
+          retval += String(tracesMemory[i]);
+          retval += "  ";
+          retval += traces[i];
+          addLog(LOG_LEVEL_DEBUG_DEV, retval);
+          retval="";
+        }
       }
     }
 }myRamTracker;                                              // instantiate class. (is global now)
@@ -3423,10 +3451,11 @@ void ArduinoOTAInit()
   });
   ArduinoOTA.begin();
 
-  String log = F("OTA  : Arduino OTA enabled on port ");
-  log += ARDUINO_OTA_PORT;
-  addLog(LOG_LEVEL_INFO, log);
-
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("OTA  : Arduino OTA enabled on port ");
+    log += ARDUINO_OTA_PORT;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 }
 
 #endif
