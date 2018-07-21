@@ -1041,6 +1041,9 @@ struct LogStruct {
 
 } Logging;
 
+byte highest_active_log_level = 0;
+bool log_to_serial_disabled = false;
+
 struct DeviceStruct
 {
   DeviceStruct() :

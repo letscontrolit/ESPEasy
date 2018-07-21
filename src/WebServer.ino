@@ -3791,12 +3791,13 @@ void handle_advanced() {
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     str2ip(syslogip.c_str(), Settings.Syslog_IP);
     Settings.UDPPort = getFormItemInt(F("udpport"));
-    Settings.SyslogLevel = getFormItemInt(F("sysloglevel"));
+
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.UseSerial = isFormItemChecked(F("useserial"));
-    Settings.SerialLogLevel = getFormItemInt(F("serialloglevel"));
-    Settings.WebLogLevel = getFormItemInt(F("webloglevel"));
-    Settings.SDLogLevel = getFormItemInt(F("sdloglevel"));
+    setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(F("sysloglevel")));
+    setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(F("serialloglevel")));
+    setLogLevelFor(LOG_TO_WEBLOG, getFormItemInt(F("webloglevel")));
+    setLogLevelFor(LOG_TO_SDCARD, getFormItemInt(F("sdloglevel")));
     Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate = getFormItemInt(F("baudrate"));
     Settings.UseNTP = isFormItemChecked(F("usentp"));

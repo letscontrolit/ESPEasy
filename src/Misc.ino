@@ -1211,11 +1211,11 @@ void ResetFactory(void)
 
 	str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 
-	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
-	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
-	Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
-	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
-	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
+  setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
+  setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
+	setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
+  setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
+  Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
 	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
 
 	Settings.UseSerial		= DEFAULT_USE_SERIAL;
@@ -1597,11 +1597,11 @@ void initLog()
 {
   //make sure addLog doesnt do any stuff before initalisation of Settings is complete.
   Settings.UseSerial=true;
-  Settings.SyslogLevel=0;
   Settings.SyslogFacility=0;
-  Settings.SerialLogLevel=2; //logging during initialisation
-  Settings.WebLogLevel=2;
-  Settings.SDLogLevel=0;
+  setLogLevelFor(LOG_TO_SYSLOG, 0);
+  setLogLevelFor(LOG_TO_SERIAL, 2); //logging during initialisation
+  setLogLevelFor(LOG_TO_WEBLOG, 2);
+  setLogLevelFor(LOG_TO_SDCARD, 0);
 }
 
 /********************************************************************************************\
@@ -1638,6 +1638,30 @@ bool SerialAvailableForWrite() {
     if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
   #endif
   return true;
+}
+
+void disableSerialLog() {
+  log_to_serial_disabled = true;
+  setLogLevelFor(LOG_TO_SERIAL, 0);
+}
+
+void setLogLevelFor(byte destination, byte logLevel) {
+  switch (destination) {
+    case LOG_TO_SERIAL:
+      if (!log_to_serial_disabled || logLevel == 0)
+        Settings.SerialLogLevel = logLevel; break;
+    case LOG_TO_SYSLOG: Settings.SyslogLevel = logLevel;    break;
+    case LOG_TO_WEBLOG: Settings.WebLogLevel = logLevel;    break;
+    case LOG_TO_SDCARD: Settings.SDLogLevel = logLevel;     break;
+    default:
+      break;
+  }
+  byte max_lvl = logLevel;
+  max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+  max_lvl = _max(max_lvl, Settings.SyslogLevel);
+  max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  max_lvl = _max(max_lvl, Settings.SDLogLevel);
+  highest_active_log_level = max_lvl;
 }
 
 boolean loglevelActiveFor(byte destination, byte logLevel) {

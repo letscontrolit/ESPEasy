@@ -115,7 +115,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 0) Settings.TaskDevicePluginConfig[event->TaskIndex][2] = HLW_PREF_PULSE;
 
         Settings.UseSerial = true; // Enable Serial port
-        Settings.SerialLogLevel = 0; // disable logging on serial port (used for CSE7766 communication)
+        disableSerialLog(); // disable logging on serial port (used for CSE7766 communication)
         Settings.BaudRate = 4800; // set BaudRate for CSE7766
         Serial.flush();
         Serial.begin(Settings.BaudRate);
