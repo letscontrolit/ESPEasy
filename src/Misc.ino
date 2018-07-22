@@ -599,6 +599,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
+  char matching_parenthesis;
 
   while (string_pos < strlen(string))
   {
@@ -610,17 +611,20 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
     else if  (!parenthesis && c == ',' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d >= 33 && d <= 126) {}
     else if  (!parenthesis && c == ',' && d >= 33 && d <= 126) {}
-    else if  (c == '"' || c == '[') {
+    else if  (c == '"' || c == '\'' || c == '[') {
       parenthesis = true;
+      matching_parenthesis = c;
+      if (c == '[')
+        matching_parenthesis = ']';
     }
     else
     {
       argv[argv_pos++] = c;
       argv[argv_pos] = 0;
 
-      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == '"' || d == ']'))) // end of word
+      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == matching_parenthesis))) // end of word
       {
-        if (d == '"' || d == ']')
+        if (d == matching_parenthesis)
           parenthesis = false;
         argv[argv_pos] = 0;
         argc_pos++;
