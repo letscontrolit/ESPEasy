@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20180722 (since mega-20180720)
+-------------------------------------------------
+
+Release date: Sun Jul 22 04:00:08 CEST 2018
+
+TD-er (12):
+      [#1591] Move system timers to main scheduler
+      [#1592] Remove systemCMDTimers
+      [#1596] Remove timerSensor and make it set its own interval.
+      [Log Viewer] Fix a 1-off error when parsing logs
+      [LogLevel] LoadFromFile log to LOG_LEVEL_DEBUG_DEV
+      [LogLevel] Use function to set loglevel and keep track of max log level
+      [LogLevel] Check loglevel before sending to log
+      [LogLevel] Add checks for LOG_LEVEL_DEBUG_MORE
+      [LogLevel] Add checks for LOG_LEVEL_DEBUG_DEV
+      [LogLevel] Added extra checks and make sure loglevel cache is up to date
+      [Scheduler] Keep statistics on timeDiff computations
+      [Scheduler] Call yield() when idle
+
+
+-------------------------------------------------
 Changes in release mega-20180720 (since mega-20180719)
 -------------------------------------------------
 
