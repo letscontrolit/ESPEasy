@@ -240,10 +240,10 @@ String to_json_object_value(const String& object, const String& value) {
 String parseString(const String& string, byte indexFind) {
   int startpos = 0;
   if (indexFind > 0) {
-    startpos = getParamStartPos(string, indexFind - 1);
+    startpos = getParamStartPos(string, indexFind);
     if (startpos < 0) return string;
   }
-  const int endpos = getParamStartPos(string, indexFind);
+  const int endpos = getParamStartPos(string, indexFind + 1);
   String result = (endpos <= 0) ? string.substring(startpos) : string.substring(startpos, endpos - 1);
   result.toLowerCase();
   return result;
@@ -254,19 +254,20 @@ String parseString(const String& string, byte indexFind) {
   \*********************************************************************************************/
 int getParamStartPos(const String& string, byte indexFind)
 {
-  if (indexFind == 0) return 0;
+  // We need to find the xth command, so we need to find the position of the (X-1)th separator.
+  if (indexFind <= 1) return 0;
   byte count = 1;
   const unsigned int strlength = string.length();
-  if (strlength <= indexFind) return -1;
+  if (strlength < indexFind) return -1;
   for (unsigned int x = 0; x < (strlength - 1); ++x)
   {
     const char c = string.charAt(x);
     if (c == ',' || c == ' ')
     {
+      ++count;
       if (count == indexFind) {
         return x + 1;
       }
-      ++count;
     }
   }
   return -1;
