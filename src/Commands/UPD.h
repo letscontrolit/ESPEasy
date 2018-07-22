@@ -43,10 +43,7 @@ bool Command_UDP_SendToUPD(struct EventStruct *event, const char* Line)
     String ip = parseString(strLine, 2);
     String port = parseString(strLine, 3);
     if (!isInt(port)) return success;
-    int msgpos = getParamStartPos(strLine, 4);
-    String message;
-    if (msgpos >= 0)
-      message = strLine.substring(msgpos);
+    String message = parseStringToEndKeepCase(strLine, 4);
     IPAddress UDP_IP;
     if(UDP_IP.fromString(ip)) {
       portUDP.beginPacket(UDP_IP, port.toInt());
@@ -60,7 +57,7 @@ bool Command_UDP_SendToUPD(struct EventStruct *event, const char* Line)
     }
     success = true;
   }
-  return success;  
+  return success;
 }
 
 #endif // COMMAND_UDP_H

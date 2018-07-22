@@ -111,13 +111,10 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
     success = true;
     if (parseString(string, 2) == F("task"))
     {
-      int configCommandPos1 = getParamStartPos(string, 3);
-      if (configCommandPos1 < 0) return success; // TD-er: Should this be return false?
-      int configCommandPos2 = getParamStartPos(string, 4);
-      if (configCommandPos2 < 0 || (configCommandPos2 - configCommandPos1) < 1) return success; // TD-er: Should this be return false?
-
-      String configTaskName = string.substring(configCommandPos1, configCommandPos2 - 1);
-      String configCommand = string.substring(configCommandPos2);
+      String configTaskName = parseStringKeepCase(string, 3);
+      String configCommand = parseStringToEndKeepCase(string, 4);
+      if (configTaskName.length() == 0 || configCommand.length() == 0)
+        return success; // TD-er: Should this be return false?
 
       int8_t index = getTaskIndexByName(configTaskName);
       if (index != -1)
@@ -380,12 +377,12 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char command[80];
+  char command[INPUT_COMMAND_SIZE];
   command[0] = 0;
-  char TmpStr1[80];
+  char TmpStr1[INPUT_COMMAND_SIZE];
   TmpStr1[0] = 0;
 
-  string.toCharArray(command, 80);
+  string.toCharArray(command, INPUT_COMMAND_SIZE);
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
@@ -597,11 +594,16 @@ byte getNotificationProtocolIndex(byte Number)
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
-boolean GetArgv(const char *string, char *argv, unsigned int argc)
+boolean GetArgv(const char *string, char *argv, unsigned int argc) {
+  return GetArgv(string, argv, INPUT_COMMAND_SIZE, argc);
+}
+
+boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
+  char matching_parenthesis = '"';
 
   while (string_pos < strlen(string))
   {
@@ -613,17 +615,32 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
     else if  (!parenthesis && c == ',' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d >= 33 && d <= 126) {}
     else if  (!parenthesis && c == ',' && d >= 33 && d <= 126) {}
-    else if  (c == '"' || c == '[') {
+    else if  (c == '"' || c == '\'' || c == '[') {
       parenthesis = true;
+      matching_parenthesis = c;
+      if (c == '[')
+        matching_parenthesis = ']';
     }
     else
     {
+      if ((argv_pos +2 ) >= argv_size) {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("GetArgv Error; argv_size exceeded. argc=");
+          log += argc;
+          log += F(" argv_size=");
+          log += argv_size;
+          log += F(" argv=");
+          log += argv;
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+        return false;
+      }
       argv[argv_pos++] = c;
       argv[argv_pos] = 0;
 
-      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == '"' || d == ']'))) // end of word
+      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == matching_parenthesis))) // end of word
       {
-        if (d == '"' || d == ']')
+        if (d == matching_parenthesis)
           parenthesis = false;
         argv[argv_pos] = 0;
         argc_pos++;
@@ -1527,6 +1544,21 @@ boolean isValidFloat(float f) {
 boolean isInt(const String& tBuf) {
   return isNumerical(tBuf, true);
 }
+
+bool validIntFromString(const String& tBuf, int& result) {
+  const String numerical = getNumerical(tBuf, true);
+  const bool isvalid = isInt(numerical);
+  result = numerical.toInt();
+  return isvalid;
+}
+
+bool validFloatFromString(const String& tBuf, float& result) {
+  const String numerical = getNumerical(tBuf, false);
+  const bool isvalid = isFloat(numerical);
+  result = numerical.toFloat();
+  return isvalid;
+}
+
 
 String getNumerical(const String& tBuf, bool mustBeInteger) {
   String result = "";

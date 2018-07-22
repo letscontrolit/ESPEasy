@@ -266,10 +266,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String lowerString=string;
-        lowerString.toLowerCase();
-        String command = parseString(lowerString, 1);
-
+        String command = parseString(string, 1);
         if (command == F("tare"))
         {
           String log = F("HX711: tare");

@@ -150,15 +150,12 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (!Plugin_057_M)
           return false;
 
-        String lowerString=string;
-        lowerString.toLowerCase();
-        String command = parseString(lowerString, 1);
+        String command = parseString(string, 1);
 
         if (command == F("mprint"))
         {
-          int paramPos = getParamStartPos(lowerString, 2);
-          if (paramPos >= 0) {
-            String text = lowerString.substring(paramPos);
+          String text = parseStringToEnd(string, 2);
+          if (text.length() > 0) {
             byte seg = 0;
 
             Plugin_057_M->ClearRowBuffer();
@@ -174,12 +171,13 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           }
         }
         else if (command == F("mbr")) {
-          int paramPos = getParamStartPos(lowerString, 2);
-          if (paramPos >= 0) {
-            uint8_t brightness = lowerString.substring(paramPos).toInt();
-            Plugin_057_M->SetBrightness(brightness);
-            success = true;
+          String param = parseString(string, 2);
+          int brightness;
+          if (validIntFromString(param, brightness)) {
+            if (brightness >= 0 && brightness <= 255)
+              Plugin_057_M->SetBrightness(brightness);
           }
+          success = true;
         }
         else if (command == F("m") || command == F("mx") || command == F("mnum"))
         {
@@ -190,6 +188,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           uint8_t seg = 0;
           uint16_t value = 0;
 
+          String lowerString=string;
+          lowerString.toLowerCase();
           lowerString.replace(F("  "), " ");
           lowerString.replace(F(" ="), "=");
           lowerString.replace(F("= "), "=");

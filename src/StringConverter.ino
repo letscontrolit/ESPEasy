@@ -233,20 +233,80 @@ String to_json_object_value(const String& object, const String& value) {
   return result;
 }
 
+/*********************************************************************************************\
+   Strip wrapping chars (e.g. quotes)
+  \*********************************************************************************************/
+
+String stripWrappingChar(const String& text, char wrappingChar) {
+  unsigned int length = text.length();
+  if (length >= 2 && stringWrappedWithChar(text, wrappingChar)) {
+    return text.substring(1, length -1);
+  }
+  return text;
+}
+
+bool stringWrappedWithChar(const String& text, char wrappingChar) {
+  unsigned int length = text.length();
+  if (length < 2) return false;
+  if (text.charAt(0) != wrappingChar) return false;
+  return (text.charAt(length - 1) == wrappingChar);
+}
+
+bool isQuoteChar(char c) {
+  return (c == '\'' || c == '"');
+}
+
+bool isParameterSeparatorChar(char c) {
+  return (c == ',' || c == ' ');
+}
+
+String stripQuotes(const String& text) {
+  if (text.length() >= 2) {
+    char c = text.charAt(0);
+    if (isQuoteChar(c)) {
+      return stripWrappingChar(text, c);
+    }
+  }
+  return text;
+}
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter in lower case
   \*********************************************************************************************/
-String parseString(const String& string, byte indexFind) {
+String parseString(const String& string, byte indexFind, bool toEndOfString, bool toLowerCase) {
   int startpos = 0;
   if (indexFind > 0) {
-    startpos = getParamStartPos(string, indexFind - 1);
-    if (startpos < 0) return string;
+    startpos = getParamStartPos(string, indexFind);
+    if (startpos < 0) {
+      return "";
+    }
   }
-  const int endpos = getParamStartPos(string, indexFind);
-  String result = (endpos <= 0) ? string.substring(startpos) : string.substring(startpos, endpos - 1);
-  result.toLowerCase();
-  return result;
+  const int endpos = getParamStartPos(string, indexFind + 1);
+  String result;
+  if (toEndOfString || endpos <= 0) {
+    result = string.substring(startpos);
+  } else {
+    result = string.substring(startpos, endpos - 1);
+  }
+  if (toLowerCase)
+    result.toLowerCase();
+  return stripQuotes(result);
+}
+
+String parseString(const String& string, byte indexFind) {
+  return parseString(string, indexFind, false, true);
+}
+
+String parseStringKeepCase(const String& string, byte indexFind) {
+  return parseString(string, indexFind, false, false);
+}
+
+String parseStringToEnd(const String& string, byte indexFind) {
+  return parseString(string, indexFind, true, true);
+}
+
+String parseStringToEndKeepCase(const String& string, byte indexFind) {
+  return parseString(string, indexFind, true, false);
 }
 
 /*********************************************************************************************\
@@ -254,19 +314,42 @@ String parseString(const String& string, byte indexFind) {
   \*********************************************************************************************/
 int getParamStartPos(const String& string, byte indexFind)
 {
-  if (indexFind == 0) return 0;
+  // We need to find the xth command, so we need to find the position of the (X-1)th separator.
+  if (indexFind <= 1) return 0;
   byte count = 1;
+  bool quotedStringActive = false;
+  char quoteStartChar = '"';
+  unsigned int lastParamStartPos = 0;
   const unsigned int strlength = string.length();
-  if (strlength <= indexFind) return -1;
+  if (strlength < indexFind) return -1;
   for (unsigned int x = 0; x < (strlength - 1); ++x)
   {
     const char c = string.charAt(x);
-    if (c == ',' || c == ' ')
-    {
-      if (count == indexFind) {
-        return x + 1;
+    // Check if we are parsing a quoted string parameter
+    if (!quotedStringActive) {
+      if (isQuoteChar(c)) {
+        // Only allow ' or " right after parameter separator.
+        if (lastParamStartPos == x ) {
+          quotedStringActive = true;
+          quoteStartChar = c;
+        }
       }
-      ++count;
+    } else {
+      if (c == quoteStartChar) {
+        // Found end of quoted string
+        quotedStringActive = false;
+      }
+    }
+    // Do further parsing.
+    if (!quotedStringActive) {
+      if (isParameterSeparatorChar(c))
+      {
+        lastParamStartPos = x + 1;
+        ++count;
+        if (count == indexFind) {
+          return lastParamStartPos;
+        }
+      }
     }
   }
   return -1;

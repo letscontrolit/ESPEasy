@@ -121,20 +121,20 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         if (!Plugin_065_SoftSerial)
           break;
 
-        String lowerString=string;
-        lowerString.toLowerCase();
-        String command = parseString(lowerString, 1);
-        String param = parseString(lowerString, 2);
+        String command = parseString(string, 1);
+        String param = parseString(string, 2);
 
         if (command == F("play"))
         {
-          String log = F("MP3  : play=");
-
-          uint16_t track = param.toInt();
-          Plugin_065_Play(track);
-          log += track;
-
-          addLog(LOG_LEVEL_INFO, log);
+          int track;
+          if (validIntFromString(param, track)) {
+            Plugin_065_Play(track);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("MP3  : play=");
+              log += track;
+              addLog(LOG_LEVEL_INFO, log);
+            }
+          }
           success = true;
         }
 

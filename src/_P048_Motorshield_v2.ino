@@ -98,21 +98,23 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_WRITE: {
-
-			String tmpString = string;
-
-			String cmd = parseString(tmpString, 1);
+			String cmd = parseString(string, 1);
 
 			// Commands:
 			// MotorShieldCMD,<DCMotor>,<Motornumber>,<Forward/Backward/Release>,<Speed>
 
 			if (cmd.equalsIgnoreCase(F("MotorShieldCMD")))
 			{
-                                String param1 = parseString(tmpString, 2);
-                                String param2 = parseString(tmpString, 3);
-                                String param3 = parseString(tmpString, 4);
-                                String param4 = parseString(tmpString, 5);
-                                String param5 = parseString(tmpString, 6);
+        String param1 = parseString(string, 2);
+        String param2 = parseString(string, 3);
+        String param3 = parseString(string, 4);
+        String param4 = parseString(string, 5);
+        String param5 = parseString(string, 6);
+
+				int p2_int;
+				int p4_int;
+				const bool param2_is_int = validIntFromString(param2, p2_int);
+				const bool param4_is_int = validIntFromString(param4, p4_int);
 
 				// Create the motor shield object with the default I2C address
 				AFMS = Adafruit_MotorShield(Plugin_048_MotorShield_address);
@@ -121,15 +123,15 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 				addLog(LOG_LEVEL_DEBUG, log);
 
 				if (param1.equalsIgnoreCase(F("DCMotor"))) {
-					if (param2.toInt() > 0 && param2.toInt() < 5)
+					if (param2_is_int && p2_int > 0 && p2_int < 5)
 					{
 						Adafruit_DCMotor *myMotor;
-						myMotor = AFMS.getMotor(param2.toInt());
+						myMotor = AFMS.getMotor(p2_int);
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{
 							byte speed = 255;
-							if (param4.toInt() >= 0 && param4.toInt() <= 255)
-								speed = param4.toInt();
+							if (param4_is_int && p4_int >= 0 && p4_int <= 255)
+								speed = p4_int;
 							AFMS.begin();
 							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Forward Speed: ")) + String(speed));
 							myMotor->setSpeed(speed);
@@ -139,8 +141,8 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 						if (param3.equalsIgnoreCase(F("Backward")))
 						{
 							byte speed = 255;
-							if (param4.toInt() >= 0 && param4.toInt() <= 255)
-								speed = param4.toInt();
+							if (param4_is_int && p4_int >= 0 && p4_int <= 255)
+								speed = p4_int;
 							AFMS.begin();
 							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Backward Speed: ")) + String(speed));
 							myMotor->setSpeed(speed);
@@ -162,10 +164,10 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 				{
 					// Stepper# is which port it is connected to. If you're using M1 and M2, its port 1.
 					// If you're using M3 and M4 indicate port 2
-					if (param2.toInt() > 0 && param2.toInt() < 3)
+					if (param2_is_int && p2_int > 0 && p2_int < 3)
 					{
 						Adafruit_StepperMotor *myStepper;
-						myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, param2.toInt());
+						myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, p2_int);
 						myStepper->setSpeed(Plugin_048_StepperSpeed);
 						if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
 							String log = F("MotorShield: StepsPerRevolution: ");
@@ -177,9 +179,9 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{
-							if (param4.toInt())
+							if (param4_is_int && p4_int != 0)
 							{
-								int steps = param4.toInt();
+								int steps = p4_int;
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
@@ -217,9 +219,9 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 						if (param3.equalsIgnoreCase(F("Backward")))
 						{
-							if (param4.toInt())
+							if (param4_is_int && p4_int != 0)
 							{
-								int steps = param4.toInt();
+								int steps = p4_int;
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();

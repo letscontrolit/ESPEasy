@@ -8,11 +8,20 @@ bool Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
       String strLine = Line;
       String host = parseString(strLine, 2);
       String port = parseString(strLine, 3);
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("SendToHTTP: Host: ");
+        log += host;
+        log += F(" port: ");
+        log += port;
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
       if (!isInt(port)) return false;
-      int pathpos = getParamStartPos(strLine, 4);
-      String path;
-      if (pathpos >= 0) 
-        path = strLine.substring(pathpos);
+      String path = parseStringToEndKeepCase(strLine, 4);
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("SendToHTTP: Path: ");
+        log += path;
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
       WiFiClient client;
       if (client.connect(host.c_str(), port.toInt()))
       {
