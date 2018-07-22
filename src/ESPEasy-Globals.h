@@ -1452,6 +1452,8 @@ bool mustLogFunction(int function) {
 
 std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> miscStats;
+unsigned long timediff_calls = 0;
+unsigned long timediff_cpu_cycles_total = 0;
 
 #define LOADFILE_STATS        0
 #define LOOP_STATS            1
@@ -1464,6 +1466,7 @@ std::map<int,TimingStats> miscStats;
 #define COMPUTE_FORMULA_STATS 8
 #define PROC_SYS_TIMER        9
 #define SET_NEW_TIMER        10
+#define TIME_DIFF_COMPUTE    11
 
 
 
@@ -1488,6 +1491,7 @@ String getMiscStatsName(int stat) {
         case COMPUTE_FORMULA_STATS: return F("Compute formula     ");
         case PROC_SYS_TIMER:        return F("proc_system_timer() ");
         case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
+        case TIME_DIFF_COMPUTE:     return F("timeDiff()          ");
     }
     return F("Unknown");
 }

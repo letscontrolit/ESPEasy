@@ -1,4 +1,5 @@
 void logStatistics(byte loglevel, bool clearLog) {
+  if (loglevelActiveFor(loglevel)) {
     String log;
     log.reserve(80);
     for (auto& x: pluginStats) {
@@ -27,4 +28,15 @@ void logStatistics(byte loglevel, bool clearLog) {
             if (clearLog) x.second.reset();
         }
     }
+    log = getMiscStatsName(TIME_DIFF_COMPUTE);
+    log += F(" stats: Count: ");
+    log += timediff_calls;
+    log += F(" - CPU cycles per call: ");
+    log += static_cast<float>(timediff_cpu_cycles_total) / static_cast<float>(timediff_calls);
+    addLog(loglevel, log);
+    if (clearLog) {
+      timediff_calls = 0;
+      timediff_cpu_cycles_total = 0;
+    }
+  }
 }
