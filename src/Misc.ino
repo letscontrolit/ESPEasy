@@ -599,7 +599,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
-  char matching_parenthesis;
+  char matching_parenthesis = '"';
 
   while (string_pos < strlen(string))
   {
