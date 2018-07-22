@@ -80,7 +80,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
           #endif
 
-          if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
+          if (GetArgv(command, TmpStr1, 100, 2)) IrType = TmpStr1;
 
           if (IrType.equalsIgnoreCase(F("RAW"))) {
             String IrRaw;
@@ -88,10 +88,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
-            if (GetArgv(command, TmpStr1, 3)) IrRaw = TmpStr1;
-            if (GetArgv(command, TmpStr1, 4)) IrHz = str2int(TmpStr1);
-            if (GetArgv(command, TmpStr1, 5)) IrPLen = str2int(TmpStr1);
-            if (GetArgv(command, TmpStr1, 6)) IrBLen = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 100, 3)) IrRaw = TmpStr1;
+            if (GetArgv(command, TmpStr1, 100, 4)) IrHz = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 100, 5)) IrPLen = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 100, 6)) IrBLen = str2int(TmpStr1);
 
             printWebString += F("<a href='https://en.wikipedia.org/wiki/Base32#base32hex'>Base32Hex</a> RAW Code: ");
             printWebString += IrRaw;
@@ -200,11 +200,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             unsigned int IrRepeat=0;
             unsigned long IrSecondCode=0UL;
 
-            if (GetArgv(command, TmpStr1, 2)) IrType = TmpStr1;
-            if (GetArgv(command, TmpStr1, 3)) IrCode = strtoul(TmpStr1, NULL, 16); //(long) TmpStr1
-            if (GetArgv(command, TmpStr1, 4)) IrBits = str2int(TmpStr1);
-            if (GetArgv(command, TmpStr1, 5)) IrRepeat = str2int(TmpStr1);
-            if (GetArgv(command, TmpStr1, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
+            if (GetArgv(command, TmpStr1, 100, 2)) IrType = TmpStr1;
+            if (GetArgv(command, TmpStr1, 100, 3)) IrCode = strtoul(TmpStr1, NULL, 16); //(long) TmpStr1
+            if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode, IrBits);
             if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode, IrBits, 2);

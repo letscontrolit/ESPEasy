@@ -636,8 +636,9 @@ unsigned long string2TimeLong(const String &str)
   // format 0000WWWWAAAABBBBCCCCDDDD
   // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
 
+	#define TmpStr1Length 10
   char command[20];
-  char TmpStr1[10];
+  char TmpStr1[TmpStr1Length];
   int w, x, y;
   unsigned long a;
   {
@@ -648,7 +649,7 @@ unsigned long string2TimeLong(const String &str)
   }
   unsigned long lngTime = 0;
 
-  if (GetArgv(command, TmpStr1, 1))
+  if (GetArgv(command, TmpStr1, TmpStr1Length, 1))
   {
     String day = TmpStr1;
     String weekDays = F("allsunmontuewedthufrisatwrkwkd");
@@ -658,7 +659,7 @@ unsigned long string2TimeLong(const String &str)
     lngTime |= (unsigned long)y << 16;
   }
 
-  if (GetArgv(command, TmpStr1, 2))
+  if (GetArgv(command, TmpStr1, TmpStr1Length, 2))
   {
     y = 0;
     for (x = strlen(TmpStr1) - 1; x >= 0; x--)
@@ -682,6 +683,7 @@ unsigned long string2TimeLong(const String &str)
       }
     }
   }
+	#undef TmpStr1Length
   return lngTime;
 }
 

@@ -377,12 +377,12 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char command[80];
+  char command[INPUT_COMMAND_SIZE];
   command[0] = 0;
-  char TmpStr1[80];
+  char TmpStr1[INPUT_COMMAND_SIZE];
   TmpStr1[0] = 0;
 
-  string.toCharArray(command, 80);
+  string.toCharArray(command, INPUT_COMMAND_SIZE);
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
@@ -594,7 +594,11 @@ byte getNotificationProtocolIndex(byte Number)
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
-boolean GetArgv(const char *string, char *argv, unsigned int argc)
+boolean GetArgv(const char *string, char *argv, unsigned int argc) {
+  return GetArgv(string, argv, INPUT_COMMAND_SIZE, argc);
+}
+
+boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
@@ -619,6 +623,18 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
     }
     else
     {
+      if ((argv_pos +2 ) >= argv_size) {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("GetArgv Error; argv_size exceeded. argc=");
+          log += argc;
+          log += F(" argv_size=");
+          log += argv_size;
+          log += F(" argv=");
+          log += argv;
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+        return false;
+      }
       argv[argv_pos++] = c;
       argv[argv_pos] = 0;
 
