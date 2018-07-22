@@ -312,26 +312,28 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         } else {
            UserVar[event->BaseVarIndex + 2] = sensor.last_press_val;
         }
-        String log;
-        log.reserve(40); // Prevent re-allocation
-        log = sensor.getDeviceName();
-        log += F(" : Address: 0x");
-        log += String(i2cAddress,HEX);
-        addLog(LOG_LEVEL_INFO, log);
-        log = sensor.getDeviceName();
-        log += F(" : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        if (sensor.hasHumidity()) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          log.reserve(40); // Prevent re-allocation
           log = sensor.getDeviceName();
-          log += F(" : Humidity: ");
-          log += UserVar[event->BaseVarIndex + 1];
+          log += F(" : Address: 0x");
+          log += String(i2cAddress,HEX);
+          addLog(LOG_LEVEL_INFO, log);
+          log = sensor.getDeviceName();
+          log += F(" : Temperature: ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+          if (sensor.hasHumidity()) {
+            log = sensor.getDeviceName();
+            log += F(" : Humidity: ");
+            log += UserVar[event->BaseVarIndex + 1];
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          log = sensor.getDeviceName();
+          log += F(" : Barometric Pressure: ");
+          log += UserVar[event->BaseVarIndex + 2];
           addLog(LOG_LEVEL_INFO, log);
         }
-        log = sensor.getDeviceName();
-        log += F(" : Barometric Pressure: ");
-        log += UserVar[event->BaseVarIndex + 2];
-        addLog(LOG_LEVEL_INFO, log);
         success = true;
         break;
       }
@@ -395,9 +397,11 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset) 
 
 
   String log;
-  log.reserve(120); // Prevent re-allocation
-  log = sensor.getDeviceName();
-  log += F(":");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    log.reserve(120); // Prevent re-allocation
+    log = sensor.getDeviceName();
+    log += F(":");
+  }
   boolean logAdded = false;
   if (sensor.hasHumidity()) {
     // Apply half of the temp offset, to correct the dew point offset.
@@ -409,34 +413,46 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset) 
   }
   if (tempOffset > 0.1 || tempOffset < -0.1) {
     // There is some offset to apply.
-    log += F(" Apply temp offset ");
-    log += tempOffset;
-    log += F("C");
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log += F(" Apply temp offset ");
+      log += tempOffset;
+      log += F("C");
+    }
     if (sensor.hasHumidity()) {
-      log += F(" humidity ");
-      log += sensor.last_hum_val;
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        log += F(" humidity ");
+        log += sensor.last_hum_val;
+      }
       sensor.last_hum_val = compute_humidity_from_dewpoint(sensor.last_temp_val + tempOffset, sensor.last_dew_temp_val);
-      log += F("% => ");
-      log += sensor.last_hum_val;
-      log += F("%");
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        log += F("% => ");
+        log += sensor.last_hum_val;
+        log += F("%");
+      }
     } else {
       sensor.last_hum_val = 0.0;
     }
-    log += F(" temperature ");
-    log += sensor.last_temp_val;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log += F(" temperature ");
+      log += sensor.last_temp_val;
+    }
     sensor.last_temp_val = sensor.last_temp_val + tempOffset;
-    log += F("C => ");
-    log += sensor.last_temp_val;
-    log += F("C");
-    logAdded = true;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log += F("C => ");
+      log += sensor.last_temp_val;
+      log += F("C");
+      logAdded = true;
+    }
   }
   if (sensor.hasHumidity()) {
-    log += F(" dew point ");
-    log += sensor.last_dew_temp_val;
-    log += F("C");
-    logAdded = true;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log += F(" dew point ");
+      log += sensor.last_dew_temp_val;
+      log += F("C");
+      logAdded = true;
+    }
   }
-  if (logAdded)
+  if (logAdded && loglevelActiveFor(LOG_LEVEL_INFO))
     addLog(LOG_LEVEL_INFO, log);
   return true;
 }

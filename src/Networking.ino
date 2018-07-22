@@ -121,9 +121,11 @@ void checkUDP()
             formatMAC(mac, macaddress);
             char ipaddress[20];
             formatIP(ip, ipaddress);
-            char log[80];
-            sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
-            addLog(LOG_LEVEL_DEBUG_MORE, log);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+              char log[80];
+              sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
+              addLog(LOG_LEVEL_DEBUG_MORE, log);
+            }
             break;
           }
 
@@ -181,9 +183,12 @@ void sendUDP(byte unit, byte* data, byte size)
   if (unit != 255)
     if (Nodes[unit].ip[0] == 0)
       return;
-  String log = F("UDP  : Send UDP message to ");
-  log += unit;
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    String log = F("UDP  : Send UDP message to ");
+    log += unit;
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
+  }
 
   statusLED(true);
 
@@ -220,7 +225,6 @@ void refreshNodeList()
   \*********************************************************************************************/
 void sendSysInfoUDP(byte repeats)
 {
-  char log[80];
   if (Settings.UDPPort == 0 || !WiFiConnected(100))
     return;
 
@@ -235,8 +239,7 @@ void sendSysInfoUDP(byte repeats)
   // 1 byte node type id
 
   // send my info to the world...
-  strcpy_P(log, PSTR("UDP  : Send Sysinfo message"));
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};
@@ -635,9 +638,11 @@ bool hostReachable(const IPAddress& ip) {
     delay(50);
     --retry;
   }
-  String log = F("Host unreachable: ");
-  log += formatIP(ip);
-  addLog(LOG_LEVEL_ERROR, log);
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("Host unreachable: ");
+    log += formatIP(ip);
+    addLog(LOG_LEVEL_ERROR, log);
+  }
   if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
     // Work-around to fix connected but not able to communicate.
     addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reconnect wifi."));

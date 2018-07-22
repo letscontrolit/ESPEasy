@@ -399,7 +399,7 @@ void updateLoopStats_30sec(byte loglevel) {
 
   msecTimerHandler.updateIdleTimeStats();
 
-  {
+  if (loglevelActiveFor(loglevel)) {
     String log = F("LoopStats: shortestLoop: ");
     log += shortestLoop;
     log += F(" longestLoop: ");
@@ -584,6 +584,7 @@ void run10TimesPerSecond() {
 void runOncePerSecond()
 {
   START_TIMER;
+  updateLogLevelCache();
   dailyResetCounter++;
   if (dailyResetCounter > 86400) // 1 day elapsed... //86400
   {
@@ -675,9 +676,11 @@ void logTimerStatistics() {
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
   logStatistics(loglevel, true);
-  String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
-  queueLog += msecTimerHandler.getQueueStats();
-  addLog(loglevel, queueLog);
+  if (loglevelActiveFor(loglevel)) {
+    String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
+    queueLog += msecTimerHandler.getQueueStats();
+    addLog(loglevel, queueLog);
+  }
 }
 
 /*********************************************************************************************\
@@ -688,15 +691,17 @@ void runEach30Seconds()
    extern void checkRAMtoLog();
   checkRAMtoLog();
   wdcounter++;
-  String log;
-  log.reserve(60);
-  log = F("WD   : Uptime ");
-  log += wdcounter / 2;
-  log += F(" ConnectFailures ");
-  log += connectionFailures;
-  log += F(" FreeMem ");
-  log += FreeMem();
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log.reserve(60);
+    log = F("WD   : Uptime ");
+    log += wdcounter / 2;
+    log += F(" ConnectFailures ");
+    log += connectionFailures;
+    log += F(" FreeMem ");
+    log += FreeMem();
+    addLog(LOG_LEVEL_INFO, log);
+  }
   sendSysInfoUDP(1);
   refreshNodeList();
 

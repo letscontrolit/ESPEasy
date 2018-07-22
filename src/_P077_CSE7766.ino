@@ -115,7 +115,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 0) Settings.TaskDevicePluginConfig[event->TaskIndex][2] = HLW_PREF_PULSE;
 
         Settings.UseSerial = true; // Enable Serial port
-        Settings.SerialLogLevel = 0; // disable logging on serial port (used for CSE7766 communication)
+        disableSerialLog(); // disable logging on serial port (used for CSE7766 communication)
         Settings.BaudRate = 4800; // set BaudRate for CSE7766
         Serial.flush();
         Serial.begin(Settings.BaudRate);
@@ -209,7 +209,6 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
 void CseReceived(struct EventStruct *event)
 {
-  String log;
   uint8_t header = serial_in_buffer[0];
   if ((header & 0xFC) == 0xFC) {
     addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
@@ -255,21 +254,23 @@ void CseReceived(struct EventStruct *event)
   power_cycle = serial_in_buffer[17] << 16 | serial_in_buffer[18] << 8 | serial_in_buffer[19];
   cf_pulses = serial_in_buffer[21] << 8 | serial_in_buffer[22];
 
-  log = F("CSE: adjustement ");
-  log += adjustement;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
-  log = F("CSE: voltage_cycle ");
-  log += voltage_cycle;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
-  log = F("CSE: current_cycle ");
-  log += current_cycle;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
-  log = F("CSE: power_cycle ");
-  log += power_cycle;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
-  log = F("CSE: cf_pulses ");
-  log += cf_pulses;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String log = F("CSE: adjustement ");
+    log += adjustement;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    log = F("CSE: voltage_cycle ");
+    log += voltage_cycle;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    log = F("CSE: current_cycle ");
+    log += current_cycle;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    log = F("CSE: power_cycle ");
+    log += power_cycle;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    log = F("CSE: cf_pulses ");
+    log += cf_pulses;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+  }
 
   //  if (energy_power_on) {  // Powered on
 
@@ -307,18 +308,20 @@ void CseReceived(struct EventStruct *event)
   //    energy_current = 0;
   //  }
 
-  log = F("CSE voltage: ");
-  log += energy_voltage;
-  addLog(LOG_LEVEL_DEBUG, log);
-  log = F("CSE power: ");
-  log += energy_power;
-  addLog(LOG_LEVEL_DEBUG, log);
-  log = F("CSE current: ");
-  log += energy_current;
-  addLog(LOG_LEVEL_DEBUG, log);
-  log = F("CSE piulses: ");
-  log += cf_pulses;
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("CSE voltage: ");
+    log += energy_voltage;
+    addLog(LOG_LEVEL_DEBUG, log);
+    log = F("CSE power: ");
+    log += energy_power;
+    addLog(LOG_LEVEL_DEBUG, log);
+    log = F("CSE current: ");
+    log += energy_current;
+    addLog(LOG_LEVEL_DEBUG, log);
+    log = F("CSE piulses: ");
+    log += cf_pulses;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 }
 
 #endif // USES_P077

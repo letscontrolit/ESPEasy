@@ -203,13 +203,15 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
               if (param == F("log"))
               {
-                String log = F("MX   : ");
-                for (byte i = 0; i < 8; i++)
-                {
-                  log += String(Plugin_057_M->GetRow(i), 16);
-                  log += F("h, ");
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("MX   : ");
+                  for (byte i = 0; i < 8; i++)
+                  {
+                    log += String(Plugin_057_M->GetRow(i), 16);
+                    log += F("h, ");
+                  }
+                  addLog(LOG_LEVEL_INFO, log);
                 }
-                addLog(LOG_LEVEL_INFO, log);
                 success = true;
               }
 

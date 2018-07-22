@@ -180,9 +180,11 @@ void C013_sendUDP(byte unit, byte* data, byte size)
   if (unit != 255)
     if (Nodes[unit].ip[0] == 0)
       return;
-  String log = F("C013 : Send UDP message to ");
-  log += unit;
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    String log = F("C013 : Send UDP message to ");
+    log += unit;
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
+  }
 
   statusLED(true);
 
@@ -197,16 +199,17 @@ void C013_sendUDP(byte unit, byte* data, byte size)
 }
 
 void C013_Receive(struct EventStruct *event) {
-
-  if (event->Data[1] > 1 && event->Data[1] < 6)
-  {
-    String log = (F("C013 : msg "));
-    for (byte x = 1; x < 6; x++)
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    if (event->Data[1] > 1 && event->Data[1] < 6)
     {
-      log += " ";
-      log += (int)event->Data[x];
+      String log = (F("C013 : msg "));
+      for (byte x = 1; x < 6; x++)
+      {
+        log += " ";
+        log += (int)event->Data[x];
+      }
+      addLog(LOG_LEVEL_DEBUG_MORE, log);
     }
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
 
   switch (event->Data[1]) {

@@ -387,16 +387,17 @@ unsigned long getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      log = F("NTP  : NTP replied: ");
-      log += timePassedSince(beginWait);
-      log += F(" mSec");
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
+			if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+	      String log = F("NTP  : NTP replied: ");
+	      log += timePassedSince(beginWait);
+	      log += F(" mSec");
+	      addLog(LOG_LEVEL_DEBUG_MORE, log);
+			}
       return secsSince1900 - 2208988800UL;
     }
     delay(10);
   }
-  log = F("NTP  : No reply");
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
   return 0;
 }
 
@@ -411,6 +412,7 @@ unsigned long getNtpTime()
 // Returned value is positive when "next" is after "prev"
 long timeDiff(const unsigned long prev, const unsigned long next)
 {
+	unsigned long start = ESP.getCycleCount();
   long signed_diff = 0;
   // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
   const unsigned long half_max_unsigned_long = 2147483647u; // = 2^31 -1
@@ -437,6 +439,11 @@ long timeDiff(const unsigned long prev, const unsigned long next)
       signed_diff = static_cast<long>((ULONG_MAX - prev) + next + 1u);
     }
   }
+	unsigned long end = ESP.getCycleCount();
+	if (end > start) {
+		++timediff_calls;
+		timediff_cpu_cycles_total += (end - start);
+	}
   return signed_diff;
 }
 

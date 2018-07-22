@@ -160,13 +160,15 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
               if (param == F("log"))
               {
-                String log = F("DMX  : ");
-                for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
-                {
-                  log += Plugin_054_DMXBuffer[i];
-                  log += F(", ");
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("DMX  : ");
+                  for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
+                  {
+                    log += Plugin_054_DMXBuffer[i];
+                    log += F(", ");
+                  }
+                  addLog(LOG_LEVEL_INFO, log);
                 }
-                addLog(LOG_LEVEL_INFO, log);
                 success = true;
               }
 

@@ -71,7 +71,6 @@ void C010_Send(struct EventStruct *event, byte varIndex, const String& formatted
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-  char log[80];
   // boolean success = false;
   addLog(LOG_LEVEL_DEBUG, String(F("UDP  : sending to ")) + ControllerSettings.getHostPortString());
   statusLED(true);
@@ -91,8 +90,10 @@ void C010_Send(struct EventStruct *event, byte varIndex, const String& formatted
     portUDP.endPacket();
   }
 
-  msg.toCharArray(log, 80);
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
-
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    char log[80];
+    msg.toCharArray(log, 80);
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
+  }
 }
 #endif

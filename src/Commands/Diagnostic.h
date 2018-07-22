@@ -35,7 +35,7 @@ bool Command_SerialFloat(struct EventStruct *event, const char* Line)
   pinMode(1, INPUT);
   pinMode(3, INPUT);
   delay(60000);
-  return success;  
+  return success;
 }
 
 bool Command_MenInfo(struct EventStruct *event, const char* Line)
@@ -49,7 +49,7 @@ bool Command_MenInfo(struct EventStruct *event, const char* Line)
   Serial.println(sizeof(ExtraTaskSettings));
   Serial.print(F("DeviceStruct: "));
   Serial.println(sizeof(Device));
-  return success;  
+  return success;
 }
 
 bool Command_Background(struct EventStruct *event, const char* Line)
@@ -60,7 +60,7 @@ bool Command_Background(struct EventStruct *event, const char* Line)
   while (!timeOutReached(timer))
     backgroundtasks();
   Serial.println(F("end"));
-  return success;  
+  return success;
 }
 
 
@@ -68,7 +68,7 @@ bool Command_Debug(struct EventStruct *event, const char* Line)
 {
   char TmpStr1[INPUT_COMMAND_SIZE];
   if (GetArgv(Line, TmpStr1, 2)) {
-    Settings.SerialLogLevel = event->Par1;
+    setLogLevelFor(LOG_TO_SERIAL, event->Par1);
   }
   else{
     Serial.println();

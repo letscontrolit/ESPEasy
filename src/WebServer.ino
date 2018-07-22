@@ -149,15 +149,16 @@ public:
       sendContentBlocking(buf);
       finalRam = ESP.getFreeHeap();
       /*
-      String log = String("Ram usage: Webserver only: ") + maxServerUsage +
-                   " including Core: " + maxCoreUsage +
-                   " flashStringCalls: " + flashStringCalls +
-                   " flashStringData: " + flashStringData;
-      addLog(LOG_LEVEL_DEBUG, log);
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = String("Ram usage: Webserver only: ") + maxServerUsage +
+                     " including Core: " + maxCoreUsage +
+                     " flashStringCalls: " + flashStringCalls +
+                     " flashStringData: " + flashStringData;
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
       */
     } else {
-      String log = String("Webpage skipped: low memory: ") + finalRam;
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLog(LOG_LEVEL_DEBUG, String("Webpage skipped: low memory: ") + finalRam);
       lowMemorySkip = false;
     }
   }
@@ -167,8 +168,7 @@ void sendContentBlocking(String& data) {
   checkRAM(F("sendContentBlocking"));
   uint32_t freeBeforeSend = ESP.getFreeHeap();
   const uint32_t length = data.length();
-  String log = String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length;
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
+  addLog(LOG_LEVEL_DEBUG_DEV, String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length);
   freeBeforeSend = ESP.getFreeHeap();
   if (TXBuffer.beforeTXRam > freeBeforeSend)
     TXBuffer.beforeTXRam = freeBeforeSend;
@@ -355,11 +355,13 @@ boolean clientIPallowed()
   String response = F("IP blocked: ");
   response += formatIP(client.remoteIP());
   WebServer.send(403, "text/html", response);
-  response += F(" Allowed: ");
-  response += formatIP(low);
-  response += F(" - ");
-  response += formatIP(high);
-  addLog(LOG_LEVEL_ERROR, response);
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    response += F(" Allowed: ");
+    response += formatIP(low);
+    response += F(" - ");
+    response += formatIP(high);
+    addLog(LOG_LEVEL_ERROR, response);
+  }
   return false;
 }
 
@@ -727,9 +729,11 @@ void getWebPageTemplateVar(const String& varName )
 
   else
   {
-    String log = F("Templ: Unknown Var : ");
-    log += varName;
-    addLog(LOG_LEVEL_ERROR, log);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("Templ: Unknown Var : ");
+      log += varName;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
     //no return string - eat var name
   }
 
@@ -747,10 +751,12 @@ void writeDefaultCSS(void)
     fs::File f = SPIFFS.open(F("esp.css"), "w");
     if (f)
     {
-      String log = F("CSS  : Writing default CSS file to SPIFFS (");
-      log += defaultCSS.length();
-      log += F(" bytes)");
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("CSS  : Writing default CSS file to SPIFFS (");
+        log += defaultCSS.length();
+        log += F(" bytes)");
+        addLog(LOG_LEVEL_INFO, log);
+      }
       defaultCSS= PGMT(pgDefaultCSS);
       f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
       f.close();
@@ -939,21 +945,18 @@ void handle_root() {
     // disconnect here could result into a crash/reboot...
     if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
     {
-      String log = F("WIFI : Disconnecting...");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
     if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
     {
-      String log = F("     : Rebooting...");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
       cmd_within_mainloop = CMD_REBOOT;
     }
    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
     {
-      String log = F("     : factory reset...");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
       TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
@@ -2280,9 +2283,11 @@ void handle_devices() {
 
 
   checkRAM(F("handle_devices"));
-  String log = F("DEBUG: String size:");
-  log += String(TXBuffer.sentBytes);
-  addLog(LOG_LEVEL_DEBUG_DEV, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String log = F("DEBUG: String size:");
+    log += String(TXBuffer.sentBytes);
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+  }
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
@@ -3791,12 +3796,13 @@ void handle_advanced() {
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     str2ip(syslogip.c_str(), Settings.Syslog_IP);
     Settings.UDPPort = getFormItemInt(F("udpport"));
-    Settings.SyslogLevel = getFormItemInt(F("sysloglevel"));
+
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.UseSerial = isFormItemChecked(F("useserial"));
-    Settings.SerialLogLevel = getFormItemInt(F("serialloglevel"));
-    Settings.WebLogLevel = getFormItemInt(F("webloglevel"));
-    Settings.SDLogLevel = getFormItemInt(F("sdloglevel"));
+    setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(F("sysloglevel")));
+    setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(F("serialloglevel")));
+    setLogLevelFor(LOG_TO_WEBLOG, getFormItemInt(F("webloglevel")));
+    setLogLevelFor(LOG_TO_SDCARD, getFormItemInt(F("sdloglevel")));
     Settings.UseValueLogger = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate = getFormItemInt(F("baudrate"));
     Settings.UseNTP = isFormItemChecked(F("usentp"));
@@ -4089,7 +4095,6 @@ void handleFileUpload() {
   if (!isLoggedIn()) return;
 
   static boolean valid = false;
-  String log = "";
 
   HTTPUpload& upload = WebServer.upload();
 
@@ -4101,9 +4106,11 @@ void handleFileUpload() {
 
   if (upload.status == UPLOAD_FILE_START)
   {
-    log = F("Upload: START, filename: ");
-    log += upload.filename;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Upload: START, filename: ");
+      log += upload.filename;
+      addLog(LOG_LEVEL_INFO, log);
+    }
     valid = false;
     uploadResult = 0;
   }
@@ -4140,16 +4147,20 @@ void handleFileUpload() {
       }
     }
     if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
-    log = F("Upload: WRITE, Bytes: ");
-    log += upload.currentSize;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Upload: WRITE, Bytes: ");
+      log += upload.currentSize;
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (uploadFile) uploadFile.close();
-    log = F("Upload: END, Size: ");
-    log += upload.totalSize;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Upload: END, Size: ");
+      log += upload.totalSize;
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
 
   if (valid)
@@ -4183,8 +4194,11 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".txt"))) dataType = F("application/octet-stream");
   else if (path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
   else if (path.endsWith(F(".esp"))) return handle_custom(path);
-  String log = F("HTML : Request file ");
-  log += path;
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("HTML : Request file ");
+    log += path;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 
   path = path.substring(1);
   if (spiffs)
@@ -4216,8 +4230,6 @@ bool loadFromFS(boolean spiffs, String path) {
 #endif
   }
   statusLED(true);
-
-  addLog(LOG_LEVEL_DEBUG, log);
   return true;
 }
 
@@ -4690,9 +4702,11 @@ void handle_setup() {
     strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
-    String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
-    reconnectlog += ssid;
-    addLog(LOG_LEVEL_INFO, reconnectlog);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
+      reconnectlog += ssid;
+      addLog(LOG_LEVEL_INFO, reconnectlog);
+    }
     status = 1;
     refreshCount = 0;
   }

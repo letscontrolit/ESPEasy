@@ -11,19 +11,21 @@ void processConnect() {
   ++wifi_reconnects;
   if (wifiStatus < ESPEASY_WIFI_CONNECTED) return;
   const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
-  String log = F("WIFI : Connected! AP: ");
-  log += WiFi.SSID();
-  log += F(" (");
-  log += WiFi.BSSIDstr();
-  log += F(") Ch: ");
-  log += last_channel;
-  if (connect_duration > 0 && connect_duration < 30000) {
-    // Just log times when they make sense.
-    log += F(" Duration: ");
-    log += connect_duration;
-    log += F(" ms");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI : Connected! AP: ");
+    log += WiFi.SSID();
+    log += F(" (");
+    log += WiFi.BSSIDstr();
+    log += F(") Ch: ");
+    log += last_channel;
+    if (connect_duration > 0 && connect_duration < 30000) {
+      // Just log times when they make sense.
+      log += F(" Duration: ");
+      log += connect_duration;
+      log += F(" ms");
+    }
+    addLog(LOG_LEVEL_INFO, log);
   }
-  addLog(LOG_LEVEL_INFO, log);
   if (Settings.UseRules && bssid_changed) {
     String event = F("WiFi#ChangedAccesspoint");
     rulesProcessing(event);
@@ -42,14 +44,16 @@ void processDisconnect() {
     String event = F("WiFi#Disconnected");
     rulesProcessing(event);
   }
-  String log = F("WIFI : Disconnected! Reason: '");
-  log += getLastDisconnectReason();
-  log += F("'");
-  if (lastConnectedDuration > 0) {
-    log += F(" Connected for ");
-    log += format_msec_duration(lastConnectedDuration);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI : Disconnected! Reason: '");
+    log += getLastDisconnectReason();
+    log += F("'");
+    if (lastConnectedDuration > 0) {
+      log += F(" Connected for ");
+      log += format_msec_duration(lastConnectedDuration);
+    }
+    addLog(LOG_LEVEL_INFO, log);
   }
-  addLog(LOG_LEVEL_INFO, log);
   logConnectionStatus();
 }
 
@@ -64,52 +68,57 @@ void processGotIP() {
   processedGetIP = true;
   const IPAddress gw = WiFi.gatewayIP();
   const IPAddress subnet = WiFi.subnetMask();
-  String log = F("WIFI : ");
-  if (useStaticIP()) {
-    log += F("Static IP: ");
-  } else {
-    log += F("DHCP IP: ");
-  }
-  log += formatIP(ip);
-  log += F(" (");
-  log += WifiGetHostname();
-  log += F(") GW: ");
-  log += formatIP(gw);
-  log += F(" SN: ");
-  log += formatIP(subnet);
-
   const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
-  if (dhcp_duration > 0 && dhcp_duration < 30000) {
-    // Just log times when they make sense.
-    log += F("   duration: ");
-    log += dhcp_duration;
-    log += F(" ms");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI : ");
+    if (useStaticIP()) {
+      log += F("Static IP: ");
+    } else {
+      log += F("DHCP IP: ");
+    }
+    log += formatIP(ip);
+    log += F(" (");
+    log += WifiGetHostname();
+    log += F(") GW: ");
+    log += formatIP(gw);
+    log += F(" SN: ");
+    log += formatIP(subnet);
+    if (dhcp_duration > 0 && dhcp_duration < 30000) {
+      // Just log times when they make sense.
+      log += F("   duration: ");
+      log += dhcp_duration;
+      log += F(" ms");
+    }
+    addLog(LOG_LEVEL_INFO, log);
   }
-  addLog(LOG_LEVEL_INFO, log);
 
   // fix octet?
   if (Settings.IP_Octet != 0 && Settings.IP_Octet != 255)
   {
     ip[3] = Settings.IP_Octet;
-    log = F("IP   : Fixed IP octet:");
-    log += formatIP(ip);
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("IP   : Fixed IP octet:");
+      log += formatIP(ip);
+      addLog(LOG_LEVEL_INFO, log);
+    }
     WiFi.config(ip, gw, subnet);
   }
 
   #ifdef FEATURE_MDNS
 
-    log = F("WIFI : ");
-    if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WIFI : ");
+      if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
 
-      log += F("mDNS started, with name: ");
-      log += WifiGetHostname();
-      log += F(".local");
+        log += F("mDNS started, with name: ");
+        log += WifiGetHostname();
+        log += F(".local");
+      }
+      else{
+        log += F("mDNS failed");
+      }
+      addLog(LOG_LEVEL_INFO, log);
     }
-    else{
-      log += F("mDNS failed");
-    }
-    addLog(LOG_LEVEL_INFO, log);
   #endif
 
   // First try to get the time, since that may be used in logs
@@ -140,11 +149,13 @@ void processGotIP() {
 void processConnectAPmode() {
   if (processedConnectAPmode) return;
   processedConnectAPmode = true;
-  String log = F("AP Mode: Client connected: ");
-  log += formatMAC(lastMacConnectedAPmode);
-  log += F(" Connected devices: ");
-  log += WiFi.softAPgetStationNum();
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("AP Mode: Client connected: ");
+    log += formatMAC(lastMacConnectedAPmode);
+    log += F(" Connected devices: ");
+    log += WiFi.softAPgetStationNum();
+    addLog(LOG_LEVEL_INFO, log);
+  }
   timerAPoff = 0; // Disable timer to switch AP off
   setWebserverRunning(true);
   // Start DNS, only used if the ESP has no valid WiFi config
@@ -160,11 +171,13 @@ void processDisconnectAPmode() {
   if (processedDisconnectAPmode) return;
   processedDisconnectAPmode = true;
   const int nrStationsConnected = WiFi.softAPgetStationNum();
-  String log = F("AP Mode: Client disconnected: ");
-  log += formatMAC(lastMacDisconnectedAPmode);
-  log += F(" Connected devices: ");
-  log += nrStationsConnected;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("AP Mode: Client disconnected: ");
+    log += formatMAC(lastMacDisconnectedAPmode);
+    log += F(" Connected devices: ");
+    log += nrStationsConnected;
+    addLog(LOG_LEVEL_INFO, log);
+  }
   if (nrStationsConnected == 0) {
     timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
   }
@@ -183,9 +196,11 @@ void processDisableAPmode() {
 void processScanDone() {
   if (processedScanDone) return;
   processedScanDone = true;
-  String log = F("WIFI  : Scan finished, found: ");
-  log += scan_done_number;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI  : Scan finished, found: ");
+    log += scan_done_number;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   int bestScanID = -1;
   int32_t bestRssi = -1000;
@@ -207,9 +222,11 @@ void processScanDone() {
       if (!selectNextWiFiSettings()) done = true;
     }
     if (bestScanID >= 0) {
-      log = F("WIFI  : Selected: ");
-      log += formatScanResult(bestScanID, " ");
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("WIFI  : Selected: ");
+        log += formatScanResult(bestScanID, " ");
+        addLog(LOG_LEVEL_INFO, log);
+      }
       lastWiFiSettings = bestWiFiSettings;
       uint8_t * scanbssid = WiFi.BSSID(bestScanID);
       if (scanbssid) {
@@ -333,17 +350,21 @@ void setAPinternal(bool enable)
       addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
     }
     if (WiFi.softAP(softAPSSID.c_str(),pwd.c_str())) {
-      String log(F("WIFI : AP Mode ssid will be "));
-      log += softAPSSID;
-      log += F(" with address ");
-      log += WiFi.softAPIP().toString();
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log(F("WIFI : AP Mode ssid will be "));
+        log += softAPSSID;
+        log += F(" with address ");
+        log += WiFi.softAPIP().toString();
+        addLog(LOG_LEVEL_INFO, log);
+      }
     } else {
-      String log(F("WIFI : Error while starting AP Mode with SSID: "));
-      log += softAPSSID;
-      log += F(" IP: ");
-      log += apIP.toString();
-      addLog(LOG_LEVEL_ERROR, log);
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log(F("WIFI : Error while starting AP Mode with SSID: "));
+        log += softAPSSID;
+        log += F(" IP: ");
+        log += apIP.toString();
+        addLog(LOG_LEVEL_ERROR, log);
+      }
     }
     #ifdef ESP32
 
@@ -445,7 +466,6 @@ bool prepareWiFi() {
     return false;
   }
   setSTA(true);
-  String log = "";
   char hostname[40];
   strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
@@ -524,15 +544,17 @@ void setupStaticIPconfig() {
   const IPAddress gw = Settings.Gateway;
   const IPAddress subnet = Settings.Subnet;
   const IPAddress dns = Settings.DNS;
-  String log = F("IP   : Static IP : ");
-  log += formatIP(ip);
-  log += F(" GW: ");
-  log += formatIP(gw);
-  log += F(" SN: ");
-  log += formatIP(subnet);
-  log += F(" DNS: ");
-  log += formatIP(dns);
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("IP   : Static IP : ");
+    log += formatIP(ip);
+    log += F(" GW: ");
+    log += formatIP(gw);
+    log += F(" SN: ");
+    log += formatIP(subnet);
+    log += F(" DNS: ");
+    log += formatIP(dns);
+    addLog(LOG_LEVEL_INFO, log);
+  }
   WiFi.config(ip, gw, subnet, dns);
 }
 
@@ -564,11 +586,13 @@ bool tryConnectWiFi() {
   }
   const char* ssid = getLastWiFiSettingsSSID();
   const char* passphrase = getLastWiFiSettingsPassphrase();
-  String log = F("WIFI : Connecting ");
-  log += ssid;
-  log += F(" attempt #");
-  log += wifi_connect_attempt;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI : Connecting ");
+    log += ssid;
+    log += F(" attempt #");
+    log += wifi_connect_attempt;
+    addLog(LOG_LEVEL_INFO, log);
+  }
   setupStaticIPconfig();
   last_wifi_connect_attempt_moment = millis();
   switch (wifi_connect_attempt) {
@@ -585,15 +609,19 @@ bool tryConnectWiFi() {
   logConnectionStatus();
   switch (WiFi.status()) {
     case WL_NO_SSID_AVAIL: {
-      log = F("WIFI : No SSID found matching: ");
-      log += ssid;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("WIFI : No SSID found matching: ");
+        log += ssid;
+        addLog(LOG_LEVEL_INFO, log);
+      }
       return false;
     }
     case WL_CONNECT_FAILED: {
-      log = F("WIFI : Connection failed to: ");
-      log += ssid;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("WIFI : Connection failed to: ");
+        log += ssid;
+        addLog(LOG_LEVEL_INFO, log);
+      }
       return false;
     }
     default:
@@ -728,18 +756,22 @@ void logConnectionStatus() {
   #ifndef ESP32
   const uint8_t sdk_wifistatus = wifi_station_get_connect_status();
   if ((arduino_corelib_wifistatus == WL_CONNECTED) != (sdk_wifistatus == STATION_GOT_IP)) {
-    log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
-    log += SDKwifiStatusToString(sdk_wifistatus);
-    log += F(" Arduino status: ");
-    log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
-    addLog(LOG_LEVEL_ERROR, log);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
+      log += SDKwifiStatusToString(sdk_wifistatus);
+      log += F(" Arduino status: ");
+      log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
+      addLog(LOG_LEVEL_ERROR, log);
+    }
   }
   #endif
-  log = F("WIFI  : Arduino wifi status: ");
-  log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
-  log += F(" ESPeasy internal wifi status: ");
-  log += ESPeasyWifiStatusToString();
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    String log = F("WIFI  : Arduino wifi status: ");
+    log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
+    log += F(" ESPeasy internal wifi status: ");
+    log += ESPeasyWifiStatusToString();
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
+  }
 }
 
 
