@@ -153,22 +153,22 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         String param3 = parseString(lowerString, 4);
 
         if (command == F("clock")) {
-          if (param1 != "") {
-            int val_Mode = param1.toInt();
+          int val_Mode;
+          if (validIntFromString(param1, val_Mode)) {
             if (val_Mode > -1 && val_Mode < 2) {
               Plugin_070_enabled = val_Mode;
               CONFIG(0) = Plugin_070_enabled;
             }
           }
-          if (param2 != "") {
-            int val_Bright = param2.toInt();
+          int val_Bright;
+          if (validIntFromString(param2, val_Bright)) {
             if (val_Bright > -1 && val_Bright < 256) {
               Plugin_070_brightness = val_Bright;
               CONFIG(1) = Plugin_070_brightness;
             }
           }
-          if (param3 != "") {
-            int val_Marks = param3.toInt();
+          int val_Marks;
+          if (validIntFromString(param3, val_Marks)) {
             if (val_Marks > -1 && val_Marks < 256) {
               Plugin_070_marks = val_Marks;
               CONFIG(2) = Plugin_070_marks;
@@ -281,5 +281,5 @@ void timeToStrip(int hours, int minutes, int seconds) {
   }
 }
 
-#endif // PLUGIN_BUILD_DISABLED 
+#endif // PLUGIN_BUILD_DISABLED
 #endif // USES_P070

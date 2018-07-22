@@ -65,17 +65,17 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
 
       case PLUGIN_WRITE:
           {
-            String tmpString = string;
-
-      			String cmd = parseString(tmpString, 1);
-      			String param1 = parseString(tmpString, 2);
-
+      			String cmd = parseString(string, 1);
+      			String param1 = parseString(string, 2);
 
             if (cmd.equalsIgnoreCase(F("senseair_setrelay")))
             {
-              if (param1.toInt() == 0 || param1.toInt() == 1 || param1.toInt() == -1) {
-                Plugin_052_setRelayStatus(param1.toInt());
-                addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
+              int par1;
+              if (validIntFromString(param1, par1)) {
+                if (par1 == 0 || par1 == 1 || par1 == -1) {
+                  Plugin_052_setRelayStatus(par1);
+                  addLog(LOG_LEVEL_INFO, String(F("Senseair command: relay=")) + param1);
+                }
               }
               success = true;
             }

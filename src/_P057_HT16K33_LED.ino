@@ -172,9 +172,10 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         }
         else if (command == F("mbr")) {
           String param = parseString(string, 2);
-          uint8_t brightness;
+          int brightness;
           if (validIntFromString(param, brightness)) {
-            Plugin_057_M->SetBrightness(brightness);
+            if (brightness >= 0 && brightness <= 255)
+              Plugin_057_M->SetBrightness(brightness);
           }
           success = true;
         }
