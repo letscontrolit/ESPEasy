@@ -1659,7 +1659,11 @@ void setLogLevelFor(byte destination, byte logLevel) {
     default:
       break;
   }
-  byte max_lvl = logLevel;
+  updateLogLevelCache();
+}
+
+void updateLogLevelCache() {
+  byte max_lvl = 0;
   max_lvl = _max(max_lvl, Settings.SerialLogLevel);
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
   max_lvl = _max(max_lvl, Settings.WebLogLevel);
