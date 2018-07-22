@@ -319,7 +319,7 @@ int getParamStartPos(const String& string, byte indexFind)
   byte count = 1;
   bool quotedStringActive = false;
   char quoteStartChar = '"';
-  int lastParamStartPos = 0;
+  unsigned int lastParamStartPos = 0;
   const unsigned int strlength = string.length();
   if (strlength < indexFind) return -1;
   for (unsigned int x = 0; x < (strlength - 1); ++x)
