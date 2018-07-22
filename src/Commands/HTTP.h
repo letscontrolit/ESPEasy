@@ -16,10 +16,7 @@ bool Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
         addLog(LOG_LEVEL_DEBUG, log);
       }
       if (!isInt(port)) return false;
-      int pathpos = getParamStartPos(strLine, 4);
-      String path;
-      if (pathpos >= 0)
-        path = strLine.substring(pathpos);
+      String path = parseStringToEndKeepCase(strLine, 4);
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("SendToHTTP: Path: ");
         log += path;

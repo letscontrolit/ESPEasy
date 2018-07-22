@@ -111,13 +111,10 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
     success = true;
     if (parseString(string, 2) == F("task"))
     {
-      int configCommandPos1 = getParamStartPos(string, 3);
-      if (configCommandPos1 < 0) return success; // TD-er: Should this be return false?
-      int configCommandPos2 = getParamStartPos(string, 4);
-      if (configCommandPos2 < 0 || (configCommandPos2 - configCommandPos1) < 1) return success; // TD-er: Should this be return false?
-
-      String configTaskName = string.substring(configCommandPos1, configCommandPos2 - 1);
-      String configCommand = string.substring(configCommandPos2);
+      String configTaskName = parseStringKeepCase(string, 3);
+      String configCommand = parseStringToEndKeepCase(string, 4);
+      if (configTaskName.length() == 0 || configCommand.length() == 0)
+        return success; // TD-er: Should this be return false?
 
       int8_t index = getTaskIndexByName(configTaskName);
       if (index != -1)
@@ -1527,6 +1524,21 @@ boolean isValidFloat(float f) {
 boolean isInt(const String& tBuf) {
   return isNumerical(tBuf, true);
 }
+
+bool validIntFromString(const String& tBuf, int& result) {
+  const String numerical = getNumerical(tBuf, true);
+  const bool isvalid = isInt(numerical);
+  result = numerical.toInt();
+  return isvalid;
+}
+
+bool validFloatFromString(const String& tBuf, float& result) {
+  const String numerical = getNumerical(tBuf, false);
+  const bool isvalid = isFloat(numerical);
+  result = numerical.toFloat();
+  return isvalid;
+}
+
 
 String getNumerical(const String& tBuf, bool mustBeInteger) {
   String result = "";

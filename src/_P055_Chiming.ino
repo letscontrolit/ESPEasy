@@ -214,31 +214,31 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (command == F("chime"))
         {
-          int paramPos = getParamStartPos(string, 2);
-          if (paramPos >= 0) {
-            String param = string.substring(paramPos);
+          String param = parseStringToEndKeepCase(string, 2);
+          if (param.length() > 0) {
             Plugin_055_AddStringFIFO(param);
-            success = true;
           }
+          success = true;
         }
         if (command == F("chimeplay"))
         {
           String name = parseString(string, 2);
-          String param;
-          Plugin_055_ReadChime(name, param);
-          Plugin_055_AddStringFIFO(param);
+          if (name.length() > 0) {
+            String param;
+            Plugin_055_ReadChime(name, param);
+            Plugin_055_AddStringFIFO(param);
+          }
           success = true;
         }
         if (command == F("chimesave"))
         {
           String name = parseString(string, 2);
-          int paramPos = getParamStartPos(string, 3);
-          if (paramPos >= 0) {
-            String param = string.substring(paramPos);
+          String param = parseStringToEndKeepCase(string, 3);
+          if (name.length() > 0 && param.length() > 0) {
             Plugin_055_WriteChime(name, param);
             Plugin_055_AddStringFIFO(F("1"));
-            success = true;
           }
+          success = true;
         }
 
         break;
