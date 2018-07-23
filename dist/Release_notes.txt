@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180723 (since mega-20180722)
+-------------------------------------------------
+
+Release date: Mon Jul 23 04:00:09 CEST 2018
+
+TD-er (8):
+      [parseString] Fix 1-of error in getParamStartPos
+      [parseString] Use quotes to use special characters in command parameters
+      [parseString] Add checks when command parameters used as int
+      [Travis CI] Signed/unsigned compare fix
+      [GetArgv] Make sure only matching ", ' or [ is allowed
+      [WebLogViewer] Removed reRunCount as quick fix for web log viewer
+      [Compiler warning] Initialize the matching_parenthesis to something
+      [GetArgv] Add some C-array size checks
+
+
+-------------------------------------------------
 Changes in release mega-20180722 (since mega-20180720)
 -------------------------------------------------
 
