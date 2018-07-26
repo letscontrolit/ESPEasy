@@ -3862,7 +3862,7 @@ void handle_advanced() {
   TXBuffer += F("var x = document.getElementById('longitude');");
   TXBuffer += F("var y = document.getElementById('latitude');");
   TXBuffer += F("function getLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(addCoordinates); } }");
-  TXBuffer += F("function addCoordinates(position) { x.innerHTML = position.coords.longitude.toFixed(2); y.innerHTML = position.coords.latitude.toFixed(2); }");
+  TXBuffer += F("function addCoordinates(position) { x.value = position.coords.longitude.toFixed(2); y.value = position.coords.latitude.toFixed(2); }");
   TXBuffer += F("</script>");
   
   addFormSubHeader(F("Log Settings"));
