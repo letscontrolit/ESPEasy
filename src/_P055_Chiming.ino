@@ -153,7 +153,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         //addHtml(F("<TR><TD><TD>"));
-        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"), F(""));
+        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] && !Settings.UseNTP)
           addFormNote(F("Enable and configure NTP!"));
@@ -214,26 +214,30 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (command == F("chime"))
         {
-          int paramPos = getParamStartPos(string, 2);
-          String param = string.substring(paramPos);
-          Plugin_055_AddStringFIFO(param);
+          String param = parseStringToEndKeepCase(string, 2);
+          if (param.length() > 0) {
+            Plugin_055_AddStringFIFO(param);
+          }
           success = true;
         }
         if (command == F("chimeplay"))
         {
           String name = parseString(string, 2);
-          String param;
-          Plugin_055_ReadChime(name, param);
-          Plugin_055_AddStringFIFO(param);
+          if (name.length() > 0) {
+            String param;
+            Plugin_055_ReadChime(name, param);
+            Plugin_055_AddStringFIFO(param);
+          }
           success = true;
         }
         if (command == F("chimesave"))
         {
           String name = parseString(string, 2);
-          int paramPos = getParamStartPos(string, 3);
-          String param = string.substring(paramPos);
-          Plugin_055_WriteChime(name, param);
-          Plugin_055_AddStringFIFO(F("1"));
+          String param = parseStringToEndKeepCase(string, 3);
+          if (name.length() > 0 && param.length() > 0) {
+            Plugin_055_WriteChime(name, param);
+            Plugin_055_AddStringFIFO(F("1"));
+          }
           success = true;
         }
 

@@ -16,4 +16,5 @@
 ## Project #####################
 lib/readme.txt
 src/Custom.h
+/ESPEasy
 test/output_export.cpp

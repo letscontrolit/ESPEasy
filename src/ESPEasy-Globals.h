@@ -73,7 +73,11 @@
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
-#define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_DELAY                      100    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
+#define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
+#define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
+#define DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID   0
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
@@ -117,6 +121,11 @@
   #define FEATURE_ADC_VCC                  false
 #endif
 
+#if defined(ESP32)
+#define ARDUINO_OTA_PORT  3232
+#else
+#define ARDUINO_OTA_PORT  8266
+#endif
 
 #if defined(ESP8266)
   //enable Arduino OTA updating.
@@ -179,12 +188,20 @@
 #endif
 
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
+#define INPUT_COMMAND_SIZE                 80
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
+
+#define TIMER_20MSEC                        1
+#define TIMER_100MSEC                       2
+#define TIMER_1SEC                          3
+#define TIMER_30SEC                         4
+#define TIMER_MQTT                          5
+#define TIMER_STATISTICS                    6
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
@@ -232,6 +249,9 @@
 #define CONTROLLER_PASS                     5
 #define CONTROLLER_SUBSCRIBE                6
 #define CONTROLLER_PUBLISH                  7
+#define CONTROLLER_LWT_TOPIC                8
+#define CONTROLLER_LWT_CONNECT_MESSAGE      9
+#define CONTROLLER_LWT_DISCONNECT_MESSAGE  10
 
 #define NPLUGIN_PROTOCOL_ADD                1
 #define NPLUGIN_GET_DEVICENAME              2
@@ -277,8 +297,6 @@
 #define NPLUGIN_MAX                         4
 #define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
 #define RULES_TIMER_MAX                     8
-#define SYSTEM_TIMER_MAX                    8
-#define SYSTEM_CMD_TIMER_MAX                2
 #define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
@@ -309,6 +327,7 @@
 #define SENSOR_TYPE_DUAL                    5
 #define SENSOR_TYPE_TRIPLE                  6
 #define SENSOR_TYPE_QUAD                    7
+#define SENSOR_TYPE_TEMP_EMPTY_BARO         8
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
@@ -357,6 +376,10 @@
 
 #include "WebStaticData.h"
 #include "ESPEasyTimeTypes.h"
+#include "I2CTypes.h"
+#include <I2Cdev.h>
+#include <map>
+
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   #include "core_version.h"
@@ -375,7 +398,7 @@
     #include <lwip/tcp_impl.h>
   #endif
   #include <ESP8266WiFi.h>
-  #include <ESP8266Ping.h>
+  //#include <ESP8266Ping.h>
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
   #include <DNSServer.h>
@@ -425,6 +448,7 @@
   #include  "esp32_ping.h"
   #include <ESP32WebServer.h>
   #include "SPIFFS.h"
+  #include <rom/rtc.h>
   ESP32WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
@@ -488,6 +512,11 @@ int mqtt_reconnect_count = 0;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
+class TimingStats;
+
+#define LOADFILE_STATS  0
+#define LOOP_STATS      1
+
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
   char binaryFilename[32+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames";
@@ -498,72 +527,7 @@ struct CRCStruct{
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
 
-enum Command {
-  cmd_Unknown,
-  cmd_accessinfo,
-  cmd_background,
-  cmd_BlynkGet,
-  cmd_build,
-  cmd_clearaccessblock,
-  cmd_clearRTCRAM,
-  cmd_config,
-  cmd_Debug,
-  cmd_Delay,
-  cmd_deepSleep,
-  cmd_Erase,
-  cmd_Event,
-  cmd_executeRules,
-  cmd_i2cscanner,
-  cmd_IP,
-  cmd_Load,
-  cmd_logentry,
-  cmd_lowmem,
-  cmd_malloc,
-  cmd_meminfo,
-  cmd_Name,
-  cmd_notify,
-  cmd_NoSleep,
-  cmd_Password,
-  cmd_Publish,
-  cmd_Reboot,
-  cmd_Reset,
-  cmd_Restart,
-  cmd_resetFlashWriteCounter,
-  cmd_Rules,
-  cmd_sdcard,
-  cmd_sdremove,
-  cmd_sysload,
-  cmd_Save,
-  cmd_SendTo,
-  cmd_SendToHTTP,
-  cmd_SendToUDP,
-  cmd_SerialFloat,
-  cmd_Settings,
-  cmd_TaskClear,
-  cmd_TaskClearAll,
-  cmd_TaskRun,
-  cmd_TaskValueSet,
-  cmd_TaskValueSetAndRun,
-  cmd_TimerSet,
-  cmd_TimerPause,
-  cmd_TimerResume,
-  cmd_udptest,
-  cmd_Unit,
-  cmd_wdconfig,
-  cmd_wdread,
-  cmd_WifiAPMode,
-  cmd_WifiConnect,
-  cmd_WifiDisconnect,
-  cmd_WifiKey2,
-  cmd_WifiKey,
-  cmd_WifiSSID2,
-  cmd_WifiSSID,
-  cmd_WifiScan
-};
 
-
-// Forward declarations.
-Command commandStringToEnum(const char * cmd);
 bool WiFiConnected(uint32_t timeout_ms);
 bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
@@ -571,6 +535,18 @@ bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
 void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
+
+
+bool I2C_read_bytes(uint8_t i2caddr, I2Cdata_bytes& data);
+bool I2C_write8_reg(uint8_t i2caddr, byte reg, byte value);
+uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok = NULL);
+uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg);
+int32_t I2C_read24_reg(uint8_t i2caddr, byte reg);
+uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg);
+int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg);
+int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg);
+I2Cdev i2cdev;
+
 
 struct SecurityStruct
 {
@@ -616,7 +592,7 @@ struct SettingsStruct
     TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
     DST_Start(0), DST_End(0), UseRTOSMultitasking(false), Pin_Reset(-1),
-    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0)
+    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0), MQTTUseUnitNameAsClientId(0)
     {
       for (byte i = 0; i < CONTROLLER_MAX; ++i) {
         Protocol[i] = 0;
@@ -724,10 +700,13 @@ struct SettingsStruct
   int8_t        Pin_Reset;
   byte          SyslogFacility;
   uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
+  boolean       MQTTUseUnitNameAsClientId;
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
+  float         Latitude;
+  float         Longitude;
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
@@ -745,6 +724,9 @@ struct ControllerSettingsStruct
     memset(HostName, 0, sizeof(HostName));
     memset(Publish, 0, sizeof(Publish));
     memset(Subscribe, 0, sizeof(Subscribe));
+    memset(MQTTLwtTopic, 0, sizeof(MQTTLwtTopic));
+    memset(LWTMessageConnect, 0, sizeof(LWTMessageConnect));
+    memset(LWTMessageDisconnect, 0, sizeof(LWTMessageDisconnect));
   }
   boolean       UseDNS;
   byte          IP[4];
@@ -752,6 +734,9 @@ struct ControllerSettingsStruct
   char          HostName[65];
   char          Publish[129];
   char          Subscribe[129];
+  char          MQTTLwtTopic[129];
+  char          LWTMessageConnect[129];
+  char          LWTMessageDisconnect[129];
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
@@ -907,6 +892,13 @@ struct EventStruct
     Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
     BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     OriginTaskIndex(0), Data(NULL) {}
+  EventStruct(const struct EventStruct& event):
+        Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
+        , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
+        , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
+        , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
+        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {}
+
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
   byte ControllerIndex; // index position in Settings.Controller, 0-3
@@ -926,6 +918,8 @@ struct EventStruct
   String String1;
   String String2;
   String String3;
+  String String4;
+  String String5;
   byte *Data;
 };
 
@@ -1047,6 +1041,11 @@ struct LogStruct {
 
 } Logging;
 
+byte highest_active_log_level = 0;
+bool log_to_serial_disabled = false;
+// Do this in a template to prevent casting to String when not needed.
+#define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
+
 struct DeviceStruct
 {
   DeviceStruct() :
@@ -1111,23 +1110,18 @@ struct NodeStruct
 struct systemTimerStruct
 {
   systemTimerStruct() :
-    timer(0), plugin(0), Par1(0), Par2(0), Par3(0) {}
+    timer(0), plugin(0), TaskIndex(-1), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0) {}
 
   unsigned long timer;
   byte plugin;
-  byte Par1;
-  byte Par2;
-  byte Par3;
-} systemTimers[SYSTEM_TIMER_MAX];
-
-#define NOTAVAILABLE_SYSTEM_TIMER_ERROR "There are no system timer available, max parallel timers are " STR(SYSTEM_TIMER_MAX)
-
-struct systemCMDTimerStruct
-{
-  systemCMDTimerStruct() : timer(0) {}
-  unsigned long timer;
-  String action;
-} systemCMDTimers[SYSTEM_CMD_TIMER_MAX];
+  int16_t TaskIndex;
+  int Par1;
+  int Par2;
+  int Par3;
+  int Par4;
+  int Par5;
+};
+std::map<unsigned long, systemTimerStruct> systemTimers;
 
 struct pinStatesStruct
 {
@@ -1166,19 +1160,15 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
-struct rulesTiemerStatus
+struct rulesTimerStatus
 {
   unsigned long timestamp;
-  unsigned int interval; //interval in millisencond
+  unsigned int interval; //interval in milliseconds
   boolean paused;
 } RulesTimer[RULES_TIMER_MAX];
 
-unsigned long timerSensor[TASKS_MAX];
-unsigned long timer100ms;
-unsigned long timer20ms;
-unsigned long timer1s;
-unsigned long timerwd;
-unsigned long timermqtt;
+msecTimerHandlerStruct msecTimerHandler;
+
 unsigned long timermqtt_interval;
 unsigned long lastSend;
 unsigned long lastWeb;
@@ -1196,7 +1186,8 @@ boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;
 
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte, struct EventStruct*, String&);
-byte Plugin_id[PLUGIN_MAX];
+std::vector<byte> Plugin_id;
+std::vector<int> Task_id_to_Plugin_id;
 
 boolean (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte CPlugin_id[CPLUGIN_MAX];
@@ -1301,12 +1292,19 @@ bool processedScanDone = true;
 bool webserver_state = false;
 bool webserver_init = false;
 
+unsigned long idle_msec_per_sec = 0;
 unsigned long elapsed10ps = 0;
 unsigned long elapsed10psU = 0;
 unsigned long elapsed50ps = 0;
 unsigned long loopCounter = 0;
 unsigned long loopCounterLast = 0;
 unsigned long loopCounterMax = 1;
+unsigned long lastLoopStart = 0;
+unsigned long shortestLoop = 10000000;
+unsigned long longestLoop = 0;
+unsigned long loopCounter_full = 1;
+float loop_usec_duration_total = 0.0;
+unsigned long countFindPluginId = 0;
 
 unsigned long dailyResetCounter = 0;
 
@@ -1324,9 +1322,184 @@ boolean       UseRTOSMultitasking;
 
 void (*MainLoopCall_ptr)(void);
 
+class TimingStats {
+    public:
+      TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
+
+      void add(unsigned long time) {
+          _timeTotal += time;
+          ++_count;
+          if (time > _maxVal) _maxVal = time;
+          if (time < _minVal) _minVal = time;
+      }
+
+      void reset() {
+          _timeTotal = 0.0;
+          _count = 0;
+          _maxVal = 0;
+          _minVal = 4294967295;
+      }
+
+      bool isEmpty() const {
+          return _count == 0;
+      }
+
+      float getAvg() const {
+        if (_count == 0) return 0.0;
+        return _timeTotal / _count;
+      }
+
+      unsigned int getMinMax(unsigned long& minVal, unsigned long& maxVal) const {
+          if (_count == 0) {
+              minVal = 0;
+              maxVal = 0;
+              return 0;
+          }
+          minVal = _minVal;
+          maxVal = _maxVal;
+          return _count;
+      }
+
+    private:
+      float _timeTotal;
+      unsigned int _count;
+      unsigned long _maxVal;
+      unsigned long _minVal;
+};
+
+String getLogLine(const TimingStats& stats) {
+    unsigned long minVal, maxVal;
+    unsigned int c = stats.getMinMax(minVal, maxVal);
+    String log;
+    log.reserve(64);
+    log += F("Count: ");
+    log += c;
+    log += F(" Avg/min/max ");
+    log += stats.getAvg();
+    log += '/';
+    log += minVal;
+    log += '/';
+    log += maxVal;
+    log += F(" usec");
+    return log;
+}
+
+
+
+String getPluginFunctionName(int function) {
+    switch(function) {
+        case PLUGIN_INIT_ALL:              return F("INIT_ALL            ");
+        case PLUGIN_INIT:                  return F("INIT                ");
+        case PLUGIN_READ:                  return F("READ                ");
+        case PLUGIN_ONCE_A_SECOND:         return F("ONCE_A_SECOND       ");
+        case PLUGIN_TEN_PER_SECOND:        return F("TEN_PER_SECOND      ");
+        case PLUGIN_DEVICE_ADD:            return F("DEVICE_ADD          ");
+        case PLUGIN_EVENTLIST_ADD:         return F("EVENTLIST_ADD       ");
+        case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE        ");
+        case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD        ");
+        case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES ");
+        case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME      ");
+        case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
+        case PLUGIN_WRITE:                 return F("WRITE               ");
+        case PLUGIN_EVENT_OUT:             return F("EVENT_OUT           ");
+        case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG ");
+        case PLUGIN_SERIAL_IN:             return F("SERIAL_IN           ");
+        case PLUGIN_UDP_IN:                return F("UDP_IN              ");
+        case PLUGIN_CLOCK_IN:              return F("CLOCK_IN            ");
+        case PLUGIN_TIMER_IN:              return F("TIMER_IN            ");
+        case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND    ");
+        case PLUGIN_SET_CONFIG:            return F("SET_CONFIG          ");
+        case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES ");
+        case PLUGIN_EXIT:                  return F("EXIT                ");
+        case PLUGIN_GET_CONFIG:            return F("GET_CONFIG          ");
+        case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL  ");
+        case PLUGIN_REQUEST:               return F("REQUEST             ");
+    }
+    return F("Unknown");
+}
+
+bool mustLogFunction(int function) {
+    switch(function) {
+        case PLUGIN_INIT_ALL:              return false;
+        case PLUGIN_INIT:                  return false;
+        case PLUGIN_READ:                  return true;
+        case PLUGIN_ONCE_A_SECOND:         return true;
+        case PLUGIN_TEN_PER_SECOND:        return true;
+        case PLUGIN_DEVICE_ADD:            return false;
+        case PLUGIN_EVENTLIST_ADD:         return false;
+        case PLUGIN_WEBFORM_SAVE:          return false;
+        case PLUGIN_WEBFORM_LOAD:          return false;
+        case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
+        case PLUGIN_GET_DEVICENAME:        return false;
+        case PLUGIN_GET_DEVICEVALUENAMES:  return false;
+        case PLUGIN_WRITE:                 return true;
+        case PLUGIN_EVENT_OUT:             return true;
+        case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
+        case PLUGIN_SERIAL_IN:             return true;
+        case PLUGIN_UDP_IN:                return true;
+        case PLUGIN_CLOCK_IN:              return false;
+        case PLUGIN_TIMER_IN:              return true;
+        case PLUGIN_FIFTY_PER_SECOND:      return true;
+        case PLUGIN_SET_CONFIG:            return false;
+        case PLUGIN_GET_DEVICEGPIONAMES:   return false;
+        case PLUGIN_EXIT:                  return false;
+        case PLUGIN_GET_CONFIG:            return false;
+        case PLUGIN_UNCONDITIONAL_POLL:    return false;
+        case PLUGIN_REQUEST:               return true;
+    }
+    return false;
+}
+
+std::map<int,TimingStats> pluginStats;
+std::map<int,TimingStats> miscStats;
+unsigned long timediff_calls = 0;
+unsigned long timediff_cpu_cycles_total = 0;
+
+#define LOADFILE_STATS        0
+#define LOOP_STATS            1
+#define PLUGIN_CALL_50PS      2
+#define PLUGIN_CALL_10PS      3
+#define PLUGIN_CALL_10PSU     4
+#define PLUGIN_CALL_1PS       5
+#define SENSOR_SEND_TASK      6
+#define SEND_DATA_STATS       7
+#define COMPUTE_FORMULA_STATS 8
+#define PROC_SYS_TIMER        9
+#define SET_NEW_TIMER        10
+#define TIME_DIFF_COMPUTE    11
+
+
+
+
+
+#define START_TIMER const unsigned statisticsTimerStart(micros());
+#define STOP_TIMER_TASK(T,F)  if (mustLogFunction(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+#define STOP_TIMER(L)       miscStats[L].add(usecPassedSince(statisticsTimerStart));
+
+
+String getMiscStatsName(int stat) {
+    switch (stat) {
+        case LOADFILE_STATS: return F("Load File");
+        case LOOP_STATS:     return F("Loop");
+        case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s  ");
+        case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s  ");
+        case PLUGIN_CALL_10PSU:     return F("Plugin call 10 p/s U");
+        case PLUGIN_CALL_1PS:       return F("Plugin call  1 p/s  ");
+        case SENSOR_SEND_TASK:      return F("SensorSendTask()    ");
+        case SEND_DATA_STATS:       return F("sendData()          ");
+        case COMPUTE_FORMULA_STATS: return F("Compute formula     ");
+        case PROC_SYS_TIMER:        return F("proc_system_timer() ");
+        case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
+        case TIME_DIFF_COMPUTE:     return F("timeDiff()          ");
+    }
+    return F("Unknown");
+}
+
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.
 #include "ESPEasyWiFiEvent.h"
+
 
 #endif /* ESPEASY_GLOBALS_H_ */

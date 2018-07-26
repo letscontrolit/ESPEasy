@@ -22,7 +22,7 @@
   License along with MechInputs.  If not, see
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
-
+#ifdef ESP8266  // Needed for precompile issues.
 #ifndef _jkSDS011_H_
 #define _jkSDS011_H_
 
@@ -78,4 +78,5 @@ private:
   boolean _sleepmode_active;
 };
 
+#endif
 #endif

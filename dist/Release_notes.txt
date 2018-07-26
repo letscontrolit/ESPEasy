@@ -1,4 +1,377 @@
 -------------------------------------------------
+Changes in release mega-20180723 (since mega-20180722)
+-------------------------------------------------
+
+Release date: Mon Jul 23 04:00:09 CEST 2018
+
+TD-er (8):
+      [parseString] Fix 1-of error in getParamStartPos
+      [parseString] Use quotes to use special characters in command parameters
+      [parseString] Add checks when command parameters used as int
+      [Travis CI] Signed/unsigned compare fix
+      [GetArgv] Make sure only matching ", ' or [ is allowed
+      [WebLogViewer] Removed reRunCount as quick fix for web log viewer
+      [Compiler warning] Initialize the matching_parenthesis to something
+      [GetArgv] Add some C-array size checks
+
+
+-------------------------------------------------
+Changes in release mega-20180722 (since mega-20180720)
+-------------------------------------------------
+
+Release date: Sun Jul 22 04:00:08 CEST 2018
+
+TD-er (12):
+      [#1591] Move system timers to main scheduler
+      [#1592] Remove systemCMDTimers
+      [#1596] Remove timerSensor and make it set its own interval.
+      [Log Viewer] Fix a 1-off error when parsing logs
+      [LogLevel] LoadFromFile log to LOG_LEVEL_DEBUG_DEV
+      [LogLevel] Use function to set loglevel and keep track of max log level
+      [LogLevel] Check loglevel before sending to log
+      [LogLevel] Add checks for LOG_LEVEL_DEBUG_MORE
+      [LogLevel] Add checks for LOG_LEVEL_DEBUG_DEV
+      [LogLevel] Added extra checks and make sure loglevel cache is up to date
+      [Scheduler] Keep statistics on timeDiff computations
+      [Scheduler] Call yield() when idle
+
+
+-------------------------------------------------
+Changes in release mega-20180720 (since mega-20180719)
+-------------------------------------------------
+
+Release date: Fri Jul 20 04:00:16 CEST 2018
+
+TD-er (2):
+      [ParseString] Make ParseString more efficient and check results before use
+      [ParseString] Fix getting the right part of the command line
+
+
+-------------------------------------------------
+Changes in release mega-20180719 (since mega-20180716)
+-------------------------------------------------
+
+Release date: Thu Jul 19 04:00:14 CEST 2018
+
+Benno Eigenmann (1):
+      lib_archive already exists & Implicit dependency not found
+
+TD-er (1):
+      [sunrise/sunset] Allow offset from sunrise/sunset
+
+denisfrench (1):
+      When clientid = %sysname%, only add %unit% if non-zero
+
+stefan (1):
+      Fix for P077 crashes
+
+
+-------------------------------------------------
+Changes in release mega-20180716 (since mega-20180714)
+-------------------------------------------------
+
+Release date: Mon Jul 16 04:00:09 CEST 2018
+
+TD-er (4):
+      [WiFi] Reset wifi when IP is set to 0.0.0.0
+      [Scheduler] Complete rewrite of time based scheduling
+      [JSON] Fixed broken JSON output on /json URL
+      [ESP32] Show partition table on sysinfo page
+
+
+-------------------------------------------------
+Changes in release mega-20180714 (since mega-20180712)
+-------------------------------------------------
+
+Release date: Sat Jul 14 04:00:13 CEST 2018
+
+Gijs Noorlander (1):
+      [#1567] Only check values set before sending
+
+
+-------------------------------------------------
+Changes in release mega-20180712 (since mega-20180710)
+-------------------------------------------------
+
+Release date: Thu Jul 12 04:00:12 CEST 2018
+
+TD-er (2):
+      [#1555] Fix TSL2591 values are not transferred to controller
+      [#1542] Fix  Domoticz IDX more than 4 characters
+
+
+-------------------------------------------------
+Changes in release mega-20180710 (since mega-20180708)
+-------------------------------------------------
+
+Release date: Tue Jul 10 04:00:12 CEST 2018
+
+Grovkillen (1):
+      P077: changed category to "energy"
+
+
+-------------------------------------------------
+Changes in release mega-20180708 (since mega-20180705)
+-------------------------------------------------
+
+Release date: Sun Jul  8 04:00:08 CEST 2018
+
+TD-er (1):
+      [PIO build] Build issues caused by incorrect precompile processing
+
+
+-------------------------------------------------
+Changes in release mega-20180705 (since mega-20180625)
+-------------------------------------------------
+
+Release date: Thu Jul  5 04:00:18 CEST 2018
+
+Bartłomiej Zimoń (1):
+      Update _C005.ino
+
+TD-er (10):
+      [CPU usage] Increase loop count
+      [loop times] New timer statistics class to monitor performance
+      [BMx280] Do not wait for measurements, collect async
+      [Timing stats] Allow computing timing to estimate performance.
+      [ESP32] Upgrade to new ESpressif32 version
+      [PIO build] Use newer flag syntax for Travis
+      [Stability] Add check for string length to isNumerical()
+      [Stability] Use functions to get Webserver Arguments from POST messages.
+      [PlatformIO] Update to Espressif32@1.1.1
+      [info] Display ESP32 partition table
+
+Tempura San (2):
+      [WebUI] font-family set to monospace for TEXTAREA
+      [WebUI] removed stray </div>
+
+
+-------------------------------------------------
+Changes in release mega-20180625 (since mega-20180624)
+-------------------------------------------------
+
+Release date: Mon Jun 25 04:00:08 CEST 2018
+
+TD-er (2):
+      [Arduino IDE] Fix build include path ESPEasy-Globals.h
+      [PIO update] platform to espressif8266@1.7.3
+
+
+-------------------------------------------------
+Changes in release mega-20180624 (since mega-20180621)
+-------------------------------------------------
+
+Release date: Sun Jun 24 04:00:29 CEST 2018
+
+Saverio Cisternino (2):
+      Implement CommandsManager
+      Migration core command
+
+TD-er (8):
+      [AM2320] Explicit use boolean in Wire.endTransmission
+      [JavaScript]  Device measurement value update may sometimes fail
+      [ArduinoJson] Update external library ArduinoJson.
+      [SDS011] Set SDS011 Dust plugin to normal from testing
+      [PlatformIO.ini] VScode needs `monitor_speed` and update ESP8266 platform
+      [web log] Disable excessive web log about RAM usage
+      [Cmd Exec] Add #ifndef #def statements to prevent multiple includes
+      [Cmd Exec] Use switch statement instead of lookup map
+
+
+-------------------------------------------------
+Changes in release mega-20180621 (since mega-20180619)
+-------------------------------------------------
+
+Release date: Thu Jun 21 04:00:14 CEST 2018
+
+Saverio Cisternino (2):
+      Fixed Issue #1489
+      Show in devices list port number in hex
+
+
+-------------------------------------------------
+Changes in release mega-20180619 (since mega-20180618)
+-------------------------------------------------
+
+Release date: Tue Jun 19 04:00:10 CEST 2018
+
+TD-er (4):
+      [ESP32] Allow flashing to ESP32 again from PlatformIO
+      [ESP32] Set build to @0.12.0
+      [OTA] Output proper port number when ARDUINO_FEATURE_OTA is set
+      [ESP8285] PlatformIO set max upload size limit
+
+
+-------------------------------------------------
+Changes in release mega-20180618 (since mega-20180615)
+-------------------------------------------------
+
+Release date: Mon Jun 18 04:00:12 CEST 2018
+
+Steffen Lange (2):
+      Add GPS coordinates to Advanced Settings
+      Add %sunrise% and %sunset% variables
+
+TD-er (1):
+      [#1494] Disabled ping to check if host is reachable
+
+stefan (1):
+      Ammended central I2C fuctions (#1417)
+
+
+-------------------------------------------------
+Changes in release mega-20180615 (since mega-20180614)
+-------------------------------------------------
+
+Release date: Fri Jun 15 04:00:11 CEST 2018
+
+TD-er (1):
+      [1M flash warning] Warn for OTA when 1M flash present
+
+
+-------------------------------------------------
+Changes in release mega-20180614 (since mega-20180613)
+-------------------------------------------------
+
+Release date: Thu Jun 14 04:00:11 CEST 2018
+
+Gijs Noorlander (2):
+      [#1502] Change wait-to-connect timeout to 12 sec.
+      [#1503] Use proper timeout on BME280/BMP280
+
+
+-------------------------------------------------
+Changes in release mega-20180613 (since mega-20180611)
+-------------------------------------------------
+
+Release date: Wed Jun 13 04:00:15 CEST 2018
+
+Gijs Noorlander (1):
+      [BMx280] Correct nr values for special sensor type
+
+TD-er (2):
+      [Diag] Log Reset Reason at boot for ESP8266 and ESP32
+      [BMx280] Send data from BMP280 as temp_baro, not temp_hum_baro
+
+
+-------------------------------------------------
+Changes in release mega-20180611 (since mega-20180606)
+-------------------------------------------------
+
+Release date: Mon Jun 11 04:00:21 CEST 2018
+
+Saverio Cisternino (1):
+      Fixed issue when there is more PCA9685
+
+TD-er (6):
+      [#1417] Move I2C functions to a separate file
+      [I2Cdev] Add I2Cdevlib library
+      [I2C] Disable calls to wire.begin() from libraries
+      [#1484] Multiple instances of ultrasonic sensors
+      [PlatformIO] Added libraries to be able to use std::map
+      [BME/BMP280] Improve temperature/humidity readout
+
+Tempura San (1):
+      [MQTT Import] system variables support for topics
+
+
+-------------------------------------------------
+Changes in release mega-20180606 (since mega-20180524)
+-------------------------------------------------
+
+Release date: Wed Jun  6 04:00:17 CEST 2018
+
+Gijs Noorlander (1):
+      [GPIO command] work-around as long as gpio command is still performed in P001_switch.
+
+
+-------------------------------------------------
+Changes in release mega-20180524 (since mega-20180522)
+-------------------------------------------------
+
+Release date: Thu May 24 04:00:14 CEST 2018
+
+Saverio Cisternino (25):
+      Allows plugin to intercept PLUGIN_WRITE and PLUGIN_REQUEST, when there is more tasks of same plugin type but different configuration.
+      Allow escape char [ and ] for use with comannd and rule containde space es [Extra 2]#Go
+      Allow PLUGIN_TIMER_IN TaskIndex
+      -Arminizze type of ParX of systemTimerStruct with EventStruct to prevent truncation issue     -Add setSystemTimer overload
+      EventStruct  copy ctor
+      Allow using two oled at same time.
+      Allow custom mqtt lwt topic
+      Allow custom lwt message
+      Allow use Unit Name as MQTT ClientId
+      Allows plugin to intercept PLUGIN_WRITE and PLUGIN_REQUEST, when there is more tasks of same plugin type but different configuration.
+      Allow escape char [ and ] for use with comannd and rule containde space es [Extra 2]#Go
+      Allow PLUGIN_TIMER_IN TaskIndex
+      -Arminizze type of ParX of systemTimerStruct with EventStruct to prevent truncation issue     -Add setSystemTimer overload
+      EventStruct  copy ctor
+      ExecuteCommand intercept Par4 and Par5
+      PCA9685: Allow select address.
+      PCA9685: Allow named istance commands for execute command on specific task when there is more PCA9685 task.
+      PCA9685: Add Pin e PWM validation
+      PCA9685: show address in hex.
+      PCA9685: Allow use pwm alias when call instance command es: Extender.pwm 1, 1000
+      PCA9685: Add pcafrq arg validation
+      PCA9685: Allow use frq alias when call instance command es: Extender.frq 100
+      PCA9685: Add support at commad gpio on name instance call
+      PCA9685: Add named istance pulse command. Es: Extend.pulse 0,1,50,auto gnenerate pulse on gpio 0 with duration of 50 ms an autorestart after 50 ms
+      PCA9685: Add support at command [TaskName].gpio all,1 | 0 which allows you to turn on (1) or turn off (0) all gpio of expander.
+
+Susis Strolch (3):
+      GIT hooks: post-merge, post-commit, post-checkout
+      add missing &amp; around value, add README
+      add missing &amp; around value
+
+TD-er (1):
+      [CI build] Small fix to prevent Travis CI build errors.
+
+
+-------------------------------------------------
+Changes in release mega-20180522 (since mega-20180519)
+-------------------------------------------------
+
+Release date: Tue May 22 04:00:14 CEST 2018
+
+Daniel Tedenljung (1):
+      Add note for PulseCounter
+
+Plebs (1):
+      Added 10 new commands for serial port configuration
+
+TD-er (1):
+      [P077] CSE7766 - Energy (Sonoff S31 and Sonoff Pow R2)
+
+stefan (1):
+      Add CSE7766 for Sonoff POW R2 to plugin_sets
+
+
+-------------------------------------------------
+Changes in release mega-20180519 (since mega-20180518)
+-------------------------------------------------
+
+Release date: Sat May 19 04:00:07 CEST 2018
+
+Grovkillen (1):
+      [tools page] added a function for wide buttons
+
+
+-------------------------------------------------
+Changes in release mega-20180518 (since mega-20180517)
+-------------------------------------------------
+
+Release date: Fri May 18 04:00:07 CEST 2018
+
+Grovkillen (3):
+      [JavaScript] made static variables "const"
+      [tools page] wider buttons
+      [tools page] Center text, factory reset is red
+
+TD-er (1):
+      [#1431] Add DataAcquisition to /json and reduce json for sensor updates
+
+
+-------------------------------------------------
 Changes in release mega-20180517 (since mega-20180516)
 -------------------------------------------------
 

@@ -59,8 +59,10 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         if (!ControllerSettings.connectToHost(client))
         {
           connectionFailures++;
-          strcpy_P(log, PSTR("HTTP : connection failed"));
-          addLog(LOG_LEVEL_ERROR, log);
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            strcpy_P(log, PSTR("HTTP : connection failed"));
+            addLog(LOG_LEVEL_ERROR, log);
+          }
           return false;
         }
         statusLED(true);
@@ -107,18 +109,24 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
           String line;
           safeReadStringUntil(client, line, '\n');
 
-          line.toCharArray(log, 80);
-          addLog(LOG_LEVEL_DEBUG_MORE, log);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+            line.toCharArray(log, 80);
+            addLog(LOG_LEVEL_DEBUG_MORE, log);
+          }
           if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
           {
-            strcpy_P(log, PSTR("HTTP : Success!"));
-            addLog(LOG_LEVEL_DEBUG, log);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              strcpy_P(log, PSTR("HTTP : Success!"));
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
             success = true;
           }
           delay(1);
         }
-        strcpy_P(log, PSTR("HTTP : closing connection"));
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          strcpy_P(log, PSTR("HTTP : closing connection"));
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
 
         client.flush();
         client.stop();

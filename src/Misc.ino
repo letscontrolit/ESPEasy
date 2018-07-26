@@ -46,7 +46,7 @@ bool readyForSleep()
     return false;
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
     // Allow 6 seconds to connect to WiFi
-    return timeOutReached(timerAwakeFromDeepSleep + 6000);
+    return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }
   return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);
 }
@@ -73,7 +73,7 @@ void deepSleep(int delay)
       return;
     }
   }
-
+  saveUserVarToRTC();
   deepSleepStart(delay); // Call deepSleepStart function after these checks
 }
 
@@ -100,7 +100,7 @@ void deepSleepStart(int delay)
   #endif
 }
 
-boolean remoteConfig(struct EventStruct *event, String& string)
+boolean remoteConfig(struct EventStruct *event, const String& string)
 {
   checkRAM(F("remoteConfig"));
   boolean success = false;
@@ -111,11 +111,10 @@ boolean remoteConfig(struct EventStruct *event, String& string)
     success = true;
     if (parseString(string, 2) == F("task"))
     {
-      int configCommandPos1 = getParamStartPos(string, 3);
-      int configCommandPos2 = getParamStartPos(string, 4);
-
-      String configTaskName = string.substring(configCommandPos1, configCommandPos2 - 1);
-      String configCommand = string.substring(configCommandPos2);
+      String configTaskName = parseStringKeepCase(string, 3);
+      String configCommand = parseStringToEndKeepCase(string, 4);
+      if (configTaskName.length() == 0 || configCommand.length() == 0)
+        return success; // TD-er: Should this be return false?
 
       int8_t index = getTaskIndexByName(configTaskName);
       if (index != -1)
@@ -378,12 +377,12 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char command[80];
+  char command[INPUT_COMMAND_SIZE];
   command[0] = 0;
-  char TmpStr1[80];
+  char TmpStr1[INPUT_COMMAND_SIZE];
   TmpStr1[0] = 0;
 
-  string.toCharArray(command, 80);
+  string.toCharArray(command, INPUT_COMMAND_SIZE);
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
@@ -495,6 +494,7 @@ String BuildFixes()
     Settings.UseRTOSMultitasking = false;
     Settings.Pin_Reset = -1;
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
     Settings.StructSize = sizeof(Settings);
   }
 
@@ -516,11 +516,13 @@ void fileSystemCheck()
       fs::FSInfo fs_info;
       SPIFFS.info(fs_info);
 
-      String log = F("FS   : Mount successful, used ");
-      log=log+fs_info.usedBytes;
-      log=log+F(" bytes of ");
-      log=log+fs_info.totalBytes;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("FS   : Mount successful, used ");
+        log=log+fs_info.usedBytes;
+        log=log+F(" bytes of ");
+        log=log+fs_info.totalBytes;
+        addLog(LOG_LEVEL_INFO, log);
+      }
     #endif
 
     fs::File f = SPIFFS.open(FILE_CONFIG, "r");
@@ -592,11 +594,16 @@ byte getNotificationProtocolIndex(byte Number)
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
-boolean GetArgv(const char *string, char *argv, unsigned int argc)
+boolean GetArgv(const char *string, char *argv, unsigned int argc) {
+  return GetArgv(string, argv, INPUT_COMMAND_SIZE, argc);
+}
+
+boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
+  char matching_parenthesis = '"';
 
   while (string_pos < strlen(string))
   {
@@ -608,17 +615,32 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc)
     else if  (!parenthesis && c == ',' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d >= 33 && d <= 126) {}
     else if  (!parenthesis && c == ',' && d >= 33 && d <= 126) {}
-    else if  (c == '"') {
+    else if  (c == '"' || c == '\'' || c == '[') {
       parenthesis = true;
+      matching_parenthesis = c;
+      if (c == '[')
+        matching_parenthesis = ']';
     }
     else
     {
+      if ((argv_pos +2 ) >= argv_size) {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("GetArgv Error; argv_size exceeded. argc=");
+          log += argc;
+          log += F(" argv_size=");
+          log += argv_size;
+          log += F(" argv=");
+          log += argv;
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+        return false;
+      }
       argv[argv_pos++] = c;
       argv[argv_pos] = 0;
 
-      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && d == '"')) // end of word
+      if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == matching_parenthesis))) // end of word
       {
-        if (d == '"')
+        if (d == matching_parenthesis)
           parenthesis = false;
         argv[argv_pos] = 0;
         argc_pos++;
@@ -1050,20 +1072,26 @@ String ClearInFile(char* fname, int index, int datasize)
   \*********************************************************************************************/
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
+  START_TIMER;
+
   checkRAM(F("LoadFromFile"));
-  String log = F("LoadFromFile: ");
-  log += fname;
-  log += F(" index: ");
-  log += index;
-  log += F(" datasize: ");
-  log += datasize;
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String log = F("LoadFromFile: ");
+    log += fname;
+    log += F(" index: ");
+    log += index;
+    log += F(" datasize: ");
+    log += datasize;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+  }
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
   SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
   SPIFFS_CHECK(f.read(memAddress,datasize), fname);
   f.close();
+
+  STOP_TIMER(LOADFILE_STATS);
 
   return(String());
 }
@@ -1195,6 +1223,7 @@ void ResetFactory(void)
 
 	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
 	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
+	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
 
     Settings.UseNTP			= DEFAULT_USE_NTP;
 	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
@@ -1203,11 +1232,11 @@ void ResetFactory(void)
 
 	str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 
-	Settings.SyslogLevel	= DEFAULT_SYSLOG_LEVEL;
-	Settings.SerialLogLevel	= DEFAULT_SERIAL_LOG_LEVEL;
-	Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
-	Settings.WebLogLevel	= DEFAULT_WEB_LOG_LEVEL;
-	Settings.SDLogLevel		= DEFAULT_SD_LOG_LEVEL;
+  setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
+  setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
+	setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
+  setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
+  Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
 	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
 
 	Settings.UseSerial		= DEFAULT_USE_SERIAL;
@@ -1235,6 +1264,9 @@ void ResetFactory(void)
   ControllerSettingsStruct ControllerSettings;
   strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
   strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
+  strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
+  strcpy_P(ControllerSettings.LWTMessageConnect, PSTR(DEFAULT_MQTT_LWT_CONNECT_MESSAGE));
+  strcpy_P(ControllerSettings.LWTMessageDisconnect, PSTR(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE));
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
   ControllerSettings.HostName[0]=0;
   ControllerSettings.Port = DEFAULT_PORT;
@@ -1248,12 +1280,7 @@ void ResetFactory(void)
   intent_to_reboot = true;
   WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  #if defined(ESP8266)
-    ESP.reset();
-  #endif
-  #if defined(ESP32)
-    ESP.restart();
-  #endif
+  reboot();
 }
 
 
@@ -1306,6 +1333,59 @@ String getLastBootCauseString() {
        return F("External Watchdog");
   }
   return F("Unknown");
+}
+
+#ifdef ESP32
+// See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
+String getResetReasonString(byte icore) {
+  bool isDEEPSLEEP_RESET(false);
+  switch (rtc_get_reset_reason( (RESET_REASON) icore)) {
+    case NO_MEAN                : return F("NO_MEAN");
+    case POWERON_RESET          : return F("Vbat power on reset");
+    case SW_RESET               : return F("Software reset digital core");
+    case OWDT_RESET             : return F("Legacy watch dog reset digital core");
+    case DEEPSLEEP_RESET        : isDEEPSLEEP_RESET = true; break;
+    case SDIO_RESET             : return F("Reset by SLC module, reset digital core");
+    case TG0WDT_SYS_RESET       : return F("Timer Group0 Watch dog reset digital core");
+    case TG1WDT_SYS_RESET       : return F("Timer Group1 Watch dog reset digital core");
+    case RTCWDT_SYS_RESET       : return F("RTC Watch dog Reset digital core");
+    case INTRUSION_RESET        : return F("Instrusion tested to reset CPU");
+    case TGWDT_CPU_RESET        : return F("Time Group reset CPU");
+    case SW_CPU_RESET           : return F("Software reset CPU");
+    case RTCWDT_CPU_RESET       : return F("RTC Watch dog Reset CPU");
+    case EXT_CPU_RESET          : return F("for APP CPU, reseted by PRO CPU");
+    case RTCWDT_BROWN_OUT_RESET : return F("Reset when the vdd voltage is not stable");
+    case RTCWDT_RTC_RESET       : return F("RTC Watch dog reset digital core and rtc module");
+    default: break;
+  }
+  if (isDEEPSLEEP_RESET) {
+    String reason = F("Deep Sleep, Wakeup reason (");
+    reason += rtc_get_wakeup_cause();
+    reason += ')';
+    return reason;
+  }
+  return F("Unknown");
+}
+#endif
+
+String getResetReasonString() {
+  #ifdef ESP32
+  String reason = F("CPU0: ");
+  reason += getResetReasonString(0);
+  reason += F(" CPU1: ");
+  reason += getResetReasonString(1);
+  return reason;
+  #else
+  return ESP.getResetReason();
+  #endif
+}
+
+uint32_t getFlashRealSizeInBytes() {
+  #if defined(ESP32)
+    return ESP.getFlashChipSize();
+  #else
+    return ESP.getFlashChipRealSize(); //ESP.getFlashChipSize();
+  #endif
 }
 
 String getSystemBuildString() {
@@ -1364,6 +1444,87 @@ String getLWIPversion() {
 }
 #endif
 
+
+/********************************************************************************************\
+  Get partition table information
+  \*********************************************************************************************/
+#ifdef ESP32
+String getPartitionType(byte pType, byte pSubType) {
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
+  esp_partition_subtype_t partitionSubType = static_cast<esp_partition_subtype_t>(pSubType);
+  if (partitionType == ESP_PARTITION_TYPE_APP) {
+    if (partitionSubType >= ESP_PARTITION_SUBTYPE_APP_OTA_MIN &&
+        partitionSubType < ESP_PARTITION_SUBTYPE_APP_OTA_MAX) {
+        String result = F("OTA partition ");
+        result += (partitionSubType - ESP_PARTITION_SUBTYPE_APP_OTA_MIN);
+        return result;
+    }
+
+    switch (partitionSubType) {
+      case ESP_PARTITION_SUBTYPE_APP_FACTORY: return F("Factory app");
+      case ESP_PARTITION_SUBTYPE_APP_TEST:    return F("Test app");
+      default: break;
+    }
+  }
+  if (partitionType == ESP_PARTITION_TYPE_DATA) {
+    switch (partitionSubType) {
+        case ESP_PARTITION_SUBTYPE_DATA_OTA:      return F("OTA selection");
+        case ESP_PARTITION_SUBTYPE_DATA_PHY:      return F("PHY init data");
+        case ESP_PARTITION_SUBTYPE_DATA_NVS:      return F("NVS");
+        case ESP_PARTITION_SUBTYPE_DATA_COREDUMP: return F("COREDUMP");
+        case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: return F("ESPHTTPD");
+        case ESP_PARTITION_SUBTYPE_DATA_FAT:      return F("FAT");
+        case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:   return F("SPIFFS");
+        default: break;
+    }
+  }
+  String result = F("Unknown(");
+  result += partitionSubType;
+  result += ')';
+  return result;
+}
+
+String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
+  String result;
+  result += F("Address");
+  result += itemSep;
+  result += F("Size");
+  result += itemSep;
+  result += F("Label");
+  result += itemSep;
+  result += F("Partition Type");
+  result += itemSep;
+  result += F("Encrypted");
+  result += lineEnd;
+  return result;
+}
+
+String getPartitionTable(byte pType, const String& itemSep, const String& lineEnd) {
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
+  String result;
+  const esp_partition_t * _mypart;
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  if (_mypartiterator) {
+    do {
+      _mypart = esp_partition_get(_mypartiterator);
+      result += formatToHex(_mypart->address);
+      result += itemSep;
+      result += formatToHex_decimal(_mypart->size, 1024);
+      result += itemSep;
+      result += _mypart->label;
+      result += itemSep;
+      result += getPartitionType(_mypart->type, _mypart->subtype);
+      result += itemSep;
+      result += (_mypart->encrypted ? F("Yes") : F("-"));
+      result += lineEnd;
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+  }
+  esp_partition_iterator_release(_mypartiterator);
+  return result;
+}
+#endif
+
+
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
@@ -1384,19 +1545,63 @@ boolean isInt(const String& tBuf) {
   return isNumerical(tBuf, true);
 }
 
-boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+bool validIntFromString(const String& tBuf, int& result) {
+  const String numerical = getNumerical(tBuf, true);
+  const bool isvalid = isInt(numerical);
+  result = numerical.toInt();
+  return isvalid;
+}
+
+bool validFloatFromString(const String& tBuf, float& result) {
+  const String numerical = getNumerical(tBuf, false);
+  const bool isvalid = isFloat(numerical);
+  result = numerical.toFloat();
+  return isvalid;
+}
+
+
+String getNumerical(const String& tBuf, bool mustBeInteger) {
+  String result = "";
+  const unsigned int bufLength = tBuf.length();
+  if (bufLength == 0) return result;
   boolean decPt = false;
   int firstDec = 0;
-  if(tBuf.charAt(0) == '+' || tBuf.charAt(0) == '-')
+  char c = tBuf.charAt(0);
+  if(c == '+' || c == '-') {
+    result += c;
     firstDec = 1;
-  for(unsigned int x=firstDec; x < tBuf.length(); ++x) {
-    if(tBuf.charAt(x) == '.') {
+  }
+  for(unsigned int x=firstDec; x < bufLength; ++x) {
+    c = tBuf.charAt(x);
+    if(c == '.') {
+      if (mustBeInteger) return result;
+      // Only one decimal point allowed
+      if(decPt) return result;
+      else decPt = true;
+    }
+    else if(c < '0' || c > '9') return result;
+    result += c;
+  }
+  return result;
+}
+
+boolean isNumerical(const String& tBuf, bool mustBeInteger) {
+  const unsigned int bufLength = tBuf.length();
+  if (bufLength == 0) return false;
+  boolean decPt = false;
+  int firstDec = 0;
+  char c = tBuf.charAt(0);
+  if(c == '+' || c == '-')
+    firstDec = 1;
+  for(unsigned int x=firstDec; x < bufLength; ++x) {
+    c = tBuf.charAt(x);
+    if(c == '.') {
       if (mustBeInteger) return false;
       // Only one decimal point allowed
       if(decPt) return false;
       else decPt = true;
     }
-    else if(tBuf.charAt(x) < '0' || tBuf.charAt(x) > '9') return false;
+    else if(c < '0' || c > '9') return false;
   }
   return true;
 }
@@ -1428,11 +1633,11 @@ void initLog()
 {
   //make sure addLog doesnt do any stuff before initalisation of Settings is complete.
   Settings.UseSerial=true;
-  Settings.SyslogLevel=0;
   Settings.SyslogFacility=0;
-  Settings.SerialLogLevel=2; //logging during initialisation
-  Settings.WebLogLevel=2;
-  Settings.SDLogLevel=0;
+  setLogLevelFor(LOG_TO_SYSLOG, 0);
+  setLogLevelFor(LOG_TO_SERIAL, 2); //logging during initialisation
+  setLogLevelFor(LOG_TO_WEBLOG, 2);
+  setLogLevelFor(LOG_TO_SDCARD, 0);
 }
 
 /********************************************************************************************\
@@ -1450,17 +1655,16 @@ String getLogLevelDisplayString(byte index, int& logLevel) {
   }
 }
 
-
-void addLog(byte loglevel, String& string)
+void addToLog(byte loglevel, String& string)
 {
-  addLog(loglevel, string.c_str());
+  addToLog(loglevel, string.c_str());
 }
 
-void addLog(byte logLevel, const __FlashStringHelper* flashString)
+void addToLog(byte logLevel, const __FlashStringHelper* flashString)
 {
-    checkRAM(F("addLog"));
+    checkRAM(F("addToLog"));
     String s(flashString);
-    addLog(logLevel, s.c_str());
+    addToLog(logLevel, s.c_str());
 }
 
 bool SerialAvailableForWrite() {
@@ -1469,6 +1673,38 @@ bool SerialAvailableForWrite() {
     if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
   #endif
   return true;
+}
+
+void disableSerialLog() {
+  log_to_serial_disabled = true;
+  setLogLevelFor(LOG_TO_SERIAL, 0);
+}
+
+void setLogLevelFor(byte destination, byte logLevel) {
+  switch (destination) {
+    case LOG_TO_SERIAL:
+      if (!log_to_serial_disabled || logLevel == 0)
+        Settings.SerialLogLevel = logLevel; break;
+    case LOG_TO_SYSLOG: Settings.SyslogLevel = logLevel;    break;
+    case LOG_TO_WEBLOG: Settings.WebLogLevel = logLevel;    break;
+    case LOG_TO_SDCARD: Settings.SDLogLevel = logLevel;     break;
+    default:
+      break;
+  }
+  updateLogLevelCache();
+}
+
+void updateLogLevelCache() {
+  byte max_lvl = 0;
+  max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+  max_lvl = _max(max_lvl, Settings.SyslogLevel);
+  max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  max_lvl = _max(max_lvl, Settings.SDLogLevel);
+  highest_active_log_level = max_lvl;
+}
+
+bool loglevelActiveFor(byte logLevel) {
+  return loglevelActive(logLevel, highest_active_log_level);
 }
 
 boolean loglevelActiveFor(byte destination, byte logLevel) {
@@ -1504,7 +1740,7 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
-void addLog(byte logLevel, const char *line)
+void addToLog(byte logLevel, const char *line)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     Serial.print(millis());
@@ -1542,12 +1778,15 @@ void delayedReboot(int rebootDelay)
     rebootDelay--;
     delay(1000);
   }
-   #if defined(ESP8266)
-     ESP.reset();
-   #endif
-   #if defined(ESP32)
-     ESP.restart();
-   #endif
+  reboot();
+}
+
+void reboot() {
+  #if defined(ESP32)
+    ESP.restart();
+  #else
+    ESP.reset();
+  #endif
 }
 
 
@@ -1921,11 +2160,13 @@ String parseTemplate(String &tmpString, byte lineSize)
                                   newString += " ";
                               }
                               {
-                                String logFormatted = F("DEBUG: Formatted String='");
-                                logFormatted += newString;
-                                logFormatted += value;
-                                logFormatted += "'";
-                                addLog(LOG_LEVEL_DEBUG, logFormatted);
+                                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                                  String logFormatted = F("DEBUG: Formatted String='");
+                                  logFormatted += newString;
+                                  logFormatted += value;
+                                  logFormatted += "'";
+                                  addLog(LOG_LEVEL_DEBUG, logFormatted);
+                                }
                               }
                             }
                           }
@@ -1933,10 +2174,12 @@ String parseTemplate(String &tmpString, byte lineSize)
 
                           newString += String(value);
                           {
-                            String logParsed = F("DEBUG DEV: Parsed String='");
-                            logParsed += newString;
-                            logParsed += "'";
-                            addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+                            if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+                              String logParsed = F("DEBUG DEV: Parsed String='");
+                              logParsed += newString;
+                              logParsed += "'";
+                              addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+                            }
                           }
                           break;
                         }
@@ -2281,11 +2524,11 @@ void rulesProcessing(String& event)
 {
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
-  String log = "";
-
-  log = F("EVENT: ");
-  log += event;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("EVENT: ");
+    log += event;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   for (byte x = 0; x < RULESETS_MAX; x++)
   {
@@ -2301,10 +2544,14 @@ void rulesProcessing(String& event)
       rulesProcessingFile(fileName, event);
   }
 
-  log += F(" Processing time:");
-  log += timePassedSince(timer);
-  log += F(" milliSeconds");
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("EVENT: ");
+    log += event;
+    log += F(" Processing time:");
+    log += timePassedSince(timer);
+    log += F(" milliSeconds");
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 
 }
 
@@ -2327,8 +2574,7 @@ String rulesProcessingFile(String fileName, String& event)
   nestingLevel++;
   if (nestingLevel > RULES_MAX_NESTING_LEVEL)
   {
-    log = F("EVENT: Error: Nesting level exceeded!");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
     return (log);
   }
@@ -2442,6 +2688,8 @@ String rulesProcessingFile(String fileName, String& event)
             {
               conditional = true;
               String check = lcAction.substring(split + 3);
+
+
               log = F("[if ");
               log += check;
               log += F("]=");
@@ -2477,9 +2725,11 @@ String rulesProcessingFile(String fileName, String& event)
             {
               ifBranche = false;
               isCommand = false;
-              log = F("else = ");
-              log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
-              addLog(LOG_LEVEL_DEBUG, log);
+              if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                String log = F("else = ");
+                log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
+                addLog(LOG_LEVEL_DEBUG, log);
+              }
             }
 
             if (lcAction == "endif") // conditional block ends here
@@ -2506,9 +2756,12 @@ String rulesProcessingFile(String fileName, String& event)
                   action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
                 }
               }
-              log = F("ACT  : ");
-              log += action;
-              addLog(LOG_LEVEL_INFO, log);
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ACT  : ");
+                log += action;
+                addLog(LOG_LEVEL_INFO, log);
+              }
 
               struct EventStruct TempEvent;
               parseCommandString(&TempEvent, action);
@@ -2517,11 +2770,13 @@ String rulesProcessingFile(String fileName, String& event)
               String tmpAction(action);
               if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
                 if (!tmpAction.equals(action)) {
-                  String log = F("PLUGIN_WRITE altered the string: ");
-                  log += action;
-                  log += F(" to: ");
-                  log += tmpAction;
-                  addLog(LOG_LEVEL_ERROR, log);
+                  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                    String log = F("PLUGIN_WRITE altered the string: ");
+                    log += action;
+                    log += F(" to: ");
+                    log += tmpAction;
+                    addLog(LOG_LEVEL_ERROR, log);
+                  }
                 }
                 ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
               }
@@ -2550,6 +2805,10 @@ boolean ruleMatch(String& event, String& rule)
   boolean match = false;
   String tmpEvent = event;
   String tmpRule = rule;
+
+  //Ignore escape char
+  tmpRule.replace(F("["),F(""));
+  tmpRule.replace(F("]"),F(""));
 
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
@@ -2847,27 +3106,33 @@ void createRuleEvents(byte TaskIndex)
 
 void SendValueLogger(byte TaskIndex)
 {
+  bool featureSD = false;
+  #ifdef FEATURE_SD
+    featureSD = true;
+  #endif
+
   String logger;
+  if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    LoadTaskSettings(TaskIndex);
+    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
+    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+    {
+      logger += getDateString('-');
+      logger += F(" ");
+      logger += getTimeString(':');
+      logger += F(",");
+      logger += Settings.Unit;
+      logger += F(",");
+      logger += ExtraTaskSettings.TaskDeviceName;
+      logger += F(",");
+      logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+      logger += F(",");
+      logger += formatUserVarNoCheck(TaskIndex, varNr);
+      logger += F("\r\n");
+    }
 
-  LoadTaskSettings(TaskIndex);
-  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
-  {
-    logger += getDateString('-');
-    logger += F(" ");
-    logger += getTimeString(':');
-    logger += F(",");
-    logger += Settings.Unit;
-    logger += F(",");
-    logger += ExtraTaskSettings.TaskDeviceName;
-    logger += F(",");
-    logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-    logger += F(",");
-    logger += formatUserVarNoCheck(TaskIndex, varNr);
-    logger += F("\r\n");
+    addLog(LOG_LEVEL_DEBUG, logger);
   }
-
-  addLog(LOG_LEVEL_DEBUG, logger);
 
 #ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
@@ -2940,15 +3205,17 @@ class RamTracker{
        if (writePtr >= TRACEENTRIES) writePtr=0;          // inc write pointer and wrap around too.
     };
    void getTraceBuffer(){                                // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
-      String retval="Memtrace\n";
-      for (int i = 0; i< TRACES; i++){
-        retval += String(i);
-        retval += ": lowest: ";
-        retval += String(tracesMemory[i]);
-        retval += "  ";
-        retval += traces[i];
-        addLog(LOG_LEVEL_DEBUG_DEV, retval);
-        retval="";
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+        String retval="Memtrace\n";
+        for (int i = 0; i< TRACES; i++){
+          retval += String(i);
+          retval += ": lowest: ";
+          retval += String(tracesMemory[i]);
+          retval += "  ";
+          retval += traces[i];
+          addLog(LOG_LEVEL_DEBUG_DEV, retval);
+          retval="";
+        }
       }
     }
 }myRamTracker;                                              // instantiate class. (is global now)
@@ -3184,16 +3451,8 @@ void ArduinoOTAInit()
 {
   checkRAM(F("ArduinoOTAInit"));
 
-  #if defined(ESP8266)
-  // Default port is 8266
-  ArduinoOTA.setPort(8266);
-  #endif
-  #if defined(ESP32)
-  ArduinoOTA.setPort(3232);
-  #endif
-
+  ArduinoOTA.setPort(ARDUINO_OTA_PORT);
   ArduinoOTA.setHostname(Settings.Name);
-
   if (SecuritySettings.Password[0]!=0)
     ArduinoOTA.setPassword(SecuritySettings.Password);
 
@@ -3208,12 +3467,7 @@ void ArduinoOTAInit()
       //so dont touch device until restart is complete
       Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
       delay(100);
-      #if defined(ESP8266)
-        ESP.reset();
-      #endif
-      #if defined(ESP32)
-        ESP.restart();
-      #endif
+      reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 
@@ -3229,18 +3483,15 @@ void ArduinoOTAInit()
       else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
 
       delay(100);
-      #if defined(ESP8266)
-       ESP.reset();
-      #endif
-      #if defined(ESP32)
-        ESP.restart();
-      #endif
+      reboot();
   });
   ArduinoOTA.begin();
 
-  String log = F("OTA  : Arduino OTA enabled on port 8266");
-  addLog(LOG_LEVEL_INFO, log);
-
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("OTA  : Arduino OTA enabled on port ");
+    log += ARDUINO_OTA_PORT;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 }
 
 #endif

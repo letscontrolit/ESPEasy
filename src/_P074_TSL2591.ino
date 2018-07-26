@@ -252,11 +252,12 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 					log += F(" IR: ");
 					log += String(ir);
 					addLog(LOG_LEVEL_INFO,log);
+          success = true;
       	}
       	else {
       		addLog(LOG_LEVEL_ERROR,F("TSL2591: Sensor not initialized!?"));
       	}
-
+        break;
       }
 
   }

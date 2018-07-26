@@ -19,6 +19,7 @@ byte getValueCountFromSensorType(byte sensorType)
     case SENSOR_TYPE_DUAL:
       return 2;
     case SENSOR_TYPE_TEMP_HUM_BARO:
+    case SENSOR_TYPE_TEMP_EMPTY_BARO: // Values 1 and 3 will contain data.
     case SENSOR_TYPE_TRIPLE:
     case SENSOR_TYPE_WIND:
       return 3;

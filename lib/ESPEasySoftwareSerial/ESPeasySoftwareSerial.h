@@ -19,7 +19,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
+#ifdef ESP8266  // Needed for precompile issues.
 #ifndef ESPeasySoftwareSerial_h
 #define ESPeasySoftwareSerial_h
 
@@ -75,4 +75,5 @@ private:
 #define SW_SERIAL_UNUSED_PIN -1
 
 
+#endif
 #endif

@@ -60,6 +60,59 @@ String formatMAC(const uint8_t* mac) {
   return String(str);
 }
 
+String formatToHex(unsigned long value, const String& prefix) {
+  String result = prefix;
+  String hex(value, HEX);
+  hex.toUpperCase();
+  result += hex;
+  return result;
+}
+
+String formatToHex(unsigned long value) {
+  return formatToHex(value, F("0x"));
+}
+
+String formatHumanReadable(unsigned long value, unsigned long factor) {
+  float floatValue(value);
+  byte steps = 0;
+  while (value >= factor) {
+    value /= factor;
+    ++steps;
+    floatValue /= float(factor);
+  }
+  String result = toString(floatValue, 2);
+  switch (steps) {
+    case 0: return String(value);
+    case 1: result += 'k'; break;
+    case 2: result += 'M'; break;
+    case 3: result += 'G'; break;
+    case 4: result += 'T'; break;
+    default:
+      result += '*';
+      result += factor;
+      result += '^';
+      result += steps;
+      break;
+  }
+  return result;
+}
+
+String formatToHex_decimal(unsigned long value) {
+  return formatToHex_decimal(value, 1);
+}
+
+String formatToHex_decimal(unsigned long value, unsigned long factor) {
+  String result = formatToHex(value);
+  result += F(" (");
+  if (factor > 1) {
+    result += formatHumanReadable(value, factor);
+  } else {
+    result += value;
+  }
+  result += ')';
+  return result;
+}
+
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
   \*********************************************************************************************/
@@ -68,6 +121,29 @@ String toString(float value, byte decimals)
   String sValue = String(value, decimals);
   sValue.trim();
   return sValue;
+}
+
+String toString(WiFiMode_t mode)
+{
+  String result = F("Undefinited");
+  switch (mode)
+  {
+    case WIFI_OFF:
+      result = F("Off");
+      break;
+    case WIFI_STA:
+      result = F("STA");
+      break;
+    case WIFI_AP:
+      result = F("AP");
+      break;
+    case WIFI_AP_STA:
+      result = F("AP+STA");
+      break;
+    default:
+      break;
+  }
+  return result;
 }
 
 /*********************************************************************************************\
@@ -157,49 +233,123 @@ String to_json_object_value(const String& object, const String& value) {
   return result;
 }
 
-
 /*********************************************************************************************\
-   Parse a string and get the xth command or parameter
+   Strip wrapping chars (e.g. quotes)
   \*********************************************************************************************/
-String parseString(String& string, byte indexFind)
-{
-  String tmpString = string;
-  tmpString += ',';
-  tmpString.replace(' ', ',');
-  String locateString = "";
-  byte count = 0;
-  int index = tmpString.indexOf(',');
-  while (index > 0)
-  {
-    count++;
-    locateString = tmpString.substring(0, index);
-    tmpString = tmpString.substring(index + 1);
-    index = tmpString.indexOf(',');
-    if (count == indexFind)
-    {
-      locateString.toLowerCase();
-      return locateString;
-    }
+
+String stripWrappingChar(const String& text, char wrappingChar) {
+  unsigned int length = text.length();
+  if (length >= 2 && stringWrappedWithChar(text, wrappingChar)) {
+    return text.substring(1, length -1);
   }
-  return "";
+  return text;
 }
 
+bool stringWrappedWithChar(const String& text, char wrappingChar) {
+  unsigned int length = text.length();
+  if (length < 2) return false;
+  if (text.charAt(0) != wrappingChar) return false;
+  return (text.charAt(length - 1) == wrappingChar);
+}
+
+bool isQuoteChar(char c) {
+  return (c == '\'' || c == '"');
+}
+
+bool isParameterSeparatorChar(char c) {
+  return (c == ',' || c == ' ');
+}
+
+String stripQuotes(const String& text) {
+  if (text.length() >= 2) {
+    char c = text.charAt(0);
+    if (isQuoteChar(c)) {
+      return stripWrappingChar(text, c);
+    }
+  }
+  return text;
+}
+
+/*********************************************************************************************\
+   Parse a string and get the xth command or parameter in lower case
+  \*********************************************************************************************/
+String parseString(const String& string, byte indexFind, bool toEndOfString, bool toLowerCase) {
+  int startpos = 0;
+  if (indexFind > 0) {
+    startpos = getParamStartPos(string, indexFind);
+    if (startpos < 0) {
+      return "";
+    }
+  }
+  const int endpos = getParamStartPos(string, indexFind + 1);
+  String result;
+  if (toEndOfString || endpos <= 0) {
+    result = string.substring(startpos);
+  } else {
+    result = string.substring(startpos, endpos - 1);
+  }
+  if (toLowerCase)
+    result.toLowerCase();
+  return stripQuotes(result);
+}
+
+String parseString(const String& string, byte indexFind) {
+  return parseString(string, indexFind, false, true);
+}
+
+String parseStringKeepCase(const String& string, byte indexFind) {
+  return parseString(string, indexFind, false, false);
+}
+
+String parseStringToEnd(const String& string, byte indexFind) {
+  return parseString(string, indexFind, true, true);
+}
+
+String parseStringToEndKeepCase(const String& string, byte indexFind) {
+  return parseString(string, indexFind, true, false);
+}
 
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter
   \*********************************************************************************************/
-int getParamStartPos(String& string, byte indexFind)
+int getParamStartPos(const String& string, byte indexFind)
 {
-  String tmpString = string;
-  byte count = 0;
-  tmpString.replace(' ', ',');
-  for (unsigned int x = 0; x < tmpString.length(); x++)
+  // We need to find the xth command, so we need to find the position of the (X-1)th separator.
+  if (indexFind <= 1) return 0;
+  byte count = 1;
+  bool quotedStringActive = false;
+  char quoteStartChar = '"';
+  unsigned int lastParamStartPos = 0;
+  const unsigned int strlength = string.length();
+  if (strlength < indexFind) return -1;
+  for (unsigned int x = 0; x < (strlength - 1); ++x)
   {
-    if (tmpString.charAt(x) == ',')
-    {
-      count++;
-      if (count == (indexFind - 1))
-        return x + 1;
+    const char c = string.charAt(x);
+    // Check if we are parsing a quoted string parameter
+    if (!quotedStringActive) {
+      if (isQuoteChar(c)) {
+        // Only allow ' or " right after parameter separator.
+        if (lastParamStartPos == x ) {
+          quotedStringActive = true;
+          quoteStartChar = c;
+        }
+      }
+    } else {
+      if (c == quoteStartChar) {
+        // Found end of quoted string
+        quotedStringActive = false;
+      }
+    }
+    // Do further parsing.
+    if (!quotedStringActive) {
+      if (isParameterSeparatorChar(c))
+      {
+        lastParamStartPos = x + 1;
+        ++count;
+        if (count == indexFind) {
+          return lastParamStartPos;
+        }
+      }
     }
   }
   return -1;
@@ -314,6 +464,7 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
 
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T,S) if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode);}
+#define SMART_REPL_T(T,S) if (s.indexOf(T) != -1) { (S((T), s, useURLencode));}
 void parseSystemVariables(String& s, boolean useURLencode)
 {
   parseSpecialCharacters(s, useURLencode);
@@ -339,7 +490,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   #endif
 
   if (s.indexOf(F("%sys")) != -1) {
-    SMART_REPL(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)))
+    SMART_REPL(F("%sysload%"), String(getCPUload()))
     SMART_REPL(F("%sysheap%"), String(ESP.getFreeHeap()));
     SMART_REPL(F("%systm_hm%"), getTimeString(':', false))
     SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))
@@ -366,6 +517,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%lcltime_am%"), getDateTimeString_ampm('-',':',' '))
   SMART_REPL(F("%uptime%"), String(wdcounter / 2))
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
+  SMART_REPL_T(F("%sunset"), replSunSetTimeString)
+  SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   if (s.indexOf(F("%vname")) != -1) {
@@ -374,6 +527,28 @@ void parseSystemVariables(String& s, boolean useURLencode)
     repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
     repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
   }
+}
+
+String getReplacementString(const String& format, String& s) {
+  int startpos = s.indexOf(format);
+  int endpos = s.indexOf('%', startpos + 1);
+  String R = s.substring(startpos, endpos + 1);
+  String log = F("ReplacementString SunTime: ");
+  log += R;
+  log += F(" offset: ");
+  log += getSecOffset(R);
+  addLog(LOG_LEVEL_DEBUG, log);
+  return R;
+}
+
+void replSunRiseTimeString(const String& format, String& s, boolean useURLencode) {
+  String R = getReplacementString(format, s);
+  repl(R, getSunriseTimeString(':', getSecOffset(R)), s, useURLencode);
+}
+
+void replSunSetTimeString(const String& format, String& s, boolean useURLencode) {
+  String R = getReplacementString(format, s);
+  repl(R, getSunsetTimeString(':', getSecOffset(R)), s, useURLencode);
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
@@ -390,6 +565,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
     }
   }
 }
+#undef SMART_REPL_T
 #undef SMART_REPL
 
 bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {

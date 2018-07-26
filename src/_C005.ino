@@ -83,13 +83,12 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        if (!WiFiConnected(100)) {
-          success = false;
-          break;
-        }
         ControllerSettingsStruct ControllerSettings;
         LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
+        if (!ControllerSettings.checkHostReachable(true)) {
+            success = false;
+            break;
+        }
         statusLED(true);
 
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
