@@ -3854,8 +3854,17 @@ void handle_advanced() {
   addFormSubHeader(F("Location Settings"));
   addFormFloatNumberBox(F("Latitude"), F("latitude"), Settings.Latitude, -90.0, 90.0);
   addUnit(F("&deg;"));
+  TXBuffer += F(" getgeopos work best on phones");
   addFormFloatNumberBox(F("Longitude"), F("longitude"), Settings.Longitude, -180.0, 180.0);
   addUnit(F("&deg;"));
+
+  TXBuffer += F("&nbsp;<button type='button' onclick='getLocation()'>Get coordinates</button>");
+  TXBuffer += F("<script>");
+  TXBuffer += F("function getLocation() { navigator.geolocation.getCurrentPosition(addCoordinates);");
+  TXBuffer += F("function addCoordinates(position) {");
+  TXBuffer += F("document.getElementById('longitude').value = position.coords.longitude.toFixed(2); ");
+  TXBuffer += F("document.getElementById('latitude').value = position.coords.latitude.toFixed(2); }");
+  TXBuffer += F("</script>");
 
   addFormSubHeader(F("Log Settings"));
 
