@@ -3854,10 +3854,11 @@ void handle_advanced() {
   addFormSubHeader(F("Location Settings"));
   addFormFloatNumberBox(F("Latitude"), F("latitude"), Settings.Latitude, -90.0, 90.0);
   addUnit(F("&deg;"));
+  TXBuffer += F(" getgeopos work best on phones");
   addFormFloatNumberBox(F("Longitude"), F("longitude"), Settings.Longitude, -180.0, 180.0);
   addUnit(F("&deg;"));
 
-  TXBuffer += F("<button type='button' onclick='getLocation()'>Get coordinates</button>");
+  TXBuffer += F("&nbsp;<button type='button' onclick='getLocation()'>Get coordinates</button>");
   TXBuffer += F("<script>");
   TXBuffer += F("function getLocation() { navigator.geolocation.getCurrentPosition(addCoordinates);");
   TXBuffer += F("function addCoordinates(position) {");
