@@ -3856,7 +3856,15 @@ void handle_advanced() {
   addUnit(F("&deg;"));
   addFormFloatNumberBox(F("Longitude"), F("longitude"), Settings.Longitude, -180.0, 180.0);
   addUnit(F("&deg;"));
-
+  
+  TXBuffer += F("<button onclick='getLocation()'>Get coordinates</button>");
+  TXBuffer += F("<script>");
+  TXBuffer += F("var x = document.getElementById('longitude');");
+  TXBuffer += F("var y = document.getElementById('latitude');");
+  TXBuffer += F("function getLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(addCoordinates); } }");
+  TXBuffer += F("function addCoordinates(position) { x.innerHTML = position.coords.longitude.toFixed(2); y.innerHTML = position.coords.latitude.toFixed(2); }");
+  TXBuffer += F("</script>");
+  
   addFormSubHeader(F("Log Settings"));
 
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
