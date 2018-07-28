@@ -345,8 +345,9 @@
 #define BOOT_CAUSE_DEEP_SLEEP               2
 #define BOOT_CAUSE_EXT_WD                  10
 
-#define DAT_TASKS_SIZE                   2048
-#define DAT_TASKS_CUSTOM_OFFSET          1024
+#define DAT_TASKS_DISTANCE               2048  // DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE
+#define DAT_TASKS_SIZE                   1024
+#define DAT_TASKS_CUSTOM_OFFSET          1024  // Equal to DAT_TASKS_SIZE
 #define DAT_TASKS_CUSTOM_SIZE            1024
 #define DAT_CUSTOM_CONTROLLER_SIZE       1024
 #define DAT_CONTROLLER_SIZE              1024
@@ -364,6 +365,15 @@
   #define DAT_OFFSET_TASKS                32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
   #define CONFIG_FILE_SIZE               131072
 #endif
+
+enum SettingsType {
+  TaskSettings_Type,
+  CustomTaskSettings_Type,
+  ControllerSettings_Type,
+  CustomControllerSettings_Type,
+  NotificationSettings_Type
+};
+bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
 
 /*
         To modify the stock configuration without changing this repo file :
@@ -582,48 +592,94 @@ struct SecurityStruct
 
 struct SettingsStruct
 {
-  SettingsStruct() :
-    PID(0), Version(0), Build(0), IP_Octet(0), Unit(0), Delay(0),
-    Pin_i2c_sda(-1), Pin_i2c_scl(-1), Pin_status_led(-1), Pin_sd_cs(-1),
-    UDPPort(0), SyslogLevel(0), SerialLogLevel(0), WebLogLevel(0), SDLogLevel(0),
-    BaudRate(0), MessageDelay(0), deepSleep(0),
-    CustomCSS(false), DST(false), WDI2CAddress(0),
-    UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
-    WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
-    TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
-    Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
-    DST_Start(0), DST_End(0), UseRTOSMultitasking(false), Pin_Reset(-1),
-    SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0), MQTTUseUnitNameAsClientId(0)
-    {
-      for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-        Protocol[i] = 0;
-        ControllerEnabled[i] = false;
-        for (byte task = 0; task < TASKS_MAX; ++task) {
-          TaskDeviceID[i][task] = 0;
-          TaskDeviceSendData[i][task] = false;
-        }
-      }
-      for (byte task = 0; task < TASKS_MAX; ++task) {
-        TaskDeviceNumber[task] = 0;
-        OLD_TaskDeviceID[task] = 0;
-        TaskDevicePin1PullUp[task] = false;
-        for (byte cv = 0; cv < PLUGIN_CONFIGVAR_MAX; ++cv) {
-          TaskDevicePluginConfig[task][cv] = 0;
-        }
-        TaskDevicePin1Inversed[task] = false;
-        for (byte cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
-          TaskDevicePluginConfigFloat[task][cv] = 0.0;
-        }
-        for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
-          TaskDevicePluginConfigLong[task][cv] = 0;
-        }
-        OLD_TaskDeviceSendData[task] = false;
-        TaskDeviceGlobalSync[task] = false;
-        TaskDeviceDataFeed[task] = 0;
-        TaskDeviceTimer[task] = 0;
-        TaskDeviceEnabled[task] = false;
-      }
+  SettingsStruct() {
+    clearAll();
+  }
+
+  void clearAll() {
+    PID = 0;
+    Version = 0;
+    Build = 0;
+    IP_Octet = 0;
+    Unit = 0;
+    Delay = 0;
+    Pin_i2c_sda = -1;
+    Pin_i2c_scl = -1;
+    Pin_status_led = -1;
+    Pin_sd_cs = -1;
+    UDPPort = 0;
+    SyslogLevel = 0;
+    SerialLogLevel = 0;
+    WebLogLevel = 0;
+    SDLogLevel = 0;
+    BaudRate = 0;
+    MessageDelay = 0;
+    deepSleep = 0;
+    CustomCSS = false;
+    DST = false;
+    WDI2CAddress = 0;
+    UseRules = false;
+    UseSerial = false;
+    UseSSDP = false;
+    UseNTP = false;
+    WireClockStretchLimit = 0;
+    GlobalSync = false;
+    ConnectionFailuresThreshold = 0;
+    TimeZone = 0;
+    MQTTRetainFlag = false;
+    InitSPI = false;
+    Pin_status_led_Inversed = false;
+    deepSleepOnFail = false;
+    UseValueLogger = false;
+    DST_Start = 0;
+    DST_End = 0;
+    UseRTOSMultitasking = false;
+    Pin_Reset = -1;
+    SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    StructSize = 0;
+    MQTTUseUnitNameAsClientId = 0;
+
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      Protocol[i] = 0;
+      ControllerEnabled[i] = false;
     }
+    for (byte i = 0; i < NOTIFICATION_MAX; ++i) {
+      Notification[i] = 0;
+      NotificationEnabled[i] = false;
+    }
+    for (byte task = 0; task < TASKS_MAX; ++task) {
+      clearTask(task);
+    }
+  }
+
+  void clearTask(byte task) {
+    for (byte i = 0; i < CONTROLLER_MAX; ++i) {
+      TaskDeviceID[i][task] = 0;
+      TaskDeviceSendData[i][task] = false;
+    }
+    TaskDeviceNumber[task] = 0;
+    OLD_TaskDeviceID[task] = 0;
+    TaskDevicePin1[task] = -1;
+    TaskDevicePin2[task] = -1;
+    TaskDevicePin3[task] = -1;
+    TaskDevicePort[task] = 0;
+    TaskDevicePin1PullUp[task] = false;
+    for (byte cv = 0; cv < PLUGIN_CONFIGVAR_MAX; ++cv) {
+      TaskDevicePluginConfig[task][cv] = 0;
+    }
+    TaskDevicePin1Inversed[task] = false;
+    for (byte cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
+      TaskDevicePluginConfigFloat[task][cv] = 0.0;
+    }
+    for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
+      TaskDevicePluginConfigLong[task][cv] = 0;
+    }
+    OLD_TaskDeviceSendData[task] = false;
+    TaskDeviceGlobalSync[task] = false;
+    TaskDeviceDataFeed[task] = 0;
+    TaskDeviceTimer[task] = 0;
+    TaskDeviceEnabled[task] = false;
+  }
 
   unsigned long PID;
   int           Version;
@@ -689,7 +745,7 @@ struct SettingsStruct
   boolean       TaskDeviceEnabled[TASKS_MAX];
   boolean       ControllerEnabled[CONTROLLER_MAX];
   boolean       NotificationEnabled[NOTIFICATION_MAX];
-  unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];
+  unsigned int  TaskDeviceID[CONTROLLER_MAX][TASKS_MAX];        // IDX number (mainly used by Domoticz)
   boolean       TaskDeviceSendData[CONTROLLER_MAX][TASKS_MAX];
   boolean       Pin_status_led_Inversed;
   boolean       deepSleepOnFail;
@@ -867,13 +923,20 @@ struct NotificationSettingsStruct
 //FIXME @TD-er: Should think of another mechanism to make this more efficient.
 struct ExtraTaskSettingsStruct
 {
-  ExtraTaskSettingsStruct() : TaskIndex(0) {
-    TaskDeviceName[0] = 0;
+  ExtraTaskSettingsStruct() : TaskIndex(TASKS_MAX) {
+    clear();
+  }
+
+  void clear() {
+    TaskIndex = TASKS_MAX;
+    for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
+      TaskDeviceName[j] = 0;
+    }
     for (byte i = 0; i < VARS_PER_TASK; ++i) {
       for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
         TaskDeviceFormula[i][j] = 0;
         TaskDeviceValueNames[i][j] = 0;
-        TaskDeviceValueDecimals[i] = 0;
+        TaskDeviceValueDecimals[i] = 2;
       }
     }
     for (byte i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
@@ -882,7 +945,7 @@ struct ExtraTaskSettingsStruct
     }
   }
 
-  byte    TaskIndex;
+  byte    TaskIndex;  // Always < TASKS_MAX
   char    TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];

@@ -200,7 +200,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
           log = F("ERR  : Illegal Payload ");
           log += Payload;
           log += "  ";
-          log += ExtraTaskSettings.TaskDeviceName;
+          log += getTaskDeviceName(event->TaskIndex);
           addLog(LOG_LEVEL_INFO, log);
           success = false;
           break;
@@ -227,7 +227,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             // Log the event
 
             String log = F("IMPT : [");
-            log += ExtraTaskSettings.TaskDeviceName;
+            log += getTaskDeviceName(event->TaskIndex);
             log += F("#");
             log += ExtraTaskSettings.TaskDeviceValueNames[x];
             log += F("] : ");
@@ -239,7 +239,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             if (Settings.UseRules)
             {
               String RuleEvent = F("");
-              RuleEvent += ExtraTaskSettings.TaskDeviceName;
+              RuleEvent += getTaskDeviceName(event->TaskIndex);
               RuleEvent += F("#");
               RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
               RuleEvent += F("=");
@@ -287,7 +287,7 @@ boolean MQTTSubscribe_037()
           {
             String log = F("IMPT : [");
             LoadTaskSettings(y);
-            log += ExtraTaskSettings.TaskDeviceName;
+            log += getTaskDeviceName(y);
             log += F("#");
             log += ExtraTaskSettings.TaskDeviceValueNames[x];
             log += F("] subscribed to ");

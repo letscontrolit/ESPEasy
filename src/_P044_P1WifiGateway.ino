@@ -317,7 +317,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 if (Settings.UseRules)
                 {
                   LoadTaskSettings(event->TaskIndex);
-                  String eventString = ExtraTaskSettings.TaskDeviceName;
+                  String eventString = getTaskDeviceName(event->TaskIndex);
                   eventString += F("#Data");
                   rulesProcessing(eventString);
                 }

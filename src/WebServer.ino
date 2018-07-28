@@ -1821,12 +1821,15 @@ void handle_devices() {
   }
   const int edit = getFormItemInt(F("edit"), 0);
 
+  // taskIndex in the URL is 1 ... TASKS_MAX
+  // For use in other functions, set it to 0 ... (TASKS_MAX - 1)
   byte taskIndex = getFormItemInt(F("index"), 0);
   boolean taskIndexNotSet = taskIndex == 0;
   --taskIndex;
 
   byte DeviceIndex = 0;
-
+  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
+  // FIXME TD-er: Might have to clear any caches here.
   if (edit != 0  && !taskIndexNotSet) // when form submitted
   {
     if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber) // change of device: cleanup old device and reset default settings

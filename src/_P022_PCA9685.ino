@@ -23,12 +23,12 @@
 #define PCA9685_ALLLED_REG          (byte)0xFA
 
 /*
-is bit flag any bit rapresent the initialization state of PCA9685 
+is bit flag any bit rapresent the initialization state of PCA9685
 es:  bit 3 is set 1 PCA9685 with address 0X40 + 0x03 is intin
 */
 #define IS_INIT(state, bit) ((state & 1 << bit) == 1 << bit)
 #define SET_INIT(state, bit) (state|= 1 << bit)
-long long initializeState; // 
+long long initializeState; //
 
 boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 {
@@ -85,7 +85,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePort[event->TaskIndex] = getFormItemInt(F("i2c_addr"));
         success = true;
         break;
-      }      
+      }
 
     case PLUGIN_WRITE:
       {
@@ -100,7 +100,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           String name = line.substring(0,dotPos);
           name.replace(F("["),F(""));
           name.replace(F("]"),F(""));
-          if(name.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName) == true)
+          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             line = line.substring(dotPos + 1);
             istanceCommand = true;
@@ -121,7 +121,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             if(event->Par2 >=0 && event->Par2 <= PCA9685_MAX_PWM)
             {
               if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS))) Plugin_022_initialize(address);
-              
+
               Plugin_022_Write(address, event->Par1, event->Par2);
               setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
               addLog(LOG_LEVEL_INFO, log);
@@ -139,7 +139,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           if(event->Par1 >= PCA9685_MIN_FREQUENCY && event->Par1 <= PCA9685_MAX_FREQUENCY)
-          {          
+          {
             if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS))) Plugin_022_initialize(address);
 
             Plugin_022_Frequency(address, event->Par1);
@@ -150,7 +150,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           }
           else{
             addLog(LOG_LEVEL_ERROR,String(F("PCA ")) + String(address, HEX) + String(F(" The frequesncy ")) + String(event->Par1) + String(F(" is out of range.")));
-          } 
+          }
 
         }
 
@@ -175,7 +175,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             if(parseString(line,2) == "all")
             {
               pin = -1;
-              log += String(F("all"));              
+              log += String(F("all"));
             }
             else
             {
@@ -189,10 +189,10 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             else
             {
               log += F(" on");
-              Plugin_022_On(address, pin);              
+              Plugin_022_On(address, pin);
             }
             addLog(LOG_LEVEL_INFO, log);
-            setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);            
+            setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
           }
           else{
@@ -237,7 +237,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
                   log += String(autoreset);
                 }
               }
-              
+
             }
             setSystemTimer(event->Par3 , PLUGIN_ID_022
               , event->TaskIndex
@@ -286,7 +286,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             , autoreset);
         }
         setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-        SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));    
+        SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
         break;
       }
   }

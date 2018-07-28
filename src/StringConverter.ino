@@ -520,6 +520,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
+  // FIXME TD-er: Must make sure LoadTaskSettings has been performed before this is called.
   repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   if (s.indexOf(F("%vname")) != -1) {
     repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);

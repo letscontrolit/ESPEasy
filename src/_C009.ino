@@ -100,7 +100,7 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
           // Each sensor value get an own object (0..n)
           // sprintf(itemNames[x],"%d",x);
           JsonObject& val = SENSOR.createNestedObject(String(x));
-          val[F("deviceName")] = ExtraTaskSettings.TaskDeviceName;
+          val[F("deviceName")] = getTaskDeviceName(event->TaskIndex);
           val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
           val[F("type")]       = event->sensorType;
           val[F("value")]      = formatUserVarNoCheck(event, x);

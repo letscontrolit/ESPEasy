@@ -195,8 +195,6 @@ void setup()
 //  setWifiMode(WIFI_STA);
   checkRuleSets();
 
-  ExtraTaskSettings.TaskIndex = 255; // make sure this is an unused nr to prevent cache load on boot
-
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
   if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)

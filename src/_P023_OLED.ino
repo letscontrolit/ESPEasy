@@ -235,7 +235,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           String name = arguments.substring(0,dotPos);
           name.replace(F("["),F(""));
           name.replace(F("]"),F(""));
-          if(name.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName) == true)
+          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             arguments = arguments.substring(dotPos+1);
           }
@@ -244,7 +244,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
              return false;
           }
         }
-        
+
         int argIndex = arguments.indexOf(',');
         if (argIndex)
           arguments = arguments.substring(0, argIndex);
@@ -492,7 +492,7 @@ void Plugin_023_reset_display(struct Plugin_023_OLED_SettingStruct &oled)
 
 
 void Plugin_023_StartUp_OLED(struct Plugin_023_OLED_SettingStruct &oled)
-{  
+{
   Plugin_023_init_OLED(oled);
   Plugin_023_reset_display(oled);
   Plugin_023_displayOff(oled);
@@ -644,7 +644,7 @@ void Plugin_023_init_OLED(struct Plugin_023_OLED_SettingStruct &oled)
       multiplex = 0x3F;
       compins = 0x12;
   }
-  
+
   Plugin_023_sendcommand(address, 0xAE);                //display off
   Plugin_023_sendcommand(address, 0xD5);                //SETDISPLAYCLOCKDIV
   Plugin_023_sendcommand(address, 0x80);                // the suggested ratio 0x80

@@ -133,8 +133,8 @@ int8_t getTaskIndexByName(String TaskNameSearch)
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     LoadTaskSettings(x);
-    String TaskName = ExtraTaskSettings.TaskDeviceName;
-    if ((ExtraTaskSettings.TaskDeviceName[0] != 0 ) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
+    String TaskName = getTaskDeviceName(x);
+    if ((TaskName.length() != 0 ) && (TaskNameSearch.equalsIgnoreCase(TaskName)))
     {
       return x;
     }
@@ -402,41 +402,9 @@ void parseCommandString(struct EventStruct *event, const String& string)
 void taskClear(byte taskIndex, boolean save)
 {
   checkRAM(F("taskClear"));
-  Settings.TaskDeviceNumber[taskIndex] = 0;
-  ExtraTaskSettings.TaskDeviceName[0] = 0;
-  Settings.TaskDeviceDataFeed[taskIndex] = 0;
-  Settings.TaskDevicePin1[taskIndex] = -1;
-  Settings.TaskDevicePin2[taskIndex] = -1;
-  Settings.TaskDevicePin3[taskIndex] = -1;
-  Settings.TaskDevicePort[taskIndex] = 0;
-  Settings.TaskDeviceGlobalSync[taskIndex] = false;
-  Settings.TaskDeviceTimer[taskIndex] = 0;
-  Settings.TaskDeviceEnabled[taskIndex] = false;
-
-  for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
-  {
-    Settings.TaskDeviceID[controllerNr][taskIndex] = 0;
-    Settings.TaskDeviceSendData[controllerNr][taskIndex] = true;
-  }
-
-  for (byte x = 0; x < PLUGIN_CONFIGVAR_MAX; x++)
-    Settings.TaskDevicePluginConfig[taskIndex][x] = 0;
-
-  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-  {
-    ExtraTaskSettings.TaskDeviceFormula[varNr][0] = 0;
-    ExtraTaskSettings.TaskDeviceValueNames[varNr][0] = 0;
-    ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = 2;
-  }
-
-  for (byte varNr = 0; varNr < PLUGIN_EXTRACONFIGVAR_MAX; varNr++)
-  {
-    ExtraTaskSettings.TaskDevicePluginConfigLong[varNr] = 0;
-    ExtraTaskSettings.TaskDevicePluginConfig[varNr] = 0;
-  }
-
-  if (save)
-  {
+  Settings.clearTask(taskIndex);
+  ExtraTaskSettings.clear(); // Invalidate any cached values.
+  if (save) {
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }
@@ -723,7 +691,13 @@ uint32_t progMemMD5check(){
    return 0;
 }
 
-
+/********************************************************************************************\
+  Handler for keeping ExtraTaskSettings up to date using cache
+  \*********************************************************************************************/
+String getTaskDeviceName(byte TaskIndex) {
+  LoadTaskSettings(TaskIndex);
+  return ExtraTaskSettings.TaskDeviceName;
+}
 
 /********************************************************************************************\
   Save settings to SPIFFS
@@ -816,9 +790,46 @@ String LoadSettings()
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
   setUseStaticIP(useStaticIP());
+  ExtraTaskSettings.clear(); // make sure these will not contain old settings.
   return(err);
 }
 
+/********************************************************************************************\
+  Offsets in settings files
+  \*********************************************************************************************/
+bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size) {
+  int max_index = -1;
+  switch (settingsType) {
+    case TaskSettings_Type:
+      max_index = TASKS_MAX;
+      offset = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE);
+      max_size = DAT_TASKS_SIZE;
+      break;
+    case CustomTaskSettings_Type:
+      max_index = TASKS_MAX;
+      offset = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE) + DAT_TASKS_CUSTOM_OFFSET;
+      max_size = DAT_TASKS_CUSTOM_SIZE;
+      break;
+    case ControllerSettings_Type:
+      max_index = CONTROLLER_MAX;
+      offset = DAT_OFFSET_CONTROLLER + (index * DAT_CONTROLLER_SIZE);
+      max_size = DAT_CONTROLLER_SIZE;
+      break;
+    case CustomControllerSettings_Type:
+      max_index = CONTROLLER_MAX;
+      offset = DAT_OFFSET_CUSTOM_CONTROLLER + (index * DAT_CUSTOM_CONTROLLER_SIZE);
+      max_size = DAT_CUSTOM_CONTROLLER_SIZE;
+      break;
+    case NotificationSettings_Type:
+      max_index = NOTIFICATION_MAX;
+      offset = index * DAT_NOTIFICATION_SIZE;
+      max_size = DAT_NOTIFICATION_SIZE;
+      break;
+  }
+  if (index >= 0 && index < max_index) return true;
+  offset = -1;
+  return false;
+}
 
 /********************************************************************************************\
   Save Task settings to SPIFFS
@@ -826,13 +837,15 @@ String LoadSettings()
 String SaveTaskSettings(byte TaskIndex)
 {
   checkRAM(F("SaveTaskSettings"));
-  if (DAT_TASKS_SIZE < sizeof(struct ExtraTaskSettingsStruct))
-    return F("SaveTaskSettings too big");
-  if (TaskIndex >= TASKS_MAX)
-    return F("SaveTaskSettings TaskIndex too big");
+  if (ExtraTaskSettings.TaskIndex != TaskIndex)
+    return F("SaveTaskSettings taskIndex does not match");
 
-  ExtraTaskSettings.TaskIndex = TaskIndex;
-  return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
+  int offset, max_size;
+  if (!getSettingsParameters(TaskSettings_Type, TaskIndex, offset, max_size))
+    return F("SaveTaskSettings TaskIndex too big");
+  if (static_cast<unsigned int>(max_size) < sizeof(struct ExtraTaskSettingsStruct))
+    return F("SaveTaskSettings too big");
+  return(SaveToFile((char*)FILE_CONFIG, offset, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
 }
 
 
@@ -842,14 +855,14 @@ String SaveTaskSettings(byte TaskIndex)
 String LoadTaskSettings(byte TaskIndex)
 {
   checkRAM(F("LoadTaskSettings"));
-  //already loaded
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
-    return(String());
-  if (TaskIndex >= TASKS_MAX)
+    return(String()); //already loaded
+  int offset, max_size;
+  if (!getSettingsParameters(TaskSettings_Type, TaskIndex, offset, max_size))
     return F("LoadTaskSettings TaskIndex too big");
-
+  ExtraTaskSettings.clear();
   String result = "";
-  result = LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE), (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  result = LoadFromFile((char*)FILE_CONFIG, offset, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
   return result;
 }
@@ -861,12 +874,12 @@ String LoadTaskSettings(byte TaskIndex)
 String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("SaveCustomTaskSettings"));
-  if (datasize > DAT_TASKS_SIZE)
-    return F("SaveCustomTaskSettings too big");
-  if (TaskIndex >= TASKS_MAX)
+  int offset, max_size;
+  if (!getSettingsParameters(CustomTaskSettings_Type, TaskIndex, offset, max_size))
     return F("SaveCustomTaskSettings TaskIndex too big");
-
-  return(SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
+  if (datasize > max_size)
+    return F("SaveCustomTaskSettings too big");
+  return(SaveToFile((char*)FILE_CONFIG, offset, memAddress, datasize));
 }
 
 
@@ -876,9 +889,10 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 String ClearCustomTaskSettings(int TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  if (TaskIndex >= TASKS_MAX)
+  int offset, max_size;
+  if (!getSettingsParameters(CustomTaskSettings_Type, TaskIndex, offset, max_size))
     return F("ClearCustomTaskSettings TaskIndex too big");
-  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, DAT_TASKS_CUSTOM_SIZE));
+  return(ClearInFile((char*)FILE_CONFIG, offset, max_size));
 }
 
 /********************************************************************************************\
@@ -887,12 +901,12 @@ String ClearCustomTaskSettings(int TaskIndex)
 String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("LoadCustomTaskSettings"));
-  if (datasize > DAT_TASKS_SIZE)
-    return (String(F("LoadCustomTaskSettings too big")));
-  if (TaskIndex >= TASKS_MAX)
+  int offset, max_size;
+  if (!getSettingsParameters(CustomTaskSettings_Type, TaskIndex, offset, max_size))
     return F("LoadCustomTaskSettings TaskIndex too big");
-
-  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_TASKS + (TaskIndex * DAT_TASKS_SIZE) + DAT_TASKS_CUSTOM_OFFSET, memAddress, datasize));
+  if (datasize > max_size)
+    return (String(F("LoadCustomTaskSettings too big")));
+  return(LoadFromFile((char*)FILE_CONFIG, offset, memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -901,9 +915,12 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("SaveControllerSettings"));
-  if (datasize > DAT_CONTROLLER_SIZE)
+  int offset, max_size;
+  if (!getSettingsParameters(ControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("SaveControllerSettings index too big");
+  if (datasize > max_size)
     return F("SaveControllerSettings too big");
-  return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize);
+  return SaveToFile((char*)FILE_CONFIG, offset, memAddress, datasize);
 }
 
 
@@ -913,10 +930,12 @@ String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("LoadControllerSettings"));
-  if (datasize > DAT_CONTROLLER_SIZE)
+  int offset, max_size;
+  if (!getSettingsParameters(ControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("LoadControllerSettings index too big");
+  if (datasize > max_size)
     return F("LoadControllerSettings too big");
-
-  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CONTROLLER + (ControllerIndex * DAT_CONTROLLER_SIZE), memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, offset, memAddress, datasize));
 }
 
 
@@ -927,7 +946,10 @@ String ClearCustomControllerSettings(int ControllerIndex)
 {
   checkRAM(F("ClearCustomControllerSettings"));
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
-  return(ClearInFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), DAT_CUSTOM_CONTROLLER_SIZE));
+  int offset, max_size;
+  if (!getSettingsParameters(CustomControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("ClearCustomControllerSettings index too big");
+  return(ClearInFile((char*)FILE_CONFIG, offset, max_size));
 }
 
 
@@ -937,9 +959,12 @@ String ClearCustomControllerSettings(int ControllerIndex)
 String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
   checkRAM(F("SaveCustomControllerSettings"));
-  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
+  int offset, max_size;
+  if (!getSettingsParameters(CustomControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("SaveCustomControllerSettings index too big");
+  if (datasize > max_size)
     return F("SaveCustomControllerSettings too big");
-  return SaveToFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize);
+  return SaveToFile((char*)FILE_CONFIG, offset, memAddress, datasize);
 }
 
 
@@ -949,9 +974,12 @@ String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int datasize)
 {
   checkRAM(F("LoadCustomControllerSettings"));
-  if (datasize > DAT_CUSTOM_CONTROLLER_SIZE)
+  int offset, max_size;
+  if (!getSettingsParameters(CustomControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("LoadCustomControllerSettings index too big");
+  if (datasize > max_size)
     return(F("LoadCustomControllerSettings too big"));
-  return(LoadFromFile((char*)FILE_CONFIG, DAT_OFFSET_CUSTOM_CONTROLLER + (ControllerIndex * DAT_CUSTOM_CONTROLLER_SIZE), memAddress, datasize));
+  return(LoadFromFile((char*)FILE_CONFIG, offset, memAddress, datasize));
 }
 
 /********************************************************************************************\
@@ -960,9 +988,12 @@ String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("SaveNotificationSettings"));
-  if (datasize > DAT_NOTIFICATION_SIZE)
+  int offset, max_size;
+  if (!getSettingsParameters(NotificationSettings_Type, NotificationIndex, offset, max_size))
+    return F("SaveNotificationSettings index too big");
+  if (datasize > max_size)
     return F("SaveNotificationSettings too big");
-  return SaveToFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize);
+  return SaveToFile((char*)FILE_NOTIFICATION, offset, memAddress, datasize);
 }
 
 
@@ -972,9 +1003,12 @@ String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("LoadNotificationSettings"));
-  if (datasize > DAT_NOTIFICATION_SIZE)
+  int offset, max_size;
+  if (!getSettingsParameters(NotificationSettings_Type, NotificationIndex, offset, max_size))
+    return F("LoadNotificationSettings index too big");
+  if (datasize > max_size)
     return(F("LoadNotificationSettings too big"));
-  return(LoadFromFile((char*)FILE_NOTIFICATION, NotificationIndex * DAT_NOTIFICATION_SIZE, memAddress, datasize));
+  return(LoadFromFile((char*)FILE_NOTIFICATION, offset, memAddress, datasize));
 }
 
 
@@ -1006,6 +1040,14 @@ String InitFile(const char* fname, int datasize)
   \*********************************************************************************************/
 String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
+  if (index < 0) {
+    String log = F("SaveToFile: ");
+    log += fname;
+    log += F(" ERROR, invalid position in file");
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
+
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
   String log = F("SaveToFile: ");
@@ -1040,6 +1082,14 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
   \*********************************************************************************************/
 String ClearInFile(char* fname, int index, int datasize)
 {
+  if (index < 0) {
+    String log = F("ClearInFile: ");
+    log += fname;
+    log += F(" ERROR, invalid position in file");
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
+
   checkRAM(F("ClearInFile"));
   FLASH_GUARD();
 
@@ -1072,6 +1122,13 @@ String ClearInFile(char* fname, int index, int datasize)
   \*********************************************************************************************/
 String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
 {
+  if (index < 0) {
+    String log = F("LoadFromFile: ");
+    log += fname;
+    log += F(" ERROR, invalid position in file");
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
@@ -1171,7 +1228,7 @@ void ResetFactory(void)
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
-  LoadSettings();
+  Settings.clearAll();
   // now we set all parameters that need to be non-zero as default value
 
 #if DEFAULT_USE_STATIC_IP
@@ -1946,9 +2003,10 @@ String parseTemplate(String &tmpString, byte lineSize)
               if (Settings.TaskDeviceEnabled[y])
               {
                 LoadTaskSettings(y);
-                if (ExtraTaskSettings.TaskDeviceName[0] != 0)
+                String taskDeviceName = getTaskDeviceName(y);
+                if (taskDeviceName.length() != 0)
                 {
-                  if (deviceName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceName))
+                  if (deviceName.equalsIgnoreCase(taskDeviceName))
                   {
                     boolean match = false;
                     for (byte z = 0; z < VARS_PER_TASK; z++)
@@ -3089,7 +3147,7 @@ void createRuleEvents(byte TaskIndex)
   byte sensorType = Device[DeviceIndex].VType;
   for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
   {
-    String eventString = ExtraTaskSettings.TaskDeviceName;
+    String eventString = getTaskDeviceName(TaskIndex);
     eventString += F("#");
     eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     eventString += F("=");
@@ -3123,7 +3181,7 @@ void SendValueLogger(byte TaskIndex)
       logger += F(",");
       logger += Settings.Unit;
       logger += F(",");
-      logger += ExtraTaskSettings.TaskDeviceName;
+      logger += getTaskDeviceName(TaskIndex);
       logger += F(",");
       logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
       logger += F(",");
