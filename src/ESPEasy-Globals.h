@@ -302,6 +302,7 @@
 #define RULES_MAX_NESTING_LEVEL             3
 #define RULESETS_MAX                        4
 #define RULES_BUFFER_SIZE                  64
+#define NAME_FORMULA_LENGTH_MAX            40
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
@@ -683,7 +684,7 @@ struct SettingsStruct
   long          TaskDevicePluginConfigLong[TASKS_MAX][PLUGIN_CONFIGLONGVAR_MAX];
   boolean       OLD_TaskDeviceSendData[TASKS_MAX];
   boolean       TaskDeviceGlobalSync[TASKS_MAX];
-  byte          TaskDeviceDataFeed[TASKS_MAX];
+  byte          TaskDeviceDataFeed[TASKS_MAX];    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[TASKS_MAX];
   boolean       TaskDeviceEnabled[TASKS_MAX];
   boolean       ControllerEnabled[CONTROLLER_MAX];
@@ -860,12 +861,16 @@ struct NotificationSettingsStruct
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
+// This is only used by some plugins to store extra settings like formula descriptions.
+// These settings can only be active for one plugin, meaning they have to be loaded
+// over and over again from flash when another active plugin uses these values.
+//FIXME @TD-er: Should think of another mechanism to make this more efficient.
 struct ExtraTaskSettingsStruct
 {
   ExtraTaskSettingsStruct() : TaskIndex(0) {
     TaskDeviceName[0] = 0;
     for (byte i = 0; i < VARS_PER_TASK; ++i) {
-      for (byte j = 0; j < 41; ++j) {
+      for (byte j = 0; j < (NAME_FORMULA_LENGTH_MAX + 1); ++j) {
         TaskDeviceFormula[i][j] = 0;
         TaskDeviceValueNames[i][j] = 0;
         TaskDeviceValueDecimals[i] = 0;
@@ -878,9 +883,9 @@ struct ExtraTaskSettingsStruct
   }
 
   byte    TaskIndex;
-  char    TaskDeviceName[41];
-  char    TaskDeviceFormula[VARS_PER_TASK][41];
-  char    TaskDeviceValueNames[VARS_PER_TASK][41];
+  char    TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
+  char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
+  char    TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
   byte    TaskDeviceValueDecimals[VARS_PER_TASK];
   int16_t TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
@@ -1053,20 +1058,26 @@ struct DeviceStruct
     PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
     ValueCount(0), Custom(false), SendDataOption(false), GlobalSyncOption(false),
     TimerOption(false), TimerOptional(false), DecimalsOnly(false) {}
-  byte Number;
-  byte Type;
-  byte VType;
-  byte Ports;
-  boolean PullUpOption;
-  boolean InverseLogicOption;
-  boolean FormulaOption;
-  byte ValueCount;
+
+  bool connectedToGPIOpins() {
+    return (Type >= DEVICE_TYPE_SINGLE && Type <= DEVICE_TYPE_TRIPLE);
+  }
+
+
+  byte Number;  // Plugin ID number.   (PLUGIN_ID_xxx)
+  byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
+  byte VType;   // Type of value the plugin will return, used only for Domoticz
+  byte Ports;   // Port to use when device has multiple I/O pins  (N.B. not used much)
+  boolean PullUpOption;       // Allow to set internal pull-up resistors.
+  boolean InverseLogicOption; // Allow to invert the boolean state (e.g. a switch)
+  boolean FormulaOption;      // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
+  byte ValueCount;            // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   boolean Custom;
-  boolean SendDataOption;
-  boolean GlobalSyncOption;
-  boolean TimerOption;
-  boolean TimerOptional;
-  boolean DecimalsOnly;
+  boolean SendDataOption;     // Allow to send data to a controller.
+  boolean GlobalSyncOption;   // No longer used. Was used for ESPeasy values sync between nodes
+  boolean TimerOption;        // Allow to set the "Interval" timer for the plugin.
+  boolean TimerOptional;      // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
+  boolean DecimalsOnly;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
 struct ProtocolStruct
