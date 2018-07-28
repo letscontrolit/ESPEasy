@@ -5,7 +5,7 @@
 bool Command_Task_Clear(struct EventStruct *event, const char* Line)
 {
   bool success = true;
-  // Pa1 is here for 1 ... TASKS_MAX
+  // Par1 is here for 1 ... TASKS_MAX
   taskClear(event->Par1 - 1, true);
   return success;
 }

@@ -1847,7 +1847,7 @@ void handle_devices() {
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString); //the plugin should populate ExtraTaskSettings with its default values.
 
-          ClearCustomTaskSettings(taskIndex);
+        ClearCustomTaskSettings(taskIndex);
       }
     }
     else if (taskdevicenumber != 0) //save settings

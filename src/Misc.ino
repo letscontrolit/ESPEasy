@@ -404,6 +404,7 @@ void taskClear(byte taskIndex, boolean save)
   checkRAM(F("taskClear"));
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
+  ExtraTaskSettings.TaskIndex = taskIndex;
   if (save) {
     SaveTaskSettings(taskIndex);
     SaveSettings();
@@ -863,7 +864,18 @@ String LoadTaskSettings(byte TaskIndex)
   ExtraTaskSettings.clear();
   String result = "";
   result = LoadFromFile((char*)FILE_CONFIG, offset, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+
+  // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
+  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) {
+    // if field set empty, reload defaults
+    struct EventStruct TempEvent;
+    TempEvent.TaskIndex = TaskIndex;
+    String dummyString;
+    //the plugin call should populate ExtraTaskSettings with its default values.
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
+  }
+
   return result;
 }
 
