@@ -427,7 +427,13 @@ bool isFormItem(const String& id)
 void addHtmlError(String error){
   if (error.length()>0)
   {
-    TXBuffer += F("<div class=\"alert\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
+    TXBuffer += F("<div class=\"");
+    if (error.startsWith(F("Warn"))) {
+      TXBuffer += F("warning");
+    } else {
+      TXBuffer += F("alert");
+    }
+    TXBuffer += F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
     TXBuffer += error;
     TXBuffer += F("</div>");
   }

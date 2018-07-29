@@ -387,6 +387,36 @@ void taskClear(byte taskIndex, boolean save)
   }
 }
 
+String checkTaskSettings(byte taskIndex) {
+  String err = LoadTaskSettings(taskIndex);
+  if (err.length() > 0) return err;
+  if (!ExtraTaskSettings.checkUniqueValueNames()) {
+    return F("Use unique value names");
+  }
+  String deviceName = ExtraTaskSettings.TaskDeviceName;
+  if (deviceName.length() == 0) {
+    if (Settings.TaskDeviceEnabled[taskIndex]) {
+      // Decide what to do here, for now give a warning when task is enabled.
+      return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");
+    }
+  }
+  for (int i = 0; i < TASKS_MAX; ++i) {
+    if (i != taskIndex) {
+      LoadTaskSettings(i);
+      if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
+        if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
+          err = F("Task Device Name is not unique, conflicts with task ID #");
+          err += (i+1);
+          return err;
+        }
+      }
+    }
+  }
+
+  err = LoadTaskSettings(taskIndex);
+  return err;
+}
+
 
 
 /********************************************************************************************\

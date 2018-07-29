@@ -293,8 +293,10 @@ String SaveTaskSettings(byte TaskIndex)
   checkRAM(F("SaveTaskSettings"));
   if (ExtraTaskSettings.TaskIndex != TaskIndex)
     return F("SaveTaskSettings taskIndex does not match");
-
-  return(SaveToFile(TaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
+  String err = SaveToFile(TaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  if (err.length() == 0)
+    err = checkTaskSettings(TaskIndex);
+  return err;
 }
 
 
@@ -543,6 +545,11 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
   Wrapper functions to handle errors in accessing settings
   \*********************************************************************************************/
 String getSettingsFileIndexRangeError(bool read, SettingsType settingsType, int index) {
+  if (settingsType >= SettingsType_MAX) {
+    String error = F("Unknown settingsType: ");
+    error += static_cast<int>(settingsType);
+    return error;
+  }
   String error = read ? F("Load") : F("Save");
   error += getSettingsTypeString(settingsType);
   error += F(" index out of range: ");

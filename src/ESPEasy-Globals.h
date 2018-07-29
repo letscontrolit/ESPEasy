@@ -960,6 +960,18 @@ struct ExtraTaskSettingsStruct
     }
   }
 
+  bool checkUniqueValueNames() {
+    for (int i = 0; i < (VARS_PER_TASK - 1); ++i) {
+      for (int j = i; j < VARS_PER_TASK; ++j) {
+        if (i != j && TaskDeviceValueNames[i][0] != 0) {
+          if (strcasecmp(TaskDeviceValueNames[i], TaskDeviceValueNames[j]) == 0)
+            return false;
+        }
+      }
+    }
+    return true;
+  }
+
   byte    TaskIndex;  // Always < TASKS_MAX
   char    TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];

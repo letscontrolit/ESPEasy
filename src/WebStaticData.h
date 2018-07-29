@@ -255,6 +255,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".div_br {clear: both; }"
     // The alert message box
     ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px; }"
+    ".warning {padding: 20px; background-color: #ffca17; color: white; margin-bottom: 15px; }"    
     // The close button
     ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s; }"
     // When moving the mouse over the close button
