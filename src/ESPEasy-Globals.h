@@ -367,13 +367,28 @@
 #endif
 
 enum SettingsType {
-  TaskSettings_Type,
+  TaskSettings_Type = 0,
   CustomTaskSettings_Type,
   ControllerSettings_Type,
   CustomControllerSettings_Type,
-  NotificationSettings_Type
+  NotificationSettings_Type,
+
+  SettingsType_MAX
+
 };
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
+String getSettingsTypeString(SettingsType settingsType) {
+  switch (settingsType) {
+    case TaskSettings_Type:             return F("TaskSettings");
+    case CustomTaskSettings_Type:       return F("CustomTaskSettings");
+    case ControllerSettings_Type:       return F("ControllerSettings");
+    case CustomControllerSettings_Type: return F("CustomControllerSettings");
+    case NotificationSettings_Type:     return F("NotificationSettings");
+    default:
+      break;
+  }
+  return String();
+}
 
 /*
         To modify the stock configuration without changing this repo file :

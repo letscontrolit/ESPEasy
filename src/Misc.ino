@@ -798,35 +798,52 @@ String LoadSettings()
 /********************************************************************************************\
   Offsets in settings files
   \*********************************************************************************************/
-bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size) {
-  int max_index = -1;
+bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
+  struct_size = 0;
   switch (settingsType) {
     case TaskSettings_Type:
       max_index = TASKS_MAX;
       offset = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE);
       max_size = DAT_TASKS_SIZE;
+      struct_size = sizeof(ExtraTaskSettingsStruct);
       break;
     case CustomTaskSettings_Type:
       max_index = TASKS_MAX;
       offset = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE) + DAT_TASKS_CUSTOM_OFFSET;
       max_size = DAT_TASKS_CUSTOM_SIZE;
+      // struct_size may differ.
       break;
     case ControllerSettings_Type:
       max_index = CONTROLLER_MAX;
       offset = DAT_OFFSET_CONTROLLER + (index * DAT_CONTROLLER_SIZE);
       max_size = DAT_CONTROLLER_SIZE;
+      struct_size = sizeof(ControllerSettingsStruct);
       break;
     case CustomControllerSettings_Type:
       max_index = CONTROLLER_MAX;
       offset = DAT_OFFSET_CUSTOM_CONTROLLER + (index * DAT_CUSTOM_CONTROLLER_SIZE);
       max_size = DAT_CUSTOM_CONTROLLER_SIZE;
+      // struct_size may differ.
       break;
     case NotificationSettings_Type:
       max_index = NOTIFICATION_MAX;
       offset = index * DAT_NOTIFICATION_SIZE;
       max_size = DAT_NOTIFICATION_SIZE;
+      struct_size = sizeof(NotificationSettingsStruct);
       break;
+    default:
+      max_index = -1;
+      offset = -1;
+      return false;
   }
+  return true;
+}
+
+bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size) {
+  int max_index = -1;
+  int struct_size;
+  if (!getSettingsParameters(settingsType, index, max_index, offset, max_size, struct_size))
+    return false;
   if (index >= 0 && index < max_index) return true;
   offset = -1;
   return false;

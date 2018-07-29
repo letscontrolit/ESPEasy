@@ -85,7 +85,8 @@ bool doExecuteCommand(const char * cmd, struct EventStruct *event, const char* l
     }
     case 'm': {
 	  COMMAND_CASE("malloc"                 , Command_Malloc);                     // Diagnostic.h
-	  COMMAND_CASE("meminfo"                , Command_MenInfo);                    // Diagnostic.h
+	  COMMAND_CASE("meminfo"                , Command_MemInfo);                    // Diagnostic.h
+    COMMAND_CASE("meminfodetail"          , Command_MemInfo_detail);             // Diagnostic.h
 	  COMMAND_CASE("messagedelay"           , Command_MQTT_messageDelay);          // MQTT.h
 	  COMMAND_CASE("mqttretainflag"         , Command_MQTT_Retain);                // MQTT.h
       break;
