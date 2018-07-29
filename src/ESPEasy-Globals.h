@@ -972,6 +972,30 @@ struct ExtraTaskSettingsStruct
     return true;
   }
 
+  bool checkInvalidCharInNames(const char* name) {
+    int pos = 0;
+    while (*(name+pos) != 0) {
+      switch (*(name+pos)) {
+        case ',':
+        case ' ':
+        case '#':
+        case '[':
+        case ']':
+          return false;
+      }
+      ++pos;
+    }
+    return true;
+  }
+
+  bool checkInvalidCharInNames() {
+    if (!checkInvalidCharInNames(&TaskDeviceName[0])) return false;
+    for (int i = 0; i < (VARS_PER_TASK - 1); ++i) {
+      if (!checkInvalidCharInNames(&TaskDeviceValueNames[i][0])) return false;
+    }
+    return true;
+  }
+
   byte    TaskIndex;  // Always < TASKS_MAX
   char    TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
