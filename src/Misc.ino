@@ -839,6 +839,18 @@ bool getSettingsParameters(SettingsType settingsType, int index, int& max_index,
   return true;
 }
 
+bool getAndLogSettingsParameters(bool read, SettingsType settingsType, int index, int& offset, int& max_size) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String log = read ? F("Read") : F("Write");
+    log += F(" settings: ");
+    log += getSettingsTypeString(settingsType);
+    log += F(" index: ");
+    log += index;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
+  }
+  return getSettingsParameters(settingsType, index, offset, max_size);
+}
+
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size) {
   int max_index = -1;
   int struct_size;
@@ -859,8 +871,8 @@ String SaveTaskSettings(byte TaskIndex)
     return F("SaveTaskSettings taskIndex does not match");
 
   int offset, max_size;
-  if (!getSettingsParameters(TaskSettings_Type, TaskIndex, offset, max_size))
-    return F("SaveTaskSettings TaskIndex too big");
+  if (!getAndLogSettingsParameters(false, TaskSettings_Type, TaskIndex, offset, max_size))
+    return F("SaveTaskSettings index out of range");
   if (static_cast<unsigned int>(max_size) < sizeof(struct ExtraTaskSettingsStruct))
     return F("SaveTaskSettings too big");
   return(SaveToFile((char*)FILE_CONFIG, offset, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct)));
@@ -876,8 +888,8 @@ String LoadTaskSettings(byte TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String()); //already loaded
   int offset, max_size;
-  if (!getSettingsParameters(TaskSettings_Type, TaskIndex, offset, max_size))
-    return F("LoadTaskSettings TaskIndex too big");
+  if (!getAndLogSettingsParameters(true, TaskSettings_Type, TaskIndex, offset, max_size))
+    return F("LoadTaskSettings index out of range");
   ExtraTaskSettings.clear();
   String result = "";
   result = LoadFromFile((char*)FILE_CONFIG, offset, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
@@ -904,8 +916,8 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("SaveCustomTaskSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(CustomTaskSettings_Type, TaskIndex, offset, max_size))
-    return F("SaveCustomTaskSettings TaskIndex too big");
+  if (!getAndLogSettingsParameters(false, CustomTaskSettings_Type, TaskIndex, offset, max_size))
+    return F("SaveCustomTaskSettings index out of range");
   if (datasize > max_size)
     return F("SaveCustomTaskSettings too big");
   return(SaveToFile((char*)FILE_CONFIG, offset, memAddress, datasize));
@@ -919,8 +931,8 @@ String ClearCustomTaskSettings(int TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
   int offset, max_size;
-  if (!getSettingsParameters(CustomTaskSettings_Type, TaskIndex, offset, max_size))
-    return F("ClearCustomTaskSettings TaskIndex too big");
+  if (!getAndLogSettingsParameters(false, CustomTaskSettings_Type, TaskIndex, offset, max_size))
+    return F("ClearCustomTaskSettings index out of range");
   return(ClearInFile((char*)FILE_CONFIG, offset, max_size));
 }
 
@@ -931,8 +943,8 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("LoadCustomTaskSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(CustomTaskSettings_Type, TaskIndex, offset, max_size))
-    return F("LoadCustomTaskSettings TaskIndex too big");
+  if (!getAndLogSettingsParameters(true, CustomTaskSettings_Type, TaskIndex, offset, max_size))
+    return F("LoadCustomTaskSettings index out of range");
   if (datasize > max_size)
     return (String(F("LoadCustomTaskSettings too big")));
   return(LoadFromFile((char*)FILE_CONFIG, offset, memAddress, datasize));
@@ -945,8 +957,8 @@ String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 {
   checkRAM(F("SaveControllerSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(ControllerSettings_Type, ControllerIndex, offset, max_size))
-    return F("SaveControllerSettings index too big");
+  if (!getAndLogSettingsParameters(false, ControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("SaveControllerSettings index out of range");
   if (datasize > max_size)
     return F("SaveControllerSettings too big");
   return SaveToFile((char*)FILE_CONFIG, offset, memAddress, datasize);
@@ -960,8 +972,8 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 {
   checkRAM(F("LoadControllerSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(ControllerSettings_Type, ControllerIndex, offset, max_size))
-    return F("LoadControllerSettings index too big");
+  if (!getAndLogSettingsParameters(true, ControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("LoadControllerSettings index out of range");
   if (datasize > max_size)
     return F("LoadControllerSettings too big");
   return(LoadFromFile((char*)FILE_CONFIG, offset, memAddress, datasize));
@@ -977,7 +989,7 @@ String ClearCustomControllerSettings(int ControllerIndex)
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
   int offset, max_size;
   if (!getSettingsParameters(CustomControllerSettings_Type, ControllerIndex, offset, max_size))
-    return F("ClearCustomControllerSettings index too big");
+    return F("ClearCustomControllerSettings index out of range");
   return(ClearInFile((char*)FILE_CONFIG, offset, max_size));
 }
 
@@ -989,8 +1001,8 @@ String SaveCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 {
   checkRAM(F("SaveCustomControllerSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(CustomControllerSettings_Type, ControllerIndex, offset, max_size))
-    return F("SaveCustomControllerSettings index too big");
+  if (!getAndLogSettingsParameters(false, CustomControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("SaveCustomControllerSettings index out of range");
   if (datasize > max_size)
     return F("SaveCustomControllerSettings too big");
   return SaveToFile((char*)FILE_CONFIG, offset, memAddress, datasize);
@@ -1004,8 +1016,8 @@ String LoadCustomControllerSettings(int ControllerIndex,byte* memAddress, int da
 {
   checkRAM(F("LoadCustomControllerSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(CustomControllerSettings_Type, ControllerIndex, offset, max_size))
-    return F("LoadCustomControllerSettings index too big");
+  if (!getAndLogSettingsParameters(true, CustomControllerSettings_Type, ControllerIndex, offset, max_size))
+    return F("LoadCustomControllerSettings index out of range");
   if (datasize > max_size)
     return(F("LoadCustomControllerSettings too big"));
   return(LoadFromFile((char*)FILE_CONFIG, offset, memAddress, datasize));
@@ -1018,8 +1030,8 @@ String SaveNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 {
   checkRAM(F("SaveNotificationSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(NotificationSettings_Type, NotificationIndex, offset, max_size))
-    return F("SaveNotificationSettings index too big");
+  if (!getAndLogSettingsParameters(false, NotificationSettings_Type, NotificationIndex, offset, max_size))
+    return F("SaveNotificationSettings index out of range");
   if (datasize > max_size)
     return F("SaveNotificationSettings too big");
   return SaveToFile((char*)FILE_NOTIFICATION, offset, memAddress, datasize);
@@ -1033,8 +1045,8 @@ String LoadNotificationSettings(int NotificationIndex, byte* memAddress, int dat
 {
   checkRAM(F("LoadNotificationSettings"));
   int offset, max_size;
-  if (!getSettingsParameters(NotificationSettings_Type, NotificationIndex, offset, max_size))
-    return F("LoadNotificationSettings index too big");
+  if (!getAndLogSettingsParameters(true, NotificationSettings_Type, NotificationIndex, offset, max_size))
+    return F("LoadNotificationSettings index out of range");
   if (datasize > max_size)
     return(F("LoadNotificationSettings too big"));
   return(LoadFromFile((char*)FILE_NOTIFICATION, offset, memAddress, datasize));
@@ -1079,13 +1091,6 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
-  String log = F("SaveToFile: ");
-  log += fname;
-  log += F(" index: ");
-  log += index;
-  log += F(" datasize: ");
-  log += datasize;
-  addLog(LOG_LEVEL_DEBUG, log);
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
@@ -1122,15 +1127,6 @@ String ClearInFile(char* fname, int index, int datasize)
   checkRAM(F("ClearInFile"));
   FLASH_GUARD();
 
-  String log = F("ClearInFile: ");
-  log += fname;
-  log += F(" index: ");
-  log += index;
-  log += F(" datasize: ");
-  log += datasize;
-  addLog(LOG_LEVEL_DEBUG, log);
-
-
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
 
@@ -1161,15 +1157,6 @@ String LoadFromFile(char* fname, int index, byte* memAddress, int datasize)
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    String log = F("LoadFromFile: ");
-    log += fname;
-    log += F(" index: ");
-    log += index;
-    log += F(" datasize: ");
-    log += datasize;
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
-  }
 
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
