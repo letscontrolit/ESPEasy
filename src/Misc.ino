@@ -1103,7 +1103,7 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     pointerToByteToSave++;
   }
   f.close();
-  log = F("FILE : Saved ");
+  String log = F("FILE : Saved ");
   log=log+fname;
   addLog(LOG_LEVEL_INFO, log);
 
