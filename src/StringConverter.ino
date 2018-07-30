@@ -477,6 +477,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   repl(F("%CR%"), F("\r"), s, useURLencode);
   repl(F("%LF%"), F("\n"), s, useURLencode);
   repl(F("%SP%"), F(" "), s, useURLencode); //space
+  repl(F("%R%"), F("\\r"), s, useURLencode);
+  repl(F("%N%"), F("\\n"), s, useURLencode);
   SMART_REPL(F("%ip4%"),WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.')+1)) //4th IP octet
   SMART_REPL(F("%ip%"),WiFi.localIP().toString())
   SMART_REPL(F("%rssi%"), String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.RSSI()))
