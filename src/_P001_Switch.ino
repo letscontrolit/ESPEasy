@@ -365,7 +365,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               case 2:
                 #if defined(ESP8266)
                 if (event->Par3 >= 9000) {
-                  servo2.detach()
+                  servo2.detach();
                 }else{
                   servo2.attach(event->Par2);
                   servo2.write(event->Par3);
