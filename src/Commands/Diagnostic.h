@@ -38,17 +38,47 @@ bool Command_SerialFloat(struct EventStruct *event, const char* Line)
   return success;
 }
 
-bool Command_MenInfo(struct EventStruct *event, const char* Line)
+bool Command_MemInfo(struct EventStruct *event, const char* Line)
 {
   bool success = true;
-  Serial.print(F("SecurityStruct         : "));
+  Serial.print(F("SecurityStruct         | "));
   Serial.println(sizeof(SecuritySettings));
-  Serial.print(F("SettingsStruct         : "));
+  Serial.print(F("SettingsStruct         | "));
   Serial.println(sizeof(Settings));
-  Serial.print(F("ExtraTaskSettingsStruct: "));
+  Serial.print(F("ExtraTaskSettingsStruct| "));
   Serial.println(sizeof(ExtraTaskSettings));
-  Serial.print(F("DeviceStruct: "));
+  Serial.print(F("DeviceStruct           | "));
   Serial.println(sizeof(Device));
+  return success;
+}
+
+bool Command_MemInfo_detail(struct EventStruct *event, const char* Line)
+{
+  bool success = true;
+  Command_MemInfo(event, Line);
+  for (int st = 0; st < SettingsType_MAX; ++st) {
+    SettingsType settingsType = static_cast<SettingsType>(st);
+    int max_index, offset, max_size;
+    int struct_size = 0;
+    Serial.println();
+    Serial.print(getSettingsTypeString(settingsType));
+    Serial.println(F(" | start | end | max_size | struct_size"));
+    Serial.println(F("--- | --- | --- | --- | ---"));
+    getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+    for (int i = 0; i < max_index; ++i) {
+      getSettingsParameters(settingsType, i, offset, max_size);
+      Serial.print(i);
+      Serial.print('|');
+      Serial.print(offset);
+      Serial.print('|');
+      Serial.print(offset + max_size);
+      Serial.print('|');
+      Serial.print(max_size);
+      Serial.print('|');
+      Serial.println(struct_size);
+    }
+  }
+
   return success;
 }
 

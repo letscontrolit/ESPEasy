@@ -117,7 +117,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   infoReply.destTaskIndex = destTaskIndex;
   LoadTaskSettings(infoReply.sourceTaskIndex);
   infoReply.deviceNumber = Settings.TaskDeviceNumber[infoReply.sourceTaskIndex];
-  strcpy(infoReply.taskName, ExtraTaskSettings.TaskDeviceName);
+  strcpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex).c_str());
   for (byte x = 0; x < VARS_PER_TASK; x++)
     strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
 
@@ -228,6 +228,7 @@ void C013_Receive(struct EventStruct *event) {
         // so it will write only once and has to be cleared manually through webgui
         if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
         {
+          taskClear(infoReply.destTaskIndex, false);
           Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
           for (byte x = 0; x < CONTROLLER_MAX; x++)
@@ -235,6 +236,7 @@ void C013_Receive(struct EventStruct *event) {
           strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
           for (byte x = 0; x < VARS_PER_TASK; x++)
             strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
+          ExtraTaskSettings.TaskIndex = infoReply.destTaskIndex;
           SaveTaskSettings(infoReply.destTaskIndex);
           SaveSettings();
         }

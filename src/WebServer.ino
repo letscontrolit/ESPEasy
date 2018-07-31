@@ -427,7 +427,13 @@ bool isFormItem(const String& id)
 void addHtmlError(String error){
   if (error.length()>0)
   {
-    TXBuffer += F("<div class=\"alert\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
+    TXBuffer += F("<div class=\"");
+    if (error.startsWith(F("Warn"))) {
+      TXBuffer += F("warning");
+    } else {
+      TXBuffer += F("alert");
+    }
+    TXBuffer += F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
     TXBuffer += error;
     TXBuffer += F("</div>");
   }
@@ -1821,12 +1827,15 @@ void handle_devices() {
   }
   const int edit = getFormItemInt(F("edit"), 0);
 
+  // taskIndex in the URL is 1 ... TASKS_MAX
+  // For use in other functions, set it to 0 ... (TASKS_MAX - 1)
   byte taskIndex = getFormItemInt(F("index"), 0);
   boolean taskIndexNotSet = taskIndex == 0;
   --taskIndex;
 
   byte DeviceIndex = 0;
-
+  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
+  // FIXME TD-er: Might have to clear any caches here.
   if (edit != 0  && !taskIndexNotSet) // when form submitted
   {
     if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber) // change of device: cleanup old device and reset default settings
@@ -1844,7 +1853,7 @@ void handle_devices() {
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString); //the plugin should populate ExtraTaskSettings with its default values.
 
-          ClearCustomTaskSettings(taskIndex);
+        ClearCustomTaskSettings(taskIndex);
       }
     }
     else if (taskdevicenumber != 0) //save settings
@@ -2121,13 +2130,16 @@ void handle_devices() {
           addFormNote(F("This plugin is only supported on task 1-4 for now"));
         }
 
-      addFormTextBox( F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, 40);   //="taskdevicename"
+      addFormTextBox( F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, NAME_FORMULA_LENGTH_MAX);   //="taskdevicename"
 
       addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);   //="taskdeviceenabled"
 
       // section: Sensor / Actuator
       if (!Device[DeviceIndex].Custom && Settings.TaskDeviceDataFeed[taskIndex] == 0 &&
-          ((Device[DeviceIndex].Ports != 0) || (Device[DeviceIndex].PullUpOption) || (Device[DeviceIndex].InverseLogicOption) || (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)) )
+          ((Device[DeviceIndex].Ports != 0) ||
+           (Device[DeviceIndex].PullUpOption) ||
+           (Device[DeviceIndex].InverseLogicOption) ||
+           (Device[DeviceIndex].connectedToGPIOpins())) )
       {
         addFormSubHeader((Device[DeviceIndex].SendDataOption) ? F("Sensor") : F("Actuator"));
 
@@ -2153,12 +2165,14 @@ void handle_devices() {
         TempEvent.String3 = F("3rd GPIO");
         PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummyString);
 
-        if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
-        if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL && Device[DeviceIndex].Type <= DEVICE_TYPE_TRIPLE)
-          addFormPinSelect( TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
-          addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
+        if (Device[DeviceIndex].connectedToGPIOpins()) {
+          if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE)
+            addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
+          if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL)
+            addFormPinSelect( TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
+          if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
+            addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
+        }
       }
 
       //add plugins content
@@ -2242,14 +2256,14 @@ void handle_devices() {
           TXBuffer += F("<TD>");
           String id = F("TDVN");   //="taskdevicevaluename"
           id += (varNr + 1);
-          addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], 40);
+          addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
 
           if (Device[DeviceIndex].FormulaOption)
           {
             TXBuffer += F("<TD>");
             String id = F("TDF");   //="taskdeviceformula"
             id += (varNr + 1);
-            addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], 40);
+            addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
           }
 
           if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
