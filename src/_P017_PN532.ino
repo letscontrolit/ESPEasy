@@ -27,6 +27,7 @@
 #define PN532_COMMAND_INLISTPASSIVETARGET   (0x4A)
 #define PN532_RESPONSE_INLISTPASSIVETARGET  (0x4B)
 #define PN532_MIFARE_ISO14443A              (0x00)
+#define PN532_COMMAND_POWERDOWN             (0x16)
 
 uint8_t Plugin_017_pn532_packetbuffer[64];
 uint8_t Plugin_017_command;
@@ -95,7 +96,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         static byte errorCount=0;
 
         counter++;
-        if (counter == 3)
+        if (counter == 3 )
         {
           if (digitalRead(4) == 0 || digitalRead(5) == 0)
           {
@@ -122,6 +123,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           {
             Plugin_017_Init(Settings.TaskDevicePin3[event->TaskIndex]);
           }
+
 
           if (error == 0) {
             unsigned long key = uid[0];
@@ -232,6 +234,23 @@ uint32_t getFirmwareVersion(void)
 }
 
 
+void Plugin_017_powerDown(void)
+{
+
+  Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_POWERDOWN;
+  Plugin_017_pn532_packetbuffer[1] = 1 << 7; //allowed wakeup source is i2c
+
+  if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 2)) {
+    return;
+  }
+
+  // delay(50); // we can try to read faster, but it will only put extra load on the I2C bus...
+
+  // read and ignore response
+  Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer));
+}
+
+
 /*********************************************************************************************\
  * PN532 read tag
 \*********************************************************************************************/
@@ -272,6 +291,10 @@ byte Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t 
   for (uint8_t i = 0; i < Plugin_017_pn532_packetbuffer[5]; i++) {
     uid[i] = Plugin_017_pn532_packetbuffer[6 + i];
   }
+
+  // Plugin_017_Init(-1);
+  Plugin_017_powerDown();
+
 
   return 0;
 }
@@ -324,6 +347,7 @@ int16_t Plugin_017_readResponse(uint8_t buf[], uint8_t len)
 {
   if (!Wire.requestFrom(PN532_I2C_ADDRESS, len + 2))
     return -1;
+
 
   if (!(Wire.read() & 1))
     return -1;
