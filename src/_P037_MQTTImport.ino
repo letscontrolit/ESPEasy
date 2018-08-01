@@ -338,6 +338,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)                // if we have found a 037 device, then give it something to think about!
     {
       TempEvent.TaskIndex = y;
+      LoadTaskSettings(y);
       TempEvent.BaseVarIndex = y * VARS_PER_TASK;           // This is the index in Uservar where values for this task are stored
       Plugin_ptr[DeviceIndex](PLUGIN_IMPORT, &TempEvent, payload);
     }

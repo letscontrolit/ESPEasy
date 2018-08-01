@@ -1008,7 +1008,7 @@ struct ExtraTaskSettingsStruct
 struct EventStruct
 {
   EventStruct() :
-    Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
+    Source(0), TaskIndex(TASKS_MAX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
     BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     OriginTaskIndex(0), Data(NULL) {}
   EventStruct(const struct EventStruct& event):
@@ -1016,7 +1016,13 @@ struct EventStruct
         , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
         , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
         , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
-        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {}
+        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {
+          String1 = event.String1;
+          String2 = event.String2;
+          String3 = event.String3;
+          String4 = event.String4;
+          String5 = event.String5;
+        }
 
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11

@@ -182,6 +182,8 @@ void ExecuteCommand(byte source, const char *Line)
   char cmd[INPUT_COMMAND_SIZE];
   cmd[0] = 0;
   struct EventStruct TempEvent;
+  // FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
+  // since commands can originate from anywhere.
   TempEvent.Source = source;
   GetArgv(Line, cmd, 1);
   if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);

@@ -20,6 +20,7 @@ bool Command_Notifications_Notify(struct EventStruct *event, const char* Line)
         struct EventStruct TempEvent;
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = index;
+        TempEvent.TaskIndex = event->TaskIndex;
         NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, message);
       }
     }

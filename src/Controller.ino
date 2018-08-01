@@ -111,6 +111,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   // addLog(LOG_LEVEL_DEBUG, log);
 
   struct EventStruct TempEvent;
+  // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
   TempEvent.String1 = c_topic;
   TempEvent.String2 = c_payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[enabledMqttController]);

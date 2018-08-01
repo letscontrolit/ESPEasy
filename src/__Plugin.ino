@@ -1063,22 +1063,24 @@ void PluginInit(void)
 }
 
 int getPluginId(byte taskId) {
-  int retry = 1;
-  while (retry >= 0) {
-    int plugin = Task_id_to_Plugin_id[taskId];
-    if (plugin >= 0 && plugin < PLUGIN_MAX) {
-      if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskId])
-        return plugin;
+  if (taskId < TASKS_MAX) {
+    int retry = 1;
+    while (retry >= 0) {
+      int plugin = Task_id_to_Plugin_id[taskId];
+      if (plugin >= 0 && plugin < PLUGIN_MAX) {
+        if (Plugin_id[plugin] == Settings.TaskDeviceNumber[taskId])
+          return plugin;
+      }
+      updateTaskPluginCache();
+      --retry;
     }
-    updateTaskPluginCache();
-    --retry;
   }
   return -1;
 }
 
 void updateTaskPluginCache() {
-  ++countFindPluginId;
-  Task_id_to_Plugin_id.resize(TASKS_MAX +1);
+  ++countFindPluginId; // Used for statistics.
+  Task_id_to_Plugin_id.resize(TASKS_MAX);
   for (byte y = 0; y < TASKS_MAX; ++y) {
     Task_id_to_Plugin_id[y] = -1;
     bool foundPlugin = false;

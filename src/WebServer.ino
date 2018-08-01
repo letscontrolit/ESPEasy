@@ -2943,7 +2943,6 @@ void addEnabled(boolean enabled)
 //********************************************************************************
 void addTaskSelect(String name,  int choice)
 {
-  struct EventStruct TempEvent;
   String deviceName;
 
   TXBuffer += F("<select id='selectwidth' name='");
