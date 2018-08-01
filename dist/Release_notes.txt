@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release mega-20180801 (since mega-20180723)
+-------------------------------------------------
+
+Release date: Wed Aug  1 04:00:18 CEST 2018
+
+Edwin Eefting (1):
+      Power down PN532 after reading. Saves power and reduces interference with Wifi.
+
+TD-er (11):
+      [ExtraTaskSettings] Added some comments & clarifications
+      [ExtraTaskSettings] Added extra clear functions and checks
+      [ExtraTaskSettings] Keep ExtraTaskSettings actualized for plugin calls
+      [meminfodetail] Add command `meminfodetail`
+      [FileHandling] Write some log indicating file operation
+      [compiler fix] Forgot to declare String
+      [Storage] Split storage related functions to new file
+      [Storage] Simplify settings I/O error handling
+      [#882] Add checks on names in task setup
+      [#1379] Check for "forbidden" characters in names.
+      [#1306] Added %R% and %N% for literals \r and \n
+
+
+-------------------------------------------------
 Changes in release mega-20180723 (since mega-20180722)
 -------------------------------------------------
 
