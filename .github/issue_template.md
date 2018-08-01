@@ -1,3 +1,4 @@
+### If you self compile, please state this and PLEASE try to ONLY REPORT ISSUES WITH OFFICIAL BUILDS! ###
 <!--- If you self compile, please state this and PLEASE try to ONLY REPORT ISSUES WITH OFFICIAL BUILDS!  --->
 <!--- NOTE: This is not a support forum! For questions and support go here: --->
 <!--- https://www.letscontrolit.com/forum/viewforum.php?f=1 --->
