@@ -263,6 +263,28 @@ bool getSettingsParameters(SettingsType settingsType, int index, int& max_index,
   return true;
 }
 
+int getMaxFilePos(SettingsType settingsType) {
+  int max_index, offset, max_size;
+  int struct_size = 0;
+  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  getSettingsParameters(settingsType, max_index - 1, offset, max_size);
+  return offset + max_size - 1;
+}
+
+int getFileSize(SettingsType settingsType) {
+  if (settingsType == NotificationSettings_Type) {
+    return getMaxFilePos(settingsType);
+  }
+
+  int max_file_pos = 0;
+  for (int st = 0; st < SettingsType_MAX; ++st) {
+    int filePos = getMaxFilePos(static_cast<SettingsType>(st));
+    if (filePos > max_file_pos)
+      max_file_pos = filePos;
+  }
+  return max_file_pos;
+}
+
 bool getAndLogSettingsParameters(bool read, SettingsType settingsType, int index, int& offset, int& max_size) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = read ? F("Read") : F("Write");

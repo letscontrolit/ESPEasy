@@ -5245,6 +5245,21 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
+  if (showSettingsFileLayout) {
+    TXBuffer += F("<TR><TD colspan=2><H3>Settings File</H3></TD></TR>");
+    TXBuffer += F("<TR><TD>");
+    TXBuffer += F("Layout 'config.dat'");
+    TXBuffer += F("<TD>");
+    getConfig_dat_file_layout();
+    for (int st = 0; st < SettingsType_MAX; ++st) {
+      SettingsType settingsType = static_cast<SettingsType>(st);
+      TXBuffer += F("<TR><TD>");
+      TXBuffer += getSettingsTypeString(settingsType);
+      TXBuffer += F("<TD>");
+      getStorageTableSVG(settingsType);
+    }
+  }
+
   #ifdef ESP32
    TXBuffer += F("<TR><TD colspan=2><H3>Partitions");
    addHelpButton(F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
@@ -5315,14 +5330,12 @@ void handle_favicon() {
   WebServer.send_P(200, PSTR("image/x-icon"), favicon_8b_ico, favicon_8b_ico_len);
 }
 
-#ifdef ESP32
-
-void createSvgRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float svgBarWidth) {
-  float width = svgBarWidth * size / range;
+void createSvgRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float SVG_BAR_WIDTH) {
+  float width = SVG_BAR_WIDTH * size / range;
   if (width < 2) width = 2;
   TXBuffer += formatToHex(color, F("<path fill=\"#"));
   TXBuffer += F("\" d=\"M");
-  TXBuffer += toString(svgBarWidth * xoffset / range, 2);
+  TXBuffer += toString(SVG_BAR_WIDTH * xoffset / range, 2);
   TXBuffer += ' ';
   TXBuffer += yoffset;
   TXBuffer += 'h';
@@ -5330,21 +5343,8 @@ void createSvgRectPath(unsigned int color, int xoffset, int yoffset, int size, i
   TXBuffer += 'v';
   TXBuffer += height;
   TXBuffer += 'H';
-  TXBuffer += toString(svgBarWidth * xoffset / range, 2);
+  TXBuffer += toString(SVG_BAR_WIDTH * xoffset / range, 2);
   TXBuffer += F("z\"/>\n");
-}
-
-int getPartionCount(byte pType) {
-  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
-  int nrPartitions = 0;
-  if (_mypartiterator) {
-    do {
-      ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
-  }
-  esp_partition_iterator_release(_mypartiterator);
-  return nrPartitions;
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
@@ -5362,36 +5362,156 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   TXBuffer += F("</tspan>\n</text>");
 }
 
+unsigned int getSettingsTypeColor(SettingsType settingsType) {
+  switch (settingsType) {
+    case TaskSettings_Type:
+      return 0xEE6352;
+    case CustomTaskSettings_Type:
+      return 0x59CD90;
+    case ControllerSettings_Type:
+      return 0x3FA7D6;
+    case CustomControllerSettings_Type:
+      return 0xFAC05E;
+    case NotificationSettings_Type:
+      return 0xF79D84;
+    default:
+      break;
+  }
+  return 0;
+}
+
+#define SVG_BAR_HEIGHT 16
+#define SVG_BAR_WIDTH 400
+
+void write_SVG_image_header(int width, int height) {
+  TXBuffer += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
+  TXBuffer += width;
+  TXBuffer += F("\" height=\"");
+  TXBuffer += height;
+  TXBuffer += F("\">");
+}
+
+void getConfig_dat_file_layout() {
+  const int shiftY = 2;
+  float yOffset = shiftY;
+  write_SVG_image_header(SVG_BAR_WIDTH + 250, SVG_BAR_HEIGHT + shiftY);
+
+  int max_index, offset, max_size;
+  int struct_size = 0;
+
+  // background
+  const uint32_t realSize = getFileSize(TaskSettings_Type);
+  createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+
+  for (int st = 0; st < SettingsType_MAX; ++st) {
+    SettingsType settingsType = static_cast<SettingsType>(st);
+    if (settingsType != NotificationSettings_Type) {
+      unsigned int color = getSettingsTypeColor(settingsType);
+      getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+      for (int i = 0; i < max_index; ++i) {
+        getSettingsParameters(settingsType, i, offset, max_size);
+        // Struct position
+        createSvgRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      }
+    }
+  }
+  // Text labels
+  float textXoffset = SVG_BAR_WIDTH + 2;
+  float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+  createSvgTextElement(F("Config.dat"), textXoffset, textYoffset);
+  TXBuffer += F("</svg>\n");
+}
+
+void getStorageTableSVG(SettingsType settingsType) {
+  uint32_t realSize = getFileSize(settingsType);
+  unsigned int color = getSettingsTypeColor(settingsType);
+  const int shiftY = 2;
+
+  int max_index, offset, max_size;
+  int struct_size = 0;
+  getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  if (max_index == 0) return;
+  // One more to add bar indicating struct size vs. reserved space.
+  write_SVG_image_header(SVG_BAR_WIDTH + 250, (max_index + 1) * SVG_BAR_HEIGHT + shiftY);
+  float yOffset = shiftY;
+  for (int i = 0; i < max_index; ++i) {
+    getSettingsParameters(settingsType, i, offset, max_size);
+    // background
+    createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+    // Struct position
+    createSvgRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+    // Text labels
+    float textXoffset = SVG_BAR_WIDTH + 2;
+    float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+    createSvgTextElement(formatHumanReadable(offset, 1024), textXoffset, textYoffset);
+    textXoffset = SVG_BAR_WIDTH + 60;
+    createSvgTextElement(formatHumanReadable(max_size, 1024), textXoffset, textYoffset);
+    textXoffset = SVG_BAR_WIDTH + 130;
+    createSvgTextElement(String(i), textXoffset, textYoffset);
+    yOffset += SVG_BAR_HEIGHT;
+  }
+  // usage
+  createSvgRectPath(0xcdcdcd, 0, yOffset, max_size, SVG_BAR_HEIGHT - 2, max_size, SVG_BAR_WIDTH);
+  // Struct size (used part of the reserved space)
+  if (struct_size != 0) {
+    createSvgRectPath(color, 0, yOffset, struct_size, SVG_BAR_HEIGHT - 2, max_size, SVG_BAR_WIDTH);
+  }
+  // Text labels
+  float textXoffset = SVG_BAR_WIDTH + 2;
+  float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+  if (struct_size != 0) {
+    String text = formatHumanReadable(struct_size, 1024);
+    text += '/';
+    text += formatHumanReadable(max_size, 1024);
+    text += F(" per item");
+    createSvgTextElement(text, textXoffset, textYoffset);
+  } else {
+    createSvgTextElement(F("Variable size"), textXoffset, textYoffset);
+  }
+  TXBuffer += F("</svg>\n");
+}
+
+#ifdef ESP32
+
+
+int getPartionCount(byte pType) {
+  esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  int nrPartitions = 0;
+  if (_mypartiterator) {
+    do {
+      ++nrPartitions;
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+  }
+  esp_partition_iterator_release(_mypartiterator);
+  return nrPartitions;
+}
+
 void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
   int nrPartitions = getPartionCount(pType);
   if (nrPartitions == 0) return;
-
-  const int barHeight = 16;
-  const int svgBarWidth = 200;
   const int shiftY = 2;
 
   uint32_t realSize = getFlashRealSizeInBytes();
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t * _mypart;
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
-  TXBuffer += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" height=\"");
-  TXBuffer += nrPartitions * barHeight + shiftY;
-  TXBuffer += F("\">");
-  int partNr = 0;
+  write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
+  float yOffset = shiftY;
   if (_mypartiterator) {
     do {
       _mypart = esp_partition_get(_mypartiterator);
-      float yOffset = partNr * barHeight + shiftY;
-      createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, barHeight - 2, realSize, svgBarWidth);
-      createSvgRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, barHeight - 2, realSize, svgBarWidth);
-      float textXoffset = svgBarWidth + 2;
-      float textYoffset = yOffset + 0.9 * barHeight;
+      float yOffset = partNr * SVG_BAR_HEIGHT + shiftY;
+      createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      createSvgRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      float textXoffset = SVG_BAR_WIDTH + 2;
+      float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
       createSvgTextElement(formatHumanReadable(_mypart->size, 1024), textXoffset, textYoffset);
-      textXoffset = svgBarWidth + 60;
+      textXoffset = SVG_BAR_WIDTH + 60;
       createSvgTextElement(_mypart->label, textXoffset, textYoffset);
-      textXoffset = svgBarWidth + 130;
+      textXoffset = SVG_BAR_WIDTH + 130;
       createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
-      ++partNr;
+      yOffset += SVG_BAR_HEIGHT;
     } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
   }
   TXBuffer += F("</svg>\n");

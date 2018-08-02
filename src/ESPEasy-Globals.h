@@ -389,6 +389,7 @@ String getSettingsTypeString(SettingsType settingsType) {
   }
   return String();
 }
+bool showSettingsFileLayout = false;
 
 /*
         To modify the stock configuration without changing this repo file :
