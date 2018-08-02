@@ -73,6 +73,12 @@ String formatToHex(unsigned long value) {
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
+  String result = formatHumanReadable(value, factor, 2);
+  result.replace(F(".00"), "");
+  return result;  
+}
+
+String formatHumanReadable(unsigned long value, unsigned long factor, int NrDecimals) {
   float floatValue(value);
   byte steps = 0;
   while (value >= factor) {
@@ -80,7 +86,7 @@ String formatHumanReadable(unsigned long value, unsigned long factor) {
     ++steps;
     floatValue /= float(factor);
   }
-  String result = toString(floatValue, 2);
+  String result = toString(floatValue, NrDecimals);
   switch (steps) {
     case 0: return String(value);
     case 1: result += 'k'; break;

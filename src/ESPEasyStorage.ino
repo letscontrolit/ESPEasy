@@ -225,6 +225,12 @@ String LoadSettings()
 bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
   struct_size = 0;
   switch (settingsType) {
+    case BasicSettings_Type:
+      max_index = 1;
+      offset = 0;
+      max_size = DAT_BASIC_SETTINGS_SIZE;
+      struct_size = sizeof(SettingsStruct);
+      break;
     case TaskSettings_Type:
       max_index = TASKS_MAX;
       offset = DAT_OFFSET_TASKS + (index * DAT_TASKS_DISTANCE);

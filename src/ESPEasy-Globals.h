@@ -353,6 +353,8 @@
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
+#define DAT_BASIC_SETTINGS_SIZE          4096
+
 #if defined(ESP8266)
   #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
   #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
@@ -367,7 +369,8 @@
 #endif
 
 enum SettingsType {
-  TaskSettings_Type = 0,
+  BasicSettings_Type = 0,
+  TaskSettings_Type,
   CustomTaskSettings_Type,
   ControllerSettings_Type,
   CustomControllerSettings_Type,
@@ -379,6 +382,7 @@ enum SettingsType {
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
 String getSettingsTypeString(SettingsType settingsType) {
   switch (settingsType) {
+    case BasicSettings_Type:            return F("Settings");
     case TaskSettings_Type:             return F("TaskSettings");
     case CustomTaskSettings_Type:       return F("CustomTaskSettings");
     case ControllerSettings_Type:       return F("ControllerSettings");
