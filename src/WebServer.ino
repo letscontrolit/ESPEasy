@@ -5501,7 +5501,6 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
   if (_mypartiterator) {
     do {
       _mypart = esp_partition_get(_mypartiterator);
-      float yOffset = partNr * SVG_BAR_HEIGHT + shiftY;
       createSvgRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       createSvgRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       float textXoffset = SVG_BAR_WIDTH + 2;
