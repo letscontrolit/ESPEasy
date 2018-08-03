@@ -1526,7 +1526,7 @@ void handle_notifications() {
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, dummyString);
+        schedule_notification_event_timer(NotificationProtocolIndex, NPLUGIN_NOTIFY, &TempEvent);
       }
     }
   }
