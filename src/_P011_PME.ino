@@ -123,7 +123,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 13)
           {
             Plugin_011_Write(event->Par1, event->Par2);
-            setSystemTimer(event->Par3 * 1000, PLUGIN_ID_011, event->TaskIndex, event->Par1, !event->Par2);
+            setPluginTaskTimer(event->Par3 * 1000, PLUGIN_ID_011, event->TaskIndex, event->Par1, !event->Par2);
             setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
             addLog(LOG_LEVEL_INFO, log);

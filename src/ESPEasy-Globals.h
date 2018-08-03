@@ -1331,7 +1331,16 @@ byte CPlugin_id[CPLUGIN_MAX];
 boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
 byte NPlugin_id[NPLUGIN_MAX];
 
-String dummyString = "";
+String dummyString = "";  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
+
+enum PluginPtrType {
+  TaskPluginEnum,
+  ControllerPluginEnum,
+  NotificationPluginEnum,
+};
+void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
+unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);
+
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
 
