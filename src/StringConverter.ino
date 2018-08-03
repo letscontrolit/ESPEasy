@@ -73,6 +73,12 @@ String formatToHex(unsigned long value) {
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
+  String result = formatHumanReadable(value, factor, 2);
+  result.replace(F(".00"), "");
+  return result;  
+}
+
+String formatHumanReadable(unsigned long value, unsigned long factor, int NrDecimals) {
   float floatValue(value);
   byte steps = 0;
   while (value >= factor) {
@@ -80,7 +86,7 @@ String formatHumanReadable(unsigned long value, unsigned long factor) {
     ++steps;
     floatValue /= float(factor);
   }
-  String result = toString(floatValue, 2);
+  String result = toString(floatValue, NrDecimals);
   switch (steps) {
     case 0: return String(value);
     case 1: result += 'k'; break;
@@ -521,15 +527,6 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
-
-  // FIXME TD-er: Must make sure LoadTaskSettings has been performed before this is called.
-  repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
-  if (s.indexOf(F("%vname")) != -1) {
-    repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
-    repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
-    repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
-    repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
-  }
 }
 
 String getReplacementString(const String& format, String& s) {
@@ -556,6 +553,8 @@ void replSunSetTimeString(const String& format, String& s, boolean useURLencode)
 
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
 {
+  // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
+  LoadTaskSettings(event->TaskIndex);
   SMART_REPL(F("%id%"), String(event->idx))
   if (s.indexOf(F("%val")) != -1) {
     if (event->sensorType == SENSOR_TYPE_LONG) {
@@ -567,6 +566,15 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
+  // FIXME TD-er: Must make sure LoadTaskSettings has been performed before this is called.
+  repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+  if (s.indexOf(F("%vname")) != -1) {
+    repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
+    repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
+    repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
+    repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+  }
+
 }
 #undef SMART_REPL_T
 #undef SMART_REPL

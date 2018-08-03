@@ -84,7 +84,6 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                   {
                     action = "";
                     int baseVar = x * VARS_PER_TASK;
-                    struct EventStruct TempEvent;
                     if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
                     {
                       int pwmValue = UserVar[baseVar];
@@ -119,6 +118,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                 }
                 if (action.length() > 0) {
                   struct EventStruct TempEvent;
+                  TempEvent.TaskIndex = x;
                   parseCommandString(&TempEvent, action);
                   PluginCall(PLUGIN_WRITE, &TempEvent, action);
                   // trigger rulesprocessing
@@ -127,6 +127,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                 }
               }
             }
+            LoadTaskSettings(event->TaskIndex);
           }
         }
         break;

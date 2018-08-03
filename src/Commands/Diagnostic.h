@@ -55,6 +55,7 @@ bool Command_MemInfo(struct EventStruct *event, const char* Line)
 bool Command_MemInfo_detail(struct EventStruct *event, const char* Line)
 {
   bool success = true;
+  showSettingsFileLayout = true;
   Command_MemInfo(event, Line);
   for (int st = 0; st < SettingsType_MAX; ++st) {
     SettingsType settingsType = static_cast<SettingsType>(st);
@@ -71,7 +72,7 @@ bool Command_MemInfo_detail(struct EventStruct *event, const char* Line)
       Serial.print('|');
       Serial.print(offset);
       Serial.print('|');
-      Serial.print(offset + max_size);
+      Serial.print(offset + max_size - 1);
       Serial.print('|');
       Serial.print(max_size);
       Serial.print('|');

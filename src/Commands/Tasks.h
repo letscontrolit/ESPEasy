@@ -60,6 +60,7 @@ bool Command_Task_Run(struct EventStruct *event, const char* Line)
 bool Command_Task_RemoteConfig(struct EventStruct *event, const char* Line)
 {
   struct EventStruct TempEvent;
+  TempEvent.TaskIndex = event->TaskIndex;
   String request = Line;
   remoteConfig(&TempEvent, request);
   return true;

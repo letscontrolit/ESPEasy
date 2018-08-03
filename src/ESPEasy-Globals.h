@@ -353,6 +353,8 @@
 #define DAT_CONTROLLER_SIZE              1024
 #define DAT_NOTIFICATION_SIZE            1024
 
+#define DAT_BASIC_SETTINGS_SIZE          4096
+
 #if defined(ESP8266)
   #define DAT_OFFSET_TASKS                 4096  // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
   #define DAT_OFFSET_CONTROLLER           28672  // each controller = 1k, 4 max
@@ -367,7 +369,8 @@
 #endif
 
 enum SettingsType {
-  TaskSettings_Type = 0,
+  BasicSettings_Type = 0,
+  TaskSettings_Type,
   CustomTaskSettings_Type,
   ControllerSettings_Type,
   CustomControllerSettings_Type,
@@ -379,6 +382,7 @@ enum SettingsType {
 bool getSettingsParameters(SettingsType settingsType, int index, int& offset, int& max_size);
 String getSettingsTypeString(SettingsType settingsType) {
   switch (settingsType) {
+    case BasicSettings_Type:            return F("Settings");
     case TaskSettings_Type:             return F("TaskSettings");
     case CustomTaskSettings_Type:       return F("CustomTaskSettings");
     case ControllerSettings_Type:       return F("ControllerSettings");
@@ -389,6 +393,7 @@ String getSettingsTypeString(SettingsType settingsType) {
   }
   return String();
 }
+bool showSettingsFileLayout = false;
 
 /*
         To modify the stock configuration without changing this repo file :
@@ -1008,7 +1013,7 @@ struct ExtraTaskSettingsStruct
 struct EventStruct
 {
   EventStruct() :
-    Source(0), TaskIndex(0), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
+    Source(0), TaskIndex(TASKS_MAX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
     BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     OriginTaskIndex(0), Data(NULL) {}
   EventStruct(const struct EventStruct& event):
@@ -1016,7 +1021,13 @@ struct EventStruct
         , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
         , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
         , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
-        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {}
+        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {
+          String1 = event.String1;
+          String2 = event.String2;
+          String3 = event.String3;
+          String4 = event.String4;
+          String5 = event.String5;
+        }
 
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11

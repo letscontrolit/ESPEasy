@@ -47,6 +47,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         } else {
           String cmd;
           struct EventStruct TempEvent;
+          TempEvent.TaskIndex = event->TaskIndex;
           bool validTopic = false;
           const int lastindex = event->String1.lastIndexOf('/');
           const String lastPartTopic = event->String1.substring(lastindex + 1);

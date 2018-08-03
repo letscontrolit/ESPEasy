@@ -59,6 +59,7 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
         body = parseTemplate(body, body.length());
         NPlugin_001_send(NotificationSettings, subject, body);
         success = true;
+        break;
       }
 
   }
