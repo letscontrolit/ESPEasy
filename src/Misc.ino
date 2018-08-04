@@ -1986,7 +1986,7 @@ String rulesProcessingFile(String fileName, String& event)
     Serial.print(F("RuleDebug Processing:"));
     Serial.println(fileName);
     Serial.println(F("     flags CMI  parse output:"));
-    }
+  }
 
   static byte nestingLevel = 0;
   int data = 0;
@@ -2004,13 +2004,13 @@ String rulesProcessingFile(String fileName, String& event)
   SPIFFS_CHECK(f, fileName.c_str());
 
   String line = "";
-  boolean match = false;
-  boolean codeBlock = false;
-  boolean isCommand = false;
-  boolean conditional = false;
-  boolean condition = false;
-  boolean ifBranche = false;
-  boolean ifBrancheJustMatch = false;
+  bool match = false;
+  bool codeBlock = false;
+  bool isCommand = false;
+  bool conditional = false;
+  bool condition = false;
+  bool ifBranche = false;
+  bool ifBrancheJustMatch = false;
 
   byte buf[RULES_BUFFER_SIZE];
   int len = 0;
@@ -2022,188 +2022,19 @@ String rulesProcessingFile(String fileName, String& event)
 
       SPIFFS_CHECK(data >= 0, fileName.c_str());
 
-      if (data != 10)
+      if (data != 10) {
         line += char(data);
-
-      if (data == 10)    // if line complete, parse this rule
-      {
+      }
+      else
+      {      // if line complete, parse this rule
         line.replace(F("\r"), "");
         if (line.substring(0, 2) != F("//") && line.length() > 0)
         {
-          isCommand = true;
-
-          int comment = line.indexOf(F("//"));
-          if (comment > 0)
-            line = line.substring(0, comment);
-
-          if (match || !codeBlock) {
-            // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
-            // This to avoid waisting CPU time...
-            line = parseTemplate(line, line.length());
-          }
-          line.trim();
-
-          String lineOrg = line; // store original line for future use
-          line.toLowerCase(); // convert all to lower case to make checks easier
-
-
-          String eventTrigger = "";
-          String action = "";
-
-          if (!codeBlock)  // do not check "on" rules if a block of actions is to be processed
-          {
-            if (line.startsWith(F("on ")))
-            {
-              line = line.substring(3);
-              int split = line.indexOf(F(" do"));
-              if (split != -1)
-              {
-                eventTrigger = line.substring(0, split);
-                action = lineOrg.substring(split + 7);
-                action.trim();
-              }
-              if (eventTrigger == "*") // wildcard, always process
-                match = true;
-              else
-                match = ruleMatch(event, eventTrigger);
-              if (action.length() > 0) // single on/do/action line, no block
-              {
-                isCommand = true;
-                codeBlock = false;
-              }
-              else
-              {
-                isCommand = false;
-                codeBlock = true;
-              }
-            }
-          }
-          else
-          {
-            action = lineOrg;
-          }
-
-          String lcAction = action;
-          lcAction.toLowerCase();
-          if (lcAction == F("endon")) // Check if action block has ended, then we will wait for a new "on" rule
-          {
-            isCommand = false;
-            codeBlock = false;
-            match = false;
-          }
-
-          if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
-            Serial.print(F("RuleDebug: "));
-            Serial.print(codeBlock);
-            Serial.print(match);
-            Serial.print(isCommand);
-            Serial.print(F(": "));
-            Serial.println(line);
-          }
-
-          if (match) // rule matched for one action or a block of actions
-          {
-            int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
-            boolean elseif = lcAction.startsWith(F("elseif "));
-            if (elseif == false && split != -1)
-            {
-              conditional = true;
-              String check = lcAction.substring(split + 3);
-
-
-              log = F("[if ");
-              log += check;
-              log += F("]=");
-              condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-              if(condition == true)
-              {
-                 ifBrancheJustMatch = true;
-              }
-              ifBranche = true;
-              isCommand = false;
-              log += condition ? F("true") : F("false");
-              addLog(LOG_LEVEL_DEBUG, log);
-            }
-
-            if(elseif)
-            {
-              String check = lcAction.substring(7);
-              log = F("[elseif ");
-              log += check;
-              log += "]=";
-              condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-              if(condition == true)
-              {
-                 ifBrancheJustMatch = true;
-              }
-              ifBranche = true;
-              isCommand = false;
-              log += condition ? F("true") : F("false");
-              addLog(LOG_LEVEL_DEBUG, log);
-            }
-
-            if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
-            {
-              ifBranche = false;
-              isCommand = false;
-              if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                String log = F("else = ");
-                log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
-                addLog(LOG_LEVEL_DEBUG, log);
-              }
-            }
-
-            if (lcAction == "endif") // conditional block ends here
-            {
-              conditional = false;
-              isCommand = false;
-              ifBranche = false;
-              ifBrancheJustMatch = false;
-            }
-
-            // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
-            if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
-            {
-              if (event.charAt(0) == '!')
-              {
-                action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
-              }
-              else
-              {
-                int equalsPos = event.indexOf("=");
-                if (equalsPos > 0)
-                {
-                  String tmpString = event.substring(equalsPos + 1);
-                  action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
-                }
-              }
-
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("ACT  : ");
-                log += action;
-                addLog(LOG_LEVEL_INFO, log);
-              }
-
-              struct EventStruct TempEvent;
-              parseCommandString(&TempEvent, action);
-              yield();
-              // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
-              String tmpAction(action);
-              if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
-                if (!tmpAction.equals(action)) {
-                  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                    String log = F("PLUGIN_WRITE altered the string: ");
-                    log += action;
-                    log += F(" to: ");
-                    log += tmpAction;
-                    addLog(LOG_LEVEL_ERROR, log);
-                  }
-                }
-                ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
-              }
-              yield();
-            }
-          }
+          parseCompleteNonCommentLine(
+            line, event, log,
+            match, codeBlock, isCommand,
+            conditional, condition,
+            ifBranche, ifBrancheJustMatch);
         }
 
         line = "";
@@ -2216,6 +2047,193 @@ String rulesProcessingFile(String fileName, String& event)
   return (F(""));
 }
 
+void parseCompleteNonCommentLine(
+    String& line,
+    String& event,
+    String& log,
+    bool& match,
+    bool& codeBlock,
+    bool& isCommand,
+    bool& conditional,
+    bool& condition,
+    bool& ifBranche,
+    bool& ifBrancheJustMatch) {
+  isCommand = true;
+
+  // Strip comments
+  int comment = line.indexOf(F("//"));
+  if (comment > 0)
+    line = line.substring(0, comment);
+
+  if (match || !codeBlock) {
+    // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
+    // This to avoid waisting CPU time...
+    line = parseTemplate(line, line.length());
+  }
+  line.trim();
+
+  String lineOrg = line; // store original line for future use
+  line.toLowerCase(); // convert all to lower case to make checks easier
+
+
+  String eventTrigger = "";
+  String action = "";
+
+  if (!codeBlock)  // do not check "on" rules if a block of actions is to be processed
+  {
+    if (line.startsWith(F("on ")))
+    {
+      line = line.substring(3);
+      int split = line.indexOf(F(" do"));
+      if (split != -1)
+      {
+        eventTrigger = line.substring(0, split);
+        action = lineOrg.substring(split + 7);
+        action.trim();
+      }
+      if (eventTrigger == "*") // wildcard, always process
+        match = true;
+      else
+        match = ruleMatch(event, eventTrigger);
+      if (action.length() > 0) // single on/do/action line, no block
+      {
+        isCommand = true;
+        codeBlock = false;
+      }
+      else
+      {
+        isCommand = false;
+        codeBlock = true;
+      }
+    }
+  }
+  else
+  {
+    action = lineOrg;
+  }
+
+  String lcAction = action;
+  lcAction.toLowerCase();
+  if (lcAction == F("endon")) // Check if action block has ended, then we will wait for a new "on" rule
+  {
+    isCommand = false;
+    codeBlock = false;
+    match = false;
+  }
+
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
+    Serial.print(F("RuleDebug: "));
+    Serial.print(codeBlock);
+    Serial.print(match);
+    Serial.print(isCommand);
+    Serial.print(F(": "));
+    Serial.println(line);
+  }
+
+  if (match) // rule matched for one action or a block of actions
+  {
+    int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+    boolean elseif = lcAction.startsWith(F("elseif "));
+    if (elseif == false && split != -1)
+    {
+      conditional = true;
+      String check = lcAction.substring(split + 3);
+
+
+      log = F("[if ");
+      log += check;
+      log += F("]=");
+      condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+      if(condition == true)
+      {
+         ifBrancheJustMatch = true;
+      }
+      ifBranche = true;
+      isCommand = false;
+      log += condition ? F("true") : F("false");
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+
+    if(elseif)
+    {
+      String check = lcAction.substring(7);
+      log = F("[elseif ");
+      log += check;
+      log += "]=";
+      condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+      if(condition == true)
+      {
+         ifBrancheJustMatch = true;
+      }
+      ifBranche = true;
+      isCommand = false;
+      log += condition ? F("true") : F("false");
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+
+    if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
+    {
+      ifBranche = false;
+      isCommand = false;
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("else = ");
+        log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+    }
+
+    if (lcAction == "endif") // conditional block ends here
+    {
+      conditional = false;
+      isCommand = false;
+      ifBranche = false;
+      ifBrancheJustMatch = false;
+    }
+
+    // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
+    if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
+    {
+      if (event.charAt(0) == '!')
+      {
+        action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+      }
+      else
+      {
+        int equalsPos = event.indexOf("=");
+        if (equalsPos > 0)
+        {
+          String tmpString = event.substring(equalsPos + 1);
+          action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+        }
+      }
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("ACT  : ");
+        log += action;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+
+      struct EventStruct TempEvent;
+      parseCommandString(&TempEvent, action);
+      yield();
+      // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+      String tmpAction(action);
+      if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+        if (!tmpAction.equals(action)) {
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = F("PLUGIN_WRITE altered the string: ");
+            log += action;
+            log += F(" to: ");
+            log += tmpAction;
+            addLog(LOG_LEVEL_ERROR, log);
+          }
+        }
+        ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
+      }
+      yield();
+    }
+  }
+}
 
 /********************************************************************************************\
   Check if an event matches to a given rule
