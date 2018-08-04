@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180804 (since mega-20180802)
+-------------------------------------------------
+
+Release date: Sat Aug  4 04:00:23 CEST 2018
+
+TD-er (5):
+      [#1574] Set event->TaskIndex
+      [Settings File] Show settings file layout
+      [ESP32] Small fix building ESP32
+      [Settings file] Include SettingsStruct in the view
+      [Cleanup] Replace a lot of TR TD with function
+
+Thomas (1):
+      Update _P075_Nextion.ino
+
+
+-------------------------------------------------
 Changes in release mega-20180802 (since mega-20180801)
 -------------------------------------------------
 
