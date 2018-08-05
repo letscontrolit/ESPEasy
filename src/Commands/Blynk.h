@@ -3,7 +3,7 @@
 
 #ifdef CPLUGIN_012
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
-bool Command_Blynk_Get(struct EventStruct *event, const char* Line)
+String Command_Blynk_Get(struct EventStruct *event, const char* Line)
 {
   byte first_enabled_blynk_controller = firstEnabledBlynkController();
   if (first_enabled_blynk_controller == -1) {
@@ -31,9 +31,9 @@ bool Command_Blynk_Get(struct EventStruct *event, const char* Line)
         status = F("Error getting data");
       }
     }
-    
+
   }
-  return true;
+  return status;
 }
 #endif
 

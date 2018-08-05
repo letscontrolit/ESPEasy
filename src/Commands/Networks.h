@@ -4,41 +4,37 @@
 
 #include "../ESPEasy-Globals.h"
 
-bool Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
+String Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  Serial.print(F("Allowed IP range : "));
-  Serial.println(describeAllowedIPrange());
-  return success;
+  String result = F("Allowed IP range : ");
+  result += describeAllowedIPrange();
+  return return_result(event, result);
 }
 
-bool Command_AccessInfo_Clear (struct EventStruct *event, const char* Line)
+String Command_AccessInfo_Clear (struct EventStruct *event, const char* Line)
 {
-  bool success = true;
   clearAccessBlock();
-  Serial.print(F("Allowed IP range : "));
-  Serial.println(describeAllowedIPrange());
-  return success;
+  return Command_AccessInfo_Ls(event, Line);
 }
 
-bool Command_DNS (struct EventStruct *event, const char* Line)
+String Command_DNS (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetIP(F("DNS:"), Line, Settings.DNS,WiFi.dnsIP(0),1);
+  return Command_GetORSetIP(event, F("DNS:"), Line, Settings.DNS,WiFi.dnsIP(0),1);
 }
 
-bool Command_Gateway (struct EventStruct *event, const char* Line)
+String Command_Gateway (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetIP(F("Gateway:"), Line, Settings.Gateway,WiFi.gatewayIP(),1);
+  return Command_GetORSetIP(event, F("Gateway:"), Line, Settings.Gateway,WiFi.gatewayIP(),1);
 }
 
-bool Command_IP (struct EventStruct *event, const char* Line)
+String Command_IP (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetIP(F("IP:"), Line, Settings.IP,WiFi.localIP(),1);
+  return Command_GetORSetIP(event, F("IP:"), Line, Settings.IP,WiFi.localIP(),1);
 }
 
-bool Command_Subnet (struct EventStruct *event, const char* Line)
+String Command_Subnet (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetIP(F("Subnet:"), Line, Settings.Subnet,WiFi.subnetMask(),1);
+  return Command_GetORSetIP(event, F("Subnet:"), Line, Settings.Subnet,WiFi.subnetMask(),1);
 }
 
 #endif // COMMAND_NETWORKS_H

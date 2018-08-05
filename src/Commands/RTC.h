@@ -2,18 +2,16 @@
 #define COMMAND_RTC_H
 
 
-bool Command_RTC_Clear(struct EventStruct *event, const char* Line)
+String Command_RTC_Clear(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  initRTC();
-  return success;
+	initRTC();
+	return return_command_success();
 }
 
-bool Command_RTC_resetFlashWriteCounter(struct EventStruct *event, const char* Line)
+String Command_RTC_resetFlashWriteCounter(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  RTC.flashDayCounter = 0;
-  return success;
+	RTC.flashDayCounter = 0;
+	return return_command_success();
 }
 
 #endif // COMMAND_RTC_H

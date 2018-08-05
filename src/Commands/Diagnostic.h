@@ -2,116 +2,109 @@
 #define COMMAND_DIAGNOSTIC_H
 
 
-bool Command_Lowmem(struct EventStruct *event, const char* Line)
+String Command_Lowmem(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  Serial.print(lowestRAM);
-  Serial.print(F(" : "));
-  Serial.println(lowestRAMfunction);
-  return success;
+	String result;
+	result += lowestRAM;
+	result += F(" : ");
+	result += lowestRAMfunction;
+	return return_result(event, result);
 }
 
-char* ramtest;
-bool Command_Malloc(struct EventStruct *event, const char* Line)
+String Command_Malloc(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  ramtest = (char *)malloc(event->Par1);
-  return success;
+	char* ramtest;
+	ramtest = (char*)malloc(event->Par1);
+	if (ramtest == NULL) return F("failed");
+	free(ramtest);
+	return return_command_success();
 }
 
-bool Command_SysLoad(struct EventStruct *event, const char* Line)
+String Command_SysLoad(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  Serial.print(getCPUload());
-  Serial.print(F("% (LC="));
-  Serial.print(getCPUload());
-  Serial.println(F(")"));
-  return success;
+	String result = toString(getCPUload());
+	result += F("% (LC=");
+	result += getLoopCountPerSec();
+	result += ')';
+	return return_result(event, result);
 }
 
-bool Command_SerialFloat(struct EventStruct *event, const char* Line)
+String Command_SerialFloat(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  pinMode(1, INPUT);
-  pinMode(3, INPUT);
-  delay(60000);
-  return success;
+	pinMode(1, INPUT);
+	pinMode(3, INPUT);
+	delay(60000);
+	return return_command_success();
 }
 
-bool Command_MemInfo(struct EventStruct *event, const char* Line)
+String Command_MemInfo(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  Serial.print(F("SecurityStruct         | "));
-  Serial.println(sizeof(SecuritySettings));
-  Serial.print(F("SettingsStruct         | "));
-  Serial.println(sizeof(Settings));
-  Serial.print(F("ExtraTaskSettingsStruct| "));
-  Serial.println(sizeof(ExtraTaskSettings));
-  Serial.print(F("DeviceStruct           | "));
-  Serial.println(sizeof(Device));
-  return success;
+	Serial.print(F("SecurityStruct         | "));
+	Serial.println(sizeof(SecuritySettings));
+	Serial.print(F("SettingsStruct         | "));
+	Serial.println(sizeof(Settings));
+	Serial.print(F("ExtraTaskSettingsStruct| "));
+	Serial.println(sizeof(ExtraTaskSettings));
+	Serial.print(F("DeviceStruct           | "));
+	Serial.println(sizeof(Device));
+	return return_see_serial(event);
 }
 
-bool Command_MemInfo_detail(struct EventStruct *event, const char* Line)
+String Command_MemInfo_detail(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  showSettingsFileLayout = true;
-  Command_MemInfo(event, Line);
-  for (int st = 0; st < SettingsType_MAX; ++st) {
-    SettingsType settingsType = static_cast<SettingsType>(st);
-    int max_index, offset, max_size;
-    int struct_size = 0;
-    Serial.println();
-    Serial.print(getSettingsTypeString(settingsType));
-    Serial.println(F(" | start | end | max_size | struct_size"));
-    Serial.println(F("--- | --- | --- | --- | ---"));
-    getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
-    for (int i = 0; i < max_index; ++i) {
-      getSettingsParameters(settingsType, i, offset, max_size);
-      Serial.print(i);
-      Serial.print('|');
-      Serial.print(offset);
-      Serial.print('|');
-      Serial.print(offset + max_size - 1);
-      Serial.print('|');
-      Serial.print(max_size);
-      Serial.print('|');
-      Serial.println(struct_size);
-    }
-  }
-
-  return success;
+	showSettingsFileLayout = true;
+	Command_MemInfo(event, Line);
+	for (int st = 0; st < SettingsType_MAX; ++st) {
+		SettingsType settingsType = static_cast<SettingsType>(st);
+		int max_index, offset, max_size;
+		int struct_size = 0;
+		Serial.println();
+		Serial.print(getSettingsTypeString(settingsType));
+		Serial.println(F(" | start | end | max_size | struct_size"));
+		Serial.println(F("--- | --- | --- | --- | ---"));
+		getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+		for (int i = 0; i < max_index; ++i) {
+			getSettingsParameters(settingsType, i, offset, max_size);
+			Serial.print(i);
+			Serial.print('|');
+			Serial.print(offset);
+			Serial.print('|');
+			Serial.print(offset + max_size - 1);
+			Serial.print('|');
+			Serial.print(max_size);
+			Serial.print('|');
+			Serial.println(struct_size);
+		}
+	}
+	return return_see_serial(event);
 }
 
-bool Command_Background(struct EventStruct *event, const char* Line)
+String Command_Background(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  unsigned long timer = millis() + event->Par1;
-  Serial.println(F("start"));
-  while (!timeOutReached(timer))
-    backgroundtasks();
-  Serial.println(F("end"));
-  return success;
+	unsigned long timer = millis() + event->Par1;
+	Serial.println(F("start"));
+	while (!timeOutReached(timer))
+		backgroundtasks();
+	Serial.println(F("end"));
+	return return_see_serial(event);
 }
 
-
-bool Command_Debug(struct EventStruct *event, const char* Line)
+String Command_Debug(struct EventStruct *event, const char* Line)
 {
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  if (GetArgv(Line, TmpStr1, 2)) {
-    setLogLevelFor(LOG_TO_SERIAL, event->Par1);
-  }
-  else{
-    Serial.println();
-    Serial.print(F("Serial debug level: "));
-    Serial.println(Settings.SerialLogLevel);
-  }
-  return true;
+	char TmpStr1[INPUT_COMMAND_SIZE];
+	if (GetArgv(Line, TmpStr1, 2)) {
+		setLogLevelFor(LOG_TO_SERIAL, event->Par1);
+	}else  {
+		Serial.println();
+		Serial.print(F("Serial debug level: "));
+		Serial.println(Settings.SerialLogLevel);
+	}
+	return return_see_serial(event);
 }
 
-bool Command_logentry(struct EventStruct *event, const char* Line)
+String Command_logentry(struct EventStruct *event, const char* Line)
 {
-  return true;
+	return return_command_success();
 }
 
 #endif // COMMAND_DIAGNOSTIC_H

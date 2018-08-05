@@ -2,12 +2,10 @@
 #define COMMAND_TIMER_H
 
 
-bool Command_Timer_Set (struct EventStruct *event, const char* Line)
+String Command_Timer_Set (struct EventStruct *event, const char* Line)
 {
-  bool success = false;
   if (event->Par1>=1 && event->Par1<=RULES_TIMER_MAX)
   {
-      success = true;
       int timerId= event->Par1-1;
       if (event->Par2)
       {
@@ -23,20 +21,19 @@ bool Command_Timer_Set (struct EventStruct *event, const char* Line)
         RulesTimer[timerId].paused = false;
         RulesTimer[timerId].timestamp = 0L;
       }
+      return return_command_success();
   }
   else
   {
       addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
   }
-  return success;
+  return return_command_failed();
 }
 
-bool Command_Timer_Pause (struct EventStruct *event, const char* Line)
+String Command_Timer_Pause (struct EventStruct *event, const char* Line)
 {
-  bool success = false;
   if (event->Par1>=1 && event->Par1<=RULES_TIMER_MAX)
   {
-      success = true;
       int timerId = event->Par1-1;
       if (RulesTimer[timerId].paused == false)
       {
@@ -54,20 +51,19 @@ bool Command_Timer_Pause (struct EventStruct *event, const char* Line)
       {
         addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
       }
+      return return_command_success();
   }
   else
   {
     addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
   }
-  return success;
+  return return_command_failed();
 }
 
-bool Command_Timer_Resume (struct EventStruct *event, const char* Line)
+String Command_Timer_Resume (struct EventStruct *event, const char* Line)
 {
-  bool success = false;
   if (event->Par1>=1 && event->Par1<=RULES_TIMER_MAX)
   {
-      success = true;
       int timerId = event->Par1-1;
       if (RulesTimer[timerId].paused == true)
       {
@@ -84,18 +80,19 @@ bool Command_Timer_Resume (struct EventStruct *event, const char* Line)
       {
         addLog(LOG_LEVEL_INFO, F("TIMER: already resumed"));
       }
+      return return_command_success();
   }
   else
   {
     addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
   }
-  return success;
+  return return_command_failed();
 }
 
-bool Command_Delay (struct EventStruct *event, const char* Line)
+String Command_Delay (struct EventStruct *event, const char* Line)
 {
   delayBackground(event->Par1);
-  return true;
+  return return_command_success();
 }
- 
+
 #endif // COMMAND_TIMER_H

@@ -3633,7 +3633,7 @@ void stream_to_json_object_value(const String& object, const String& value) {
 }
 
 String jsonBool(bool value) {
-  return value ? F("true") : F("false");
+  return toString(value);
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.

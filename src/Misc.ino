@@ -2167,7 +2167,7 @@ void processMatchedRule(
       }
       ifBranche = true;
       isCommand = false;
-      log += condition ? F("true") : F("false");
+      log += toString(condition);
       addLog(LOG_LEVEL_DEBUG, log);
     }
   }
@@ -2184,7 +2184,7 @@ void processMatchedRule(
     }
     ifBranche = true;
     isCommand = false;
-    log += condition ? F("true") : F("false");
+    log += toString(condition);
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
@@ -2194,7 +2194,7 @@ void processMatchedRule(
     isCommand = false;
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("else = ");
-      log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
+      log += toString(conditional && (condition == ifBranche));
       addLog(LOG_LEVEL_DEBUG, log);
     }
   }
