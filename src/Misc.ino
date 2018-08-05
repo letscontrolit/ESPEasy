@@ -2132,13 +2132,30 @@ void parseCompleteNonCommentLine(
 
   if (match) // rule matched for one action or a block of actions
   {
-    int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
-    boolean elseif = lcAction.startsWith(F("elseif "));
-    if (elseif == false && split != -1)
-    {
+    processMatchedRule(
+      lcAction, action, event, log,
+      match, codeBlock, isCommand,
+      conditional, condition,
+      ifBranche, ifBrancheJustMatch);
+  }
+}
+
+void processMatchedRule(
+  String& lcAction, String& action, String& event, String& log,
+  bool& match,
+  bool& codeBlock,
+  bool& isCommand,
+  bool& conditional,
+  bool& condition,
+  bool& ifBranche,
+  bool& ifBrancheJustMatch)
+{
+  int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+  if (!lcAction.startsWith(F("elseif "))) {
+    if (split != -1)
+    { // There is some 'if ' in the string.
       conditional = true;
       String check = lcAction.substring(split + 3);
-
 
       log = F("[if ");
       log += check;
@@ -2153,85 +2170,88 @@ void parseCompleteNonCommentLine(
       log += condition ? F("true") : F("false");
       addLog(LOG_LEVEL_DEBUG, log);
     }
-
-    if(elseif)
+  }
+  else
+  { // Starts with 'elseif '
+    String check = lcAction.substring(7);
+    log = F("[elseif ");
+    log += check;
+    log += "]=";
+    condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
+    if(condition == true)
     {
-      String check = lcAction.substring(7);
-      log = F("[elseif ");
-      log += check;
-      log += "]=";
-      condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-      if(condition == true)
-      {
-         ifBrancheJustMatch = true;
-      }
-      ifBranche = true;
-      isCommand = false;
-      log += condition ? F("true") : F("false");
+       ifBrancheJustMatch = true;
+    }
+    ifBranche = true;
+    isCommand = false;
+    log += condition ? F("true") : F("false");
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
+  {
+    ifBranche = false;
+    isCommand = false;
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("else = ");
+      log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
       addLog(LOG_LEVEL_DEBUG, log);
     }
+  }
 
-    if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
+  if (lcAction == "endif") // conditional block ends here
+  {
+    conditional = false;
+    isCommand = false;
+    ifBranche = false;
+    ifBrancheJustMatch = false;
+  }
+
+  // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
+  if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
+  {
+    if (event.charAt(0) == '!')
     {
-      ifBranche = false;
-      isCommand = false;
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("else = ");
-        log += (conditional && (condition == ifBranche)) ? F("true") : F("false");
-        addLog(LOG_LEVEL_DEBUG, log);
+      action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+    }
+    else
+    {
+      int equalsPos = event.indexOf("=");
+      if (equalsPos > 0)
+      {
+        String tmpString = event.substring(equalsPos + 1);
+        action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
       }
     }
 
-    if (lcAction == "endif") // conditional block ends here
-    {
-      conditional = false;
-      isCommand = false;
-      ifBranche = false;
-      ifBrancheJustMatch = false;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("ACT  : ");
+      log += action;
+      addLog(LOG_LEVEL_INFO, log);
     }
 
-    // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
-    if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
-    {
-      if (event.charAt(0) == '!')
-      {
-        action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
-      }
-      else
-      {
-        int equalsPos = event.indexOf("=");
-        if (equalsPos > 0)
-        {
-          String tmpString = event.substring(equalsPos + 1);
-          action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+    struct EventStruct TempEvent;
+    parseCommandString(&TempEvent, action);
+
+    // FIXME TD-er: This part seems a bit strange.
+    // It can't schedule a call to PLUGIN_WRITE.
+    // Maybe ExecuteCommand can be scheduled?
+    yield();
+    // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
+    String tmpAction(action);
+    if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
+      if (!tmpAction.equals(action)) {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("PLUGIN_WRITE altered the string: ");
+          log += action;
+          log += F(" to: ");
+          log += tmpAction;
+          addLog(LOG_LEVEL_ERROR, log);
         }
       }
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("ACT  : ");
-        log += action;
-        addLog(LOG_LEVEL_INFO, log);
-      }
-
-      struct EventStruct TempEvent;
-      parseCommandString(&TempEvent, action);
-      yield();
-      // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
-      String tmpAction(action);
-      if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
-        if (!tmpAction.equals(action)) {
-          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            String log = F("PLUGIN_WRITE altered the string: ");
-            log += action;
-            log += F(" to: ");
-            log += tmpAction;
-            addLog(LOG_LEVEL_ERROR, log);
-          }
-        }
-        ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
-      }
-      yield();
+      ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
+    yield();
   }
 }
 
