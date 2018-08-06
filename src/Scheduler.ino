@@ -6,7 +6,7 @@
 #define SYSTEM_EVENT_TIMER   4
 #define COMMAND_TIMER        5
 
-#include <queue>
+#include <list>
 struct EventStructCommandWrapper {
   EventStructCommandWrapper() : id(0) {}
 
@@ -15,7 +15,7 @@ struct EventStructCommandWrapper {
   String line;
   struct EventStruct event;
 };
-std::queue<EventStructCommandWrapper> EventQueue;
+std::list<EventStructCommandWrapper> EventQueue;
 
 
 /*********************************************************************************************\
@@ -252,9 +252,9 @@ void schedule_command_timer(const char * cmd, struct EventStruct *event, const c
   cmdStr += cmd;
   String lineStr;
   lineStr += line;
-  // Using CRC here based on the cmd, to make sure other commands are not removed from the queue.
-  // since the ID used in the queue must be unique.
-  const int crc = calc_CRC16(cmdStr.c_str(), cmdStr.length());
+  // Using CRC here based on the cmd AND line, to make sure other commands are
+  // not removed from the queue,  since the ID used in the queue must be unique.
+  const int crc = calc_CRC16(cmdStr) ^ calc_CRC16(lineStr);
   const unsigned long mixedId = createSystemEventMixedId(CommandTimerEnum, static_cast<uint16_t>(crc));
   setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
   EventStructCommandWrapper eventWrapper;
@@ -262,7 +262,7 @@ void schedule_command_timer(const char * cmd, struct EventStruct *event, const c
   eventWrapper.event = *event;
   eventWrapper.cmd = cmdStr;
   eventWrapper.line = lineStr;
-  EventQueue.push(eventWrapper);
+  EventQueue.push_back(eventWrapper);
 }
 
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event) {
@@ -271,7 +271,7 @@ void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, str
   EventStructCommandWrapper eventWrapper;
   eventWrapper.id = mixedId;
   eventWrapper.event = *event;
-  EventQueue.push(eventWrapper);
+  EventQueue.push_back(eventWrapper);
 }
 
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
@@ -320,5 +320,5 @@ void process_system_event_timer() {
         break;
       }
   }
-  EventQueue.pop();
+  EventQueue.pop_front();
 }

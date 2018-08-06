@@ -2955,6 +2955,10 @@ void ArduinoOTAInit()
 
 #endif
 
+int calc_CRC16(const String& text) {
+  return calc_CRC16(text.c_str(), text.length());
+}
+
 int calc_CRC16(const char *ptr, int count)
 {
     int  crc;

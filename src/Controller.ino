@@ -250,6 +250,7 @@ void SendStatus(byte source, String status)
   switch(source)
   {
     case VALUE_SOURCE_HTTP:
+    case VALUE_SOURCE_WEB_FRONTEND:
       if (printToWeb)
         printWebString += status;
       break;

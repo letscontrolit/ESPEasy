@@ -339,6 +339,7 @@
 #define VALUE_SOURCE_HTTP                   3
 #define VALUE_SOURCE_MQTT                   4
 #define VALUE_SOURCE_UDP                    5
+#define VALUE_SOURCE_WEB_FRONTEND           6
 
 #define BOOT_CAUSE_MANUAL_REBOOT            0
 #define BOOT_CAUSE_COLD_BOOT                1
