@@ -1337,9 +1337,11 @@ enum PluginPtrType {
   TaskPluginEnum,
   ControllerPluginEnum,
   NotificationPluginEnum,
+  CommandTimerEnum
 };
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);
+unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16);
 
 
 byte lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;

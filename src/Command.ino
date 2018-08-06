@@ -222,10 +222,7 @@ void ExecuteCommand(byte source, const char *Line)
 	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = str2int(TmpStr1);
 	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = str2int(TmpStr1);
 
-	String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
-	yield();
-	SendStatus(source, status);
-	yield();
+  schedule_command_timer((char*)&cmd[0], &TempEvent, Line);
 }
 
 #ifdef FEATURE_SD

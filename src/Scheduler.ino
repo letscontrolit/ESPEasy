@@ -4,9 +4,19 @@
 #define PLUGIN_TASK_TIMER    2
 #define TASK_DEVICE_TIMER    3
 #define SYSTEM_EVENT_TIMER   4
+#define COMMAND_TIMER        5
 
 #include <queue>
-std::queue<struct EventStruct> EventQueue;
+struct EventStructCommandWrapper {
+  EventStructCommandWrapper() : id(0) {}
+
+  unsigned long id;
+  String cmd;
+  String line;
+  struct EventStruct event;
+};
+std::queue<EventStructCommandWrapper> EventQueue;
+
 
 /*********************************************************************************************\
  * Generic Timer functions.
@@ -48,7 +58,8 @@ void handle_schedule() {
       process_task_device_timer(id, timer);
       break;
     case SYSTEM_EVENT_TIMER:
-      process_system_event_timer(id);
+      // Do not use the id, it is kept in the EventQueue
+      process_system_event_timer();
   }
 }
 
@@ -236,10 +247,37 @@ void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Func
   schedule_event_timer(NotificationPluginEnum, NotificationProtocolIndex, Function, event);
 }
 
+void schedule_command_timer(const char * cmd, struct EventStruct *event, const char* line) {
+  String cmdStr;
+  cmdStr += cmd;
+  String lineStr;
+  lineStr += line;
+  // Using CRC here based on the cmd, to make sure other commands are not removed from the queue.
+  // since the ID used in the queue must be unique.
+  const int crc = calc_CRC16(cmdStr.c_str(), cmdStr.length());
+  const unsigned long mixedId = createSystemEventMixedId(CommandTimerEnum, static_cast<uint16_t>(crc));
+  setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
+  EventStructCommandWrapper eventWrapper;
+  eventWrapper.id = mixedId;
+  eventWrapper.event = *event;
+  eventWrapper.cmd = cmdStr;
+  eventWrapper.line = lineStr;
+  EventQueue.push(eventWrapper);
+}
+
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
-  setNewTimerAt(mixedId, millis());
-  EventQueue.push(*event);
+  setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
+  EventStructCommandWrapper eventWrapper;
+  eventWrapper.id = mixedId;
+  eventWrapper.event = *event;
+  EventQueue.push(eventWrapper);
+}
+
+unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
+  unsigned long subId = ptr_type;
+  subId = (subId << 16) + crc16;
+  return getMixedId(SYSTEM_EVENT_TIMER, subId);
 }
 
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
@@ -249,25 +287,38 @@ unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte 
   return getMixedId(SYSTEM_EVENT_TIMER, subId);
 }
 
-void process_system_event_timer(unsigned long id) {
+void process_system_event_timer() {
+  unsigned long id = EventQueue.front().id;
   byte Function = id & 0xFF;
   byte Index = (id >> 8) & 0xFF;
   PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
-  // At this moment, the String is not being used, so just supply a dummy String.
+  // At this moment, the String is not being used in the plugin calls, so just supply a dummy String.
   // Also since these events will be processed asynchronous, the resulting
   //   output in the String is probably of no use elsewhere.
+  // Else the line string could be used.
   String tmpString;
   switch (ptr_type) {
     case TaskPluginEnum:
-      LoadTaskSettings(EventQueue.front().TaskIndex);
-      Plugin_ptr[Index](Function, &EventQueue.front(), tmpString);
+      LoadTaskSettings(EventQueue.front().event.TaskIndex);
+      Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPlugin_ptr[Index](Function, &EventQueue.front(), tmpString);
+      CPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
-      NPlugin_ptr[Index](Function, &EventQueue.front(), tmpString);
+      NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
+    case CommandTimerEnum:
+      {
+        String status = doExecuteCommand(
+            EventQueue.front().cmd.c_str(),
+            &EventQueue.front().event,
+            EventQueue.front().line.c_str());
+        yield();
+        SendStatus(EventQueue.front().event.Source, status);
+        yield();
+        break;
+      }
   }
   EventQueue.pop();
 }
