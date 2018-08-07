@@ -21,20 +21,21 @@
 
 
 /*********************************************************************************************\
- * Registers command
+* Registers command
 \*********************************************************************************************/
-bool doExecuteCommand(const char * cmd, struct EventStruct *event, const char* line) {
-  // Simple macro to match command to function call.
-  #define COMMAND_CASE(S,C) if (strcmp_P(cmd_lc, PSTR(S)) == 0) return (C(event,line));
+String doExecuteCommand(const char * cmd, struct EventStruct *event, const char* line)
+{
+	// Simple macro to match command to function call.
+  #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc, PSTR(S)) == 0) return (C(event, line));
 
-  String tmpcmd;
-  tmpcmd = cmd;
-  tmpcmd.toLowerCase();
-  String log = F("Command: ");
-  log += tmpcmd;
-  addLog(LOG_LEVEL_INFO, log);
-  char cmd_lc[INPUT_COMMAND_SIZE];
-  tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
+	String tmpcmd;
+	tmpcmd = cmd;
+	tmpcmd.toLowerCase();
+	String log = F("Command: ");
+	log += tmpcmd;
+	addLog(LOG_LEVEL_INFO, log);
+	char cmd_lc[INPUT_COMMAND_SIZE];
+	tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
     case 'a': {
 	  COMMAND_CASE("accessinfo"             , Command_AccessInfo_Ls);              // Network Command
@@ -164,67 +165,97 @@ bool doExecuteCommand(const char * cmd, struct EventStruct *event, const char* l
       break;
   }
   String errorUnknown = F("Command unknown: \"");
-  errorUnknown += cmd_lc;
-  errorUnknown += '\"';
-  addLog(LOG_LEVEL_INFO, errorUnknown);
-  return false;
+	errorUnknown += cmd_lc;
+	errorUnknown += '\"';
+	addLog(LOG_LEVEL_INFO, errorUnknown);
+	return F("\nUnknown command!");
 
   #undef COMMAND_CASE
 }
 
+// Simple function to return "Ok", to avoid flash string duplication in the firmware.
+String return_command_success()
+{
+	return F("\nOk");
+}
+String return_command_failed()
+{
+	return F("\nFailed");
+}
+String return_not_connected()
+{
+	return F("Not connected to WiFi");
+}
+
+String return_result(struct EventStruct *event, const String& result)
+{
+	Serial.println(result);
+	if (event->Source == VALUE_SOURCE_SERIAL) {
+		return return_command_success();
+	}
+	return result;
+}
+
+String return_see_serial(struct EventStruct *event)
+{
+	if (event->Source == VALUE_SOURCE_SERIAL) {
+		return return_command_success();
+	}
+	return F("Output sent to serial");
+}
+
 void ExecuteCommand(byte source, const char *Line)
 {
-  checkRAM(F("ExecuteCommand"));
-  String status = "";
-  boolean success = false;
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  TmpStr1[0] = 0;
-  char cmd[INPUT_COMMAND_SIZE];
-  cmd[0] = 0;
-  struct EventStruct TempEvent;
-  // FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
-  // since commands can originate from anywhere.
-  TempEvent.Source = source;
-  GetArgv(Line, cmd, 1);
-  if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);
-  if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = str2int(TmpStr1);
-  if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = str2int(TmpStr1);
-  if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = str2int(TmpStr1);
-  if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = str2int(TmpStr1);
+	checkRAM(F("ExecuteCommand"));
+	char TmpStr1[INPUT_COMMAND_SIZE];
+	TmpStr1[0] = 0;
+	char cmd[INPUT_COMMAND_SIZE];
+	cmd[0] = 0;
+	struct EventStruct TempEvent;
+	// FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
+	// since commands can originate from anywhere.
+	TempEvent.Source = source;
+	GetArgv(Line, cmd, 1);
+	if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = str2int(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = str2int(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = str2int(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = str2int(TmpStr1);
 
-  success = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
-  yield();
-
-  if (success)
-    status += F("\nOk");
-  else
-    status += F("\nUnknown command!");
-  SendStatus(source, status);
-  yield();
+  if (source == VALUE_SOURCE_WEB_FRONTEND) {
+    // Must run immediately, to see result in web frontend
+    String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
+    yield();
+    SendStatus(source, status);
+    yield();
+  } else {
+    // Schedule to run async
+    schedule_command_timer((char*)&cmd[0], &TempEvent, Line);
+  }
 }
 
 #ifdef FEATURE_SD
-void printDirectory(File dir, int numTabs) {
-  while (true) {
-
-    File entry =  dir.openNextFile();
-    if (! entry) {
-      // no more files
-      break;
-    }
-    for (uint8_t i = 0; i < numTabs; i++) {
-      Serial.print('\t');
-    }
-    Serial.print(entry.name());
-    if (entry.isDirectory()) {
-      Serial.println("/");
-      printDirectory(entry, numTabs + 1);
-    } else {
-      // files have sizes, directories do not
-      Serial.print("\t\t");
-      Serial.println(entry.size(), DEC);
-    }
-    entry.close();
-  }
+void printDirectory(File dir, int numTabs)
+{
+	while (true) {
+		File entry = dir.openNextFile();
+		if (!entry) {
+			// no more files
+			break;
+		}
+		for (uint8_t i = 0; i < numTabs; i++) {
+			Serial.print('\t');
+		}
+		Serial.print(entry.name());
+		if (entry.isDirectory()) {
+			Serial.println("/");
+			printDirectory(entry, numTabs + 1);
+		} else {
+			// files have sizes, directories do not
+			Serial.print("\t\t");
+			Serial.println(entry.size(), DEC);
+		}
+		entry.close();
+	}
 }
 #endif

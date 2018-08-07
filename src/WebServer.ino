@@ -1526,7 +1526,7 @@ void handle_notifications() {
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, dummyString);
+        schedule_notification_event_timer(NotificationProtocolIndex, NPLUGIN_NOTIFY, &TempEvent);
       }
     }
   }
@@ -3148,9 +3148,9 @@ void handle_tools() {
     {
       struct EventStruct TempEvent;
       parseCommandString(&TempEvent, webrequest);
-      TempEvent.Source = VALUE_SOURCE_HTTP;
+      TempEvent.Source = VALUE_SOURCE_WEB_FRONTEND;
       if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
-        ExecuteCommand(VALUE_SOURCE_HTTP, webrequest.c_str());
+        ExecuteCommand(VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
     }
 
     if (printWebString.length() > 0)
@@ -3633,7 +3633,7 @@ void stream_to_json_object_value(const String& object, const String& value) {
 }
 
 String jsonBool(bool value) {
-  return value ? F("true") : F("false");
+  return toString(value);
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.

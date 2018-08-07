@@ -333,6 +333,8 @@ String SaveTaskSettings(byte TaskIndex)
   \*********************************************************************************************/
 String LoadTaskSettings(byte TaskIndex)
 {
+  if (TaskIndex < 0 || TaskIndex >= TASKS_MAX)
+    return(String()); // Un-initialized task index.
   checkRAM(F("LoadTaskSettings"));
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String()); //already loaded

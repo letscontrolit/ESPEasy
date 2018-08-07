@@ -3,25 +3,23 @@
 
 
 #ifdef FEATURE_SD
-bool Command_SD_LS(struct EventStruct *event, const char* Line)
+String Command_SD_LS(struct EventStruct *event, const char* Line)
 {
-  bool success = true;
-  success = true;
   File root = SD.open("/");
   root.rewindDirectory();
   printDirectory(root, 0);
   root.close();
-  return success;
+  return return_see_serial(event);
 }
-bool Command_SD_Remove(struct EventStruct *event, const char* Line)
+
+String Command_SD_Remove(struct EventStruct *event, const char* Line)
 {
-  success = true;
   String fname = Line;
   fname = fname.substring(9);
-  Serial.print(F("Removing:"));
-  Serial.println(fname.c_str());
+  String result = F("Removing:");
+  result += fname.c_str();
   SD.remove((char*)fname.c_str());
-  return success;
+  return return_result(event, result);
 }
 #endif
 

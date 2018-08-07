@@ -75,7 +75,7 @@ String formatToHex(unsigned long value) {
 String formatHumanReadable(unsigned long value, unsigned long factor) {
   String result = formatHumanReadable(value, factor, 2);
   result.replace(F(".00"), "");
-  return result;  
+  return result;
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor, int NrDecimals) {
@@ -150,6 +150,10 @@ String toString(WiFiMode_t mode)
       break;
   }
   return result;
+}
+
+String toString(bool value) {
+  return value ? F("true") : F("false");
 }
 
 /*********************************************************************************************\
