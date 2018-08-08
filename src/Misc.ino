@@ -44,8 +44,8 @@ bool readyForSleep()
 {
   if (!isDeepSleepEnabled())
     return false;
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    // Allow 6 seconds to connect to WiFi
+  if (!checkConnectionsEstablished()) {
+    // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }
   return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep);

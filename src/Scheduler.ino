@@ -200,8 +200,17 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
     // to make sure not all are run at the same time.
     // This scheduled time may be overriden by the plugin's own init.
     runAt += (task_index * 37) + Settings.MessageDelay;
+  } else {
+    runAt += (task_index * 11) + 10;
   }
   schedule_task_device_timer(task_index, runAt);
+}
+
+// Typical use case is to run this when all needed connections are made.
+void schedule_all_task_device_timers() {
+  for (byte task = 0; task < TASKS_MAX; task++) {
+    schedule_task_device_timer_at_init(task);
+  }
 }
 
 void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
