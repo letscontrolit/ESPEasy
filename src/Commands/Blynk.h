@@ -1,13 +1,13 @@
 #ifndef COMMAND_BLYNK_H
 #define COMMAND_BLYNK_H
 
-#ifdef CPLUGIN_012
+#ifdef USES_C012
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
 String Command_Blynk_Get(struct EventStruct *event, const char* Line)
 {
   byte first_enabled_blynk_controller = firstEnabledBlynkController();
   if (first_enabled_blynk_controller == -1) {
-    status = F("Controller not enabled");
+    return F("Controller not enabled");
   } else {
     String strLine = Line;
     strLine = strLine.substring(9);
@@ -22,18 +22,18 @@ String Command_Blynk_Get(struct EventStruct *event, const char* Line)
         UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = value;
       }
       else
-        status = F("Error getting data");
+        return F("Error getting data");
     }
     else
     {
       if (!Blynk_get(strLine, first_enabled_blynk_controller))
       {
-        status = F("Error getting data");
+        return F("Error getting data");
       }
     }
 
   }
-  return status;
+  return return_command_success();
 }
 #endif
 
