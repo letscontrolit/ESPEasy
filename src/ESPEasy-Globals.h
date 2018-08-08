@@ -1022,13 +1022,13 @@ struct EventStruct
         , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
         , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
         , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
-        , OriginTaskIndex(event.OriginTaskIndex), Data(event.Data) {
-          String1 = event.String1;
-          String2 = event.String2;
-          String3 = event.String3;
-          String4 = event.String4;
-          String5 = event.String5;
-        }
+        , OriginTaskIndex(event.OriginTaskIndex)
+        , String1(event.String1)
+        , String2(event.String2)
+        , String3(event.String3)
+        , String4(event.String4)
+        , String5(event.String5)
+        , Data(event.Data) {}
 
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
