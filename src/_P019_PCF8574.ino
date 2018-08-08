@@ -131,10 +131,11 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         if (command == F("pcfpulse"))
         {
           success = true;
+          setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           Plugin_019_Write(event->Par1, event->Par2);
           delay(event->Par3);
           Plugin_019_Write(event->Par1, !event->Par2);
-          setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+          setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
           log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
@@ -143,8 +144,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         if (command == F("pcflongpulse"))
         {
           success = true;
-          Plugin_019_Write(event->Par1, event->Par2);
           setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+          Plugin_019_Write(event->Par1, event->Par2);
           setPluginTaskTimer(event->Par3 * 1000, PLUGIN_ID_019, event->TaskIndex, event->Par1, !event->Par2);
           log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
           addLog(LOG_LEVEL_INFO, log);
