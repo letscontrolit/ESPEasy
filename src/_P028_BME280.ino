@@ -287,7 +287,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
         const float tempOffset = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 10.0;
-        Plugin_028_update_measurements(i2cAddress, tempOffset);
+        if (Plugin_028_update_measurements(i2cAddress, tempOffset, event->TaskIndex)) {
+          // Update was succesfull, schedule a read.
+          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        }
         break;
       }
 
@@ -349,7 +352,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
 
 // Only perform the measurements with big interval to prevent the sensor from warming up.
-bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset) {
+bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, unsigned long task_index) {
   P028_sensordata& sensor = P028_sensors[i2cAddress];
   const unsigned long current_time = millis();
   Plugin_028_check(i2cAddress); // Check id device is present
@@ -362,7 +365,7 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset) 
   }
   if (sensor.state != BMx_Wait_for_samples) {
     if (sensor.last_measurement != 0 &&
-        !timeOutReached(sensor.last_measurement + (Settings.MessageDelay * 1000))) {
+        !timeOutReached(sensor.last_measurement + (Settings.TaskDeviceTimer[task_index] * 1000))) {
       // Timeout has not yet been reached.
       return false;
     }
