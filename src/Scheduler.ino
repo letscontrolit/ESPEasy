@@ -1,14 +1,14 @@
 #define TIMER_ID_SHIFT    28
 
+#define SYSTEM_EVENT_QUEUE   0  // Not really a timer.
 #define CONST_INTERVAL_TIMER 1
 #define PLUGIN_TASK_TIMER    2
 #define TASK_DEVICE_TIMER    3
-#define SYSTEM_EVENT_TIMER   4
-#define COMMAND_TIMER        5
 
 #include <list>
 struct EventStructCommandWrapper {
   EventStructCommandWrapper() : id(0) {}
+  EventStructCommandWrapper(unsigned long i, const struct EventStruct& e) : id(i), event(e) {}
 
   unsigned long id;
   String cmd;
@@ -42,7 +42,13 @@ unsigned long getMixedId(unsigned long timerType, unsigned long id) {
 void handle_schedule() {
   unsigned long timer;
   const unsigned long mixed_id = msecTimerHandler.getNextId(timer);
-  if (mixed_id == 0) return;
+  if (mixed_id == 0) {
+    // No id ready to run right now.
+    // Events are not that important to run immediately.
+    // Make sure normal scheduled jobs run at higher priority.
+    process_system_event_queue();
+    return;
+  }
   const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
   const unsigned long id = mixed_id & mask;
@@ -57,9 +63,6 @@ void handle_schedule() {
     case TASK_DEVICE_TIMER:
       process_task_device_timer(id, timer);
       break;
-    case SYSTEM_EVENT_TIMER:
-      // Do not use the id, it is kept in the EventQueue
-      process_system_event_timer();
   }
 }
 
@@ -256,10 +259,7 @@ void schedule_command_timer(const char * cmd, struct EventStruct *event, const c
   // not removed from the queue,  since the ID used in the queue must be unique.
   const int crc = calc_CRC16(cmdStr) ^ calc_CRC16(lineStr);
   const unsigned long mixedId = createSystemEventMixedId(CommandTimerEnum, static_cast<uint16_t>(crc));
-  setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
-  EventStructCommandWrapper eventWrapper;
-  eventWrapper.id = mixedId;
-  eventWrapper.event = *event;
+  EventStructCommandWrapper eventWrapper(mixedId, *event);
   eventWrapper.cmd = cmdStr;
   eventWrapper.line = lineStr;
   EventQueue.push_back(eventWrapper);
@@ -267,27 +267,27 @@ void schedule_command_timer(const char * cmd, struct EventStruct *event, const c
 
 void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
-  setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
-  EventStructCommandWrapper eventWrapper;
-  eventWrapper.id = mixedId;
-  eventWrapper.event = *event;
-  EventQueue.push_back(eventWrapper);
+//  EventStructCommandWrapper eventWrapper(mixedId, *event);
+//  EventQueue.push_back(eventWrapper);
+  EventQueue.emplace_back(mixedId, *event);
+
 }
 
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
   unsigned long subId = ptr_type;
   subId = (subId << 16) + crc16;
-  return getMixedId(SYSTEM_EVENT_TIMER, subId);
+  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
 }
 
 unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
   unsigned long subId = ptr_type;
   subId = (subId << 8) + Index;
   subId = (subId << 8) + Function;
-  return getMixedId(SYSTEM_EVENT_TIMER, subId);
+  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
 }
 
-void process_system_event_timer() {
+void process_system_event_queue() {
+  if (EventQueue.size() == 0) return;
   unsigned long id = EventQueue.front().id;
   byte Function = id & 0xFF;
   byte Index = (id >> 8) & 0xFF;
