@@ -9,6 +9,8 @@
 
 #define NPLUGIN_001_TIMEOUT 5000
 
+// The message body is included in event->String1
+
 boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -51,8 +53,8 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
         LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
         String subject = NotificationSettings.Subject;
         String body = "";
-        if (string.length() >0)
-          body = string;
+        if (event->String1.length() >0)
+          body = event->String1;
         else
           body = NotificationSettings.Body;
         subject = parseTemplate(subject, subject.length());

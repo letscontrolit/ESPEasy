@@ -1,14 +1,73 @@
 #define TIMER_ID_SHIFT    28
 
 #define CONST_INTERVAL_TIMER 1
-#define GENERIC_TIMER        2
-#define SYSTEM_TIMER         3
-#define TASK_DEVICE_TIMER    4
+#define PLUGIN_TASK_TIMER    2
+#define TASK_DEVICE_TIMER    3
+#define SYSTEM_EVENT_TIMER   4
+#define COMMAND_TIMER        5
 
-void setTimer(unsigned long id) {
-  setTimer(GENERIC_TIMER, id, 0);
+#include <list>
+struct EventStructCommandWrapper {
+  EventStructCommandWrapper() : id(0) {}
+
+  unsigned long id;
+  String cmd;
+  String line;
+  struct EventStruct event;
+};
+std::list<EventStructCommandWrapper> EventQueue;
+
+
+/*********************************************************************************************\
+ * Generic Timer functions.
+\*********************************************************************************************/
+void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromNow) {
+  setNewTimerAt(getMixedId(timerType, id), millis() + msecFromNow);
 }
 
+void setNewTimerAt(unsigned long id, unsigned long timer) {
+  START_TIMER;
+  msecTimerHandler.registerAt(id, timer);
+  STOP_TIMER(SET_NEW_TIMER);
+}
+
+// Mix timer type int with an ID describing the scheduled job.
+unsigned long getMixedId(unsigned long timerType, unsigned long id) {
+  return (timerType << TIMER_ID_SHIFT) + id;
+}
+
+/*********************************************************************************************\
+ * Handle scheduled timers.
+\*********************************************************************************************/
+void handle_schedule() {
+  unsigned long timer;
+  const unsigned long mixed_id = msecTimerHandler.getNextId(timer);
+  if (mixed_id == 0) return;
+  const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
+  const unsigned long id = mixed_id & mask;
+
+  switch (timerType) {
+    case CONST_INTERVAL_TIMER:
+      process_interval_timer(id, timer);
+      break;
+    case PLUGIN_TASK_TIMER:
+      process_plugin_task_timer(id);
+      break;
+    case TASK_DEVICE_TIMER:
+      process_task_device_timer(id, timer);
+      break;
+    case SYSTEM_EVENT_TIMER:
+      // Do not use the id, it is kept in the EventQueue
+      process_system_event_timer();
+  }
+}
+
+/*********************************************************************************************\
+ * Interval Timer
+ * These timers set a new scheduled timer, based on the old value.
+ * This will make their interval as constant as possible.
+\*********************************************************************************************/
 void setIntervalTimer(unsigned long id) {
   setIntervalTimer(id, millis());
 }
@@ -35,72 +94,8 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
-void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromNow) {
-  setNewTimerAt(getMixedId(timerType, id), millis() + msecFromNow);
-}
-
-void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
-{
-  // plugin number and par1 form a unique key that can be used to restart a timer
-  const unsigned long systemTimerId = createSystemTimerId(plugin, Par1);
-  systemTimerStruct timer_data;
-  timer_data.TaskIndex = taskIndex;
-  timer_data.Par1 = Par1;
-  timer_data.Par2 = Par2;
-  timer_data.Par3 = Par3;
-  timer_data.Par4 = Par4;
-  timer_data.Par5 = Par5;
-  systemTimers[systemTimerId] = timer_data;
-  setTimer(SYSTEM_TIMER, systemTimerId, timer);
-}
-
-void setNewTimerAt(unsigned long id, unsigned long timer) {
-  START_TIMER;
-  msecTimerHandler.registerAt(id, timer);
-  STOP_TIMER(SET_NEW_TIMER);
-}
-
-unsigned long createSystemTimerId(byte plugin, int Par1) {
-  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-  const unsigned long mixed = (Par1 << 8) + plugin;
-  return (mixed & mask);
-}
-
-/* // Not (yet) used
-void splitSystemTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
-  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-  plugin = mixed_id & 0xFF;
-  Par1 = (mixed_id & mask) >> 8;
-}
-*/
-
-unsigned long getMixedId(unsigned long timerType, unsigned long id) {
-  return (timerType << TIMER_ID_SHIFT) + id;
-}
-
-void handle_schedule() {
-  unsigned long timer;
-  const unsigned long mixed_id = msecTimerHandler.getNextId(timer);
-  if (mixed_id == 0) return;
-  const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
-  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-  const unsigned long id = mixed_id & mask;
-
-  switch (timerType) {
-    case CONST_INTERVAL_TIMER:
-      setIntervalTimer(id, timer);
-      process_interval_timer(id);
-      break;
-    case SYSTEM_TIMER:
-      process_system_timer(id);
-      break;
-    case TASK_DEVICE_TIMER:
-      process_task_device_timer(id, timer);
-      break;
-  }
-}
-
-void process_interval_timer(unsigned long id) {
+void process_interval_timer(unsigned long id, unsigned long lasttimer) {
+  setIntervalTimer(id, lasttimer);
   switch (id) {
     case TIMER_20MSEC:
       run50TimesPerSecond();
@@ -124,7 +119,40 @@ void process_interval_timer(unsigned long id) {
   }
 }
 
-void process_system_timer(unsigned long id) {
+
+/*********************************************************************************************\
+ * Plugin Task Timer
+\*********************************************************************************************/
+unsigned long createPluginTaskTimerId(byte plugin, int Par1) {
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
+  const unsigned long mixed = (Par1 << 8) + plugin;
+  return (mixed & mask);
+}
+
+/* // Not (yet) used
+void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
+  plugin = mixed_id & 0xFF;
+  Par1 = (mixed_id & mask) >> 8;
+}
+*/
+
+void setPluginTaskTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
+{
+  // plugin number and par1 form a unique key that can be used to restart a timer
+  const unsigned long systemTimerId = createPluginTaskTimerId(plugin, Par1);
+  systemTimerStruct timer_data;
+  timer_data.TaskIndex = taskIndex;
+  timer_data.Par1 = Par1;
+  timer_data.Par2 = Par2;
+  timer_data.Par3 = Par3;
+  timer_data.Par4 = Par4;
+  timer_data.Par5 = Par5;
+  systemTimers[systemTimerId] = timer_data;
+  setTimer(PLUGIN_TASK_TIMER, systemTimerId, timer);
+}
+
+void process_plugin_task_timer(unsigned long id) {
   START_TIMER;
   const systemTimerStruct timer_data = systemTimers[id];
   struct EventStruct TempEvent;
@@ -154,6 +182,14 @@ void process_system_timer(unsigned long id) {
   STOP_TIMER(PROC_SYS_TIMER);
 }
 
+
+/*********************************************************************************************\
+ * Task Device Timer
+ * This is the interval set in a plugin to get a new reading.
+ * These timers will re-schedule themselves as long as the plugin task is enabled.
+ * When the plugin task is initialized, a call to schedule_task_device_timer_at_init
+ * will bootstrap this sequence.
+\*********************************************************************************************/
 void schedule_task_device_timer_at_init(unsigned long task_index) {
   unsigned long runAt = millis();
   if (!isDeepSleepEnabled()) {
@@ -191,4 +227,98 @@ void process_task_device_timer(unsigned long task_index, unsigned long lasttimer
   START_TIMER;
   SensorSendTask(task_index);
   STOP_TIMER(SENSOR_SEND_TASK);
+}
+
+/*********************************************************************************************\
+ * System Event Timer
+ * Handling of these events will be asynchronous and being called from the loop().
+ * Thus only use these when the result is not needed immediately.
+ * Proper use case is calling from a callback function, since those cannot use yield() or delay()
+\*********************************************************************************************/
+void schedule_plugin_task_event_timer(byte DeviceIndex, byte Function, struct EventStruct* event) {
+  schedule_event_timer(TaskPluginEnum, DeviceIndex, Function, event);
+}
+
+void schedule_controller_event_timer(byte ProtocolIndex, byte Function, struct EventStruct* event) {
+  schedule_event_timer(ControllerPluginEnum, ProtocolIndex, Function, event);
+}
+
+void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct* event) {
+  schedule_event_timer(NotificationPluginEnum, NotificationProtocolIndex, Function, event);
+}
+
+void schedule_command_timer(const char * cmd, struct EventStruct *event, const char* line) {
+  String cmdStr;
+  cmdStr += cmd;
+  String lineStr;
+  lineStr += line;
+  // Using CRC here based on the cmd AND line, to make sure other commands are
+  // not removed from the queue,  since the ID used in the queue must be unique.
+  const int crc = calc_CRC16(cmdStr) ^ calc_CRC16(lineStr);
+  const unsigned long mixedId = createSystemEventMixedId(CommandTimerEnum, static_cast<uint16_t>(crc));
+  setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
+  EventStructCommandWrapper eventWrapper;
+  eventWrapper.id = mixedId;
+  eventWrapper.event = *event;
+  eventWrapper.cmd = cmdStr;
+  eventWrapper.line = lineStr;
+  EventQueue.push_back(eventWrapper);
+}
+
+void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event) {
+  const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
+  setNewTimerAt(mixedId, millis()); // Do not schedule out of order, so do not add offset to the time.
+  EventStructCommandWrapper eventWrapper;
+  eventWrapper.id = mixedId;
+  eventWrapper.event = *event;
+  EventQueue.push_back(eventWrapper);
+}
+
+unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
+  unsigned long subId = ptr_type;
+  subId = (subId << 16) + crc16;
+  return getMixedId(SYSTEM_EVENT_TIMER, subId);
+}
+
+unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
+  unsigned long subId = ptr_type;
+  subId = (subId << 8) + Index;
+  subId = (subId << 8) + Function;
+  return getMixedId(SYSTEM_EVENT_TIMER, subId);
+}
+
+void process_system_event_timer() {
+  unsigned long id = EventQueue.front().id;
+  byte Function = id & 0xFF;
+  byte Index = (id >> 8) & 0xFF;
+  PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
+  // At this moment, the String is not being used in the plugin calls, so just supply a dummy String.
+  // Also since these events will be processed asynchronous, the resulting
+  //   output in the String is probably of no use elsewhere.
+  // Else the line string could be used.
+  String tmpString;
+  switch (ptr_type) {
+    case TaskPluginEnum:
+      LoadTaskSettings(EventQueue.front().event.TaskIndex);
+      Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      break;
+    case ControllerPluginEnum:
+      CPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      break;
+    case NotificationPluginEnum:
+      NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      break;
+    case CommandTimerEnum:
+      {
+        String status = doExecuteCommand(
+            EventQueue.front().cmd.c_str(),
+            &EventQueue.front().event,
+            EventQueue.front().line.c_str());
+        yield();
+        SendStatus(EventQueue.front().event.Source, status);
+        yield();
+        break;
+      }
+  }
+  EventQueue.pop_front();
 }

@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20180808 (since mega-20180804)
+-------------------------------------------------
+
+Release date: Wed Aug  8 04:00:13 CEST 2018
+
+Gijs Noorlander (1):
+      [#1612] Make P008_RFID using new functions
+
+TD-er (8):
+      [Scheduler] Rename some functions and clean-up
+      [Notifications] Schedule NPlugin_ptr calls async
+      [MQTT] Schedule from callback functions
+      [Rules] Split parsing single line from rulesProcessingFile
+      [Rules] Split processing matched rule in a separate function
+      [Commands] Return String output per command
+      [Schedule] Scheduled command timer
+      [Schedule] Run command from webpage immediately
+
+
+-------------------------------------------------
 Changes in release mega-20180804 (since mega-20180802)
 -------------------------------------------------
 

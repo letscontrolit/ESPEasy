@@ -239,7 +239,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               }
 
             }
-            setSystemTimer(event->Par3 , PLUGIN_ID_022
+            setPluginTaskTimer(event->Par3 , PLUGIN_ID_022
               , event->TaskIndex
               , event->Par1
               , !event->Par2
@@ -278,7 +278,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             log += String(autoreset);
             autoreset--;
           }
-          setSystemTimer(event->Par3, PLUGIN_ID_022
+          setPluginTaskTimer(event->Par3, PLUGIN_ID_022
             , event->TaskIndex
             , event->Par1
             , !event->Par2

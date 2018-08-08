@@ -2,30 +2,28 @@
 #define COMMAND_NOTIFICATIONS_H
 
 
-bool Command_Notifications_Notify(struct EventStruct *event, const char* Line)
+String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 {
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  String message = "";
-  if (GetArgv(Line, TmpStr1, 3))
-    message = TmpStr1;
+	char TmpStr1[INPUT_COMMAND_SIZE];
+	String message = "";
+	if (GetArgv(Line, TmpStr1, 3))
+		message = TmpStr1;
 
-  if (event->Par1 > 0)
-  {
-    int index = event->Par1 -1;
-    if (Settings.NotificationEnabled[index] && Settings.Notification[index] != 0)
-    {
-      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index]);
-      if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
-      {
-        struct EventStruct TempEvent;
-        // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
-        TempEvent.NotificationIndex = index;
-        TempEvent.TaskIndex = event->TaskIndex;
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, message);
-      }
-    }
-  }
-  return true;
+	if (event->Par1 > 0) {
+		int index = event->Par1 - 1;
+		if (Settings.NotificationEnabled[index] && Settings.Notification[index] != 0) {
+			byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[index]);
+			if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND) {
+				struct EventStruct TempEvent;
+				// TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
+				TempEvent.NotificationIndex = index;
+				TempEvent.TaskIndex = event->TaskIndex;
+				TempEvent.String1 = message;
+				schedule_notification_event_timer(NotificationProtocolIndex, NPLUGIN_NOTIFY, &TempEvent);
+			}
+		}
+	}
+	return return_command_success();
 }
 
 #endif // COMMAND_NOTIFICATIONS_H

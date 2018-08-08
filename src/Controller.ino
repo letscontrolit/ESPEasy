@@ -115,7 +115,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
   TempEvent.String1 = c_topic;
   TempEvent.String2 = c_payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[enabledMqttController]);
-  CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_RECV, &TempEvent, dummyString);
+  schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }
 
 
@@ -250,6 +250,7 @@ void SendStatus(byte source, String status)
   switch(source)
   {
     case VALUE_SOURCE_HTTP:
+    case VALUE_SOURCE_WEB_FRONTEND:
       if (printToWeb)
         printWebString += status;
       break;
