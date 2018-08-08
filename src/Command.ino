@@ -43,7 +43,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 'b': {
 	  COMMAND_CASE("background"             , Command_Background);                 // Diagnostic.h
-    #ifdef CPLUGIN_012
+    #ifdef USES_C012
 	  COMMAND_CASE("blynkget"               , Command_Blynk_Get);
     #endif
 	  COMMAND_CASE("build"                  , Command_Settings_Build);             // Settings.h
