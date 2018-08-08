@@ -16,10 +16,17 @@
 
 struct C011_ConfigStruct
 {
-  char          HttpMethod[C011_HTTP_METHOD_MAX_LEN];
-  char          HttpUri[C011_HTTP_URI_MAX_LEN];
-  char          HttpHeader[C011_HTTP_HEADER_MAX_LEN];
-  char          HttpBody[C011_HTTP_BODY_MAX_LEN];
+  void zero_last() {
+    HttpMethod[C011_HTTP_METHOD_MAX_LEN - 1] = 0;
+    HttpUri[C011_HTTP_URI_MAX_LEN - 1] = 0;
+    HttpHeader[C011_HTTP_HEADER_MAX_LEN - 1] = 0;
+    HttpBody[C011_HTTP_BODY_MAX_LEN - 1] = 0;
+  }
+
+  char          HttpMethod[C011_HTTP_METHOD_MAX_LEN] = {0};
+  char          HttpUri[C011_HTTP_URI_MAX_LEN] = {0};
+  char          HttpHeader[C011_HTTP_HEADER_MAX_LEN] = {0};
+  char          HttpBody[C011_HTTP_BODY_MAX_LEN] = {0};
 };
 
 boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
@@ -52,6 +59,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         C011_ConfigStruct customConfig;
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
+        customConfig.zero_last();
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
         for (byte i = 0; i < 5; i++)
@@ -102,6 +110,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
         strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
         strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
+        customConfig.zero_last();
         SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         break;
       }
@@ -141,6 +150,7 @@ boolean HTTPSend011(struct EventStruct *event)
 
   C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
+  customConfig.zero_last();
 
   boolean success = false;
   addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
@@ -284,4 +294,3 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 }
 
 #endif
-
