@@ -458,14 +458,15 @@ void loop()
   if (!processedDisconnectAPmode) processDisconnectAPmode();
   if (!processedScanDone) processScanDone();
 
-  bool firstLoopWiFiConnected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED && firstLoop;
-  if (firstLoopWiFiConnected) {
+  bool firstLoopConnectionsEstablished = checkConnectionsEstablished() && firstLoop;
+  if (firstLoopConnectionsEstablished) {
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
+     schedule_all_task_device_timers();
    }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
-  if ((firstLoopWiFiConnected || readyForSleep()) && isDeepSleepEnabled())
+  if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
   {
       runPeriodicalMQTT();
       // Now run all frequent tasks
@@ -496,6 +497,14 @@ void loop()
   }
 }
 
+bool checkConnectionsEstablished() {
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) return false;
+  if (firstEnabledMQTTController() >= 0) {
+    // There should be a MQTT connection.
+    return MQTTclient_connected;
+  }
+  return true;
+}
 
 void runPeriodicalMQTT() {
   // MQTT_KEEPALIVE = 15 seconds.
