@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20180809 (since mega-20180808)
+-------------------------------------------------
+
+Release date: Thu Aug  9 04:00:06 CEST 2018
+
+Bartlomiej Zimon (1):
+      fix for #702, setup propper gpio state before send into PCF8574 for pcfpulse,pcflongpulse
+
+Gijs Noorlander (2):
+      [Blynk] Command handling was not active
+      [Blynk] Change define to allow blynkget command
+
+TD-er (4):
+      [#1621] Timing interval of BME280 incorrect
+      [C011] Make sure the loaded extra controller settings end with 0
+      [Scheduler] Remove scheduled commands from scheduler to run in idle time
+      [deepsleep] Send values immediately after connections are made
+
+
+-------------------------------------------------
 Changes in release mega-20180808 (since mega-20180804)
 -------------------------------------------------
 
