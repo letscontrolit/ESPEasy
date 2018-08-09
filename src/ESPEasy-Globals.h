@@ -796,7 +796,7 @@ struct SettingsStruct
 
 struct ControllerSettingsStruct
 {
-  ControllerSettingsStruct() : UseDNS(false), Port(0) {
+  ControllerSettingsStruct() : UseDNS(false), Port(0), MinimalTimeBetweenMessages(100), MaxBufferDepth(0) {
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -816,6 +816,8 @@ struct ControllerSettingsStruct
   char          MQTTLwtTopic[129];
   char          LWTMessageConnect[129];
   char          LWTMessageDisconnect[129];
+  unsigned int  MinimalTimeBetweenMessages;
+  unsigned int  MaxBufferDepth;
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
@@ -913,6 +915,17 @@ private:
     return false;
   }
 
+};
+
+struct ControllerDelayHandler {
+  ControllerDelayHandler() :
+      lastSend(0), minTimeBetweenMessages(100), max_buffer(0), value_index(0) {}
+
+  std::list<struct EventStruct> sendQueue;
+  unsigned long lastSend;
+  unsigned int minTimeBetweenMessages;
+  byte max_buffer;
+  byte value_index; // Some controllers send only 1 value at a time and thus have to process the same event more than once.
 };
 
 struct NotificationSettingsStruct

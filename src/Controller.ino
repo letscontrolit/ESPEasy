@@ -39,21 +39,25 @@ void sendData(struct EventStruct *event)
     event->ControllerIndex = x;
     event->idx = Settings.TaskDeviceID[x][event->TaskIndex];
     if (Settings.TaskDeviceSendData[event->ControllerIndex][event->TaskIndex] &&
-        Settings.ControllerEnabled[event->ControllerIndex] && Settings.Protocol[event->ControllerIndex])
+        Settings.ControllerEnabled[event->ControllerIndex] &&
+        Settings.Protocol[event->ControllerIndex])
     {
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
       if (validUserVar(event)) {
         CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
       } else {
-        String log = F("Invalid value detected for controller ");
-        String controllerName;
-        CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
-        log += controllerName;
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("Invalid value detected for controller ");
+          String controllerName;
+          CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
+          log += controllerName;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
       }
     }
   }
 
+  // FIXME TD-er: This PLUGIN_EVENT_OUT seems to be unused.
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);

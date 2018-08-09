@@ -1164,6 +1164,8 @@ void handle_controllers() {
   String MQTTLwtTopic = WebServer.arg(F("mqttlwttopic"));
   String lwtmessageconnect = WebServer.arg(F("lwtmessageconnect"));
   String lwtmessagedisconnect = WebServer.arg(F("lwtmessagedisconnect"));
+  const int minimumsendinterval = getFormItemInt(F("minimumsendinterval"), 100);
+  const int maxbufferdepth = getFormItemInt(F("maxbufferdepth"), 0);
 
 
   //submitted data
@@ -1182,6 +1184,8 @@ void handle_controllers() {
         //reset (some) default-settings
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
         ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
+        ControllerSettings.MinimalTimeBetweenMessages = 100;
+        ControllerSettings.MaxBufferDepth = 0;
         if (Protocol[ProtocolIndex].usesTemplate)
           CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
         strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
@@ -1241,6 +1245,8 @@ void handle_controllers() {
         strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
         strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
         strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
+        ControllerSettings.MaxBufferDepth = maxbufferdepth;
 
         CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
@@ -1326,7 +1332,6 @@ void handle_controllers() {
       {
 
         addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
-
         if (ControllerSettings.UseDNS)
         {
           addFormTextBox( F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
@@ -1337,6 +1342,9 @@ void handle_controllers() {
         }
 
         addFormNumericBox( F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
+        addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 0, 3600000);
+        addUnit(F("ms"));
+        addFormNumericBox( F("Max Buffer Depth"), F("maxbufferdepth"), ControllerSettings.MaxBufferDepth, 0, 10);
 
         if (Protocol[ProtocolIndex].usesAccount)
         {
