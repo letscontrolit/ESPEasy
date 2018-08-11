@@ -2007,10 +2007,10 @@ String rulesProcessingFile(String fileName, String& event)
   bool match = false;
   bool codeBlock = false;
   bool isCommand = false;
-  bool conditional = false;
-  bool condition = false;
-  bool ifBranche = false;
-  bool ifBrancheJustMatch = false;
+  bool condition[RULES_IF_MAX_NESTING_LEVEL];
+  bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
+  byte ifBlock = 0;
+  byte fakeIfBlock = 0;
 
   byte buf[RULES_BUFFER_SIZE];
   int len = 0;
@@ -2033,8 +2033,8 @@ String rulesProcessingFile(String fileName, String& event)
           parseCompleteNonCommentLine(
             line, event, log,
             match, codeBlock, isCommand,
-            conditional, condition,
-            ifBranche, ifBrancheJustMatch);
+            condition, ifBranche,
+            ifBlock, fakeIfBlock);
         }
 
         line = "";
@@ -2054,10 +2054,11 @@ void parseCompleteNonCommentLine(
     bool& match,
     bool& codeBlock,
     bool& isCommand,
-    bool& conditional,
-    bool& condition,
-    bool& ifBranche,
-    bool& ifBrancheJustMatch) {
+    bool condition[],
+    bool ifBranche[],
+    byte& ifBlock,
+    byte& fakeIfBlock)
+{
   isCommand = true;
 
   // Strip comments
@@ -2069,6 +2070,12 @@ void parseCompleteNonCommentLine(
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
     // This to avoid waisting CPU time...
     line = parseTemplate(line, line.length());
+
+    int equalsPos = event.indexOf("=");
+    if (equalsPos > 0) {
+      String tmpString = event.substring(equalsPos + 1);
+      line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+    }
   }
   line.trim();
 
@@ -2083,6 +2090,8 @@ void parseCompleteNonCommentLine(
   {
     if (line.startsWith(F("on ")))
     {
+      ifBlock = 0;
+      fakeIfBlock = 0;
       line = line.substring(3);
       int split = line.indexOf(F(" do"));
       if (split != -1)
@@ -2119,6 +2128,8 @@ void parseCompleteNonCommentLine(
     isCommand = false;
     codeBlock = false;
     match = false;
+    ifBlock = 0;
+    fakeIfBlock = 0;
   }
 
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
@@ -2135,8 +2146,8 @@ void parseCompleteNonCommentLine(
     processMatchedRule(
       lcAction, action, event, log,
       match, codeBlock, isCommand,
-      conditional, condition,
-      ifBranche, ifBrancheJustMatch);
+      condition, ifBranche,
+      ifBlock, fakeIfBlock);
   }
 }
 
@@ -2145,84 +2156,108 @@ void processMatchedRule(
   bool& match,
   bool& codeBlock,
   bool& isCommand,
-  bool& conditional,
-  bool& condition,
-  bool& ifBranche,
-  bool& ifBrancheJustMatch)
+  bool condition[],
+  bool ifBranche[],
+  byte& ifBlock,
+  byte& fakeIfBlock)
 {
-  int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
-  if (!lcAction.startsWith(F("elseif "))) {
-    if (split != -1)
-    { // There is some 'if ' in the string.
-      conditional = true;
-      String check = lcAction.substring(split + 3);
-
-      log = F("[if ");
-      log += check;
-      log += F("]=");
-      condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-      if(condition == true)
-      {
-         ifBrancheJustMatch = true;
-      }
-      ifBranche = true;
+  if (ifBlock)
+    if (condition[ifBlock-1] != ifBranche[ifBlock-1])
       isCommand = false;
-      log += toString(condition);
-      addLog(LOG_LEVEL_DEBUG, log);
+  if (fakeIfBlock)
+    isCommand = false;
+  int split = lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
+  if (split != -1)
+  {
+    isCommand = false;
+    if (ifBlock && !fakeIfBlock)
+    {
+      if (ifBranche[ifBlock-1])
+      {
+        if (condition[ifBlock-1])
+          ifBranche[ifBlock-1] = false;
+        else
+        {
+          String check = lcAction.substring(split + 7);
+          log = F("Lev.");
+          log += String(ifBlock);
+          log += F(": [elseif ");
+          log += check;
+          log += "]=";
+          condition[ifBlock-1] = conditionMatchExtended(check);
+          log += toString(condition[ifBlock-1]);
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+      }
     }
   }
   else
-  { // Starts with 'elseif '
-    String check = lcAction.substring(7);
-    log = F("[elseif ");
-    log += check;
-    log += "]=";
-    condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-    if(condition == true)
+  {
+    split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+    if (split != -1)
     {
-       ifBrancheJustMatch = true;
+      if (ifBlock < RULES_IF_MAX_NESTING_LEVEL)
+      {
+        if (isCommand)
+        {
+          ifBlock++;
+          String check = lcAction.substring(split + 3);
+          log = F("Lev.");
+          log += String(ifBlock);
+          log += F(": [if ");
+          log += check;
+          log += F("]=");
+          condition[ifBlock-1] = conditionMatchExtended(check);
+          ifBranche[ifBlock-1] = true;
+          log += toString(condition[ifBlock-1]);
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        else
+          fakeIfBlock++;
+      }
+      else
+      {
+        fakeIfBlock++;
+        log = F("Lev.");
+        log += String(ifBlock);
+        log = F(": Error: IF Nesting level exceeded!");
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      isCommand = false;
     }
-    ifBranche = true;
-    isCommand = false;
-    log += toString(condition);
-    addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
+  if ((lcAction == F("else")) && !fakeIfBlock) // in case of an "else" block of actions, set ifBranche to false
   {
-    ifBranche = false;
+    ifBranche[ifBlock-1] = false;
     isCommand = false;
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("else = ");
-      log += toString(conditional && (condition == ifBranche));
+      log = F("Lev.");
+      log += String(ifBlock);
+      log += F(": [else]=");
+      log += toString(condition[ifBlock-1] == ifBranche[ifBlock-1]);
       addLog(LOG_LEVEL_DEBUG, log);
     }
   }
 
-  if (lcAction == "endif") // conditional block ends here
+  if (lcAction == F("endif")) // conditional block ends here
   {
-    conditional = false;
+    if (fakeIfBlock)
+      fakeIfBlock--;
+    else if (ifBlock)
+      ifBlock--;
     isCommand = false;
-    ifBranche = false;
-    ifBrancheJustMatch = false;
   }
 
   // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
-  if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
+  if (isCommand)
   {
-    if (event.charAt(0) == '!')
-    {
-      action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
-    }
-    else
-    {
-      int equalsPos = event.indexOf("=");
-      if (equalsPos > 0)
-      {
-        String tmpString = event.substring(equalsPos + 1);
-        action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
-      }
-    }
+    // This portion of code makes no sense, so I suppress it
+    // the substitution of %eventvalue% is made earlyer so it can be used on if sentence too
+    //if (event.charAt(0) == '!')
+    //{
+    //  action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+    //}
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ACT  : ");
