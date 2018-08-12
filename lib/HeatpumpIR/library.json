@@ -1,0 +1,16 @@
+{
+  "name": "HeatpumpIR",
+  "description": "Heatpump / Air Conditioner infrared control",
+  "keywords": "ac, ir, remote",
+  "authors": {
+    "name": "Toni Arte",
+    "email": "toni.arte@iki.fi",
+    "url": "https://github.com/ToniA"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ToniA/arduino-heatpumpir.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "atmelavr"
+}
