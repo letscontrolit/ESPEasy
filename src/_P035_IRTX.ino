@@ -208,9 +208,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                        if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoul(TmpStr1, NULL, 16);
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
                                                         }
-            if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
-            if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
+            //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
+           // if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
+           // if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
             
             //Comented out need char[] for input Needs fixing
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode);
