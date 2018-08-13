@@ -201,8 +201,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //sprintf_P(log, PSTR("IR Params2: RAW Code:%s"), IrRaw.c_str());
             //addLog(LOG_LEVEL_INFO, log);
           } else {
-            unsigned int IrRepeat=0;
-            unsigned long IrSecondCode=0UL;
+           // unsigned int IrRepeat=0;
+           // unsigned long IrSecondCode=0UL;
             char ircodestr[100];
             if (GetArgv(command, TmpStr1,100, 2)) IrType = TmpStr1;
                        if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoul(TmpStr1, NULL, 16);
