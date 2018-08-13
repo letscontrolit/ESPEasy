@@ -15,6 +15,8 @@ void sendData(struct EventStruct *event)
 //  if (!Settings.TaskDeviceSendData[event->TaskIndex])
 //    return false;
 
+/*
+  // Disabed for now, using buffers at controller side.
   if (Settings.MessageDelay != 0)
   {
     const long dif = timePassedSince(lastSend);
@@ -31,6 +33,7 @@ void sendData(struct EventStruct *event)
       //   backgroundtasks();
     }
   }
+*/
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
@@ -269,12 +272,38 @@ void SendStatus(byte source, String status)
 
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
-  if (MQTTclient.publish(topic, payload, retained)) {
-    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
-    return true;
+  const bool success = MQTTDelayHandler.addToQueue(controller_idx, topic, payload, retained);
+  if (!success) {
+    addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed, queue full"));
   }
-  addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
-  return false;
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+void scheduleNextMQTTdelayQueue() {
+  const unsigned long nextTime = MQTTDelayHandler.getNextScheduleTime();
+  if (nextTime != 0) {
+    // Schedule for next process run.
+    setIntervalTimerAt(TIMER_MQTT_DELAY_QUEUE, nextTime);
+  }
+}
+
+void processMQTTdelayQueue() {
+  MQTT_queue_element element;
+  if (!MQTTDelayHandler.getNext(element)) return;
+  if (MQTTclient.publish(element._topic.c_str(), element._payload.c_str(), element._retained)) {
+    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+    MQTTDelayHandler.markProcessed(true);
+  } else {
+    MQTTDelayHandler.markProcessed(false);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("MQTT : process MQTT queue not published, ");
+      log += MQTTDelayHandler.sendQueue.size();
+      log += F(" items left in queue");
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+  }
+  scheduleNextMQTTdelayQueue();
 }
 
 /*********************************************************************************************\

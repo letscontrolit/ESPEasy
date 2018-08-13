@@ -1342,9 +1342,13 @@ void handle_controllers() {
         }
 
         addFormNumericBox( F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
-        addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 0, 3600000);
-        addUnit(F("ms"));
-        addFormNumericBox( F("Max Buffer Depth"), F("maxbufferdepth"), ControllerSettings.MaxBufferDepth, 0, 10);
+        if (Protocol[ProtocolIndex].usesMQTT) {
+          // For now, only use this send interval for MQTT controllers, since MQTT can have a buffer.
+          // Other controllers don't have one yet.
+          addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 0, 3600000);
+          addUnit(F("ms"));
+          addFormNumericBox( F("Max Buffer Depth"), F("maxbufferdepth"), ControllerSettings.MaxBufferDepth, 0, 10);
+        }
 
         if (Protocol[ProtocolIndex].usesAccount)
         {

@@ -202,6 +202,7 @@
 #define TIMER_30SEC                         4
 #define TIMER_MQTT                          5
 #define TIMER_STATISTICS                    6
+#define TIMER_MQTT_DELAY_QUEUE              7
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
@@ -917,16 +918,94 @@ private:
 
 };
 
-struct ControllerDelayHandler {
-  ControllerDelayHandler() :
-      lastSend(0), minTimeBetweenMessages(100), max_buffer(0), value_index(0) {}
+struct MQTT_queue_element {
+  MQTT_queue_element() : _controller_idx(0), _retained(false) {}
 
-  std::list<struct EventStruct> sendQueue;
+  MQTT_queue_element(int controller_idx,
+    const String& topic, const String& payload, boolean retained) :
+    _controller_idx(controller_idx), _topic(topic), _payload(payload), _retained(retained)
+     {}
+
+  int _controller_idx;
+  String _topic;
+  String _payload;
+  boolean _retained;
+};
+
+struct MQTTDelayHandlerStruct {
+  MQTTDelayHandlerStruct() :
+      lastSend(0), minTimeBetweenMessages(100), max_buffer(10), attempt(0), max_attempt(10) {}
+
+  // Add to the queue when not max reached.
+  // If max buffer is reached, nothing will be added.
+  bool addToQueue(int controller_idx,
+      const String& topic, const String& payload, boolean retained) {
+    if (sendQueue.size() < max_buffer) {
+      sendQueue.emplace_back(controller_idx, topic, payload, retained);
+      return true;
+    }
+    return false;
+  }
+
+  // Force add to the queue.
+  // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
+  // Return true when no elements removed from queue.
+  bool forceAddToQueue(int controller_idx,
+      const String& topic, const String& payload, boolean retained) {
+    sendQueue.emplace_back(controller_idx, topic, payload, retained);
+    if (sendQueue.size() <= max_buffer) {
+      return true;
+    }
+    sendQueue.pop_front();
+    return false;
+  }
+
+  // Get the next element.
+  // Remove front element when max_attempt is reached.
+  bool getNext(MQTT_queue_element& element) {
+    if (sendQueue.empty()) return false;
+    if (max_attempt <= attempt) {
+      sendQueue.pop_front();
+      attempt = 0;
+    }
+    element = sendQueue.front();
+    return true;
+  }
+
+  // Mark as processed and return time to schedule for next process.
+  // Return 0 when nothing to process.
+  // @param remove_from_queue indicates whether the elements should be removed from the queue.
+  unsigned long markProcessed(bool remove_from_queue) {
+    if (sendQueue.empty()) return 0;
+    if (remove_from_queue) {
+      sendQueue.pop_front();
+      attempt = 0;
+    } else {
+      ++attempt;
+    }
+    lastSend = millis();
+    return getNextScheduleTime();
+  }
+
+  unsigned long getNextScheduleTime() const {
+    if (sendQueue.empty()) return 0;
+    unsigned long nextTime = lastSend + minTimeBetweenMessages;
+    if (timePassedSince(nextTime) > 0) {
+      nextTime = millis();
+    }
+    if (nextTime == 0) nextTime = 1; // Just to make sure it will be executed
+    return nextTime;
+  }
+
+  std::list<MQTT_queue_element> sendQueue;
   unsigned long lastSend;
   unsigned int minTimeBetweenMessages;
   byte max_buffer;
-  byte value_index; // Some controllers send only 1 value at a time and thus have to process the same event more than once.
+  byte attempt;
+  byte max_attempt;
 };
+
+MQTTDelayHandlerStruct MQTTDelayHandler;
 
 struct NotificationSettingsStruct
 {

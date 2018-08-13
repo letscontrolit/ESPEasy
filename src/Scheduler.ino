@@ -75,6 +75,10 @@ void setIntervalTimer(unsigned long id) {
   setIntervalTimer(id, millis());
 }
 
+void setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), newtimer);
+}
+
 void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
   unsigned long timer = millis();
   setNextTimeInterval(timer, msecFromNow);
@@ -91,6 +95,7 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_30SEC:      interval = 30000; break;
     case TIMER_MQTT:       interval = timermqtt_interval; break;
     case TIMER_STATISTICS: interval = 30000; break;
+    case TIMER_MQTT_DELAY_QUEUE: interval = 1000; break;
   }
   unsigned long timer = lasttimer;
   setNextTimeInterval(timer, interval);
@@ -98,6 +103,8 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
 }
 
 void process_interval_timer(unsigned long id, unsigned long lasttimer) {
+  // Set the interval timer now, it may be altered by the commands below.
+  // This is the default next-run-time.
   setIntervalTimer(id, lasttimer);
   switch (id) {
     case TIMER_20MSEC:
@@ -118,6 +125,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
     case TIMER_STATISTICS:
       logTimerStatistics();
+      break;
+    case TIMER_MQTT_DELAY_QUEUE:
+      processMQTTdelayQueue();
       break;
   }
 }
