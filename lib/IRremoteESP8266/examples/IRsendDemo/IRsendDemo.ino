@@ -1,10 +1,14 @@
-/*
- * IRremoteESP8266: IRsendDemo - demonstrates sending IR codes with IRsend.
+/* IRremoteESP8266: IRsendDemo - demonstrates sending IR codes with IRsend.
  *
- * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+ * Version 1.0 April, 2017
+ * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009,
+ * Copyright 2009 Ken Shirriff, http://arcfn.com
+ *
+ * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * as specified by IR_LED below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
- * 
+ *
  * Suggested circuit:
  *     https://github.com/markszabo/IRremoteESP8266/wiki#ir-sending
  *
@@ -22,26 +26,46 @@
  *     * Pin 3/RX/RXD0: Any serial transmissions to the ESP8266 will interfere.
  *   * ESP-01 modules are tricky. We suggest you use a module with more GPIOs
  *     for your first time. e.g. ESP-12 etc.
- *
- * Version 1.0 April, 2017
- * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009, Copyright 2009 Ken Shirriff, http://arcfn.com
  */
 
+#ifndef UNIT_TEST
+#include <Arduino.h>
+#endif
 #include <IRremoteESP8266.h>
+#include <IRsend.h>
 
-IRsend irsend(4); //an IR led is connected to GPIO pin 4 (D2)
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 
-void setup()
-{
+IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
+
+// Example of data captured by IRrecvDumpV2.ino
+uint16_t rawData[67] = {9000, 4500, 650, 550, 650, 1650, 600, 550, 650, 550,
+                        600, 1650, 650, 550, 600, 1650, 650, 1650, 650, 1650,
+                        600, 550, 650, 1650, 650, 1650, 650, 550, 600, 1650,
+                        650, 1650, 650, 550, 650, 550, 650, 1650, 650, 550,
+                        650, 550, 650, 550, 600, 550, 650, 550, 650, 550,
+                        650, 1650, 600, 550, 650, 1650, 650, 1650, 650, 1650,
+                        650, 1650, 650, 1650, 650, 1650, 600};
+
+void setup() {
   irsend.begin();
   Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
 }
 
 void loop() {
+#if SEND_NEC
   Serial.println("NEC");
   irsend.sendNEC(0x00FFE01FUL, 32);
+#endif  // SEND_NEC
   delay(2000);
+#if SEND_SONY
   Serial.println("Sony");
   irsend.sendSony(0xa90, 12, 2);
+#endif  // SEND_SONY
+  delay(2000);
+#if SEND_RAW
+  Serial.println("a rawData capture from IRrecvDumpV2");
+  irsend.sendRaw(rawData, 67, 38);  // Send a raw data capture at 38kHz.
+#endif  // SEND_RAW
   delay(2000);
 }
