@@ -1,3 +1,6 @@
+#ifndef I2C_TYPES_H
+#define I2C_TYPES_H I2C_TYPES_H
+
 #include <Arduino.h>
 #include <vector>
 
@@ -50,3 +53,5 @@ private:
 
 typedef I2Cdata<uint8_t> I2Cdata_bytes;
 typedef I2Cdata<uint16_t> I2Cdata_words;
+
+#endif // I2C_TYPES_H

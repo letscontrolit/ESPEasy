@@ -2727,7 +2727,7 @@ void checkRAM( String &a ) {
 /********************************************************************************************\
   Generate a tone of specified frequency on pin
   \*********************************************************************************************/
-void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
+void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
     delay(duration);
   #else
@@ -2888,7 +2888,7 @@ void play_rtttl(uint8_t _pin, const char *p )
     // now play the note
     if(note)
     {
-      tone(_pin, notes[(scale - 4) * 12 + note], duration);
+      tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration);
     }
     else
     {
