@@ -2071,10 +2071,19 @@ void parseCompleteNonCommentLine(
     // This to avoid waisting CPU time...
     line = parseTemplate(line, line.length());
 
-    int equalsPos = event.indexOf("=");
-    if (equalsPos > 0) {
-      String tmpString = event.substring(equalsPos + 1);
-      line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+    // substitution of %eventvalue% is made here so it can be used on if statement too
+    if (event.charAt(0) == '!')
+    {
+      line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+    }
+    else
+    {
+      int equalsPos = event.indexOf("=");
+      if (equalsPos > 0)
+      {
+        String tmpString = event.substring(equalsPos + 1);
+        line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+      }
     }
   }
   line.trim();
@@ -2252,13 +2261,6 @@ void processMatchedRule(
   // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
   if (isCommand)
   {
-    // This portion of code makes no sense, so I suppress it
-    // the substitution of %eventvalue% is made earlyer so it can be used on if sentence too
-    //if (event.charAt(0) == '!')
-    //{
-    //  action.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
-    //}
-
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ACT  : ");
       log += action;
