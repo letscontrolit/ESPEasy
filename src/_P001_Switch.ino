@@ -421,7 +421,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             pinMode(event->Par1, OUTPUT);
-            tone(event->Par1, event->Par2, event->Par3);
+            tone_espEasy(event->Par1, event->Par2, event->Par3);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("SW   : ")) + string;
             addLog(LOG_LEVEL_INFO, log);

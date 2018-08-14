@@ -1,5 +1,5 @@
 #ifndef COMMAND_RULES_H
-#define COMMAND_RTC_H
+#define COMMAND_RULES_H
 
 
 #include "../ESPEasy-Globals.h"
