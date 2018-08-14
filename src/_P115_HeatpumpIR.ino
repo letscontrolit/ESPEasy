@@ -10,6 +10,7 @@
  * ESPEasy plugin to send air conditioner / heatpump IR signals
  * * Use the device type 'Heatpump IR transmitter' as the device type in Devices -> Edit
  * * Connect and IR LED + series resistor between the GPIO pin configured for this device and ground
+ * * This is not a standalone plugin, also the _C002.ino modification is needed for Domoticz MQTT to work
  *
  * Send commands through http, like this example (assuming the IP address of the ESP node is 192.168.0.61):
  * * curl http://192.168.0.61/control?cmd=heatpumpir,panasonic_ckp,1,1,0,22,0,0
@@ -18,7 +19,14 @@
  * assuming the 'Name' of the ESP node in ESPEasy Main Settings page is 'ESP_Easy')
  * * mosquitto_pub -t /ESP_Easy/cmd -m heatpumpir,panasonic_ckp,1,1,0,22,0,0
  *
- * ToDo: Domoticz MQTT support
+ * Send commands through Domoticz MQTT, like this example,
+ * assuming the IDX of the heatpump device in both Domoticz and ESP Easy is 13:
+ * * Create a 'Dummy' hardware in Domoticz, create a 'Text' virtual sensor into the 'Dummy' device (assumed we got IDX 13)
+ * * Define the Domoticz MQTT protocol in ESP Easy, define the 'Heatpump IR transmitter' device using the same IDX as in Domoticz
+ * * Update the 'Text' sensor using the Domoticz API, like navigating to this URL (assuming Domoticz is at 192.168.0.5:8080):
+ * *   http://192.168.0.5:8080/json.htm?type=command&param=udevice&idx=13&svalue=panasonic_ckp,1,1,0,22,0,0
+ *
+ * Take a look at https://github.com/ToniA/cabin-village-project/blob/eventscripts/script_device_hp.lua for Domoticz event examples
  *
  * The parameters are (in this order)
  * * The type of the heatpump as a string, see the implementations of different models, like https://github.com/ToniA/arduino-heatpumpir/blob/master/MitsubishiHeatpumpIR.cpp
@@ -71,7 +79,7 @@ HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpu
                             new BalluHeatpumpIR(), new AUXHeatpumpIR(),
                             NULL};
 
-IRSender *Plugin_115_irSender;
+IRSenderIRremoteESP8266 *Plugin_115_irSender;
 
 int panasonicCKPTimer = 0;
 
@@ -85,7 +93,18 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_115;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].Ports = 0;
+        Device[deviceCount].PullUpOption = false;
+        Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].FormulaOption = false;
+        Device[deviceCount].ValueCount = 0;
         Device[deviceCount].SendDataOption = false;
+        Device[deviceCount].TimerOption = false;
+        Device[deviceCount].TimerOptional = false;
+        Device[deviceCount].GlobalSyncOption = false;
+        Device[deviceCount].DecimalsOnly = false;
+
         break;
       }
 
@@ -100,12 +119,38 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        // We need the index of the controller we are: 0-CONTROLLER_MAX
+        byte controllerNr = 0;
+          for (byte i=0; i < CONTROLLER_MAX; i++)
+          {
+            if (Settings.Protocol[i] == 2) { controllerNr = i; }
+          }
+
+        if (Settings.ControllerEnabled[controllerNr])
+        {
+          addHtml(F("<TR><TD>IDX:<TD>"));
+          String id = F("TDID");   //="taskdeviceid"
+          id += controllerNr + 1;
+          addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);
+        }
+        success = true;
+        break;
+      }
+
+    case PLUGIN_WEBFORM_SAVE:
+      {
+        success = true;
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, "INIT: Heatpump IR transmitter activated");
+          addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR transmitter activated"));
           if (Plugin_115_irSender != NULL)
           {
             delete Plugin_115_irSender;
@@ -114,10 +159,16 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         }
         if (Plugin_115_irSender != 0 && irPin == -1)
         {
-          addLog(LOG_LEVEL_INFO, "INIT: Heatpump IR transmitter deactivated");
+          addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR transmitter deactivated"));
           delete Plugin_115_irSender;
           Plugin_115_irSender = NULL;
         }
+        success = true;
+        break;
+      }
+
+    case PLUGIN_READ:
+      {
         success = true;
         break;
       }
@@ -159,18 +210,11 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
             if (strcmp_P(heatpumpModel.c_str(), shortName) == 0)
             {
-              Serial.print(F("Found: "));
-              Serial.print(heatpumpModel);
-              Serial.print(F(" as index: "));
-              Serial.println(i);
-
               heatpumpIR[i]->send(*Plugin_115_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
-              success = true;
-
-              addLog(LOG_LEVEL_INFO, "Heatpump IR code transmitted");
+              addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR code transmitted"));
               if (printToWeb)
               {
-                printWebString += F("Heatpump IR code transmitted");
+                printWebString += F("P115: Heatpump IR code transmitted");
               }
 
               // Panasonic CKP can only be turned ON/OFF by using the timer,
@@ -180,6 +224,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
                 panasonicCKPTimer = 120;
               }
 
+              success = true;
               break;
             }
           }
@@ -187,6 +232,19 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
+    case PLUGIN_EXIT:
+    	{
+        addLog(LOG_LEVEL_INFO, F("P115: Heatpump IR transmitter deactivated"));
+
+        if (Plugin_115_irSender != NULL)
+        {
+          delete Plugin_115_irSender;
+        }
+
+    	  break;
+    	}
+
     case PLUGIN_ONCE_A_SECOND:
       {
         if (panasonicCKPTimer > 0)
@@ -196,11 +254,19 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
           {
             PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR();
             panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_115_irSender);
-            Serial.println("The TIMER led on Panasonic CKP should now be OFF");
+            addLog(LOG_LEVEL_INFO, F("P115: The TIMER led on Panasonic CKP should now be OFF"));
           }
         }
+        success = true;
+        break;
+      }
+
+    case PLUGIN_TEN_PER_SECOND:
+      {
+        success = true;
         break;
       }
   }
+
   return success;
 }
