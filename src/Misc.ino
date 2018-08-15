@@ -2071,18 +2071,20 @@ void parseCompleteNonCommentLine(
     // This to avoid waisting CPU time...
     line = parseTemplate(line, line.length());
 
-    // substitution of %eventvalue% is made here so it can be used on if statement too
-    if (event.charAt(0) == '!')
-    {
-      line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
-    }
-    else
-    {
-      int equalsPos = event.indexOf("=");
-      if (equalsPos > 0)
+    if (match && !fakeIfBlock) {
+      // substitution of %eventvalue% is made here so it can be used on if statement too
+      if (event.charAt(0) == '!')
       {
-        String tmpString = event.substring(equalsPos + 1);
-        line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+        line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+      }
+      else
+      {
+        int equalsPos = event.indexOf("=");
+        if (equalsPos > 0)
+        {
+          String tmpString = event.substring(equalsPos + 1);
+          line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+        }
       }
     }
   }
@@ -2170,11 +2172,11 @@ void processMatchedRule(
   byte& ifBlock,
   byte& fakeIfBlock)
 {
-  if (ifBlock)
-    if (condition[ifBlock-1] != ifBranche[ifBlock-1])
-      isCommand = false;
   if (fakeIfBlock)
     isCommand = false;
+  elseif (ifBlock)
+    if (condition[ifBlock-1] != ifBranche[ifBlock-1])
+      isCommand = false;
   int split = lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
   if (split != -1)
   {
@@ -2309,18 +2311,20 @@ boolean ruleMatch(String& event, String& rule)
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
   {
-    int pos = rule.indexOf('#');
-    if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
-      {
-        tmpEvent = event.substring(0,rule.length());
-        tmpRule = rule;
-      }
-
-    pos = rule.indexOf('*');
+    int pos = rule.indexOf('*');
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
       {
         tmpEvent = event.substring(0,pos-1);
         tmpRule = rule.substring(0,pos-1);
+      }
+    else
+      {
+        pos = rule.indexOf('#');
+        if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
+          {
+            tmpEvent = event.substring(0,rule.length());
+            tmpRule = rule;
+          }
       }
 
     if (tmpEvent.equalsIgnoreCase(tmpRule))
