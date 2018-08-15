@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180815 (since mega-20180809)
+-------------------------------------------------
+
+Release date: Wed Aug 15 04:00:13 CEST 2018
+
+TD-er (1):
+      [core 2.4.2] Update to PlatformIO espressif8266@1.8.0
+
+krikk (1):
+      Update _P047_i2c-soil-moisture-sensor.ino
+
+
+-------------------------------------------------
 Changes in release mega-20180809 (since mega-20180808)
 -------------------------------------------------
 
