@@ -2174,7 +2174,7 @@ void processMatchedRule(
 {
   if (fakeIfBlock)
     isCommand = false;
-  elseif (ifBlock)
+  else if (ifBlock)
     if (condition[ifBlock-1] != ifBranche[ifBlock-1])
       isCommand = false;
   int split = lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
