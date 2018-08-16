@@ -202,15 +202,15 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //addLog(LOG_LEVEL_INFO, log);
           } else {
            // unsigned int IrRepeat=0;
-           // unsigned long IrSecondCode=0UL;
+          //  unsigned long IrSecondCode=0UL;
             char ircodestr[100];
             if (GetArgv(command, TmpStr1,100, 2)) IrType = TmpStr1;
                        if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoul(TmpStr1, NULL, 16);
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
                                                         }
             //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-           // if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
-           // if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
+            //if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
+            //if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
             
             //Comented out need char[] for input Needs fixing
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode);
@@ -235,12 +235,12 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("Mitsubishi2"))) Plugin_035_irSender->sendMitsubishi2(IrCode);
             if (IrType.equalsIgnoreCase(F("MitsubishiAC"))) parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
             if (IrType.equalsIgnoreCase(F("FujitsuAC"))) parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
-            if (IrType.equalsIgnoreCase(F("GC"))) parseStringAndSendGC(ircodestr);
+            if (IrType.equalsIgnoreCase(F("GC"))) parseStringAndSendGC(ircodestr);                           //Needs testing
             if (IrType.equalsIgnoreCase(F("Kelvinator"))) parseStringAndSendAirCon(KELVINATOR, ircodestr);
             if (IrType.equalsIgnoreCase(F("Daikin"))) parseStringAndSendAirCon(DAIKIN, ircodestr);
             if (IrType.equalsIgnoreCase(F("AiwaRCT501"))) Plugin_035_irSender->sendAiwaRCT501(IrCode);
             if (IrType.equalsIgnoreCase(F("GREE"))) parseStringAndSendAirCon(GREE, ircodestr);
-            if (IrType.equalsIgnoreCase(F("Pronto"))) parseStringAndSendPronto(ircodestr, 0);
+            if (IrType.equalsIgnoreCase(F("Pronto"))) parseStringAndSendPronto(ircodestr, 0);               //Needs testing
             if (IrType.equalsIgnoreCase(F("Argo"))) parseStringAndSendAirCon(ARGO, ircodestr);
             if (IrType.equalsIgnoreCase(F("Trotec"))) parseStringAndSendAirCon(TROTEC, ircodestr);
             if (IrType.equalsIgnoreCase(F("Nikai"))) Plugin_035_irSender->sendNikai(IrCode);
@@ -479,7 +479,7 @@ void parseStringAndSendPronto(const String str, uint16_t repeats) {
   if (count < PRONTO_MIN_LENGTH) return;
 
   // Now we know how many there are, allocate the memory to store them all.
-  code_array = newCodeArray(count);
+  code_array =  reinterpret_cast<uint16_t*>(malloc(count * sizeof(uint16_t)));
 
   // Rest of the string are values for the code array.
   // Now convert the hex strings to integers and place them in code_array.
@@ -497,47 +497,47 @@ void parseStringAndSendPronto(const String str, uint16_t repeats) {
   free(code_array);  // Free up the memory allocated.
 }
 #endif  // SEND_PRONTO
-#if SEND_RAW
-// Parse an IRremote Raw Hex String/code and send it.
-// Args:
-//   str: A comma-separated String containing the freq and raw IR data.
-//        e.g. "38000,9000,4500,600,1450,600,900,650,1500,..."
-//        Requires at least two comma-separated values.
-//        First value is the transmission frequency in Hz or kHz.
-void parseStringAndSendRaw(const String str) {
-  uint16_t count;
-  uint16_t freq = 38000;  // Default to 38kHz.
-  uint16_t *raw_array;
-
-  // Find out how many items there are in the string.
-  count = countValuesInStr(str, ',');
-
-  // We expect the frequency as the first comma separated value, so we need at
-  // least two values. If not, bail out.
-  if (count < 2) return;
-  count--;  // We don't count the frequency value as part of the raw array.
-
-  // Now we know how many there are, allocate the memory to store them all.
-  raw_array = newCodeArray(count);
-
-  // Grab the first value from the string, as it is the frequency.
-  int16_t index = str.indexOf(',', 0);
-  freq = str.substring(0, index).toInt();
-  uint16_t start_from = index + 1;
-  // Rest of the string are values for the raw array.
-  // Now convert the strings to integers and place them in raw_array.
-  count = 0;
-  do {
-    index = str.indexOf(',', start_from);
-    raw_array[count] = str.substring(start_from, index).toInt();
-    start_from = index + 1;
-    count++;
-  } while (index != -1);
-
-  Plugin_035_irSender->sendRaw(raw_array, count, freq);  // All done. Send it.
-  free(raw_array);  // Free up the memory allocated.
-}
-#endif  // SEND_RAW
+//#if SEND_RAW
+//// Parse an IRremote Raw Hex String/code and send it.
+//// Args:
+////   str: A comma-separated String containing the freq and raw IR data.
+////        e.g. "38000,9000,4500,600,1450,600,900,650,1500,..."
+////        Requires at least two comma-separated values.
+////        First value is the transmission frequency in Hz or kHz.
+//void parseStringAndSendRaw(const String str) {
+//  uint16_t count;
+//  uint16_t freq = 38000;  // Default to 38kHz.
+//  uint16_t *raw_array;
+//
+//  // Find out how many items there are in the string.
+//  count = countValuesInStr(str, ',');
+//
+//  // We expect the frequency as the first comma separated value, so we need at
+//  // least two values. If not, bail out.
+//  if (count < 2) return;
+//  count--;  // We don't count the frequency value as part of the raw array.
+//
+//  // Now we know how many there are, allocate the memory to store them all.
+//  raw_array = newCodeArray(count);
+//
+//  // Grab the first value from the string, as it is the frequency.
+//  int16_t index = str.indexOf(',', 0);
+//  freq = str.substring(0, index).toInt();
+//  uint16_t start_from = index + 1;
+//  // Rest of the string are values for the raw array.
+//  // Now convert the strings to integers and place them in raw_array.
+//  count = 0;
+//  do {
+//    index = str.indexOf(',', start_from);
+//    raw_array[count] = str.substring(start_from, index).toInt();
+//    start_from = index + 1;
+//    count++;
+//  } while (index != -1);
+//
+//  Plugin_035_irSender->sendRaw(raw_array, count, freq);  // All done. Send it.
+//  free(raw_array);  // Free up the memory allocated.
+//}
+//#endif  // SEND_RAW
 #if SEND_GLOBALCACHE
 // Parse a GlobalCache String/code and send it.
 // Args:
@@ -562,7 +562,7 @@ void parseStringAndSendGC(const String str) {
   count = countValuesInStr(tmp_str, ',');
 
   // Now we know how many there are, allocate the memory to store them all.
-  code_array = newCodeArray(count);
+  code_array = reinterpret_cast<uint16_t*>(malloc(count * sizeof(uint16_t)));
 
   // Now convert the strings to integers and place them in code_array.
   count = 0;
@@ -600,19 +600,19 @@ uint16_t countValuesInStr(const String str, char sep) {
 //   size:  Nr. of uint16_t's need to be in the new array.
 // Returns:
 //   A Ptr to the new array. Restarts the ESP8266 if it fails.
-uint16_t * newCodeArray(const uint16_t size) {
-  uint16_t *result;
-
-  result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
-  // Check we malloc'ed successfully.
-  if (result == NULL) {  // malloc failed, so give up.
-    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
-                  size * sizeof(uint16_t), ESP.getFreeHeap());
-    Serial.println("Giving up & forcing a reboot.");
-    ESP.restart();  // Reboot.
-    delay(500);  // Wait for the restart to happen.
-    return result;  // Should never get here, but just in case.
-  }
-  return result;
-}
+//uint16_t * newCodeArray(const uint16_t size) {
+//  uint16_t *result;
+//
+//  result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
+//  // Check we malloc'ed successfully.
+//  if (result == NULL) {  // malloc failed, so give up.
+//    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
+//                  size * sizeof(uint16_t), ESP.getFreeHeap());
+//    Serial.println("Giving up & forcing a reboot.");
+//    ESP.restart();  // Reboot.
+//    delay(500);  // Wait for the restart to happen.
+//    return result;  // Should never get here, but just in case.
+//  }
+//  return result;
+//}
 #endif // USES_P035
