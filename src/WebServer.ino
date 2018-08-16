@@ -557,7 +557,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</head>"
               "<body>"
               "<header class='headermenu'>"
-              "<h1>ESP Easy Mega: {{name}}</h1><div class='menu_button'>&#9776;</div><BR>"
+              "<h1>ESP Easy Mega: {{name}}</h1><BR>"
               "</header>"
               "<section>"
               "<span class='message error'>"
@@ -602,7 +602,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<body class='bodymenu'>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
-          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1><div class='menu_button'>&#9776;</div><BR>"
+          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1><BR>"
           "{{menu}}"
         "</header>"
         "<section>"
@@ -659,15 +659,17 @@ void getWebPageTemplateVar(const String& varName )
 
   else if (varName == F("menu"))
   {
-    static const __FlashStringHelper* gpMenu[8][2] = {
-      F("Main"), F("."),                      //0
-      F("Config"), F("config"),               //1
-      F("Controllers"), F("controllers"),     //2
-      F("Hardware"), F("hardware"),           //3
-      F("Devices"), F("devices"),             //4
-      F("Rules"), F("rules"),                 //5
-      F("Notifications"), F("notifications"), //6
-      F("Tools"), F("tools"),                 //7
+    static const __FlashStringHelper* gpMenu[8][3] = {
+      // See https://github.com/letscontrolit/ESPEasy/issues/1650
+      // Icon,        Full width label,   URL
+      F("&#8962;"),   F("Main"),          F("."),             //0
+      F("&#9881;"),   F("Config"),        F("config"),        //1
+      F("&#128172;"), F("Controllers"),   F("controllers"),   //2
+      F("&#128204;"), F("Hardware"),      F("hardware"),      //3
+      F("&#128268;"), F("Devices"),       F("devices"),       //4
+      F("&#10740;"),  F("Rules"),         F("rules"),         //5
+      F("&#9993;"),   F("Notifications"), F("notifications"), //6
+      F("&#128295;"), F("Tools"),         F("tools"),         //7
     };
 
     TXBuffer += F("<div class='menubar'>");
@@ -681,9 +683,12 @@ void getWebPageTemplateVar(const String& varName )
       if (i == navMenuIndex)
         TXBuffer += F(" active");
       TXBuffer += F("' href='");
-      TXBuffer += gpMenu[i][1];
+      TXBuffer += gpMenu[i][2];
       TXBuffer += F("'>");
       TXBuffer += gpMenu[i][0];
+      TXBuffer += F("<span class='showmenulabel'>");
+      TXBuffer += gpMenu[i][1];
+      TXBuffer += F("</span>");
       TXBuffer += F("</a>");
     }
 
