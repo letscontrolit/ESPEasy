@@ -85,6 +85,13 @@ void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
+void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime) {
+  if (nextTime != 0) {
+    // Schedule for next process run.
+    setIntervalTimerAt(id, nextTime);
+  }
+}
+
 void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   // Set the initial timers for the regular runs
   unsigned long interval = 0;
@@ -95,7 +102,11 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_30SEC:      interval = 30000; break;
     case TIMER_MQTT:       interval = timermqtt_interval; break;
     case TIMER_STATISTICS: interval = 30000; break;
-    case TIMER_MQTT_DELAY_QUEUE: interval = 1000; break;
+    // Fall-through for all DelayQueue, which are just the fall-back timers.
+    // The timers for all delay queues will be set according to their own settings as long as there is something to process.
+    case TIMER_MQTT_DELAY_QUEUE:
+    case TIMER_C001_DELAY_QUEUE:
+      interval = 1000; break;
   }
   unsigned long timer = lasttimer;
   setNextTimeInterval(timer, interval);
@@ -128,6 +139,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
     case TIMER_MQTT_DELAY_QUEUE:
       processMQTTdelayQueue();
+      break;
+    case TIMER_C001_DELAY_QUEUE:
+      process_c001_delay_queue();
       break;
   }
 }

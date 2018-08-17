@@ -272,7 +272,7 @@ void SendStatus(byte source, String status)
 
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
-  const bool success = MQTTDelayHandler.addToQueue(controller_idx, topic, payload, retained);
+  const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
   if (!success) {
     addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed, queue full"));
   }
@@ -281,11 +281,7 @@ boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, 
 }
 
 void scheduleNextMQTTdelayQueue() {
-  const unsigned long nextTime = MQTTDelayHandler.getNextScheduleTime();
-  if (nextTime != 0) {
-    // Schedule for next process run.
-    setIntervalTimerAt(TIMER_MQTT_DELAY_QUEUE, nextTime);
-  }
+  scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
 }
 
 void processMQTTdelayQueue() {
