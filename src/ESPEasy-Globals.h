@@ -551,6 +551,9 @@ class TimingStats;
 #define LOADFILE_STATS  0
 #define LOOP_STATS      1
 
+/*********************************************************************************************\
+ * CRCStruct
+\*********************************************************************************************/
 struct CRCStruct{
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
   char binaryFilename[32+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames";
@@ -581,7 +584,9 @@ int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg);
 I2Cdev i2cdev;
 
-
+/*********************************************************************************************\
+ * SecurityStruct
+\*********************************************************************************************/
 struct SecurityStruct
 {
   SecurityStruct() {
@@ -613,6 +618,9 @@ struct SecurityStruct
   uint8_t       md5[16];
 } SecuritySettings;
 
+/*********************************************************************************************\
+ * SettingsStruct
+\*********************************************************************************************/
 struct SettingsStruct
 {
   SettingsStruct() {
@@ -795,9 +803,13 @@ struct SettingsStruct
 //  uint8_t       md5[16];
 } Settings;
 
+
+/*********************************************************************************************\
+ * ControllerSettingsStruct
+\*********************************************************************************************/
 struct ControllerSettingsStruct
 {
-  ControllerSettingsStruct() : UseDNS(false), Port(0), MinimalTimeBetweenMessages(100), MaxBufferDepth(0) {
+  ControllerSettingsStruct() : UseDNS(false), Port(0), MinimalTimeBetweenMessages(100), MaxBufferDepth(0), DeleteOldest(false) {
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -819,6 +831,8 @@ struct ControllerSettingsStruct
   char          LWTMessageDisconnect[129];
   unsigned int  MinimalTimeBetweenMessages;
   unsigned int  MaxBufferDepth;
+  unsigned int  MaxRetry;
+  boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
@@ -918,7 +932,11 @@ private:
 
 };
 
-struct MQTT_queue_element {
+/*********************************************************************************************\
+ * ControllerDelayHandler
+\*********************************************************************************************/
+class MQTT_queue_element {
+public:
   MQTT_queue_element() : _controller_idx(0), _retained(false) {}
 
   MQTT_queue_element(int controller_idx,
@@ -932,14 +950,24 @@ struct MQTT_queue_element {
   boolean _retained;
 };
 
-struct MQTTDelayHandlerStruct {
-  MQTTDelayHandlerStruct() :
+template<class T>
+struct ControllerDelayHandlerStruct {
+  ControllerDelayHandlerStruct() :
       lastSend(0), minTimeBetweenMessages(100), max_buffer(10), attempt(0), max_attempt(10) {}
 
-  // Add to the queue when not max reached.
-  // If max buffer is reached, nothing will be added.
-  bool addToQueue(int controller_idx,
-      const String& topic, const String& payload, boolean retained) {
+  void configureControllerSettings(const ControllerSettingsStruct& settings) {
+    minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
+    max_buffer = settings.MaxBufferDepth;
+    max_attempt = settings.MaxRetry;
+    delete_oldest = settings.DeleteOldest;
+  }
+
+  // Try to add to the queue, if permitted by "delete_oldest"
+  // Return false when the buffer was full. Success depends on "delete_oldest"
+  bool addToQueue(int controller_idx, const String& topic, const String& payload, boolean retained) {
+    if (delete_oldest) {
+      return forceAddToQueue(controller_idx, topic, payload, retained);
+    }
     if (sendQueue.size() < max_buffer) {
       sendQueue.emplace_back(controller_idx, topic, payload, retained);
       return true;
@@ -962,7 +990,7 @@ struct MQTTDelayHandlerStruct {
 
   // Get the next element.
   // Remove front element when max_attempt is reached.
-  bool getNext(MQTT_queue_element& element) {
+  bool getNext(T& element) {
     if (sendQueue.empty()) return false;
     if (max_attempt <= attempt) {
       sendQueue.pop_front();
@@ -997,16 +1025,20 @@ struct MQTTDelayHandlerStruct {
     return nextTime;
   }
 
-  std::list<MQTT_queue_element> sendQueue;
+  std::list<T> sendQueue;
   unsigned long lastSend;
   unsigned int minTimeBetweenMessages;
   byte max_buffer;
   byte attempt;
   byte max_attempt;
+  bool delete_oldest;
 };
 
-MQTTDelayHandlerStruct MQTTDelayHandler;
+ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 
+/*********************************************************************************************\
+ * NotificationSettingsStruct
+\*********************************************************************************************/
 struct NotificationSettingsStruct
 {
   NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
@@ -1033,6 +1065,10 @@ struct NotificationSettingsStruct
   char          Pass[33];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
+
+/*********************************************************************************************\
+ * ExtraTaskSettingsStruct
+\*********************************************************************************************/
 
 // This is only used by some plugins to store extra settings like formula descriptions.
 // These settings can only be active for one plugin, meaning they have to be loaded
@@ -1107,6 +1143,9 @@ struct ExtraTaskSettingsStruct
   int16_t TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
 } ExtraTaskSettings;
 
+/*********************************************************************************************\
+ * EventStruct
+\*********************************************************************************************/
 struct EventStruct
 {
   EventStruct() :
@@ -1150,6 +1189,10 @@ struct EventStruct
   byte *Data;
 };
 
+
+/*********************************************************************************************\
+ * LogStruct
+\*********************************************************************************************/
 #define LOG_STRUCT_MESSAGE_SIZE 128
 #ifdef ESP32
   #define LOG_STRUCT_MESSAGE_LINES 30
@@ -1273,6 +1316,9 @@ bool log_to_serial_disabled = false;
 // Do this in a template to prevent casting to String when not needed.
 #define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 
+/*********************************************************************************************\
+ * DeviceStruct
+\*********************************************************************************************/
 struct DeviceStruct
 {
   DeviceStruct() :
@@ -1302,6 +1348,10 @@ struct DeviceStruct
   boolean DecimalsOnly;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
 } Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
 
+
+/*********************************************************************************************\
+ * ProtocolStruct
+\*********************************************************************************************/
 struct ProtocolStruct
 {
   ProtocolStruct() :
@@ -1317,6 +1367,9 @@ struct ProtocolStruct
   boolean Custom;
 } Protocol[CPLUGIN_MAX];
 
+/*********************************************************************************************\
+ * NotificationStruct
+\*********************************************************************************************/
 struct NotificationStruct
 {
   NotificationStruct() :
@@ -1326,6 +1379,10 @@ struct NotificationStruct
   byte usesGPIO;
 } Notification[NPLUGIN_MAX];
 
+
+/*********************************************************************************************\
+ * NodeStruct
+\*********************************************************************************************/
 struct NodeStruct
 {
   NodeStruct() :
@@ -1340,6 +1397,9 @@ struct NodeStruct
   byte nodeType;
 } Nodes[UNIT_MAX];
 
+/*********************************************************************************************\
+ * systemTimerStruct
+\*********************************************************************************************/
 struct systemTimerStruct
 {
   systemTimerStruct() :
@@ -1356,6 +1416,9 @@ struct systemTimerStruct
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 
+/*********************************************************************************************\
+ * pinStatesStruct
+\*********************************************************************************************/
 struct pinStatesStruct
 {
   byte plugin;
@@ -1369,6 +1432,9 @@ struct pinStatesStruct
 #define RTC_BASE_STRUCT 64
 #define RTC_BASE_USERVAR 74
 
+/*********************************************************************************************\
+ * RTCStruct
+\*********************************************************************************************/
 //max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
@@ -1393,6 +1459,10 @@ String printWebString = "";
 boolean printToWebJSON = false;
 
 float UserVar[VARS_PER_TASK * TASKS_MAX];
+
+/*********************************************************************************************\
+ * rulesTimerStruct
+\*********************************************************************************************/
 struct rulesTimerStatus
 {
   unsigned long timestamp;
@@ -1566,6 +1636,9 @@ boolean       UseRTOSMultitasking;
 
 void (*MainLoopCall_ptr)(void);
 
+/*********************************************************************************************\
+ * TimingStats
+\*********************************************************************************************/
 class TimingStats {
     public:
       TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
