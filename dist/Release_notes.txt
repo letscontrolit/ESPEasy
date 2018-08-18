@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180818 (since mega-20180815)
+-------------------------------------------------
+
+Release date: Sat Aug 18 04:00:17 CEST 2018
+
+Edwin Eefting (1):
+      fixed network config for newer versions
+
+TD-er (1):
+      [#1650] Use icons in tabs on web page on small screens
+
+
+-------------------------------------------------
 Changes in release mega-20180815 (since mega-20180809)
 -------------------------------------------------
 
