@@ -8,14 +8,14 @@
 \*********************************************************************************************/
 class MQTT_queue_element {
 public:
-  MQTT_queue_element() : _controller_idx(0), _retained(false) {}
+  MQTT_queue_element() : controller_idx(0), _retained(false) {}
 
-  MQTT_queue_element(int controller_idx,
+  MQTT_queue_element(int ctrl_idx,
     const String& topic, const String& payload, boolean retained) :
-    _controller_idx(controller_idx), _topic(topic), _payload(payload), _retained(retained)
+    controller_idx(ctrl_idx), _topic(topic), _payload(payload), _retained(retained)
      {}
 
-  int _controller_idx;
+  int controller_idx;
   String _topic;
   String _payload;
   boolean _retained;
@@ -26,10 +26,10 @@ public:
 \*********************************************************************************************/
 class C001_queue_element {
 public:
-  C001_queue_element() : _controller_idx(0) {}
-  C001_queue_element(int controller_idx, const String& req) : _controller_idx(controller_idx), request(req) {}
+  C001_queue_element() : controller_idx(0) {}
+  C001_queue_element(int ctrl_idx, const String& req) : controller_idx(ctrl_idx), request(req) {}
 
-  int _controller_idx;
+  int controller_idx;
   String request;
 };
 
@@ -38,12 +38,33 @@ public:
 \*********************************************************************************************/
 class C003_queue_element {
 public:
-  C003_queue_element() : _controller_idx(0) {}
-  C003_queue_element(int controller_idx, const String& req) : _controller_idx(controller_idx), url(req) {}
+  C003_queue_element() : controller_idx(0) {}
+  C003_queue_element(int ctrl_idx, const String& req) : controller_idx(ctrl_idx), url(req) {}
 
-  int _controller_idx;
+  int controller_idx;
   String url;
 };
+
+/*********************************************************************************************\
+ * C004_queue_element for queueing requests for C004 ThingSpeak.
+ *   Typical use case for Thingspeak is to only send values every N seconds/minutes.
+ *   So we just store everything needed to recreate the event when the time is ready.
+\*********************************************************************************************/
+class C004_queue_element {
+public:
+  C004_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
+  C004_queue_element(const struct EventStruct* event) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    sensorType(event->sensorType) {}
+
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  byte sensorType;
+};
+
 
 
 /*********************************************************************************************\
@@ -138,8 +159,43 @@ struct ControllerDelayHandlerStruct {
 };
 
 ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
-ControllerDelayHandlerStruct<C001_queue_element> C001_DelayHandler;
-ControllerDelayHandlerStruct<C003_queue_element> C003_DelayHandler;
+
+// Forward declaration
+void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
+String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize);
+
+// This macro defines the code needed to create the 'process_c##NNN##_delay_queue()'
+// function and all needed objects and forward declarations.
+// It is a macro to prevent common typo errors.
+// This function will perform the (re)scheduling and mark if it is processed (and can be removed)
+// The controller itself must implement the 'do_process_c004_delay_queue' function to actually
+// send the data.
+// Its return value must state whether it can be marked 'Processed'.
+// N.B. some controllers only can send one value per iteration, so a returned "false" can mean it
+//      was still successful. The controller should keep track of the last value sent
+//      in the element stored in the queue.
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN) \
+                ControllerDelayHandlerStruct<C##NNN##_queue_element> C##NNN##_DelayHandler; \
+                bool do_process_c##NNN##_delay_queue(const C##NNN##_queue_element& element, ControllerSettingsStruct& ControllerSettings); \
+                void process_c##NNN##_delay_queue() { \
+                  C##NNN##_queue_element element; \
+                  if (!C##NNN##_DelayHandler.getNext(element)) return; \
+                  ControllerSettingsStruct ControllerSettings; \
+                  LoadControllerSettings(element.controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings)); \
+                  C##NNN##_DelayHandler.configureControllerSettings(ControllerSettings); \
+                  if (!WiFiConnected(100)) { \
+                    scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime()); \
+                    return; \
+                  } \
+                  C##NNN##_DelayHandler.markProcessed(do_process_c##NNN##_delay_queue(element, ControllerSettings)); \
+                  scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime()); \
+                }
+
+// Define the function wrappers to handle the calling to Cxxx_DelayHandler etc.
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(001)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(003)
+DEFINE_Cxxx_DELAY_QUEUE_MACRO(004)
+
 
 
 

@@ -141,17 +141,8 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void process_c001_delay_queue() {
-  if (!WiFiConnected(100)) {
-    scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
-    return;
-  }
-  C001_queue_element element;
-  if (!C001_DelayHandler.getNext(element)) return;
-
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(element._controller_idx, (byte*)&ControllerSettings, sizeof (ControllerSettings));
-  C001_DelayHandler.configureControllerSettings(ControllerSettings);
+bool do_process_c001_delay_queue(const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  boolean success = false;
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
@@ -160,8 +151,7 @@ void process_c001_delay_queue() {
     connectionFailures++;
 
     addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-    C001_DelayHandler.markProcessed(false);
-    return;
+    return success;
   }
   statusLED(true);
   if (connectionFailures)
@@ -189,13 +179,12 @@ void process_c001_delay_queue() {
     }
     yield();
   }
-  C001_DelayHandler.markProcessed(done);
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
 
   client.flush();
   client.stop();
-  scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
+  return success;
 }
 
 #endif

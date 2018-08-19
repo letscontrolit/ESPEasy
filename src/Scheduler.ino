@@ -107,6 +107,7 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_MQTT_DELAY_QUEUE:
     case TIMER_C001_DELAY_QUEUE:
     case TIMER_C003_DELAY_QUEUE:
+    case TIMER_C004_DELAY_QUEUE:
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
@@ -146,6 +147,9 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
     case TIMER_C003_DELAY_QUEUE:
       process_c003_delay_queue();
+      break;
+    case TIMER_C004_DELAY_QUEUE:
+      process_c004_delay_queue();
       break;
   }
 }

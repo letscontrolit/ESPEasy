@@ -59,19 +59,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void process_c003_delay_queue() {
-  if (!WiFiConnected(100)) {
-    scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
-    return;
-  }
-  C003_queue_element element;
-  if (!C003_DelayHandler.getNext(element)) return;
-
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(element._controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-  C003_DelayHandler.configureControllerSettings(ControllerSettings);
-
-
+bool do_process_c003_delay_queue(const C003_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   boolean success = false;
   char log[80];
   addLog(LOG_LEVEL_DEBUG, String(F("TELNT : connecting to ")) + ControllerSettings.getHostPortString());
@@ -82,8 +70,7 @@ void process_c003_delay_queue() {
     connectionFailures++;
     strcpy_P(log, PSTR("TELNT: connection failed"));
     addLog(LOG_LEVEL_ERROR, log);
-    scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
-    return;
+    return success;
   }
   statusLED(true);
   if (connectionFailures)
@@ -116,7 +103,7 @@ void process_c003_delay_queue() {
 
   strcpy_P(log, PSTR("TELNT: Sending pw"));
   addLog(LOG_LEVEL_DEBUG, log);
-  client.println(SecuritySettings.ControllerPassword[element._controller_idx]);
+  client.println(SecuritySettings.ControllerPassword[element.controller_idx]);
   delay(100);
   while (client.available())
     client.read();
@@ -132,6 +119,6 @@ void process_c003_delay_queue() {
   addLog(LOG_LEVEL_DEBUG, log);
 
   client.stop();
-  scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
+  return success;
 }
 #endif

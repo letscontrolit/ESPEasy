@@ -11,7 +11,6 @@
 // Set default configuration settings if you want (not mandatory)
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
-
 // --- Basic Config Settings ------------------------------------------------------------------------
 #define DEFAULT_NAME        "ESP_Easy"                  // Enter your device friendly name
 #define UNIT                            0                                       // Unit Number
@@ -205,6 +204,7 @@
 #define TIMER_MQTT_DELAY_QUEUE              7
 #define TIMER_C001_DELAY_QUEUE              8
 #define TIMER_C003_DELAY_QUEUE              9
+#define TIMER_C004_DELAY_QUEUE             10
 
 
 #define PLUGIN_INIT_ALL                     1

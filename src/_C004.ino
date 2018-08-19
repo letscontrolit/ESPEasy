@@ -30,6 +30,14 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        C004_DelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
       {
         success = true;
@@ -48,92 +56,99 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
-        // boolean success = false;
-        addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
-        char log[80];
-        // Use WiFiClient class to create TCP connections
-        WiFiClient client;
-        if (!ControllerSettings.connectToHost(client))
-        {
-          connectionFailures++;
-          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            strcpy_P(log, PSTR("HTTP : connection failed"));
-            addLog(LOG_LEVEL_ERROR, log);
-          }
-          return false;
+        success = C004_DelayHandler.addToQueue(C004_queue_element(event));
+        if (!success) {
+          addLog(LOG_LEVEL_DEBUG, F("C004 : publish failed, queue full"));
         }
-        statusLED(true);
-        if (connectionFailures)
-          connectionFailures--;
+        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
 
-        String postDataStr = F("api_key=");
-        postDataStr += SecuritySettings.ControllerPassword[event->ControllerIndex]; // used for API key
-
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
-        for (byte x = 0; x < valueCount; x++)
-        {
-          postDataStr += F("&field");
-          postDataStr += event->idx + x;
-          postDataStr += "=";
-          postDataStr += formatUserVarNoCheck(event, x);
-        }
-        String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
-        if (ControllerSettings.UseDNS)
-          hostName = ControllerSettings.HostName;
-
-        String postStr = F("POST /update HTTP/1.1\r\n");
-        postStr += F("Host: ");
-        postStr += hostName;
-        postStr += F("\r\n");
-        postStr += F("Connection: close\r\n");
-
-        postStr += F("Content-Type: application/x-www-form-urlencoded\r\n");
-        postStr += F("Content-Length: ");
-        postStr += postDataStr.length();
-        postStr += F("\r\n\r\n");
-        postStr += postDataStr;
-
-        // This will send the request to the server
-        client.print(postStr);
-
-        unsigned long timer = millis() + 200;
-        while (!client.available() && !timeOutReached(timer))
-          delay(1);
-
-        // Read all the lines of the reply from server and print them to Serial
-        while (client.available()) {
-          //   String line = client.readStringUntil('\n');
-          String line;
-          safeReadStringUntil(client, line, '\n');
-
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-            line.toCharArray(log, 80);
-            addLog(LOG_LEVEL_DEBUG_MORE, log);
-          }
-          if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
-          {
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              strcpy_P(log, PSTR("HTTP : Success!"));
-              addLog(LOG_LEVEL_DEBUG, log);
-            }
-            success = true;
-          }
-          delay(1);
-        }
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          strcpy_P(log, PSTR("HTTP : closing connection"));
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
-
-        client.flush();
-        client.stop();
         break;
       }
 
   }
+  return success;
+}
+
+bool do_process_c004_delay_queue(const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  boolean success = false;
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
+  char log[80];
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  if (!ControllerSettings.connectToHost(client))
+  {
+    connectionFailures++;
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      strcpy_P(log, PSTR("HTTP : connection failed"));
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return success;
+  }
+  statusLED(true);
+  if (connectionFailures)
+    connectionFailures--;
+
+  String postDataStr = F("api_key=");
+  postDataStr += SecuritySettings.ControllerPassword[element.controller_idx]; // used for API key
+
+  byte valueCount = getValueCountFromSensorType(element.sensorType);
+  for (byte x = 0; x < valueCount; x++)
+  {
+    postDataStr += F("&field");
+    postDataStr += element.idx + x;
+    postDataStr += "=";
+    postDataStr += formatUserVarNoCheck(element.TaskIndex, x);
+  }
+  String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
+  if (ControllerSettings.UseDNS)
+    hostName = ControllerSettings.HostName;
+
+  String postStr = F("POST /update HTTP/1.1\r\n");
+  postStr += F("Host: ");
+  postStr += hostName;
+  postStr += F("\r\n");
+  postStr += F("Connection: close\r\n");
+
+  postStr += F("Content-Type: application/x-www-form-urlencoded\r\n");
+  postStr += F("Content-Length: ");
+  postStr += postDataStr.length();
+  postStr += F("\r\n\r\n");
+  postStr += postDataStr;
+
+  // This will send the request to the server
+  client.print(postStr);
+
+  unsigned long timer = millis() + 200;
+  while (!client.available() && !timeOutReached(timer))
+    delay(1);
+
+  // Read all the lines of the reply from server and print them to Serial
+  while (client.available()) {
+    //   String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+      line.toCharArray(log, 80);
+      addLog(LOG_LEVEL_DEBUG_MORE, log);
+    }
+    if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
+    {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        strcpy_P(log, PSTR("HTTP : Success!"));
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+      success = true;
+    }
+    delay(1);
+  }
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    strcpy_P(log, PSTR("HTTP : closing connection"));
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  client.flush();
+  client.stop();
   return success;
 }
 #endif
