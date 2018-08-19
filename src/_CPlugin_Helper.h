@@ -90,15 +90,15 @@ public:
 template<class T>
 struct ControllerDelayHandlerStruct {
   ControllerDelayHandlerStruct() :
-      lastSend(0), minTimeBetweenMessages(100), max_buffer(10), attempt(0), max_attempt(10), delete_oldest(false) {}
+      lastSend(0), minTimeBetweenMessages(100), max_queue_depth(10), attempt(0), max_attempt(10), delete_oldest(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
-    max_buffer = settings.MaxBufferDepth;
+    max_queue_depth = settings.MaxQueueDepth;
     max_attempt = settings.MaxRetry;
     delete_oldest = settings.DeleteOldest;
     // Set some sound limits
-    if (max_buffer == 0) max_buffer = 10;
+    if (max_queue_depth == 0) max_queue_depth = 10;
     if (max_attempt == 0) max_attempt = 10;
     if (minTimeBetweenMessages == 0) minTimeBetweenMessages = 100;
     if (minTimeBetweenMessages < 10) minTimeBetweenMessages = 10;
@@ -110,7 +110,7 @@ struct ControllerDelayHandlerStruct {
     if (delete_oldest) {
       return forceAddToQueue(element);
     }
-    if (sendQueue.size() < max_buffer) {
+    if (sendQueue.size() < max_queue_depth) {
       sendQueue.emplace_back(element);
       return true;
     }
@@ -122,7 +122,7 @@ struct ControllerDelayHandlerStruct {
   // Return true when no elements removed from queue.
   bool forceAddToQueue(const T& element) {
     sendQueue.emplace_back(element);
-    if (sendQueue.size() <= max_buffer) {
+    if (sendQueue.size() <= max_queue_depth) {
       return true;
     }
     sendQueue.pop_front();
@@ -169,7 +169,7 @@ struct ControllerDelayHandlerStruct {
   std::list<T> sendQueue;
   unsigned long lastSend;
   unsigned int minTimeBetweenMessages;
-  byte max_buffer;
+  byte max_queue_depth;
   byte attempt;
   byte max_attempt;
   bool delete_oldest;

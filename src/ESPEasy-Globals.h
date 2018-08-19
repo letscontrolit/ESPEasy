@@ -819,7 +819,8 @@ struct SettingsStruct
 \*********************************************************************************************/
 struct ControllerSettingsStruct
 {
-  ControllerSettingsStruct() : UseDNS(false), Port(0), MinimalTimeBetweenMessages(100), MaxBufferDepth(0), DeleteOldest(false) {
+  ControllerSettingsStruct() : UseDNS(false), Port(0),
+      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10), DeleteOldest(false) {
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -840,7 +841,7 @@ struct ControllerSettingsStruct
   char          LWTMessageConnect[129];
   char          LWTMessageDisconnect[129];
   unsigned int  MinimalTimeBetweenMessages;
-  unsigned int  MaxBufferDepth;
+  unsigned int  MaxQueueDepth;
   unsigned int  MaxRetry;
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
 
