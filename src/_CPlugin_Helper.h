@@ -65,6 +65,23 @@ public:
   byte sensorType;
 };
 
+/*********************************************************************************************\
+ * C007_queue_element for queueing requests for C007 Emoncms
+\*********************************************************************************************/
+class C007_queue_element {
+public:
+  C007_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
+  C007_queue_element(const struct EventStruct* event) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    sensorType(event->sensorType) {}
+
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  byte sensorType;
+};
 
 
 /*********************************************************************************************\
@@ -201,10 +218,10 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 #ifdef USES_C004
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(004)
 #endif
-/*
 #ifdef USES_C007
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(007)
 #endif
+/*
 #ifdef USES_C008
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(008)
 #endif
