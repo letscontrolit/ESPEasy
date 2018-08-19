@@ -192,10 +192,38 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
                 }
 
 // Define the function wrappers to handle the calling to Cxxx_DelayHandler etc.
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(001)
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(003)
-DEFINE_Cxxx_DELAY_QUEUE_MACRO(004)
-
+#ifdef USES_C001
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(001)
+#endif
+#ifdef USES_C003
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(003)
+#endif
+#ifdef USES_C004
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(004)
+#endif
+/*
+#ifdef USES_C007
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(007)
+#endif
+#ifdef USES_C008
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(008)
+#endif
+#ifdef USES_C009
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(009)
+#endif
+#ifdef USES_C010
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(010)
+#endif
+#ifdef USES_C011
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(011)
+#endif
+#ifdef USES_C012
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(012)
+#endif
+#ifdef USES_C013
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(013)
+#endif
+*/
 
 
 

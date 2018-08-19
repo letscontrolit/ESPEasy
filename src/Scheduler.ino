@@ -108,6 +108,13 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_C001_DELAY_QUEUE:
     case TIMER_C003_DELAY_QUEUE:
     case TIMER_C004_DELAY_QUEUE:
+    case TIMER_C007_DELAY_QUEUE:
+    case TIMER_C008_DELAY_QUEUE:
+    case TIMER_C009_DELAY_QUEUE:
+    case TIMER_C010_DELAY_QUEUE:
+    case TIMER_C011_DELAY_QUEUE:
+    case TIMER_C012_DELAY_QUEUE:
+    case TIMER_C013_DELAY_QUEUE:
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
@@ -142,15 +149,58 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
     case TIMER_MQTT_DELAY_QUEUE:
       processMQTTdelayQueue();
       break;
+  #ifdef USES_C001
     case TIMER_C001_DELAY_QUEUE:
       process_c001_delay_queue();
       break;
+  #endif
+  #ifdef USES_C003
     case TIMER_C003_DELAY_QUEUE:
       process_c003_delay_queue();
       break;
+  #endif
+  #ifdef USES_C004
     case TIMER_C004_DELAY_QUEUE:
       process_c004_delay_queue();
       break;
+  #endif
+/*
+  #ifdef USES_C007
+    case TIMER_C007_DELAY_QUEUE:
+      process_c007_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C008
+    case TIMER_C008_DELAY_QUEUE:
+      process_c008_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C009
+    case TIMER_C009_DELAY_QUEUE:
+      process_c009_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C010
+    case TIMER_C010_DELAY_QUEUE:
+      process_c010_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C011
+    case TIMER_C011_DELAY_QUEUE:
+      process_c011_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C012
+    case TIMER_C012_DELAY_QUEUE:
+      process_c012_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C013
+    case TIMER_C013_DELAY_QUEUE:
+      process_c013_delay_queue();
+      break;
+  #endif
+*/
   }
 }
 

@@ -205,6 +205,13 @@
 #define TIMER_C001_DELAY_QUEUE              8
 #define TIMER_C003_DELAY_QUEUE              9
 #define TIMER_C004_DELAY_QUEUE             10
+#define TIMER_C007_DELAY_QUEUE             11
+#define TIMER_C008_DELAY_QUEUE             12
+#define TIMER_C009_DELAY_QUEUE             13
+#define TIMER_C010_DELAY_QUEUE             14
+#define TIMER_C011_DELAY_QUEUE             15
+#define TIMER_C012_DELAY_QUEUE             16
+#define TIMER_C013_DELAY_QUEUE             17
 
 
 #define PLUGIN_INIT_ALL                     1
