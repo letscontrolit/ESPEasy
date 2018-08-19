@@ -34,6 +34,19 @@ public:
 };
 
 /*********************************************************************************************\
+ * C003_queue_element for queueing requests for C003 Nodo Telnet.
+\*********************************************************************************************/
+class C003_queue_element {
+public:
+  C003_queue_element() : _controller_idx(0) {}
+  C003_queue_element(int controller_idx, const String& req) : _controller_idx(controller_idx), url(req) {}
+
+  int _controller_idx;
+  String url;
+};
+
+
+/*********************************************************************************************\
  * ControllerDelayHandlerStruct
 \*********************************************************************************************/
 template<class T>
@@ -126,6 +139,7 @@ struct ControllerDelayHandlerStruct {
 
 ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 ControllerDelayHandlerStruct<C001_queue_element> C001_DelayHandler;
+ControllerDelayHandlerStruct<C003_queue_element> C003_DelayHandler;
 
 
 

@@ -31,6 +31,14 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        C001_DelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         if (event->idx != 0)
@@ -134,11 +142,11 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 }
 
 void process_c001_delay_queue() {
-  C001_queue_element element;
   if (!WiFiConnected(100)) {
     scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
     return;
   }
+  C001_queue_element element;
   if (!C001_DelayHandler.getNext(element)) return;
 
   ControllerSettingsStruct ControllerSettings;

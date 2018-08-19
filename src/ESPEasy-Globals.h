@@ -204,6 +204,7 @@
 #define TIMER_STATISTICS                    6
 #define TIMER_MQTT_DELAY_QUEUE              7
 #define TIMER_C001_DELAY_QUEUE              8
+#define TIMER_C003_DELAY_QUEUE              9
 
 
 #define PLUGIN_INIT_ALL                     1
