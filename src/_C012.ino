@@ -134,7 +134,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
     }
     yield();
   }
-  strcpy_P(log, PSTR("HTTP : closing connection"));
+  strcpy_P(log, PSTR("HTTP : closing connection (012)"));
   addLog(LOG_LEVEL_DEBUG, log);
 
   client.flush();

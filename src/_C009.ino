@@ -188,7 +188,7 @@ void FHEMHTTPsend(String & url, String & buffer, byte index)
     yield();
   }
   // strcpy_P(log, PSTR("HTTP : closing connection"));
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
+  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (009)"));
   client.flush();
   client.stop();
 }

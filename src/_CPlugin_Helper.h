@@ -27,10 +27,10 @@ public:
 class C001_queue_element {
 public:
   C001_queue_element() : controller_idx(0) {}
-  C001_queue_element(int ctrl_idx, const String& req) : controller_idx(ctrl_idx), request(req) {}
+  C001_queue_element(int ctrl_idx, const String& req) : controller_idx(ctrl_idx), url(req) {}
 
   int controller_idx;
-  String request;
+  String url;
 };
 
 /*********************************************************************************************\
@@ -83,6 +83,34 @@ public:
   byte sensorType;
 };
 
+/*********************************************************************************************\
+ * C008_queue_element for queueing requests for 008: Generic HTTP
+ * This controller only sends a single value per request and thus needs to keep track of the
+ * number of values already sent.
+\*********************************************************************************************/
+class C008_queue_element {
+public:
+  C008_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
+  C008_queue_element(const struct EventStruct* event, byte value_count) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    valuesSent(0),
+    valueCount(value_count) {}
+
+  bool checkDone(bool succesfull) const {
+    if (succesfull) ++valuesSent;
+    return (valuesSent == valueCount);
+  }
+
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  String url[VARS_PER_TASK];
+  mutable byte valuesSent;
+  byte valueCount;
+};
+
 
 /*********************************************************************************************\
  * ControllerDelayHandlerStruct
@@ -90,16 +118,16 @@ public:
 template<class T>
 struct ControllerDelayHandlerStruct {
   ControllerDelayHandlerStruct() :
-      lastSend(0), minTimeBetweenMessages(100), max_queue_depth(10), attempt(0), max_attempt(10), delete_oldest(false) {}
+      lastSend(0), minTimeBetweenMessages(100), max_queue_depth(10), attempt(0), max_retries(10), delete_oldest(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
     max_queue_depth = settings.MaxQueueDepth;
-    max_attempt = settings.MaxRetry;
+    max_retries = settings.MaxRetry;
     delete_oldest = settings.DeleteOldest;
     // Set some sound limits
     if (max_queue_depth == 0) max_queue_depth = 10;
-    if (max_attempt == 0) max_attempt = 10;
+    if (max_retries == 0) max_retries = 10;
     if (minTimeBetweenMessages == 0) minTimeBetweenMessages = 100;
     if (minTimeBetweenMessages < 10) minTimeBetweenMessages = 10;
   }
@@ -130,12 +158,13 @@ struct ControllerDelayHandlerStruct {
   }
 
   // Get the next element.
-  // Remove front element when max_attempt is reached.
+  // Remove front element when max_retries is reached.
   bool getNext(T& element) {
     if (sendQueue.empty()) return false;
-    if (max_attempt <= attempt) {
+    if (attempt > max_retries) {
       sendQueue.pop_front();
       attempt = 0;
+      if (sendQueue.empty()) return false;
     }
     element = sendQueue.front();
     return true;
@@ -171,7 +200,7 @@ struct ControllerDelayHandlerStruct {
   unsigned int minTimeBetweenMessages;
   byte max_queue_depth;
   byte attempt;
-  byte max_attempt;
+  byte max_retries;
   bool delete_oldest;
 };
 
@@ -204,7 +233,9 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
                     scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime()); \
                     return; \
                   } \
+                  START_TIMER; \
                   C##NNN##_DelayHandler.markProcessed(do_process_c##NNN##_delay_queue(element, ControllerSettings)); \
+                  STOP_TIMER(C##NNN##_DELAY_QUEUE); \
                   scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime()); \
                 }
 
@@ -221,10 +252,10 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 #ifdef USES_C007
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(007)
 #endif
-/*
 #ifdef USES_C008
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(008)
 #endif
+/*
 #ifdef USES_C009
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(009)
 #endif

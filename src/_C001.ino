@@ -43,25 +43,6 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          ControllerSettingsStruct ControllerSettings;
-          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof (ControllerSettings));
-
-          String authHeader = "";
-          if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
-          {
-            base64 encoder;
-            String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
-            auth += ":";
-            auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-            authHeader = F("Authorization: Basic ");
-            authHeader += encoder.encode(auth);
-            authHeader += F(" \r\n");
-          }
-
-          // boolean success = false;
-          addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
-
-
           // We now create a URI for the request
           String url = F("/json.htm?type=command&param=udevice&idx=");
           url += event->idx;
@@ -116,16 +97,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += mapVccToDomoticz();
           #endif
 
-          // This will send the request to the server
-          String request = F("GET ");
-          request += url;
-          request += F(" HTTP/1.1\r\n");
-          request += F("Host: ");
-          request += ControllerSettings.getHost();
-          request += F("\r\n");
-          request += authHeader;
-          request += F("Connection: close\r\n\r\n");
-          const bool success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, request));
+          success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
           if (!success) {
             addLog(LOG_LEVEL_DEBUG, F("C001 : publish failed, queue full"));
           }
@@ -150,14 +122,41 @@ bool do_process_c001_delay_queue(const C001_queue_element& element, ControllerSe
   {
     connectionFailures++;
 
-    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
+//    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
     return success;
   }
   statusLED(true);
   if (connectionFailures)
     connectionFailures--;
 
-  client.print(element.request);
+  String authHeader = "";
+  if ((SecuritySettings.ControllerUser[element.controller_idx][0] != 0) &&
+      (SecuritySettings.ControllerPassword[element.controller_idx][0] != 0))
+  {
+    base64 encoder;
+    String auth = SecuritySettings.ControllerUser[element.controller_idx];
+    auth += ":";
+    auth += SecuritySettings.ControllerPassword[element.controller_idx];
+    authHeader = F("Authorization: Basic ");
+    authHeader += encoder.encode(auth);
+    authHeader += F(" \r\n");
+  }
+
+  // boolean success = false;
+  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
+
+  // This will send the request to the server
+  String request = F("GET ");
+  request += element.url;
+  request += F(" HTTP/1.1\r\n");
+  request += F("Host: ");
+  request += ControllerSettings.getHost();
+  request += F("\r\n");
+  request += authHeader;
+  request += F("Connection: close\r\n\r\n");
+
+  client.print(request);
+  addLog(LOG_LEVEL_DEBUG, element.url);
 
   unsigned long timer = millis() + 200;
   while (!client.available() && !timeOutReached(timer))
@@ -180,7 +179,7 @@ bool do_process_c001_delay_queue(const C001_queue_element& element, ControllerSe
     yield();
   }
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-    addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
+    addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (001)"));
 
   client.flush();
   client.stop();

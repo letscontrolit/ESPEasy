@@ -1692,6 +1692,21 @@ unsigned long timediff_cpu_cycles_total = 0;
 #define PROC_SYS_TIMER        9
 #define SET_NEW_TIMER        10
 #define TIME_DIFF_COMPUTE    11
+#define MQTT_DELAY_QUEUE     12
+#define C001_DELAY_QUEUE     13
+#define C002_DELAY_QUEUE     14
+#define C003_DELAY_QUEUE     15
+#define C004_DELAY_QUEUE     16
+#define C005_DELAY_QUEUE     17
+#define C006_DELAY_QUEUE     18
+#define C007_DELAY_QUEUE     19
+#define C008_DELAY_QUEUE     20
+#define C009_DELAY_QUEUE     21
+#define C010_DELAY_QUEUE     22
+#define C011_DELAY_QUEUE     23
+#define C012_DELAY_QUEUE     24
+#define C013_DELAY_QUEUE     25
+
 
 
 
@@ -1717,6 +1732,25 @@ String getMiscStatsName(int stat) {
         case PROC_SYS_TIMER:        return F("proc_system_timer() ");
         case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
         case TIME_DIFF_COMPUTE:     return F("timeDiff()          ");
+        case MQTT_DELAY_QUEUE:      return F("Delay queue MQTT    ");
+        case C001_DELAY_QUEUE:
+        case C002_DELAY_QUEUE:
+        case C003_DELAY_QUEUE:
+        case C004_DELAY_QUEUE:
+        case C005_DELAY_QUEUE:
+        case C006_DELAY_QUEUE:
+        case C007_DELAY_QUEUE:
+        case C008_DELAY_QUEUE:
+        case C009_DELAY_QUEUE:
+        case C010_DELAY_QUEUE:
+        case C011_DELAY_QUEUE:
+        case C012_DELAY_QUEUE:
+        case C013_DELAY_QUEUE:
+        {
+          String result = F("Delay queue       C");
+          result += static_cast<int>(stat - C001_DELAY_QUEUE + 1);
+          return result;
+        }
     }
     return F("Unknown");
 }

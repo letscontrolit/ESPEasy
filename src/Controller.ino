@@ -285,6 +285,7 @@ void scheduleNextMQTTdelayQueue() {
 }
 
 void processMQTTdelayQueue() {
+  START_TIMER;
   MQTT_queue_element element;
   if (!MQTTDelayHandler.getNext(element)) return;
   if (MQTTclient.publish(element._topic.c_str(), element._payload.c_str(), element._retained)) {
@@ -300,6 +301,7 @@ void processMQTTdelayQueue() {
     }
   }
   scheduleNextMQTTdelayQueue();
+  STOP_TIMER(MQTT_DELAY_QUEUE);
 }
 
 /*********************************************************************************************\

@@ -45,7 +45,7 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
           break;
         }
-        const bool success = C007_DelayHandler.addToQueue(C007_queue_element(event));
+        success = C007_DelayHandler.addToQueue(C007_queue_element(event));
         if (!success) {
           addLog(LOG_LEVEL_DEBUG, F("C007 : publish failed, queue full"));
         }
@@ -127,7 +127,7 @@ bool do_process_c007_delay_queue(const C007_queue_element& element, ControllerSe
     }
     delay(1);
   }
-  strcpy_P(log, PSTR("HTTP : closing connection"));
+  strcpy_P(log, PSTR("HTTP : closing connection (007)"));
   addLog(LOG_LEVEL_DEBUG, log);
 
   client.flush();

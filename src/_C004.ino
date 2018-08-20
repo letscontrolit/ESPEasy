@@ -143,7 +143,7 @@ bool do_process_c004_delay_queue(const C004_queue_element& element, ControllerSe
     delay(1);
   }
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    strcpy_P(log, PSTR("HTTP : closing connection"));
+    strcpy_P(log, PSTR("HTTP : closing connection (004)"));
     addLog(LOG_LEVEL_DEBUG, log);
   }
 

@@ -1075,7 +1075,7 @@ String getLogLevelDisplayString(byte index, int& logLevel) {
   }
 }
 
-void addToLog(byte loglevel, String& string)
+void addToLog(byte loglevel, const String& string)
 {
   addToLog(loglevel, string.c_str());
 }

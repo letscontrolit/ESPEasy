@@ -219,7 +219,7 @@ boolean HTTPSend011(struct EventStruct *event)
     }
     yield();
   }
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
+  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (011)"));
 
   client.flush();
   client.stop();
