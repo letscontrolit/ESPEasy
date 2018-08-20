@@ -206,9 +206,6 @@ struct ControllerDelayHandlerStruct {
 
 ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 
-// Forward declaration
-void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
-String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize);
 
 // This macro defines the code needed to create the 'process_c##NNN##_delay_queue()'
 // function and all needed objects and forward declarations.
@@ -273,7 +270,215 @@ String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasiz
 #endif
 */
 
+/*********************************************************************************************\
+ * Helper functions used in a number of controllers
+\*********************************************************************************************/
+bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize = 1024, unsigned int timeout = 1000)
+{
+	int c;
+	const unsigned long timer = millis() + timeout;
+	str = "";
 
+	do {
+		//read character
+		c = input.read();
+		if (c >= 0) {
+			//found terminator, we're ok
+			if (c == terminator) {
+				return(true);
+			}
+			//found character, add to string
+			else{
+				str += char(c);
+				//string at max size?
+				if (str.length() >= maxSize) {
+					addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+					return(false);
+				}
+			}
+		}
+		yield();
+	} while (!timeOutReached(timer));
+
+	addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
+	return(false);
+}
+
+String get_formatted_Controller_number(int controller_index) {
+  String result = F("C");
+  if (controller_index < 100) result += '0';
+  if (controller_index < 10) result += '0';
+  result += controller_index;
+  return result;
+}
+
+String get_auth_header(int controller_index) {
+  String authHeader = "";
+  if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
+      (SecuritySettings.ControllerPassword[controller_index][0] != 0))
+  {
+    base64 encoder;
+    String auth = SecuritySettings.ControllerUser[controller_index];
+    auth += ":";
+    auth += SecuritySettings.ControllerPassword[controller_index];
+    authHeader = F("Authorization: Basic ");
+    authHeader += encoder.encode(auth);
+    authHeader += F(" \r\n");
+  }
+  return authHeader;
+}
+
+String do_create_http_request(
+    const String& hostportString,
+    const String& method, const String& uri,
+    const String& auth_header, const String& additional_options,
+    int content_length) {
+  int estimated_size = hostportString.length() + method.length()
+                       + uri.length() + auth_header.length()
+                       + additional_options.length()
+                       + 42;
+  if (content_length >= 0) estimated_size += 25;
+  String request;
+  request.reserve(estimated_size);
+  request += method;
+  request += ' ';
+  if (!uri.startsWith("/")) request += '/';
+  request += uri;
+  request += F(" HTTP/1.1\r\n");
+  if (content_length >= 0) {
+    request += F("Content-Length: ");
+    request += content_length;
+    request += F("\r\n");
+  }
+  request += F("Host: ");
+  request += hostportString;
+  request += F("\r\n");
+  request += auth_header;
+  request += additional_options;
+  request += F("Connection: close\r\n");
+  request += F("\r\n");
+  return request;
+}
+
+String do_create_http_request(
+    const String& hostportString,
+    const String& method, const String& uri) {
+  return do_create_http_request(hostportString, method, uri,
+    "", // auth_header
+    "", // additional_options
+    -1  // content_length
+  );
+}
+
+
+String do_create_http_request(
+    int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri,
+    bool include_auth_header, int content_length) {
+  const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
+  return do_create_http_request(
+    defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
+    method,
+    uri,
+    include_auth_header ? get_auth_header(controller_index) : "",
+    "", // additional_options
+    content_length);
+}
+
+String create_http_get_request(int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& uri) {
+  return do_create_http_request(controller_index, ControllerSettings, F("GET"), uri, false, -1);
+}
+
+String create_http_request_auth(int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri) {
+  return do_create_http_request(controller_index, ControllerSettings, method, uri, true, -1);
+}
+
+String create_http_request_auth(int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri, int content_length) {
+  return do_create_http_request(controller_index, ControllerSettings, method, uri, true, content_length);
+}
+
+bool try_connect_host(int controller_index, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+  // Use WiFiClient class to create TCP connections
+  String log = F("HTTP : ");
+  log += get_formatted_Controller_number(controller_index);
+  log += F(" connecting to ");
+  log += ControllerSettings.getHostPortString();
+  addLog(LOG_LEVEL_DEBUG, log);
+  if (!ControllerSettings.connectToHost(client))
+  {
+    connectionFailures++;
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      log = F("HTTP : ");
+      log += get_formatted_Controller_number(controller_index);
+      log += F(" connection failed");
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return false;
+  }
+  statusLED(true);
+  if (connectionFailures)
+    connectionFailures--;
+  return true;
+}
+
+bool send_via_http(int controller_index, WiFiClient& client, const String& postStr) {
+  bool success = false;
+  // This will send the request to the server
+  client.print(postStr);
+
+  unsigned long timer = millis() + 200;
+  while (!client.available() && !timeOutReached(timer))
+    delay(1);
+
+  // Read all the lines of the reply from server and print them to Serial
+  while (client.available() && !success) {
+    //   String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+      if (line.length() > 80) {
+        addLog(LOG_LEVEL_DEBUG_MORE, line.substring(0, 80));
+      } else {
+        addLog(LOG_LEVEL_DEBUG_MORE, line);
+      }
+    }
+    if (line.startsWith(F("HTTP/1.1 2")))
+    {
+      success = true;
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("HTTP : ");
+        log += get_formatted_Controller_number(controller_index);
+        log += F(" Success! ");
+        log += line;
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+    } else if (line.startsWith(F("HTTP/1.1 4"))) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("HTTP : ");
+        log += get_formatted_Controller_number(controller_index);
+        log += F(" Error: ");
+        log += line;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      addLog(LOG_LEVEL_DEBUG_MORE, postStr);
+    }
+    yield();
+  }
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("HTTP : ");
+    log += get_formatted_Controller_number(controller_index);
+    log += F(" closing connection");
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  client.flush();
+  client.stop();
+  return success;
+}
 
 
 #endif // CPLUGIN_HELPER_H

@@ -124,72 +124,19 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 // FHEM HTTP request
 //********************************************************************************
 //TODO: create a generic HTTPSend function that we use in all the controllers. lots of code duplication here
-void FHEMHTTPsend(String & url, String & buffer, byte index)
+bool FHEMHTTPsend(String & url, String & buffer, byte index)
 {
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(index, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-  // boolean success = false;
-
-  String authHeader = "";
-  if ((SecuritySettings.ControllerUser[index][0] != 0) && (SecuritySettings.ControllerPassword[index][0] != 0)) {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[index];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[index];
-    authHeader = String(F("Authorization: Basic ")) + encoder.encode(auth) + " \r\n";
-  }
-
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
-
-  // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!ControllerSettings.connectToHost(client)) {
-    connectionFailures++;
-    // strcpy_P(log, PSTR("HTTP : connection failed"));
-    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-    return;
-  }
+  if (!try_connect_host(CPLUGIN_ID_009, client, ControllerSettings))
+    return false;
 
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
-
-  // This will send the request to the server
   int len = buffer.length();
-  client.print(String("POST ") + url + F(" HTTP/1.1\r\n") +
-              F("Content-Length: ")+ len + F("\r\n") +
-              F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
-              F("Connection: close\r\n\r\n")
-              + buffer);
+  String request = create_http_request_auth(CPLUGIN_ID_009, ControllerSettings, F("POST"), url, len);
+  request += buffer;
 
-  unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
-    yield();
-
-  // Read all the lines of the reply from server and print them to Serial
-  while (client.available()) {
-    // String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-
-    // String helper = line;
-    // line.toCharArray(log, 80);
-    addLog(LOG_LEVEL_DEBUG_MORE, line);
-
-    if (line.startsWith(F("HTTP/1.1 200 OK"))) {
-      // strcpy_P(log, PSTR("HTTP : Success"));
-      addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP : Success"));
-      // success = true;
-    }
-    else if (line.startsWith(F("HTTP/1.1 4"))) {
-      addLog(LOG_LEVEL_ERROR, String(F("HTTP : Error: "))+line);
-    }
-    yield();
-  }
-  // strcpy_P(log, PSTR("HTTP : closing connection"));
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (009)"));
-  client.flush();
-  client.stop();
+  return send_via_http(CPLUGIN_ID_009, client, request);
 }
 #endif

@@ -23,14 +23,14 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 			addLog(LOG_LEVEL_DEBUG, log);
 		}
 		WiFiClient client;
-		if (client.connect(host.c_str(), port.toInt())) {
-			String reply = F("GET ");
-			reply += path;
-			reply += F(" HTTP/1.1\r\n");
-			reply += F("Host: ");
-			reply += host;
-			reply += F("\r\n");
-			reply += F("Connection: close\r\n\r\n");
+		const int port_int = port.toInt();
+		if (client.connect(host.c_str(), port_int)) {
+			String hostportString = host;
+			if (port_int != 0 && port_int != 80) {
+				hostportString += ':';
+				hostportString += port_int;
+			}
+			String reply = do_create_http_request(hostportString, F("GET"), path);
 			addLog(LOG_LEVEL_DEBUG, reply);
 			client.print(reply);
 

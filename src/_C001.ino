@@ -114,76 +114,15 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 }
 
 bool do_process_c001_delay_queue(const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  boolean success = false;
-
-  // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!ControllerSettings.connectToHost(client))
-  {
-    connectionFailures++;
-
-//    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-    return success;
-  }
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
-
-  String authHeader = "";
-  if ((SecuritySettings.ControllerUser[element.controller_idx][0] != 0) &&
-      (SecuritySettings.ControllerPassword[element.controller_idx][0] != 0))
-  {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[element.controller_idx];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[element.controller_idx];
-    authHeader = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth);
-    authHeader += F(" \r\n");
-  }
-
-  // boolean success = false;
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
+  if (!try_connect_host(CPLUGIN_ID_001, client, ControllerSettings))
+    return false;
 
   // This will send the request to the server
-  String request = F("GET ");
-  request += element.url;
-  request += F(" HTTP/1.1\r\n");
-  request += F("Host: ");
-  request += ControllerSettings.getHost();
-  request += F("\r\n");
-  request += authHeader;
-  request += F("Connection: close\r\n\r\n");
+  String request = create_http_request_auth(CPLUGIN_ID_001, ControllerSettings, F("GET"), element.url);
 
-  client.print(request);
   addLog(LOG_LEVEL_DEBUG, element.url);
-
-  unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
-    yield();
-
-  // Read all the lines of the reply from server and log them
-  bool done = false;
-  while (client.available() && !done) {
-    // String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
-      addLog(LOG_LEVEL_DEBUG_MORE, line);
-    if (line.startsWith(F("HTTP/1.1 200 OK")) )
-    {
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-        addLog(LOG_LEVEL_DEBUG, F("HTTP : Success"));
-      done = true;
-    }
-    yield();
-  }
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-    addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (001)"));
-
-  client.flush();
-  client.stop();
-  return success;
+  return send_via_http(CPLUGIN_ID_001, client, request);
 }
 
 #endif

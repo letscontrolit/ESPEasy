@@ -70,16 +70,16 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
-  if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0) || !ControllerSettings.connectToHost(client))
-  {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, F("Blynk : connection failed"));
+
+  if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0)) {
+    addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
     return false;
   }
-  if (connectionFailures)
-    connectionFailures--;
+
+  WiFiClient client;
+  if (!try_connect_host(CPLUGIN_ID_012, client, ControllerSettings))
+    return false;
+
 
   // We now create a URI for the request
   char request[300] = {0};

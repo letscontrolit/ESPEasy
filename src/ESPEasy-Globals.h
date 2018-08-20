@@ -381,6 +381,15 @@
   #define CONFIG_FILE_SIZE               131072
 #endif
 
+// Forward declaration
+void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
+String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize);
+String get_formatted_Controller_number(int controller_index);
+bool loglevelActiveFor(byte logLevel);
+void addToLog(byte loglevel, const String& string);
+void addToLog(byte logLevel, const __FlashStringHelper* flashString);
+void statusLED(boolean traffic);
+
 enum SettingsType {
   BasicSettings_Type = 0,
   TaskSettings_Type,
@@ -1732,7 +1741,7 @@ String getMiscStatsName(int stat) {
         case PROC_SYS_TIMER:        return F("proc_system_timer() ");
         case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
         case TIME_DIFF_COMPUTE:     return F("timeDiff()          ");
-        case MQTT_DELAY_QUEUE:      return F("Delay queue MQTT    ");
+        case MQTT_DELAY_QUEUE:      return F("Delay queue     MQTT");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:
@@ -1747,8 +1756,8 @@ String getMiscStatsName(int stat) {
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
         {
-          String result = F("Delay queue       C");
-          result += static_cast<int>(stat - C001_DELAY_QUEUE + 1);
+          String result = F("Delay queue     ");
+          result += get_formatted_Controller_number(static_cast<int>(stat - C001_DELAY_QUEUE + 1));
           return result;
         }
     }

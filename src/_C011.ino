@@ -136,49 +136,20 @@ boolean HTTPSend011(struct EventStruct *event)
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
-  String authHeader = "";
-  if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
-  {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-    authHeader = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth);
-    authHeader += F(" \r\n");
-  }
-
   C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
   customConfig.zero_last();
 
-  boolean success = false;
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
-      ControllerSettings.getHostPortString());
-
-  // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  if (!ControllerSettings.connectToHost(client))
-  {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
+  if (!try_connect_host(CPLUGIN_ID_011, client, ControllerSettings))
     return false;
-  }
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
 
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-  String payload = String(customConfig.HttpMethod) + " /";
-  payload += customConfig.HttpUri;
-  payload += F(" HTTP/1.1\r\n");
-  payload += F("Host: ");
-  payload += ControllerSettings.getHostPortString();
-  payload += F("\r\n");
-  payload += authHeader;
-  payload += F("Connection: close\r\n");
+  String payload = create_http_request_auth(
+    CPLUGIN_ID_011, ControllerSettings,
+    String(customConfig.HttpMethod), customConfig.HttpUri);
 
   if (strlen(customConfig.HttpHeader) > 0)
     payload += customConfig.HttpHeader;
@@ -195,36 +166,7 @@ boolean HTTPSend011(struct EventStruct *event)
   }
   payload += F("\r\n");
 
-  // This will send the request to the server
-  client.print(payload);
-  addLog(LOG_LEVEL_DEBUG_MORE, payload);
-
-  unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
-    yield();
-
-  // Read all the lines of the reply from server and print them to Serial
-  while (client.available()) {
-    // String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-
-
-    // line.toCharArray(log, 80);
-    addLog(LOG_LEVEL_DEBUG_MORE, line);
-    if (line.startsWith(F("HTTP/1.1 2")))
-    {
-      addLog(LOG_LEVEL_DEBUG, F("HTTP : Success!"));
-      success = true;
-    }
-    yield();
-  }
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (011)"));
-
-  client.flush();
-  client.stop();
-
-  return(success);
+  return send_via_http(CPLUGIN_ID_011, client, payload);
 }
 
 // parses the string and returns only the the number of name/values we want
