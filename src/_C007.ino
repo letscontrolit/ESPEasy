@@ -46,9 +46,6 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
           break;
         }
         success = C007_DelayHandler.addToQueue(C007_queue_element(event));
-        if (!success) {
-          addLog(LOG_LEVEL_DEBUG, F("C007 : publish failed, queue full"));
-        }
         scheduleNextDelayQueue(TIMER_C007_DELAY_QUEUE, C007_DelayHandler.getNextScheduleTime());
         break;
       }

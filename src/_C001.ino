@@ -98,9 +98,6 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
           #endif
 
           success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
-          if (!success) {
-            addLog(LOG_LEVEL_DEBUG, F("C001 : publish failed, queue full"));
-          }
           scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
         } // if ixd !=0
         else

@@ -47,9 +47,6 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         url += formatUserVarNoCheck(event, 0);
         url += "\n";
         success = C003_DelayHandler.addToQueue(C003_queue_element(event->ControllerIndex, url));
-        if (!success) {
-          addLog(LOG_LEVEL_DEBUG, F("C003 : publish failed, queue full"));
-        }
         scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
 
         break;

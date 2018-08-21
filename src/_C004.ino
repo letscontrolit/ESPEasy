@@ -57,9 +57,6 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_SEND:
       {
         success = C004_DelayHandler.addToQueue(C004_queue_element(event));
-        if (!success) {
-          addLog(LOG_LEVEL_DEBUG, F("C004 : publish failed, queue full"));
-        }
         scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
 
         break;

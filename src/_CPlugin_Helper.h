@@ -111,6 +111,22 @@ public:
   byte valueCount;
 };
 
+/*********************************************************************************************\
+ * C009_queue_element for queueing requests for C009: FHEM HTTP.
+\*********************************************************************************************/
+class C009_queue_element {
+public:
+  C009_queue_element() : controller_idx(0) {}
+  C009_queue_element(int ctrl_idx, const String& URI, const String& JSON) :
+     controller_idx(ctrl_idx), url(URI), json(JSON) {}
+
+  int controller_idx;
+  String url;
+  String json;
+};
+
+
+
 
 /*********************************************************************************************\
  * ControllerDelayHandlerStruct
@@ -133,14 +149,20 @@ struct ControllerDelayHandlerStruct {
   }
 
   // Try to add to the queue, if permitted by "delete_oldest"
-  // Return false when the buffer was full. Success depends on "delete_oldest"
+  // Return false when no item was added.
   bool addToQueue(const T& element) {
     if (delete_oldest) {
-      return forceAddToQueue(element);
+      forceAddToQueue(element);
+      return true;
     }
     if (sendQueue.size() < max_queue_depth) {
       sendQueue.emplace_back(element);
       return true;
+    }
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = get_formatted_Controller_number(element.controller_idx);
+      log += " : queue full";
+      addLog(LOG_LEVEL_DEBUG, log);
     }
     return false;
   }
@@ -252,10 +274,10 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 #ifdef USES_C008
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(008)
 #endif
-/*
 #ifdef USES_C009
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(009)
 #endif
+/*
 #ifdef USES_C010
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(010)
 #endif

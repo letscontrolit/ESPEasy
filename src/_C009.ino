@@ -107,35 +107,28 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         }
 
         // Create json buffer
-        // char buffer[root.measureLength() +1];
-        // root.printTo(buffer, sizeof(buffer));
         String jsonString;
         root.printTo(jsonString);
-        // Push data to server
-        FHEMHTTPsend(url, jsonString, event->ControllerIndex);
+
+        success = C009_DelayHandler.addToQueue(C009_queue_element(event->ControllerIndex, url, jsonString));
+        scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime());
         break;
       }
   }
   return success;
 }
 
-
-//********************************************************************************
-// FHEM HTTP request
-//********************************************************************************
-//TODO: create a generic HTTPSend function that we use in all the controllers. lots of code duplication here
-bool FHEMHTTPsend(String & url, String & buffer, byte index)
-{
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(index, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
+/*********************************************************************************************\
+ * FHEM HTTP request
+\*********************************************************************************************/
+bool do_process_c009_delay_queue(const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
   if (!try_connect_host(CPLUGIN_ID_009, client, ControllerSettings))
     return false;
 
-  int len = buffer.length();
-  String request = create_http_request_auth_no_portnr(CPLUGIN_ID_009, ControllerSettings, F("POST"), url, len);
-  request += buffer;
+  String request = create_http_request_auth_no_portnr(
+      CPLUGIN_ID_009, ControllerSettings, F("POST"), element.url, element.json.length());
+  request += element.json;
 
   return send_via_http(CPLUGIN_ID_009, client, request);
 }
