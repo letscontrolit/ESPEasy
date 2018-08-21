@@ -134,7 +134,7 @@ bool FHEMHTTPsend(String & url, String & buffer, byte index)
     return false;
 
   int len = buffer.length();
-  String request = create_http_request_auth(CPLUGIN_ID_009, ControllerSettings, F("POST"), url, len);
+  String request = create_http_request_auth_no_portnr(CPLUGIN_ID_009, ControllerSettings, F("POST"), url, len);
   request += buffer;
 
   return send_via_http(CPLUGIN_ID_009, client, request);

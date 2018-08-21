@@ -370,6 +370,18 @@ String do_create_http_request(
   );
 }
 
+String do_create_http_request_no_portnr(
+    int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri,
+    bool include_auth_header, int content_length) {
+  return do_create_http_request(
+    ControllerSettings.getHost(),
+    method,
+    uri,
+    include_auth_header ? get_auth_header(controller_index) : "",
+    "", // additional_options
+    content_length);
+}
 
 String do_create_http_request(
     int controller_index, ControllerSettingsStruct& ControllerSettings,
@@ -400,6 +412,16 @@ String create_http_request_auth(int controller_index, ControllerSettingsStruct& 
   return do_create_http_request(controller_index, ControllerSettings, method, uri, true, content_length);
 }
 
+String create_http_request_auth_no_portnr(int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri) {
+  return do_create_http_request_no_portnr(controller_index, ControllerSettings, method, uri, true, -1);
+}
+
+String create_http_request_auth_no_portnr(int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri, int content_length) {
+  return do_create_http_request_no_portnr(controller_index, ControllerSettings, method, uri, true, content_length);
+}
+
 bool try_connect_host(int controller_index, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   // Use WiFiClient class to create TCP connections
   String log = F("HTTP : ");
@@ -424,7 +446,7 @@ bool try_connect_host(int controller_index, WiFiClient& client, ControllerSettin
   return true;
 }
 
-bool send_via_http(int controller_index, WiFiClient& client, const String& postStr) {
+bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr) {
   bool success = false;
   // This will send the request to the server
   client.print(postStr);
@@ -451,7 +473,7 @@ bool send_via_http(int controller_index, WiFiClient& client, const String& postS
       success = true;
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("HTTP : ");
-        log += get_formatted_Controller_number(controller_index);
+        log += logIdentifier;
         log += F(" Success! ");
         log += line;
         addLog(LOG_LEVEL_DEBUG, log);
@@ -459,7 +481,7 @@ bool send_via_http(int controller_index, WiFiClient& client, const String& postS
     } else if (line.startsWith(F("HTTP/1.1 4"))) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("HTTP : ");
-        log += get_formatted_Controller_number(controller_index);
+        log += logIdentifier;
         log += F(" Error: ");
         log += line;
         addLog(LOG_LEVEL_ERROR, log);
@@ -470,7 +492,7 @@ bool send_via_http(int controller_index, WiFiClient& client, const String& postS
   }
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTTP : ");
-    log += get_formatted_Controller_number(controller_index);
+    log += logIdentifier;
     log += F(" closing connection");
     addLog(LOG_LEVEL_DEBUG, log);
   }
@@ -478,6 +500,10 @@ bool send_via_http(int controller_index, WiFiClient& client, const String& postS
   client.flush();
   client.stop();
   return success;
+}
+
+bool send_via_http(int controller_index, WiFiClient& client, const String& postStr) {
+  return send_via_http(get_formatted_Controller_number(controller_index), client, postStr);
 }
 
 

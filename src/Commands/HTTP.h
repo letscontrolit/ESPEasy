@@ -30,25 +30,9 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 				hostportString += ':';
 				hostportString += port_int;
 			}
-			String reply = do_create_http_request(hostportString, F("GET"), path);
-			addLog(LOG_LEVEL_DEBUG, reply);
-			client.print(reply);
-
-			unsigned long timer = millis() + 200;
-			while (!client.available() && !timeOutReached(timer))
-				delay(1);
-
-			while (client.available()) {
-				// String line = client.readStringUntil('\n');
-				String line;
-				safeReadStringUntil(client, line, '\n');
-
-				if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
-					addLog(LOG_LEVEL_DEBUG, line);
-				delay(1);
-			}
-			client.flush();
-			client.stop();
+			String request = do_create_http_request(hostportString, F("GET"), path);
+			addLog(LOG_LEVEL_DEBUG, request);
+			send_via_http(F("Command_HTTP_SendToHTTP"), client, request);
 		}
 	}
 	return return_command_success();
