@@ -353,7 +353,8 @@ unsigned long getNtpTime()
   }
 
   WiFiUDP udp;
-  udp.begin(123);
+	if (!beginWiFiUDP_randomPort(udp))
+	  return 0;
 
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
   byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
@@ -372,14 +373,18 @@ unsigned long getNtpTime()
   packetBuffer[13]  = 0x4E;
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
-  udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
+	if (udp.beginPacket(timeServerIP, 123) == 0) { //NTP requests are to port 123
+		udp.stop();
+		return 0;
+	}
   udp.write(packetBuffer, NTP_PACKET_SIZE);
   udp.endPacket();
 
   uint32_t beginWait = millis();
   while (!timeOutReached(beginWait + 1000)) {
     int size = udp.parsePacket();
-    if (size >= NTP_PACKET_SIZE) {
+		int remotePort = udp.remotePort();
+    if (size >= NTP_PACKET_SIZE && remotePort == 123) {
       udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
       // convert four bytes starting at location 40 to a long integer
@@ -393,11 +398,13 @@ unsigned long getNtpTime()
 	      log += F(" mSec");
 	      addLog(LOG_LEVEL_DEBUG_MORE, log);
 			}
+			udp.stop();
       return secsSince1900 - 2208988800UL;
     }
     delay(10);
   }
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
+	udp.stop();
   return 0;
 }
 
