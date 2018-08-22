@@ -855,7 +855,10 @@ struct ControllerSettingsStruct
     bool connected = false;
     while (retry > 0 && !connected) {
       --retry;
-      connected = client.connect(getIP(), Port);
+      // In case of domain name resolution error result can be negative.
+      // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
+      // Thus must match the result with 1.
+      connected = (client.connect(getIP(), Port) == 1);
       if (connected) return true;
       if (!checkHostReachable(false))
         return false;

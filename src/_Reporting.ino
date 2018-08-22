@@ -20,7 +20,7 @@ void ReportStatus()
 
 
   WiFiClient client;
-  if (!client.connect(host.c_str(), 80))
+  if (client.connect(host.c_str(), 80) != 1)
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
     return;
