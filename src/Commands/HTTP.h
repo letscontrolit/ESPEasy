@@ -24,7 +24,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 		}
 		WiFiClient client;
 		const int port_int = port.toInt();
-		if (client.connect(host.c_str(), port_int)) {
+		if (client.connect(host.c_str(), port_int) != 1) {
 			String hostportString = host;
 			if (port_int != 0 && port_int != 80) {
 				hostportString += ':';
