@@ -126,7 +126,7 @@ bool do_process_c009_delay_queue(const C009_queue_element& element, ControllerSe
   if (!try_connect_host(CPLUGIN_ID_009, client, ControllerSettings))
     return false;
 
-  String request = create_http_request_auth_no_portnr(
+  String request = create_http_request_auth(
       CPLUGIN_ID_009, ControllerSettings, F("POST"), element.url, element.json.length());
   request += element.json;
 

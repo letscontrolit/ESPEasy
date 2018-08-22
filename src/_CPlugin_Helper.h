@@ -141,10 +141,11 @@ struct ControllerDelayHandlerStruct {
     max_queue_depth = settings.MaxQueueDepth;
     max_retries = settings.MaxRetry;
     delete_oldest = settings.DeleteOldest;
-    // Set some sound limits
+    // Set some sound limits when not configured
     if (max_queue_depth == 0) max_queue_depth = 10;
     if (max_retries == 0) max_retries = 10;
     if (minTimeBetweenMessages == 0) minTimeBetweenMessages = 100;
+    // No less than 10 msec between messages.
     if (minTimeBetweenMessages < 10) minTimeBetweenMessages = 10;
   }
 
@@ -326,7 +327,14 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 	return(false);
 }
 
+bool valid_controller_index(int controller_index) {
+  return (controller_index >= 0 && controller_index < CONTROLLER_MAX);
+}
+
 String get_formatted_Controller_number(int controller_index) {
+  if (!valid_controller_index(controller_index)) {
+    return F("C---");
+  }
   String result = F("C");
   if (controller_index < 100) result += '0';
   if (controller_index < 10) result += '0';
@@ -336,6 +344,10 @@ String get_formatted_Controller_number(int controller_index) {
 
 String get_auth_header(int controller_index) {
   String authHeader = "";
+  if (!valid_controller_index(controller_index)) {
+    addLog(LOG_LEVEL_ERROR, F("Invalid controller index"));
+    return authHeader;
+  }
   if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
       (SecuritySettings.ControllerPassword[controller_index][0] != 0))
   {
@@ -392,19 +404,6 @@ String do_create_http_request(
   );
 }
 
-String do_create_http_request_no_portnr(
-    int controller_index, ControllerSettingsStruct& ControllerSettings,
-    const String& method, const String& uri,
-    bool include_auth_header, int content_length) {
-  return do_create_http_request(
-    ControllerSettings.getHost(),
-    method,
-    uri,
-    include_auth_header ? get_auth_header(controller_index) : "",
-    "", // additional_options
-    content_length);
-}
-
 String do_create_http_request(
     int controller_index, ControllerSettingsStruct& ControllerSettings,
     const String& method, const String& uri,
@@ -432,16 +431,6 @@ String create_http_request_auth(int controller_index, ControllerSettingsStruct& 
 String create_http_request_auth(int controller_index, ControllerSettingsStruct& ControllerSettings,
     const String& method, const String& uri, int content_length) {
   return do_create_http_request(controller_index, ControllerSettings, method, uri, true, content_length);
-}
-
-String create_http_request_auth_no_portnr(int controller_index, ControllerSettingsStruct& ControllerSettings,
-    const String& method, const String& uri) {
-  return do_create_http_request_no_portnr(controller_index, ControllerSettings, method, uri, true, -1);
-}
-
-String create_http_request_auth_no_portnr(int controller_index, ControllerSettingsStruct& ControllerSettings,
-    const String& method, const String& uri, int content_length) {
-  return do_create_http_request_no_portnr(controller_index, ControllerSettings, method, uri, true, content_length);
 }
 
 bool try_connect_host(int controller_index, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
