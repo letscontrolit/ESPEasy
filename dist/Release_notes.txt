@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20180822 (since mega-20180818)
+-------------------------------------------------
+
+Release date: Wed Aug 22 04:00:15 CEST 2018
+
+Gijs Noorlander (1):
+      Changed INPUT_COMMAND_SIZE from 80 to 240
+
+TD-er (1):
+      [UDP] Use random outgoing port for NTP and check return values
+
+
+-------------------------------------------------
 Changes in release mega-20180818 (since mega-20180815)
 -------------------------------------------------
 
