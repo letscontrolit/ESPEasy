@@ -84,7 +84,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
-bool do_process_c008_delay_queue(const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.url[element.valuesSent] == "") {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
@@ -93,11 +93,11 @@ bool do_process_c008_delay_queue(const C008_queue_element& element, ControllerSe
   }
 
   WiFiClient client;
-  if (!try_connect_host(CPLUGIN_ID_008, client, ControllerSettings))
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  String request = create_http_request_auth(CPLUGIN_ID_008, ControllerSettings, F("GET"), element.url[element.valuesSent]);
-  return element.checkDone(send_via_http(CPLUGIN_ID_008, client, request));
+  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.url[element.valuesSent]);
+  return element.checkDone(send_via_http(controller_number, client, request));
 }
 
 #endif

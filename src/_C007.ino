@@ -54,9 +54,9 @@ boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool do_process_c007_delay_queue(const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
-  if (!try_connect_host(CPLUGIN_ID_007, client, ControllerSettings))
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
   String url = F("/emoncms/input/post.json?node=");
@@ -77,7 +77,7 @@ bool do_process_c007_delay_queue(const C007_queue_element& element, ControllerSe
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.println(url);
 
-  return send_via_http(CPLUGIN_ID_007, client,
-    create_http_get_request(CPLUGIN_ID_007, ControllerSettings, url));
+  return send_via_http(controller_number, client,
+    create_http_get_request(controller_number, ControllerSettings, url));
 }
 #endif

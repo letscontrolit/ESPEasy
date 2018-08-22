@@ -56,7 +56,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool do_process_c003_delay_queue(const C003_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c003_delay_queue(int controller_number, const C003_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   boolean success = false;
   char log[80];
   addLog(LOG_LEVEL_DEBUG, String(F("TELNT : connecting to ")) + ControllerSettings.getHostPortString());

@@ -110,16 +110,16 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool do_process_c001_delay_queue(const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c001_delay_queue(int controller_number, const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
-  if (!try_connect_host(CPLUGIN_ID_001, client, ControllerSettings))
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
   // This will send the request to the server
-  String request = create_http_request_auth(CPLUGIN_ID_001, ControllerSettings, F("GET"), element.url);
+  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.url);
 
   addLog(LOG_LEVEL_DEBUG, element.url);
-  return send_via_http(CPLUGIN_ID_001, client, request);
+  return send_via_http(controller_number, client, request);
 }
 
 #endif

@@ -27,7 +27,8 @@ public:
 class C001_queue_element {
 public:
   C001_queue_element() : controller_idx(0) {}
-  C001_queue_element(int ctrl_idx, const String& req) : controller_idx(ctrl_idx), url(req) {}
+  C001_queue_element(int ctrl_idx, const String& req) :
+       controller_idx(ctrl_idx), url(req) {}
 
   int controller_idx;
   String url;
@@ -39,7 +40,8 @@ public:
 class C003_queue_element {
 public:
   C003_queue_element() : controller_idx(0) {}
-  C003_queue_element(int ctrl_idx, const String& req) : controller_idx(ctrl_idx), url(req) {}
+  C003_queue_element(int ctrl_idx, const String& req) :
+       controller_idx(ctrl_idx), url(req) {}
 
   int controller_idx;
   String url;
@@ -240,9 +242,9 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 // N.B. some controllers only can send one value per iteration, so a returned "false" can mean it
 //      was still successful. The controller should keep track of the last value sent
 //      in the element stored in the queue.
-#define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN) \
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M) \
                 ControllerDelayHandlerStruct<C##NNN##_queue_element> C##NNN##_DelayHandler; \
-                bool do_process_c##NNN##_delay_queue(const C##NNN##_queue_element& element, ControllerSettingsStruct& ControllerSettings); \
+                bool do_process_c##NNN##_delay_queue(int controller_number, const C##NNN##_queue_element& element, ControllerSettingsStruct& ControllerSettings); \
                 void process_c##NNN##_delay_queue() { \
                   C##NNN##_queue_element element; \
                   if (!C##NNN##_DelayHandler.getNext(element)) return; \
@@ -254,42 +256,43 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
                     return; \
                   } \
                   START_TIMER; \
-                  C##NNN##_DelayHandler.markProcessed(do_process_c##NNN##_delay_queue(element, ControllerSettings)); \
+                  C##NNN##_DelayHandler.markProcessed(do_process_c##NNN##_delay_queue(M, element, ControllerSettings)); \
                   STOP_TIMER(C##NNN##_DELAY_QUEUE); \
                   scheduleNextDelayQueue(TIMER_C##NNN##_DELAY_QUEUE, C##NNN##_DelayHandler.getNextScheduleTime()); \
                 }
 
 // Define the function wrappers to handle the calling to Cxxx_DelayHandler etc.
+// If someone knows how to add leading zeros in macros, please be my guest :)
 #ifdef USES_C001
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(001)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(001, 1)
 #endif
 #ifdef USES_C003
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(003)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(003, 3)
 #endif
 #ifdef USES_C004
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(004)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(004, 4)
 #endif
 #ifdef USES_C007
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(007)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(007, 7)
 #endif
 #ifdef USES_C008
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(008)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(008, 8)
 #endif
 #ifdef USES_C009
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(009)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(009, 9)
 #endif
 /*
 #ifdef USES_C010
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(010)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(010, 10)
 #endif
 #ifdef USES_C011
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(011)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(011, 11)
 #endif
 #ifdef USES_C012
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(012)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(012, 12)
 #endif
 #ifdef USES_C013
-  DEFINE_Cxxx_DELAY_QUEUE_MACRO(013)
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
 
@@ -327,37 +330,39 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 	return(false);
 }
 
-bool valid_controller_index(int controller_index) {
-  return (controller_index >= 0 && controller_index < CONTROLLER_MAX);
+bool valid_controller_number(int controller_number) {
+  if (controller_number < 0) return false;
+  return true;
+//  return getProtocolIndex(controller_number) <= protocolCount;
 }
 
-String get_formatted_Controller_number(int controller_index) {
-  if (!valid_controller_index(controller_index)) {
+String get_formatted_Controller_number(int controller_number) {
+  if (!valid_controller_number(controller_number)) {
     return F("C---");
   }
   String result = F("C");
-  if (controller_index < 100) result += '0';
-  if (controller_index < 10) result += '0';
-  result += controller_index;
+  if (controller_number < 100) result += '0';
+  if (controller_number < 10) result += '0';
+  result += controller_number;
   return result;
 }
 
 String get_auth_header(int controller_index) {
   String authHeader = "";
-  if (!valid_controller_index(controller_index)) {
+  if (controller_index < CONTROLLER_MAX) {
+    if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
+        (SecuritySettings.ControllerPassword[controller_index][0] != 0))
+    {
+      base64 encoder;
+      String auth = SecuritySettings.ControllerUser[controller_index];
+      auth += ":";
+      auth += SecuritySettings.ControllerPassword[controller_index];
+      authHeader = F("Authorization: Basic ");
+      authHeader += encoder.encode(auth);
+      authHeader += F(" \r\n");
+    }
+  } else {
     addLog(LOG_LEVEL_ERROR, F("Invalid controller index"));
-    return authHeader;
-  }
-  if ((SecuritySettings.ControllerUser[controller_index][0] != 0) &&
-      (SecuritySettings.ControllerPassword[controller_index][0] != 0))
-  {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[controller_index];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[controller_index];
-    authHeader = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth);
-    authHeader += F(" \r\n");
   }
   return authHeader;
 }
@@ -391,6 +396,7 @@ String do_create_http_request(
   request += additional_options;
   request += F("Connection: close\r\n");
   request += F("\r\n");
+  addLog(LOG_LEVEL_DEBUG, request);
   return request;
 }
 
@@ -405,38 +411,47 @@ String do_create_http_request(
 }
 
 String do_create_http_request(
-    int controller_index, ControllerSettingsStruct& ControllerSettings,
+    int controller_number, ControllerSettingsStruct& ControllerSettings,
     const String& method, const String& uri,
-    bool include_auth_header, int content_length) {
+    int content_length) {
   const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
   return do_create_http_request(
     defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
     method,
     uri,
-    include_auth_header ? get_auth_header(controller_index) : "",
+    "", // auth_header
     "", // additional_options
     content_length);
 }
 
-String create_http_get_request(int controller_index, ControllerSettingsStruct& ControllerSettings,
+String create_http_request_auth(
+    int controller_number, int controller_index, ControllerSettingsStruct& ControllerSettings,
+    const String& method, const String& uri,
+    int content_length) {
+  const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
+  return do_create_http_request(
+    defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
+    method,
+    uri,
+    get_auth_header(controller_index),
+    "", // additional_options
+    content_length);
+}
+
+String create_http_get_request(int controller_number, ControllerSettingsStruct& ControllerSettings,
     const String& uri) {
-  return do_create_http_request(controller_index, ControllerSettings, F("GET"), uri, false, -1);
+  return do_create_http_request(controller_number, ControllerSettings, F("GET"), uri, -1);
 }
 
-String create_http_request_auth(int controller_index, ControllerSettingsStruct& ControllerSettings,
+String create_http_request_auth(int controller_number, int controller_index, ControllerSettingsStruct& ControllerSettings,
     const String& method, const String& uri) {
-  return do_create_http_request(controller_index, ControllerSettings, method, uri, true, -1);
+  return create_http_request_auth(controller_number, controller_index, ControllerSettings, method, uri, -1);
 }
 
-String create_http_request_auth(int controller_index, ControllerSettingsStruct& ControllerSettings,
-    const String& method, const String& uri, int content_length) {
-  return do_create_http_request(controller_index, ControllerSettings, method, uri, true, content_length);
-}
-
-bool try_connect_host(int controller_index, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   // Use WiFiClient class to create TCP connections
   String log = F("HTTP : ");
-  log += get_formatted_Controller_number(controller_index);
+  log += get_formatted_Controller_number(controller_number);
   log += F(" connecting to ");
   log += ControllerSettings.getHostPortString();
   addLog(LOG_LEVEL_DEBUG, log);
@@ -445,7 +460,7 @@ bool try_connect_host(int controller_index, WiFiClient& client, ControllerSettin
     connectionFailures++;
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       log = F("HTTP : ");
-      log += get_formatted_Controller_number(controller_index);
+      log += get_formatted_Controller_number(controller_number);
       log += F(" connection failed");
       addLog(LOG_LEVEL_ERROR, log);
     }
@@ -513,8 +528,8 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   return success;
 }
 
-bool send_via_http(int controller_index, WiFiClient& client, const String& postStr) {
-  return send_via_http(get_formatted_Controller_number(controller_index), client, postStr);
+bool send_via_http(int controller_number, WiFiClient& client, const String& postStr) {
+  return send_via_http(get_formatted_Controller_number(controller_number), client, postStr);
 }
 
 

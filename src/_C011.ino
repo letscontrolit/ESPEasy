@@ -130,6 +130,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 boolean HTTPSend011(struct EventStruct *event)
 {
+  int controller_number = CPLUGIN_ID_011;
   if (!WiFiConnected(100)) {
     return false;
   }
@@ -141,14 +142,14 @@ boolean HTTPSend011(struct EventStruct *event)
   customConfig.zero_last();
 
   WiFiClient client;
-  if (!try_connect_host(CPLUGIN_ID_011, client, ControllerSettings))
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
   String payload = create_http_request_auth(
-    CPLUGIN_ID_011, ControllerSettings,
+    controller_number, event->ControllerIndex, ControllerSettings,
     String(customConfig.HttpMethod), customConfig.HttpUri);
 
   if (strlen(customConfig.HttpHeader) > 0)
@@ -166,7 +167,7 @@ boolean HTTPSend011(struct EventStruct *event)
   }
   payload += F("\r\n");
 
-  return send_via_http(CPLUGIN_ID_011, client, payload);
+  return send_via_http(controller_number, client, payload);
 }
 
 // parses the string and returns only the the number of name/values we want

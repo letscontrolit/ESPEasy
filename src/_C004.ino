@@ -66,9 +66,9 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-bool do_process_c004_delay_queue(const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
-  if (!try_connect_host(CPLUGIN_ID_004, client, ControllerSettings))
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
   String postDataStr = F("api_key=");
@@ -94,6 +94,6 @@ bool do_process_c004_delay_queue(const C004_queue_element& element, ControllerSe
     postDataStr.length());
   postStr += postDataStr;
 
-  return send_via_http(CPLUGIN_ID_004, client, postStr);
+  return send_via_http(controller_number, client, postStr);
 }
 #endif

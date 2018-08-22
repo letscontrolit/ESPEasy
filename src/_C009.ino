@@ -121,15 +121,16 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
 /*********************************************************************************************\
  * FHEM HTTP request
 \*********************************************************************************************/
-bool do_process_c009_delay_queue(const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c009_delay_queue(int controller_number, const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
-  if (!try_connect_host(CPLUGIN_ID_009, client, ControllerSettings))
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
   String request = create_http_request_auth(
-      CPLUGIN_ID_009, ControllerSettings, F("POST"), element.url, element.json.length());
+      controller_number, element.controller_idx, ControllerSettings,
+      F("POST"), element.url, element.json.length());
   request += element.json;
 
-  return send_via_http(CPLUGIN_ID_009, client, request);
+  return send_via_http(controller_number, client, request);
 }
 #endif
