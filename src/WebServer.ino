@@ -3665,6 +3665,7 @@ void handle_json()
   bool showWifi = true;
   bool showDataAcquisition = true;
   bool showTaskDetails = true;
+  bool showNodes = true;
   {
     String view = WebServer.arg("view");
     if (view.length() != 0) {
@@ -3673,6 +3674,7 @@ void handle_json()
         showWifi = false;
         showDataAcquisition = false;
         showTaskDetails = false;
+        showNodes =false;
       }
     }
   }
@@ -3798,9 +3800,70 @@ void handle_json()
   }
   if (!showSpecificTask) {
     TXBuffer += F("],\n");
-    stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
+    stream_next_json_object_value(F("TTL"), String(ttl_json * 1000));
   }
 
+  if(showNodes) {
+    bool comma_between=false;
+    for (byte x = 0; x < UNIT_MAX; x++)
+    {
+      if (Nodes[x].ip[0] != 0)
+      {
+
+        char ip[20];
+
+        sprintf_P(ip, PSTR("%u.%u.%u.%u"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+
+        if( comma_between ) {
+          TXBuffer += F(",");
+        } else {
+          comma_between=true;
+          TXBuffer += F("\"nodes\":[\n"); // open json array if >0 nodes
+        }
+
+        TXBuffer += F("{");
+        stream_next_json_object_value(F("nr"), String(x));
+
+        if (x != Settings.Unit) {
+          stream_next_json_object_value(F("name"), Nodes[x].nodeName);
+        } else {
+          stream_next_json_object_value(F("name"), Settings.Name);
+        }
+
+        if (Nodes[x].build) {
+          stream_next_json_object_value(F("build"), String(Nodes[x].build));
+        }
+
+        if (Nodes[x].nodeType) {
+          switch (Nodes[x].nodeType)
+          {
+            case NODE_TYPE_ID_ESP_EASY_STD:
+              stream_next_json_object_value(F("type"), F("ESP Easy"));
+            break;
+            case NODE_TYPE_ID_ESP_EASYM_STD:
+              stream_next_json_object_value(F("type"), F("ESP Easy Mega"));
+            break;
+            case NODE_TYPE_ID_ESP_EASY32_STD:
+              stream_next_json_object_value(F("type"), F("ESP Easy 32"));
+            break;
+            case NODE_TYPE_ID_ARDUINO_EASY_STD:
+              stream_next_json_object_value(F("type"), F("Arduino Easy"));
+            break;
+            case NODE_TYPE_ID_NANO_EASY_STD:
+              stream_next_json_object_value(F("type"), F("Nano Easy"));
+            break;
+          }
+
+        }
+        stream_next_json_object_value(F("ip"), ip);
+        stream_last_json_object_value(F("age"),  String( Nodes[x].age ));
+      } // if node info exists
+    } // for loop
+    if(comma_between) {
+      TXBuffer += F("]\n"); // close array if >0 nodes
+    }
+  }
+  TXBuffer += F("}\n");
   TXBuffer.endStream();
 }
 
