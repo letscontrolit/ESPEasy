@@ -1,24 +1,27 @@
+## WARNING! library initialization changed! ##
+<i>old library version is available at [old_template branch](https://github.com/reaper7/SDM_Energy_Meter/tree/old_template)</i><br>
 ## Library for reading SDM120 SDM220 SDM230 SDM630 Modbus Energy meters. ##
 
 ### SECTIONS: ###
 #### 1. [INTRODUCTION](#introduction) ####
 #### 2. [SCREENSHOTS](#screenshots) ####
-#### 3. [INITIALIZING](#initializing) ####
-#### 4. [READING](#reading) ####
-#### 5. [DEBUGING](#debuging) ####
-#### 6. [CREDITS](#credits) ####
+#### 3. [CONFIGURING](#configuring) ####
+#### 4. [INITIALIZING](#initializing) ####
+#### 5. [READING](#reading) ####
+#### 6. [DEBUGING](#debuging) ####
+#### 7. [CREDITS](#credits) ####
 
 ---
 
 ### Introduction: ###
 This library allows you reading SDM module(s) using:
 - [x] Hardware Serial (<i>recommended option, smallest number of reads errors</i>) <b><i>or</i></b>
-- [x] Software Serial (<i>library for ESP8266</i> https://github.com/plerup/espsoftwareserial)
+- [x] Software Serial (<i>[library for ESP8266](https://github.com/plerup/espsoftwareserial)</i>)
 
 you also need rs232<->rs485 converter:
 - [x] with automatic flow direction control (<i>look at images below</i>) <b><i>or</i></b>
 - [x] with additional pins for flow control, like MAX485</br>
-     (<i>in this case MAX485 DE and RE pins must be connected together to one of esp pin</br>
+     (<i>in this case MAX485 DE and RE pins must be connected together to one of uC pin</br>
      and this pin must be passed when initializing the library</i>)
 
 _Tested on Wemos D1 Mini with Arduino IDE 1.8.3-1.9.0b & ESP8266 core 2.3.0-2.4.1_
@@ -34,27 +37,68 @@ _Tested on Wemos D1 Mini with Arduino IDE 1.8.3-1.9.0b & ESP8266 core 2.3.0-2.4.
 
 ---
 
+### Configuring: ###
+Default configuration is specified in the [SDM.h](https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM.h#L18) file, and parameters are set to:</br>
+<i>Software Serial, baud 4800, uart config SERIAL_8N1, without DE/RE pin</i>.</br>
+
+User can set the parameters in two ways:
+- by editing the [SDM_Config_User.h](https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM_Config_User.h) file
+- by passing values during initialization (section below)
+
+---
+
 ### Initializing: ###
+If the user configuration is specified in the [SDM_Config_User.h](https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM_Config_User.h) file</br>
+or if the default configuration from the [SDM.h](https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM.h#L18) file is suitable</br>
+initialization is limited to passing serial port reference (software or hardware)</br>
+and looks as follows:
 ```cpp
 //lib init when Software Serial is used:
+#include <SoftwareSerial.h>
 #include <SDM.h>
-//      ______________________baudrate
-//     |    __________________rx pin
-//     |   |    ______________tx pin
-//     |   |   |    __________dere pin(optional for max485)
-//     |   |   |   |
-SDM<4800, 13, 15, 12> sdm;
+
+SoftwareSerial swSerSDM(13, 15);
+
+//              _software serial reference
+//             |
+SDM sdm(swSerSDM);
+
 
 //lib init when Hardware Serial is used:
-#define USE_HARDWARESERIAL
 #include <SDM.h>
-//      ______________________baudrate
-//     |    __________________dere pin(optional for max485)
-//     |   |    ______________swap hw serial pins from 3/1 to 13/15(default false)
-//     |   |   |
-SDM<4800, 12, false> sdm;
+
+//            _hardware serial reference
+//           |
+SDM sdm(Serial);
 ```
-NOTE: <i>when GPIO15 is used (especially for swapped hardware serial):</br>
+If the user wants to temporarily change the configuration during the initialization process</br>
+then can pass additional parameters as below:
+```cpp
+//lib init when Software Serial is used:
+#include <SoftwareSerial.h>
+#include <SDM.h>
+
+SoftwareSerial swSerSDM(13, 15);
+
+//              __________________software serial reference
+//             |      ____________baudrate(optional, default from SDM_Config_User.h)   
+//             |     |           _dere pin for max485(optional, default from SDM_Config_User.h)
+//             |     |          |
+SDM sdm(swSerSDM, 9600, NOT_A_PIN);
+
+
+//lib init when Hardware Serial is used:
+#include <SDM.h>
+
+//            _____________________________________hardware serial reference
+//           |      _______________________________baudrate(optional, default from SDM_Config_User.h)
+//           |     |           ____________________dere pin for max485(optional, default from SDM_Config_User.h)
+//           |     |          |            ________hardware uart config(optional, default from SDM_Config_User.h)
+//           |     |          |           |       _swap hw serial pins from 3/1 to 13/15(optional, default from SDM_Config_User.h)
+//           |     |          |           |      |
+SDM sdm(Serial, 9600, NOT_A_PIN, SERIAL_8N1, false);
+```
+NOTE for ESP8266: <i>when GPIO15 is used (especially for swapped hardware serial):</br>
 some converters (like mine) have built-in pullup resistors on TX/RX lines from rs232 side,</br>
 connection this type of converters to ESP8266 pin GPIO15 block booting process.</br>
 In this case you can replace the pull-up resistor on converter with higher value (100k),</br>
@@ -64,7 +108,7 @@ to ensure low level on GPIO15 by built-in in most ESP8266 modules pulldown resis
 
 ### Reading: ###
 List of available registers for SDM120/220/230/630:</br>
-https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM.h#L36
+https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM.h#L50
 ```cpp
 //reading voltage from SDM with slave address 0x01 (default)
 //                                      __________register name
@@ -123,7 +167,7 @@ uint16_t lasterror = sdm.getErrCode(true);
 sdm.clearErrCode();
 ```
 Errors list returned by <b>getErrCode</b>:</br>
-https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM.h#L128</br>
+https://github.com/reaper7/SDM_Energy_Meter/blob/master/SDM.h#L142</br>
 
 You can also check total number of errors using function:
 ```cpp

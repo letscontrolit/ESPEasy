@@ -25,7 +25,7 @@ const char index_page[] PROGMEM = R"=====(
     function handleServerResponse(){
      if(xmlHttp.readyState==4 && xmlHttp.status==200){
        xmlResponse=xmlHttp.responseXML;
-       for(i=0;i<6;i++){
+       for(i=0;i<5;i++){
         xmldoc=xmlResponse.getElementsByTagName('response'+i)[0].firstChild.nodeValue;
         document.getElementById('resp'+i).innerHTML=xmldoc;
        }
@@ -60,8 +60,7 @@ const char index_page[] PROGMEM = R"=====(
         <TR><TH title="CURRENT">CURRENT</TH><TD><A id='resp1'></A></TD><TD>A</TD></TR>
         <TR><TH title="POWER">POWER</TH><TD><A id='resp2'></A></TD><TD>W</TD></TR>
         <TR><TH title="POWER FACTOR">POWER FACTOR</TH><TD><A id='resp3'></A></TD><TD>PF</TD></TR>
-        <TR><TH title="PHASE ANGLE">PHASE ANGLE</TH><TD><A id='resp4'></A></TD><TD>&deg;</TD></TR>
-        <TR><TH title="FREQUENCY">FREQUENCY</TH><TD><A id='resp5'></A></TD><TD>Hz</TD></TR>
+        <TR><TH title="FREQUENCY">FREQUENCY</TH><TD><A id='resp4'></A></TD><TD>Hz</TD></TR>
         <TR><TH title="FREE HEAP">FREE HEAP</TH><TD><A id='freeheap'></A></TD><TD>bytes</TD></TR>
         <TR><TH title="LAST RESET REASON">LAST RESET REASON</TH><TD colspan="2"><A id='rstreason'></A></TD></TR>
       </TABLE>
