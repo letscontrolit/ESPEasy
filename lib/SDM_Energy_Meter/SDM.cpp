@@ -1,7 +1,7 @@
 /* Library for reading SDM 120/220/230/630 Modbus Energy meters.
 *  Reading via Hardware or Software Serial library & rs232<->rs485 converter
 *  2016-2018 Reaper7 (tested on wemos d1 mini->ESP8266 with Arduino 1.9.0-beta & 2.4.1 esp8266 core)
-*  crc calculation by Jaime García (https://github.com/peninquen/Modbus-Energy-Monitor-Arduino/)
+*  crc calculation by Jaime Garcï¿½a (https://github.com/peninquen/Modbus-Energy-Monitor-Arduino/)
 */
 //------------------------------------------------------------------------------
 #include "SDM.h"
@@ -14,7 +14,7 @@ SDM::SDM(HardwareSerial& serial, long baud, int dere_pin, int config, bool swapu
   this->_swapuart = swapuart;
 }
 #else
-SDM::SDM(SoftwareSerial& serial, long baud, int dere_pin) : sdmSer(serial) {
+SDM::SDM(ESPeasySoftwareSerial& serial, long baud, int dere_pin) : sdmSer(serial) {
   this->_baud = baud;
   this->_dere_pin = dere_pin;
 }
@@ -119,7 +119,7 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
   if (readErr != SDM_ERR_NO_ERROR) {                                            //if error then copy temp error value to global val and increment global error counter
     readingerrcode = readErr;
-    readingerrcount++; 
+    readingerrcount++;
   }
 
 #ifndef USE_HARDWARESERIAL

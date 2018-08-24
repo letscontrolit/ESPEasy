@@ -12,7 +12,8 @@
 #ifdef USE_HARDWARESERIAL
   #include <HardwareSerial.h>
 #else
-  #include <SoftwareSerial.h>
+  #include <ESPeasySoftwareSerial.h>
+//  #include <SoftwareSerial.h>
 #endif
 //------------------------------------------------------------------------------
 //DEFAULT CONFIG (DO NOT CHANGE ANYTHING!!! for changes use SDM_Config_User.h):
@@ -150,7 +151,7 @@ class SDM {
 #ifdef USE_HARDWARESERIAL
     SDM(HardwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN, int config = SDM_UART_CONFIG, bool swapuart = SWAPHWSERIAL);
 #else
-    SDM(SoftwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
+    SDM(ESPeasySoftwareSerial& serial, long baud = SDM_UART_BAUD, int dere_pin = DERE_PIN);
 #endif
     virtual ~SDM();
 
@@ -165,7 +166,7 @@ class SDM {
 #ifdef USE_HARDWARESERIAL
     HardwareSerial& sdmSer;
 #else
-    SoftwareSerial& sdmSer;
+    ESPeasySoftwareSerial& sdmSer;
 #endif
 
 #ifdef USE_HARDWARESERIAL
@@ -175,7 +176,7 @@ class SDM {
     long _baud = SDM_UART_BAUD;
     int _dere_pin = DERE_PIN;
     uint16_t readingerrcode = SDM_ERR_NO_ERROR;                                 //4 = timeout; 3 = not enough bytes; 2 = number of bytes OK but bytes b0,b1 or b2 wrong, 1 = crc error
-    uint16_t readingerrcount = 0;                                               //total errors couter 
+    uint16_t readingerrcount = 0;                                               //total errors couter
     uint16_t calculateCRC(uint8_t *array, uint8_t num);
 };
 #endif //SDM_h

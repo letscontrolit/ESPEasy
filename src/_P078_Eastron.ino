@@ -17,8 +17,8 @@
 
 boolean Plugin_078_init = false;
 #include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
-
-SDM<2400, D6, D7> Plugin_078_SDM;
+ESPeasySoftwareSerial swSerSDM(6, 7);  //config SoftwareSerial (rx->pin6 / tx->pin7)
+SDM Plugin_078_SDM(swSerSDM, 9600, NOT_A_PIN);      //config SDM
 
 boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 {
