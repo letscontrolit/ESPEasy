@@ -442,7 +442,7 @@ uint8_t Plugin_080_DS_read_bit(void)
 boolean Plugin_080_DS_readiButton(byte addr[8])
 {
     // maybe this is needed to trigger the reading
-    byte ScratchPad[12];
+//    byte ScratchPad[12];
 
     Plugin_080_DS_reset();
     Plugin_080_DS_write(0x55); // Choose ROM
@@ -451,8 +451,8 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
 
     Plugin_080_DS_write(0xBE); // Read scratchpad
 
-    for (byte i = 0; i < 9; i++) // read 9 bytes
-        ScratchPad[i] = Plugin_080_DS_read();
+//    for (byte i = 0; i < 9; i++) // read 9 bytes
+//        ScratchPad[i] = Plugin_080_DS_read();
     // end maybe this is needed to trigger the reading
 
     byte tmpaddr[8];
