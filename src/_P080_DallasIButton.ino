@@ -12,7 +12,7 @@
 
 #define PLUGIN_080
 #define PLUGIN_ID_080         80
-#define PLUGIN_NAME_080       "Input - iButton"
+#define PLUGIN_NAME_080       "Input - iButton [TESTING]"
 #define PLUGIN_VALUENAME1_080 "iButton"
 
 int8_t Plugin_080_DallasPin;
