@@ -76,7 +76,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
   WiFiClient client;
   String aHost = notificationsettings.Server;
   addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to "))+aHost + notificationsettings.Port);
-  if (!client.connect(aHost.c_str(), notificationsettings.Port)) {
+  if (client.connect(aHost.c_str(), notificationsettings.Port) != 1) {
     addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to "))+aHost + notificationsettings.Port);
     myStatus = false;
   }

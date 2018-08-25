@@ -193,12 +193,15 @@ void C013_sendUDP(byte unit, byte* data, byte size)
     remoteNodeIP = {255, 255, 255, 255};
   else
     remoteNodeIP = Nodes[unit].ip;
-  C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
+  if (!beginWiFiUDP_randomPort(C013_portUDP)) return;
+  if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) return;
   C013_portUDP.write(data, size);
   C013_portUDP.endPacket();
+  C013_portUDP.stop();
 }
 
 void C013_Receive(struct EventStruct *event) {
+  if (event->Par2 < 6) return;
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     if (event->Data[1] > 1 && event->Data[1] < 6)
     {
@@ -222,23 +225,27 @@ void C013_Receive(struct EventStruct *event) {
     case 3: // sensor info
       {
         struct infoStruct infoReply;
-        memcpy((byte*)&infoReply, (byte*)event->Data, sizeof(infoStruct));
+        if (static_cast<size_t>(event->Par2) < sizeof(infoStruct)) {
+          addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than infoStruct, discarded"));
+        } else {
+          memcpy((byte*)&infoReply, (byte*)event->Data, sizeof(infoStruct));
 
-        // to prevent flash wear out (bugs in communication?) we can only write to an empty task
-        // so it will write only once and has to be cleared manually through webgui
-        if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
-        {
-          taskClear(infoReply.destTaskIndex, false);
-          Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
-          Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
-          for (byte x = 0; x < CONTROLLER_MAX; x++)
-            Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
-          strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
-          for (byte x = 0; x < VARS_PER_TASK; x++)
-            strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
-          ExtraTaskSettings.TaskIndex = infoReply.destTaskIndex;
-          SaveTaskSettings(infoReply.destTaskIndex);
-          SaveSettings();
+          // to prevent flash wear out (bugs in communication?) we can only write to an empty task
+          // so it will write only once and has to be cleared manually through webgui
+          if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
+          {
+            taskClear(infoReply.destTaskIndex, false);
+            Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
+            Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
+            for (byte x = 0; x < CONTROLLER_MAX; x++)
+              Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
+            strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
+            for (byte x = 0; x < VARS_PER_TASK; x++)
+              strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
+            ExtraTaskSettings.TaskIndex = infoReply.destTaskIndex;
+            SaveTaskSettings(infoReply.destTaskIndex);
+            SaveSettings();
+          }
         }
         break;
       }
@@ -252,17 +259,21 @@ void C013_Receive(struct EventStruct *event) {
     case 5: // sensor data
       {
         struct dataStruct dataReply;
-        memcpy((byte*)&dataReply, (byte*)event->Data, sizeof(dataStruct));
+        if (static_cast<size_t>(event->Par2) < sizeof(dataStruct)) {
+          addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than dataStruct, discarded"));
+        } else {
+          memcpy((byte*)&dataReply, (byte*)event->Data, sizeof(dataStruct));
 
-        // only if this task has a remote feed, update values
-        if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
-        {
-          for (byte x = 0; x < VARS_PER_TASK; x++)
+          // only if this task has a remote feed, update values
+          if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
           {
-            UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+            for (byte x = 0; x < VARS_PER_TASK; x++)
+            {
+              UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+            }
+            if (Settings.UseRules)
+              createRuleEvents(dataReply.destTaskIndex);
           }
-          if (Settings.UseRules)
-            createRuleEvents(dataReply.destTaskIndex);
         }
         break;
       }

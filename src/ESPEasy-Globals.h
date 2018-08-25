@@ -188,7 +188,7 @@
 #endif
 
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
-#define INPUT_COMMAND_SIZE                 80
+#define INPUT_COMMAND_SIZE                240 // Affects maximum command length in rules and other commands
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
@@ -303,6 +303,7 @@
 #define RULESETS_MAX                        4
 #define RULES_BUFFER_SIZE                  64
 #define NAME_FORMULA_LENGTH_MAX            40
+#define UDP_PACKETSIZE_MAX               2048
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
@@ -854,7 +855,10 @@ struct ControllerSettingsStruct
     bool connected = false;
     while (retry > 0 && !connected) {
       --retry;
-      connected = client.connect(getIP(), Port);
+      // In case of domain name resolution error result can be negative.
+      // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
+      // Thus must match the result with 1.
+      connected = (client.connect(getIP(), Port) == 1);
       if (connected) return true;
       if (!checkHostReachable(false))
         return false;

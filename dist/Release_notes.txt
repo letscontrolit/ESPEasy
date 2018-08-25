@@ -1,4 +1,43 @@
 -------------------------------------------------
+Changes in release mega-20180822 (since mega-20180818)
+-------------------------------------------------
+
+Release date: Wed Aug 22 04:00:15 CEST 2018
+
+Gijs Noorlander (1):
+      Changed INPUT_COMMAND_SIZE from 80 to 240
+
+TD-er (1):
+      [UDP] Use random outgoing port for NTP and check return values
+
+
+-------------------------------------------------
+Changes in release mega-20180818 (since mega-20180815)
+-------------------------------------------------
+
+Release date: Sat Aug 18 04:00:17 CEST 2018
+
+Edwin Eefting (1):
+      fixed network config for newer versions
+
+TD-er (1):
+      [#1650] Use icons in tabs on web page on small screens
+
+
+-------------------------------------------------
+Changes in release mega-20180815 (since mega-20180809)
+-------------------------------------------------
+
+Release date: Wed Aug 15 04:00:13 CEST 2018
+
+TD-er (1):
+      [core 2.4.2] Update to PlatformIO espressif8266@1.8.0
+
+krikk (1):
+      Update _P047_i2c-soil-moisture-sensor.ino
+
+
+-------------------------------------------------
 Changes in release mega-20180809 (since mega-20180808)
 -------------------------------------------------
 

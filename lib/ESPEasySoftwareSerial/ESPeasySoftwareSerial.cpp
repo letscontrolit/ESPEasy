@@ -70,6 +70,7 @@ ESPeasySoftwareSerial::ESPeasySoftwareSerial(uint8_t receivePin, uint8_t transmi
    m_rxValid = m_txValid = m_txEnableValid = false;
    m_buffer = NULL;
    m_invert = inverse_logic;
+   m_rxEnabled = false;
    if (isValidGPIOpin(receivePin)) {
       m_rxPin = receivePin;
       m_buffSize = buffSize;
@@ -140,6 +141,8 @@ uint8_t ESPeasySoftwareSerial::pinToIndex(uint8_t pin) {
 void ESPeasySoftwareSerial::begin(long speed) {
    // Use getCycleCount() loop to get as exact timing as possible
    m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
+   if (!m_rxEnabled)
+     enableRx(true);
 }
 
 void ESPeasySoftwareSerial::setTransmitEnablePin(uint8_t transmitEnablePin) {
@@ -160,6 +163,7 @@ void ESPeasySoftwareSerial::enableRx(bool on) {
       } else {
          detachInterrupt(m_rxPin);
       }
+      m_rxEnabled = on;
    }
 }
 

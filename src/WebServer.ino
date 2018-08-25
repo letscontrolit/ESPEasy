@@ -557,7 +557,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</head>"
               "<body>"
               "<header class='headermenu'>"
-              "<h1>ESP Easy Mega: {{name}}</h1><div class='menu_button'>&#9776;</div><BR>"
+              "<h1>ESP Easy Mega: {{name}}</h1><BR>"
               "</header>"
               "<section>"
               "<span class='message error'>"
@@ -602,7 +602,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
       "<body class='bodymenu'>"
         "<span class='message' id='rbtmsg'></span>"
         "<header class='headermenu'>"
-          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1><div class='menu_button'>&#9776;</div><BR>"
+          "<h1>ESP Easy Mega: {{name}} {{logo}}</h1><BR>"
           "{{menu}}"
         "</header>"
         "<section>"
@@ -659,15 +659,17 @@ void getWebPageTemplateVar(const String& varName )
 
   else if (varName == F("menu"))
   {
-    static const __FlashStringHelper* gpMenu[8][2] = {
-      F("Main"), F("."),                      //0
-      F("Config"), F("config"),               //1
-      F("Controllers"), F("controllers"),     //2
-      F("Hardware"), F("hardware"),           //3
-      F("Devices"), F("devices"),             //4
-      F("Rules"), F("rules"),                 //5
-      F("Notifications"), F("notifications"), //6
-      F("Tools"), F("tools"),                 //7
+    static const __FlashStringHelper* gpMenu[8][3] = {
+      // See https://github.com/letscontrolit/ESPEasy/issues/1650
+      // Icon,        Full width label,   URL
+      F("&#8962;"),   F("Main"),          F("."),             //0
+      F("&#9881;"),   F("Config"),        F("config"),        //1
+      F("&#128172;"), F("Controllers"),   F("controllers"),   //2
+      F("&#128204;"), F("Hardware"),      F("hardware"),      //3
+      F("&#128268;"), F("Devices"),       F("devices"),       //4
+      F("&#10740;"),  F("Rules"),         F("rules"),         //5
+      F("&#9993;"),   F("Notifications"), F("notifications"), //6
+      F("&#128295;"), F("Tools"),         F("tools"),         //7
     };
 
     TXBuffer += F("<div class='menubar'>");
@@ -681,9 +683,12 @@ void getWebPageTemplateVar(const String& varName )
       if (i == navMenuIndex)
         TXBuffer += F(" active");
       TXBuffer += F("' href='");
-      TXBuffer += gpMenu[i][1];
+      TXBuffer += gpMenu[i][2];
       TXBuffer += F("'>");
       TXBuffer += gpMenu[i][0];
+      TXBuffer += F("<span class='showmenulabel'>");
+      TXBuffer += gpMenu[i][1];
+      TXBuffer += F("</span>");
       TXBuffer += F("</a>");
     }
 
@@ -3660,6 +3665,7 @@ void handle_json()
   bool showWifi = true;
   bool showDataAcquisition = true;
   bool showTaskDetails = true;
+  bool showNodes = true;
   {
     String view = WebServer.arg("view");
     if (view.length() != 0) {
@@ -3668,6 +3674,7 @@ void handle_json()
         showWifi = false;
         showDataAcquisition = false;
         showTaskDetails = false;
+        showNodes =false;
       }
     }
   }
@@ -3719,6 +3726,54 @@ void handle_json()
       stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
       stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
       TXBuffer += F(",\n");
+    }
+    if(showNodes) {
+      bool comma_between=false;
+      for (byte x = 0; x < UNIT_MAX; x++)
+      {
+        if (Nodes[x].ip[0] != 0)
+        {
+
+          char ip[20];
+
+          sprintf_P(ip, PSTR("%u.%u.%u.%u"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+
+          if( comma_between ) {
+            TXBuffer += F(",");
+          } else {
+            comma_between=true;
+            TXBuffer += F("\"nodes\":[\n"); // open json array if >0 nodes
+          }
+
+          TXBuffer += F("{");
+          stream_next_json_object_value(F("nr"), String(x));
+          stream_next_json_object_value(F("name"),
+              (x != Settings.Unit) ? Nodes[x].nodeName : Settings.Name);
+
+          if (Nodes[x].build) {
+            stream_next_json_object_value(F("build"), String(Nodes[x].build));
+          }
+
+          if (Nodes[x].nodeType) {
+            String platform;
+            switch (Nodes[x].nodeType)
+            {
+              case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
+              case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
+              case NODE_TYPE_ID_ESP_EASY32_STD:   platform = F("ESP Easy 32");   break;
+              case NODE_TYPE_ID_ARDUINO_EASY_STD: platform = F("Arduino Easy");  break;
+              case NODE_TYPE_ID_NANO_EASY_STD:    platform = F("Nano Easy");     break;
+            }
+            if (platform.length() > 0)
+              stream_next_json_object_value(F("platform"), platform);
+          }
+          stream_next_json_object_value(F("ip"), ip);
+          stream_last_json_object_value(F("age"),  String( Nodes[x].age ));
+        } // if node info exists
+      } // for loop
+      if(comma_between) {
+        TXBuffer += F("],\n"); // close array if >0 nodes
+      }
     }
   }
 

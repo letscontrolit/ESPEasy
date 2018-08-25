@@ -255,7 +255,7 @@ static const char pgDefaultCSS[] PROGMEM = {
     ".div_br {clear: both; }"
     // The alert message box
     ".alert {padding: 20px; background-color: #f44336; color: white; margin-bottom: 15px; }"
-    ".warning {padding: 20px; background-color: #ffca17; color: white; margin-bottom: 15px; }"    
+    ".warning {padding: 20px; background-color: #ffca17; color: white; margin-bottom: 15px; }"
     // The close button
     ".closebtn {margin-left: 15px; color: white; font-weight: bold; float: right; font-size: 22px; line-height: 20px; cursor: pointer; transition: 0.3s; }"
     // When moving the mouse over the close button
@@ -263,13 +263,16 @@ static const char pgDefaultCSS[] PROGMEM = {
     "section{overflow-x: auto; width: 100%; }"
     // For screens with width less than 960 pixels
     "@media screen and (max-width: 960px) {"
-      "header:hover .menubar {display: block;}"
-      ".menu_button {display: block; text-align: center;}"
-      ".bodymenu{  margin-top: 0px;  }"
-      ".menubar{ display: none; top: 0px;   position: relative;   float: left;   width: 100%;}"
-      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 5px; z-index: 1;}"
-      ".headermenu h1{  padding: 8px 12px; }"
-      ".headermenu  a{  text-align: center;  width: 100%;  padding:7px 10px;  height: auto;   border: 0px;   border-radius:0px; }; }"
+//      "header:hover .menubar {display: block;}"
+//      ".menu_button {display: block; text-align: center;}"
+//      ".bodymenu{  margin-top: 0px;  }"
+//      ".menubar{ display: none; top: 0px;   position: relative;   float: left;   width: 100%;}"
+//      ".headermenu{  position: relative;   height: auto;   float: left;   width: 100%;   padding: 5px; z-index: 1;}"
+//      ".headermenu h1{  padding: 8px 12px; }"
+//      ".headermenu  a{  text-align: center;  width: 100%;  padding:7px 10px;  height: auto;   border: 0px;   border-radius:0px; }; }"
+        "span.showmenulabel { display: none; }"
+        ".menu { max-width: 11vw; max-width: 48px; }"
+
     "\0"
 };
 
