@@ -1,6 +1,6 @@
-#ifdef USES_P078
+#ifdef USES_P079
 //#######################################################################################################
-//#################################### Plugin 078: Wemos Motorshield ##############################
+//#################################### Plugin 079: Wemos Motorshield ##############################
 //#######################################################################################################
 
 // Wemos Motorshield
@@ -11,10 +11,10 @@
 
 
 
-#define PLUGIN_078
-#define PLUGIN_ID_078         78
-#define PLUGIN_NAME_078       "Motor - Wemos Motorshield [TESTING]"
-#define PLUGIN_VALUENAME1_078 "Wemos Motorshield"
+#define PLUGIN_079
+#define PLUGIN_ID_079         79
+#define PLUGIN_NAME_079       "Motor - Wemos Motorshield [TESTING]"
+#define PLUGIN_VALUENAME1_079 "Wemos Motorshield"
 
 // copied from <WEMOS_Motor.h>
 #ifndef __WEMOS_MOTOR_H
@@ -61,10 +61,10 @@ private:
 
 
 
-uint8_t Plugin_078_MotorShield_address = 0x30;
+uint8_t Plugin_079_MotorShield_address = 0x30;
 
 
-boolean Plugin_078(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_079(byte function, struct EventStruct *event, String& string) {
 	boolean success = false;
 
 	//WemosMotor WMS;
@@ -72,7 +72,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string) {
 	switch (function) {
 
 		case PLUGIN_DEVICE_ADD: {
-			Device[++deviceCount].Number = PLUGIN_ID_078;
+			Device[++deviceCount].Number = PLUGIN_ID_079;
 			Device[deviceCount].Type = DEVICE_TYPE_I2C;
 			Device[deviceCount].VType = SENSOR_TYPE_NONE;
 			Device[deviceCount].Ports = 0;
@@ -86,19 +86,19 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_GET_DEVICENAME: {
-			string = F(PLUGIN_NAME_078);
+			string = F(PLUGIN_NAME_079);
 			break;
 		}
 
 		case PLUGIN_GET_DEVICEVALUENAMES: {
 			strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0],
-					PSTR(PLUGIN_VALUENAME1_078));
+					PSTR(PLUGIN_VALUENAME1_079));
 			break;
 		}
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-    	addFormTextBox(F("I2C Address (Hex)"), F("plugin_078_adr"), String(F("0x")) +
+    	addFormTextBox(F("I2C Address (Hex)"), F("plugin_079_adr"), String(F("0x")) +
     			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
 
 			success = true;
@@ -106,7 +106,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_WEBFORM_SAVE: {
-			String plugin1 = WebServer.arg(F("plugin_078_adr"));
+			String plugin1 = WebServer.arg(F("plugin_079_adr"));
 			Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
 
 			success = true;
@@ -114,7 +114,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_INIT: {
-			Plugin_078_MotorShield_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+			Plugin_079_MotorShield_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
 			success = true;
 			break;
@@ -141,8 +141,8 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string) {
         String paramDirection = parseString(tmpString, 3); // Direction
         String paramSpeed     = parseString(tmpString, 4); // Speed
 
-				WemosMotor WMS(Plugin_078_MotorShield_address, paramMotor.toInt(), 1000);
-        addLog(LOG_LEVEL_DEBUG, String(F("WemosMotorShield: Address = ")) + Plugin_078_MotorShield_address + String(F(" Motor = ")) + paramMotor);
+				WemosMotor WMS(Plugin_079_MotorShield_address, paramMotor.toInt(), 1000);
+        addLog(LOG_LEVEL_DEBUG, String(F("WemosMotorShield: Address = ")) + Plugin_079_MotorShield_address + String(F(" Motor = ")) + paramMotor);
 
 				if (paramDirection.equalsIgnoreCase(F("Forward"))) {
 					WMS.setmotor(_CW, paramSpeed.toInt());
@@ -286,4 +286,4 @@ void WemosMotor::setmotor(uint8_t dir)
 // end copied from <WEMOS_Motor.cpp>
 
 #endif
-// USES_P078
+// USES_P079
