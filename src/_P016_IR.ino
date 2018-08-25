@@ -215,15 +215,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           }
 #endif  // DECODE_HAIER_AC
           // If we got a human-readable description of the message, display it.
-          if (log != "")  log += ("Mesg Desc.: " + log);
-
+          if (log != "") addLog(LOG_LEVEL_INFO, log);
+		  
           // Output RAW timing info of the result.
           //log += resultToTimingInfo(&results);  //not showing up nicely in the web log... Maybe send them to serial?
           // Output the results as source code
           //  log += resultToSourceCode(&results); //not showing up nicely in the web log... Maybe send them to serial?
-          addLog(LOG_LEVEL_INFO, log);
           sendData(event);
-
         }
         success = true;
         break;
