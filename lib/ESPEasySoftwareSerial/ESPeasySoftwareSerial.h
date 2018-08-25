@@ -54,6 +54,12 @@ public:
 
    void rxRead();
 
+   // AVR compatibility methods
+   bool listen() { enableRx(true); return true; }
+   void end() { stopListening(); }
+   bool isListening() { return m_rxEnabled; }
+   bool stopListening() { enableRx(false); return true; }
+
    using Print::write;
 
 private:
@@ -62,7 +68,8 @@ private:
 
    // Member variables
    uint8_t m_rxPin, m_txPin, m_txEnablePin;
-   bool m_rxValid, m_txValid, m_txEnableValid;
+   bool m_rxValid, m_rxEnabled;
+   bool m_txValid, m_txEnableValid;
    bool m_invert;
    unsigned long m_bitTime;
    uint16_t m_inPos, m_outPos;
