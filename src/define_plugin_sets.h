@@ -446,6 +446,7 @@ To create/register a plugin, you have to :
     #define USES_P075   // Nextion
 
     #define USES_P078   // Eastron Modbus Energy meters
+    #define USES_P079   // Wemos Motoshield
 #endif
 
 

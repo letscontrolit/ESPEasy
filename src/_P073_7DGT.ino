@@ -60,8 +60,8 @@ bool    p073_shift;
 //   - pos 10   - Space " "
 //   - pos 11   - minus symbol "-"
 //   - pos 12   - degree symbol "°"
-const byte CharTableTM1637  [13] = {B00111111,B00000110,B01011011,B01001111,B01100110,B01101101,B01111101,B00000111,B01111111,B01101111,B00000000,B01000000,B01100011};
-const byte CharTableMAX7219 [13] = {B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,B01111111,B01111011,B00000000,B00000001,B01100011};
+const PROGMEM byte CharTableTM1637  [13] = {B00111111,B00000110,B01011011,B01001111,B01100110,B01101101,B01111101,B00000111,B01111111,B01101111,B00000000,B01000000,B01100011};
+const PROGMEM byte CharTableMAX7219 [13] = {B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,B01111111,B01111011,B00000000,B00000001,B01100011};
 
 boolean Plugin_073(byte function, struct EventStruct *event, String& string)
 {
@@ -111,8 +111,11 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_073_displout"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_073_brightness"));
         if (Plugin_073_7dgt) {
+          // dat_pin:
           Plugin_073_7dgt->pin1 = Settings.TaskDevicePin1[event->TaskIndex];
+          // clk_pin:
           Plugin_073_7dgt->pin2 = Settings.TaskDevicePin2[event->TaskIndex];
+          // cs_pin:
           Plugin_073_7dgt->pin3 = Settings.TaskDevicePin3[event->TaskIndex];
           Plugin_073_7dgt->type = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
           Plugin_073_7dgt->output = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -125,16 +128,16 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             case 2:
               {
                 int tm1637_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 2;
-                tm1637_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], tm1637_bright, true);
+                tm1637_SetPowerBrightness(tm1637_bright, true);
                 if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 0)
-                  tm1637_ClearDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+                  tm1637_ClearDisplay();
                 break;
               }
             case 3:    // set brightness of MAX7219
               {
-                max7219_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex], Settings.TaskDevicePluginConfig[event->TaskIndex][2], true);
+                max7219_SetPowerBrightness(Settings.TaskDevicePluginConfig[event->TaskIndex][2], true);
                 if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 0)
-                  max7219_ClearDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex]);
+                  max7219_ClearDisplay();
                 break;
               }
           }
@@ -159,15 +162,15 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
             case 1:
             case 2:
               {
-                tm1637_InitDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
+                tm1637_InitDisplay();
                 int tm1637_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][2] / 2;
-                tm1637_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], tm1637_bright, true);
+                tm1637_SetPowerBrightness(tm1637_bright, true);
                 break;
               }
             case 3:
               {
-                max7219_InitDisplay(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex]);
-                max7219_SetPowerBrightness(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex], Settings.TaskDevicePin3[event->TaskIndex], Settings.TaskDevicePluginConfig[event->TaskIndex][2], true);
+                max7219_InitDisplay();
+                max7219_SetPowerBrightness(Settings.TaskDevicePluginConfig[event->TaskIndex][2], true);
                 break;
               }
           }
@@ -202,7 +205,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
                 p073_FillBufferWithNumber(String(int(event->Par1)));
               else
                 p073_FillBufferWithDash();
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_4DIGIT);
+              tm1637_ShowBuffer(TM1637_4DIGIT);
               break;
             case 1:
             {
@@ -210,7 +213,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
                 p073_FillBufferWithNumber(tmpStr.substring(comma1+1).c_str());
               else
                 p073_FillBufferWithDash();
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_4DIGIT);
+              tm1637_ShowBuffer(TM1637_4DIGIT);
               break;
             }
             case 2:
@@ -220,7 +223,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               else
                 p073_FillBufferWithDash();
               tm1637_SwapDigitInBuffer();     // only needed for 6-digits displays
-              tm1637_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, TM1637_6DIGIT);
+              tm1637_ShowBuffer(TM1637_6DIGIT);
               break;
             }
             case 3:
@@ -231,7 +234,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
                 }
                 else
                   p073_FillBufferWithDash();
-                max7219_ShowBuffer(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+                max7219_ShowBuffer();
               }
               break;
             }
@@ -263,7 +266,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
                 if (p073_temptemp == 0 && p073_tempflagdot)
                   p073_showbuffer[5] = 0;
               }
-              tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, p073_tempflagdot, 4);
+              tm1637_ShowTimeTemp4(p073_tempflagdot, 4);
               break;
             }
             case 2:
@@ -279,7 +282,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
                 if (p073_temptemp == 0 && p073_tempflagdot)
                   p073_showbuffer[5] = 0;
               }
-              tm1637_ShowTemp6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, p073_tempflagdot);
+              tm1637_ShowTemp6(p073_tempflagdot);
               break;
             }
             case 3:
@@ -288,7 +291,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               p073_FillBufferWithTemp(p073_temptemp);
               if (p073_temptemp == 0)
                 p073_showbuffer[5] = 0;
-              max7219_ShowTemp(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+              max7219_ShowTemp();
               break;
             }
           }
@@ -326,10 +329,10 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
               case 1:
               case 2:
               { int tm1637_bright = Plugin_073_7dgt->brightness / 2;
-                tm1637_SetPowerBrightness(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, tm1637_bright, p073_displayon);
+                tm1637_SetPowerBrightness(tm1637_bright, p073_displayon);
                 break; }
               case 3:
-              { max7219_SetPowerBrightness(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->brightness, p073_displayon);
+              { max7219_SetPowerBrightness(Plugin_073_7dgt->brightness, p073_displayon);
                 break; }
             }
           }
@@ -357,23 +360,23 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
           case 0:
           case 1:
           {
-            tm1637_ShowTimeTemp4(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep, 0);
+            tm1637_ShowTimeTemp4(Plugin_073_7dgt->timesep, 0);
             break;
           }
           case 2:
           {
             if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 3)
-              tm1637_ShowDate6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
+              tm1637_ShowDate6(Plugin_073_7dgt->timesep);
             else
-              tm1637_ShowTime6(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->timesep);
+              tm1637_ShowTime6(Plugin_073_7dgt->timesep);
             break;
           }
           case 3:
           {
             if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 3)
-              max7219_ShowDate(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3);
+              max7219_ShowDate();
             else
-              max7219_ShowTime(Plugin_073_7dgt->pin1, Plugin_073_7dgt->pin2, Plugin_073_7dgt->pin3, Plugin_073_7dgt->timesep);
+              max7219_ShowTime(Plugin_073_7dgt->timesep);
             break;
           }
         }
@@ -383,7 +386,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void p073_FillBufferWithTime()
+void p073_FillBufferWithTime(void)
 {
   memset(p073_showbuffer,0,sizeof(p073_showbuffer));
   byte sevendgt_hours = hour();
@@ -401,7 +404,7 @@ void p073_FillBufferWithTime()
   p073_showbuffer[4] = p073_digit1; p073_showbuffer[5] = p073_digit2;
 }
 
-void p073_FillBufferWithDate()
+void p073_FillBufferWithDate(void)
 {
   memset(p073_showbuffer,0,sizeof(p073_showbuffer));
   byte sevendgt_day = day();
@@ -466,7 +469,7 @@ void p073_FillBufferWithTemp(long temperature)
   p073_showbuffer[7] = 12;  // degree "°"
 }
 
-void p073_FillBufferWithDash()  // in case of error show all dashes
+void p073_FillBufferWithDash(void)  // in case of error show all dashes
 {
   memset(p073_showbuffer,11,sizeof(p073_showbuffer));
 }
@@ -475,12 +478,12 @@ void p073_FillBufferWithDash()  // in case of error show all dashes
 //---- TM1637 specific functions ----
 //===================================
 
-#define CLK_HIGH()  digitalWrite(clk_pin, HIGH)
-#define CLK_LOW()   digitalWrite(clk_pin, LOW)
-#define DIO_HIGH()  pinMode(dio_pin, INPUT)
-#define DIO_LOW()   pinMode(dio_pin, OUTPUT)
+#define CLK_HIGH()  digitalWrite(Plugin_073_7dgt->pin2, HIGH)
+#define CLK_LOW()   digitalWrite(Plugin_073_7dgt->pin2, LOW)
+#define DIO_HIGH()  pinMode(Plugin_073_7dgt->pin1, INPUT)
+#define DIO_LOW()   pinMode(Plugin_073_7dgt->pin1, OUTPUT)
 
-void tm1637_i2cStart (uint8_t clk_pin, uint8_t dio_pin)
+void tm1637_i2cStart (void)
 {
   if (PLUGIN_073_DEBUG) {
     String log = F("7DGT : Comm Start");
@@ -492,7 +495,7 @@ void tm1637_i2cStart (uint8_t clk_pin, uint8_t dio_pin)
   DIO_LOW();
 }
 
-void tm1637_i2cStop (uint8_t clk_pin, uint8_t dio_pin)
+void tm1637_i2cStop (void)
 {
   if (PLUGIN_073_DEBUG) {
     String log = F("7DGT : Comm Stop");
@@ -507,15 +510,15 @@ void tm1637_i2cStop (uint8_t clk_pin, uint8_t dio_pin)
   DIO_HIGH();
 }
 
-void tm1637_i2cAck (uint8_t clk_pin, uint8_t dio_pin)
+void tm1637_i2cAck (void)
 {
   bool dummyAck = false;
   CLK_LOW();
-  pinMode(dio_pin, INPUT_PULLUP);
+  pinMode(Plugin_073_7dgt->pin1, INPUT_PULLUP);
   //DIO_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
-  //while(digitalRead(dio_pin));
-  dummyAck = digitalRead(dio_pin);
+  //while(digitalRead(Plugin_073_7dgt->pin1));
+  dummyAck = digitalRead(Plugin_073_7dgt->pin1);
   if (PLUGIN_073_DEBUG) {
     String log = F("7DGT : Comm ACK=");
     if (dummyAck == 0) { log += F("TRUE"); } else { log += F("FALSE"); }
@@ -524,10 +527,10 @@ void tm1637_i2cAck (uint8_t clk_pin, uint8_t dio_pin)
   CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_LOW();
-  pinMode(dio_pin, OUTPUT);
+  pinMode(Plugin_073_7dgt->pin1, OUTPUT);
 }
 
-void tm1637_i2cWrite (uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
+void tm1637_i2cWrite (uint8_t bytetoprint)
 {
   if (PLUGIN_073_DEBUG) {
     String log = F("7DGT : WriteByte");
@@ -545,20 +548,16 @@ void tm1637_i2cWrite (uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint)
   }
 }
 
-void tm1637_ClearDisplay (uint8_t clk_pin, uint8_t dio_pin)
+void tm1637_ClearDisplay (void)
 {
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0);      tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0xC0);   tm1637_i2cAck();
+  for (uint8_t i=0; i<6; i++)
+    tm1637_i2cWrite(0);      tm1637_i2cAck();
+  tm1637_i2cStop();
 }
 
-void tm1637_SetPowerBrightness (uint8_t clk_pin, uint8_t dio_pin, uint8_t brightlvl, bool poweron)
+void tm1637_SetPowerBrightness (uint8_t brightlvl, bool poweron)
 {
   if (PLUGIN_073_DEBUG) {
     String log = F("7DGT : Set BRIGHT");
@@ -569,95 +568,95 @@ void tm1637_SetPowerBrightness (uint8_t clk_pin, uint8_t dio_pin, uint8_t bright
     brightvalue = TM1637_POWER_ON  | brightvalue;
   else
     brightvalue = TM1637_POWER_OFF | brightvalue;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, brightvalue);
-  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(brightvalue);
+  tm1637_i2cAck();
+  tm1637_i2cStop();
 }
 
-void tm1637_InitDisplay(uint8_t clk_pin, uint8_t dio_pin)
+void tm1637_InitDisplay(void)
 {
-  pinMode(clk_pin, OUTPUT);
-  pinMode(dio_pin, OUTPUT);
+  pinMode(Plugin_073_7dgt->pin2, OUTPUT); // clk_pin
+  pinMode(Plugin_073_7dgt->pin1, OUTPUT); // dat_pin
   CLK_HIGH();
   DIO_HIGH();
-//  pinMode(dio_pin, INPUT_PULLUP);
-//  pinMode(clk_pin, OUTPUT);
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0x40);
-  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
-  tm1637_ClearDisplay(clk_pin, dio_pin);
+//  pinMode(Plugin_073_7dgt->pin1, INPUT_PULLUP);
+//  pinMode(Plugin_073_7dgt->pin2, OUTPUT);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0x40);
+  tm1637_i2cAck();
+  tm1637_i2cStop();
+  tm1637_ClearDisplay();
 }
 
-void tm1637_ShowTime6(uint8_t clk_pin, uint8_t dio_pin, bool sep)
+void tm1637_ShowTime6(bool sep)
 {
   byte p073_datashowpos1;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[2]]);   tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0xC0);                                  tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[2]));   tm1637_i2cAck();
   // add bit for colon on second digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1]];
+    p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[1]);
     if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[5]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[4]]);   tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cWrite(p073_datashowpos1);                     tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[0]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[5]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[4]));   tm1637_i2cAck();
   // add bit for colon on fourth digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[3]];
+    p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[3]);
     if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cWrite(p073_datashowpos1);                     tm1637_i2cAck();
+  tm1637_i2cStop();
 }
 
-void tm1637_ShowDate6(uint8_t clk_pin, uint8_t dio_pin, bool sep)
+void tm1637_ShowDate6(bool sep)
 {
   byte p073_datashowpos1;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                  tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[2]]);   tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0xC0);                                  tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[2]));   tm1637_i2cAck();
   // add bit for colon on second digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1]];
+    p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[1]);
     if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[7]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[6]]);   tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cWrite(p073_datashowpos1);                     tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[0]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[7]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[6]));   tm1637_i2cAck();
   // add bit for colon on fourth digit if required
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[3]];
+    p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[3]);
     if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cWrite(p073_datashowpos1);                     tm1637_i2cAck();
+  tm1637_i2cStop();
 }
 
-void tm1637_ShowTemp6(uint8_t clk_pin, uint8_t dio_pin, bool sep)
+void tm1637_ShowTemp6(bool sep)
 {
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                  tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0xC0);                                  tm1637_i2cAck();
   // add bit for colon on second digit if required
-    byte p073_datashowpos1 = CharTableTM1637[p073_showbuffer[5]];
+    byte p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[5]);
     if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                     tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[4]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[10]);                   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[10]);                   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[7]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[6]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cWrite(p073_datashowpos1);                     tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[4]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(10));                   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(10));                   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[7]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[6]));   tm1637_i2cAck();
+  tm1637_i2cStop();
 }
 
-void tm1637_ShowTimeTemp4(uint8_t clk_pin, uint8_t dio_pin, bool sep, byte bufoffset)
+void tm1637_ShowTimeTemp4(bool sep, byte bufoffset)
 {
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                                            tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[0+bufoffset]]);   tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0xC0);                                            tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[0+bufoffset]));   tm1637_i2cAck();
   // add bit for colon on second digit if required
-    byte p073_datashowpos1 = CharTableTM1637[p073_showbuffer[1+bufoffset]];
+    byte p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[1+bufoffset]);
     if (sep) p073_datashowpos1 |= 0b10000000;
-  tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);                               tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[2+bufoffset]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, CharTableTM1637[p073_showbuffer[3+bufoffset]]);   tm1637_i2cAck(clk_pin, dio_pin);
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cWrite(p073_datashowpos1);                               tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[2+bufoffset]));   tm1637_i2cAck();
+  tm1637_i2cWrite(get_byte_CharTableTM1637(p073_showbuffer[3+bufoffset]));   tm1637_i2cAck();
+  tm1637_i2cStop();
 }
 
 void tm1637_SwapDigitInBuffer() {
@@ -673,17 +672,17 @@ void tm1637_SwapDigitInBuffer() {
   }
 }
 
-void tm1637_ShowBuffer(uint8_t clk_pin, uint8_t dio_pin, byte digits)
+void tm1637_ShowBuffer(byte digits)
 {
   byte p073_datashowpos1;
-  tm1637_i2cStart(clk_pin, dio_pin);
-  tm1637_i2cWrite(clk_pin, dio_pin, 0xC0);                            tm1637_i2cAck(clk_pin, dio_pin);
+  tm1637_i2cStart();
+  tm1637_i2cWrite(0xC0);                            tm1637_i2cAck();
     for(int i=digits;i<8;i++) {
-    p073_datashowpos1 = CharTableTM1637[p073_showbuffer[i]];
+    p073_datashowpos1 = get_byte_CharTableTM1637(p073_showbuffer[i]);
     if (p073_dotpos == i) p073_datashowpos1 |= 0b10000000;
-    tm1637_i2cWrite(clk_pin, dio_pin, p073_datashowpos1);             tm1637_i2cAck(clk_pin, dio_pin);
+    tm1637_i2cWrite(p073_datashowpos1);             tm1637_i2cAck();
   }
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cStop();
 }
 
 //====================================
@@ -696,93 +695,98 @@ void tm1637_ShowBuffer(uint8_t clk_pin, uint8_t dio_pin, byte digits)
 #define OP_SHUTDOWN    12
 #define OP_DISPLAYTEST 15
 
-void max7219_spiTransfer (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, volatile byte opcode, volatile byte data)
+void max7219_spiTransfer (byte opcode, byte data)
 {
   p073_spidata[0]=(byte)0;  p073_spidata[1]=(byte)0;
   p073_spidata[1]=opcode;   p073_spidata[0]=data;
-  digitalWrite(cs_pin,LOW);
-  shiftOut(din_pin,clk_pin,MSBFIRST,p073_spidata[1]);
-  shiftOut(din_pin,clk_pin,MSBFIRST,p073_spidata[0]);
-  digitalWrite(cs_pin,HIGH);
+  digitalWrite(Plugin_073_7dgt->pin3,LOW);
+  shiftOut(Plugin_073_7dgt->pin1,Plugin_073_7dgt->pin2,MSBFIRST,p073_spidata[1]);
+  shiftOut(Plugin_073_7dgt->pin1,Plugin_073_7dgt->pin2,MSBFIRST,p073_spidata[0]);
+  digitalWrite(Plugin_073_7dgt->pin3,HIGH); // cs_pin
 }
 
-void max7219_ClearDisplay (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
+void max7219_ClearDisplay (void)
 {
   for(int i=0;i<8;i++) {
-    max7219_spiTransfer(din_pin, clk_pin, cs_pin, i+1, 0);
+    max7219_spiTransfer(i+1, 0);
   }
 }
 
-void max7219_SetPowerBrightness (uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, uint8_t brightlvl, bool poweron)
+void max7219_SetPowerBrightness (uint8_t brightlvl, bool poweron)
 {
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_INTENSITY, brightlvl);
+  max7219_spiTransfer(OP_INTENSITY, brightlvl);
   if (poweron)
-    max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, 1);
+    max7219_spiTransfer(OP_SHUTDOWN, 1);
   else
-    max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN, 0);
+    max7219_spiTransfer(OP_SHUTDOWN, 0);
 }
 
-void max7219_SetDigit(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, int dgtpos, byte dgtvalue, boolean showdot)
+void max7219_SetDigit(int dgtpos, byte dgtvalue, boolean showdot)
 {
   byte p073_tempvalue;
-  p073_tempvalue = CharTableMAX7219[dgtvalue];
+  p073_tempvalue = pgm_read_byte(&CharTableMAX7219[dgtvalue]);
   if(showdot)
     p073_tempvalue |= 0b10000000;
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, dgtpos+1, p073_tempvalue);
+  max7219_spiTransfer(dgtpos+1, p073_tempvalue);
 }
 
-void max7219_InitDisplay(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
+void max7219_InitDisplay(void)
 {
-  pinMode(din_pin, OUTPUT);
-  pinMode(clk_pin, OUTPUT);
-  pinMode(cs_pin, OUTPUT);
-  digitalWrite(cs_pin, HIGH);
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_DISPLAYTEST, 0);
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SCANLIMIT, 7);    // scanlimit setup to max at Init
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_DECODEMODE, 0);
-  max7219_ClearDisplay(din_pin, clk_pin, cs_pin);
-  max7219_SetPowerBrightness(din_pin, clk_pin, cs_pin,0,false);
+  pinMode(Plugin_073_7dgt->pin1, OUTPUT); // dat_pin
+  pinMode(Plugin_073_7dgt->pin2, OUTPUT); // clk_pin
+  pinMode(Plugin_073_7dgt->pin3, OUTPUT); // cs_pin
+  digitalWrite(Plugin_073_7dgt->pin3, HIGH); // cs_pin
+  max7219_spiTransfer(OP_DISPLAYTEST, 0);
+  max7219_spiTransfer(OP_SCANLIMIT, 7);    // scanlimit setup to max at Init
+  max7219_spiTransfer(OP_DECODEMODE, 0);
+  max7219_ClearDisplay();
+  max7219_SetPowerBrightness(0, false);
 }
 
-void max7219_ShowTime(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin, bool sep)
+void max7219_ShowTime(bool sep)
 {
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 0, p073_showbuffer[5], false);
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 1, p073_showbuffer[4], false);
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 3, p073_showbuffer[3], false);
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 4, p073_showbuffer[2], false);
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 6, p073_showbuffer[1], false);
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 7, p073_showbuffer[0], false);
+  max7219_SetDigit(0, p073_showbuffer[5], false);
+  max7219_SetDigit(1, p073_showbuffer[4], false);
+  max7219_SetDigit(3, p073_showbuffer[3], false);
+  max7219_SetDigit(4, p073_showbuffer[2], false);
+  max7219_SetDigit(6, p073_showbuffer[1], false);
+  max7219_SetDigit(7, p073_showbuffer[0], false);
   if (sep) {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 2, 11, false);
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 5, 11, false);
+    max7219_SetDigit(2, 11, false);
+    max7219_SetDigit(5, 11, false);
   }
   else {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 2, 10, false);
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, 5, 10, false);
+    max7219_SetDigit(2, 10, false);
+    max7219_SetDigit(5, 10, false);
   }
 }
 
-void max7219_ShowTemp(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
+void max7219_ShowTemp(void)
 {
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 0, 10, false);
+  max7219_SetDigit(0, 10, false);
   byte dotflags[8] = {false,false,false,false,false,true,false,false};
   for(int i=1;i<8;i++)
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, i, p073_showbuffer[8-i], dotflags[8-i]);
+    max7219_SetDigit(i, p073_showbuffer[8-i], dotflags[8-i]);
 }
 
-void max7219_ShowDate(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
+void max7219_ShowDate(void)
 {
   byte dotflags[8] = {false,true,false,true,false,false,false,false};
   for(int i=0;i<8;i++)
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, i, p073_showbuffer[7-i], dotflags[7-i]);
+    max7219_SetDigit(i, p073_showbuffer[7-i], dotflags[7-i]);
 }
 
-void max7219_ShowBuffer(uint8_t din_pin, uint8_t clk_pin, uint8_t cs_pin)
+void max7219_ShowBuffer(void)
 {
   byte dotflags[8] = {false,false,false,false,false,false,false,false};
   if (p073_dotpos >= 0) dotflags[p073_dotpos] = true;
   for(int i=0;i<8;i++)
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, i, p073_showbuffer[7-i], dotflags[7-i]);
+    max7219_SetDigit(i, p073_showbuffer[7-i], dotflags[7-i]);
+}
+
+uint8_t get_byte_CharTableTM1637(uint8_t index)
+{
+  return pgm_read_byte(&CharTableTM1637[index]);
 }
 
 #endif // USES_P073
