@@ -12,7 +12,7 @@
 
 #define PLUGIN_078
 #define PLUGIN_ID_078         78
-#define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120C"
+#define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120C [TESTING]"
 #define PLUGIN_VALUENAME1_078 "Voltage"
 
 boolean Plugin_078_init = false;
