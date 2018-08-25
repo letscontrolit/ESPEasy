@@ -3727,53 +3727,53 @@ void handle_json()
       stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
       TXBuffer += F(",\n");
     }
-  }
-  if(showNodes) {
-    bool comma_between=false;
-    for (byte x = 0; x < UNIT_MAX; x++)
-    {
-      if (Nodes[x].ip[0] != 0)
+    if(showNodes) {
+      bool comma_between=false;
+      for (byte x = 0; x < UNIT_MAX; x++)
       {
+        if (Nodes[x].ip[0] != 0)
+        {
 
-        char ip[20];
+          char ip[20];
 
-        sprintf_P(ip, PSTR("%u.%u.%u.%u"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+          sprintf_P(ip, PSTR("%u.%u.%u.%u"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
 
-        if( comma_between ) {
-          TXBuffer += F(",");
-        } else {
-          comma_between=true;
-          TXBuffer += F("\"nodes\":[\n"); // open json array if >0 nodes
-        }
-
-        TXBuffer += F("{");
-        stream_next_json_object_value(F("nr"), String(x));
-        stream_next_json_object_value(F("name"),
-            (x != Settings.Unit) ? Nodes[x].nodeName : Settings.Name);
-
-        if (Nodes[x].build) {
-          stream_next_json_object_value(F("build"), String(Nodes[x].build));
-        }
-
-        if (Nodes[x].nodeType) {
-          String platform;
-          switch (Nodes[x].nodeType)
-          {
-            case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
-            case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
-            case NODE_TYPE_ID_ESP_EASY32_STD:   platform = F("ESP Easy 32");   break;
-            case NODE_TYPE_ID_ARDUINO_EASY_STD: platform = F("Arduino Easy");  break;
-            case NODE_TYPE_ID_NANO_EASY_STD:    platform = F("Nano Easy");     break;
+          if( comma_between ) {
+            TXBuffer += F(",");
+          } else {
+            comma_between=true;
+            TXBuffer += F("\"nodes\":[\n"); // open json array if >0 nodes
           }
-          if (platform.length() > 0)
-            stream_next_json_object_value(F("platform"), platform);
-        }
-        stream_next_json_object_value(F("ip"), ip);
-        stream_last_json_object_value(F("age"),  String( Nodes[x].age ));
-      } // if node info exists
-    } // for loop
-    if(comma_between) {
-      TXBuffer += F("],\n"); // close array if >0 nodes
+
+          TXBuffer += F("{");
+          stream_next_json_object_value(F("nr"), String(x));
+          stream_next_json_object_value(F("name"),
+              (x != Settings.Unit) ? Nodes[x].nodeName : Settings.Name);
+
+          if (Nodes[x].build) {
+            stream_next_json_object_value(F("build"), String(Nodes[x].build));
+          }
+
+          if (Nodes[x].nodeType) {
+            String platform;
+            switch (Nodes[x].nodeType)
+            {
+              case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
+              case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
+              case NODE_TYPE_ID_ESP_EASY32_STD:   platform = F("ESP Easy 32");   break;
+              case NODE_TYPE_ID_ARDUINO_EASY_STD: platform = F("Arduino Easy");  break;
+              case NODE_TYPE_ID_NANO_EASY_STD:    platform = F("Nano Easy");     break;
+            }
+            if (platform.length() > 0)
+              stream_next_json_object_value(F("platform"), platform);
+          }
+          stream_next_json_object_value(F("ip"), ip);
+          stream_last_json_object_value(F("age"),  String( Nodes[x].age ));
+        } // if node info exists
+      } // for loop
+      if(comma_between) {
+        TXBuffer += F("],\n"); // close array if >0 nodes
+      }
     }
   }
 
