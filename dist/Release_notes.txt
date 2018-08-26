@@ -1,4 +1,51 @@
 -------------------------------------------------
+Changes in release mega-20180826 (since mega-20180822)
+-------------------------------------------------
+
+Release date: Sun Aug 26 04:00:20 CEST 2018
+
+Gerald Hollweger (1):
+      Optimisations     - Save RAM, move constants to flash (CharTableTM1637, CharTableMAX7219)     - Remove unnecessary parameter passing (the interface pins do not change during operation for one instance)
+
+TD-er (16):
+      [MQTT] PubSubClient Add checks for connectivity
+      [Client Connect] Check for success on connecting with client.
+      [Eastron] Add P078 plugin from the Playground (was P150)
+      [SDM] Update library to latest version
+      [Eastron] Make P078 Eastron compile, serial settings do not yet work
+      [Eastron] Add missing SDM_Config_User.h
+      [IR/IRTX] For PullReq #1645 split IR/IRTX to a separate build
+      [JSON] Fix issue when UDP port not set
+      [JSON] Only show node information when generic info is requested
+      [MotorShield] Rename P078 to P079
+      [MotorShield] Cleanup code layout
+      [MotorShield] Added comments in the code and fixes
+      [P080] Dallas iButton Rename P078 to P80
+      [Dallas iButton] Change VType to SENSOR_TYPE_LONG
+      [Build] Add "[TESTING]" labels to P078 and P080
+      [Build Travis] "Scratchpad was set but never used"
+
+TungstenE2 (2):
+      Added Wemos Motorshield Plugin (No. 78)
+      Added Wemos Motorshield Plugin (No. 78)
+
+feuerreiter (1):
+      Adds a overview of known espeasy nodes to the json response. I think this can be useful for own webinterfaces etc.
+
+henfri (2):
+      Create _P078_DallasIButton.ino
+      Update _P078_DallasIButton.ino
+
+jimmys01 (6):
+      IR library added
+      Travis build complaining about unused vars
+      commented out more unused code
+      Travis please be happy :-)
+      IR RX updated
+      Small correction
+
+
+-------------------------------------------------
 Changes in release mega-20180822 (since mega-20180818)
 -------------------------------------------------
 
