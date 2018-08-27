@@ -367,6 +367,22 @@ String get_auth_header(int controller_index) {
   return authHeader;
 }
 
+String get_user_agent_request_header_field() {
+  static unsigned int agent_size = 20;
+  String request;
+  request.reserve(agent_size);
+  request = F("User-Agent: ");
+  request += F("ESP Easy/");
+  request += BUILD;
+  request += '/';
+  request += String(CRCValues.compileDate);
+  request += ' ';
+  request += String(CRCValues.compileTime);
+  request += F("\r\n");
+  agent_size = request.length();
+  return request;
+}
+
 String do_create_http_request(
     const String& hostportString,
     const String& method, const String& uri,
@@ -394,6 +410,7 @@ String do_create_http_request(
   request += F("\r\n");
   request += auth_header;
   request += additional_options;
+  request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
   request += F("\r\n");
   addLog(LOG_LEVEL_DEBUG, request);
