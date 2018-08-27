@@ -903,21 +903,22 @@ struct ControllerSettingsStruct
     return false;
   }
 
+  // Returns 1 if successful, 0 if there was a problem resolving the hostname or port
   int beginPacket(WiFiUDP &client) {
     if (!checkHostReachable(true)) {
       return 0; // Host not reachable
     }
     byte retry = 2;
     int connected = 0;
-    while (retry > 0 && !connected) {
+    while (retry > 0 && connected == 0) {
       --retry;
       connected = client.beginPacket(getIP(), Port);
       if (connected != 0) return connected;
       if (!checkHostReachable(false))
-        return false;
+        return 0;
       delay(10);
     }
-    return false;
+    return 0;
   }
 
   String getHostPortString() const {

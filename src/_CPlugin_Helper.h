@@ -127,6 +127,33 @@ public:
   String json;
 };
 
+/*********************************************************************************************\
+ * C010_queue_element for queueing requests for 010: Generic UDP
+ * This controller only sends a single value per request and thus needs to keep track of the
+ * number of values already sent.
+\*********************************************************************************************/
+class C010_queue_element {
+public:
+  C010_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
+  C010_queue_element(const struct EventStruct* event, byte value_count) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    valuesSent(0),
+    valueCount(value_count) {}
+
+  bool checkDone(bool succesfull) const {
+    if (succesfull) ++valuesSent;
+    return (valuesSent == valueCount);
+  }
+
+  int controller_idx;
+  byte TaskIndex;
+  int idx;
+  String url[VARS_PER_TASK];
+  mutable byte valuesSent;
+  byte valueCount;
+};
 
 
 
@@ -281,10 +308,10 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 #ifdef USES_C009
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(009, 9)
 #endif
-/*
 #ifdef USES_C010
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(010, 10)
 #endif
+/*
 #ifdef USES_C011
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(011, 11)
 #endif
@@ -295,6 +322,9 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
 */
+// When extending this, also extend in Scheduler.ino:
+// void process_interval_timer(unsigned long id, unsigned long lasttimer)
+
 
 /*********************************************************************************************\
  * Helper functions used in a number of controllers
@@ -465,28 +495,53 @@ String create_http_request_auth(int controller_number, int controller_index, Con
   return create_http_request_auth(controller_number, controller_index, ControllerSettings, method, uri, -1);
 }
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  // Use WiFiClient class to create TCP connections
-  String log = F("HTTP : ");
-  log += get_formatted_Controller_number(controller_number);
-  log += F(" connecting to ");
-  log += ControllerSettings.getHostPortString();
-  addLog(LOG_LEVEL_DEBUG, log);
-  if (!ControllerSettings.connectToHost(client))
+void log_connecting_to(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = prefix;
+    log += get_formatted_Controller_number(controller_number);
+    log += F(" connecting to ");
+    log += ControllerSettings.getHostPortString();
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+}
+
+void log_connecting_fail(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = prefix;
+    log += get_formatted_Controller_number(controller_number);
+    log += F(" connection failed");
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+}
+
+bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+  if (!success)
   {
     connectionFailures++;
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      log = F("HTTP : ");
-      log += get_formatted_Controller_number(controller_number);
-      log += F(" connection failed");
-      addLog(LOG_LEVEL_ERROR, log);
-    }
+    log_connecting_fail(prefix, controller_number, ControllerSettings);
     return false;
   }
   statusLED(true);
   if (connectionFailures)
     connectionFailures--;
   return true;
+}
+
+bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
+  log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
+  bool success = ControllerSettings.beginPacket(client) != 0;
+  return count_connection_results(
+      success,
+      F("UDP  : "), controller_number, ControllerSettings);
+}
+
+bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+  // Use WiFiClient class to create TCP connections
+  log_connecting_to(F("HTTP : "), controller_number, ControllerSettings);
+  bool success = ControllerSettings.connectToHost(client);
+  return count_connection_results(
+      success,
+      F("HTTP : "), controller_number, ControllerSettings);
 }
 
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr) {
