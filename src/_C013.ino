@@ -80,7 +80,7 @@ boolean CPlugin_013(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        C013_Send(event, 0, UserVar[event->BaseVarIndex], 0);
+        C013_SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
         break;
       }
 
@@ -98,14 +98,6 @@ boolean CPlugin_013(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic UDP message
 //********************************************************************************
-void C013_Send(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
-{
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-  statusLED(true);
-  C013_SendUDPTaskData(0, event->TaskIndex, event->TaskIndex);
-}
-
 void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
   if (!WiFiConnected(100)) {
