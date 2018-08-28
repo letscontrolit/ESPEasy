@@ -116,9 +116,9 @@ bool do_process_c001_delay_queue(int controller_number, const C001_queue_element
     return false;
 
   // This will send the request to the server
-  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.url);
+  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt);
 
-  addLog(LOG_LEVEL_DEBUG, element.url);
+  addLog(LOG_LEVEL_DEBUG, element.txt);
   return send_via_http(controller_number, client, request);
 }
 

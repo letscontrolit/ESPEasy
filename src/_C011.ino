@@ -117,18 +117,31 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-      	HTTPSend011(event);
+      	success = Create_schedule_HTTP_C011(event);
+        break;
       }
 
   }
   return success;
 }
 
+//********************************************************************************
+// Generic HTTP request
+//********************************************************************************
+bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  WiFiClient client;
+  if (!try_connect_host(controller_number, client, ControllerSettings))
+    return false;
+
+  return send_via_http(controller_number, client, element.txt);
+}
+
+
 
 //********************************************************************************
-// Generic HTTP get request
+// Create request
 //********************************************************************************
-boolean HTTPSend011(struct EventStruct *event)
+boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
   int controller_number = CPLUGIN_ID_011;
   if (!WiFiConnected(100)) {
@@ -167,7 +180,9 @@ boolean HTTPSend011(struct EventStruct *event)
   }
   payload += F("\r\n");
 
-  return send_via_http(controller_number, client, payload);
+  bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+  scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
+  return success;
 }
 
 // parses the string and returns only the the number of name/values we want

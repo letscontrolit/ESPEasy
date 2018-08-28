@@ -107,7 +107,7 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
 
   strcpy_P(log, PSTR("TELNT: Sending cmd"));
   addLog(LOG_LEVEL_DEBUG, log);
-  client.print(element.url);
+  client.print(element.txt);
   delay(10);
   while (client.available())
     client.read();

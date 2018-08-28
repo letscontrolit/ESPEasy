@@ -184,12 +184,12 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       process_c010_delay_queue();
       break;
   #endif
-/*
   #ifdef USES_C011
     case TIMER_C011_DELAY_QUEUE:
       process_c011_delay_queue();
       break;
   #endif
+/*
   #ifdef USES_C012
     case TIMER_C012_DELAY_QUEUE:
       process_c012_delay_queue();

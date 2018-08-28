@@ -22,30 +22,28 @@ public:
 };
 
 /*********************************************************************************************\
- * C001_queue_element for queueing requests for C001.
+ * Simple queue element, only storing controller index and some String
 \*********************************************************************************************/
-class C001_queue_element {
+class simple_queue_element_string_only {
 public:
-  C001_queue_element() : controller_idx(0) {}
-  C001_queue_element(int ctrl_idx, const String& req) :
-       controller_idx(ctrl_idx), url(req) {}
+  simple_queue_element_string_only() : controller_idx(0) {}
+  simple_queue_element_string_only(int ctrl_idx, const String& req) :
+       controller_idx(ctrl_idx), txt(req) {}
 
   int controller_idx;
-  String url;
+  String txt;
 };
+
+
+/*********************************************************************************************\
+ * C001_queue_element for queueing requests for C001.
+\*********************************************************************************************/
+#define C001_queue_element simple_queue_element_string_only
 
 /*********************************************************************************************\
  * C003_queue_element for queueing requests for C003 Nodo Telnet.
 \*********************************************************************************************/
-class C003_queue_element {
-public:
-  C003_queue_element() : controller_idx(0) {}
-  C003_queue_element(int ctrl_idx, const String& req) :
-       controller_idx(ctrl_idx), url(req) {}
-
-  int controller_idx;
-  String url;
-};
+#define C003_queue_element simple_queue_element_string_only
 
 /*********************************************************************************************\
  * C004_queue_element for queueing requests for C004 ThingSpeak.
@@ -101,14 +99,14 @@ public:
 
   bool checkDone(bool succesfull) const {
     if (succesfull) ++valuesSent;
-    return (valuesSent == valueCount);
+    return (valuesSent >= valueCount || valuesSent >= VARS_PER_TASK);
   }
 
   int controller_idx;
   byte TaskIndex;
   int idx;
   String txt[VARS_PER_TASK];
-  mutable byte valuesSent;
+  mutable byte valuesSent;  // Value must be set by const function checkDone()
   byte valueCount;
 };
 
@@ -138,6 +136,11 @@ public:
  * Using queue_element_single_value_base
 \*********************************************************************************************/
 #define C010_queue_element queue_element_single_value_base
+
+/*********************************************************************************************\
+ * C011_queue_element for queueing requests for 011: Generic HTTP Advanced
+\*********************************************************************************************/
+#define C011_queue_element simple_queue_element_string_only
 
 
 
@@ -295,10 +298,10 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 #ifdef USES_C010
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(010, 10)
 #endif
-/*
 #ifdef USES_C011
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(011, 11)
 #endif
+/*
 #ifdef USES_C012
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(012, 12)
 #endif
