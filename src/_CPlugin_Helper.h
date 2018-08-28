@@ -150,7 +150,12 @@ public:
 template<class T>
 struct ControllerDelayHandlerStruct {
   ControllerDelayHandlerStruct() :
-      lastSend(0), minTimeBetweenMessages(100), max_queue_depth(10), attempt(0), max_retries(10), delete_oldest(false) {}
+      lastSend(0),
+      minTimeBetweenMessages(CONTROLLER_DELAY_QUEUE_DELAY_DFLT),
+      max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
+      attempt(0),
+      max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
+      delete_oldest(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
@@ -158,9 +163,9 @@ struct ControllerDelayHandlerStruct {
     max_retries = settings.MaxRetry;
     delete_oldest = settings.DeleteOldest;
     // Set some sound limits when not configured
-    if (max_queue_depth == 0) max_queue_depth = 10;
-    if (max_retries == 0) max_retries = 10;
-    if (minTimeBetweenMessages == 0) minTimeBetweenMessages = 100;
+    if (max_queue_depth == 0) max_queue_depth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+    if (max_retries == 0) max_retries = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+    if (minTimeBetweenMessages == 0) minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
     // No less than 10 msec between messages.
     if (minTimeBetweenMessages < 10) minTimeBetweenMessages = 10;
   }

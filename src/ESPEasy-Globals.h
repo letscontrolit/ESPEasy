@@ -213,6 +213,17 @@
 #define TIMER_C012_DELAY_QUEUE             16
 #define TIMER_C013_DELAY_QUEUE             17
 
+// Minimum delay between messages for a controller to send in msec.
+#define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
+#define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
+// Queue length for controller messages not yet sent.
+#define CONTROLLER_DELAY_QUEUE_DEPTH_MAX   25
+#define CONTROLLER_DELAY_QUEUE_DEPTH_DFLT  10
+// Number of retries to send a message by a controller.
+// N.B. Retries without a connection to wifi do not count as retry.
+#define CONTROLLER_DELAY_QUEUE_RETRY_MAX   10
+#define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
+
 
 #define PLUGIN_INIT_ALL                     1
 #define PLUGIN_INIT                         2
