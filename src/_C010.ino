@@ -53,14 +53,14 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
           bool isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
           if (isvalid) {
-            element.url[x] = "";
-            element.url[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.url[x], event, false);
-            element.url[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-            element.url[x].replace(F("%value%"), formattedValue);
+            element.txt[x] = "";
+            element.txt[x] += ControllerSettings.Publish;
+            parseControllerVariables(element.txt[x], event, false);
+            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+            element.txt[x].replace(F("%value%"), formattedValue);
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
               char log[80];
-              element.url[x].toCharArray(log, 80);
+              element.txt[x].toCharArray(log, 80);
               addLog(LOG_LEVEL_DEBUG_MORE, log);
             }
           }
@@ -79,19 +79,19 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
 // Generic UDP message
 //********************************************************************************
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  while (element.url[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent] == "") {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
     if (element.checkDone(true))
       return true;
   }
-  
+
   if (!try_connect_host(controller_number, portUDP, ControllerSettings))
     return false;
 
   portUDP.write(
-    (uint8_t*)element.url[element.valuesSent].c_str(),
-              element.url[element.valuesSent].length());
+    (uint8_t*)element.txt[element.valuesSent].c_str(),
+              element.txt[element.valuesSent].length());
   return element.checkDone(portUDP.endPacket() != 0);
 }
 #endif

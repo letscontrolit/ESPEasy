@@ -63,13 +63,13 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
           bool isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
           if (isvalid) {
-            element.url[x] = "/";
-            element.url[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.url[x], event, true);
+            element.txt[x] = "/";
+            element.txt[x] += ControllerSettings.Publish;
+            parseControllerVariables(element.txt[x], event, true);
 
-            element.url[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
-            element.url[x].replace(F("%value%"), formattedValue);
-            addLog(LOG_LEVEL_DEBUG_MORE, element.url[x]);
+            element.txt[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            element.txt[x].replace(F("%value%"), formattedValue);
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
         success = C008_DelayHandler.addToQueue(element);
@@ -85,7 +85,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 // Generic HTTP get request
 //********************************************************************************
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  while (element.url[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent] == "") {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
     if (element.checkDone(true))
@@ -96,7 +96,7 @@ bool do_process_c008_delay_queue(int controller_number, const C008_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.url[element.valuesSent]);
+  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
   return element.checkDone(send_via_http(controller_number, client, request));
 }
 

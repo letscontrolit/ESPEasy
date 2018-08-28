@@ -86,14 +86,13 @@ public:
 };
 
 /*********************************************************************************************\
- * C008_queue_element for queueing requests for 008: Generic HTTP
- * This controller only sends a single value per request and thus needs to keep track of the
- * number of values already sent.
+ * Base class for controllers that only send a single value per request and thus needs to
+ * keep track of the number of values already sent.
 \*********************************************************************************************/
-class C008_queue_element {
+class queue_element_single_value_base {
 public:
-  C008_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
-  C008_queue_element(const struct EventStruct* event, byte value_count) :
+  queue_element_single_value_base() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
+  queue_element_single_value_base(const struct EventStruct* event, byte value_count) :
     controller_idx(event->ControllerIndex),
     TaskIndex(event->TaskIndex),
     idx(event->idx),
@@ -108,10 +107,17 @@ public:
   int controller_idx;
   byte TaskIndex;
   int idx;
-  String url[VARS_PER_TASK];
+  String txt[VARS_PER_TASK];
   mutable byte valuesSent;
   byte valueCount;
 };
+
+
+/*********************************************************************************************\
+ * C008_queue_element for queueing requests for 008: Generic HTTP
+ * Using queue_element_single_value_base
+\*********************************************************************************************/
+#define C008_queue_element queue_element_single_value_base
 
 /*********************************************************************************************\
  * C009_queue_element for queueing requests for C009: FHEM HTTP.
@@ -129,31 +135,9 @@ public:
 
 /*********************************************************************************************\
  * C010_queue_element for queueing requests for 010: Generic UDP
- * This controller only sends a single value per request and thus needs to keep track of the
- * number of values already sent.
+ * Using queue_element_single_value_base
 \*********************************************************************************************/
-class C010_queue_element {
-public:
-  C010_queue_element() : controller_idx(0), TaskIndex(0), idx(0), valuesSent(0) {}
-  C010_queue_element(const struct EventStruct* event, byte value_count) :
-    controller_idx(event->ControllerIndex),
-    TaskIndex(event->TaskIndex),
-    idx(event->idx),
-    valuesSent(0),
-    valueCount(value_count) {}
-
-  bool checkDone(bool succesfull) const {
-    if (succesfull) ++valuesSent;
-    return (valuesSent == valueCount);
-  }
-
-  int controller_idx;
-  byte TaskIndex;
-  int idx;
-  String url[VARS_PER_TASK];
-  mutable byte valuesSent;
-  byte valueCount;
-};
+#define C010_queue_element queue_element_single_value_base
 
 
 
