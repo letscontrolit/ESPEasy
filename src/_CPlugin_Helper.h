@@ -142,6 +142,12 @@ public:
 \*********************************************************************************************/
 #define C011_queue_element simple_queue_element_string_only
 
+/*********************************************************************************************\
+ * C012_queue_element for queueing requests for 012: Blynk
+ * Using queue_element_single_value_base
+\*********************************************************************************************/
+#define C012_queue_element queue_element_single_value_base
+
 
 
 /*********************************************************************************************\
@@ -306,10 +312,10 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 #ifdef USES_C011
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(011, 11)
 #endif
-/*
 #ifdef USES_C012
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(012, 12)
 #endif
+/*
 #ifdef USES_C013
   DEFINE_Cxxx_DELAY_QUEUE_MACRO(013, 13)
 #endif
