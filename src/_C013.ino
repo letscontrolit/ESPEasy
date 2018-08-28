@@ -113,19 +113,18 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   for (byte x = 0; x < VARS_PER_TASK; x++)
     strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
 
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
   if (destUnit != 0)
   {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (byte x = firstUnit; x <= lastUnit; x++)
-  {
-    if (x != Settings.Unit){
-      infoReply.destUnit = x;
-      C013_sendUDP(x, (byte*)&infoReply, sizeof(infoStruct));
-      delay(10);
+    infoReply.destUnit = destUnit;
+    C013_sendUDP(destUnit, (byte*)&infoReply, sizeof(infoStruct));
+    delay(10);
+  } else {
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        infoReply.destUnit = it->first;
+        C013_sendUDP(it->first, (byte*)&infoReply, sizeof(infoStruct));
+        delay(10);
+      }
     }
   }
   delay(50);
@@ -143,19 +142,18 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   for (byte x = 0; x < VARS_PER_TASK; x++)
     dataReply.Values[x] = UserVar[dataReply.sourceTaskIndex * VARS_PER_TASK + x];
 
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
   if (destUnit != 0)
   {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (byte x = firstUnit; x <= lastUnit; x++)
-  {
-    if (x != Settings.Unit){
-      dataReply.destUnit = x;
-      C013_sendUDP(x, (byte*) &dataReply, sizeof(dataStruct));
-      delay(10);
+    dataReply.destUnit = destUnit;
+    C013_sendUDP(destUnit, (byte*) &dataReply, sizeof(dataStruct));
+    delay(10);
+  } else {
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        dataReply.destUnit = it->first;
+        C013_sendUDP(it->first, (byte*) &dataReply, sizeof(dataStruct));
+        delay(10);
+      }
     }
   }
   delay(50);
@@ -169,9 +167,14 @@ void C013_sendUDP(byte unit, byte* data, byte size)
   if (!WiFiConnected(100)) {
     return;
   }
-  if (unit != 255)
-    if (Nodes[unit].ip[0] == 0)
+  NodesMap::iterator it;
+  if (unit != 255) {
+    it = Nodes.find(unit);
+    if (it == Nodes.end())
       return;
+    if (it->second.ip[0] == 0)
+      return;
+  }
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("C013 : Send UDP message to ");
     log += unit;
@@ -184,7 +187,7 @@ void C013_sendUDP(byte unit, byte* data, byte size)
   if (unit == 255)
     remoteNodeIP = {255, 255, 255, 255};
   else
-    remoteNodeIP = Nodes[unit].ip;
+    remoteNodeIP = it->second.ip;
   if (!beginWiFiUDP_randomPort(C013_portUDP)) return;
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) return;
   C013_portUDP.write(data, size);

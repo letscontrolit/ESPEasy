@@ -900,25 +900,25 @@ void handle_root() {
     addButton(F("sysinfo"), F("More info"));
 
     TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
-    for (byte x = 0; x < UNIT_MAX; x++)
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
-      if (Nodes[x].ip[0] != 0)
+      if (it->second.ip[0] != 0)
       {
         char url[80];
-        sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+        sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
         html_TR_TD(); TXBuffer += F("Unit ");
-        TXBuffer += String(x);
+        TXBuffer += String(it->first);
         html_TD();
-        if (x != Settings.Unit)
-          TXBuffer += Nodes[x].nodeName;
+        if (it->first != Settings.Unit)
+          TXBuffer += it->second.nodeName;
         else
           TXBuffer += Settings.Name;
         html_TD();
-        if (Nodes[x].build)
-          TXBuffer += String(Nodes[x].build);
+        if (it->second.build)
+          TXBuffer += String(it->second.build);
         html_TD();
-        if (Nodes[x].nodeType)
-          switch (Nodes[x].nodeType)
+        if (it->second.nodeType)
+          switch (it->second.nodeType)
           {
             case NODE_TYPE_ID_ESP_EASY_STD:
               TXBuffer += F("ESP Easy");
@@ -939,7 +939,7 @@ void handle_root() {
         html_TD();
         TXBuffer += url;
         html_TD();
-        TXBuffer += String( Nodes[x].age);
+        TXBuffer += String( it->second.age);
       }
     }
 
@@ -3776,14 +3776,14 @@ void handle_json()
     }
     if(showNodes) {
       bool comma_between=false;
-      for (byte x = 0; x < UNIT_MAX; x++)
+      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
       {
-        if (Nodes[x].ip[0] != 0)
+        if (it->second.ip[0] != 0)
         {
 
           char ip[20];
 
-          sprintf_P(ip, PSTR("%u.%u.%u.%u"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+          sprintf_P(ip, PSTR("%u.%u.%u.%u"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
 
           if( comma_between ) {
             TXBuffer += F(",");
@@ -3793,17 +3793,17 @@ void handle_json()
           }
 
           TXBuffer += F("{");
-          stream_next_json_object_value(F("nr"), String(x));
+          stream_next_json_object_value(F("nr"), String(it->first));
           stream_next_json_object_value(F("name"),
-              (x != Settings.Unit) ? Nodes[x].nodeName : Settings.Name);
+              (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
 
-          if (Nodes[x].build) {
-            stream_next_json_object_value(F("build"), String(Nodes[x].build));
+          if (it->second.build) {
+            stream_next_json_object_value(F("build"), String(it->second.build));
           }
 
-          if (Nodes[x].nodeType) {
+          if (it->second.nodeType) {
             String platform;
-            switch (Nodes[x].nodeType)
+            switch (it->second.nodeType)
             {
               case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
               case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
@@ -3815,7 +3815,7 @@ void handle_json()
               stream_next_json_object_value(F("platform"), platform);
           }
           stream_next_json_object_value(F("ip"), ip);
-          stream_last_json_object_value(F("age"),  String( Nodes[x].age ));
+          stream_last_json_object_value(F("age"),  String( it->second.age ));
         } // if node info exists
       } // for loop
       if(comma_between) {
@@ -4401,16 +4401,19 @@ boolean handle_custom(String path) {
     if(!unit) unit = btnunit; // unit element prevails, if not used then set to btnunit
     if (unit && unit != Settings.Unit)
     {
-      TXBuffer.startStream();
-      sendHeadandTail(F("TmplDsh"),_HEAD);
-      char url[40];
-      sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
-      TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
-      TXBuffer += url;
-      TXBuffer += F("\">");
-      sendHeadandTail(F("TmplDsh"),_TAIL);
-      TXBuffer.endStream();
-      return true;
+      NodesMap::iterator it = Nodes.find(unit);
+      if (it != Nodes.end()) {
+        TXBuffer.startStream();
+        sendHeadandTail(F("TmplDsh"),_HEAD);
+        char url[40];
+        sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
+        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
+        TXBuffer += url;
+        TXBuffer += F("\">");
+        sendHeadandTail(F("TmplDsh"),_TAIL);
+        TXBuffer.endStream();
+        return true;
+      }
     }
 
     TXBuffer.startStream();
@@ -4424,16 +4427,16 @@ boolean handle_custom(String path) {
     // create unit selector dropdown
     addSelector_Head(F("unit"), true);
     byte choice = Settings.Unit;
-    for (byte x = 0; x < UNIT_MAX; x++)
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
-      if (Nodes[x].ip[0] != 0 || x == Settings.Unit)
+      if (it->second.ip[0] != 0 || it->first == Settings.Unit)
       {
-        String name = String(x) + F(" - ");
-        if (x != Settings.Unit)
-          name += Nodes[x].nodeName;
+        String name = String(it->first) + F(" - ");
+        if (it->first != Settings.Unit)
+          name += it->second.nodeName;
         else
           name += Settings.Name;
-        addSelector_Item(name, x, choice == x, false, F(""));
+        addSelector_Item(name, it->first, choice == it->first, false, F(""));
       }
     }
     addSelector_Foot();
@@ -4441,10 +4444,19 @@ boolean handle_custom(String path) {
     // create <> navigation buttons
     byte prev=Settings.Unit;
     byte next=Settings.Unit;
-    for (byte x = Settings.Unit-1; x > 0; x--)
-      if (Nodes[x].ip[0] != 0) {prev = x; break;}
-    for (byte x = Settings.Unit+1; x < UNIT_MAX; x++)
-      if (Nodes[x].ip[0] != 0) {next = x; break;}
+    NodesMap::iterator it;
+    for (byte x = Settings.Unit-1; x > 0; x--) {
+      it = Nodes.find(x);
+      if (it != Nodes.end()) {
+        if (it->second.ip[0] != 0) {prev = x; break;}
+      }
+    }
+    for (byte x = Settings.Unit+1; x < UNIT_MAX; x++) {
+      it = Nodes.find(x);
+      if (it != Nodes.end()) {
+        if (it->second.ip[0] != 0) {next = x; break;}
+      }
+    }
 
     TXBuffer += F("<a class='button link' href=");
     TXBuffer += path;

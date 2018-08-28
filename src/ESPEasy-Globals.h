@@ -317,7 +317,7 @@
 #define PLUGIN_EXTRACONFIGVAR_MAX          16
 #define CPLUGIN_MAX                        16
 #define NPLUGIN_MAX                         4
-#define UNIT_MAX                           32 // Only relevant for UDP unicast message 'sweeps' and the nodelist.
+#define UNIT_MAX                          254 // unit 255 = broadcast
 #define RULES_TIMER_MAX                     8
 #define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
@@ -1324,7 +1324,9 @@ struct NodeStruct
   uint16_t build;
   char* nodeName;
   byte nodeType;
-} Nodes[UNIT_MAX];
+};
+typedef std::map<byte, NodeStruct> NodesMap;
+NodesMap Nodes;
 
 /*********************************************************************************************\
  * systemTimerStruct
