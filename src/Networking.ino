@@ -115,12 +115,17 @@ void checkUDP()
                   it->second.age = 0; // reset 'age counter'
                   if (len >= 41) // extended packet size
                   {
-                    // FIXME TD-er: Memory leak waiting to happen.
                     it->second.build = packetBuffer[13] + 256*packetBuffer[14];
-                    if (it->second.nodeName==0)
-                        it->second.nodeName =  (char *)malloc(26);
-                    memcpy(it->second.nodeName,reinterpret_cast<byte*>(&packetBuffer[15]), 25);
-                    it->second.nodeName[25]=0;
+                    String tmpNodeName;
+                    tmpNodeName.reserve(25);
+                    unsigned int pos = 15;
+                    char c = 1; // Something other than 0
+                    while (c != 0 && pos < 40) {
+                      c = packetBuffer[pos];
+                      ++pos;
+                      tmpNodeName += c;
+                    }
+                    it->second.nodeName = tmpNodeName;
                     it->second.nodeType = packetBuffer[40];
                   }
                 }

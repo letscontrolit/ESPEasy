@@ -1251,9 +1251,9 @@ bool log_to_serial_disabled = false;
 struct DeviceStruct
 {
   DeviceStruct() :
-    Number(0), Type(0), VType(0), Ports(0),
+    Number(0), Type(0), VType(0), Ports(0), ValueCount(0),
     PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
-    ValueCount(0), Custom(false), SendDataOption(false), GlobalSyncOption(false),
+    Custom(false), SendDataOption(false), GlobalSyncOption(false),
     TimerOption(false), TimerOptional(false), DecimalsOnly(false) {}
 
   bool connectedToGPIOpins() {
@@ -1265,17 +1265,19 @@ struct DeviceStruct
   byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   byte VType;   // Type of value the plugin will return, used only for Domoticz
   byte Ports;   // Port to use when device has multiple I/O pins  (N.B. not used much)
+  byte ValueCount;            // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   boolean PullUpOption;       // Allow to set internal pull-up resistors.
   boolean InverseLogicOption; // Allow to invert the boolean state (e.g. a switch)
   boolean FormulaOption;      // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
-  byte ValueCount;            // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   boolean Custom;
   boolean SendDataOption;     // Allow to send data to a controller.
   boolean GlobalSyncOption;   // No longer used. Was used for ESPeasy values sync between nodes
   boolean TimerOption;        // Allow to set the "Interval" timer for the plugin.
   boolean TimerOptional;      // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
   boolean DecimalsOnly;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
-} Device[DEVICES_MAX + 1]; // 1 more because first device is empty device
+};
+typedef std::vector<DeviceStruct> DeviceVector;
+DeviceVector Device;
 
 
 /*********************************************************************************************\
@@ -1284,17 +1286,20 @@ struct DeviceStruct
 struct ProtocolStruct
 {
   ProtocolStruct() :
-    Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
-    defaultPort(0), usesTemplate(false), usesID(false), Custom(false) {}
+    defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
+    usesTemplate(false), usesID(false), Custom(false) {}
+  uint16_t defaultPort;
   byte Number;
   boolean usesMQTT;
   boolean usesAccount;
   boolean usesPassword;
-  int defaultPort;
   boolean usesTemplate;
   boolean usesID;
   boolean Custom;
-} Protocol[CPLUGIN_MAX];
+};
+typedef std::vector<ProtocolStruct> ProtocolVector;
+ProtocolVector Protocol;
+
 
 /*********************************************************************************************\
  * NotificationStruct
@@ -1315,14 +1320,14 @@ struct NotificationStruct
 struct NodeStruct
 {
   NodeStruct() :
-    age(0), build(0), nodeName(NULL), nodeType(0)
+    build(0), age(0), nodeType(0)
     {
       for (byte i = 0; i < 4; ++i) ip[i] = 0;
     }
+  String nodeName;
   byte ip[4];
-  byte age;
   uint16_t build;
-  char* nodeName;
+  byte age;
   byte nodeType;
 };
 typedef std::map<byte, NodeStruct> NodesMap;

@@ -148,11 +148,19 @@ byte CPluginCall(byte Function, struct EventStruct *event)
   {
     // Unconditional calls to all plugins
     case CPLUGIN_PROTOCOL_ADD:
-      for (x = 0; x < CPLUGIN_MAX; x++)
-        if (CPlugin_id[x] != 0){
+      for (x = 0; x < CPLUGIN_MAX; x++) {
+        if (CPlugin_id[x] != 0) {
+          const unsigned int next_ProtocolIndex = protocolCount + 2;
+          if (next_ProtocolIndex > Protocol.size()) {
+            // Increase with 8 to get some compromise between number of resizes and wasted space
+            unsigned int newSize = Protocol.size();
+            newSize = newSize + 8 - (newSize % 8);
+            Protocol.resize(newSize);
+          }
           checkRAM(F("CPluginCallADD"),x);
           CPlugin_ptr[x](Function, event, dummyString);
         }
+      }
       return true;
       break;
 
