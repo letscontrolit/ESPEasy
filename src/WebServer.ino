@@ -906,13 +906,19 @@ void handle_root() {
       {
         char url[80];
         sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-        html_TR_TD(); TXBuffer += F("Unit ");
+        bool isThisUnit = it->first == Settings.Unit;
+        if (isThisUnit)
+          html_TR_TD_highlight();
+        else
+          html_TR_TD();
+
+        TXBuffer += F("Unit ");
         TXBuffer += String(it->first);
         html_TD();
-        if (it->first != Settings.Unit)
-          TXBuffer += it->second.nodeName;
-        else
+        if (isThisUnit)
           TXBuffer += Settings.Name;
+        else
+          TXBuffer += it->second.nodeName;
         html_TD();
         if (it->second.build)
           TXBuffer += String(it->second.build);
@@ -1449,6 +1455,11 @@ void handle_controllers() {
 // HTML string re-use to keep the executable smaller
 // Flash strings are not checked for duplication.
 //********************************************************************************
+
+void html_TR_TD_highlight() {
+  TXBuffer += F("<TR class=\"highlight\">");
+  html_TD();
+}
 
 void html_TR_TD() {
   TXBuffer += F("<TR>");
