@@ -116,16 +116,11 @@ void checkUDP()
                   if (len >= 41) // extended packet size
                   {
                     it->second.build = packetBuffer[13] + 256*packetBuffer[14];
-                    String tmpNodeName;
-                    tmpNodeName.reserve(25);
-                    unsigned int pos = 15;
-                    char c = 1; // Something other than 0
-                    while (c != 0 && pos < 40) {
-                      c = packetBuffer[pos];
-                      ++pos;
-                      tmpNodeName += c;
-                    }
+                    char tmpNodeName[26] = {0};
+                    memcpy(&tmpNodeName[0], reinterpret_cast<byte*>(&packetBuffer[15]), 25);
+                    tmpNodeName[25] = 0;
                     it->second.nodeName = tmpNodeName;
+                    it->second.nodeName.trim();
                     it->second.nodeType = packetBuffer[40];
                   }
                 }
