@@ -5397,6 +5397,18 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
+  html_TR_TD(); TXBuffer += F("SPIFF Size<TD>");
+  {
+  #if defined(ESP8266)
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+    TXBuffer += fs_info.totalBytes / 1024;
+    TXBuffer += F(" kB (");
+    TXBuffer += (fs_info.totalBytes - fs_info.usedBytes) / 1024;
+    TXBuffer += F(" kB free)");
+  #endif
+  }
+
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
     html_TR_TD();
