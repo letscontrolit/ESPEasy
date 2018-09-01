@@ -826,6 +826,11 @@ void backgroundtasks()
   //checkRAM(F("backgroundtasks"));
   //always start with a yield
   yield();
+  #ifdef ESP32
+  // Have to find a similar function to call ESP32's esp_task_wdt_feed();
+  #else
+  ESP.wdtFeed();
+  #endif
 
   //prevent recursion!
   if (runningBackgroundTasks)

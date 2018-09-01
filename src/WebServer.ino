@@ -5397,7 +5397,7 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
-  html_TR_TD(); TXBuffer += F("SPIFF Size<TD>");
+  html_TR_TD(); TXBuffer += F("SPIFFS Size<TD>");
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
