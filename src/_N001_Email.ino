@@ -78,7 +78,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	if (client.connect(aHost.c_str(), notificationsettings.Port) != 1) {
 		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
-	}else  {
+	}else {
 		String mailheader = F(
 			"From: $nodename <$emailfrom>\r\n"
 			"To: $ato\r\n"
@@ -116,6 +116,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 				mailFound += emailTo;
 				addLog(LOG_LEVEL_INFO, mailFound);
 				if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + emailTo + ">", F("250 "))) break;
+				++i;
 				nextAddressAvailable = getNextMailAddress(notificationsettings.Receiver, emailTo, i);
 			}
 
@@ -131,7 +132,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 		if (myStatus == true) {
 			addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
-		}else  {
+		}else {
 			String log = F("EMAIL: Connection Closed With Error. Used header: ");
 			log += mailheader;
 			addLog(LOG_LEVEL_ERROR, log);
