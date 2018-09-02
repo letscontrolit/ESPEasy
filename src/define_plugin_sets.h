@@ -136,6 +136,18 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
+// Shelly ----------------------------
+#ifdef PLUGIN_SET_SHELLY_1
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define CONTROLLER_SET_STABLE
+    #define NOTIFIER_SET_STABLE
+
+    #undef DEFAULT_PIN_I2C_SDA
+    #undef DEFAULT_PIN_I2C_SCL
+    #define DEFAULT_PIN_I2C_SDA    6  // GPIO4 conflicts with relay control.
+    #define DEFAULT_PIN_I2C_SCL    7  // GPIO5 conflicts with SW input
+#endif
+
 // Easy ----------------------------
 #ifdef PLUGIN_SET_EASY_TEMP
     #define PLUGIN_SET_ONLY_TEMP_HUM
