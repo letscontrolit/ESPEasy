@@ -5545,6 +5545,7 @@ void handle_sysvars() {
   addSysVar_html(F("Wind Dir.:    %c_w_dir%(123.4)"));
   addSysVar_html(F("{D}C to {D}F: %c_c2f%(20.4)"));
   addSysVar_html(F("m/s to Bft:   %c_ms2Bft%(5.1)"));
+  addSysVar_html(F("Dew point(T,H): %c_dew_th%(18.6,67)"));
   addFormSeparator(3);
   addSysVar_html(F("cm to imperial: %c_cm2imp%(190)"));
   addSysVar_html(F("mm to imperial: %c_mm2imp%(1900)"));

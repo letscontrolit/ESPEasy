@@ -593,6 +593,33 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
 #undef SMART_REPL
 
 bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {
+  String argumentString;
+  if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
+    if (!isFloat(argumentString)) return false;
+    argument = argumentString.toFloat();
+    return true;
+  }
+  return false;
+}
+
+bool getConvertArgument2(const String& marker, const String& s, float& arg1, float& arg2, int& startIndex, int& endIndex) {
+  String argumentString;
+  if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
+    int pos_comma = argumentString.indexOf(',');
+    if (pos_comma == -1) return false;
+    String arg1_s = argumentString.substring(0, pos_comma);
+    if (!isFloat(arg1_s)) return false;
+    String arg2_s = argumentString.substring(pos_comma+1);
+    if (!isFloat(arg2_s)) return false;
+    arg1 = arg1_s.toFloat();
+    arg2 = arg2_s.toFloat();
+    return true;
+  }
+  return false;
+}
+
+
+bool getConvertArgumentString(const String& marker, const String& s, String& argumentString, int& startIndex, int& endIndex) {
   startIndex = s.indexOf(marker);
   if (startIndex == -1) return false;
 
@@ -604,10 +631,8 @@ bool getConvertArgument(const String& marker, const String& s, float& argument, 
   endIndex = s.indexOf(')', startIndexArgument);
   if (endIndex == -1) return false;
 
-  String argumentString = s.substring(startIndexArgument, endIndex);
-  if (argumentString.length() == 0 || !isFloat(argumentString)) return false;
-
-  argument = argumentString.toFloat();
+  argumentString = s.substring(startIndexArgument, endIndex);
+  if (argumentString.length() == 0) return false;
   ++endIndex; // Must also strip ')' from the original string.
   return true;
 }
@@ -618,21 +643,26 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   if (s.indexOf(F("%c_")) == -1)
     return; // Nothing to replace
 
-  float arg = 0.0;
+  float arg1 = 0.0;
   int startIndex = 0;
   int endIndex = 0;
   // These replacements should be done in a while loop per marker,
   // since they also replace the numerical parameter.
   // The marker may occur more than once per string, but with different parameters.
-  #define SMART_CONV(T,FUN) while (getConvertArgument((T), s, arg, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
-  SMART_CONV(F("%c_w_dir%"),  getBearing(arg))
-  SMART_CONV(F("%c_c2f%"),    toString(CelsiusToFahrenheit(arg), 1))
-  SMART_CONV(F("%c_ms2Bft%"), String(m_secToBeaufort(arg)))
-  SMART_CONV(F("%c_cm2imp%"), centimeterToImperialLength(arg))
-  SMART_CONV(F("%c_mm2imp%"), millimeterToImperialLength(arg))
-  SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(arg), 2))
-  SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(arg))
-  SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(arg))
-  SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(arg))
+  #define SMART_CONV(T,FUN) while (getConvertArgument((T), s, arg1, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
+  SMART_CONV(F("%c_w_dir%"),  getBearing(arg1))
+  SMART_CONV(F("%c_c2f%"),    toString(CelsiusToFahrenheit(arg1), 2))
+  SMART_CONV(F("%c_ms2Bft%"), String(m_secToBeaufort(arg1)))
+  SMART_CONV(F("%c_cm2imp%"), centimeterToImperialLength(arg1))
+  SMART_CONV(F("%c_mm2imp%"), millimeterToImperialLength(arg1))
+  SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(arg1), 2))
+  SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(arg1))
+  SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(arg1))
+  SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(arg1))
+  #undef SMART_CONV
+  // Conversions with 2 parameters
+  #define SMART_CONV(T,FUN) while (getConvertArgument2((T), s, arg1, arg2, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
+  float arg2 = 0.0;
+  SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
   #undef SMART_CONV
 }
