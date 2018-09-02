@@ -513,16 +513,25 @@ void parseSystemVariables(String& s, boolean useURLencode)
     // valueString is being used by the macro.
     char valueString[5];
     #define SMART_REPL_TIME(T,F,V) if (s.indexOf(T) != -1) { sprintf_P(valueString, (F), (V)); repl((T),valueString, s, useURLencode);}
-    SMART_REPL_TIME(F("%syshour%"), PSTR("%02d"), hour())
-    SMART_REPL_TIME(F("%sysmin%"), PSTR("%02d"), minute())
-    SMART_REPL_TIME(F("%syssec%"),PSTR("%02d"), second())
+    SMART_REPL_TIME(F("%sysyear%"), PSTR("%d"), year())
+    SMART_REPL_TIME(F("%sysmonth%"),PSTR("%d"), month())
+    SMART_REPL_TIME(F("%sysday%"), PSTR("%d"), day())
+    SMART_REPL_TIME(F("%syshour%"), PSTR("%d"), hour())
+    SMART_REPL_TIME(F("%sysmin%"), PSTR("%d"), minute())
+    SMART_REPL_TIME(F("%syssec%"),PSTR("%d"), second())
     SMART_REPL_TIME(F("%syssec_d%"),PSTR("%d"), ((hour()*60) + minute())*60 + second());
-    SMART_REPL_TIME(F("%sysday%"), PSTR("%02d"), day())
-    SMART_REPL_TIME(F("%sysmonth%"),PSTR("%02d"), month())
-    SMART_REPL_TIME(F("%sysyear%"), PSTR("%04d"), year())
-    SMART_REPL_TIME(F("%sysyears%"),PSTR("%02d"), year()%100)
     SMART_REPL(F("%sysweekday%"), String(weekday()))
     SMART_REPL(F("%sysweekday_s%"), weekday_str())
+
+    // With leading zero
+    SMART_REPL_TIME(F("%sysyears%"),PSTR("%02d"), year()%100)
+    SMART_REPL_TIME(F("%sysyear_0%"), PSTR("%04d"), year())
+    SMART_REPL_TIME(F("%syshour_0%"), PSTR("%02d"), hour())
+    SMART_REPL_TIME(F("%sysday_0%"), PSTR("%02d"), day())
+    SMART_REPL_TIME(F("%sysmin_0%"), PSTR("%02d"), minute())
+    SMART_REPL_TIME(F("%syssec_0%"),PSTR("%02d"), second())
+    SMART_REPL_TIME(F("%sysmonth_0%"),PSTR("%02d"), month())
+
     #undef SMART_REPL_TIME
   }
   SMART_REPL(F("%lcltime%"), getDateTimeString('-',':',' '))
