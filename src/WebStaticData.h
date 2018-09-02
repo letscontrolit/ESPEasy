@@ -143,6 +143,8 @@ static const char pgDefaultCSS[] PROGMEM = {
     "h2 {font-size: 12pt; margin: 0 -4px; padding: 6px; background-color: #444; color: #FFF; font-weight: bold; }"
     "h3 {font-size: 12pt; margin: 16px -4px 0 -4px; padding: 4px; background-color: #EEE; color: #444; font-weight: bold; }"
     "h6 {font-size: 10pt; color: #07D; }"
+    // monospaced
+    "pre, xmp, code, kbd, samp, tt{ font-family:monospace,monospace; font-size:1em; }"
     // buttons
     ".button {margin: 4px; padding: 4px 16px; background-color: #07D; color: #FFF; text-decoration: none; border-radius: 4px; border: none;}"
     ".button.link { }"
