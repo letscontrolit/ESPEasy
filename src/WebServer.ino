@@ -5423,10 +5423,14 @@ void handle_sysvars() {
 
   addHeader(true,  TXBuffer.buf);
 
-  TXBuffer += F("<p>This page may load slow. Do not load too often, since it may affect performance of the node.</p>");
+  html_BR();
+  TXBuffer += F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>");
+  html_BR();
 
   // the table header
   TXBuffer += F("<table class='normal'><TR><TH align='left'>System Variables<TH align='left'>Normal<TH align='left'>URL encoded");
+  addHelpButton(F("ESPEasy_System_Variables"));
+
   addTableSeparator(F("Constants"), 3, 3);
   addSysVar_html(F("%CR%"));
   addSysVar_html(F("%LF%"));
@@ -5456,22 +5460,24 @@ void handle_sysvars() {
 #endif
 
   addTableSeparator(F("Time"), 3, 3);
+  addSysVar_html(F("%lcltime%"));
+  addSysVar_html(F("%lcltime_am%"));
   addSysVar_html(F("%systm_hm%"));
   addSysVar_html(F("%systm_hm_am%"));
   addSysVar_html(F("%systime%"));
   addSysVar_html(F("%systime_am%"));
-  addSysVar_html(F("%syshour%"));
-  addSysVar_html(F("%sysmin%"));
-  addSysVar_html(F("%syssec%"));
-  addSysVar_html(F("%syssec_d%"));
-  addSysVar_html(F("%sysday%"));
-  addSysVar_html(F("%sysmonth%"));
-  addSysVar_html(F("%sysyear%"));
+  addTableSeparator(F("System"), 3, 3);
+  addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
+  addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
+  addSysVar_html(F("%sysday%   // %sysday_0%"));
+  addSysVar_html(F("%syshour%  // %syshour_0%"));
+  addSysVar_html(F("%sysmin%   // %sysmin_0%"));
+  addSysVar_html(F("%syssec%   // %syssec_0%"));
+  addSysVar_html(F("%syssec_d%"));
   addSysVar_html(F("%sysweekday%"));
   addSysVar_html(F("%sysweekday_s%"));
-  addSysVar_html(F("%lcltime%"));
-  addSysVar_html(F("%lcltime_am%"));
+  addTableSeparator(F("System"), 3, 3);
   addSysVar_html(F("%uptime%"));
   addSysVar_html(F("%unixtime%"));
   addSysVar_html(F("%sunset%"));
