@@ -46,7 +46,7 @@ decode_results results;
 // than normal buffer so we can handle Air Conditioner remote codes.
 #define CAPTURE_BUFFER_SIZE 1024
 
-// TIMEOUT is the Nr. of milli-Seconds of no-more-data before we consider a
+// P016_TIMEOUT is the Nr. of milli-Seconds of no-more-data before we consider a
 // message ended.
 // This parameter is an interesting trade-off. The longer the timeout, the more
 // complex a message it can capture. e.g. Some device protocols will send
@@ -58,21 +58,21 @@ decode_results results;
 // them is often also around 20+ms. This can result in the raw data be 2-3+
 // times larger than needed as it has captured 2-3+ messages in a single
 // capture. Setting a low timeout value can resolve this.
-// So, choosing the best TIMEOUT value for your use particular case is
+// So, choosing the best P016_TIMEOUT value for your use particular case is
 // quite nuanced. Good luck and happy hunting.
-// NOTE: Don't exceed MAX_TIMEOUT_MS. Typically 130ms.
+// NOTE: Don't exceed MAX_P016_TIMEOUT_MS. Typically 130ms.
 #if DECODE_AC
-#define TIMEOUT 50U  // Some A/C units have gaps in their protocols of ~40ms.
+#define P016_TIMEOUT 50U  // Some A/C units have gaps in their protocols of ~40ms.
 // e.g. Kelvinator
 // A value this large may swallow repeats of some protocols
 #else  // DECODE_AC
-#define TIMEOUT 15U  // Suits most messages, while not swallowing many repeats.
+#define P016_TIMEOUT 15U  // Suits most messages, while not swallowing many repeats.
 #endif  // DECODE_AC
 // Alternatives:
-// #define TIMEOUT 90U  // Suits messages with big gaps like XMP-1 & some aircon
+// #define P016_TIMEOUT 90U  // Suits messages with big gaps like XMP-1 & some aircon
 // units, but can accidentally swallow repeated messages
 // in the rawData[] output.
-// #define TIMEOUT MAX_TIMEOUT_MS  // This will set it to our currently allowed
+// #define P016_TIMEOUT MAX_P016_TIMEOUT_MS  // This will set it to our currently allowed
 // maximum. Values this high are problematic
 // because it is roughly the typical boundary
 // where most messages repeat.
@@ -84,7 +84,7 @@ decode_results results;
 // Set the smallest sized "UNKNOWN" message packets we actually care about.
 // This value helps reduce the false-positive detection rate of IR background
 // noise as real messages. The chances of background IR noise getting detected
-// as a message increases with the length of the TIMEOUT value. (See above)
+// as a message increases with the length of the P016_TIMEOUT value. (See above)
 // The downside of setting this message too large is you can miss some valid
 // short messages for protocols that this library doesn't yet decode.
 //
@@ -136,7 +136,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         if (irReceiver == 0 && irPin != -1)
         {
           Serial.println(F("IR Init"));
-          irReceiver = new IRrecv(irPin, CAPTURE_BUFFER_SIZE, TIMEOUT, true);
+          irReceiver = new IRrecv(irPin, CAPTURE_BUFFER_SIZE, P016_TIMEOUT, true);
           irReceiver->setUnknownThreshold(MIN_UNKNOWN_SIZE); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
         }
@@ -216,7 +216,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 #endif  // DECODE_HAIER_AC
           // If we got a human-readable description of the message, display it.
           if (log != "") addLog(LOG_LEVEL_INFO, log);
-		  
+
           // Output RAW timing info of the result.
           //log += resultToTimingInfo(&results);  //not showing up nicely in the web log... Maybe send them to serial?
           // Output the results as source code
