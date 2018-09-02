@@ -480,6 +480,7 @@ void WebServerInit()
   WebServer.on(F("/rules"), handle_rules);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
+  WebServer.on(F("/sysvars"), handle_sysvars);
   WebServer.on(F("/favicon.ico"), handle_favicon);
 
   #if defined(ESP8266)
@@ -1432,6 +1433,10 @@ void html_TR_TD() {
   html_TD();
 }
 
+void html_BR() {
+  TXBuffer += F("<BR>");
+}
+
 void html_TR_TD_height(int height) {
   TXBuffer += F("<TR><TD HEIGHT=\"");
   TXBuffer += height;
@@ -2312,7 +2317,8 @@ void handle_devices() {
 
     addFormSeparator(4);
 
-    html_TR_TD(); TXBuffer += F("<TD colspan='3'><a class='button link' href=\"devices?setpage=");
+    html_TR_TD();
+    TXBuffer += F("<TD colspan='3'><a class='button link' href=\"devices?setpage=");
     TXBuffer += page;
     TXBuffer += F("\">Close</a>");
     addSubmitButton();
@@ -2759,6 +2765,24 @@ void addCopyButton(const String &value, const String &delimiter, const String &n
 //********************************************************************************
 // Add a header
 //********************************************************************************
+void addTableSeparator(const String& label, int colspan, int h_size) {
+  addTableSeparator(label, colspan, h_size, "");
+}
+
+void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
+  TXBuffer += F("<TR><TD colspan=");
+  TXBuffer += colspan;
+  TXBuffer += "><H";
+  TXBuffer += h_size;
+  TXBuffer += '>';
+  TXBuffer += label;
+  if (helpButton.length() > 0)
+    addHelpButton(helpButton);
+  TXBuffer += "</H";
+  TXBuffer += h_size;
+  TXBuffer += F("></TD></TR>");
+}
+
 void addFormHeader(const String& header1, const String& header2)
 {
   TXBuffer += F("<TR><TH>");
@@ -2770,9 +2794,7 @@ void addFormHeader(const String& header1, const String& header2)
 
 void addFormHeader(const String& header)
 {
-  TXBuffer += F("<TR><TD colspan='2'><h2>");
-  TXBuffer += header;
-  TXBuffer += F("</h2>");
+  addTableSeparator(header, 2, 2);
 }
 
 
@@ -2781,9 +2803,7 @@ void addFormHeader(const String& header)
 //********************************************************************************
 void addFormSubHeader(const String& header)
 {
-  TXBuffer += F("<TR><TD colspan='2'><h3>");
-  TXBuffer += header;
-  TXBuffer += F("</h3>");
+  addTableSeparator(header, 2, 3);
 }
 
 
@@ -3196,6 +3216,11 @@ void handle_tools() {
   addWideButton(F("pinstates"), F("Pin state buffer"), F(""));
   html_TD();
   TXBuffer += F("Show Pin state buffer");
+
+  html_TR_TD_height(30);
+  addWideButton(F("sysvars"), F("System Variables"), F(""));
+  html_TD();
+  TXBuffer += F("Show all system variables and conversions");
 
   addFormSubHeader(F("Wifi"));
 
@@ -5111,9 +5136,7 @@ void handle_sysinfo() {
    html_TR_TD(); TXBuffer += F("Reset Reason<TD>");
    TXBuffer += getResetReasonString();
 
-   TXBuffer += F("<TR><TD colspan=2><H3>Network");
-   addHelpButton(F("Wifi"));
-   TXBuffer += F("</H3></TD></TR>");
+   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
@@ -5206,7 +5229,7 @@ void handle_sysinfo() {
   html_TR_TD(); TXBuffer += F("Number reconnects<TD>");
   TXBuffer += wifi_reconnects;
 
-  TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
+  addTableSeparator(F("Firmware"), 2, 3);
 
   TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
   TXBuffer += BUILD;
@@ -5239,7 +5262,7 @@ void handle_sysinfo() {
    TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
    TXBuffer += String(CRCValues.binaryFilename);
 
-   TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
+   addTableSeparator(F("ESP board"), 2, 3);
 
    html_TR_TD(); TXBuffer += F("ESP Chip ID<TD>");
   #if defined(ESP8266)
@@ -5273,8 +5296,7 @@ void handle_sysinfo() {
   #endif
 
 
-
-   TXBuffer += F("<TR><TD colspan=2><H3>Storage</H3></TD></TR>");
+   addTableSeparator(F("Storage"), 2, 3);
 
    html_TR_TD(); TXBuffer += F("Flash Chip ID<TD>");
   #if defined(ESP8266)
@@ -5331,7 +5353,7 @@ void handle_sysinfo() {
   #endif
 
   if (showSettingsFileLayout) {
-    TXBuffer += F("<TR><TD colspan=2><H3>Settings Files</H3></TD></TR>");
+    addTableSeparator(F("Settings Files"), 2, 3);
     html_TR_TD();
     TXBuffer += F("Layout Settings File");
     html_TD();
@@ -5350,9 +5372,8 @@ void handle_sysinfo() {
   }
 
   #ifdef ESP32
-   TXBuffer += F("<TR><TD colspan=2><H3>Partitions");
-   addHelpButton(F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
-   TXBuffer += F("</H3></TD></TR>");
+   addTableSeparator(F("Partitions"), 2, 3,
+     F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
 
    html_TR_TD(); TXBuffer += F("Data Partition Table<TD>");
 //   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
@@ -5367,6 +5388,168 @@ void handle_sysinfo() {
 
    TXBuffer += F("</table></form>");
    sendHeadandTail(F("TmplStd"),true);
+  TXBuffer.endStream();
+}
+
+void addSysVar_html(const String& input) {
+  html_TR_TD();
+  TXBuffer += F("<pre>"); // Make monospaced (<tt> tag?)
+  TXBuffer += F("<xmp>"); // Make sure HTML code is escaped. Tag depricated??
+  TXBuffer += input;
+  TXBuffer += F("</xmp>");
+  TXBuffer += F("</pre>");
+  html_TD();
+  String replacement(input); // Make deepcopy for replacement
+  parseSystemVariables(replacement, false); // Not URL encoded
+  parseStandardConversions(replacement, false);
+  TXBuffer += replacement;
+  html_TD();
+  replacement = input;
+  parseSystemVariables(replacement, true); // URL encoded
+  parseStandardConversions(replacement, true);
+  TXBuffer += replacement;
+  yield();
+}
+
+
+//********************************************************************************
+// Web Interface sysvars showing all system vars and their value.
+//********************************************************************************
+void handle_sysvars() {
+  checkRAM(F("handle_sysvars"));
+  if (!isLoggedIn()) return;
+  TXBuffer.startStream();
+  sendHeadandTail(F("TmplStd"));
+
+  addHeader(true,  TXBuffer.buf);
+
+  TXBuffer += F("<p>This page may load slow. Do not load too often, since it may affect performance of the node.</p>");
+
+  // the table header
+  TXBuffer += F("<table class='normal'><TR><TH align='left'>System Variables<TH align='left'>Normal<TH align='left'>URL encoded");
+  addTableSeparator(F("Constants"), 3, 3);
+  addSysVar_html(F("%CR%"));
+  addSysVar_html(F("%LF%"));
+  addSysVar_html(F("%SP%"));
+  addSysVar_html(F("%R%"));
+  addSysVar_html(F("%N%"));
+
+  addTableSeparator(F("Network"), 3, 3);
+  addSysVar_html(F("%mac%"));
+#if defined(ESP8266)
+  addSysVar_html(F("%mac_int%"));
+#endif
+  addSysVar_html(F("%ip4%"));
+  addSysVar_html(F("%ip%"));
+  addSysVar_html(F("%rssi%"));
+  addSysVar_html(F("%ssid%"));
+  addSysVar_html(F("%bssid%"));
+  addSysVar_html(F("%wi_ch%"));
+
+  addTableSeparator(F("System"), 3, 3);
+  addSysVar_html(F("%unit%"));
+  addSysVar_html(F("%sysload%"));
+  addSysVar_html(F("%sysheap%"));
+  addSysVar_html(F("%sysname%"));
+#if FEATURE_ADC_VCC
+  addSysVar_html(F("%vcc%"));
+#endif
+
+  addTableSeparator(F("Time"), 3, 3);
+  addSysVar_html(F("%systm_hm%"));
+  addSysVar_html(F("%systm_hm_am%"));
+  addSysVar_html(F("%systime%"));
+  addSysVar_html(F("%systime_am%"));
+  addSysVar_html(F("%syshour%"));
+  addSysVar_html(F("%sysmin%"));
+  addSysVar_html(F("%syssec%"));
+  addSysVar_html(F("%syssec_d%"));
+  addSysVar_html(F("%sysday%"));
+  addSysVar_html(F("%sysmonth%"));
+  addSysVar_html(F("%sysyear%"));
+  addSysVar_html(F("%sysyears%"));
+  addSysVar_html(F("%sysweekday%"));
+  addSysVar_html(F("%sysweekday_s%"));
+  addSysVar_html(F("%lcltime%"));
+  addSysVar_html(F("%lcltime_am%"));
+  addSysVar_html(F("%uptime%"));
+  addSysVar_html(F("%unixtime%"));
+  addSysVar_html(F("%sunset%"));
+  addSysVar_html(F("%sunset-1h%"));
+  addSysVar_html(F("%sunrise%"));
+  addSysVar_html(F("%sunrise+10m%"));
+
+  addTableSeparator(F("Special Characters"), 3, 2);
+  addTableSeparator(F("Degree"), 3, 3);
+  addSysVar_html(F("{D}"));
+  addSysVar_html(F("&deg;"));
+
+  addTableSeparator(F("Angle quotes"), 3, 3);
+  addSysVar_html(F("{<<}"));
+  addSysVar_html(F("&laquo;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{>>}"));
+  addSysVar_html(F("&raquo;"));
+  addTableSeparator(F("Greek letter Mu"), 3, 3);
+  addSysVar_html(F("{u}"));
+  addSysVar_html(F("&micro;"));
+  addTableSeparator(F("Currency"), 3, 3);
+  addSysVar_html(F("{E}"));
+  addSysVar_html(F("&euro;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{Y}"));
+  addSysVar_html(F("&yen;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{P}"));
+  addSysVar_html(F("&pound;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{c}"));
+  addSysVar_html(F("&cent;"));
+
+  addTableSeparator(F("Math symbols"), 3, 3);
+  addSysVar_html(F("{^1}"));
+  addSysVar_html(F("&sup1;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{^2}"));
+  addSysVar_html(F("&sup2;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{^3}"));
+  addSysVar_html(F("&sup3;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{1_4}"));
+  addSysVar_html(F("&frac14;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{1_2}"));
+  addSysVar_html(F("&frac12;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{3_4}"));
+  addSysVar_html(F("&frac34;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{+-}"));
+  addSysVar_html(F("&plusmn;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{x}"));
+  addSysVar_html(F("&times;"));
+  addFormSeparator(3);
+  addSysVar_html(F("{..}"));
+  addSysVar_html(F("&divide;"));
+
+  addTableSeparator(F("Standard Conversions"), 3, 2);
+
+  addSysVar_html(F("Wind Dir.:    %c_w_dir%(123.4)"));
+  addSysVar_html(F("{D}C to {D}F: %c_c2f%(20.4)"));
+  addSysVar_html(F("m/s to Bft:   %c_ms2Bft%(5.1)"));
+  addFormSeparator(3);
+  addSysVar_html(F("cm to imperial: %c_cm2imp%(190)"));
+  addSysVar_html(F("mm to imperial: %c_mm2imp%(1900)"));
+  addFormSeparator(3);
+  addSysVar_html(F("Mins to days: %c_m2day%(1900)"));
+  addSysVar_html(F("Mins to dh:   %c_m2dh%(1900)"));
+  addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
+  addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
+
+  TXBuffer += F("</table></form>");
+  sendHeadandTail(F("TmplStd"),true);
   TXBuffer.endStream();
 }
 
