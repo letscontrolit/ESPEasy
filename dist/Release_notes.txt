@@ -1,4 +1,20 @@
 -------------------------------------------------
+Changes in release mega-20180903 (since mega-20180826)
+-------------------------------------------------
+
+Release date: Mon Sep  3 04:01:13 CEST 2018
+
+TD-er (7):
+      [Pio] Build issues
+      [#1692] Add 2nd Receiver for Email notification
+      Forgot to save before commit
+      [#1549] Add page showing all system variables
+      [sysvar] rename vars with leading zero to %..._0%
+      [#1688] Add dew point computation as standard conversion
+      [Shelly1] Add first test build for Shelly1 nodes
+
+
+-------------------------------------------------
 Changes in release mega-20180826 (since mega-20180822)
 -------------------------------------------------
 
