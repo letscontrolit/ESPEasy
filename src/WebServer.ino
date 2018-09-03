@@ -1882,6 +1882,7 @@ void handle_devices() {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
 
       taskClear(taskIndex, false); // clear settings, but do not save
+      ClearCustomTaskSettings(taskIndex);
 
       Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
       if (taskdevicenumber != 0) // set default values if a new device has been selected
@@ -1889,8 +1890,9 @@ void handle_devices() {
         //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
         if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) // if field set empty, reload defaults
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString); //the plugin should populate ExtraTaskSettings with its default values.
-
-        ClearCustomTaskSettings(taskIndex);
+      } else {
+        SaveTaskSettings(taskIndex);
+        SaveSettings();
       }
     }
     else if (taskdevicenumber != 0) //save settings

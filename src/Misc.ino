@@ -404,7 +404,7 @@ String checkTaskSettings(byte taskIndex) {
     }
   }
   for (int i = 0; i < TASKS_MAX; ++i) {
-    if (i != taskIndex) {
+    if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
       LoadTaskSettings(i);
       if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
         if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
