@@ -5480,10 +5480,10 @@ void handle_sysvars() {
   addTableSeparator(F("System"), 3, 3);
   addSysVar_html(F("%uptime%"));
   addSysVar_html(F("%unixtime%"));
-  addSysVar_html(F("%sunset%"));
-  addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
   addSysVar_html(F("%sunrise+10m%"));
+  addSysVar_html(F("%sunset%"));
+  addSysVar_html(F("%sunset-1h%"));
 
   addTableSeparator(F("Special Characters"), 3, 2);
   addTableSeparator(F("Degree"), 3, 3);
