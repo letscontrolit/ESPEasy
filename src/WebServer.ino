@@ -3117,6 +3117,7 @@ void handle_log() {
 // Web Interface JSON log page
 //********************************************************************************
 void handle_log_JSON() {
+  if (!isLoggedIn()) return;
   TXBuffer.startJsonStream();
   String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
