@@ -89,6 +89,24 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			"X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
 			);
 
+    String email_address = notificationsettings.Sender;
+		int pos_less = email_address.indexOf('<');
+		if (pos_less == -1) {
+			// No email address markup
+			mailheader.replace(String(F("$nodename")), Settings.Name);
+			mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
+		} else {
+			String senderName = email_address.substring(0, pos_less);
+			senderName.replace("\"", ""); // Remove quotes
+			String address = email_address.substring(pos_less + 1);
+			address.replace("<", "");
+			address.replace(">", "");
+			address.trim();
+			senderName.trim();
+			mailheader.replace(String(F("$nodename")), senderName);
+			mailheader.replace(String(F("$emailfrom")), address);
+		}
+
 		mailheader.replace(String(F("$nodename")), Settings.Name);
 		mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
 		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
