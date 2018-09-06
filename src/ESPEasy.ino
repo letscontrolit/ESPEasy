@@ -464,7 +464,7 @@ void loop()
   if (firstLoopConnectionsEstablished) {
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     schedule_all_task_device_timers();
+     // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
    }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
@@ -556,6 +556,8 @@ void updateMQTTclient_connected() {
         connectionError += getMQTT_state();
         addLog(LOG_LEVEL_ERROR, connectionError);
       }
+    } else {
+      schedule_all_tasks_using_MQTT_controller();
     }
     if (Settings.UseRules) {
       String event = MQTTclient_connected ? F("MQTT#Connected") : F("MQTT#Disconnected");

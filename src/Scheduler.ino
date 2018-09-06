@@ -46,6 +46,7 @@ void handle_schedule() {
     // No id ready to run right now.
     // Events are not that important to run immediately.
     // Make sure normal scheduled jobs run at higher priority.
+    backgroundtasks();
     process_system_event_queue();
     return;
   }
@@ -297,18 +298,37 @@ void schedule_all_task_device_timers() {
   }
 }
 
-void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
-/*
-  String log = F("schedule_task_device_timer: task: ");
-  log += task_index;
-  log += F(" @ ");
-  log += runAt;
-  if (Settings.TaskDeviceEnabled[task_index]) {
-    log += F(" (enabled)");
+void schedule_all_tasks_using_MQTT_controller() {
+  int ControllerIndex = firstEnabledMQTTController();
+  if (ControllerIndex < 0) return;
+  for (byte task = 0; task < TASKS_MAX; task++) {
+    if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
+        Settings.ControllerEnabled[ControllerIndex] &&
+        Settings.Protocol[ControllerIndex])
+    {
+      schedule_task_device_timer_at_init(task);
+    }
   }
-  addLog(LOG_LEVEL_INFO, log);
-*/
+}
+
+void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
+  /*
+    String log = F("schedule_task_device_timer: task: ");
+    log += task_index;
+    log += F(" @ ");
+    log += runAt;
+    if (Settings.TaskDeviceEnabled[task_index]) {
+      log += F(" (enabled)");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  */
+
   if (task_index >= TASKS_MAX) return;
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[task_index]);
+  if (!Device[DeviceIndex].TimerOption) return;
+  if (Device[DeviceIndex].TimerOptional && Settings.TaskDeviceTimer[task_index] == 0) {
+    return;
+  }
   if (Settings.TaskDeviceEnabled[task_index]) {
     setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
   }
