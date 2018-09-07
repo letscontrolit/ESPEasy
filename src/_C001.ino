@@ -44,8 +44,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
         if (event->idx != 0)
         {
           // We now create a URI for the request
-          String url = F("/json.htm?type=command&param=udevice&idx=");
-          url += event->idx;
+          String url;
 
           switch (event->sensorType)
           {

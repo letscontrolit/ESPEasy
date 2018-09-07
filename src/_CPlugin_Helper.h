@@ -15,6 +15,10 @@ public:
     controller_idx(ctrl_idx), _topic(topic), _payload(payload), _retained(retained)
      {}
 
+  size_t getSize() const {
+    return sizeof(this) + _topic.length() + _payload.length();
+  }
+
   int controller_idx;
   String _topic;
   String _payload;
@@ -29,6 +33,10 @@ public:
   simple_queue_element_string_only() : controller_idx(0) {}
   simple_queue_element_string_only(int ctrl_idx, const String& req) :
        controller_idx(ctrl_idx), txt(req) {}
+
+  size_t getSize() const {
+    return sizeof(this) + txt.length();
+  }
 
   int controller_idx;
   String txt;
@@ -59,6 +67,10 @@ public:
     idx(event->idx),
     sensorType(event->sensorType) {}
 
+  size_t getSize() const {
+    return sizeof(this);
+  }
+
   int controller_idx;
   byte TaskIndex;
   int idx;
@@ -76,6 +88,10 @@ public:
     TaskIndex(event->TaskIndex),
     idx(event->idx),
     sensorType(event->sensorType) {}
+
+  size_t getSize() const {
+    return sizeof(this);
+  }
 
   int controller_idx;
   byte TaskIndex;
@@ -102,6 +118,14 @@ public:
     return (valuesSent >= valueCount || valuesSent >= VARS_PER_TASK);
   }
 
+  size_t getSize() const {
+    size_t total = sizeof(this);
+    for (int i = 0; i < VARS_PER_TASK; ++i) {
+      total += txt[i].length();
+    }
+    return total;
+  }
+
   int controller_idx;
   byte TaskIndex;
   int idx;
@@ -125,6 +149,10 @@ public:
   C009_queue_element() : controller_idx(0) {}
   C009_queue_element(int ctrl_idx, const String& URI, const String& JSON) :
      controller_idx(ctrl_idx), url(URI), json(JSON) {}
+
+  size_t getSize() const {
+    return sizeof(this) + url.length() + json.length();
+  }
 
   int controller_idx;
   String url;
@@ -176,14 +204,40 @@ struct ControllerDelayHandlerStruct {
     if (minTimeBetweenMessages < 10) minTimeBetweenMessages = 10;
   }
 
+  bool queueFull(const T& element) const {
+    if (sendQueue.size() >= max_queue_depth) return true;
+
+    // Number of elements is not exceeding the limit, check memory
+    int freeHeap = ESP.getFreeHeap();
+    if (freeHeap > 5000) return false; // Memory is not an issue.
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = "Controller-";
+      log += element.controller_idx +1;
+      log += " : Memory used: ";
+      log += getQueueMemorySize();
+      log += " bytes ";
+      log += sendQueue.size();
+      log += " items ";
+      log += freeHeap;
+      log += " free";
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+    return true;
+  }
+
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return false when no item was added.
   bool addToQueue(const T& element) {
     if (delete_oldest) {
-      forceAddToQueue(element);
+      // Force add to the queue.
+      // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
+      while (queueFull(element)) {
+        sendQueue.pop_front();
+      }
+      sendQueue.emplace_back(element);
       return true;
     }
-    if (sendQueue.size() < max_queue_depth) {
+    if (!queueFull(element)) {
       sendQueue.emplace_back(element);
       return true;
     }
@@ -192,18 +246,6 @@ struct ControllerDelayHandlerStruct {
       log += " : queue full";
       addLog(LOG_LEVEL_DEBUG, log);
     }
-    return false;
-  }
-
-  // Force add to the queue.
-  // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
-  // Return true when no elements removed from queue.
-  bool forceAddToQueue(const T& element) {
-    sendQueue.emplace_back(element);
-    if (sendQueue.size() <= max_queue_depth) {
-      return true;
-    }
-    sendQueue.pop_front();
     return false;
   }
 
@@ -243,6 +285,14 @@ struct ControllerDelayHandlerStruct {
     }
     if (nextTime == 0) nextTime = 1; // Just to make sure it will be executed
     return nextTime;
+  }
+
+  size_t getQueueMemorySize() const {
+    size_t totalSize = 0;
+    for (auto it = sendQueue.begin(); it != sendQueue.end(); ++it) {
+      totalSize += it->getSize();
+    }
+    return totalSize;
   }
 
   std::list<T> sendQueue;
