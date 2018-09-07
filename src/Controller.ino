@@ -15,6 +15,8 @@ void sendData(struct EventStruct *event)
 //  if (!Settings.TaskDeviceSendData[event->TaskIndex])
 //    return false;
 
+/*
+  // Disabed for now, using buffers at controller side.
   if (Settings.MessageDelay != 0)
   {
     const long dif = timePassedSince(lastSend);
@@ -31,6 +33,7 @@ void sendData(struct EventStruct *event)
       //   backgroundtasks();
     }
   }
+*/
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
@@ -39,21 +42,25 @@ void sendData(struct EventStruct *event)
     event->ControllerIndex = x;
     event->idx = Settings.TaskDeviceID[x][event->TaskIndex];
     if (Settings.TaskDeviceSendData[event->ControllerIndex][event->TaskIndex] &&
-        Settings.ControllerEnabled[event->ControllerIndex] && Settings.Protocol[event->ControllerIndex])
+        Settings.ControllerEnabled[event->ControllerIndex] &&
+        Settings.Protocol[event->ControllerIndex])
     {
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
       if (validUserVar(event)) {
         CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
       } else {
-        String log = F("Invalid value detected for controller ");
-        String controllerName;
-        CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
-        log += controllerName;
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("Invalid value detected for controller ");
+          String controllerName;
+          CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
+          log += controllerName;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
       }
     }
   }
 
+  // FIXME TD-er: This PLUGIN_EVENT_OUT seems to be unused.
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
@@ -265,12 +272,33 @@ void SendStatus(byte source, String status)
 
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
-  if (MQTTclient.publish(topic, payload, retained)) {
+  const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+void scheduleNextMQTTdelayQueue() {
+  scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
+}
+
+void processMQTTdelayQueue() {
+  START_TIMER;
+  MQTT_queue_element element;
+  if (!MQTTDelayHandler.getNext(element)) return;
+  if (MQTTclient.publish(element._topic.c_str(), element._payload.c_str(), element._retained)) {
     setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
-    return true;
+    MQTTDelayHandler.markProcessed(true);
+  } else {
+    MQTTDelayHandler.markProcessed(false);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("MQTT : process MQTT queue not published, ");
+      log += MQTTDelayHandler.sendQueue.size();
+      log += F(" items left in queue");
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
   }
-  addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
-  return false;
+  scheduleNextMQTTdelayQueue();
+  STOP_TIMER(MQTT_DELAY_QUEUE);
 }
 
 /*********************************************************************************************\

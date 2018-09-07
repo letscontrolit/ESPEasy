@@ -46,6 +46,7 @@ void handle_schedule() {
     // No id ready to run right now.
     // Events are not that important to run immediately.
     // Make sure normal scheduled jobs run at higher priority.
+    backgroundtasks();
     process_system_event_queue();
     return;
   }
@@ -75,10 +76,21 @@ void setIntervalTimer(unsigned long id) {
   setIntervalTimer(id, millis());
 }
 
+void setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), newtimer);
+}
+
 void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
   unsigned long timer = millis();
   setNextTimeInterval(timer, msecFromNow);
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
+}
+
+void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime) {
+  if (nextTime != 0) {
+    // Schedule for next process run.
+    setIntervalTimerAt(id, nextTime);
+  }
 }
 
 void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
@@ -91,6 +103,20 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
     case TIMER_30SEC:      interval = 30000; break;
     case TIMER_MQTT:       interval = timermqtt_interval; break;
     case TIMER_STATISTICS: interval = 30000; break;
+    // Fall-through for all DelayQueue, which are just the fall-back timers.
+    // The timers for all delay queues will be set according to their own settings as long as there is something to process.
+    case TIMER_MQTT_DELAY_QUEUE:
+    case TIMER_C001_DELAY_QUEUE:
+    case TIMER_C003_DELAY_QUEUE:
+    case TIMER_C004_DELAY_QUEUE:
+    case TIMER_C007_DELAY_QUEUE:
+    case TIMER_C008_DELAY_QUEUE:
+    case TIMER_C009_DELAY_QUEUE:
+    case TIMER_C010_DELAY_QUEUE:
+    case TIMER_C011_DELAY_QUEUE:
+    case TIMER_C012_DELAY_QUEUE:
+    case TIMER_C013_DELAY_QUEUE:
+      interval = 1000; break;
   }
   unsigned long timer = lasttimer;
   setNextTimeInterval(timer, interval);
@@ -98,6 +124,8 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
 }
 
 void process_interval_timer(unsigned long id, unsigned long lasttimer) {
+  // Set the interval timer now, it may be altered by the commands below.
+  // This is the default next-run-time.
   setIntervalTimer(id, lasttimer);
   switch (id) {
     case TIMER_20MSEC:
@@ -119,6 +147,63 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
     case TIMER_STATISTICS:
       logTimerStatistics();
       break;
+    case TIMER_MQTT_DELAY_QUEUE:
+      processMQTTdelayQueue();
+      break;
+  #ifdef USES_C001
+    case TIMER_C001_DELAY_QUEUE:
+      process_c001_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C003
+    case TIMER_C003_DELAY_QUEUE:
+      process_c003_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C004
+    case TIMER_C004_DELAY_QUEUE:
+      process_c004_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C007
+    case TIMER_C007_DELAY_QUEUE:
+      process_c007_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C008
+    case TIMER_C008_DELAY_QUEUE:
+      process_c008_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C009
+    case TIMER_C009_DELAY_QUEUE:
+      process_c009_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C010
+    case TIMER_C010_DELAY_QUEUE:
+      process_c010_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C011
+    case TIMER_C011_DELAY_QUEUE:
+      process_c011_delay_queue();
+      break;
+  #endif
+  #ifdef USES_C012
+    case TIMER_C012_DELAY_QUEUE:
+      process_c012_delay_queue();
+      break;
+  #endif
+/*
+  #ifdef USES_C013
+    case TIMER_C013_DELAY_QUEUE:
+      process_c013_delay_queue();
+      break;
+  #endif
+*/
+// When extending this, also extend in _CPlugin_Helper.h
+// Look for DEFINE_Cxxx_DELAY_QUEUE_MACRO
   }
 }
 
@@ -213,18 +298,37 @@ void schedule_all_task_device_timers() {
   }
 }
 
-void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
-/*
-  String log = F("schedule_task_device_timer: task: ");
-  log += task_index;
-  log += F(" @ ");
-  log += runAt;
-  if (Settings.TaskDeviceEnabled[task_index]) {
-    log += F(" (enabled)");
+void schedule_all_tasks_using_MQTT_controller() {
+  int ControllerIndex = firstEnabledMQTTController();
+  if (ControllerIndex < 0) return;
+  for (byte task = 0; task < TASKS_MAX; task++) {
+    if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
+        Settings.ControllerEnabled[ControllerIndex] &&
+        Settings.Protocol[ControllerIndex])
+    {
+      schedule_task_device_timer_at_init(task);
+    }
   }
-  addLog(LOG_LEVEL_INFO, log);
-*/
+}
+
+void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
+  /*
+    String log = F("schedule_task_device_timer: task: ");
+    log += task_index;
+    log += F(" @ ");
+    log += runAt;
+    if (Settings.TaskDeviceEnabled[task_index]) {
+      log += F(" (enabled)");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  */
+
   if (task_index >= TASKS_MAX) return;
+  byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[task_index]);
+  if (!Device[DeviceIndex].TimerOption) return;
+  if (Device[DeviceIndex].TimerOptional && Settings.TaskDeviceTimer[task_index] == 0) {
+    return;
+  }
   if (Settings.TaskDeviceEnabled[task_index]) {
     setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
   }

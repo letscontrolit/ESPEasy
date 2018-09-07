@@ -1075,7 +1075,7 @@ String getLogLevelDisplayString(byte index, int& logLevel) {
   }
 }
 
-void addToLog(byte loglevel, String& string)
+void addToLog(byte loglevel, const String& string)
 {
   addToLog(loglevel, string.c_str());
 }
@@ -1973,6 +1973,7 @@ void rulesProcessing(String& event)
     log += F(" milliSeconds");
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  backgroundtasks();
 
 }
 
@@ -2035,6 +2036,7 @@ String rulesProcessingFile(String fileName, String& event)
             match, codeBlock, isCommand,
             conditional, condition,
             ifBranche, ifBrancheJustMatch);
+          yield();
         }
 
         line = "";

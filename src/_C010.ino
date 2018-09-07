@@ -41,20 +41,32 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_PROTOCOL_SEND:
       {
         byte valueCount = getValueCountFromSensorType(event->sensorType);
+        C010_queue_element element(event, valueCount);
+        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
+
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
         for (byte x = 0; x < valueCount; x++)
         {
           bool isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
-          if (isvalid)
-            C010_Send(event, x, formattedValue);
-          if (valueCount > 1)
-          {
-            delayBackground(Settings.MessageDelay);
-            // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (!timeOutReached(timer))
-            //   backgroundtasks();
+          if (isvalid) {
+            element.txt[x] = "";
+            element.txt[x] += ControllerSettings.Publish;
+            parseControllerVariables(element.txt[x], event, false);
+            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+            element.txt[x].replace(F("%value%"), formattedValue);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+              char log[80];
+              element.txt[x].toCharArray(log, 80);
+              addLog(LOG_LEVEL_DEBUG_MORE, log);
+            }
           }
         }
+        success = C010_DelayHandler.addToQueue(element);
+        scheduleNextDelayQueue(TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime());
         break;
       }
 
@@ -66,34 +78,20 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic UDP message
 //********************************************************************************
-void C010_Send(struct EventStruct *event, byte varIndex, const String& formattedValue)
-{
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
-  // boolean success = false;
-  addLog(LOG_LEVEL_DEBUG, String(F("UDP  : sending to ")) + ControllerSettings.getHostPortString());
-  statusLED(true);
-
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
-
-  String msg = "";
-  msg += ControllerSettings.Publish;
-  parseControllerVariables(msg, event, false);
-  msg.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[varIndex]);
-  msg.replace(F("%value%"), formattedValue);
-
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    ControllerSettings.beginPacket(portUDP);
-    portUDP.write((uint8_t*)msg.c_str(),msg.length());
-    portUDP.endPacket();
+bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  while (element.txt[element.valuesSent] == "") {
+    // A non valid value, which we are not going to send.
+    // Increase sent counter until a valid value is found.
+    if (element.checkDone(true))
+      return true;
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    char log[80];
-    msg.toCharArray(log, 80);
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
-  }
+  if (!try_connect_host(controller_number, portUDP, ControllerSettings))
+    return false;
+
+  portUDP.write(
+    (uint8_t*)element.txt[element.valuesSent].c_str(),
+              element.txt[element.valuesSent].length());
+  return element.checkDone(portUDP.endPacket() != 0);
 }
 #endif

@@ -900,25 +900,31 @@ void handle_root() {
     addButton(F("sysinfo"), F("More info"));
 
     TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
-    for (byte x = 0; x < UNIT_MAX; x++)
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
-      if (Nodes[x].ip[0] != 0)
+      if (it->second.ip[0] != 0)
       {
         char url[80];
-        sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3], Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
-        html_TR_TD(); TXBuffer += F("Unit ");
-        TXBuffer += String(x);
-        html_TD();
-        if (x != Settings.Unit)
-          TXBuffer += Nodes[x].nodeName;
+        sprintf_P(url, PSTR("<a class='button link' href='http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
+        bool isThisUnit = it->first == Settings.Unit;
+        if (isThisUnit)
+          html_TR_TD_highlight();
         else
+          html_TR_TD();
+
+        TXBuffer += F("Unit ");
+        TXBuffer += String(it->first);
+        html_TD();
+        if (isThisUnit)
           TXBuffer += Settings.Name;
+        else
+          TXBuffer += it->second.nodeName;
         html_TD();
-        if (Nodes[x].build)
-          TXBuffer += String(Nodes[x].build);
+        if (it->second.build)
+          TXBuffer += String(it->second.build);
         html_TD();
-        if (Nodes[x].nodeType)
-          switch (Nodes[x].nodeType)
+        if (it->second.nodeType)
+          switch (it->second.nodeType)
           {
             case NODE_TYPE_ID_ESP_EASY_STD:
               TXBuffer += F("ESP Easy");
@@ -939,7 +945,7 @@ void handle_root() {
         html_TD();
         TXBuffer += url;
         html_TD();
-        TXBuffer += String( Nodes[x].age);
+        TXBuffer += String( it->second.age);
       }
     }
 
@@ -1164,6 +1170,10 @@ void handle_controllers() {
   String MQTTLwtTopic = WebServer.arg(F("mqttlwttopic"));
   String lwtmessageconnect = WebServer.arg(F("lwtmessageconnect"));
   String lwtmessagedisconnect = WebServer.arg(F("lwtmessagedisconnect"));
+  const int minimumsendinterval = getFormItemInt(F("minimumsendinterval"), 100);
+  const int maxqueuedepth = getFormItemInt(F("maxqueuedepth"), 10);
+  const int maxretry = getFormItemInt(F("maxretry"), 10);
+  String deleteoldest = WebServer.arg(F("deleteoldest"));
 
 
   //submitted data
@@ -1182,6 +1192,8 @@ void handle_controllers() {
         //reset (some) default-settings
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
         ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
+        ControllerSettings.MinimalTimeBetweenMessages = 100;
+//        ControllerSettings.MaxQueueDepth = 0;
         if (Protocol[ProtocolIndex].usesTemplate)
           CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
         strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
@@ -1241,6 +1253,11 @@ void handle_controllers() {
         strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
         strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
         strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
+        ControllerSettings.MaxQueueDepth = maxqueuedepth;
+        ControllerSettings.MaxRetry = maxretry;
+        ControllerSettings.DeleteOldest = deleteoldest.toInt();
+
 
         CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
@@ -1321,12 +1338,17 @@ void handle_controllers() {
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
 
+      byte choice_delete_oldest = ControllerSettings.DeleteOldest;
+      String options_delete_oldest[2];
+      options_delete_oldest[0] = F("Ignore New");
+      options_delete_oldest[1] = F("Delete Oldest");
+
+
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (!Protocol[ProtocolIndex].Custom)
       {
 
         addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
-
         if (ControllerSettings.UseDNS)
         {
           addFormTextBox( F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
@@ -1337,15 +1359,21 @@ void handle_controllers() {
         }
 
         addFormNumericBox( F("Controller Port"), F("controllerport"), ControllerSettings.Port, 1, 65535);
+        addFormNumericBox( F("Minimum Send Interval"), F("minimumsendinterval"), ControllerSettings.MinimalTimeBetweenMessages, 1, CONTROLLER_DELAY_QUEUE_DELAY_MAX);
+        addUnit(F("ms"));
+        addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
+        addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
+        addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+
 
         if (Protocol[ProtocolIndex].usesAccount)
         {
-           String protoDisplayName;
+          String protoDisplayName;
           if (!getControllerProtocolDisplayName(ProtocolIndex, CONTROLLER_USER, protoDisplayName)) {
             protoDisplayName = F("Controller User");
           }
           addFormTextBox(protoDisplayName, F("controlleruser"), SecuritySettings.ControllerUser[controllerindex], sizeof(SecuritySettings.ControllerUser[0])-1);
-         }
+        }
         if (Protocol[ProtocolIndex].usesPassword)
         {
           String protoDisplayName;
@@ -1427,6 +1455,11 @@ void handle_controllers() {
 // HTML string re-use to keep the executable smaller
 // Flash strings are not checked for duplication.
 //********************************************************************************
+
+void html_TR_TD_highlight() {
+  TXBuffer += F("<TR class=\"highlight\">");
+  html_TD();
+}
 
 void html_TR_TD() {
   TXBuffer += F("<TR>");
@@ -3086,6 +3119,7 @@ void handle_log() {
 // Web Interface JSON log page
 //********************************************************************************
 void handle_log_JSON() {
+  if (!isLoggedIn()) return;
   TXBuffer.startJsonStream();
   String webrequest = WebServer.arg(F("view"));
   TXBuffer += F("{\"Log\": {");
@@ -3756,14 +3790,14 @@ void handle_json()
     }
     if(showNodes) {
       bool comma_between=false;
-      for (byte x = 0; x < UNIT_MAX; x++)
+      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
       {
-        if (Nodes[x].ip[0] != 0)
+        if (it->second.ip[0] != 0)
         {
 
           char ip[20];
 
-          sprintf_P(ip, PSTR("%u.%u.%u.%u"), Nodes[x].ip[0], Nodes[x].ip[1], Nodes[x].ip[2], Nodes[x].ip[3]);
+          sprintf_P(ip, PSTR("%u.%u.%u.%u"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
 
           if( comma_between ) {
             TXBuffer += F(",");
@@ -3773,17 +3807,17 @@ void handle_json()
           }
 
           TXBuffer += F("{");
-          stream_next_json_object_value(F("nr"), String(x));
+          stream_next_json_object_value(F("nr"), String(it->first));
           stream_next_json_object_value(F("name"),
-              (x != Settings.Unit) ? Nodes[x].nodeName : Settings.Name);
+              (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
 
-          if (Nodes[x].build) {
-            stream_next_json_object_value(F("build"), String(Nodes[x].build));
+          if (it->second.build) {
+            stream_next_json_object_value(F("build"), String(it->second.build));
           }
 
-          if (Nodes[x].nodeType) {
+          if (it->second.nodeType) {
             String platform;
-            switch (Nodes[x].nodeType)
+            switch (it->second.nodeType)
             {
               case NODE_TYPE_ID_ESP_EASY_STD:     platform = F("ESP Easy");      break;
               case NODE_TYPE_ID_ESP_EASYM_STD:    platform = F("ESP Easy Mega"); break;
@@ -3795,7 +3829,7 @@ void handle_json()
               stream_next_json_object_value(F("platform"), platform);
           }
           stream_next_json_object_value(F("ip"), ip);
-          stream_last_json_object_value(F("age"),  String( Nodes[x].age ));
+          stream_last_json_object_value(F("age"),  String( it->second.age ));
         } // if node info exists
       } // for loop
       if(comma_between) {
@@ -4381,16 +4415,19 @@ boolean handle_custom(String path) {
     if(!unit) unit = btnunit; // unit element prevails, if not used then set to btnunit
     if (unit && unit != Settings.Unit)
     {
-      TXBuffer.startStream();
-      sendHeadandTail(F("TmplDsh"),_HEAD);
-      char url[40];
-      sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), Nodes[unit].ip[0], Nodes[unit].ip[1], Nodes[unit].ip[2], Nodes[unit].ip[3]);
-      TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
-      TXBuffer += url;
-      TXBuffer += F("\">");
-      sendHeadandTail(F("TmplDsh"),_TAIL);
-      TXBuffer.endStream();
-      return true;
+      NodesMap::iterator it = Nodes.find(unit);
+      if (it != Nodes.end()) {
+        TXBuffer.startStream();
+        sendHeadandTail(F("TmplDsh"),_HEAD);
+        char url[40];
+        sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
+        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
+        TXBuffer += url;
+        TXBuffer += F("\">");
+        sendHeadandTail(F("TmplDsh"),_TAIL);
+        TXBuffer.endStream();
+        return true;
+      }
     }
 
     TXBuffer.startStream();
@@ -4404,16 +4441,16 @@ boolean handle_custom(String path) {
     // create unit selector dropdown
     addSelector_Head(F("unit"), true);
     byte choice = Settings.Unit;
-    for (byte x = 0; x < UNIT_MAX; x++)
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
-      if (Nodes[x].ip[0] != 0 || x == Settings.Unit)
+      if (it->second.ip[0] != 0 || it->first == Settings.Unit)
       {
-        String name = String(x) + F(" - ");
-        if (x != Settings.Unit)
-          name += Nodes[x].nodeName;
+        String name = String(it->first) + F(" - ");
+        if (it->first != Settings.Unit)
+          name += it->second.nodeName;
         else
           name += Settings.Name;
-        addSelector_Item(name, x, choice == x, false, F(""));
+        addSelector_Item(name, it->first, choice == it->first, false, F(""));
       }
     }
     addSelector_Foot();
@@ -4421,10 +4458,19 @@ boolean handle_custom(String path) {
     // create <> navigation buttons
     byte prev=Settings.Unit;
     byte next=Settings.Unit;
-    for (byte x = Settings.Unit-1; x > 0; x--)
-      if (Nodes[x].ip[0] != 0) {prev = x; break;}
-    for (byte x = Settings.Unit+1; x < UNIT_MAX; x++)
-      if (Nodes[x].ip[0] != 0) {next = x; break;}
+    NodesMap::iterator it;
+    for (byte x = Settings.Unit-1; x > 0; x--) {
+      it = Nodes.find(x);
+      if (it != Nodes.end()) {
+        if (it->second.ip[0] != 0) {prev = x; break;}
+      }
+    }
+    for (byte x = Settings.Unit+1; x < UNIT_MAX; x++) {
+      it = Nodes.find(x);
+      if (it != Nodes.end()) {
+        if (it->second.ip[0] != 0) {next = x; break;}
+      }
+    }
 
     TXBuffer += F("<a class='button link' href=");
     TXBuffer += path;
@@ -5353,6 +5399,18 @@ void handle_sysinfo() {
    TXBuffer += ESP.getFreeSketchSpace() / 1024;
    TXBuffer += F(" kB free)");
   #endif
+
+  html_TR_TD(); TXBuffer += F("SPIFFS Size<TD>");
+  {
+  #if defined(ESP8266)
+    fs::FSInfo fs_info;
+    SPIFFS.info(fs_info);
+    TXBuffer += fs_info.totalBytes / 1024;
+    TXBuffer += F(" kB (");
+    TXBuffer += (fs_info.totalBytes - fs_info.usedBytes) / 1024;
+    TXBuffer += F(" kB free)");
+  #endif
+  }
 
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);

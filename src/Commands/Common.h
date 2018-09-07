@@ -18,36 +18,6 @@ bool IsNumeric(char * source)
 	return result;
 }
 
-bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize = 1024, unsigned int timeout = 1000)
-{
-	int c;
-	const unsigned long timer = millis() + timeout;
-	str = "";
-
-	do {
-		//read character
-		c = input.read();
-		if (c >= 0) {
-			//found terminator, we're ok
-			if (c == terminator) {
-				return(true);
-			}
-			//found character, add to string
-			else{
-				str += char(c);
-				//string at max size?
-				if (str.length() >= maxSize) {
-					addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
-					return(false);
-				}
-			}
-		}
-		yield();
-	} while (!timeOutReached(timer));
-
-	addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
-	return(false);
-}
 
 String Command_GetORSetIP(struct EventStruct *event,
 	      const __FlashStringHelper *targetDescription,

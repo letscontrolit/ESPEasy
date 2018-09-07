@@ -34,33 +34,47 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 
      case CPLUGIN_PROTOCOL_SEND:
       {
-        if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-          success = false;
-          break;
-        }
+        // Collect the values at the same run, to make sure all are from the same sample
+        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        C012_queue_element element(event, valueCount);
+        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        String postDataStr = F("");
-        const byte valueCount = getValueCountFromSensorType(event->sensorType);
-        success = CPlugin_012_send(event, valueCount);
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+
+        for (byte x = 0; x < valueCount; x++)
+        {
+          bool isvalid;
+          String formattedValue = formatUserVar(event, x, isvalid);
+          if (isvalid) {
+            element.txt[x] = F("update/V");
+            element.txt[x] += event->idx + x;
+            element.txt[x] += F("?value=");
+            element.txt[x] += formattedValue;
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+          }
+        }
+        success = C012_DelayHandler.addToQueue(element);
+        scheduleNextDelayQueue(TIMER_C012_DELAY_QUEUE, C012_DelayHandler.getNextScheduleTime());
         break;
       }
   }
   return success;
 }
 
-boolean CPlugin_012_send(struct EventStruct *event, int nrValues) {
-  String postDataStr = F("");
-  boolean success = true;
-  for (int i = 0; i < nrValues && success; ++i) {
-    postDataStr = F("update/V") ;
-    postDataStr += event->idx + i;
-    postDataStr += F("?value=");
-    postDataStr += formatUserVarNoCheck(event, i);
-    success = Blynk_get(postDataStr, event->ControllerIndex);
+//********************************************************************************
+// Process Queued Blynk request, with data set to NULL
+//********************************************************************************
+bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  while (element.txt[element.valuesSent] == "") {
+    // A non valid value, which we are not going to send.
+    // Increase sent counter until a valid value is found.
+    if (element.checkDone(true))
+      return true;
   }
-  return success;
+  return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));
 }
-
 
 boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 {
@@ -70,16 +84,16 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 
   ControllerSettingsStruct ControllerSettings;
   LoadControllerSettings(controllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
-  if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0) || !ControllerSettings.connectToHost(client))
-  {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, F("Blynk : connection failed"));
+
+  if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0)) {
+    addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
     return false;
   }
-  if (connectionFailures)
-    connectionFailures--;
+
+  WiFiClient client;
+  if (!try_connect_host(CPLUGIN_ID_012, client, ControllerSettings))
+    return false;
+
 
   // We now create a URI for the request
   char request[300] = {0};
@@ -134,7 +148,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
     }
     yield();
   }
-  strcpy_P(log, PSTR("HTTP : closing connection"));
+  strcpy_P(log, PSTR("HTTP : closing connection (012)"));
   addLog(LOG_LEVEL_DEBUG, log);
 
   client.flush();

@@ -1113,6 +1113,15 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_UNCONDITIONAL_POLL:
       for (byte x = 0; x < PLUGIN_MAX; x++) {
         if (Plugin_id[x] != 0){
+          if (Function == PLUGIN_DEVICE_ADD) {
+            const unsigned int next_DeviceIndex = deviceCount + 2;
+            if (next_DeviceIndex > Device.size()) {
+              // Increase with 16 to get some compromise between number of resizes and wasted space
+              unsigned int newSize = Device.size();
+              newSize = newSize + 16 - (newSize % 16);
+              Device.resize(newSize);
+            }
+          }
           START_TIMER;
           Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x,Function);

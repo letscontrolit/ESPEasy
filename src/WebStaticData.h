@@ -236,6 +236,8 @@ static const char pgDefaultCSS[] PROGMEM = {
     "table.multirow tr {padding: 4px; }"
       "table.multirow tr:nth-child(even){background-color: #DEE6FF; }"
     "table.multirow {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
+    // Highlight row
+    "tr.highlight td { background-color: #dbff0075; }"    
     // inside a form
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
