@@ -849,7 +849,7 @@ void backgroundtasks()
   #if defined(ESP8266)
     tcpCleanup();
   #endif
-
+  process_serialLogBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial)
       if (Serial.available())

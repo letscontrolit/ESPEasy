@@ -1162,10 +1162,23 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addToLog(byte logLevel, const char *line)
 {
+  const size_t line_length = strlen(line);
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    Serial.print(millis());
-    Serial.print(F(" : "));
-    Serial.println(line);
+    int roomLeft = ESP.getFreeHeap() - 5000;
+    if (roomLeft > 0) {
+      String timestamp_log(millis());
+      timestamp_log += F(" : ");
+      for (size_t i = 0; i < timestamp_log.length(); ++i) {
+        serialLogBuffer.push_back(timestamp_log[i]);
+      }
+      size_t pos = 0;
+      while (pos < line_length && pos < static_cast<size_t>(roomLeft)) {
+        serialLogBuffer.push_back(line[pos]);
+        ++pos;
+      }
+      serialLogBuffer.push_back('\r');
+      serialLogBuffer.push_back('\n');
+    }
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
@@ -1184,6 +1197,25 @@ void addToLog(byte logLevel, const char *line)
 #endif
 }
 
+void process_serialLogBuffer() {
+  if (serialLogBuffer.size() == 0) return;
+  if (timePassedSince(last_serial_log_emptied) > 10000) {
+    last_serial_log_emptied = millis();
+    serialLogBuffer.clear();
+    return;
+  }
+  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
+#if defined(ESP8266)
+  snip = Serial.availableForWrite();
+#endif
+  if (snip > 0) last_serial_log_emptied = millis();
+  size_t bytes_to_write = serialLogBuffer.size();
+  if (snip < bytes_to_write) bytes_to_write = snip;
+  for (size_t i = 0; i < bytes_to_write; ++i) {
+    Serial.write(serialLogBuffer.front());
+    serialLogBuffer.pop_front();
+  }
+}
 
 /********************************************************************************************\
   Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
