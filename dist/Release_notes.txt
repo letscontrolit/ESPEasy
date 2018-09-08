@@ -1,4 +1,53 @@
 -------------------------------------------------
+Changes in release mega-20180908 (since mega-20180904)
+-------------------------------------------------
+
+Release date: Sat Sep  8 04:00:20 CEST 2018
+
+Gijs Noorlander (1):
+      Update README.md
+
+TD-er (37):
+      [controller delay] Let controllers handle their own delay and buffer
+      [MQTT] Add controller delay queue for MQTT
+      [Controller] Make ControllerDelayHandler templated and comment
+      [C001] Let C001 controller use queue
+      [C003] Let C003 controller use queue
+      [C004] Let C004 controller use queue and simplify using macros
+      Added `USES_Cxxx` checks
+      [C007] Let C007 controller use queue
+      [MQTT] Use set controller settings on MQTT controllers
+      [Webserver] Add fields for new Controller settings
+      [C008] Let C008 use queue and some bugfixes
+      [#1666] Moved code duplication for HTTP requests to special functions
+      [C009] Removed port number from HTTP host header
+      [C009] Controller C009 now also uses Delay Queue
+      [Client Connect] Check for success on connecting with client.
+      [C009] Remove 'no port' option in HTTP packet
+      [HTTP Auth] Now using proper index for retrieving credentials
+      [HTTP] Add user agent in request header
+      [C010] Controller C010 now also uses Delay Queue
+      [Cleanup] Merge code duplication between C008 and C010
+      [C011] Controller C011 now also uses Delay Queue
+      [Controller] Moved the 'magic' default and max values to defines
+      [C012] Controller C012 now also uses Delay Queue
+      [C013] Remove some obsolete function
+      [Nodes] Make Nodes list a map with dynamic size
+      [Nodes] Highlight current node in the list of nodes
+      [Cleanup] Memory optimisation in available controllers and plugins
+      [Nodes] Fix String copy to properly read node names
+      [MQTT] Give MQTT state in log when connect state changes.
+      [SPIFFS] Add SPIFFS size + usage to sysinfo page
+      [Watchdog] Add watchdog feed to backgroundtasks() function
+      [MQTT] Force MQTT client reconnect when wifi reconnects
+      [WDT] Add yield() and runbackgroundtasks() when parsing rules
+      [#1707] Getting logs from the /log even when password is not entered
+      [#1714] Parse notification sender to allow some sender formatting
+      [Scheduler] Do not schedule task device timer for tasks without interval
+      [Queue] Add memory check to determine full queue
+
+
+-------------------------------------------------
 Changes in release mega-20180904 (since mega-20180903)
 -------------------------------------------------
 
