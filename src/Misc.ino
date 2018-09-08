@@ -1165,17 +1165,20 @@ void addToLog(byte logLevel, const char *line)
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     Serial.print(millis());
     Serial.print(F(" : "));
-    uint16_t snip = (uint16_t)(Serial.availableForWrite());
-    if(strlen(line) + 20 > snip) {
+
+    size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
+#if defined(ESP8266)
+    snip = Serial.availableForWrite();
+#endif
+    if (strlen(line) + 20 > snip) {
         if(snip < 22) snip = 22;
         String linestr = line;
         Serial.print(linestr.substring(0,snip-22));
         Serial.println(F(",snip!"));             // Sorry, but no room for your entire log message.
-    }
-    else {
-        Serial.print(F("["));
+    } else {
+        Serial.print('[');
         Serial.print(String(snip));
-        Serial.print(F("], "));
+        Serial.print("], ");
         Serial.println(line);
     }
   }
