@@ -380,7 +380,9 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize = 1024, unsigned int timeout = 1000)
 {
 	int c;
-	const unsigned long timer = millis() + timeout;
+  const unsigned long start = millis();
+	const unsigned long timer = start + timeout;
+  unsigned long backgroundtasks_timer = start + 100;
 	str = "";
 
 	do {
@@ -401,7 +403,13 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 				}
 			}
 		}
-		yield();
+    // We must run the backgroundtasks every now and then.
+    if (timeOutReached(backgroundtasks_timer)) {
+      backgroundtasks_timer += 100;
+      backgroundtasks();
+    } else {
+      yield();
+    }
 	} while (!timeOutReached(timer));
 
 	addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
@@ -592,6 +600,13 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
       F("HTTP : "), controller_number, ControllerSettings);
 }
 
+// Use "client.available() || client.connected()" to read all lines from slow servers.
+// See: https://github.com/esp8266/Arduino/pull/5113
+//      https://github.com/esp8266/Arduino/pull/1829
+bool client_available(WiFiClient& client) {
+  return client.available() || client.connected();
+}
+
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr) {
   bool success = false;
   // This will send the request to the server
@@ -602,7 +617,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
     delay(1);
 
   // Read all the lines of the reply from server and print them to Serial
-  while (client.available() && !success) {
+  while (client_available(client) && !success) {
     //   String line = client.readStringUntil('\n');
     String line;
     safeReadStringUntil(client, line, '\n');

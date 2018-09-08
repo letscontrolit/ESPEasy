@@ -82,7 +82,7 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
     delay(1);
 
   timer = millis() + 1000;
-  while (client.available() && !timeOutReached(timer) && !success)
+  while (client_available(client) && !timeOutReached(timer) && !success)
   {
 
     //   String line = client.readStringUntil('\n');
@@ -109,7 +109,7 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
   addLog(LOG_LEVEL_DEBUG, log);
   client.print(element.txt);
   delay(10);
-  while (client.available())
+  while (client_available(client))
     client.read();
 
   strcpy_P(log, PSTR("TELNT: closing connection"));

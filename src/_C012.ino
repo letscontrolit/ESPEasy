@@ -113,7 +113,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   char log[80] = {0};
 
   // Read all the lines of the reply from server and log them
-  while (client.available()) {
+  while (client_available(client)) {
     String line;
     safeReadStringUntil(client, line, '\n');
     addLog(LOG_LEVEL_DEBUG_MORE, line);
@@ -154,7 +154,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   client.flush();
   client.stop();
 
-  // important - backgroudtasks - free mem
+  // important - backgroundtasks - free mem
   timer = millis() + Settings.MessageDelay;
   while (!timeOutReached(timer))
               backgroundtasks();
