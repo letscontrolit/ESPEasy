@@ -1165,7 +1165,19 @@ void addToLog(byte logLevel, const char *line)
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     Serial.print(millis());
     Serial.print(F(" : "));
-    Serial.println(line);
+    uint16_t snip = (uint16_t)(Serial.availableForWrite());
+    if(strlen(line) + 20 > snip) {
+        if(snip < 22) snip = 22;
+        String linestr = line;
+        Serial.print(linestr.substring(0,snip-22));
+        Serial.println(F(",snip!"));             // Sorry, but no room for your entire log message.
+    }
+    else {
+        Serial.print(F("["));
+        Serial.print(String(snip));
+        Serial.print(F("], "));
+        Serial.println(line);
+    }
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
