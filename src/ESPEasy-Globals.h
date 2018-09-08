@@ -400,6 +400,7 @@ bool loglevelActiveFor(byte logLevel);
 void addToLog(byte loglevel, const String& string);
 void addToLog(byte logLevel, const __FlashStringHelper* flashString);
 void statusLED(boolean traffic);
+void backgroundtasks();
 
 enum SettingsType {
   BasicSettings_Type = 0,
