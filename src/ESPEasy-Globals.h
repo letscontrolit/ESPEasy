@@ -444,6 +444,7 @@ bool showSettingsFileLayout = false;
 #include "I2CTypes.h"
 #include <I2Cdev.h>
 #include <map>
+#include <deque>
 
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
@@ -1240,6 +1241,9 @@ struct LogStruct {
     String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
+
+std::deque<char> serialLogBuffer;
+unsigned long last_serial_log_emptied = 0;
 
 byte highest_active_log_level = 0;
 bool log_to_serial_disabled = false;
