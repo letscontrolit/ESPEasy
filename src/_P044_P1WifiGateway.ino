@@ -16,7 +16,7 @@
 
 #define P044_STATUS_LED 12
 #define P044_BUFFER_SIZE 1024
-#define P044_NETBUF_SIZE 600
+#define P044_NETBUF_SIZE 128
 #define P044_DISABLED 0
 #define P044_WAITING 1
 #define P044_READING 2
@@ -31,7 +31,7 @@ boolean CRCcheck = false;
 unsigned int currCRC = 0;
 int checkI = 0;
 
-WiFiServer *P1GatewayServer;
+WiFiServer *P1GatewayServer = nullptr;
 WiFiClient P1GatewayClient;
 
 boolean Plugin_044(byte function, struct EventStruct *event, String& string)
@@ -125,7 +125,11 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           #if defined(ESP32)
             Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
           #endif
-          if (P1GatewayServer) P1GatewayServer->close();
+          if (P1GatewayServer)
+          {
+            P1GatewayServer->close();
+            delete P1GatewayServer;
+          }
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           P1GatewayServer->begin();
 
@@ -164,7 +168,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (P1GatewayServer) {
           P1GatewayServer->close();
-          //FIXME: shouldnt P1P1GatewayServer be deleted?
+          delete P1GatewayServer;
           P1GatewayServer = NULL;
         }
         success = true;
@@ -175,7 +179,6 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_044_init)
         {
-          size_t bytes_read;
           if (P1GatewayServer->hasClient())
           {
             if (P1GatewayClient) P1GatewayClient.stop();
@@ -186,24 +189,25 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           if (P1GatewayClient.connected())
           {
             connectionState = 1;
-            uint8_t net_buf[P044_BUFFER_SIZE];
+            uint8_t net_buf[P044_NETBUF_SIZE];
             int count = P1GatewayClient.available();
             if (count > 0)
             {
-              if (count > P044_BUFFER_SIZE)
-                count = P044_BUFFER_SIZE;
-              bytes_read = P1GatewayClient.read(net_buf, count);
-              Serial.write(net_buf, bytes_read);
+              size_t net_bytes_read;
+              if (count > P044_NETBUF_SIZE)
+                count = P044_NETBUF_SIZE;
+              net_bytes_read = P1GatewayClient.read(net_buf, count);
+              Serial.write(net_buf, net_bytes_read);
               Serial.flush(); // Waits for the transmission of outgoing serial data to complete
 
-              if (count == P044_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+              if (count == P044_NETBUF_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
                 // and log buffer full situation
                 addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[P044_BUFFER_SIZE + 40];
+              char log[P044_NETBUF_SIZE + 40];
               sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
               addLog(LOG_LEVEL_DEBUG, log);
             }
