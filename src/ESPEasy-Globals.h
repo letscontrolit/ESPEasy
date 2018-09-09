@@ -357,6 +357,9 @@
 #define SENSOR_TYPE_LONG                   20
 #define SENSOR_TYPE_WIND                   21
 
+#define UNIT_NUMBER_MAX                  9999  // Stored in Settings.Unit
+#define DOMOTICZ_MAX_IDX            999999999  // Looks like it is an unsigned int, so could be up to 4 bln.
+
 #define VALUE_SOURCE_SYSTEM                 1
 #define VALUE_SOURCE_SERIAL                 2
 #define VALUE_SOURCE_HTTP                   3

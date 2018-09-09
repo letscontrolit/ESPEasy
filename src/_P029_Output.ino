@@ -53,7 +53,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
         addHtml(F("<TR><TD>IDX:<TD>"));
         String id = F("TDID");   //="taskdeviceid"
         id += controllerNr + 1;
-        addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);
+        addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, DOMOTICZ_MAX_IDX);
         success = true;
         break;
       }
