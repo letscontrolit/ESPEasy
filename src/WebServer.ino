@@ -1082,7 +1082,7 @@ void handle_config() {
   Settings.Name[25] = 0;
   SecuritySettings.Password[25] = 0;
   addFormTextBox( F("Unit Name"), F("name"), Settings.Name, 25);
-  addFormNumericBox( F("Unit Number"), F("unit"), Settings.Unit, 0, 9999);
+  addFormNumericBox( F("Unit Number"), F("unit"), Settings.Unit, 0, UNIT_NUMBER_MAX);
   addFormPasswordBox(F("Admin Password"), F("password"), SecuritySettings.Password, 25);
 
   addFormSubHeader(F("Wifi Settings"));
@@ -2283,7 +2283,7 @@ void handle_devices() {
               html_TR_TD(); TXBuffer += F("IDX:<TD>");
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
-              addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, 999999999); // Looks like it is an unsigned int, so could be up to 4 bln.
+              addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
             }
           }
         }
