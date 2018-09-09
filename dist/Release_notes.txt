@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20180909 (since mega-20180908)
+-------------------------------------------------
+
+Release date: Sun Sep  9 04:00:14 CEST 2018
+
+Gijs Noorlander (1):
+      Revert [WDT] Add watchdog feed to backgroundtasks()
+
+TD-er (5):
+      [#1720] WiFi read all lines from slow servers
+      Add forward declaration for void backgroundtasks()
+      [Serial Log] Limit serial log to prevent buffer overflow
+      [ESP32] Fix Build, ESP32 doesn't have the availableForWrite
+      [Serial log] Use buffer to prevent Serial buffer to overflow
+
+
+-------------------------------------------------
 Changes in release mega-20180908 (since mega-20180904)
 -------------------------------------------------
 
