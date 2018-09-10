@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180910 (since mega-20180909)
+-------------------------------------------------
+
+Release date: Mon Sep 10 04:00:22 CEST 2018
+
+TD-er (2):
+      [HTTP] Command SendToHttp cannot connect
+      [Domoticz IDX] Allow for IDX of > 9999
+
+sakinit (1):
+      Reduced buffer size to prevent stack overflow
+
+
+-------------------------------------------------
 Changes in release mega-20180909 (since mega-20180908)
 -------------------------------------------------
 
