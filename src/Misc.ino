@@ -365,11 +365,11 @@ void parseCommandString(struct EventStruct *event, const String& string)
   event->Par4 = 0;
   event->Par5 = 0;
 
-  if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 2)) event->Par1 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 3)) event->Par2 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 4)) event->Par3 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 5)) event->Par4 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 6)) event->Par5 = CalculateParam(TmpStr1);
 }
 
 /********************************************************************************************\
@@ -1945,6 +1945,23 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
+float CalculateParam(const char *TmpStr) {
+  float param=0;
+  int returnCode=Calculate(TmpStr, &param);
+  if (returnCode!=CALCULATE_OK) {
+    String log = String(F("Parameter Calculate ERROR. Return Code = ")) + String(returnCode);
+    addLog(LOG_LEVEL_INFO, log);
+  } else {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("Parameter calculated result: ");
+      log += TmpStr;
+      log += F(" = ");
+      log += lround(param);
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+  }
+  return (lround(param));
+}
 
 void checkRuleSets(){
 for (byte x=0; x < RULESETS_MAX; x++){
