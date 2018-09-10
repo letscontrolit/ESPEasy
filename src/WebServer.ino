@@ -3649,6 +3649,7 @@ void handle_control() {
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
+           command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("rules"))) {
     addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
