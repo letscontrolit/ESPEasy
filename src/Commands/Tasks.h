@@ -32,7 +32,7 @@ String Command_Task_ValueSet(struct EventStruct *event, const char* Line)
 
 String Command_Task_ValueToggle(struct EventStruct *event, const char* Line)
 {
-	const float result = UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1];
+	const int result = round(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]);
 	if (result == 0 || result == 1) {
 	  UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = !result;
 	}
