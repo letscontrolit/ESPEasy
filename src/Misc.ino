@@ -1961,19 +1961,19 @@ int CalculateParam(char *TmpStr) {
       String errorDesc;
       switch (returnCode) {
         case CALCULATE_ERROR_STACK_OVERFLOW:
-          errorDesc = "Stack Overflow";
+          errorDesc = F("Stack Overflow");
           break;
         case CALCULATE_ERROR_BAD_OPERATOR:
-          errorDesc = "Bad Operator";
+          errorDesc = F("Bad Operator");
           break;
         case CALCULATE_ERROR_PARENTHESES_MISMATCHED:
-          errorDesc = "Parenthesis mismatch";
+          errorDesc = F("Parenthesis mismatch");
           break;
         case CALCULATE_ERROR_UNKNOWN_TOKEN:
-          errorDesc = "Unknown token";
+          errorDesc = F("Unknown token");
           break;
         default:
-          errorDesc = "Unknown error";
+          errorDesc = F("Unknown error");
           break;
         }
         String log = String(F("CALCULATE: Parameter Calculate ERROR: ")) + errorDesc;
