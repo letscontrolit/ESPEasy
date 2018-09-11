@@ -1945,22 +1945,51 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
-float CalculateParam(const char *TmpStr) {
-  float param=0;
-  int returnCode=Calculate(TmpStr, &param);
-  if (returnCode!=CALCULATE_OK) {
-    String log = String(F("Parameter Calculate ERROR. Return Code = ")) + String(returnCode);
-    addLog(LOG_LEVEL_INFO, log);
+bool is_digits(const std::string &str)
+{
+    return std::all_of(str.begin(), str.end(), ::isdigit); // C++11
+}
+
+int CalculateParam(char *TmpStr) {
+  int returnValue;
+  if (is_digits(TmpStr)) { //if the string is made only of digits, do not waste time calling Calculate
+    returnValue=str2int(TmpStr);
   } else {
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Parameter calculated result: ");
-      log += TmpStr;
-      log += F(" = ");
-      log += lround(param);
-      addLog(LOG_LEVEL_DEBUG, log);
+    float param=0;
+    int returnCode=Calculate(TmpStr, &param);
+    if (returnCode!=CALCULATE_OK) {
+      String errorDesc;
+      switch (returnCode) {
+        case CALCULATE_ERROR_STACK_OVERFLOW:
+          errorDesc = "Stack Overflow";
+          break;
+        case CALCULATE_ERROR_BAD_OPERATOR:
+          errorDesc = "Bad Operator";
+          break;
+        case CALCULATE_ERROR_PARENTHESES_MISMATCHED:
+          errorDesc = "Parenthesis mismatch";
+          break;
+        case CALCULATE_ERROR_UNKNOWN_TOKEN:
+          errorDesc = "Unknown token";
+          break;
+        default:
+          errorDesc = "Unknown error";
+          break;
+        }
+        String log = String(F("CALCULATE: Parameter Calculate ERROR: ")) + errorDesc;
+        addLog(LOG_LEVEL_INFO, log);
+      } else {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("CALCULATE: ");
+        log += TmpStr;
+        log += F(" = ");
+        log += round(param);
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
     }
+    returnValue=round(param); //return integer only as it's valid only for device and task id
   }
-  return (lround(param));
+  return returnValue;
 }
 
 void checkRuleSets(){
