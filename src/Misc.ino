@@ -1820,6 +1820,12 @@ int Calculate(const char *input, float* result)
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
   oc=c=0;
+
+  if (input[0] == '=') {
+    ++strpos;
+    c = *strpos;
+  }
+
   while (strpos < strend)
   {
     // read one token from the input stream
@@ -1945,17 +1951,16 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
-bool is_digits(const std::string &str)
-{
-  return str.find_first_not_of("0123456789") == std::string::npos;
-}
-
 int CalculateParam(char *TmpStr) {
   int returnValue;
-  if (is_digits(TmpStr)) { //if the string is made only of digits, do not waste time calling Calculate
+
+  // Minimize calls to the Calulate function.
+  // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
+  if (TmpStr[0] != '=') {
     returnValue=str2int(TmpStr);
   } else {
     float param=0;
+    TmpStr[0] = ' '; //replace '=' with space
     int returnCode=Calculate(TmpStr, &param);
     if (returnCode!=CALCULATE_OK) {
       String errorDesc;
@@ -1976,11 +1981,16 @@ int CalculateParam(char *TmpStr) {
           errorDesc = F("Unknown error");
           break;
         }
-        String log = String(F("CALCULATE: Parameter Calculate ERROR: ")) + errorDesc;
-        addLog(LOG_LEVEL_INFO, log);
+        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+        addLog(LOG_LEVEL_ERROR, log);
+        log = F("CALCULATE PARAM ERROR details: ");
+        log += TmpStr;
+        log += F(" = ");
+        log += round(param);
+        addLog(LOG_LEVEL_ERROR, log);
       } else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("CALCULATE: ");
+        String log = F("CALCULATE PARAM: ");
         log += TmpStr;
         log += F(" = ");
         log += round(param);
