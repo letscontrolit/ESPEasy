@@ -49,7 +49,7 @@ boolean NPlugin_002(byte function, struct EventStruct *event, String& string)
         //this reserves IRAM and uninitialized RAM
         #ifndef ESP32
         // Buzzer not compatible with ESP32 due to lack of tone command.
-        tone(NotificationSettings.Pin1, 500, 500);
+        tone_espEasy(NotificationSettings.Pin1, 500, 500);
         #endif
         success = true;
       }

@@ -6,7 +6,6 @@
 #define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
 //  #endif
 
-
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
@@ -60,7 +59,7 @@ void checkUDP()
 
   // UDP events
   int packetSize = portUDP.parsePacket();
-  if (packetSize)
+  if (packetSize > 0 /*&& portUDP.remotePort() == Settings.UDPPort*/)
   {
     statusLED(true);
 
@@ -71,73 +70,85 @@ void checkUDP()
       runningUPDCheck = false;
       return;
     }
-    char packetBuffer[128];
-    int len = portUDP.read(packetBuffer, 128);
+    if (packetSize >= 2 && packetSize < UDP_PACKETSIZE_MAX) {
+      // Allocate buffer to process packet.
+      std::vector<char> packetBuffer;
+      packetBuffer.resize(packetSize + 1);
+      memset(&packetBuffer[0], 0, packetSize + 1);
 
-    if (packetBuffer[0] != 255)
-    {
-      packetBuffer[len] = 0;
-      addLog(LOG_LEVEL_DEBUG, packetBuffer);
-      struct EventStruct TempEvent;
-      String request = packetBuffer;
-      parseCommandString(&TempEvent, request);
-      TempEvent.Source = VALUE_SOURCE_SYSTEM;
-      if (!PluginCall(PLUGIN_WRITE, &TempEvent, request))
-        ExecuteCommand(VALUE_SOURCE_SYSTEM, packetBuffer);
-    }
-    else
-    {
-      // binary data!
-      switch (packetBuffer[1])
-      {
-
-        case 1: // sysinfo message
+      int len = portUDP.read(&packetBuffer[0], packetSize);
+      if (len >= 2) {
+        if (packetBuffer[0] != 255)
+        {
+          packetBuffer[len] = 0;
+          String request = &packetBuffer[0];
+          addLog(LOG_LEVEL_DEBUG, request);
+          struct EventStruct TempEvent;
+          parseCommandString(&TempEvent, request);
+          TempEvent.Source = VALUE_SOURCE_SYSTEM;
+          if (!PluginCall(PLUGIN_WRITE, &TempEvent, request))
+            ExecuteCommand(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+        }
+        else
+        {
+          // binary data!
+          switch (packetBuffer[1])
           {
-            byte mac[6];
-            byte ip[4];
-            byte unit = packetBuffer[12];
-            for (byte x = 0; x < 6; x++)
-              mac[x] = packetBuffer[x + 2];
-            for (byte x = 0; x < 4; x++)
-              ip[x] = packetBuffer[x + 8];
 
-            if (unit < UNIT_MAX)
-            {
-              for (byte x = 0; x < 4; x++)
-                Nodes[unit].ip[x] = packetBuffer[x + 8];
-              Nodes[unit].age = 0; // reset 'age counter'
-              if (len >20) // extended packet size
+            case 1: // sysinfo message
               {
-                Nodes[unit].build = packetBuffer[13] + 256*packetBuffer[14];
-                if (Nodes[unit].nodeName==0)
-                    Nodes[unit].nodeName =  (char *)malloc(26);
-                memcpy(Nodes[unit].nodeName,(byte*)packetBuffer+15,25);
-                Nodes[unit].nodeName[25]=0;
-                Nodes[unit].nodeType = packetBuffer[40];
+                if (len < 13)
+                  break;
+                byte mac[6];
+                byte ip[4];
+                byte unit = packetBuffer[12];
+                for (byte x = 0; x < 6; x++)
+                  mac[x] = packetBuffer[x + 2];
+                for (byte x = 0; x < 4; x++)
+                  ip[x] = packetBuffer[x + 8];
+
+                Nodes[unit].age = 0; // Create a new element when not present
+                NodesMap::iterator it = Nodes.find(unit);
+                if (it != Nodes.end()) {
+                  for (byte x = 0; x < 4; x++)
+                    it->second.ip[x] = packetBuffer[x + 8];
+                  it->second.age = 0; // reset 'age counter'
+                  if (len >= 41) // extended packet size
+                  {
+                    it->second.build = packetBuffer[13] + 256*packetBuffer[14];
+                    char tmpNodeName[26] = {0};
+                    memcpy(&tmpNodeName[0], reinterpret_cast<byte*>(&packetBuffer[15]), 25);
+                    tmpNodeName[25] = 0;
+                    it->second.nodeName = tmpNodeName;
+                    it->second.nodeName.trim();
+                    it->second.nodeType = packetBuffer[40];
+                  }
+                }
+
+                char macaddress[20];
+                formatMAC(mac, macaddress);
+                char ipaddress[20];
+                formatIP(ip, ipaddress);
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                  char log[80];
+                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
+                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                }
+                break;
               }
-            }
 
-            char macaddress[20];
-            formatMAC(mac, macaddress);
-            char ipaddress[20];
-            formatIP(ip, ipaddress);
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-              char log[80];
-              sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
-              addLog(LOG_LEVEL_DEBUG_MORE, log);
-            }
-            break;
+            default:
+              {
+                struct EventStruct TempEvent;
+                TempEvent.Data = reinterpret_cast<byte*>(&packetBuffer[0]);
+                TempEvent.Par1 = remoteIP[3];
+                TempEvent.Par2 = len;
+                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
+                CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
+                break;
+              }
           }
-
-        default:
-          {
-            struct EventStruct TempEvent;
-            TempEvent.Data = (byte*)packetBuffer;
-            TempEvent.Par1 = remoteIP[3];
-            PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
-            CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
-            break;
-          }
+        }
       }
     }
   }
@@ -156,17 +167,17 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   if (!WiFiConnected(100)) {
     return;
   }
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
   if (destUnit != 0)
   {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (int x = firstUnit; x <= lastUnit; x++)
-  {
-    sendUDP(x, (byte*)data, dataLength);
+    sendUDP(destUnit, (byte*)data, dataLength);
     delay(10);
+  } else {
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        sendUDP(it->first, (byte*)data, dataLength);
+        delay(10);
+      }
+    }
   }
   delay(50);
 }
@@ -180,9 +191,18 @@ void sendUDP(byte unit, byte* data, byte size)
   if (!WiFiConnected(100)) {
     return;
   }
-  if (unit != 255)
-    if (Nodes[unit].ip[0] == 0)
+
+  IPAddress remoteNodeIP;
+  if (unit == 255)
+    remoteNodeIP = {255,255,255,255};
+  else {
+    NodesMap::iterator it = Nodes.find(unit);
+    if (it == Nodes.end())
       return;
+    if (it->second.ip[0] == 0)
+      return;
+    remoteNodeIP = it->second.ip;
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
@@ -191,12 +211,6 @@ void sendUDP(byte unit, byte* data, byte size)
   }
 
   statusLED(true);
-
-  IPAddress remoteNodeIP;
-  if (unit == 255)
-    remoteNodeIP = {255,255,255,255};
-  else
-    remoteNodeIP = Nodes[unit].ip;
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
   portUDP.write(data, size);
   portUDP.endPacket();
@@ -208,14 +222,17 @@ void sendUDP(byte unit, byte* data, byte size)
   \*********************************************************************************************/
 void refreshNodeList()
 {
-  for (byte counter = 0; counter < UNIT_MAX; counter++)
-  {
-    if (Nodes[counter].ip[0] != 0)
-    {
-      Nodes[counter].age++;  // increment age counter
-      if (Nodes[counter].age > 10) // if entry to old, clear this node ip from the list.
-        for (byte x = 0; x < 4; x++)
-          Nodes[counter].ip[x] = 0;
+  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ) {
+    bool mustRemove = true;
+    if (it->second.ip[0] != 0) {
+      if (it->second.age < 10) {
+        it->second.age++;
+        mustRemove = false;
+        ++it;
+      }
+    }
+    if (mustRemove) {
+      it = Nodes.erase(it);
     }
   }
 }
@@ -267,15 +284,17 @@ void sendSysInfoUDP(byte repeats)
       delay(500);
   }
 
-  // store my own info also in the list...
-  if (Settings.Unit < UNIT_MAX)
+  Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  // store my own info also in the list
+  NodesMap::iterator it = Nodes.find(Settings.Unit);
+  if (it != Nodes.end())
   {
     IPAddress ip = WiFi.localIP();
     for (byte x = 0; x < 4; x++)
-      Nodes[Settings.Unit].ip[x] = ip[x];
-    Nodes[Settings.Unit].age = 0;
-    Nodes[Settings.Unit].build = Settings.Build;
-    Nodes[Settings.Unit].nodeType = NODE_TYPE_ID;
+      it->second.ip[x] = ip[x];
+    it->second.age = 0;
+    it->second.build = Settings.Build;
+    it->second.nodeType = NODE_TYPE_ID;
   }
 }
 
@@ -662,5 +681,18 @@ bool hostReachable(const String& hostname) {
   String log = F("Hostname cannot be resolved: ");
   log += hostname;
   addLog(LOG_LEVEL_ERROR, log);
+  return false;
+}
+
+// Create a random port for the UDP connection.
+// Return true when successful.
+bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
+  unsigned int attempts = 3;
+  while (attempts > 0) {
+    --attempts;
+    long port = random(1025, 65535);
+    if (udp.begin(port) != 0)
+      return true;
+  }
   return false;
 }

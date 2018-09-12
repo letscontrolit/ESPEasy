@@ -237,6 +237,7 @@ uint8_t Plugin_047_getVersion() {
  *----------------------------------------------------------------------*/
 bool Plugin_047_setAddress(int addr) {
 	I2C_write8_reg(_i2caddrP47, SOILMOISTURESENSOR_SET_ADDRESS, addr);
+	I2C_write8_reg(_i2caddrP47, SOILMOISTURESENSOR_SET_ADDRESS, addr);
 	I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_RESET);
 	delayBackground(1000);
   _i2caddrP47=addr;

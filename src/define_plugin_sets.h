@@ -26,6 +26,23 @@ To create/register a plugin, you have to :
  * BUILD Configs *******************************************************************
 \******************************************************************************/
 
+// IR library is large, so make a separate build including stable plugins and IR.
+#ifdef PLUGIN_BUILD_DEV_IR
+    #define PLUGIN_BUILD_DEV       // add dev
+    #define PLUGIN_BUILD_IR
+#endif
+
+#ifdef PLUGIN_BUILD_TESTING_IR
+    #define PLUGIN_BUILD_TESTING   // add testing
+    #define PLUGIN_BUILD_IR
+#endif
+
+#ifdef PLUGIN_BUILD_NORMAL_IR
+    #define PLUGIN_BUILD_NORMAL     // add stable
+    #define PLUGIN_BUILD_IR
+#endif
+
+
 #ifdef PLUGIN_BUILD_DEV
     #define  PLUGIN_SET_EXPERIMENTAL
     #define  CONTROLLER_SET_EXPERIMENTAL
@@ -52,6 +69,18 @@ To create/register a plugin, you have to :
     #define  NOTIFIER_SET_STABLE
 #endif
 
+
+/******************************************************************************\
+ * IR plugins *****************************************************************
+\******************************************************************************/
+// See lib\IRremoteESP8266\src\IRremoteESP8266.h
+// Disable all settings like these when not needed:
+// #define DECODE_TOSHIBA_AC      true
+// #define SEND_TOSHIBA_AC        true
+#ifdef PLUGIN_BUILD_IR
+    #define USES_P016      // IR
+    #define USES_P035      // IRTX
+#endif
 
 
 /******************************************************************************\
@@ -105,6 +134,18 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_SONOFF_TOUCH
     #define PLUGIN_SET_ONLY_SWITCH
+#endif
+
+// Shelly ----------------------------
+#ifdef PLUGIN_SET_SHELLY_1
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define CONTROLLER_SET_STABLE
+    #define NOTIFIER_SET_STABLE
+
+    #undef DEFAULT_PIN_I2C_SDA
+    #undef DEFAULT_PIN_I2C_SCL
+    #define DEFAULT_PIN_I2C_SDA    6  // GPIO4 conflicts with relay control.
+    #define DEFAULT_PIN_I2C_SCL    7  // GPIO5 conflicts with SW input
 #endif
 
 // Easy ----------------------------
@@ -349,7 +390,7 @@ To create/register a plugin, you have to :
     #define USES_P013   // HCSR04
     #define USES_P014   // SI7021
     #define USES_P015   // TSL2561
-    #define USES_P016   // IR
+//    #define USES_P016   // IR
     #define USES_P017   // PN532
     #define USES_P018   // Dust
     #define USES_P019   // PCF8574
@@ -370,7 +411,7 @@ To create/register a plugin, you have to :
     #define USES_P032   // MS5611
     #define USES_P033   // Dummy
     #define USES_P034   // DHT12
-    #define USES_P035   // IRTX
+//    #define USES_P035   // IRTX
     #define USES_P036   // FrameOLED
     #define USES_P037   // MQTTImport
     #define USES_P038   // NeoPixel
@@ -444,6 +485,10 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DG
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
+
+    #define USES_P078   // Eastron Modbus Energy meters
+    #define USES_P079   // Wemos Motoshield
+    #define USES_P080   // iButton Sensor  DS1990A
 #endif
 
 

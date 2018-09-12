@@ -83,6 +83,8 @@
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
 #include "define_plugin_sets.h"
+// Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
+#include "_CPlugin_Helper.h"
 
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
@@ -462,7 +464,7 @@ void loop()
   if (firstLoopConnectionsEstablished) {
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     schedule_all_task_device_timers();
+     // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
    }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
@@ -529,11 +531,34 @@ void runPeriodicalMQTT() {
   }
 }
 
+String getMQTT_state() {
+  switch (MQTTclient.state()) {
+    case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
+    case MQTT_CONNECTION_LOST        : return F("Connection lost");
+    case MQTT_CONNECT_FAILED         : return F("Connect failed");
+    case MQTT_DISCONNECTED           : return F("Disconnected");
+    case MQTT_CONNECTED              : return F("Connected");
+    case MQTT_CONNECT_BAD_PROTOCOL   : return F("Connect bad protocol");
+    case MQTT_CONNECT_BAD_CLIENT_ID  : return F("Connect bad client_id");
+    case MQTT_CONNECT_UNAVAILABLE    : return F("Connect unavailable");
+    case MQTT_CONNECT_BAD_CREDENTIALS: return F("Connect bad credentials");
+    case MQTT_CONNECT_UNAUTHORIZED   : return F("Connect unauthorized");
+    default: return "";
+  }
+}
+
 void updateMQTTclient_connected() {
   if (MQTTclient_connected != MQTTclient.connected()) {
     MQTTclient_connected = !MQTTclient_connected;
-    if (!MQTTclient_connected)
-      addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
+    if (!MQTTclient_connected) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String connectionError = F("MQTT : Connection lost, state: ");
+        connectionError += getMQTT_state();
+        addLog(LOG_LEVEL_ERROR, connectionError);
+      }
+    } else {
+      schedule_all_tasks_using_MQTT_controller();
+    }
     if (Settings.UseRules) {
       String event = MQTTclient_connected ? F("MQTT#Connected") : F("MQTT#Disconnected");
       rulesProcessing(event);
@@ -803,6 +828,16 @@ void backgroundtasks()
   //checkRAM(F("backgroundtasks"));
   //always start with a yield
   yield();
+/*
+  // Remove this watchdog feed for now.
+  // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
+  
+  #ifdef ESP32
+  // Have to find a similar function to call ESP32's esp_task_wdt_feed();
+  #else
+  ESP.wdtFeed();
+  #endif
+*/
 
   //prevent recursion!
   if (runningBackgroundTasks)
@@ -814,7 +849,7 @@ void backgroundtasks()
   #if defined(ESP8266)
     tcpCleanup();
   #endif
-
+  process_serialLogBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial)
       if (Serial.available())

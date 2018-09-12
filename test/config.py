@@ -4,6 +4,8 @@ nodes=[
         'type'      : 'wemos d1 mini v2.2.0',
         'port'      : '/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.1:1.0-port0',
         'ip'        : '192.168.13.91',
+        'subnet'    : '255.255.255.0',
+        'gateway'   : '192.168.13.1',
         'flash_cmd' : 'esptool.py --port {port} -b 1500000  write_flash 0x0 .pioenvs/dev_ESP8266_4096/firmware.bin --flash_size=32m -p',
         'build_cmd' : 'platformio run --environment dev_ESP8266_4096 -s'
     },
@@ -13,6 +15,8 @@ nodes=[
         'type'      : 'nodemcu geekcreit ESP12E devkit v2',
         'port'      : '/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.2:1.0-port0',
         'ip'        : '192.168.13.92',
+        'subnet'    : '255.255.255.0',
+        'gateway'   : '192.168.13.1',
         'flash_cmd' : 'esptool.py --port {port} -b 1500000  write_flash 0x0 .pioenvs/dev_ESP8266_4096/firmware.bin --flash_size=32m -p',
         'build_cmd' : 'platformio run --environment dev_ESP8266_4096 -s'
     },
@@ -20,8 +24,10 @@ nodes=[
     # node 2
     {
         'type'      : 'ESP-01S 1Mb PUYA flash',
-        'port'      : '/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.3:1.0-port0',
-        'ip'        : '192.168.13.93',
+        'port'      : '/dev/ttyUSB0',
+        'ip'        : '192.168.13.55',
+        'subnet'    : '255.255.255.0',
+        'gateway'   : '192.168.13.1',
         'flash_cmd' : 'esptool.py --port {port} -b 115200  write_flash 0x0 .pioenvs/dev_ESP8266PUYA_1024/firmware.bin --flash_size=1MB -p',
         'build_cmd' : 'platformio run --environment dev_ESP8266PUYA_1024 -s'
     },

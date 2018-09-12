@@ -31,49 +31,20 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        ControllerSettingsStruct ControllerSettings;
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        C001_DelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_SEND:
       {
         if (event->idx != 0)
         {
-          if (!WiFiConnected(100)) {
-            success = false;
-            break;
-          }
-          ControllerSettingsStruct ControllerSettings;
-          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof (ControllerSettings));
-
-          String authHeader = "";
-          if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
-          {
-            base64 encoder;
-            String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
-            auth += ":";
-            auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-            authHeader = F("Authorization: Basic ");
-            authHeader += encoder.encode(auth);
-            authHeader += F(" \r\n");
-          }
-
-          // boolean success = false;
-          addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
-
-
-          // Use WiFiClient class to create TCP connections
-          WiFiClient client;
-          if (!ControllerSettings.connectToHost(client))
-          {
-            connectionFailures++;
-
-            addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-            return false;
-          }
-          statusLED(true);
-          if (connectionFailures)
-            connectionFailures--;
-
           // We now create a URI for the request
-          String url = F("/json.htm?type=command&param=udevice&idx=");
-          url += event->idx;
+          String url;
 
           switch (event->sensorType)
           {
@@ -125,38 +96,8 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
             url += mapVccToDomoticz();
           #endif
 
-          // This will send the request to the server
-          String request = F("GET ");
-          request += url;
-          request += F(" HTTP/1.1\r\n");
-          request += F("Host: ");
-          request += ControllerSettings.getHost();
-          request += F("\r\n");
-          request += authHeader;
-          request += F("Connection: close\r\n\r\n");
-          client.print(request);
-
-          unsigned long timer = millis() + 200;
-          while (!client.available() && !timeOutReached(timer))
-            yield();
-
-          // Read all the lines of the reply from server and log them
-          while (client.available()) {
-            // String line = client.readStringUntil('\n');
-            String line;
-            safeReadStringUntil(client, line, '\n');
-            addLog(LOG_LEVEL_DEBUG_MORE, line);
-            if (line.startsWith(F("HTTP/1.1 200 OK")) )
-            {
-              addLog(LOG_LEVEL_DEBUG, F("HTTP : Success"));
-              success = true;
-            }
-            yield();
-          }
-          addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
-
-          client.flush();
-          client.stop();
+          success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
+          scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
         } // if ixd !=0
         else
         {
@@ -167,4 +108,17 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+bool do_process_c001_delay_queue(int controller_number, const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  WiFiClient client;
+  if (!try_connect_host(controller_number, client, ControllerSettings))
+    return false;
+
+  // This will send the request to the server
+  String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt);
+
+  addLog(LOG_LEVEL_DEBUG, element.txt);
+  return send_via_http(controller_number, client, request);
+}
+
 #endif

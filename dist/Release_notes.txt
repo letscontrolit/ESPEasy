@@ -1,4 +1,196 @@
 -------------------------------------------------
+Changes in release mega-20180910 (since mega-20180909)
+-------------------------------------------------
+
+Release date: Mon Sep 10 04:00:22 CEST 2018
+
+TD-er (2):
+      [HTTP] Command SendToHttp cannot connect
+      [Domoticz IDX] Allow for IDX of > 9999
+
+sakinit (1):
+      Reduced buffer size to prevent stack overflow
+
+
+-------------------------------------------------
+Changes in release mega-20180909 (since mega-20180908)
+-------------------------------------------------
+
+Release date: Sun Sep  9 04:00:14 CEST 2018
+
+Gijs Noorlander (1):
+      Revert [WDT] Add watchdog feed to backgroundtasks()
+
+TD-er (5):
+      [#1720] WiFi read all lines from slow servers
+      Add forward declaration for void backgroundtasks()
+      [Serial Log] Limit serial log to prevent buffer overflow
+      [ESP32] Fix Build, ESP32 doesn't have the availableForWrite
+      [Serial log] Use buffer to prevent Serial buffer to overflow
+
+
+-------------------------------------------------
+Changes in release mega-20180908 (since mega-20180904)
+-------------------------------------------------
+
+Release date: Sat Sep  8 04:00:20 CEST 2018
+
+Gijs Noorlander (1):
+      Update README.md
+
+TD-er (37):
+      [controller delay] Let controllers handle their own delay and buffer
+      [MQTT] Add controller delay queue for MQTT
+      [Controller] Make ControllerDelayHandler templated and comment
+      [C001] Let C001 controller use queue
+      [C003] Let C003 controller use queue
+      [C004] Let C004 controller use queue and simplify using macros
+      Added `USES_Cxxx` checks
+      [C007] Let C007 controller use queue
+      [MQTT] Use set controller settings on MQTT controllers
+      [Webserver] Add fields for new Controller settings
+      [C008] Let C008 use queue and some bugfixes
+      [#1666] Moved code duplication for HTTP requests to special functions
+      [C009] Removed port number from HTTP host header
+      [C009] Controller C009 now also uses Delay Queue
+      [Client Connect] Check for success on connecting with client.
+      [C009] Remove 'no port' option in HTTP packet
+      [HTTP Auth] Now using proper index for retrieving credentials
+      [HTTP] Add user agent in request header
+      [C010] Controller C010 now also uses Delay Queue
+      [Cleanup] Merge code duplication between C008 and C010
+      [C011] Controller C011 now also uses Delay Queue
+      [Controller] Moved the 'magic' default and max values to defines
+      [C012] Controller C012 now also uses Delay Queue
+      [C013] Remove some obsolete function
+      [Nodes] Make Nodes list a map with dynamic size
+      [Nodes] Highlight current node in the list of nodes
+      [Cleanup] Memory optimisation in available controllers and plugins
+      [Nodes] Fix String copy to properly read node names
+      [MQTT] Give MQTT state in log when connect state changes.
+      [SPIFFS] Add SPIFFS size + usage to sysinfo page
+      [Watchdog] Add watchdog feed to backgroundtasks() function
+      [MQTT] Force MQTT client reconnect when wifi reconnects
+      [WDT] Add yield() and runbackgroundtasks() when parsing rules
+      [#1707] Getting logs from the /log even when password is not entered
+      [#1714] Parse notification sender to allow some sender formatting
+      [Scheduler] Do not schedule task device timer for tasks without interval
+      [Queue] Add memory check to determine full queue
+
+
+-------------------------------------------------
+Changes in release mega-20180904 (since mega-20180903)
+-------------------------------------------------
+
+Release date: Tue Sep  4 04:00:34 CEST 2018
+
+TD-er (1):
+      [#1702] Check for duplicate names bug
+
+
+-------------------------------------------------
+Changes in release mega-20180903 (since mega-20180826)
+-------------------------------------------------
+
+Release date: Mon Sep  3 04:01:13 CEST 2018
+
+TD-er (7):
+      [Pio] Build issues
+      [#1692] Add 2nd Receiver for Email notification
+      Forgot to save before commit
+      [#1549] Add page showing all system variables
+      [sysvar] rename vars with leading zero to %..._0%
+      [#1688] Add dew point computation as standard conversion
+      [Shelly1] Add first test build for Shelly1 nodes
+
+
+-------------------------------------------------
+Changes in release mega-20180826 (since mega-20180822)
+-------------------------------------------------
+
+Release date: Sun Aug 26 04:00:20 CEST 2018
+
+Gerald Hollweger (1):
+      Optimisations     - Save RAM, move constants to flash (CharTableTM1637, CharTableMAX7219)     - Remove unnecessary parameter passing (the interface pins do not change during operation for one instance)
+
+TD-er (16):
+      [MQTT] PubSubClient Add checks for connectivity
+      [Client Connect] Check for success on connecting with client.
+      [Eastron] Add P078 plugin from the Playground (was P150)
+      [SDM] Update library to latest version
+      [Eastron] Make P078 Eastron compile, serial settings do not yet work
+      [Eastron] Add missing SDM_Config_User.h
+      [IR/IRTX] For PullReq #1645 split IR/IRTX to a separate build
+      [JSON] Fix issue when UDP port not set
+      [JSON] Only show node information when generic info is requested
+      [MotorShield] Rename P078 to P079
+      [MotorShield] Cleanup code layout
+      [MotorShield] Added comments in the code and fixes
+      [P080] Dallas iButton Rename P078 to P80
+      [Dallas iButton] Change VType to SENSOR_TYPE_LONG
+      [Build] Add "[TESTING]" labels to P078 and P080
+      [Build Travis] "Scratchpad was set but never used"
+
+TungstenE2 (2):
+      Added Wemos Motorshield Plugin (No. 78)
+      Added Wemos Motorshield Plugin (No. 78)
+
+feuerreiter (1):
+      Adds a overview of known espeasy nodes to the json response. I think this can be useful for own webinterfaces etc.
+
+henfri (2):
+      Create _P078_DallasIButton.ino
+      Update _P078_DallasIButton.ino
+
+jimmys01 (6):
+      IR library added
+      Travis build complaining about unused vars
+      commented out more unused code
+      Travis please be happy :-)
+      IR RX updated
+      Small correction
+
+
+-------------------------------------------------
+Changes in release mega-20180822 (since mega-20180818)
+-------------------------------------------------
+
+Release date: Wed Aug 22 04:00:15 CEST 2018
+
+Gijs Noorlander (1):
+      Changed INPUT_COMMAND_SIZE from 80 to 240
+
+TD-er (1):
+      [UDP] Use random outgoing port for NTP and check return values
+
+
+-------------------------------------------------
+Changes in release mega-20180818 (since mega-20180815)
+-------------------------------------------------
+
+Release date: Sat Aug 18 04:00:17 CEST 2018
+
+Edwin Eefting (1):
+      fixed network config for newer versions
+
+TD-er (1):
+      [#1650] Use icons in tabs on web page on small screens
+
+
+-------------------------------------------------
+Changes in release mega-20180815 (since mega-20180809)
+-------------------------------------------------
+
+Release date: Wed Aug 15 04:00:13 CEST 2018
+
+TD-er (1):
+      [core 2.4.2] Update to PlatformIO espressif8266@1.8.0
+
+krikk (1):
+      Update _P047_i2c-soil-moisture-sensor.ino
+
+
+-------------------------------------------------
 Changes in release mega-20180809 (since mega-20180808)
 -------------------------------------------------
 

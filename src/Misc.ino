@@ -404,7 +404,7 @@ String checkTaskSettings(byte taskIndex) {
     }
   }
   for (int i = 0; i < TASKS_MAX; ++i) {
-    if (i != taskIndex) {
+    if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
       LoadTaskSettings(i);
       if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
         if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
@@ -1075,7 +1075,7 @@ String getLogLevelDisplayString(byte index, int& logLevel) {
   }
 }
 
-void addToLog(byte loglevel, String& string)
+void addToLog(byte loglevel, const String& string)
 {
   addToLog(loglevel, string.c_str());
 }
@@ -1162,10 +1162,23 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addToLog(byte logLevel, const char *line)
 {
+  const size_t line_length = strlen(line);
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    Serial.print(millis());
-    Serial.print(F(" : "));
-    Serial.println(line);
+    int roomLeft = ESP.getFreeHeap() - 5000;
+    if (roomLeft > 0) {
+      String timestamp_log(millis());
+      timestamp_log += F(" : ");
+      for (size_t i = 0; i < timestamp_log.length(); ++i) {
+        serialLogBuffer.push_back(timestamp_log[i]);
+      }
+      size_t pos = 0;
+      while (pos < line_length && pos < static_cast<size_t>(roomLeft)) {
+        serialLogBuffer.push_back(line[pos]);
+        ++pos;
+      }
+      serialLogBuffer.push_back('\r');
+      serialLogBuffer.push_back('\n');
+    }
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
@@ -1184,6 +1197,25 @@ void addToLog(byte logLevel, const char *line)
 #endif
 }
 
+void process_serialLogBuffer() {
+  if (serialLogBuffer.size() == 0) return;
+  if (timePassedSince(last_serial_log_emptied) > 10000) {
+    last_serial_log_emptied = millis();
+    serialLogBuffer.clear();
+    return;
+  }
+  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
+#if defined(ESP8266)
+  snip = Serial.availableForWrite();
+#endif
+  if (snip > 0) last_serial_log_emptied = millis();
+  size_t bytes_to_write = serialLogBuffer.size();
+  if (snip < bytes_to_write) bytes_to_write = snip;
+  for (size_t i = 0; i < bytes_to_write; ++i) {
+    Serial.write(serialLogBuffer.front());
+    serialLogBuffer.pop_front();
+  }
+}
 
 /********************************************************************************************\
   Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -1973,6 +2005,7 @@ void rulesProcessing(String& event)
     log += F(" milliSeconds");
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  backgroundtasks();
 
 }
 
@@ -2035,6 +2068,7 @@ String rulesProcessingFile(String fileName, String& event)
             match, codeBlock, isCommand,
             condition, ifBranche,
             ifBlock, fakeIfBlock);
+          yield();
         }
 
         line = "";
@@ -2768,7 +2802,7 @@ void checkRAM( String &a ) {
 /********************************************************************************************\
   Generate a tone of specified frequency on pin
   \*********************************************************************************************/
-void tone(uint8_t _pin, unsigned int frequency, unsigned long duration) {
+void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
     delay(duration);
   #else
@@ -2929,7 +2963,7 @@ void play_rtttl(uint8_t _pin, const char *p )
     // now play the note
     if(note)
     {
-      tone(_pin, notes[(scale - 4) * 12 + note], duration);
+      tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration);
     }
     else
     {

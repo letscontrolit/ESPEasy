@@ -10,6 +10,7 @@ for ENV in \
   normal_ESP8266_1024 \
   normal_ESP8266_4096 \
   normal_ESP8285_1024 \
+  normal_IR_ESP8266_4096 \
   test_ESP8266_1024\
   test_ESP8266_4096\
   test_ESP8266_4096_VCC\
@@ -20,6 +21,7 @@ for ENV in \
   dev_ESP8266PUYA_1024\
   dev_ESP8266PUYA_1024_VCC\
   hard_SONOFF_POW\
+  hard_Shelly_1\
   esp32dev;\
 do
   echo

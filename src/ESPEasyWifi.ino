@@ -126,6 +126,7 @@ void processGotIP() {
     initTime();
   }
   mqtt_reconnect_count = 0;
+  MQTTclient_should_reconnect = true;
   timermqtt_interval = 100;
   setIntervalTimer(TIMER_MQTT);
   if (Settings.UseRules)
