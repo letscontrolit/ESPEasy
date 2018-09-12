@@ -155,7 +155,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
       {
         if (irReceiver->decode(&results))
         {
+          unsigned long IRcode = results.value;
           irReceiver->resume();
+          UserVar[event->BaseVarIndex] = (IRcode & 0xFFFF);
+          UserVar[event->BaseVarIndex + 1] = ((IRcode >> 16) & 0xFFFF);
           String log = "IR: ";
           if (results.overflow)
             log += F("WARNING: IR code is too big for buffer. This result shouldn't be trusted until this is resolved. Edit & increase CAPTURE_BUFFER_SIZE.\n");
