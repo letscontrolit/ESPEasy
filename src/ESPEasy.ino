@@ -158,6 +158,7 @@ void setup()
   //warm boot
   if (readFromRTC())
   {
+    RTC.bootFailedCount++;
     RTC.bootCounter++;
     readUserVarFromRTC();
 
@@ -193,6 +194,16 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
+    byte toDisable = RTC.bootFailedCount - 10;
+    toDisable = disablePlugin(toDisable);
+    if (toDisable != 0) {
+      toDisable = disableController(toDisable);
+    }
+    if (toDisable != 0) {
+      toDisable = disableNotification(toDisable);
+    }
+  }
 
 //  setWifiMode(WIFI_STA);
   checkRuleSets();
@@ -465,7 +476,10 @@ void loop()
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
      // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
-   }
+
+     RTC.bootFailedCount = 0;
+     saveToRTC();
+  }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
@@ -831,7 +845,7 @@ void backgroundtasks()
 /*
   // Remove this watchdog feed for now.
   // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
-  
+
   #ifdef ESP32
   // Have to find a similar function to call ESP32's esp_task_wdt_feed();
   #else

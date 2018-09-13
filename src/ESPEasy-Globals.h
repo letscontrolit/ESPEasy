@@ -1382,17 +1382,19 @@ struct pinStatesStruct
 //max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
+  RTCStruct() : ID1(0), ID2(0), unused1(false), factoryResetCounter(0),
+                deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
+                flashCounter(0), bootCounter(0) {}
   byte ID1;
   byte ID2;
   boolean unused1;
   byte factoryResetCounter;
   byte deepSleepState;
-  byte unused2;
+  byte bootFailedCount;
   byte flashDayCounter;
   unsigned long flashCounter;
   unsigned long bootCounter;
 } RTC;
-
 
 int deviceCount = -1;
 int protocolCount = -1;
