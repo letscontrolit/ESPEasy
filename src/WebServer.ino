@@ -4569,18 +4569,40 @@ void handle_filelist() {
     checkRuleSets();
   }
 
+  const int pageSize = 25;
+  int startIdx = 0;
 
+  String fstart = WebServer.arg(F("start"));
+  if (fstart.length() > 0)
+  {
+    startIdx = atoi(fstart.c_str());
+  }
+  int endIdx = startIdx + pageSize - 1;
 
   TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH style='width:50px;'><TH>Filename<TH style='width:80px;'>Size");
 
   fs::Dir dir = SPIFFS.openDir("");
+
+  int count = -1;
   while (dir.next())
   {
+    ++count;
+
+    if (count < startIdx)
+    {
+      continue;
+    }
+
     html_TR_TD();
     if (dir.fileName() != F(FILE_CONFIG) && dir.fileName() != F(FILE_SECURITY) && dir.fileName() != F(FILE_NOTIFICATION))
     {
       TXBuffer += F("<a class='button link' href=\"filelist?delete=");
       TXBuffer += dir.fileName();
+      if (startIdx > 0)
+      {
+        TXBuffer += F("&start=");
+        TXBuffer += startIdx;
+      }
       TXBuffer += F("\">Del</a>");
     }
 
@@ -4592,9 +4614,26 @@ void handle_filelist() {
     fs::File f = dir.openFile("r");
     html_TD();
     TXBuffer += f.size();
+    if (count >= endIdx)
+    {
+      break;
+    }
   }
   TXBuffer += F("</table></form>");
-  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a><BR><BR>");
+  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  if (startIdx > 0)
+  {
+    TXBuffer += F("<a class='button link' href=\"/filelist?start=");
+    TXBuffer += max(0, startIdx - pageSize);
+    TXBuffer += F("\">Previous</a>");
+  }
+  if (count >= endIdx and dir.next())
+  {
+    TXBuffer += F("<a class='button link' href=\"/filelist?start=");
+    TXBuffer += endIdx + 1;
+    TXBuffer += F("\">Next</a>");
+  }
+  TXBuffer += F("<BR><BR>");
     sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
 #endif
