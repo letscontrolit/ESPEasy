@@ -2263,10 +2263,11 @@ void processMatchedRule(
 
         if (GetArgv(command,tmpParam,1)) {
            action.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
-           action.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue% in actions with the actual value from the event
+           action.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
         }
         if (GetArgv(command,tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
         if (GetArgv(command,tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
+        if (GetArgv(command,tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
       }
     }
 
