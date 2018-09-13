@@ -365,11 +365,11 @@ void parseCommandString(struct EventStruct *event, const String& string)
   event->Par4 = 0;
   event->Par5 = 0;
 
-  if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
+  if (GetArgv(command, TmpStr1, 2)) event->Par1 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 3)) event->Par2 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 4)) event->Par3 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 5)) event->Par4 = CalculateParam(TmpStr1);
+  if (GetArgv(command, TmpStr1, 6)) event->Par5 = CalculateParam(TmpStr1);
 }
 
 /********************************************************************************************\
@@ -1820,6 +1820,12 @@ int Calculate(const char *input, float* result)
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
   oc=c=0;
+
+  if (input[0] == '=') {
+    ++strpos;
+    c = *strpos;
+  }
+
   while (strpos < strend)
   {
     // read one token from the input stream
@@ -1945,6 +1951,56 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
+int CalculateParam(char *TmpStr) {
+  int returnValue;
+
+  // Minimize calls to the Calulate function.
+  // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
+  if (TmpStr[0] != '=') {
+    returnValue=str2int(TmpStr);
+  } else {
+    float param=0;
+    TmpStr[0] = ' '; //replace '=' with space
+    int returnCode=Calculate(TmpStr, &param);
+    if (returnCode!=CALCULATE_OK) {
+      String errorDesc;
+      switch (returnCode) {
+        case CALCULATE_ERROR_STACK_OVERFLOW:
+          errorDesc = F("Stack Overflow");
+          break;
+        case CALCULATE_ERROR_BAD_OPERATOR:
+          errorDesc = F("Bad Operator");
+          break;
+        case CALCULATE_ERROR_PARENTHESES_MISMATCHED:
+          errorDesc = F("Parenthesis mismatch");
+          break;
+        case CALCULATE_ERROR_UNKNOWN_TOKEN:
+          errorDesc = F("Unknown token");
+          break;
+        default:
+          errorDesc = F("Unknown error");
+          break;
+        }
+        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+        addLog(LOG_LEVEL_ERROR, log);
+        log = F("CALCULATE PARAM ERROR details: ");
+        log += TmpStr;
+        log += F(" = ");
+        log += round(param);
+        addLog(LOG_LEVEL_ERROR, log);
+      } else {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("CALCULATE PARAM: ");
+        log += TmpStr;
+        log += F(" = ");
+        log += round(param);
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+    }
+    returnValue=round(param); //return integer only as it's valid only for device and task id
+  }
+  return returnValue;
+}
 
 void checkRuleSets(){
 for (byte x=0; x < RULESETS_MAX; x++){
