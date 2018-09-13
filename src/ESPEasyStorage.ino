@@ -220,6 +220,51 @@ String LoadSettings()
 }
 
 /********************************************************************************************\
+  Disable Plugin, based on bootFailedCount
+  \*********************************************************************************************/
+byte disablePlugin(byte bootFailedCount) {
+  for (byte i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.TaskDeviceEnabled[i]) {
+      --bootFailedCount;
+      if (bootFailedCount == 0) {
+        Settings.TaskDeviceEnabled[i] = false;
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+/********************************************************************************************\
+  Disable Controller, based on bootFailedCount
+  \*********************************************************************************************/
+byte disableController(byte bootFailedCount) {
+  for (byte i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.ControllerEnabled[i]) {
+      --bootFailedCount;
+      if (bootFailedCount == 0) {
+        Settings.ControllerEnabled[i] = false;
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+/********************************************************************************************\
+  Disable Notification, based on bootFailedCount
+  \*********************************************************************************************/
+byte disableNotification(byte bootFailedCount) {
+  for (byte i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.NotificationEnabled[i]) {
+      --bootFailedCount;
+      if (bootFailedCount == 0) {
+        Settings.NotificationEnabled[i] = false;
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+/********************************************************************************************\
   Offsets in settings files
   \*********************************************************************************************/
 bool getSettingsParameters(SettingsType settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
