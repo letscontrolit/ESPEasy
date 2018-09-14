@@ -1,4 +1,33 @@
 -------------------------------------------------
+Changes in release mega-20180914 (since mega-20180910)
+-------------------------------------------------
+
+Release date: Fri Sep 14 04:00:17 CEST 2018
+
+Gijs Noorlander (1):
+      Added PayPal link
+
+Markus Gloede (1):
+      Fix IR plugin passing received code
+
+Plebs (7):
+      Use parameters inside rules when calling commands
+      few changes
+      fixed ESP32 compatibility issue
+      fixed calls to F-macro
+      adding more parameters to EVENT
+      final version with '=' sign as a prefix to identify the formula in rules
+      added %eventvalue4%
+
+TD-er (2):
+      [Flash tools] Add blank files and README.txt
+      [CrashRecover] Disable failing step based on failed boot count
+
+sakinit (1):
+      Feature: Split webserver spiffs filelist into pages
+
+
+-------------------------------------------------
 Changes in release mega-20180910 (since mega-20180909)
 -------------------------------------------------
 
