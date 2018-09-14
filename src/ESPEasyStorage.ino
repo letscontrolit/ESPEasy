@@ -147,7 +147,6 @@ String SaveSettings(void)
     // Settings have changed, save to file.
     memcpy(Settings.md5, tmp_md5, 16);
 */
-    Settings.validate();
     err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(Settings));
     if (err.length())
      return(err);
@@ -183,7 +182,6 @@ String LoadSettings()
   err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof( SettingsStruct));
   if (err.length())
     return(err);
-  Settings.validate();
 
     // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 /*
