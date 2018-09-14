@@ -41,7 +41,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -83,7 +83,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   }
 
   ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(controllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  LoadControllerSettings(controllerIndex, ControllerSettings);
 
   if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0)) {
     addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
