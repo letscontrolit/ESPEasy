@@ -666,9 +666,17 @@ struct SettingsStruct
     clearAll();
   }
 
-  bool appendUnitToHostname() {  return getBitFromUL(VariousBits1, 1); }
-  void appendUnitToHostname(bool value) { setBitToUL(VariousBits1, 1, value); }
+  // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
+  bool appendUnitToHostname() {  return !getBitFromUL(VariousBits1, 1); }
+  void appendUnitToHostname(bool value) { setBitToUL(VariousBits1, 1, !value); }
 
+  void validate() {
+    if (UDPPort > 65535) UDPPort = 0;
+
+    if (Latitude  < -90.0  || Latitude > 90.0) Latitude = 0.0;
+    if (Longitude < -180.0 || Longitude > 180.0) Longitude = 0.0;
+    if (VariousBits1 > (1 << 30)) VariousBits1 = 0;
+  }
 
   void clearAll() {
     PID = 0;
