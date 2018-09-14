@@ -61,8 +61,8 @@ void calcSunRiseAndSet() {
 	float eqt = equationOfTime(doy);
 	float dec = sunDeclination(doy);
 	float da = diurnalArc(dec, Settings.Latitude);
-	float rise = 12 - da - eqt;
-	float set = 12 + da - eqt;
+	float rise = 12 - da - eqt - Settings.Longitude / 15.0;
+	float set = 12 + da - eqt - Settings.Longitude / 15.0;
   tsRise.Hour = (int)rise;
   tsRise.Minute = (rise - (int)rise) * 60.0;
   tsSet.Hour = (int)set;
@@ -70,10 +70,6 @@ void calcSunRiseAndSet() {
   tsRise.Day = tsSet.Day = tm.Day;
   tsRise.Month = tsSet.Month = tm.Month;
   tsRise.Year = tsSet.Year = tm.Year;
-  // Now apply the longitude
-	int secOffset_longitude = -1.0 * (Settings.Longitude / 15.0) * 3600;
-	tsSet = addSeconds(tsSet, secOffset_longitude, false);
-	tsRise = addSeconds(tsRise, secOffset_longitude, false);
   breakTime(toLocal(makeTime(tsRise)), sunRise);
   breakTime(toLocal(makeTime(tsSet)), sunSet);
 }
