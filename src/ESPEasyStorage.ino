@@ -433,20 +433,25 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Controller settings to SPIFFS
   \*********************************************************************************************/
-String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
+String SaveControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings)
 {
   checkRAM(F("SaveControllerSettings"));
-  return SaveToFile(ControllerSettings_Type, ControllerIndex, (char*)FILE_CONFIG, memAddress, datasize);
+  controller_settings.validate(); // Make sure the saved controller settings have proper values.
+  return SaveToFile(ControllerSettings_Type, ControllerIndex,
+                    (char*)FILE_CONFIG, (byte*)&controller_settings, sizeof(controller_settings));
 }
 
 
 /********************************************************************************************\
   Load Controller settings to SPIFFS
   \*********************************************************************************************/
-String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
-{
+String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings) {
   checkRAM(F("LoadControllerSettings"));
-  return(LoadFromFile(ControllerSettings_Type, ControllerIndex, (char*)FILE_CONFIG, memAddress, datasize));
+  String result =
+    LoadFromFile(ControllerSettings_Type, ControllerIndex,
+                 (char*)FILE_CONFIG, (byte*)&controller_settings, sizeof(controller_settings));
+  controller_settings.validate(); // Make sure the loaded controller settings have proper values.
+  return result;
 }
 
 

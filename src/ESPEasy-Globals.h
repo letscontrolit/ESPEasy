@@ -396,14 +396,18 @@
 #endif
 
 // Forward declaration
+struct ControllerSettingsStruct;
 void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime);
-String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize);
+String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings);
 String get_formatted_Controller_number(int controller_index);
 bool loglevelActiveFor(byte logLevel);
 void addToLog(byte loglevel, const String& string);
 void addToLog(byte logLevel, const __FlashStringHelper* flashString);
 void statusLED(boolean traffic);
 void backgroundtasks();
+
+bool getBitFromUL(uint32_t number, byte bitnr);
+void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 enum SettingsType {
   BasicSettings_Type = 0,
@@ -662,6 +666,10 @@ struct SettingsStruct
     clearAll();
   }
 
+  bool appendUnitToHostname() {  return getBitFromUL(VariousBits1, 1); }
+  void appendUnitToHostname(bool value) { setBitToUL(VariousBits1, 1, value); }
+
+
   void clearAll() {
     PID = 0;
     Version = 0;
@@ -704,6 +712,9 @@ struct SettingsStruct
     SyslogFacility = DEFAULT_SYSLOG_FACILITY;
     StructSize = 0;
     MQTTUseUnitNameAsClientId = 0;
+    Latitude = 0.0;
+    Longitude = 0.0;
+    VariousBits1 = 0;
 
     for (byte i = 0; i < CONTROLLER_MAX; ++i) {
       Protocol[i] = 0;
@@ -830,6 +841,7 @@ struct SettingsStruct
   //TODO: document config.dat somewhere here
   float         Latitude;
   float         Longitude;
+  uint32_t      VariousBits1;
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
@@ -869,6 +881,14 @@ struct ControllerSettingsStruct
   unsigned int  MaxQueueDepth;
   unsigned int  MaxRetry;
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
+
+  void validate() {
+    if (Port > 65535) Port = 0;
+    if (MinimalTimeBetweenMessages < 1) MinimalTimeBetweenMessages = 100;
+    if (MinimalTimeBetweenMessages > 3600000) MinimalTimeBetweenMessages = 100;
+    if (MaxQueueDepth > 25) MaxQueueDepth = 10;
+    if (MaxRetry > 10) MaxRetry = 10;
+  }
 
   IPAddress getIP() const {
     IPAddress host(IP[0], IP[1], IP[2], IP[3]);
