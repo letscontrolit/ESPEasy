@@ -222,20 +222,16 @@ void ExecuteCommand(byte source, const char *Line)
 	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1);
 	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1);
 
-  // FIXME: TD-er  Disabling scheduling commands.
-  // Gives too much issues.
-  // if (source == VALUE_SOURCE_WEB_FRONTEND) {
+  if (source == VALUE_SOURCE_WEB_FRONTEND) {
     // Must run immediately, to see result in web frontend
     String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
     yield();
     SendStatus(source, status);
     yield();
-/*
   } else {
     // Schedule to run async
     schedule_command_timer((char*)&cmd[0], &TempEvent, Line);
   }
-*/
 }
 
 #ifdef FEATURE_SD
