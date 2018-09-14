@@ -148,7 +148,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     return false;
   }
   ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
   C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));

@@ -418,8 +418,10 @@ void setWifiMode(WiFiMode_t wifimode) {
 String WifiGetAPssid()
 {
   String ssid(Settings.Name);
-  ssid+=F("_");
-  ssid+=Settings.Unit;
+  if (Settings.appendUnitToHostname()) {
+    ssid+=F("_");
+    ssid+=Settings.Unit;
+  }
   return (ssid);
 }
 
