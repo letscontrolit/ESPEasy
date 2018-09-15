@@ -2600,8 +2600,8 @@ void addPinSelect(boolean forI2C, String name,  int choice)
 //********************************************************************************
 void addPinSelect(boolean forI2C, String name,  int choice)
 {
-  String options[PIN_D_MAX+1];
-  int optionValues[PIN_D_MAX+1];
+  String * options = new String[PIN_D_MAX+1];
+  int * optionValues = new int[PIN_D_MAX+1];
   options[0] = F("- None -");
   optionValues[0] = -1;
   for(byte x=1; x < PIN_D_MAX+1; x++)
@@ -2611,6 +2611,8 @@ void addPinSelect(boolean forI2C, String name,  int choice)
     optionValues[x] = x;
   }
   renderHTMLForPinSelect(options, optionValues, forI2C, name, choice, PIN_D_MAX+1);
+  delete[] optionValues;
+  delete[] options;
 }
 #endif
 
