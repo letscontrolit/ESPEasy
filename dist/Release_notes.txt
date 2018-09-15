@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20180915 (since mega-20180914)
+-------------------------------------------------
+
+Release date: Sat Sep 15 04:00:15 CEST 2018
+
+Plebs (1):
+      Added 2 new operators in Calculate
+
+TD-er (4):
+      [Scheduler] Disable command scheduler
+      [Controller settings] Validate settings on load/save
+      [#1713] Make hostname-unitnumber optional & validate settings
+      [#1698] Incorrect sunrise value southern hemisphere
+
+svmac (4):
+      Fix elseif & Add if-elseif-else nesting levels
+      reenabled code about !
+      some code optimization
+      fix mistake
+
+
+-------------------------------------------------
 Changes in release mega-20180914 (since mega-20180910)
 -------------------------------------------------
 
