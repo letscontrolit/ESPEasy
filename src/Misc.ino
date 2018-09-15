@@ -1700,7 +1700,8 @@ float globalstack[STACK_SIZE];
 float *sp = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
+#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
+#define is_unary_operator(c)  (c == '!')
 
 int push(float value)
 {
@@ -1733,8 +1734,21 @@ float apply_operator(char op, float first, float second)
       return first * second;
     case '/':
       return first / second;
+    case '%':
+      return round(first) % round(second);
     case '^':
       return pow(first, second);
+    default:
+      return 0;
+  }
+}
+
+float apply_unary_operator(char op, float first)
+{
+  switch (op)
+  {
+    case '!':
+      return (round(first) == 0) ? 1 : 0;
     default:
       return 0;
   }
@@ -1759,8 +1773,14 @@ int RPNCalculate(char* token)
 
     if (push(apply_operator(token[0], first, second)))
       return CALCULATE_ERROR_STACK_OVERFLOW;
-  }
-  else // Als er nog een is, dan deze ophalen
+  } else if (is_unary_operator(token[0]) && token[1] == 0)
+  {
+    float first = pop();
+
+    if (push(apply_unary_operator(token[0], first)))
+      return CALCULATE_ERROR_STACK_OVERFLOW;
+
+  } else // Als er nog een is, dan deze ophalen
     if (push(atof(token))) // is het een waarde, dan op de stack plaatsen
       return CALCULATE_ERROR_STACK_OVERFLOW;
 
@@ -1776,10 +1796,13 @@ int op_preced(const char c)
 {
   switch (c)
   {
+    case '!':
+      return 4;
     case '^':
       return 3;
     case '*':
     case '/':
+    case '%':
       return 2;
     case '+':
     case '-':
@@ -1797,8 +1820,10 @@ bool op_left_assoc(const char c)
     case '/':
     case '+':
     case '-':
+    case '%':
       return true;     // left to right
-      //case '!': return false;    // right to left
+    case '!':
+      return false;    // right to left
   }
   return false;
 }
@@ -1812,8 +1837,10 @@ unsigned int op_arg_count(const char c)
     case '/':
     case '+':
     case '-':
+    case '%':
       return 2;
-      //case '!': return 1;
+    case '!':
+      return 1;
   }
   return 0;
 }
@@ -1854,7 +1881,7 @@ int Calculate(const char *input, float* result)
       }
 
       // If the token is an operator, op1, then:
-      else if (is_operator(c))
+      else if (is_operator(c) || is_unary_operator(c))
       {
         *(TokenPos) = 0;
         error = RPNCalculate(token);
