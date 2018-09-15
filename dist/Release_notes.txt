@@ -4,6 +4,9 @@ Changes in release mega-20180915 (since mega-20180914)
 
 Release date: Sat Sep 15 04:00:15 CEST 2018
 
+Known issue:
+      Causes reboots.
+
 Plebs (1):
       Added 2 new operators in Calculate
 
@@ -29,7 +32,7 @@ Release date: Fri Sep 14 04:00:17 CEST 2018
 Gijs Noorlander (1):
       Added PayPal link
 
-Markus Gloede (1):
+giddyhup (1):
       Fix IR plugin passing received code
 
 Plebs (7):
@@ -3432,4 +3435,3 @@ JustMe-NL (6):
       Update _C002.ino
       Create _P045_MPU6050
       Create _P046_VentusW266
-
