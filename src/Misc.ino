@@ -2137,7 +2137,7 @@ String rulesProcessingFile(String fileName, String& event)
             match, codeBlock, isCommand,
             conditional, condition,
             ifBranche, ifBrancheJustMatch);
-          yield();
+          backgroundtasks();
         }
 
         line = "";
