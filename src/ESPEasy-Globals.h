@@ -325,8 +325,6 @@
 #define RULESETS_MAX                        4
 #define RULES_BUFFER_SIZE                  64
 #define NAME_FORMULA_LENGTH_MAX            40
-#define RULES_IF_MAX_NESTING_LEVEL          4
-
 #define UDP_PACKETSIZE_MAX               2048
 
 #define PIN_MODE_UNDEFINED                  0
