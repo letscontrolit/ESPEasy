@@ -147,7 +147,6 @@ String SaveSettings(void)
     // Settings have changed, save to file.
     memcpy(Settings.md5, tmp_md5, 16);
 */
-    Settings.validate();
     err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(Settings));
     if (err.length())
      return(err);
@@ -183,7 +182,6 @@ String LoadSettings()
   err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof( SettingsStruct));
   if (err.length())
     return(err);
-  Settings.validate();
 
     // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 /*
@@ -435,25 +433,20 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Controller settings to SPIFFS
   \*********************************************************************************************/
-String SaveControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings)
+String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
 {
   checkRAM(F("SaveControllerSettings"));
-  controller_settings.validate(); // Make sure the saved controller settings have proper values.
-  return SaveToFile(ControllerSettings_Type, ControllerIndex,
-                    (char*)FILE_CONFIG, (byte*)&controller_settings, sizeof(controller_settings));
+  return SaveToFile(ControllerSettings_Type, ControllerIndex, (char*)FILE_CONFIG, memAddress, datasize);
 }
 
 
 /********************************************************************************************\
   Load Controller settings to SPIFFS
   \*********************************************************************************************/
-String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings) {
+String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
+{
   checkRAM(F("LoadControllerSettings"));
-  String result =
-    LoadFromFile(ControllerSettings_Type, ControllerIndex,
-                 (char*)FILE_CONFIG, (byte*)&controller_settings, sizeof(controller_settings));
-  controller_settings.validate(); // Make sure the loaded controller settings have proper values.
-  return result;
+  return(LoadFromFile(ControllerSettings_Type, ControllerIndex, (char*)FILE_CONFIG, memAddress, datasize));
 }
 
 

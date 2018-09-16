@@ -33,7 +33,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_INIT:
       {
         ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
         C004_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
       }

@@ -35,7 +35,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
     case CPLUGIN_INIT:
       {
         ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
         C008_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
       }
@@ -56,7 +56,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 
         for (byte x = 0; x < valueCount; x++)
         {

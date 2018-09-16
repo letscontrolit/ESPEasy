@@ -1033,7 +1033,6 @@ void handle_config() {
       MQTTclient_should_reconnect = true;
     }
     strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
-    Settings.appendUnitToHostname(isFormItemChecked(F("appendunittohostname")));
     //strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
     strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
@@ -1084,7 +1083,6 @@ void handle_config() {
   SecuritySettings.Password[25] = 0;
   addFormTextBox( F("Unit Name"), F("name"), Settings.Name, 25);
   addFormNumericBox( F("Unit Number"), F("unit"), Settings.Unit, 0, UNIT_NUMBER_MAX);
-  addFormCheckBox(F("Append Unit Number to hostname"), F("appendunittohostname"), Settings.appendUnitToHostname());
   addFormPasswordBox(F("Admin Password"), F("password"), SecuritySettings.Password, 25);
 
   addFormSubHeader(F("Wifi Settings"));
@@ -1264,7 +1262,7 @@ void handle_controllers() {
         CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
-    addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
+    addHtmlError(SaveControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
     addHtmlError(SaveSettings());
   }
 
@@ -1278,7 +1276,7 @@ void handle_controllers() {
     ControllerSettingsStruct ControllerSettings;
     for (byte x = 0; x < CONTROLLER_MAX; x++)
     {
-      LoadControllerSettings(x, ControllerSettings);
+      LoadControllerSettings(x, (byte*)&ControllerSettings, sizeof(ControllerSettings));
       html_TR_TD();
       TXBuffer += F("<a class='button link' href=\"controllers?index=");
       TXBuffer += x + 1;
@@ -1334,7 +1332,7 @@ void handle_controllers() {
     if (Settings.Protocol[controllerindex])
     {
       ControllerSettingsStruct ControllerSettings;
-      LoadControllerSettings(controllerindex, ControllerSettings);
+      LoadControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
       byte choice = ControllerSettings.UseDNS;
       String options[2];
       options[0] = F("Use IP address");

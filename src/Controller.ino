@@ -133,7 +133,7 @@ bool MQTTConnect(int controller_idx)
 {
   ++mqtt_reconnect_count;
   ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(controller_idx, ControllerSettings);
+  LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
   if (!ControllerSettings.checkHostReachable(true))
     return false;
   if (MQTTclient.connected()) {
@@ -309,7 +309,7 @@ void MQTTStatus(String& status)
   ControllerSettingsStruct ControllerSettings;
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
-    LoadControllerSettings(enabledMqttController, ControllerSettings);
+    LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
     String pubname = ControllerSettings.Subscribe;
     pubname.replace(F("/#"), F("/status"));
     parseSystemVariables(pubname, false);
