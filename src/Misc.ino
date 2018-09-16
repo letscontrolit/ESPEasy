@@ -207,19 +207,6 @@ boolean hasPinState(byte plugin, byte index)
 
 
 /*********************************************************************************************\
-   Bitwise operators
-  \*********************************************************************************************/
-bool getBitFromUL(uint32_t number, byte bitnr) {
-  return (number >> bitnr) & 1UL;
-}
-
-void setBitToUL(uint32_t& number, byte bitnr, bool value) {
-  uint32_t newbit = value ? 1UL : 0UL;
-  number ^= (-newbit ^ number) & (1UL << bitnr);
-}
-
-
-/*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
 String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
@@ -781,7 +768,7 @@ void ResetFactory(void)
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
   ControllerSettings.HostName[0]=0;
   ControllerSettings.Port = DEFAULT_PORT;
-  SaveControllerSettings(0, ControllerSettings);
+  SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
 #endif
   checkRAM(F("ResetFactory2"));
   Serial.println(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));

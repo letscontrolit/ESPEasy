@@ -1264,7 +1264,7 @@ void handle_controllers() {
         CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
-    addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
+    addHtmlError(SaveControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings)));
     addHtmlError(SaveSettings());
   }
 
@@ -1278,7 +1278,7 @@ void handle_controllers() {
     ControllerSettingsStruct ControllerSettings;
     for (byte x = 0; x < CONTROLLER_MAX; x++)
     {
-      LoadControllerSettings(x, ControllerSettings);
+      LoadControllerSettings(x, (byte*)&ControllerSettings, sizeof(ControllerSettings));
       html_TR_TD();
       TXBuffer += F("<a class='button link' href=\"controllers?index=");
       TXBuffer += x + 1;
@@ -1334,7 +1334,7 @@ void handle_controllers() {
     if (Settings.Protocol[controllerindex])
     {
       ControllerSettingsStruct ControllerSettings;
-      LoadControllerSettings(controllerindex, ControllerSettings);
+      LoadControllerSettings(controllerindex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
       byte choice = ControllerSettings.UseDNS;
       String options[2];
       options[0] = F("Use IP address");
