@@ -3,6 +3,7 @@ Changes in release mega-20180916 (since mega-20180915)
 -------------------------------------------------
 
 Release date: Sun Sep 16 04:00:11 CEST 2018
+This release is deleted, see issue #1755
 
 Gijs Noorlander (3):
       Revert "Added 2 new operators in Calculate() function"
@@ -16,6 +17,7 @@ TD-er (1):
 -------------------------------------------------
 Changes in release mega-20180915 (since mega-20180914)
 -------------------------------------------------
+This release is deleted, see known issues.
 
 Release date: Sat Sep 15 04:00:15 CEST 2018
 Known issue:
@@ -3450,4 +3452,3 @@ JustMe-NL (6):
       Update _C002.ino
       Create _P045_MPU6050
       Create _P046_VentusW266
-
