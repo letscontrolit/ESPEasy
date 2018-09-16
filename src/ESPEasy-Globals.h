@@ -662,10 +662,6 @@ struct SettingsStruct
     clearAll();
   }
 
-  bool appendUnitToHostname() {  return getBitFromUL(VariousBits1, 1); }
-  void appendUnitToHostname(bool value) { setBitToUL(VariousBits1, 1, value); }
-
-
   void clearAll() {
     PID = 0;
     Version = 0;
