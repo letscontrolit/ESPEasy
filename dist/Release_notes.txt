@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release mega-20180916 (since mega-20180915)
+-------------------------------------------------
+
+Release date: Sun Sep 16 04:00:11 CEST 2018
+
+Gijs Noorlander (3):
+      Revert "Added 2 new operators in Calculate() function"
+      Revert "Fix elseif & Add if-elseif-else nesting levels"
+      Added warning to release notes 20180915
+
+TD-er (1):
+      [HW Watchdog] Backgroundtasks instead of yield during rules handling
+
+
+-------------------------------------------------
 Changes in release mega-20180915 (since mega-20180914)
 -------------------------------------------------
 
