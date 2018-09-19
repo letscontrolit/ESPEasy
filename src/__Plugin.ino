@@ -1199,6 +1199,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_INIT_ALL:
     case PLUGIN_CLOCK_IN:
     case PLUGIN_EVENT_OUT:
+    case PLUGIN_TIME_CHANGE:
       {
         if (Function == PLUGIN_INIT_ALL)
           Function = PLUGIN_INIT;

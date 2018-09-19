@@ -259,6 +259,7 @@
 #define PLUGIN_GET_CONFIG                  24
 #define PLUGIN_UNCONDITIONAL_POLL          25
 #define PLUGIN_REQUEST                     26
+#define PLUGIN_TIME_CHANGE                 27
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2

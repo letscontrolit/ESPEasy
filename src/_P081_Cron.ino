@@ -17,9 +17,11 @@ extern "C"
 #define PLUGIN_081
 #define PLUGIN_ID_081      81                 //plugin id
 #define PLUGIN_NAME_081   "CRON"              //"Plugin Name" is what will be dislpayed in the selection list
-#define PLUGIN_VALUENAME1_081 ""              //variable output of the plugin. The label is in quotation marks
+#define PLUGIN_VALUENAME1_081 "LastExecution"
+#define PLUGIN_VALUENAME2_081 "NextExecution"
 #define PLUGIN_081_DEBUG  false                //set to true for extra log info in the debug
 #define PLUGIN_081_EXPRESSION_SIZE 41
+
 
 typedef struct
 {
@@ -33,9 +35,7 @@ typedef struct
 boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 {
 
-
   boolean success = false;
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -49,7 +49,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 0;             //number of output variables. The value should match the number of keys PLUGIN_VALUENAME1_xxx
+        Device[deviceCount].ValueCount = 2;             //number of output variables. The value should match the number of keys PLUGIN_VALUENAME1_xxx
         Device[deviceCount].SendDataOption = false;
         Device[deviceCount].TimerOption = false;
         Device[deviceCount].TimerOptional = false;
@@ -70,6 +70,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       //called when the user opens the module configuration page
       //it allows to add a new row for each output variable of the plugin
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_081));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_081));
       break;
     }
 
@@ -83,8 +84,6 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         , state.Expression
         , 39);
 
-      addFormNote(String(F("Last execution:")) + getDateTimeString(*gmtime(&state.LastExecution)));
-      addFormNote(String(F("Next execution:")) + getDateTimeString(*gmtime(&state.NextExecution)));
       success = true;
       break;
     }
@@ -128,6 +127,24 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       break;
 
     }
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      CronState state;
+      LoadCustomTaskSettings(event->TaskIndex, (byte*)&state, sizeof(state));
+
+      string += F("<div class=\"div_l\">");
+      string += ExtraTaskSettings.TaskDeviceValueNames[0];
+      string += F(":</div><div class=\"div_r\">");
+      string += getDateTimeString(*gmtime(&state.LastExecution));
+      string += F("</div><div class=\"div_br\"></div><div class=\"div_l\">");
+      string += ExtraTaskSettings.TaskDeviceValueNames[1];
+      string += F(":</div><div class=\"div_r\">");
+      string += getDateTimeString(*gmtime(&state.NextExecution));
+      string += F("</div>");
+      success = true;
+      break;
+    }
+
     case PLUGIN_INIT:
     {
       //this case defines code to be executed when the plugin is initialised
@@ -142,8 +159,12 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     {
       //code to be executed to read data
       //It is executed according to the delay configured on the device configuration page, only once
-
+      CronState state;
+      String log;
+      LoadCustomTaskSettings(event->TaskIndex, (byte*)&state, sizeof(state));
       //after the plugin has read data successfuly, set success and break
+      UserVar[event->BaseVarIndex] = (float)state.LastExecution;
+      UserVar[event->BaseVarIndex + 1] = (float)state.NextExecution;
       success = true;
       break;
 
