@@ -183,12 +183,14 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
     }
 
+    case PLUGIN_TIME_CHANGE:
     case PLUGIN_ONCE_A_SECOND:
     {
       //code to be executed once a second. Tasks which do not require fast response can be added here
       CronState state;
       String log;
       LoadCustomTaskSettings(event->TaskIndex, (byte*)&state, sizeof(state));
+      unsigned long time __attribute__((unused)) = now();
       struct tm current = tm;
       #if PLUGIN_081_DEBUG
         Serial.println(F("CRON Debug info:"));
@@ -199,7 +201,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         Serial.print(F("Triggered:"));
         Serial.println(state.NextExecution <=  mktime((struct tm *)&current));
       #endif
-      if(state.NextExecution <=  mktime((struct tm *)&current))
+      if(function == PLUGIN_TIME_CHANGE || state.NextExecution <=  mktime((struct tm *)&current))
       {
         cron_expr expr;
         memset(&expr, 0, sizeof(expr));
@@ -242,7 +244,8 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
             }
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + getDateTimeString(*gmtime(&state.NextExecution)));
             LoadTaskSettings(event->TaskIndex);
-            rulesProcessing(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+            if(function != PLUGIN_TIME_CHANGE)
+              rulesProcessing(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
           }
           else
           {
