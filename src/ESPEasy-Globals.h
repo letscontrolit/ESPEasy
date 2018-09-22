@@ -521,10 +521,10 @@ bool showSettingsFileLayout = false;
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
   #include  "esp32_ping.h"
-  #include <ESP32WebServer.h>
+  #include <WebServer.h>
   #include "SPIFFS.h"
   #include <rom/rtc.h>
-  ESP32WebServer WebServer(80);
+  WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
   #endif

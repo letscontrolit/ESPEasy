@@ -24,7 +24,7 @@
  - removed obsolete http get url code
  - v1.04
  - added build options and node_type_id to JSON/device
- /******************************************************************************/
+ ******************************************************************************/
 
 #define CPLUGIN_009
 #define CPLUGIN_ID_009         9
