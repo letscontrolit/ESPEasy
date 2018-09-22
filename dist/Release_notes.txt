@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20180922 (since mega-20180916)
+-------------------------------------------------
+
+Release date: Sat Sep 22 04:00:22 CEST 2018
+
+Gijs Noorlander (1):
+      Revert "Revert "Added 2 new operators in Calculate() function""
+
+TD-er (2):
+      Revert "[Scheduler] Disable command scheduler"
+      Revert "Revert "Fix elseif & Add if-elseif-else nesting levels""
+
+
+-------------------------------------------------
 Changes in release mega-20180916 (since mega-20180915)
 -------------------------------------------------
 
