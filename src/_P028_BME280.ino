@@ -382,8 +382,10 @@ bool Plugin_028_update_measurements(const uint8_t i2cAddress, float tempOffset, 
     return false;
   }
 
-  if (!timeOutReached(sensor.last_measurement + 1000)) {
-    // Must wait one second to make sure the filtered values stabilize.
+  // It takes at least 1.587 sec for valit measurements to complete.
+  // The datasheet names this the "T63" moment.
+  // 1 second = 63% of the time needed to perform a measurement.
+  if (!timeOutReached(sensor.last_measurement + 1587)) {
     return false;
   }
   if (!Plugin_028_readUncompensatedData(i2cAddress)) {
@@ -510,7 +512,7 @@ bool Plugin_028_begin(uint8_t i2cAddress) {
   I2C_write8_reg(i2cAddress, BMx280_REGISTER_SOFTRESET, 0xB6);
   delay(2);  // Startup time is 2 ms (datasheet)
   Plugin_028_readCoefficients(i2cAddress);
-  delay(65); //May be needed here as well to fix first wrong measurement?
+//  delay(65); //May be needed here as well to fix first wrong measurement?
   return true;
 }
 
@@ -548,8 +550,8 @@ void Plugin_028_readCoefficients(uint8_t i2cAddress)
 bool Plugin_028_readUncompensatedData(uint8_t i2cAddress) {
   // wait until measurement has been completed, otherwise we would read
   // the values from the last measurement
-  while (I2C_read8_reg(i2cAddress, BMx280_REGISTER_STATUS) & 0x08)
-    delay(1);
+  if (I2C_read8_reg(i2cAddress, BMx280_REGISTER_STATUS) & 0x08)
+    return false;
 
   I2Cdata_bytes BME280_data(BME280_P_T_H_DATA_LEN, BME280_DATA_ADDR);
   bool allDataRead = I2C_read_bytes(i2cAddress, BME280_data);
@@ -641,13 +643,6 @@ float Plugin_028_readHumidity(uint8_t i2cAddress)
   if (!sensor.hasHumidity()) {
     // No support for humidity
     return 0.0;
-  }
-  // It takes at least 1.587 sec for valit measurements to complete.
-  // The datasheet names this the "T63" moment.
-  // 1 second = 63% of the time needed to perform a measurement.
-  unsigned long difTime = millis() - sensor.last_measurement;
-  if (difTime < 1587) {
-    delay(1587 - difTime);
   }
   int32_t adc_H = sensor.uncompensated.humidity;
 
