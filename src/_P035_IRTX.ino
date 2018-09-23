@@ -198,10 +198,15 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 printWebString += F("<BR>");
 
             } else {        // RAW2
-                for (unsigned int i = 0, p = 0; i < IrRaw.length(); ) {
-                   char c = IrRaw[i++];
-                   buf[idx++] = (c != '.'? from_32hex(c) : (from_32hex(IrRaw[i++]) * 32 + from_32hex(IrRaw[i++]))) *
-                        ((p++ & 1)? IrBLen : IrPLen);
+                for (unsigned int i = 0, p = 0; i < IrRaw.length(); i++) {
+                   char c = IrRaw[i];
+                   uint16_t irLen = (p++ & 1)? IrBLen : IrPLen;
+                   if (c != '.')
+                       buf[idx++] = from_32hex(c) * irLen;
+                   else {
+                       buf[idx++] = (from_32hex(IrRaw[i+1]) * 32 + from_32hex(IrRaw[i+2])) * irLen;
+                       i += 2;
+                   }
                 }
             }
 

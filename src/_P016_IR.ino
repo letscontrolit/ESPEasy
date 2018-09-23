@@ -279,11 +279,11 @@ void displayRawToReadableB32Hex() {
             for (uint16_t i = 1 + p; i < results.rawlen; i += 2) {
                 uint16_t val = results.rawbuf[i] * RAWTICK;
                 uint16_t rmdr = val >= cd ? val % cd : cd - val;
-                if (rmdr > get_tolerance(val)) { avg = -1; break; }
+                if (rmdr > get_tolerance(val)) { avg = 0xFFFFU; break; }
                 avg += rmdr;
                 totTms += val / cd + (cd > val? 1 : 0);
             }
-            if (avg == -1) continue;
+            if (avg == 0xFFFFU) continue;
             avg /= results.rawlen / 2;
             float avgTms = (float)totTms / (results.rawlen / 2);
             if (avgTms <= bstMul && avg < bstAvg) {
