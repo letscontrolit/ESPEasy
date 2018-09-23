@@ -161,6 +161,15 @@ bool MQTTConnect(int controller_idx)
     clientid = F("ESPClient_");
     clientid += WiFi.macAddress();
   }
+  // Work-around for 'lost connections' to the MQTT broker.
+  // If the broker thinks the connection is still alive, a reconnect from the
+  // client will be refused.
+  // To overcome this issue, append the number of reconnects to the client ID to
+  // make it different from the previous one.
+  if (wifi_reconnects >= 1) {
+    clientid += F("_");
+    clientid += wifi_reconnects;
+  }
 
   String LWTTopic = ControllerSettings.MQTTLwtTopic;
   if(LWTTopic.length() == 0)
