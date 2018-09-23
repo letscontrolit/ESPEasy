@@ -297,7 +297,11 @@
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
   #define DEVICES_MAX                      75
 #else
-  #define DEVICES_MAX                      50
+  #ifdef ESP32
+    #define DEVICES_MAX                      75
+  #else
+    #define DEVICES_MAX                      50
+  #endif
 #endif
 
 #if defined(ESP8266)
