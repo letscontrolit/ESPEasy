@@ -203,9 +203,12 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                    uint16_t irLen = (p++ & 1)? IrBLen : IrPLen;
                    if (c != '.')
                        buf[idx++] = from_32hex(c) * irLen;
-                   else {
+                   else if (i+2 < IrRaw.length()) {
                        buf[idx++] = (from_32hex(IrRaw[i+1]) * 32 + from_32hex(IrRaw[i+2])) * irLen;
                        i += 2;
+                   } else {
+                       addLog(LOG_LEVEL_ERROR, "Invalid RAW2 B32 encoding!");
+                       return true;
                    }
                 }
             }
