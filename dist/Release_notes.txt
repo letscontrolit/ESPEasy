@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20180923 (since mega-20180922)
+-------------------------------------------------
+
+Release date: Sun Sep 23 04:00:12 CEST 2018
+
+TD-er (2):
+      [MQTT import] Fix crash at boot when plugin is enabled
+      [BME280] Fix slow reading of BME280 causing watchdog resets
+
+sakinit (5):
+      ESP32 build issues fixed
+      Fix ESP32 stack overflow in addPinSelect when called from P1WifiGateway
+      ESP32: Split webserver spiffs filelist into pages
+      Reverted Webserver change
+      ESP32 platform updated to 1.2.0; Webserver replaced by platform one
+
+
+-------------------------------------------------
 Changes in release mega-20180922 (since mega-20180916)
 -------------------------------------------------
 
