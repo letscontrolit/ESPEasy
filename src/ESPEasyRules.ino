@@ -1,3 +1,38 @@
+#define RULE_FILE_SEPARAROR '/'
+#define RULE_MAX_FILENAME_LENGTH 24
+
+String EventToFileName(String& eventName)
+{
+  int size = eventName.length();
+  int index = eventName.indexOf('=');
+  if(index >- 1)
+  {
+    size = index;
+  }
+#if defined(ESP8266)
+  String fileName = F("rules/");
+#endif
+#if defined(ESP32)
+  String fileName = F("/rules/");
+#endif
+  fileName += eventName.substring(0,size);
+  fileName.replace('#',RULE_FILE_SEPARAROR);
+  fileName.toLowerCase();
+return fileName;
+}
+
+String FileNameToEvent(String& fileName)
+{
+  #if defined(ESP8266)
+  String eventName = fileName.substring(6);
+  #endif
+  #if defined(ESP32)
+  String eventName = fileName.substring(7);
+  #endif
+  eventName.replace(RULE_FILE_SEPARAROR,'#');
+  return eventName;
+}
+
 void checkRuleSets(){
 for (byte x=0; x < RULESETS_MAX; x++){
   #if defined(ESP8266)
@@ -36,19 +71,15 @@ void rulesProcessing(String& event)
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  for (byte x = 0; x < RULESETS_MAX; x++)
-  {
-    #if defined(ESP8266)
-      String fileName = F("rules");
-    #endif
-    #if defined(ESP32)
-      String fileName = F("/rules");
-    #endif
-    fileName += x+1;
-    fileName += F(".txt");
-    if(activeRuleSets[x])
+  String fileName = EventToFileName(event);
+  //if exists processed the rule file
+  if(SPIFFS.exists(fileName))
       rulesProcessingFile(fileName, event);
-  }
+  else
+    addLog(LOG_LEVEL_DEBUG
+      , String(F("EVENT: ")) + event
+        + String(F(" is ingnored. File ")) + fileName
+        + String(F(" not found.")));
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("EVENT: ");

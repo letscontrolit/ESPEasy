@@ -2,7 +2,6 @@
   SPIFFS error handling
   Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
   \*********************************************************************************************/
-#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 String FileError(int line, const char * fname)
 {
    String err = F("FS   : Error while reading/writing ");
