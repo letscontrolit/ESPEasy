@@ -2875,6 +2875,52 @@ void addButton(const String &url, const String &label, const String& classes)
   TXBuffer += F("</a>");
 }
 
+void addButton(class StreamingBuffer &buffer, const String &url, const String &label)
+{
+  buffer += F("<a class='button link' href='");
+  buffer += url;
+  buffer += F("'>");
+  buffer += label;
+  buffer += F("</a>");
+}
+
+void addSaveButton(const String &url, const String &label)
+{
+  addSaveButton(TXBuffer, url, label);
+}
+
+void addSaveButton(class StreamingBuffer &buffer, const String &url, const String &label)
+{
+  buffer += F("<a class='button link' href='");
+  buffer += url;
+  buffer += F("' alt='");
+  buffer += label;
+  buffer += F("'>");
+  buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
+  buffer += F("<path d='M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z'  stroke='white' fill='white' ></path>");
+  buffer += F("</svg>");
+  buffer += F("</a>");
+}
+
+void addDeleteButton(const String &url, const String &label)
+{
+  addSaveButton(TXBuffer, url, label);
+}
+
+void addDeleteButton(class StreamingBuffer &buffer, const String &url, const String &label)
+{
+  buffer += F("<a class='button link' href='");
+  buffer += url;
+  buffer += F("' alt='");
+  buffer += label;
+  buffer += F("' onclick='return confirm(\"Are you sure?\")'>");
+  buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
+  buffer += F("<path fill='none' d='M0 0h24v24H0V0z'></path>");
+  buffer += F("<path d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z' stroke='white' fill='white' ></path>");
+  buffer += F("</svg>");
+  buffer += F("</a>");
+}
+
 void addWideButton(const String &url, const String &label, const String &classes)
 {
   html_add_wide_button_prefix(classes);
@@ -3096,19 +3142,64 @@ void addFormFloatNumberBox(const String& label, const String& id, float value, f
 
 void addTextBox(const String& id, const String&  value, int maxlength)
 {
+  addTextBox(id, value, maxlength, false);
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly)
+{
+  addTextBox(id, value, maxlength, false, false, "");
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required)
+{
+  addTextBox(id, value, maxlength, false, false, "");
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
+{
   TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' maxlength=");
   TXBuffer += maxlength;
   TXBuffer += F(" value='");
   TXBuffer += value;
-  TXBuffer += "'>";
+  TXBuffer += '\'';
+  if(readonly){
+    TXBuffer += F(" readonly ");
+  }
+  if(required){
+    TXBuffer += F(" required ");
+  }
+  if(pattern.length()>0){
+    TXBuffer += F("pattern = '");
+    TXBuffer += pattern;
+    TXBuffer += '\'';
+  }
+  TXBuffer += '>';
 }
 
 void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength)
 {
   addRowLabel(label);
   addTextBox(id, value, maxlength);
+}
+
+void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly)
+{
+  addRowLabel(label);
+  addTextBox(id, value, maxlength, readonly);
+}
+
+void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly, bool required)
+{
+  addRowLabel(label);
+  addTextBox(id, value, maxlength, readonly, required);
+}
+
+void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
+{
+  addRowLabel(label);
+  addTextBox(id, value, maxlength, readonly, required, pattern);
 }
 
 
