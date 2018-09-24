@@ -862,8 +862,10 @@ struct SettingsStruct
   // Try to extend settings to make the checksum 4-byte aligned.
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 //  uint8_t       md5[16];
-} Settings;
+};
 
+SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
+SettingsStruct& Settings = *SettingsStruct_ptr;
 
 /*********************************************************************************************\
  * ControllerSettingsStruct
