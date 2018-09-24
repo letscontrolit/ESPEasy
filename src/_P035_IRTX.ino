@@ -205,7 +205,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                            return addErrorTrue("Invalid RAW2 B32 encoding!");
                        gotRep = 2;
                    } else {
-                       if (c == '^' && i+1 >= total || idx == sizeof(buf))
+                       if ((c == '^' && i+1 >= total) || idx == sizeof(buf))
                            return addErrorTrue("Invalid RAW2 B32 encoding!");
 
                        uint16_t irLen = (idx & 1)? IrBLen : IrPLen;
@@ -310,7 +310,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-boolean addErrorTrue(char *str) {
+boolean addErrorTrue(const char *str) {
     addLog(LOG_LEVEL_ERROR, str);
     return true;
 }
