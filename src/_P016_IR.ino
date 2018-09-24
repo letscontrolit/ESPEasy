@@ -305,29 +305,55 @@ void displayRawToReadableB32Hex() {
         addLog(LOG_LEVEL_DEBUG, line);
     }
 
-    unsigned int ptr = 0;
-    char out[100];
-
     // Generate the B32 Hex string, per the divisors found.
-    for (unsigned int i = 1; i < results.rawlen; i++) {
-        uint16_t val = results.rawbuf[i] * RAWTICK;
-        unsigned int dv = div[(i-1) & 1];
+    //line = "Tm: ";
+    uint16_t tmOut[RAWBUF], total = results.rawlen - 1;
+    for (unsigned int i = 0; i < total; i++) {
+        uint16_t val = results.rawbuf[i+1] * RAWTICK;
+        unsigned int dv = div[(i) & 1];
         unsigned int tm = val / dv + (val % dv > dv / 2? 1 : 0);
-        if (ptr +3 > sizeof(out) * 8 || tm >= 32*32) {
+        tmOut[i] = tm;
+        //line += uint64ToString(tm, 10) + ",";
+    }
+    //Serial.println(line);
+
+    char out[RAWBUF];
+    unsigned int iOut = 0, s = 2, d = 0;
+    for (; s+1 < total; d = s, s += 2) {
+        unsigned int vals = 2;
+        while (s+1 < total && tmOut[s] == tmOut[d] && tmOut[s+1] == tmOut[d+1]) {
+            vals += 2;
+            s += 2;
+        }
+        if (iOut + 5 > sizeof(out) || tmOut[d] >= 32*32 || tmOut[d+1] >= 32*32 || vals >= 64) {
             addLog(LOG_LEVEL_INFO, "Raw code too long. Try again...");
             return;
         }
-        if (tm >= 32) {
-            out[ptr++] = '.';
-            out[ptr++] = to_32hex(tm/32);
-            tm %= 32;
-        }
-        out[ptr++] = to_32hex(tm);
-    }
-    out[ptr] = 0;
 
+        if (vals > 4 || (vals == 4 && (tmOut[d] >= 32 || tmOut[d+1] >= 32))) {
+            out[iOut++] = '*';
+            out[iOut++] = to_32hex(vals / 2);
+            vals = 2;
+        }
+        while (vals--)
+            iOut = storeB32Hex(out, iOut, tmOut[d++]);
+    }
+    while (d < total)
+        iOut = storeB32Hex(out, iOut, tmOut[d++]);
+
+    out[iOut] = 0;
     line = "IRSEND,RAW2," + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
     addLog(LOG_LEVEL_INFO, line);
+}
+
+unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val) {
+    if (val >= 32) {
+        out[iOut++] = '^';
+        out[iOut++] = to_32hex(val/32);
+        val %= 32;
+    }
+    out[iOut++] = to_32hex(val);
+    return iOut;
 }
 
 #endif // USES_P016

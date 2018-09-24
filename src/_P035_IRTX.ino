@@ -198,17 +198,30 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 printWebString += F("<BR>");
 
             } else {        // RAW2
-                for (unsigned int i = 0, p = 0; i < IrRaw.length(); i++) {
-                   char c = IrRaw[i];
-                   uint16_t irLen = (p++ & 1)? IrBLen : IrPLen;
-                   if (c != '.')
-                       buf[idx++] = from_32hex(c) * irLen;
-                   else if (i+2 < IrRaw.length()) {
-                       buf[idx++] = (from_32hex(IrRaw[i+1]) * 32 + from_32hex(IrRaw[i+2])) * irLen;
-                       i += 2;
+                for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep; i < total;) {
+                   char c = IrRaw[i++];
+                   if (c == '*') {
+                       if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf))
+                           return addErrorTrue("Invalid RAW2 B32 encoding!");
+                       gotRep = 2;
                    } else {
-                       addLog(LOG_LEVEL_ERROR, "Invalid RAW2 B32 encoding!");
-                       return true;
+                       if (c == '^' && i+1 >= total || idx == sizeof(buf))
+                           return addErrorTrue("Invalid RAW2 B32 encoding!");
+
+                       uint16_t irLen = (idx & 1)? IrBLen : IrPLen;
+                       if (c == '^') {
+                           buf[idx++] = (from_32hex(IrRaw[i]) * 32 + from_32hex(IrRaw[i+1])) * irLen;
+                           i += 2;
+                       } else
+                           buf[idx++] = from_32hex(c) * irLen;
+
+                       if (--gotRep == 0) {
+                           while (--rep) {
+                               buf[idx] = buf[idx-2];
+                               buf[idx+1] = buf[idx-1];
+                               idx += 2;
+                           }
+                       }
                    }
                 }
             }
@@ -295,6 +308,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
       }
   }
   return success;
+}
+
+boolean addErrorTrue(char *str) {
+    addLog(LOG_LEVEL_ERROR, str);
+    return true;
 }
 
 
