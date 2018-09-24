@@ -458,6 +458,7 @@ void p073_FillBufferWithTemp(long temperature)
   int p073_numlenght = strlen(p073_digit);
   byte p073_dispdigit;
   for (int i=0;i<p073_numlenght;i++) {
+    p073_dispdigit = 10;           // default is space
     if (p073_digit[i] > 47 && p073_digit[i] < 58)
       p073_dispdigit = p073_digit[i]-48;
     else if (p073_digit[i] == 32)  // space
