@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20180924 (since mega-20180923)
+-------------------------------------------------
+
+Release date: Mon Sep 24 04:00:20 CEST 2018
+
+Benno Eigenmann (1):
+      Fix platformio
+
+TD-er (2):
+      [MQTT] Work around for lost MQTT connection
+      [ESP32] Fix I2C handling to allow I2C devices to work
+
+sakinit (1):
+      change to platform version core_esp32_1_3_0
+
+stefan (1):
+      Change type of sensor for MCP and PCF devices
+
+
+-------------------------------------------------
 Changes in release mega-20180923 (since mega-20180922)
 -------------------------------------------------
 
