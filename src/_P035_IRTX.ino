@@ -198,7 +198,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 printWebString += F("<BR>");
 
             } else {        // RAW2
-                for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep; i < total;) {
+                for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
                    char c = IrRaw[i++];
                    if (c == '*') {
                        if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf))
