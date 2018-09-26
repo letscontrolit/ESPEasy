@@ -2600,8 +2600,8 @@ void addPinSelect(boolean forI2C, String name,  int choice)
 //********************************************************************************
 void addPinSelect(boolean forI2C, String name,  int choice)
 {
-  String options[PIN_D_MAX+1];
-  int optionValues[PIN_D_MAX+1];
+  String * options = new String[PIN_D_MAX+1];
+  int * optionValues = new int[PIN_D_MAX+1];
   options[0] = F("- None -");
   optionValues[0] = -1;
   for(byte x=1; x < PIN_D_MAX+1; x++)
@@ -2611,6 +2611,8 @@ void addPinSelect(boolean forI2C, String name,  int choice)
     optionValues[x] = x;
   }
   renderHTMLForPinSelect(options, optionValues, forI2C, name, choice, PIN_D_MAX+1);
+  delete[] optionValues;
+  delete[] options;
 }
 #endif
 
@@ -4636,8 +4638,8 @@ void handle_filelist() {
     TXBuffer += F("\">Next</a>");
   }
   TXBuffer += F("<BR><BR>");
-    sendHeadandTail(F("TmplStd"),true);
-    TXBuffer.endStream();
+  sendHeadandTail(F("TmplStd"),true);
+  TXBuffer.endStream();
 #endif
 #if defined(ESP32)
   String fdelete = WebServer.arg(F("delete"));
@@ -4648,35 +4650,67 @@ void handle_filelist() {
     // flashCount();
   }
 
+  const int pageSize = 25;
+  int startIdx = 0;
 
+  String fstart = WebServer.arg(F("start"));
+  if (fstart.length() > 0)
+  {
+    startIdx = atoi(fstart.c_str());
+  }
+  int endIdx = startIdx + pageSize - 1;
 
   TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TH><TH>Filename<TH>Size");
 
   File root = SPIFFS.open("/");
   File file = root.openNextFile();
-  while (file)
+  int count = -1;
+  while (file and count < endIdx)
   {
     if(!file.isDirectory()){
-      html_TR_TD();
-      if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
-      {
-        TXBuffer += F("<a class='button link' href=\"filelist?delete=");
-        TXBuffer += file.name();
-        TXBuffer += F("\">Del</a>");
-      }
+      ++count;
 
-      TXBuffer += F("<TD><a href=\"");
-      TXBuffer += file.name();
-      TXBuffer += F("\">");
-      TXBuffer += file.name();
-      TXBuffer += F("</a>");
-      html_TD();
-      TXBuffer += file.size();
-      file = root.openNextFile();
+      if (count >= startIdx)
+      {
+        html_TR_TD();
+        if (strcmp(file.name(), FILE_CONFIG) != 0 && strcmp(file.name(), FILE_SECURITY) != 0 && strcmp(file.name(), FILE_NOTIFICATION) != 0)
+        {
+          TXBuffer += F("<a class='button link' href=\"filelist?delete=");
+          TXBuffer += file.name();
+          if (startIdx > 0)
+          {
+            TXBuffer += F("&start=");
+            TXBuffer += startIdx;
+          }
+          TXBuffer += F("\">Del</a>");
+        }
+
+        TXBuffer += F("<TD><a href=\"");
+        TXBuffer += file.name();
+        TXBuffer += F("\">");
+        TXBuffer += file.name();
+        TXBuffer += F("</a>");
+        html_TD();
+        TXBuffer += file.size();
+      }
     }
+    file = root.openNextFile();
   }
   TXBuffer += F("</table></form>");
-  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a><BR><BR>");
+  TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
+  if (startIdx > 0)
+  {
+    TXBuffer += F("<a class='button link' href=\"/filelist?start=");
+    TXBuffer += startIdx < pageSize ? 0 : startIdx - pageSize;
+    TXBuffer += F("\">Previous</a>");
+  }
+  if (count >= endIdx and file)
+  {
+    TXBuffer += F("<a class='button link' href=\"/filelist?start=");
+    TXBuffer += endIdx + 1;
+    TXBuffer += F("\">Next</a>");
+  }
+  TXBuffer += F("<BR><BR>");
     sendHeadandTail(F("TmplStd"),true);
     TXBuffer.endStream();
 #endif

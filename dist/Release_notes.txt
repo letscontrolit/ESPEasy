@@ -1,4 +1,56 @@
 -------------------------------------------------
+Changes in release mega-20180924 (since mega-20180923)
+-------------------------------------------------
+
+Release date: Mon Sep 24 04:00:20 CEST 2018
+
+Benno Eigenmann (1):
+      Fix platformio
+
+TD-er (2):
+      [MQTT] Work around for lost MQTT connection
+      [ESP32] Fix I2C handling to allow I2C devices to work
+
+sakinit (1):
+      change to platform version core_esp32_1_3_0
+
+stefan (1):
+      Change type of sensor for MCP and PCF devices
+
+
+-------------------------------------------------
+Changes in release mega-20180923 (since mega-20180922)
+-------------------------------------------------
+
+Release date: Sun Sep 23 04:00:12 CEST 2018
+
+TD-er (2):
+      [MQTT import] Fix crash at boot when plugin is enabled
+      [BME280] Fix slow reading of BME280 causing watchdog resets
+
+sakinit (5):
+      ESP32 build issues fixed
+      Fix ESP32 stack overflow in addPinSelect when called from P1WifiGateway
+      ESP32: Split webserver spiffs filelist into pages
+      Reverted Webserver change
+      ESP32 platform updated to 1.2.0; Webserver replaced by platform one
+
+
+-------------------------------------------------
+Changes in release mega-20180922 (since mega-20180916)
+-------------------------------------------------
+
+Release date: Sat Sep 22 04:00:22 CEST 2018
+
+Gijs Noorlander (1):
+      Revert "Revert "Added 2 new operators in Calculate() function""
+
+TD-er (2):
+      Revert "[Scheduler] Disable command scheduler"
+      Revert "Revert "Fix elseif & Add if-elseif-else nesting levels""
+
+
+-------------------------------------------------
 Changes in release mega-20180916 (since mega-20180915)
 -------------------------------------------------
 

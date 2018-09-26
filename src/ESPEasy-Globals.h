@@ -325,6 +325,8 @@
 #define RULESETS_MAX                        4
 #define RULES_BUFFER_SIZE                  64
 #define NAME_FORMULA_LENGTH_MAX            40
+#define RULES_IF_MAX_NESTING_LEVEL          4
+
 #define UDP_PACKETSIZE_MAX               2048
 
 #define PIN_MODE_UNDEFINED                  0
@@ -519,10 +521,10 @@ bool showSettingsFileLayout = false;
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
   #include  "esp32_ping.h"
-  #include <ESP32WebServer.h>
+  #include <WebServer.h>
   #include "SPIFFS.h"
   #include <rom/rtc.h>
-  ESP32WebServer WebServer(80);
+  WebServer WebServer(80);
   #ifdef FEATURE_MDNS
     #include <ESPmDNS.h>
   #endif
