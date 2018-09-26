@@ -202,12 +202,15 @@ To create/register a plugin, you have to :
     #ifdef ESP8266
         #undef ESP8266
     #endif
-    #define PLUGIN_SET_ONLY_SWITCH
-    #define USES_P036   // FrameOLED
-    #define USES_P027   // INA219
-    #define USES_P028   // BME280
+//    #define PLUGIN_SET_ONLY_SWITCH
 
-    // TODO : Add list of compatible plugins for ESP32 board.
+    #define  PLUGIN_SET_TESTING
+    #define  CONTROLLER_SET_STABLE
+    #define  NOTIFIER_SET_STABLE
+    #define  PLUGIN_SET_STABLE     // add stable
+    // See also PLUGIN_SET_GENERIC_ESP32 section at end,
+    // where incompatible plugins will be disabled.
+    // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 
@@ -585,8 +588,22 @@ To create/register a plugin, you have to :
 #ifdef NOTIFIER_SET_EXPERIMENTAL
 #endif
 
+/******************************************************************************\
+ * Remove incompatible plugins ************************************************
+\******************************************************************************/
+#ifdef PLUGIN_SET_GENERIC_ESP32
+  #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
+  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
 
+  #undef USES_P052   // SenseAir        (doesn't work yet on ESP32)
+  #undef USES_P053   // PMSx003
 
+  #undef USES_P056   // SDS011-Dust     (doesn't work yet on ESP32)
+  #undef USES_P065   // DRF0299
+  #undef USES_P071   // Kamstrup401
+  #undef USES_P075   // Nextion
+  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
+#endif
 
 
 /******************************************************************************\
