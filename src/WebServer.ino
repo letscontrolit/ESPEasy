@@ -5417,6 +5417,8 @@ void handle_sysinfo() {
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
+  html_TR_TD(); TXBuffer += F("ESP Board Name:<TD>");
+  TXBuffer += ARDUINO_BOARD;
 
 
    addTableSeparator(F("Storage"), 2, 3);

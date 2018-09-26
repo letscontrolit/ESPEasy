@@ -297,7 +297,11 @@
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
   #define DEVICES_MAX                      75
 #else
-  #define DEVICES_MAX                      50
+  #ifdef ESP32
+    #define DEVICES_MAX                      75
+  #else
+    #define DEVICES_MAX                      50
+  #endif
 #endif
 
 #if defined(ESP8266)
@@ -858,8 +862,10 @@ struct SettingsStruct
   // Try to extend settings to make the checksum 4-byte aligned.
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 //  uint8_t       md5[16];
-} Settings;
+};
 
+SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
+SettingsStruct& Settings = *SettingsStruct_ptr;
 
 /*********************************************************************************************\
  * ControllerSettingsStruct
