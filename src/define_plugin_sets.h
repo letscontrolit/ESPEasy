@@ -202,17 +202,29 @@ To create/register a plugin, you have to :
     #ifdef ESP8266
         #undef ESP8266
     #endif
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P036   // FrameOLED
+    #define USES_P027   // INA219
+    #define USES_P028   // BME280
+#endif
+
+#ifdef PLUGIN_SET_TEST_ESP32
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
 //    #define PLUGIN_SET_ONLY_SWITCH
 
     #define  PLUGIN_SET_TESTING
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
     #define  PLUGIN_SET_STABLE     // add stable
-    // See also PLUGIN_SET_GENERIC_ESP32 section at end,
+    // See also PLUGIN_SET_TEST_ESP32 section at end,
     // where incompatible plugins will be disabled.
     // TODO : Check compatibility of plugins for ESP32 board.
 #endif
-
 
 
 // Generic ------------------------------------
@@ -591,7 +603,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Remove incompatible plugins ************************************************
 \******************************************************************************/
-#ifdef PLUGIN_SET_GENERIC_ESP32
+#ifdef PLUGIN_SET_TEST_ESP32
   #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
   #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
 
