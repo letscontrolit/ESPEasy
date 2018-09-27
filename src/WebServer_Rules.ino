@@ -112,9 +112,15 @@ void handle_rules_new() {
 
   if (startIdx > 0)
   {
+    #ifdef ESP32
+    #define max(a,b) a > b ? a : b
+    #endif
     TXBuffer += F("<a class='button link' href=''/rules?start=");
     TXBuffer += max(0, startIdx - rulesListPageSize);
     TXBuffer += F("'>Previous</a>");
+    #ifdef ESP32
+      #undef max
+    #endif
   }
   if (hasMore && count >= endIdx)
   {
@@ -451,7 +457,7 @@ bool EnumerateFileAndDirectory(String& rootPath
         fi.isDirectory = file.isDirectory();
         next = handler(fi);
       }
-      if(!file.isDirectory()){
+      if(!file.isDirectory())
         ++count;
       file = root.openNextFile();
     }
