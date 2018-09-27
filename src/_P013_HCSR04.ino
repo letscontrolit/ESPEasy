@@ -15,7 +15,11 @@
 struct P_013_sensordef {
   P_013_sensordef() : sonar(NULL) {}
 
-  P_013_sensordef(byte TRIG_Pin, byte IRQ_Pin, int16_t max_cm_distance) : sonar(NULL) {
+  void init(byte TRIG_Pin, byte IRQ_Pin, int16_t max_cm_distance) {
+    if (sonar != NULL) {
+      delete sonar;
+      sonar = NULL;
+    }
     sonar = new NewPingESP8266(TRIG_Pin, IRQ_Pin, max_cm_distance);
   }
 
@@ -107,8 +111,8 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         byte Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         byte Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
         int16_t max_cm_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        P_013_sensordefs[event->TaskIndex] =
-          P_013_sensordef(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance);
+        P_013_sensordefs[event->TaskIndex] = P_013_sensordef();
+        P_013_sensordefs[event->TaskIndex].init(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance);
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex +1;
         log += F(" TrigPin: ");
@@ -118,7 +122,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         log += F(" max dist cm: ");
         log += max_cm_distance;
         log += F(" max echo: ");
-        log += P_013_sensordefs[event->TaskIndex].sonar->getMaxEchoTime();
+        if (P_013_sensordefs[event->TaskIndex].sonar == NULL) {
+          log += 0;
+        } else {
+          log += P_013_sensordefs[event->TaskIndex].sonar->getMaxEchoTime();
+        }
         log += F(" nr_tasks: ");
         log += P_013_sensordefs.size();
         addLog(LOG_LEVEL_INFO, log);
