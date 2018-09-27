@@ -21,8 +21,8 @@ struct P_013_sensordef {
   }
 
   ~P_013_sensordef() {
+    addLog(LOG_LEVEL_INFO, "delete P_013_sensordef");
     if (sonar != NULL) {
-      addLog(LOG_LEVEL_INFO, "delete P_013_sensordef");
       delete sonar;
       sonar = NULL;
     }
@@ -109,6 +109,10 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         byte Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         byte Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
         int16_t max_cm_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        // if a device already exists, delete it first and add a new one with new settings
+        if (P_013_sensordefs.count(event->TaskIndex) > 0) {
+          P_013_sensordefs.erase(event->TaskIndex);
+        };
         P_013_sensordef *newSensordef = new P_013_sensordef(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance);
         P_013_sensordefs[event->TaskIndex] = *newSensordef;
         String log = F("ULTRASONIC : TaskNr: ");
