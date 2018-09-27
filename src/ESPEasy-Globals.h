@@ -2158,6 +2158,6 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 // Also the functions use a lot of global defined variables, so include at the end of this file.
 #include "ESPEasyWiFiEvent.h"
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
-
+#include "WebServer_Rules.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

@@ -510,7 +510,18 @@ void WebServerInit()
   WebServer.on(F("/json"), handle_json);
   WebServer.on(F("/timingstats_json"), handle_timingstats_json);
   WebServer.on(F("/timingstats"), handle_timingstats);
-  WebServer.on(F("/rules"), handle_rules);
+  WebServer.on(F("/rules"), handle_rules_new);
+  WebServer.on(F("/rules/"), []()
+  {
+    WebServer.sendHeader(F("Location"), F("/rules"),true);
+    WebServer.send(302, F("text/plain"),F(""));
+  });
+  WebServer.on(F("/rules/add"), []()
+  {
+    handle_rules_edit(WebServer.uri(),true);
+  });
+  WebServer.on(F("/rules/backup"), handle_rules_backup);
+  WebServer.on(F("/rules/delete"), handle_rules_delete);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
   WebServer.on(F("/sysvars"), handle_sysvars);
@@ -5597,6 +5608,7 @@ void handleNotFound() {
   }
 
   if (!isLoggedIn()) return;
+  if (handle_rules_edit(WebServer.uri())) return;
   if (loadFromFS(true, WebServer.uri())) return;
   if (loadFromFS(false, WebServer.uri())) return;
   String message = F("URI: ");
