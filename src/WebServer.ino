@@ -702,14 +702,14 @@ void getWebPageTemplateVar(const String& varName )
     static const __FlashStringHelper* gpMenu[8][3] = {
       // See https://github.com/letscontrolit/ESPEasy/issues/1650
       // Icon,        Full width label,   URL
-      F("&#8962;"),   F("Main"),          F("."),             //0
-      F("&#9881;"),   F("Config"),        F("config"),        //1
-      F("&#128172;"), F("Controllers"),   F("controllers"),   //2
-      F("&#128204;"), F("Hardware"),      F("hardware"),      //3
-      F("&#128268;"), F("Devices"),       F("devices"),       //4
-      F("&#10740;"),  F("Rules"),         F("rules"),         //5
-      F("&#9993;"),   F("Notifications"), F("notifications"), //6
-      F("&#128295;"), F("Tools"),         F("tools"),         //7
+      F("&#8962;"),   F("Main"),          F("/"),              //0
+      F("&#9881;"),   F("Config"),        F("/config"),        //1
+      F("&#128172;"), F("Controllers"),   F("/controllers"),   //2
+      F("&#128204;"), F("Hardware"),      F("/hardware"),      //3
+      F("&#128268;"), F("Devices"),       F("/devices"),       //4
+      F("&#10740;"),  F("Rules"),         F("/rules"),         //5
+      F("&#9993;"),   F("Notifications"), F("/notifications"), //6
+      F("&#128295;"), F("Tools"),         F("/tools"),         //7
     };
 
     TXBuffer += F("<div class='menubar'>");
