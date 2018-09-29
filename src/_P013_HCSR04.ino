@@ -10,10 +10,11 @@
 
 #include <Arduino.h>
 #include <map>
+//#include <shared_ptr>
 #include <NewPingESP8266.h>
 
-std::map<unsigned int, NewPingESP8266*> P_013_sensordefs;
-
+// map of sensors
+std::map<unsigned int, std::shared_ptr<NewPingESP8266> > P_013_sensordefs;
 
 boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 {
@@ -88,12 +89,9 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         byte Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
         byte Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
         int16_t max_cm_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        // if a device already exists, delete it first and add a new one with new settings
-        if (P_013_sensordefs.count(event->TaskIndex) > 0) {
-          delete P_013_sensordefs[event->TaskIndex];
-          P_013_sensordefs.erase(event->TaskIndex);
-        }
-        P_013_sensordefs[event->TaskIndex] = new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance);
+        P_013_sensordefs.erase(event->TaskIndex);
+        P_013_sensordefs[event->TaskIndex] =
+          std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance));
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex +1;
         log += F(" TrigPin: ");
@@ -103,7 +101,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         log += F(" max dist cm: ");
         log += max_cm_distance;
         log += F(" max echo: ");
-        log += (P_013_sensordefs[event->TaskIndex])->getMaxEchoTime();
+        log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
         log += F(" nr_tasks: ");
         log += P_013_sensordefs.size();
         addLog(LOG_LEVEL_INFO, log);
@@ -128,18 +126,13 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-        addLog(LOG_LEVEL_INFO, F("P013 exit"));
-        if (P_013_sensordefs.count(event->TaskIndex) > 0) {
-          delete P_013_sensordefs[event->TaskIndex];
-          P_013_sensordefs.erase(event->TaskIndex);
-        }
+        P_013_sensordefs.erase(event->TaskIndex);
         break;
       }
 
     case PLUGIN_READ: // If we select value mode, read and send the value based on global timer
       {
-        if ((Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 1) &&
-            (P_013_sensordefs.count(event->TaskIndex) > 0))
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 1)
         {
           float value = Plugin_013_read(event->TaskIndex);
           String log = F("ULTRASONIC : TaskNr: ");
@@ -193,7 +186,6 @@ float Plugin_013_read(unsigned int taskIndex)
 /*********************************************************************/
 {
   if (P_013_sensordefs.count(taskIndex) == 0) return 0;
-  //if (P_013_sensordefs[taskIndex].sonar == NULL) return 0;
   delay(1);
   float distance = (P_013_sensordefs[taskIndex])->ping_cm();
   delay(1);
