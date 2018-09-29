@@ -236,9 +236,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 }
 
 
-#define PCT_TOLERANCE     7U
-#define get_tolerance(v) ((v) / (100 / PCT_TOLERANCE))
-#define to_32hex(c) ((c) < 10 ? (c) + '0' : (c) + 'A' - 10)
+#define PCT_TOLERANCE       7u
+#define pct_tolerance(v)    ((v) / (100u / PCT_TOLERANCE))
+//#define MIN_TOLERANCE       10u
+//#define get_tolerance(v)    (pct_tolerance(v) > MIN_TOLERANCE? pct_tolerance(v) : MIN_TOLERANCE)
+#define get_tolerance(v)    (pct_tolerance(v))
+#define MIN_VIABLE_DIV      40u
+#define to_32hex(c)         ((c) < 10 ? (c) + '0' : (c) + 'A' - 10)
 
 // This function attempts to convert the raw IR timings buffer to a short string that can be sent over as
 // an IRSEND HTTP/MQTT command. It analyzes the timings, and searches for a common denominator which can be
@@ -272,7 +276,7 @@ void displayRawToReadableB32Hex() {
         cd += get_tolerance(cd) + 1;
         //Serial.println(String("p="+ uint64ToString(p, 10) + " start cd=" + uint64ToString(cd, 10)).c_str());
         // find the best divisor based on lowest avg err, within allowed tolerance.
-        while (--cd >= 50) {
+        while (--cd >= MIN_VIABLE_DIV) {
             uint32_t avg = 0;
             uint16_t totTms = 0;
             // calculate average error for current divisor, and verify it's within tolerance for all timings.
@@ -306,8 +310,9 @@ void displayRawToReadableB32Hex() {
     }
 
     // Generate the B32 Hex string, per the divisors found.
-    //line = "Tm: ";
-    uint16_t tmOut[RAWBUF], total = results.rawlen - 1;
+    uint16_t total = results.rawlen - 1, tmOut[total];
+    //line = "Timing muls ("+ uint64ToString(total, 10) + "): ";
+
     for (unsigned int i = 0; i < total; i++) {
         uint16_t val = results.rawbuf[i+1] * RAWTICK;
         unsigned int dv = div[(i) & 1];
@@ -317,7 +322,7 @@ void displayRawToReadableB32Hex() {
     }
     //Serial.println(line);
 
-    char out[RAWBUF];
+    char out[total];
     unsigned int iOut = 0, s = 2, d = 0;
     for (; s+1 < total; d = s, s += 2) {
         unsigned int vals = 2;
