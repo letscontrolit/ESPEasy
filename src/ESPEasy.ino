@@ -462,8 +462,11 @@ int getLoopCountPerSec() {
 \*********************************************************************************************/
 void loop()
 {
+  /*
+  //FIXME TD-er: No idea what this does.
   if(MainLoopCall_ptr)
       MainLoopCall_ptr();
+  */
 
   updateLoopStats();
 

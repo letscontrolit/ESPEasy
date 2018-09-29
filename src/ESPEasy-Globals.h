@@ -68,6 +68,9 @@
 #if defined(ESP32)
   #define USE_RTOS_MULTITASKING
 #endif
+#ifdef M5STACK_ESP
+//  #include <M5Stack.h>
+#endif
 
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
 
@@ -684,17 +687,30 @@ struct SettingsStruct
     if (VariousBits1 > (1 << 30)) VariousBits1 = 0;
   }
 
+  void clearNetworkSettings() {
+    for (byte i = 0; i < 4; ++i) {
+      IP[i] = 0;
+      Gateway[i] = 0;
+      Subnet[i] = 0;
+      DNS[i] = 0;
+    }
+  }
+
   void clearAll() {
     PID = 0;
     Version = 0;
     Build = 0;
     IP_Octet = 0;
     Unit = 0;
+    Name[0] = 0;
+    NTPHost[0] = 0;
     Delay = 0;
     Pin_i2c_sda = -1;
     Pin_i2c_scl = -1;
     Pin_status_led = -1;
     Pin_sd_cs = -1;
+    for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
+    for (byte i = 0; i < 4; ++i) {  Syslog_IP[i] = 0; }
     UDPPort = 0;
     SyslogLevel = 0;
     SerialLogLevel = 0;
@@ -719,12 +735,13 @@ struct SettingsStruct
     Pin_status_led_Inversed = false;
     deepSleepOnFail = false;
     UseValueLogger = false;
+    ArduinoOTAEnable = false;
     DST_Start = 0;
     DST_End = 0;
     UseRTOSMultitasking = false;
     Pin_Reset = -1;
     SyslogFacility = DEFAULT_SYSLOG_FACILITY;
-    StructSize = 0;
+    StructSize = sizeof(SettingsStruct);
     MQTTUseUnitNameAsClientId = 0;
     Latitude = 0.0;
     Longitude = 0.0;
@@ -741,6 +758,7 @@ struct SettingsStruct
     for (byte task = 0; task < TASKS_MAX; ++task) {
       clearTask(task);
     }
+    clearNetworkSettings();
   }
 
   void clearTask(byte task) {
@@ -1401,6 +1419,7 @@ std::map<unsigned long, systemTimerStruct> systemTimers;
 \*********************************************************************************************/
 struct pinStatesStruct
 {
+  pinStatesStruct() : plugin(0), index(0), mode(0), value(0) {}
   byte plugin;
   byte index;
   byte mode;
@@ -1447,6 +1466,8 @@ float UserVar[VARS_PER_TASK * TASKS_MAX];
 \*********************************************************************************************/
 struct rulesTimerStatus
 {
+  rulesTimerStatus() : timestamp(0), interval(0), paused(false) {}
+
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds
   boolean paused;
@@ -1454,11 +1475,11 @@ struct rulesTimerStatus
 
 msecTimerHandlerStruct msecTimerHandler;
 
-unsigned long timermqtt_interval;
-unsigned long lastSend;
-unsigned long lastWeb;
+unsigned long timermqtt_interval = 250;
+unsigned long lastSend = 0;
+unsigned long lastWeb = 0;
 byte cmd_within_mainloop = 0;
-unsigned long connectionFailures;
+unsigned long connectionFailures = 0;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
 unsigned long timerAwakeFromDeepSleep = 0;
@@ -1614,9 +1635,9 @@ bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
 
-boolean       UseRTOSMultitasking;
+boolean UseRTOSMultitasking = false;
 
-void (*MainLoopCall_ptr)(void);
+// void (*MainLoopCall_ptr)(void); //FIXME TD-er: No idea what this does.
 
 /*********************************************************************************************\
  * TimingStats
