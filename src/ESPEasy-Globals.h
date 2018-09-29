@@ -1419,6 +1419,7 @@ std::map<unsigned long, systemTimerStruct> systemTimers;
 \*********************************************************************************************/
 struct pinStatesStruct
 {
+  pinStatesStruct() : plugin(0), index(0), mode(0), value(0) {}
   byte plugin;
   byte index;
   byte mode;
@@ -1465,6 +1466,8 @@ float UserVar[VARS_PER_TASK * TASKS_MAX];
 \*********************************************************************************************/
 struct rulesTimerStatus
 {
+  rulesTimerStatus() : timestamp(0), interval(0), paused(false) {}
+
   unsigned long timestamp;
   unsigned int interval; //interval in milliseconds
   boolean paused;
@@ -1472,11 +1475,11 @@ struct rulesTimerStatus
 
 msecTimerHandlerStruct msecTimerHandler;
 
-unsigned long timermqtt_interval;
-unsigned long lastSend;
-unsigned long lastWeb;
+unsigned long timermqtt_interval = 250;
+unsigned long lastSend = 0;
+unsigned long lastWeb = 0;
 byte cmd_within_mainloop = 0;
-unsigned long connectionFailures;
+unsigned long connectionFailures = 0;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
 unsigned long timerAwakeFromDeepSleep = 0;
@@ -1632,9 +1635,9 @@ bool firstLoop=true;
 
 boolean activeRuleSets[RULESETS_MAX];
 
-boolean       UseRTOSMultitasking;
+boolean UseRTOSMultitasking = false;
 
-void (*MainLoopCall_ptr)(void);
+// void (*MainLoopCall_ptr)(void); //FIXME TD-er: No idea what this does.
 
 /*********************************************************************************************\
  * TimingStats
