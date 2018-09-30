@@ -120,7 +120,6 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         log += F(" usec, ");
         addLog(LOG_LEVEL_INFO, log);
 
-
         success = true;
         break;
       }
@@ -139,17 +138,17 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           String log = F("ULTRASONIC : TaskNr: ");
           log += event->TaskIndex +1;
           log += F(" Distance: ");
-          if (value > 0)
+          UserVar[event->BaseVarIndex] = value;
+          log += UserVar[event->BaseVarIndex];
+          if (value == 0)
           {
-            UserVar[event->BaseVarIndex] = value;
-            log += UserVar[event->BaseVarIndex];
-            success = true;
+             log += F(" Error: ");
+             log += Plugin_013_getErrorStatusString(event->TaskIndex);
           }
-          else
-            log += F("No reading!");
 
-        addLog(LOG_LEVEL_INFO,log);
+          addLog(LOG_LEVEL_INFO,log);
         }
+        success = true;
         break;
       }
 
@@ -165,7 +164,9 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               state = 1;
             if (state != switchstate[event->TaskIndex])
             {
-              String log = F("ULTRASONIC : State ");
+              String log = F("ULTRASONIC : TaskNr: ");
+              log += event->TaskIndex +1;
+              log += F(" state: ");
               log += state;
               addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
@@ -174,6 +175,14 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               sendData(event);
             }
           }
+          else {
+            String log = F("ULTRASONIC : TaskNr: ");
+            log += event->TaskIndex +1;
+            log += F(" Error: ");
+            log += Plugin_013_getErrorStatusString(event->TaskIndex);
+            addLog(LOG_LEVEL_INFO,log);
+          }
+
         }
         success = true;
         break;
@@ -191,5 +200,56 @@ float Plugin_013_read(unsigned int taskIndex)
   float distance = (P_013_sensordefs[taskIndex])->ping_cm();
   delay(1);
   return distance;
+}
+
+/*********************************************************************/
+String Plugin_013_getErrorStatusString(unsigned int taskIndex)
+/*********************************************************************/
+{
+  if (P_013_sensordefs.count(taskIndex) == 0)
+    return String(F("invalid taskindex"));
+
+  switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
+    case NewPingESP8266::STATUS_SENSOR_READY: {
+      return String(F("Sensor ready"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_MEASUREMENT_VALID: {
+      return String(F("no error, measurement valid"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_TRIGGERED: {
+      return String(F("Echo triggered, waiting for Echo end"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_STATE_ERROR: {
+      return String(F("Echo pulse error, Echopin not low on trigger"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_50ms: {
+      return String(F("Echo timeout error, no echo start whithin 50 ms"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
+      return String(F("Echo timeout error, no echo start whithin time for max. distance"));
+      break;
+    }
+
+    case NewPingESP8266::STATUS_MAX_DISTANCE_EXCEEDED: {
+      return String(F("Echo too late, maximum distance exceeded"));
+      break;
+    }
+
+    default: {
+      return String(F("unknown error"));
+      break;
+    }
+
+  }
 }
 #endif // USES_P013
