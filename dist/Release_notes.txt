@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20180930 (since mega-20180927)
+-------------------------------------------------
+
+Release date: Sun Sep 30 04:00:24 CEST 2018
+
+JojoS (5):
+      fixed distance reading
+      on INIT, delete sensordef before adding new
+      removed sensordefs helper structure
+      changed implementation to use shared_ptr instead of helper structure
+      minor change: unit was missing for threshold in 'state' mode
+
+TD-er (2):
+      [Default Settings] Properly clear settings when reset to default
+      [Defaults] Other default initializations
+
+
+-------------------------------------------------
 Changes in release mega-20180927 (since mega-20180924)
 -------------------------------------------------
 
