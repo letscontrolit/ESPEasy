@@ -109,6 +109,10 @@ void setup()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
   setWifiMode(WIFI_OFF);
+  #ifndef ESP32
+    lowestFreeStack = getFreeStackWatermark();
+  #endif
+  lowestRAM = FreeMem();
 
   Plugin_id.resize(PLUGIN_MAX);
   Task_id_to_Plugin_id.resize(TASKS_MAX);
@@ -118,8 +122,6 @@ void setup()
     for(byte x = 0; x < 16; x++)
       ledChannelPin[x] = -1;
   #endif
-
-  lowestRAM = FreeMem();
 
   Serial.begin(115200);
   // Serial.print("\n\n\nBOOOTTT\n\n\n");

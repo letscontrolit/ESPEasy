@@ -12,6 +12,49 @@ struct tcp_pcb;
 extern struct tcp_pcb* tcp_tw_pcbs;
 extern "C" void tcp_abort (struct tcp_pcb* pcb);
 
+// For keeping track of 'cont' stack
+// See: https://github.com/esp8266/Arduino/issues/2557
+//      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
+//      https://github.com/letscontrolit/ESPEasy/issues/1824
+#ifndef ESP32
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+// All version before core 2.4.2
+extern "C" {
+#include <cont.h>
+  extern cont_t g_cont;
+}
+
+uint32_t getCurrentFreeStack() {
+  register uint32_t *sp asm("a1");
+  return 4 * (sp - g_cont.stack);
+}
+
+uint32_t getFreeStackWatermark() {
+  return cont_get_free_stack(&g_cont);
+}
+
+#else
+// All version from core 2.4.2
+// See: https://github.com/esp8266/Arduino/pull/5018
+//      https://github.com/esp8266/Arduino/pull/4553
+extern "C" {
+#include <cont.h>
+  extern cont_t* g_pcont;
+}
+
+uint32_t getCurrentFreeStack() {
+  // https://github.com/esp8266/Arduino/issues/2557
+  register uint32_t *sp asm("a1");
+  return 4 * (sp - g_pcont->stack);
+}
+
+uint32_t getFreeStackWatermark() {
+  return cont_get_free_stack(g_pcont);
+}
+
+#endif // ARDUINO_ESP8266_RELEASE_2_x_x
+#endif // ESP32
+
 void tcpCleanup()
 {
 
@@ -2905,12 +2948,18 @@ void checkRAM( const __FlashStringHelper* flashString)
   myRamTracker.registerRamState(s);
 
   uint32_t freeRAM = FreeMem();
-
   if (freeRAM < lowestRAM)
   {
     lowestRAM = freeRAM;
     lowestRAMfunction = flashString;
   }
+#ifndef ESP32
+  uint32_t freeStack = getFreeStackWatermark();
+  if (freeStack < lowestFreeStack) {
+    lowestFreeStack = freeStack;
+    lowestFreeStackfunction = flashString;
+  }
+#endif
 }
 
 void checkRAM( String &a ) {

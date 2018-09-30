@@ -1629,6 +1629,9 @@ String eventBuffer = "";
 
 uint32_t lowestRAM = 0;
 String lowestRAMfunction = "";
+uint32_t lowestFreeStack = 0;
+String lowestFreeStackfunction = "";
+
 
 bool shouldReboot=false;
 bool firstLoop=true;
