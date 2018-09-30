@@ -33,6 +33,13 @@ uint32_t getFreeStackWatermark() {
   return cont_get_free_stack(&g_cont);
 }
 
+bool allocatedOnStack(const void* address) {
+  register uint32_t *sp asm("a1");
+  if (sp < address) return false;
+  return g_cont.stack < address;
+}
+
+
 #else
 // All version from core 2.4.2
 // See: https://github.com/esp8266/Arduino/pull/5018
@@ -50,6 +57,12 @@ uint32_t getCurrentFreeStack() {
 
 uint32_t getFreeStackWatermark() {
   return cont_get_free_stack(g_pcont);
+}
+
+bool allocatedOnStack(const void* address) {
+  register uint32_t *sp asm("a1");
+  if (sp < address) return false;
+  return g_pcont->stack < address;
 }
 
 #endif // ARDUINO_ESP8266_RELEASE_2_x_x
