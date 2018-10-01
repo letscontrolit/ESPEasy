@@ -109,9 +109,7 @@ void setup()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
   setWifiMode(WIFI_OFF);
-  #ifndef ESP32
-    lowestFreeStack = getFreeStackWatermark();
-  #endif
+  lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 
   Plugin_id.resize(PLUGIN_MAX);

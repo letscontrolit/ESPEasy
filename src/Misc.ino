@@ -12,11 +12,37 @@ struct tcp_pcb;
 extern struct tcp_pcb* tcp_tw_pcbs;
 extern "C" void tcp_abort (struct tcp_pcb* pcb);
 
+void tcpCleanup()
+{
+
+     while(tcp_tw_pcbs!=NULL)
+    {
+      tcp_abort(tcp_tw_pcbs);
+    }
+
+ }
+#endif
+
+
 // For keeping track of 'cont' stack
 // See: https://github.com/esp8266/Arduino/issues/2557
 //      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
-#ifndef ESP32
+#ifdef ESP32
+// FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
+uint32_t getCurrentFreeStack() {
+  register uint8_t *sp asm("a1");
+  return (sp - pxTaskGetStackStart(NULL));
+}
+
+uint32_t getFreeStackWatermark() {
+  return uxTaskGetStackHighWaterMark(NULL);
+}
+
+// FIXME TD-er: Must check if these functions are also needed for ESP32.
+bool canYield() { return true; }
+
+#else
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
 // All version before core 2.4.2
 extern "C" {
@@ -31,6 +57,10 @@ uint32_t getCurrentFreeStack() {
 
 uint32_t getFreeStackWatermark() {
   return cont_get_free_stack(&g_cont);
+}
+
+bool canYield() {
+  return cont_can_yield(&g_cont);
 }
 
 bool allocatedOnStack(const void* address) {
@@ -59,6 +89,10 @@ uint32_t getFreeStackWatermark() {
   return cont_get_free_stack(g_pcont);
 }
 
+bool canYield() {
+  return cont_can_yield(g_pcont);
+}
+
 bool allocatedOnStack(const void* address) {
   register uint32_t *sp asm("a1");
   if (sp < address) return false;
@@ -67,17 +101,6 @@ bool allocatedOnStack(const void* address) {
 
 #endif // ARDUINO_ESP8266_RELEASE_2_x_x
 #endif // ESP32
-
-void tcpCleanup()
-{
-
-     while(tcp_tw_pcbs!=NULL)
-    {
-      tcp_abort(tcp_tw_pcbs);
-    }
-
- }
-#endif
 
 bool isDeepSleepEnabled()
 {
@@ -2987,13 +3010,11 @@ void checkRAM( const __FlashStringHelper* flashString)
     lowestRAM = freeRAM;
     lowestRAMfunction = flashString;
   }
-#ifndef ESP32
   uint32_t freeStack = getFreeStackWatermark();
   if (freeStack < lowestFreeStack) {
     lowestFreeStack = freeStack;
     lowestFreeStackfunction = flashString;
   }
-#endif
 }
 
 void checkRAM( String &a ) {

@@ -414,6 +414,9 @@ void addToLog(byte loglevel, const String& string);
 void addToLog(byte logLevel, const __FlashStringHelper* flashString);
 void statusLED(boolean traffic);
 void backgroundtasks();
+uint32_t getCurrentFreeStack();
+uint32_t getFreeStackWatermark();
+bool canYield();
 
 bool getBitFromUL(uint32_t number, byte bitnr);
 void setBitToUL(uint32_t& number, byte bitnr, bool value);

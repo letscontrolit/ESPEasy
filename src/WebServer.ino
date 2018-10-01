@@ -876,14 +876,12 @@ void handle_root() {
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += F(")");
     html_TR_TD(); TXBuffer += F("Free Stack:<TD>");
-#ifndef ESP32
     TXBuffer += String(getCurrentFreeStack());
     TXBuffer += F(" (");
     TXBuffer += String(lowestFreeStack);
     TXBuffer += F(" - ");
     TXBuffer += String(lowestFreeStackfunction);
     TXBuffer += F(")");
-#endif
 
     html_TR_TD(); TXBuffer += F("IP:<TD>");
     TXBuffer += formatIP(ip);
@@ -5259,7 +5257,6 @@ void handle_sysinfo() {
    TXBuffer += F(" - ");
    TXBuffer += lowestRAMfunction;
    TXBuffer += F(")");
-#ifndef ESP32
    html_TR_TD(); TXBuffer += F("Free Stack<TD>");
    TXBuffer += getCurrentFreeStack();
    TXBuffer += F(" (");
@@ -5267,7 +5264,6 @@ void handle_sysinfo() {
    TXBuffer += F(" - ");
    TXBuffer += lowestFreeStackfunction;
    TXBuffer += F(")");
-#endif
 
    html_TR_TD(); TXBuffer += F("Boot<TD>");
    TXBuffer += getLastBootCauseString();
