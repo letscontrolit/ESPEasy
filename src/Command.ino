@@ -222,14 +222,14 @@ void ExecuteCommand(byte source, const char *Line)
 	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1);
 	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1);
 
-  if (source == VALUE_SOURCE_WEB_FRONTEND) {
-    // Must run immediately, to see result in web frontend
+  if (canYield()) {
+    // Is executed in Arduino stack.
     String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
     yield();
     SendStatus(source, status);
     yield();
   } else {
-    // Schedule to run async
+    // Schedule to run async, which will be executed in Arduino stack space.
     schedule_command_timer((char*)&cmd[0], &TempEvent, Line);
   }
 }
