@@ -275,3 +275,12 @@ unsigned int NewPingESP8266::convert_in(unsigned int echoTime) {
 	return NewPingESP8266Convert(echoTime, US_ROUNDTRIP_IN); // Convert uS to inches.
 #endif
 }
+
+float NewPingESP8266::convert_cm_F(unsigned int echoTime) {
+	return ((float)echoTime / US_ROUNDTRIP_CM);              // Convert uS to centimeters (no rounding).
+}
+
+
+float NewPingESP8266::convert_in_F(unsigned int echoTime) {
+	return ((float)echoTime / US_ROUNDTRIP_IN);              // Convert uS to inches (no rounding).
+}

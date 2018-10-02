@@ -212,6 +212,8 @@ class NewPingESP8266 {
 		unsigned long ping_median(uint32_t it = 5, unsigned int max_cm_distance = 0);
 		static unsigned int convert_cm(unsigned int echoTime);
 		static unsigned int convert_in(unsigned int echoTime);
+		static float convert_cm_F(unsigned int echoTime);
+		static float convert_in_F(unsigned int echoTime);
 
 		unsigned int getMaxEchoTime() { return _maxEchoTime; };
 		errorState getErrorState() { return _errorState; };
