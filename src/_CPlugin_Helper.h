@@ -382,8 +382,9 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 	int c;
   const unsigned long start = millis();
 	const unsigned long timer = start + timeout;
-  unsigned long backgroundtasks_timer = start + 100;
+  unsigned long backgroundtasks_timer = start + 10;
 	str = "";
+  input.setTimeout(100);
 
 	do {
 		//read character
@@ -405,7 +406,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 		}
     // We must run the backgroundtasks every now and then.
     if (timeOutReached(backgroundtasks_timer)) {
-      backgroundtasks_timer += 100;
+      backgroundtasks_timer += 10;
       backgroundtasks();
     } else {
       yield();
@@ -613,8 +614,10 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   client.print(postStr);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
+  while (!client.available()) {
+    if (timeOutReached(timer)) return false;
     delay(1);
+  }
 
   // Read all the lines of the reply from server and print them to Serial
   while (client_available(client) && !success) {
