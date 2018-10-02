@@ -36,6 +36,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
+
+        // set default values
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = 500;   // max. distance
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = 5;     // Filtersize
+
         break;
       }
 
@@ -54,20 +59,41 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choiceMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        byte choiceUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        byte choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+
+        String strUnit = (choiceUnit == 1) ? F("cm") : F("inch");
         String options[2];
         options[0] = F("Value");
         options[1] = F("State");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choice);
+        addFormSelector(F("Mode"), F("plugin_013_mode"), 2, options, optionValues, choiceMode);
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 2)
         {
         	addFormNumericBox(F("Threshold"), F("plugin_013_threshold"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-          addUnit(F("cm"));
+          addUnit(strUnit);
         }
         addFormNumericBox(F("Max Distance"), F("plugin_013_max_distance"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 500);
-        addUnit(F("cm"));
+        addUnit(strUnit);
+
+        String options1[2];
+        options1[0] = F("Metric");
+        options1[1] = F("Imperial");
+        int optionValues1[2] = { 1, 2 };
+        addFormSelector(F("Unit"), F("plugin_013_Unit"), 2, options1, optionValues1, choiceUnit);
+
+        String options2[2];
+        options2[0] = F("None");
+        options2[1] = F("Median");
+        int optionValues2[2] = { 1, 2 };
+        addFormSelector(F("Filter"), F("plugin_013_FilterType"), 2, options2, optionValues2, choiceFilter);
+
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][4] == 2)
+        {
+        	addFormNumericBox(F("Filter size"), F("Plugin_013_FilterSize"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 2, 20);
+        }
 
         success = true;
         break;
@@ -81,28 +107,49 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_013_threshold"));
         }
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_013_max_distance"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_013_Unit"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_013_FilterType"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("Plugin_013_FilterSize"));
+
         success = true;
         break;
       }
 
     case PLUGIN_INIT:
       {
-        byte Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-        byte Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
-        int16_t max_cm_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        int16_t Plugin_013_TRIG_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+        int16_t Plugin_013_IRQ_Pin = Settings.TaskDevicePin2[event->TaskIndex];
+        int16_t max_distance = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        int16_t choiceUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        int16_t choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        int16_t filterSize = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+
         P_013_sensordefs.erase(event->TaskIndex);
         P_013_sensordefs[event->TaskIndex] =
-          std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_cm_distance));
+          std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance));
+
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex +1;
         log += F(" TrigPin: ");
         log += Plugin_013_TRIG_Pin;
         log += F(" IRQ_Pin: ");
         log += Plugin_013_IRQ_Pin;
-        log += F(" max dist cm: ");
-        log += max_cm_distance;
+        log += F(" max dist ");
+        log += (choiceUnit == 1) ? F("[cm]: ") : F("[inch]: ");
+        log += max_distance;
         log += F(" max echo: ");
         log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
+        log += F(" Filter: ");
+        if (choiceFilter == 1)
+          log += F("none");
+        else
+          if (choiceFilter == 2) {
+            log += F("Median size: ");
+            log += filterSize;
+          }
+          else
+            log += F("invalid!");
         log += F(" nr_tasks: ");
         log += P_013_sensordefs.size();
         addLog(LOG_LEVEL_INFO, log);
@@ -196,10 +243,29 @@ float Plugin_013_read(unsigned int taskIndex)
 /*********************************************************************/
 {
   if (P_013_sensordefs.count(taskIndex) == 0) return 0;
-  delay(1);
-  float distance = (P_013_sensordefs[taskIndex])->ping_cm();
-  delay(1);
-  return distance;
+
+  int16_t max_cm_distance = Settings.TaskDevicePluginConfig[taskIndex][2];
+  int16_t choiceUnit = Settings.TaskDevicePluginConfig[taskIndex][3];
+  int16_t choiceFilter = Settings.TaskDevicePluginConfig[taskIndex][4];
+  int16_t filterSize = Settings.TaskDevicePluginConfig[taskIndex][5];
+
+  unsigned int distance = 0;
+
+  switch  (choiceFilter) {
+    case 1:
+      distance = (P_013_sensordefs[taskIndex])->ping();
+      break;
+    case 2:
+      distance = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_cm_distance);
+      break;
+    default:
+      addLog(LOG_LEVEL_INFO, F("invalid Filter Type setting!"));
+  }
+
+  if (choiceUnit == 1)
+    return NewPingESP8266::convert_cm_F(distance);
+  else
+    return NewPingESP8266::convert_in_F(distance);
 }
 
 /*********************************************************************/
