@@ -125,9 +125,11 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         int16_t choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
         int16_t filterSize = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
 
+        int16_t max_distance_cm = (choiceUnit == 1) ? max_distance : (float)max_distance * 2.54f;
+
         P_013_sensordefs.erase(event->TaskIndex);
         P_013_sensordefs[event->TaskIndex] =
-          std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance));
+          std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm));
 
         String log = F("ULTRASONIC : TaskNr: ");
         log += event->TaskIndex +1;
@@ -181,12 +183,14 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
       {
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 1)
         {
+          int16_t choiceUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
           float value = Plugin_013_read(event->TaskIndex);
           String log = F("ULTRASONIC : TaskNr: ");
           log += event->TaskIndex +1;
           log += F(" Distance: ");
           UserVar[event->BaseVarIndex] = value;
           log += UserVar[event->BaseVarIndex];
+          log += (choiceUnit == 1) ? F(" cm ") : F(" inch ");
           if (value == 0)
           {
              log += F(" Error: ");
@@ -244,10 +248,11 @@ float Plugin_013_read(unsigned int taskIndex)
 {
   if (P_013_sensordefs.count(taskIndex) == 0) return 0;
 
-  int16_t max_cm_distance = Settings.TaskDevicePluginConfig[taskIndex][2];
+  int16_t max_distance = Settings.TaskDevicePluginConfig[taskIndex][2];
   int16_t choiceUnit = Settings.TaskDevicePluginConfig[taskIndex][3];
   int16_t choiceFilter = Settings.TaskDevicePluginConfig[taskIndex][4];
   int16_t filterSize = Settings.TaskDevicePluginConfig[taskIndex][5];
+  int16_t max_distance_cm = (choiceUnit == 1) ? max_distance : (float)max_distance * 2.54f;
 
   unsigned int distance = 0;
 
@@ -256,7 +261,7 @@ float Plugin_013_read(unsigned int taskIndex)
       distance = (P_013_sensordefs[taskIndex])->ping();
       break;
     case 2:
-      distance = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_cm_distance);
+      distance = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_distance_cm);
       break;
     default:
       addLog(LOG_LEVEL_INFO, F("invalid Filter Type setting!"));
