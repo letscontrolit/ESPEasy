@@ -41,6 +41,9 @@ decode_results results;
 #define PLUGIN_NAME_016       "Communication - TSOP4838"
 #define PLUGIN_VALUENAME1_016 "IR"
 
+// A lot of the following code has been taken directly (with permission) from the IRrecvDumpV2.ino example code
+// of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
+
 // ==================== start of TUNEABLE PARAMETERS ====================
 // As this program is a special purpose capture/decoder, let us use a larger
 // than normal buffer so we can handle Air Conditioner remote codes.
