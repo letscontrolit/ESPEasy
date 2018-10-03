@@ -384,7 +384,6 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 	const unsigned long timer = start + timeout;
   unsigned long backgroundtasks_timer = start + 10;
 	str = "";
-  input.setTimeout(100);
 
 	do {
 		//read character
@@ -585,6 +584,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
 }
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
+  client.setTimeout(ControllerSettings.ClientTimeout);
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
   bool success = ControllerSettings.beginPacket(client) != 0;
   return count_connection_results(
@@ -594,6 +594,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   // Use WiFiClient class to create TCP connections
+  client.setTimeout(ControllerSettings.ClientTimeout);
   log_connecting_to(F("HTTP : "), controller_number, ControllerSettings);
   bool success = ControllerSettings.connectToHost(client);
   return count_connection_results(

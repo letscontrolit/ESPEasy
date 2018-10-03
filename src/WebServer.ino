@@ -1183,6 +1183,7 @@ void handle_controllers() {
   const int maxqueuedepth = getFormItemInt(F("maxqueuedepth"), 10);
   const int maxretry = getFormItemInt(F("maxretry"), 10);
   String deleteoldest = WebServer.arg(F("deleteoldest"));
+  const int clienttimeout = getFormItemInt(F("clienttimeout"), CONTROLLER_CLIENTTIMEOUT_DFLT);
 
 
   //submitted data
@@ -1201,7 +1202,8 @@ void handle_controllers() {
         //reset (some) default-settings
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
         ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
-        ControllerSettings.MinimalTimeBetweenMessages = 100;
+        ControllerSettings.MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+        ControllerSettings.ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
 //        ControllerSettings.MaxQueueDepth = 0;
         if (Protocol[ProtocolIndex].usesTemplate)
           CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
@@ -1266,6 +1268,7 @@ void handle_controllers() {
         ControllerSettings.MaxQueueDepth = maxqueuedepth;
         ControllerSettings.MaxRetry = maxretry;
         ControllerSettings.DeleteOldest = deleteoldest.toInt();
+        ControllerSettings.ClientTimeout = clienttimeout;
 
 
         CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
@@ -1373,6 +1376,8 @@ void handle_controllers() {
         addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
         addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
         addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+        addFormNumericBox( F("Client Timeout"), F("clienttimeout"), ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
+        addUnit(F("ms"));
 
 
         if (Protocol[ProtocolIndex].usesAccount)
