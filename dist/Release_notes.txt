@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20181003 (since mega-20181002)
+-------------------------------------------------
+
+Release date: Wed Oct  3 04:00:18 CEST 2018
+
+David Conran (2):
+      Acknowledge credit & origin of code used in IRTX
+      Acknowledge credit & origin of code used in _P016IR.ino
+
+
+-------------------------------------------------
 Changes in release mega-20181002 (since mega-20181001)
 -------------------------------------------------
 
