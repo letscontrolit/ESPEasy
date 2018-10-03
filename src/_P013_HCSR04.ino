@@ -230,7 +230,6 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
       {
         int16_t operatingMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         int16_t threshold = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        int16_t measuringUnit = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
 
         if (operatingMode == OPMODE_STATE)
         {
