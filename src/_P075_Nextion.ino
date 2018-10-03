@@ -3,10 +3,15 @@
 //################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
 //###################################   Created on the work of  majklovec     ###########################
 //###################################    Revisions by BertB and ThomasB       ########################### 
-//###################################    Last Revision: Aug-03-2018 (TB)      ###########################
+//###################################    Last Revision: Oct-03-2018 (TB)      ###########################
 //#######################################################################################################
 //
-// Updated: Aug-03-2018, ThomasB.
+// Updated: Oct-03-2018, ThomasB.
+// Added DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
+// Added SendStatus() to post log message on browser to acknowledge HTTP write.
+// Added reserve() to minimize string memory allocations.
+//
+// Aug-03-2018 change log summary:
 // This updated Nextion Plugin introduces hardware (UART) serial as an alternative to SoftSerial.
 // Hardware serial offers more reliable communication with the Nextion display.
 // Created on the experimental Serial.swap() work of BertB.
@@ -18,6 +23,9 @@
 // *****************************************************************************************************
 // Defines start here
 // *****************************************************************************************************
+
+//#define DEBUG_LOG             // Enable this to include additional info messages in log output.
+
 
 // Plug-In defines
 #define PLUGIN_075
@@ -241,7 +249,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         SoftSerial = NULL;
       }
 
-      String log = F("NEXTION075 : serial pin config RX:");
+      String log;
+      log.reserve(80);                                 // Prevent re-allocation
+      log = F("NEXTION075 : serial pin config RX:");
       log += rxPin;
       log += F(", TX:");
       log += txPin;
@@ -313,6 +323,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
               int barVal;
+              newString.reserve(Lenlines+10);               // Prevent re-allocation
               newString = tmpString.substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
               if (nbars < -100 || nbars >= 0)
@@ -345,31 +356,38 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
 
             sendCommand(newString.c_str(), HwSerial);
-            
-            String log = F("NEXTION075 : Cmd Statement Line-");
-            log += String(x+1);
-            log += F(" Sent: ");
-            log += newString;
-            addLog(LOG_LEVEL_INFO, log);
+            #ifdef DEBUG_LOG 
+              String log;
+              log.reserve(Lenlines+50);                 // Prevent re-allocation
+              log = F("NEXTION075 : Cmd Statement Line-");
+              log += String(x+1);
+              log += F(" Sent: ");
+              log += newString;
+              addLog(LOG_LEVEL_INFO, log);
+            #endif
           }
         }
 
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
         if(IncludeValues) {
-/* 
-            String log = F("NEXTION075: Interval values data enabled, resending idx=");
-            log += String(UserVar[event->BaseVarIndex]);
-            log += F(", value=");
-            log += String(UserVar[event->BaseVarIndex+1]);
-            addLog(LOG_LEVEL_INFO, log);
-*/
+            #ifdef DEBUG_LOG
+             String log;
+             log.reserve(120);                          // Prevent re-allocation
+             log = F("NEXTION075: Interval values data enabled, resending idx=");
+             log += String(UserVar[event->BaseVarIndex]);
+             log += F(", value=");
+             log += String(UserVar[event->BaseVarIndex+1]);
+             addLog(LOG_LEVEL_INFO, log);
+            #endif
+
             success = true;
         }
         else {
-/*
-            String log = F("NEXTION075: Interval values data disabled, idx & value not resent");
-            addLog(LOG_LEVEL_INFO, log);
-*/
+            #ifdef DEBUG_LOG
+             String log = F("NEXTION075: Interval values data disabled, idx & value not resent");
+             addLog(LOG_LEVEL_INFO, log);
+            #endif
+
             success = false;
         } 
 
@@ -386,6 +404,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         
 // Enable addLog() code below to help debug plugin write problems.
 /*
+        String log;
+        log.reserve(140);                               // Prevent re-allocation
         String log = F("Nextion arg0: ");
         log += tmpString; 
         log += F(", TaskDeviceName: ");
@@ -401,11 +421,14 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             tmpString = string.substring(argIndex + 1);
             sendCommand(tmpString.c_str(), HwSerial);
 
-            String log = F("NEXTION075 : WRITE, ");
-            log += F("Command is ");
-            log += (tmpString.c_str());
-            addLog(LOG_LEVEL_INFO, log);
-
+            String log;
+            log.reserve(110);                           // Prevent re-allocation
+            log = F("NEXTION075 : WRITE = ");
+            log += tmpString;
+            #ifdef DEBUG_LOG  
+              addLog(LOG_LEVEL_INFO, log);
+            #endif
+            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
             success = true;                             // Set true only if plugin found a command to execute.
         }
         break;
@@ -439,7 +462,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       uint16_t i;
       uint8_t c;
       uint8_t charCount;
-      String log;
       String Vidx;
       String Nvalue;
       String Svalue;
@@ -447,7 +469,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       char __buffer[RXBUFFSZ+1];                        // Staging buffer.
       
       if(rxPin < 0) {
-        String log = F("NEXTION075 : Missing RxD Pin Number, aborted serial receive");
+        String log = F("NEXTION075 : Missing RxD Pin, aborted serial receive");
         addLog(LOG_LEVEL_INFO, log);
         break;
       }
@@ -455,6 +477,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if(HwSerial == UARTSERIAL) {
         charCount = Serial.available();                 // Prime the Hardware Serial engine.
         if(charCount >= RXBUFFWARN) {                   // ESP8266 has 128 byte circular Rx buffer.
+            String log;
+            log.reserve(70);                           // Prevent re-allocation
             log = F("NEXTION075 : RxD UART Buffer capacity warning,");
             log += String(charCount);
             log += F(" bytes");
@@ -465,6 +489,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if(SoftSerial == NULL) break;                   // SoftSerial missing, exit.
         charCount = SoftSerial->available();            // Prime the Soft Serial engine.
         if(charCount >= RXBUFFWARN) {
+            String log;
+            log.reserve(70);                           // Prevent re-allocation
             log = F("NEXTION075 : RxD SoftSerial Buffer capacity warning, ");
             log += String(charCount);
             log += F(" bytes");
@@ -495,13 +521,17 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex + 1] = __buffer[3];
               sendData(event);
 
-              log = F("NEXTION075 : code: ");
-              log += __buffer[1];
-              log += ",";
-              log += __buffer[2];
-              log += ",";
-              log += __buffer[3];
-              addLog(LOG_LEVEL_INFO, log);
+              #ifdef DEBUG_LOG
+                String log;
+                log.reserve(70);                        // Prevent re-allocation
+                log = F("NEXTION075 : code: ");
+                log += __buffer[1];
+                log += ",";
+                log += __buffer[2];
+                log += ",";
+                log += __buffer[3];
+                addLog(LOG_LEVEL_INFO, log);
+              #endif
             }
           }
         } 
@@ -534,9 +564,14 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             __buffer[i] = 0x00;
             
             String tmpString = __buffer;
-            log = F("NEXTION075 : code: ");
-            log += tmpString;
-            addLog(LOG_LEVEL_INFO, log);
+
+            #ifdef DEBUG_LOG
+              String log;
+              log.reserve(50);                          // Prevent re-allocation
+              log = F("NEXTION075 : Code = ");
+              log += tmpString;
+              addLog(LOG_LEVEL_INFO, log);
+            #endif
 
             int argIndex = tmpString.indexOf(F(",i"));
             int argEnd = tmpString.indexOf(',', argIndex + 1);
@@ -568,14 +603,21 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
                 sendData(event);
 
-                log = F("NEXTION075 : Pipe Command Sent: ");
-                log += __buffer;
-                log += UserVar[event->BaseVarIndex];
+                #ifdef DEBUG_LOG
+                 String log;
+                 log.reserve(80);                       // Prevent re-allocation
+                 log = F("NEXTION075 : Pipe Command Sent: ");
+                 log += __buffer;
+                 log += UserVar[event->BaseVarIndex];
+                 addLog(LOG_LEVEL_INFO, log);
+                #endif
             }
             else {
-                log = F("NEXTION075 : Unknown Pipe Command, skipped");
+                #ifdef DEBUG_LOG
+                 String log = F("NEXTION075 : Unknown Pipe Command, skipped");
+                 addLog(LOG_LEVEL_INFO, log);
+                #endif
             }
-            addLog(LOG_LEVEL_INFO, log);
           }
         }
         if(HwSerial == UARTSERIAL) charCount = Serial.available();
