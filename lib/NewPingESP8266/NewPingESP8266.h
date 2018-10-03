@@ -194,15 +194,29 @@
 
 class NewPingESP8266 {
 	public:
+		enum errorState {
+			STATUS_SENSOR_READY,  								// no error, no measruement started
+			STATUS_MEASUREMENT_VALID, 						// no errors
+			STATUS_ECHO_TRIGGERED,								// echo triggered, intermediate state
+			STATUS_MAX_DISTANCE_EXCEEDED, 				// echo too late, maximum distance exceeded
+			STATUS_ECHO_START_TIMEOUT_50ms, 			// no echo start signal after 50 ms
+			STATUS_ECHO_START_TIMEOUT_DISTANCE,		// no echo start signal after max. distance
+			STATUS_ECHO_STATE_ERROR 				 			// echopin level not low after triggered
+		};
+
 		NewPingESP8266(uint32_t trigger_pin, uint32_t echo_pin, unsigned int max_cm_distance = MAX_SENSOR_DISTANCE);
+		~NewPingESP8266() { };
 		unsigned int ping(unsigned int max_cm_distance = 0);
 		unsigned long ping_cm(unsigned int max_cm_distance = 0);
 		unsigned long ping_in(unsigned int max_cm_distance = 0);
 		unsigned long ping_median(uint32_t it = 5, unsigned int max_cm_distance = 0);
 		static unsigned int convert_cm(unsigned int echoTime);
 		static unsigned int convert_in(unsigned int echoTime);
+		static float convert_cm_F(unsigned int echoTime);
+		static float convert_in_F(unsigned int echoTime);
 
-		unsigned int getMaxEchoTime() { return _maxEchoTime; }
+		unsigned int getMaxEchoTime() { return _maxEchoTime; };
+		errorState getErrorState() { return _errorState; };
 	private:
 		boolean ping_trigger();
 		void set_max_distance(unsigned int max_cm_distance);
@@ -218,6 +232,8 @@ class NewPingESP8266 {
 #endif
 		unsigned int _maxEchoTime;
 		unsigned long _max_time;
+		errorState _errorState;
+		unsigned int _max_cm_distance;
 };
 
 
