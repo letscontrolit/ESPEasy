@@ -1,4 +1,78 @@
 -------------------------------------------------
+Changes in release mega-20181003 (since mega-20181002)
+-------------------------------------------------
+
+Release date: Wed Oct  3 04:00:18 CEST 2018
+
+David Conran (2):
+      Acknowledge credit & origin of code used in IRTX
+      Acknowledge credit & origin of code used in _P016IR.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181002 (since mega-20181001)
+-------------------------------------------------
+
+Release date: Tue Oct  2 04:00:29 CEST 2018
+
+Plebs (1):
+      split parseTemplate function
+
+TD-er (4):
+      [#1798] Bugfix Sonoff Si7021 stability
+      [ESP32] Add default partition table for reference
+      [ESP32] Update to PIO espressif32@1.4.0
+      [Stack] Report stack usage on ESP32 and increase stack for ESP8266normal
+
+
+-------------------------------------------------
+Changes in release mega-20181001 (since mega-20180930)
+-------------------------------------------------
+
+Release date: Mon Oct  1 13:13:13 CEST 2018
+
+TD-er (4):
+      [#1824] Show stack size on main page
+      [Heap] Use NO_EXTRA_4K_HEAP to get old stack address space
+      [Stack] Check if a block sent to save on SPIFFS is stack allocated
+      [Stack] Revert move Settings from stack to heap
+
+
+-------------------------------------------------
+Changes in release mega-20180930 (since mega-20180927)
+-------------------------------------------------
+
+Release date: Sun Sep 30 04:00:24 CEST 2018
+
+JojoS (5):
+      fixed distance reading
+      on INIT, delete sensordef before adding new
+      removed sensordefs helper structure
+      changed implementation to use shared_ptr instead of helper structure
+      minor change: unit was missing for threshold in 'state' mode
+
+TD-er (2):
+      [Default Settings] Properly clear settings when reset to default
+      [Defaults] Other default initializations
+
+
+-------------------------------------------------
+Changes in release mega-20180927 (since mega-20180924)
+-------------------------------------------------
+
+Release date: Thu Sep 27 04:00:17 CEST 2018
+
+TD-er (7):
+      [ESP32] Change partition size (will clear all settings) and add plugins
+      [Travis] Uninitialized variable in P073_7DGT
+      [Stack] Move Settings from stack to heap
+      [ESP32] RTOS move handle_schedule() to core1 and increase stack
+      [Info] Add board name to the sysinfo page.
+      [ESP32] Split new partition layout to separate build
+      [Build] Add esp32test_1M8_partition build and warning on ESP32 partition
+
+
+-------------------------------------------------
 Changes in release mega-20180924 (since mega-20180923)
 -------------------------------------------------
 

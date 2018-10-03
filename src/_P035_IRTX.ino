@@ -274,6 +274,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+// A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
+// of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
 
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:

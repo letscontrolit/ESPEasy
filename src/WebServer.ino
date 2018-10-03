@@ -875,6 +875,13 @@ void handle_root() {
     TXBuffer += F(" - ");
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += F(")");
+    html_TR_TD(); TXBuffer += F("Free Stack:<TD>");
+    TXBuffer += String(getCurrentFreeStack());
+    TXBuffer += F(" (");
+    TXBuffer += String(lowestFreeStack);
+    TXBuffer += F(" - ");
+    TXBuffer += String(lowestFreeStackfunction);
+    TXBuffer += F(")");
 
     html_TR_TD(); TXBuffer += F("IP:<TD>");
     TXBuffer += formatIP(ip);
@@ -5250,6 +5257,13 @@ void handle_sysinfo() {
    TXBuffer += F(" - ");
    TXBuffer += lowestRAMfunction;
    TXBuffer += F(")");
+   html_TR_TD(); TXBuffer += F("Free Stack<TD>");
+   TXBuffer += getCurrentFreeStack();
+   TXBuffer += F(" (");
+   TXBuffer += lowestFreeStack;
+   TXBuffer += F(" - ");
+   TXBuffer += lowestFreeStackfunction;
+   TXBuffer += F(")");
 
    html_TR_TD(); TXBuffer += F("Boot<TD>");
    TXBuffer += getLastBootCauseString();
@@ -5417,6 +5431,8 @@ void handle_sysinfo() {
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
+  html_TR_TD(); TXBuffer += F("ESP Board Name:<TD>");
+  TXBuffer += ARDUINO_BOARD;
 
 
    addTableSeparator(F("Storage"), 2, 3);

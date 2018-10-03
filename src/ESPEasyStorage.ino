@@ -535,6 +535,15 @@ String InitFile(const char* fname, int datasize)
   \*********************************************************************************************/
 String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
+#ifndef ESP32
+  if (allocatedOnStack(memAddress)) {
+    String log = F("SaveToFile: ");
+    log += fname;
+    log += F(" ERROR, Data allocated on stack");
+    addLog(LOG_LEVEL_ERROR, log);
+//    return log;  // FIXME TD-er: Should this be considered a breaking error?
+  }
+#endif
   if (index < 0) {
     String log = F("SaveToFile: ");
     log += fname;
