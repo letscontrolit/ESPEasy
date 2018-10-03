@@ -226,6 +226,9 @@
 // N.B. Retries without a connection to wifi do not count as retry.
 #define CONTROLLER_DELAY_QUEUE_RETRY_MAX   10
 #define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
+// Timeout of the client in msec.
+#define CONTROLLER_CLIENTTIMEOUT_MAX 1000
+#define CONTROLLER_CLIENTTIMEOUT_DFLT 100
 
 
 #define PLUGIN_INIT_ALL                     1
@@ -895,7 +898,7 @@ SettingsStruct& Settings = *SettingsStruct_ptr;
 struct ControllerSettingsStruct
 {
   ControllerSettingsStruct() : UseDNS(false), Port(0),
-      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10), DeleteOldest(false) {
+      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10), DeleteOldest(false), ClientTimeout(100) {
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -919,13 +922,16 @@ struct ControllerSettingsStruct
   unsigned int  MaxQueueDepth;
   unsigned int  MaxRetry;
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
+  unsigned int  ClientTimeout;
 
   void validate() {
     if (Port > 65535) Port = 0;
-    if (MinimalTimeBetweenMessages < 1) MinimalTimeBetweenMessages = 100;
-    if (MinimalTimeBetweenMessages > 3600000) MinimalTimeBetweenMessages = 100;
-    if (MaxQueueDepth > 25) MaxQueueDepth = 10;
-    if (MaxRetry > 10) MaxRetry = 10;
+    if (MinimalTimeBetweenMessages < 1  ||  MinimalTimeBetweenMessages > CONTROLLER_DELAY_QUEUE_DELAY_MAX)
+      MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+    if (MaxQueueDepth > CONTROLLER_DELAY_QUEUE_DEPTH_MAX) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+    if (MaxRetry > CONTROLLER_DELAY_QUEUE_RETRY_MAX) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_MAX;
+    if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX)
+      ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
   }
 
   IPAddress getIP() const {

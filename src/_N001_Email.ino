@@ -73,6 +73,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
+	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
 	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
 	if (client.connect(aHost.c_str(), notificationsettings.Port) != 1) {

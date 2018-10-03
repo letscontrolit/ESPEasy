@@ -382,7 +382,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 	int c;
   const unsigned long start = millis();
 	const unsigned long timer = start + timeout;
-  unsigned long backgroundtasks_timer = start + 100;
+  unsigned long backgroundtasks_timer = start + 10;
 	str = "";
 
 	do {
@@ -405,7 +405,7 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 		}
     // We must run the backgroundtasks every now and then.
     if (timeOutReached(backgroundtasks_timer)) {
-      backgroundtasks_timer += 100;
+      backgroundtasks_timer += 10;
       backgroundtasks();
     } else {
       yield();
@@ -584,6 +584,7 @@ bool count_connection_results(bool success, const String& prefix, int controller
 }
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
+  client.setTimeout(ControllerSettings.ClientTimeout);
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
   bool success = ControllerSettings.beginPacket(client) != 0;
   return count_connection_results(
@@ -593,6 +594,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   // Use WiFiClient class to create TCP connections
+  client.setTimeout(ControllerSettings.ClientTimeout);
   log_connecting_to(F("HTTP : "), controller_number, ControllerSettings);
   bool success = ControllerSettings.connectToHost(client);
   return count_connection_results(
@@ -613,8 +615,10 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   client.print(postStr);
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
+  while (!client.available()) {
+    if (timeOutReached(timer)) return false;
     delay(1);
+  }
 
   // Read all the lines of the reply from server and print them to Serial
   while (client_available(client) && !success) {
