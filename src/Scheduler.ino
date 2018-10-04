@@ -41,18 +41,25 @@ unsigned long getMixedId(unsigned long timerType, unsigned long id) {
 \*********************************************************************************************/
 void handle_schedule() {
   unsigned long timer;
-  const unsigned long mixed_id = msecTimerHandler.getNextId(timer);
+  unsigned long mixed_id = 0;
+  if (timePassedSince(last_system_event_run) < 500) {
+    // Make sure system event queue will be looked at every now and then.
+    mixed_id = msecTimerHandler.getNextId(timer);
+  }
   if (mixed_id == 0) {
     // No id ready to run right now.
     // Events are not that important to run immediately.
     // Make sure normal scheduled jobs run at higher priority.
     backgroundtasks();
     process_system_event_queue();
+    last_system_event_run = millis();
     return;
   }
   const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
   const unsigned long id = mixed_id & mask;
+
+  yield(); // See: https://github.com/letscontrolit/ESPEasy/issues/1818#issuecomment-425351328
 
   switch (timerType) {
     case CONST_INTERVAL_TIMER:

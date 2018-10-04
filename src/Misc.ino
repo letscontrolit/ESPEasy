@@ -445,23 +445,19 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char command[INPUT_COMMAND_SIZE];
-  command[0] = 0;
   char TmpStr1[INPUT_COMMAND_SIZE];
   TmpStr1[0] = 0;
-
-  string.toCharArray(command, INPUT_COMMAND_SIZE);
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
   event->Par4 = 0;
   event->Par5 = 0;
 
-  if (GetArgv(command, TmpStr1, 2)) event->Par1 = CalculateParam(TmpStr1);
-  if (GetArgv(command, TmpStr1, 3)) event->Par2 = CalculateParam(TmpStr1);
-  if (GetArgv(command, TmpStr1, 4)) event->Par3 = CalculateParam(TmpStr1);
-  if (GetArgv(command, TmpStr1, 5)) event->Par4 = CalculateParam(TmpStr1);
-  if (GetArgv(command, TmpStr1, 6)) event->Par5 = CalculateParam(TmpStr1);
+  if (GetArgv(string.c_str(), TmpStr1, 2)) { event->Par1 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 3)) { event->Par2 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1); }
 }
 
 /********************************************************************************************\
@@ -572,15 +568,18 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc) {
 
 boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
+  size_t string_len = strlen(string);
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
   char matching_parenthesis = '"';
 
-  while (string_pos < strlen(string))
+  while (string_pos < string_len)
   {
     c = string[string_pos];
-    d = string[string_pos + 1];
+    d = 0;
+    if ((string_pos + 1) < string_len)
+      d = string[string_pos + 1];
 
     if       (!parenthesis && c == ' ' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d == ',') {}
@@ -2504,19 +2503,16 @@ void processMatchedRule(
       {
         String tmpString = event.substring(equalsPos + 1);
 
-        char command[INPUT_COMMAND_SIZE];
-        command[0] = 0;
         char tmpParam[INPUT_COMMAND_SIZE];
         tmpParam[0] = 0;
-        tmpString.toCharArray(command, INPUT_COMMAND_SIZE);
 
-        if (GetArgv(command,tmpParam,1)) {
+        if (GetArgv(tmpString.c_str(),tmpParam,1)) {
            action.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
            action.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
         }
-        if (GetArgv(command,tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
-        if (GetArgv(command,tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
-        if (GetArgv(command,tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+        if (GetArgv(tmpString.c_str(),tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
+        if (GetArgv(tmpString.c_str(),tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
+        if (GetArgv(tmpString.c_str(),tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
       }
     }
 
