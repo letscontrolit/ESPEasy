@@ -138,13 +138,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_REQUEST:
       {
-        String device = parseString(string, 1);
-        String command = parseString(string, 2);
-        String strPar1 = parseString(string, 3);
-        if (device == F("gpio") && command == F("pinstate"))
+        //String device = parseString(string, 1);
+        //String command = parseString(string, 2);
+        //String strPar1 = parseString(string, 3);
+
+        if (parseString(string, 1) == F("gpio") && parseString(string, 2) == F("pinstate"))
         {
           int par1;
-          if (validIntFromString(strPar1, par1)) {
+            if (validIntFromString(parseString(string, 3), par1)) {
             string = digitalRead(par1);
           }
           success = true;
