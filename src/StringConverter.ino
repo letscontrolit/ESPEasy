@@ -375,6 +375,28 @@ void htmlEscape(String & html)
   html.replace(">",  F("&gt;"));
 }
 
+void htmlStrongEscape(String & html)
+{
+  String escaped;
+  for (unsigned i = 0; i < html.length(); ++i)
+  {
+    if ((html[i] >= 'a' && html[i] <= 'z') || (html[i] >= 'A' && html[i] <= 'Z') || (html[i] >= '0' && html[i] <= '9'))
+    {
+      escaped += html[i];
+    }
+    else
+    {
+      char s [4];
+      sprintf(s, "%03d", static_cast<int>(html[i]));
+      escaped += "&#";
+      escaped += s;
+      escaped += ";";
+    }
+  }
+  html = escaped;
+}
+
+
 /********************************************************************************************\
   replace other system variables like %sysname%, %systime%, %ip%
   \*********************************************************************************************/
