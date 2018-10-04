@@ -109,6 +109,22 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_REQUEST:
+      {
+        String device = parseString(string, 1);
+        String command = parseString(string, 2);
+        String strPar1 = parseString(string, 3);
+        if (device == F("mcpgpio") && command == F("pinstate"))
+        {
+          int par1;
+          if (validIntFromString(strPar1, par1)) {
+            string = Plugin_009_Read(par1);
+          }
+          success = true;
+        }
+        break;
+      }
+
     case PLUGIN_WRITE:
       {
         String log = "";
