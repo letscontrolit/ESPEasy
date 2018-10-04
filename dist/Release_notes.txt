@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20181004 (since mega-20181003)
+-------------------------------------------------
+
+Release date: Thu Oct  4 04:00:08 CEST 2018
+
+Bartlomiej Zimon (1):
+      - partial fix for #1723
+
+JojoS (1):
+      added error checking and logging
+
+JojoS62 (5):
+      added float calculation for time to distance conversion
+      added more settings: unit, filtertype and size
+      max distance depends on measurement unit
+      code clean up
+      fixed 'unused variable' warning
+
+TD-er (3):
+      [sendHttp] #1830 Set timeout and early exit on timeout reached
+      [WiFiClient] Set timeout and make it configurable for controllers
+      [Core 2.4.1] Move back to core 2.4.1 from 2.4.2
+
+Thomas (1):
+      Update _P075_Nextion.ino (#1)
+
+
+-------------------------------------------------
 Changes in release mega-20181003 (since mega-20181002)
 -------------------------------------------------
 
