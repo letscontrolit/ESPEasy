@@ -191,6 +191,8 @@
 
 #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 #define INPUT_COMMAND_SIZE                240 // Affects maximum command length in rules and other commands
+// FIXME TD-er: INPUT_COMMAND_SIZE is also used in commands where simply a check for valid parameter is needed
+// and some may need less memory. (which is stack allocated)
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
@@ -955,6 +957,7 @@ struct ControllerSettingsStruct
     if (!WiFiConnected(10)) {
       return false; // Not connected, so no use in wasting time to connect to a host.
     }
+    delay(1); // Make sure the Watchdog will not trigger a reset.
     if (quick && ipSet()) return true;
     if (UseDNS) {
       if (!updateIPcache()) {
@@ -1493,6 +1496,7 @@ unsigned long connectionFailures = 0;
 unsigned long wdcounter = 0;
 unsigned long timerAPoff = 0;
 unsigned long timerAwakeFromDeepSleep = 0;
+unsigned long last_system_event_run = 0;
 
 #if FEATURE_ADC_VCC
 float vcc = -1.0;
