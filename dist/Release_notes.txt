@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20181006 (since mega-20181004)
+-------------------------------------------------
+
+Release date: Sat Oct  6 04:00:13 CEST 2018
+
+TD-er (3):
+      [Stack] Increase stack to 5k and reduce stack allocations in rules
+      [WiFi] Add delay to connection attempts in ControllerSettings
+      [Build flags] Remove NO_EXTRA_4K_HEAP
+
+
+-------------------------------------------------
 Changes in release mega-20181004 (since mega-20181003)
 -------------------------------------------------
 
