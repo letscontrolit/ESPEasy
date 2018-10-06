@@ -4206,6 +4206,7 @@ void handle_download()
 
   WebServer.sendHeader(F("Content-Disposition"), str);
   WebServer.streamFile(dataFile, F("application/octet-stream"));
+  dataFile.close();
 }
 
 
@@ -4629,7 +4630,10 @@ void handle_filelist() {
     TXBuffer += F("</a>");
     fs::File f = dir.openFile("r");
     html_TD();
-    TXBuffer += f.size();
+    if (f) {
+      TXBuffer += f.size();
+      f.close();
+    }
     if (count >= endIdx)
     {
       break;
@@ -5126,7 +5130,7 @@ void handle_rules() {
         log += F(" Create new file: ");
         log += fileName;
         fs::File f = SPIFFS.open(fileName, "w");
-        f.close();
+        if (f) f.close();
       }
     }
     addLog(LOG_LEVEL_INFO, log);
