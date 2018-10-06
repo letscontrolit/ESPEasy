@@ -4988,7 +4988,11 @@ void handle_setup() {
       {
         html_TR_TD(); TXBuffer += F("<label class='container2'>");
         TXBuffer += F("<input type='radio' name='ssid' value='");
-        TXBuffer += WiFi.SSID(i);
+        {
+          String escapeBuffer = WiFi.SSID(i);
+          htmlStrongEscape(escapeBuffer);
+          TXBuffer += escapeBuffer;
+        }
         TXBuffer += F("'");
         if (WiFi.SSID(i) == ssid)
           TXBuffer += F(" checked ");
