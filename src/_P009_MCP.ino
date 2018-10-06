@@ -124,6 +124,22 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
         }
 
+        if (command == F("mcpgpiotoggle"))
+        {
+          success = true;
+          byte mode;
+          uint16_t currentState;
+
+          getPinState(PLUGIN_ID_009, event->Par1, &mode, &currentState);
+          if (mode == PIN_MODE_OUTPUT || mode == PIN_MODE_UNDEFINED) {
+            setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, !currentState);
+            Plugin_009_Write(event->Par1, !currentState);
+            log = String(F("MCP  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
+          }
+        }
+
         if (command == F("mcppulse"))
         {
           success = true;
