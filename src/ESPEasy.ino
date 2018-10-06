@@ -106,6 +106,9 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 void setup()
 {
+#ifdef ESP8266_DISABLE_EXTRA4K
+  disable_extra4k_at_link_time();
+#endif
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
   setWifiMode(WIFI_OFF);

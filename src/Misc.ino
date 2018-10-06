@@ -2207,7 +2207,7 @@ void rulesProcessing(String& event)
 /********************************************************************************************\
   Rules processing
   \*********************************************************************************************/
-String rulesProcessingFile(String fileName, String& event)
+String rulesProcessingFile(const String& fileName, String& event)
 {
   checkRAM(F("rulesProcessingFile"));
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
@@ -2270,6 +2270,7 @@ String rulesProcessingFile(String fileName, String& event)
       }
     }
   }
+  if (f) f.close();
 
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
