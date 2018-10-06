@@ -193,7 +193,9 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
           {
             success = true;
             float _rtx = MAX_TX_POWER;
+            #if defined(ESP32)
             int8_t __rtx = _rtx;
+            #endif
 
             if ((event->Par1 >= 0) && (event->Par1 <= MAX_TX_POWER)) {
               _rtx = event->Par1;
