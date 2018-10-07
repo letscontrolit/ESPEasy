@@ -8,10 +8,25 @@ Welcome to ESPEasy's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Table of Contents
 
+   ESPEasy/AboutUs.rst
    ESPEasy/FunctionBlocks.rst
    Controller/Controller.rst
+   Plugin/Plugin.rst
+   Rules/Rules.rst
+
+.. raw:: latex
+
+   \appendix
+
+
+.. toctree::
+   :caption: Appendix
+
+   Participate/Documentation.rst
+   Reference/Command.rst
+   Reference/SystemVariable.rst
 
 
 
