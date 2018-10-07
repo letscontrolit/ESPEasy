@@ -16,19 +16,19 @@ extern "C"
 
 #define PLUGIN_081
 #define PLUGIN_ID_081      81                 //plugin id
-#define PLUGIN_NAME_081   "CRON"              //"Plugin Name" is what will be dislpayed in the selection list
+#define PLUGIN_NAME_081   "Generic - CRON [TESTING]" //"Plugin Name" is what will be displayed in the selection list
 #define PLUGIN_VALUENAME1_081 "LastExecution"
 #define PLUGIN_VALUENAME2_081 "NextExecution"
 #define PLUGIN_081_DEBUG  false                //set to true for extra log info in the debug
 #define PLUGIN_081_EXPRESSION_SIZE 41
 
 
-typedef struct
+struct CronState
 {
   char Expression[PLUGIN_081_EXPRESSION_SIZE];
   time_t LastExecution;
   time_t NextExecution;
-} CronState;
+};
 
 //A plugin has to implement the following function
 
