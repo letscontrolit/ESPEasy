@@ -10,6 +10,9 @@ Welcome to ESPEasy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   ESPEasy/FunctionBlocks.rst
+   Controller/Controller.rst
+
 
 
 Indices and tables
