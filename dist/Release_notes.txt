@@ -1,4 +1,25 @@
 -------------------------------------------------
+Changes in release mega-20181007 (since mega-20181006)
+-------------------------------------------------
+
+Release date: Sun Oct  7 04:00:09 CEST 2018
+
+Max (2):
+      Force slash to be converted in htmlEscape
+      Fix XSS-Vulnerabilites on wifi configuration pages
+
+Plebs (3):
+      Add three new TOGGLE commands
+      fixed float to int conversion
+      added "mcpgpiotoggle" command
+
+TD-er (3):
+      [ESP32] Allow Wrover dev kit to be used for PIO debug
+      [Stack] Move Arduino 'cont' stack into user RAM
+      [SPIFFS] Make sure to close open files on SPIFFS
+
+
+-------------------------------------------------
 Changes in release mega-20181006 (since mega-20181004)
 -------------------------------------------------
 
