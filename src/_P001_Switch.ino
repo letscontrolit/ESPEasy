@@ -18,10 +18,14 @@
 #define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH 0
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
+#define PLUGIN_001_DOUBLECLICK_MIN_MAX_SPEED 500
 
 unsigned int Plugin_001_clickCounter[TASKS_MAX];
 unsigned long Plugin_001_clickTimeDC[TASKS_MAX];
 unsigned long Plugin_001_clickTimePrevious[TASKS_MAX];
+
+boolean  Plugin_001_firedLP[TASKS_MAX];
+unsigned long Plugin_001_clickTimeLP[TASKS_MAX];
 
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
   return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
@@ -95,11 +99,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Advanced event management"));
 
-        addFormNumericBox(F("De-bounce (ms)"), F("plugin_001_debounce"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 50, 300);
+        addFormNumericBox(F("De-bounce (ms)"), F("plugin_001_debounce"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 250);
 
         addFormCheckBox(F("Doubleclick event"), F("plugin_001_dc"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
         //addFormNumericBox(F("Doubleclick min. speed (ms)"), F("plugin_001_dcminspeed"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 200, 400);
-        addFormNumericBox(F("Doubleclick max. speed (ms)"), F("plugin_001_dcmaxspeed"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 400, 2000);
+        addFormNumericBox(F("Doubleclick max. speed (ms)"), F("plugin_001_dcmaxspeed"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], PLUGIN_001_DOUBLECLICK_MIN_MAX_SPEED, 2000);
 
         //addFormCheckBox(F("Longpress event"), F("plugin_001_lp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]);
         //addFormNumericBox(F("Longpress min. interval (ms)"), F("plugin_001_lpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][4], 500, 2000);
@@ -165,10 +169,16 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         // counter = 0
         Plugin_001_clickCounter[event->TaskIndex]=0;
+        Plugin_001_firedLP[event->TaskIndex]=false;
 
-        //store millis for debounce
+        //store millis for debounce, doubleclick and long press
         Plugin_001_clickTimeDC[event->TaskIndex]=millis();
         Plugin_001_clickTimePrevious[event->TaskIndex]=millis();
+        Plugin_001_clickTimeLP[event->TaskIndex]=millis();
+
+        //set minimum value for doubleclick MIN max speed
+        if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]==0)
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = PLUGIN_001_DOUBLECLICK_MIN_MAX_SPEED;
 
         success = true;
         break;
@@ -211,14 +221,20 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
       {
         const boolean state = Plugin_001_read_switch_state(event);
+
         if (state != switchstate[event->TaskIndex])
         {
+          //reset timer for long press
+          Plugin_001_clickTimeLP[event->TaskIndex]=millis();
+          Plugin_001_firedLP[event->TaskIndex] = false;
+
           const unsigned long debounceTime = timePassedSince(Plugin_001_clickTimePrevious[event->TaskIndex]);
           if (debounceTime >= (unsigned long)Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]) //de-bounce check
           {
             const unsigned long deltaDC = timePassedSince(Plugin_001_clickTimeDC[event->TaskIndex]);
             if (deltaDC >= (unsigned long)Settings.TaskDevicePluginConfigLong[event->TaskIndex][2])
             {
+              //reset timer for doubleclick
               Plugin_001_clickCounter[event->TaskIndex]=0;
               Plugin_001_clickTimeDC[event->TaskIndex]=millis();
             }
@@ -276,7 +292,28 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
             Plugin_001_clickTimePrevious[event->TaskIndex] = millis();
           }
+          TO DO: AGGIUNGERE VARIABILI PER LUNGHEZZA LP E ABILITARE LP
+          SE PUSH BUTTON HIGH HA SENSO SOLO 11
+          SE PUSH BUTTON LOW HA SENSO SOLO 10
+        } else if (!Plugin_001_firedLP[event->TaskIndex]) { //check if LP is enabled and if LP has not fired yet
+          const unsigned long deltaLP = timePassedSince(Plugin_001_clickTimeLP[event->TaskIndex]);
+          if (deltaLP >= (unsigned long)1000) //(unsigned long)Settings.TaskDevicePluginConfigLong[event->TaskIndex][2])
+          {
+            byte output_value;
+
+            Plugin_001_firedLP[event->TaskIndex] = true;
+
+            output_value = state + 10;
+            UserVar[event->BaseVarIndex] = output_value;
+            String log = F("SW   : Switch state ");
+            log += state ? F("1") : F("0");
+            log += F(" Output value ");
+            log += output_value;
+            addLog(LOG_LEVEL_INFO, log);
+            sendData(event);
+          }
         }
+
         success = true;
         break;
       }
