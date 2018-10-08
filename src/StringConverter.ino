@@ -228,13 +228,13 @@ String to_json_object_value(const String& object, const String& value) {
   result = wrap_String(object, F("\""));
   result += F(":");
   if (value.length() == 0 || !isFloat(value)) {
-    if (value.indexOf('\n') == -1 && value.indexOf('"') == -1 && value.indexOf(F("Pragma")) == -1) {
+    if (value.indexOf('\n') == -1 && value.indexOf('\r') == -1 && value.indexOf('"') == -1) {
       result += wrap_String(value, F("\""));
     } else {
       String tmpValue(value);
       tmpValue.replace('\n', '^');
+      tmpValue.replace('\r', '^');
       tmpValue.replace('"', '\'');
-      tmpValue.replace(F("Pragma"), F("Bugje!"));
       result += wrap_String(tmpValue, F("\""));
     }
   } else {
