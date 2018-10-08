@@ -15,22 +15,22 @@ DOCUMENTATION_CHANGED=False
 for CHANGED_FILE in $CHANGED_FILES; do
   if ! [[ $CHANGED_FILE =~ $MD || $CHANGED_FILE =~ $DOCS ]]; then
     ONLY_READMES=False
-    break
+#    break
   else
     DOCUMENTATION_CHANGED=True
   fi
 done
 
-if [[ $ONLY_READMES == True ]]; then
-  echo "Only documentation files found, exiting."
-  travis_terminate 0
-  exit 1
-else
-  echo "Non-documentation files found, continuing with build."
-fi
+#if [[ $ONLY_READMES == True ]]; then
+#  echo "Only documentation files found, exiting."
+#  travis_terminate 0
+#  exit 1
+#else
+#  echo "Non-documentation files found, continuing with build."
+#fi
 
 if [[ $DOCUMENTATION_CHANGED == True ]]; then
   echo "Generate documentation."
   cd docs
-  ./make html
+  make html
 fi
