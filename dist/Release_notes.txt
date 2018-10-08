@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181008 (since mega-20181007)
+-------------------------------------------------
+
+Release date: Mon Oct  8 04:00:09 CEST 2018
+
+Gijs Noorlander (1):
+      Added link to ReadTheDocs
+
+Grovkillen (1):
+      [Sphinx] added extension "sphinx.ext.imgconverter"
+
+TD-er (3):
+      [Sphinx] Initial setup for Sphinx documentation
+      [Docs] First ESPEasy documentation (Controllers)
+      [Docs] Added some directory structure and template
+
+
+-------------------------------------------------
 Changes in release mega-20181007 (since mega-20181006)
 -------------------------------------------------
 
