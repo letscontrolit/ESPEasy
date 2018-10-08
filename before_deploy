@@ -35,10 +35,13 @@ done
 
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
-rm -rf dist/Source 2>/dev/null
-mkdir dist/Source
+rm -rf dist/* 2>/dev/null
+
+mkdir -p dist/Source
+mkdir -p dist/Docs
 cp -r lib dist/Source/
 cp -r src dist/Source/
+cp -r docs/build/ dist/Docs/
 cp platformio.ini dist/Source/
 
 cd dist
