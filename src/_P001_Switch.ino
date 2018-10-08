@@ -19,6 +19,10 @@
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
 
+unsigned int Plugin_001_clickCounter[TASKS_MAX];
+unsigned long Plugin_001_clickTimeDC[TASKS_MAX];
+unsigned long Plugin_001_clickTimePrevious[TASKS_MAX];
+
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
   return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
 }
@@ -89,6 +93,20 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Send Boot state"),F("plugin_001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
+        addFormSubHeader(F("Advanced event management"));
+
+        addFormNumericBox(F("De-bounce (ms)"), F("plugin_001_debounce"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 50, 300);
+
+        addFormCheckBox(F("Doubleclick event"), F("plugin_001_dc"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        //addFormNumericBox(F("Doubleclick min. speed (ms)"), F("plugin_001_dcminspeed"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 200, 400);
+        addFormNumericBox(F("Doubleclick max. speed (ms)"), F("plugin_001_dcmaxspeed"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 400, 2000);
+
+        //addFormCheckBox(F("Longpress event"), F("plugin_001_lp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]);
+        //addFormNumericBox(F("Longpress min. interval (ms)"), F("plugin_001_lpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][4], 500, 2000);
+
+        //addFormCheckBox(F("Extra Longpress event"), F("plugin_001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][6]);
+        //addFormNumericBox(F("Extra Longpress min. interval (ms)"), F("plugin_001_elpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][7], 500, 2000);
+
         success = true;
         break;
       }
@@ -104,6 +122,18 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_001_button"));
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_boot"));
+
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("plugin_001_debounce"));
+
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("plugin_001_dc"));
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("plugin_001_dcminspeed"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("plugin_001_dcmaxspeed"));
+
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_lp"));
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][4] = getFormItemInt(F("plugin_001_lpmininterval"));
+
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][6] = isFormItemChecked(F("plugin_001_elp"));
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][7] = getFormItemInt(F("plugin_001_elpmininterval"));
 
         success = true;
         break;
@@ -132,6 +162,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
           outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
         }
+
+        // counter = 0
+        Plugin_001_clickCounter[event->TaskIndex]=0;
+
+        //store millis for debounce
+        Plugin_001_clickTimeDC[event->TaskIndex]=millis();
+        Plugin_001_clickTimePrevious[event->TaskIndex]=millis();
+
         success = true;
         break;
       }
@@ -175,47 +213,68 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         const boolean state = Plugin_001_read_switch_state(event);
         if (state != switchstate[event->TaskIndex])
         {
-          switchstate[event->TaskIndex] = state;
-          const boolean currentOutputState = outputstate[event->TaskIndex];
-          boolean new_outputState = currentOutputState;
-          switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
-            case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
-                new_outputState = state;
-              break;
-            case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
-              if (!state)
-                new_outputState = !currentOutputState;
-              break;
-            case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
-              if (state)
-                new_outputState = !currentOutputState;
-              break;
-          }
-
-          // send if output needs to be changed
-          if (currentOutputState != new_outputState)
+          const unsigned long debounceTime = timePassedSince(Plugin_001_clickTimePrevious[event->TaskIndex]);
+          if (debounceTime >= (unsigned long)Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]) //de-bounce check
           {
-            outputstate[event->TaskIndex] = new_outputState;
-            boolean sendState = new_outputState;
-            if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-              sendState = !sendState;
-
-            byte output_value = sendState ? 1 : 0;
-            event->sensorType = SENSOR_TYPE_SWITCH;
-            if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
-              if (sendState) {
-                output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-                // Only set type to being dimmer when setting a value else it is "switched off".
-                event->sensorType = SENSOR_TYPE_DIMMER;
-              }
+            const unsigned long deltaDC = timePassedSince(Plugin_001_clickTimeDC[event->TaskIndex]);
+            if (deltaDC >= (unsigned long)Settings.TaskDevicePluginConfigLong[event->TaskIndex][2])
+            {
+              Plugin_001_clickCounter[event->TaskIndex]=0;
+              Plugin_001_clickTimeDC[event->TaskIndex]=millis();
             }
-            UserVar[event->BaseVarIndex] = output_value;
-            String log = F("SW   : Switch state ");
-            log += state ? F("1") : F("0");
-            log += F(" Output value ");
-            log += output_value;
-            addLog(LOG_LEVEL_INFO, log);
-            sendData(event);
+            Plugin_001_clickCounter[event->TaskIndex]++;
+
+            switchstate[event->TaskIndex] = state;
+            const boolean currentOutputState = outputstate[event->TaskIndex];
+            boolean new_outputState = currentOutputState;
+            switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+            {
+              case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
+                  new_outputState = state;
+                break;
+              case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+                if (!state)
+                  new_outputState = !currentOutputState;
+                break;
+              case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+                if (state)
+                  new_outputState = !currentOutputState;
+                break;
+            }
+
+            // send if output needs to be changed
+            if (currentOutputState != new_outputState)
+            {
+              byte output_value;
+              outputstate[event->TaskIndex] = new_outputState;
+              boolean sendState = new_outputState;
+              if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+                sendState = !sendState;
+
+              if (Plugin_001_clickCounter[event->TaskIndex]==3 && Settings.TaskDevicePluginConfigLong[event->TaskIndex][1])
+                //double click
+                output_value = 3;
+              else
+                //single click
+                output_value = sendState ? 1 : 0;
+
+              event->sensorType = SENSOR_TYPE_SWITCH;
+              if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
+                if (sendState) {
+                  output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+                  // Only set type to being dimmer when setting a value else it is "switched off".
+                  event->sensorType = SENSOR_TYPE_DIMMER;
+                }
+              }
+              UserVar[event->BaseVarIndex] = output_value;
+              String log = F("SW   : Switch state ");
+              log += state ? F("1") : F("0");
+              log += F(" Output value ");
+              log += output_value;
+              addLog(LOG_LEVEL_INFO, log);
+              sendData(event);
+            }
+            Plugin_001_clickTimePrevious[event->TaskIndex] = millis();
           }
         }
         success = true;
