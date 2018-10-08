@@ -22,7 +22,7 @@ addons:
 
 
 install:
-  - pip install -U platformio
+  - pip install -U platformio sphinx recommonmark sphinx_bootstrap_theme
 
 script:
   # - cppcheck --enable=warning src/*.ino -q --force -I src --include=src/ESPEasy.ino --error-exitcode=1
@@ -37,6 +37,7 @@ script:
 
 
 before_deploy:
+  - bash ./preflight.sh # make sure input files are OK before wasting time with prereqs
   - ./before_deploy
   - export RELEASE_FILE=$(ls ESPEasy*.zip)
 
