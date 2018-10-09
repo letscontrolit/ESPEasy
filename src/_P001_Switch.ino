@@ -142,10 +142,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //String command = parseString(string, 2);
         //String strPar1 = parseString(string, 3);
 
-        String tempstring = string;
-        tempstring.toLowerCase();
         // returns pin value using syntax: [plugin#gpio#pinstate#xx]
-        if (tempstring.startsWith(F("gpio,pinstate")))
+        string.toLowerCase();
+        if (string.startsWith(F("gpio,pinstate")))
         {
           int par1;
             if (validIntFromString(parseString(string, 3), par1)) {
