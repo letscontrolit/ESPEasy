@@ -228,6 +228,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           ? 0
           : 1;
         String arguments = String(string);
+        /************************************************\
+        Removed due to bug #1864
         int dotPos = arguments.indexOf('.');
         if(dotPos > -1)
         {
@@ -244,6 +246,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
              return false;
           }
         }
+        \************************************************/
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)
