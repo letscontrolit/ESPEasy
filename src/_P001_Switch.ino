@@ -179,6 +179,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
         }
 
+        // set initial UserVar of the switch
+        if (Settings.TaskDevicePin1Inversed[event->TaskIndex]){
+          UserVar[event->BaseVarIndex] = !switchstate[event->TaskIndex];
+        } else {
+          UserVar[event->BaseVarIndex] = switchstate[event->TaskIndex];
+        }
+
         // counter = 0
         Plugin_001_clickCounter[event->TaskIndex]=0;
         Plugin_001_firedLP[event->TaskIndex]=false;
