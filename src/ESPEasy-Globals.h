@@ -79,7 +79,7 @@
 #define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
-#define DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID   0
+#define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   0
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname

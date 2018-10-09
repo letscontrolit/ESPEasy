@@ -42,7 +42,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
       {
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C010_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         ControllerSettingsStruct ControllerSettings;

@@ -1252,11 +1252,10 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             // Schedule the plugin to be read.
             schedule_task_device_timer_at_init(event->TaskIndex);
           }
-          if (Function != PLUGIN_GET_DEVICEVALUENAMES) {
+          if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
-
           event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
           checkRAM(F("PluginCall_init"),x);
           START_TIMER;
