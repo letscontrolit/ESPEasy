@@ -53,6 +53,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("clearaccessblock"       , Command_AccessInfo_Clear);           // Network Command
 	  COMMAND_CASE("clearrtcram"            , Command_RTC_Clear);                  // RTC.h
 	  COMMAND_CASE("config"                 , Command_Task_RemoteConfig);          // Tasks.h
+    COMMAND_CASE("customvar"              , Command_Rules_CustomVar);            // Rules.h
       break;
     }
     case 'd': {

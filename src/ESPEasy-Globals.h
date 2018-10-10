@@ -338,6 +338,7 @@
 #define RULES_BUFFER_SIZE                  64
 #define NAME_FORMULA_LENGTH_MAX            40
 #define RULES_IF_MAX_NESTING_LEVEL          4
+#define CUSTOM_VARS_MAX                    16
 
 #define UDP_PACKETSIZE_MAX               2048
 
@@ -883,6 +884,7 @@ struct SettingsStruct
   float         Longitude;
   uint32_t      VariousBits1;
 
+  float         customVar[CUSTOM_VARS_MAX];
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
   // Try to extend settings to make the checksum 4-byte aligned.

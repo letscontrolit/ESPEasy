@@ -5650,6 +5650,24 @@ void handle_sysvars() {
   addSysVar_html(F("%sunrise%"));
   addSysVar_html(F("%sunrise+10m%"));
 
+  addTableSeparator(F("Custom Variables"), 3, 3);
+  addSysVar_html(F("%customvar1%"));
+  addSysVar_html(F("%customvar2%"));
+  addSysVar_html(F("%customvar3%"));
+  addSysVar_html(F("%customvar4%"));
+  addSysVar_html(F("%customvar5%"));
+  addSysVar_html(F("%customvar6%"));
+  addSysVar_html(F("%customvar7%"));
+  addSysVar_html(F("%customvar8%"));
+  addSysVar_html(F("%customvar9%"));
+  addSysVar_html(F("%customvar10%"));
+  addSysVar_html(F("%customvar11%"));
+  addSysVar_html(F("%customvar12%"));
+  addSysVar_html(F("%customvar13%"));
+  addSysVar_html(F("%customvar14%"));
+  addSysVar_html(F("%customvar15%"));
+  addSysVar_html(F("%customvar16%"));
+
   addTableSeparator(F("Special Characters"), 3, 2);
   addTableSeparator(F("Degree"), 3, 3);
   addSysVar_html(F("{D}"));
