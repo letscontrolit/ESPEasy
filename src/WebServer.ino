@@ -3189,6 +3189,7 @@ void handle_log_JSON() {
   stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
   TXBuffer += F("}\n");
   TXBuffer.endStream();
+  updateLogLevelCache();
 }
 
 //********************************************************************************

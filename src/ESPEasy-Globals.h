@@ -1197,18 +1197,19 @@ struct EventStruct
 #define LOG_STRUCT_MESSAGE_SIZE 128
 #ifdef ESP32
   #define LOG_STRUCT_MESSAGE_LINES 30
+  #define LOG_BUFFER_EXPIRE         30000  // Time after which a buffered log item is considered expired.
 #else
   #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
     #define LOG_STRUCT_MESSAGE_LINES 10
   #else
     #define LOG_STRUCT_MESSAGE_LINES 15
   #endif
+  #define LOG_BUFFER_EXPIRE         5000  // Time after which a buffered log item is considered expired.
 #endif
 
 struct LogStruct {
-    LogStruct() : write_idx(0), read_idx(0) {
+    LogStruct() : write_idx(0), read_idx(0), lastReadTimeStamp(0) {
       for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
-        Message[i].reserve(LOG_STRUCT_MESSAGE_SIZE);
         timeStamp[i] = 0;
         log_level[i] = 0;
       }
@@ -1226,6 +1227,7 @@ struct LogStruct {
       if (linelength > LOG_STRUCT_MESSAGE_SIZE-1)
         linelength = LOG_STRUCT_MESSAGE_SIZE-1;
       Message[write_idx] = "";
+      Message[write_idx].reserve(linelength);
       for (unsigned i = 0; i < linelength; ++i) {
         Message[write_idx] += *(line + i);
       }
@@ -1234,6 +1236,7 @@ struct LogStruct {
     // Read the next item and append it to the given string.
     // Returns whether new lines are available.
     bool get(String& output, const String& lineEnd) {
+      lastReadTimeStamp = millis();
       if (!isEmpty()) {
         read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
         output += formatLine(read_idx, lineEnd);
@@ -1242,6 +1245,7 @@ struct LogStruct {
     }
 
     String get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp) {
+      lastReadTimeStamp = millis();
       logLinesAvailable = false;
       if (isEmpty()) {
         return "";
@@ -1255,29 +1259,13 @@ struct LogStruct {
       return output;
     }
 
-    bool get(String& output, const String& lineEnd, int line) {
-      int tmpread((write_idx + 1+line) % LOG_STRUCT_MESSAGE_LINES);
-      if (timeStamp[tmpread] != 0) {
-        output += formatLine(tmpread, lineEnd);
-      }
-      return !isEmpty();
-    }
-
-    bool getAll(String& output, const String& lineEnd) {
-      int tmpread((write_idx + 1) % LOG_STRUCT_MESSAGE_LINES);
-      bool someAdded = false;
-      while (tmpread != write_idx) {
-        if (timeStamp[tmpread] != 0) {
-          output += formatLine(tmpread, lineEnd);
-          someAdded = true;
-        }
-        tmpread = (tmpread + 1)% LOG_STRUCT_MESSAGE_LINES;
-      }
-      return someAdded;
-    }
-
     bool isEmpty() {
       return (write_idx == read_idx);
+    }
+
+    bool logActiveRead() {
+      clearExpiredEntries();
+      return timePassedSince(lastReadTimeStamp) < LOG_BUFFER_EXPIRE;
     }
 
   private:
@@ -1303,10 +1291,27 @@ struct LogStruct {
       return output;
     }
 
+    void clearExpiredEntries() {
+      if (isEmpty()) {
+        return;
+      }
+      if (timePassedSince(lastReadTimeStamp) > LOG_BUFFER_EXPIRE) {
+        // Clear the entire log.
+        // If web log is the only log active, it will not be checked again until it is read.
+        for (read_idx = 0; read_idx < LOG_STRUCT_MESSAGE_LINES; ++read_idx) {
+          Message[read_idx] = String(); // Free also the reserved memory.
+          timeStamp[read_idx] = 0;
+          log_level[read_idx] = 0;
+        }
+        read_idx = 0;
+        write_idx = 0;
+      }
+    }
 
     int write_idx;
     int read_idx;
     unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
+    unsigned long lastReadTimeStamp;
     byte log_level[LOG_STRUCT_MESSAGE_LINES];
     String Message[LOG_STRUCT_MESSAGE_LINES];
 
