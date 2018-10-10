@@ -812,7 +812,7 @@ void ResetFactory(void)
 
 	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
 	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
-	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
+	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
     Settings.UseNTP			= DEFAULT_USE_NTP;
 	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
@@ -1209,7 +1209,9 @@ void updateLogLevelCache() {
   byte max_lvl = 0;
   max_lvl = _max(max_lvl, Settings.SerialLogLevel);
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
-  max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  if (Logging.logActiveRead()) {
+    max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  }
   max_lvl = _max(max_lvl, Settings.SDLogLevel);
   highest_active_log_level = max_lvl;
 }
@@ -1233,7 +1235,13 @@ boolean loglevelActiveFor(byte destination, byte logLevel) {
       break;
     }
     case LOG_TO_WEBLOG: {
-      logLevelSettings = Settings.WebLogLevel;
+      if (Logging.logActiveRead()) {
+        logLevelSettings = Settings.WebLogLevel;
+      } else {
+        if (Settings.WebLogLevel != 0) {
+          updateLogLevelCache();
+        }
+      }
       break;
     }
     case LOG_TO_SDCARD: {

@@ -158,7 +158,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+  if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
   String payload = create_http_request_auth(

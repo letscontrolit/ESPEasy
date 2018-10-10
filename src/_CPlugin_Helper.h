@@ -126,10 +126,10 @@ public:
     return total;
   }
 
+  String txt[VARS_PER_TASK];
   int controller_idx;
   byte TaskIndex;
   int idx;
-  String txt[VARS_PER_TASK];
   mutable byte valuesSent;  // Value must be set by const function checkDone()
   byte valueCount;
 };
@@ -146,18 +146,30 @@ public:
 \*********************************************************************************************/
 class C009_queue_element {
 public:
-  C009_queue_element() : controller_idx(0) {}
-  C009_queue_element(int ctrl_idx, const String& URI, const String& JSON) :
-     controller_idx(ctrl_idx), url(URI), json(JSON) {}
+  C009_queue_element() : controller_idx(0), TaskIndex(0), idx(0), sensorType(0) {}
+  C009_queue_element(const struct EventStruct* event) :
+    controller_idx(event->ControllerIndex),
+    TaskIndex(event->TaskIndex),
+    idx(event->idx),
+    sensorType(event->sensorType) {}
 
   size_t getSize() const {
-    return sizeof(this) + url.length() + json.length();
+    size_t total = sizeof(this);
+    for (int i = 0; i < VARS_PER_TASK; ++i) {
+      total += txt[i].length();
+      total += valueNames[i].length();
+    }
+    return total;
   }
 
+  String txt[VARS_PER_TASK];
+  String valueNames[VARS_PER_TASK];
   int controller_idx;
-  String url;
-  String json;
+  byte TaskIndex;
+  int idx;
+  byte sensorType;
 };
+
 
 /*********************************************************************************************\
  * C010_queue_element for queueing requests for 010: Generic UDP
