@@ -112,8 +112,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         //parseString(string, 3) = gpio number
 
         // returns pin value using syntax: [plugin#pcfgpio#pinstate#xx]
-        string.toLowerCase();
-        if (string.startsWith(F("pcfgpio,pinstate")))
+        if (string.substring(0,16).equalsIgnoreCase(F("pcfgpio,pinstate")))
         {
           int par1;
           if (validIntFromString(parseString(string, 3), par1)) {
