@@ -890,7 +890,9 @@ void handle_root() {
     if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
-      TXBuffer += F(" dB");
+      TXBuffer += F(" dB (");
+      TXBuffer += WiFi.SSID();
+      TXBuffer += ')';
     }
 
     #ifdef FEATURE_MDNS
