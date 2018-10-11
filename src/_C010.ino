@@ -85,13 +85,19 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
     if (element.checkDone(true))
       return true;
   }
-
-  if (!try_connect_host(controller_number, portUDP, ControllerSettings))
+  WiFiUDP C010_portUDP;
+  if (!beginWiFiUDP_randomPort(C010_portUDP)) return false;
+  if (!try_connect_host(controller_number, C010_portUDP, ControllerSettings))
     return false;
 
-  portUDP.write(
+  C010_portUDP.write(
     (uint8_t*)element.txt[element.valuesSent].c_str(),
               element.txt[element.valuesSent].length());
-  return element.checkDone(portUDP.endPacket() != 0);
+  C010_portUDP.endPacket();
+  C010_portUDP.stop();
+  // FIXME TD-er:
+  // WiFiUDP endPacket() doesn't return a value like described in the documentation,
+  // so we now consider it to be successful
+  return element.checkDone(true);
 }
 #endif
