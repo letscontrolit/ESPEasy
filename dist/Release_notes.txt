@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20181011 (since mega-20181010)
+-------------------------------------------------
+
+Release date: Thu Oct 11 04:00:24 CEST 2018
+
+TD-er (5):
+      [C009] Reduce memory usage of FHEM HTTP delay queue
+      [Controller] Set default timeout to 300 msec (was 100 msec)
+      Make sure to load ExtraTaskSettings when needed
+      [Travis Doc] Remove building documentation by Travis
+      [WebLog] Disable weblog when it is not being read
+
+
+-------------------------------------------------
 Changes in release mega-20181010 (since mega-20181009)
 -------------------------------------------------
 
