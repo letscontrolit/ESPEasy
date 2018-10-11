@@ -676,6 +676,15 @@ struct SecurityStruct
 } SecuritySettings;
 
 /*********************************************************************************************\
+ * Custom Variables for usage in rules and http.
+ * Syntax: %customvarX%
+ * usage:
+ * customvar,1,10
+ * if %customvar1%=10 do ...
+\*********************************************************************************************/
+float         customFloatVar[CUSTOM_VARS_MAX];
+
+/*********************************************************************************************\
  * SettingsStruct
 \*********************************************************************************************/
 struct SettingsStruct
@@ -884,7 +893,6 @@ struct SettingsStruct
   float         Longitude;
   uint32_t      VariousBits1;
 
-  float         customVar[CUSTOM_VARS_MAX];
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
   // Try to extend settings to make the checksum 4-byte aligned.

@@ -564,22 +564,9 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
-  SMART_REPL(F("%customvar1%"), toString(Settings.customVar[0],2))
-  SMART_REPL(F("%customvar2%"), toString(Settings.customVar[1],2))
-  SMART_REPL(F("%customvar3%"), toString(Settings.customVar[2],2))
-  SMART_REPL(F("%customvar4%"), toString(Settings.customVar[3],2))
-  SMART_REPL(F("%customvar5%"), toString(Settings.customVar[4],2))
-  SMART_REPL(F("%customvar6%"), toString(Settings.customVar[5],2))
-  SMART_REPL(F("%customvar7%"), toString(Settings.customVar[6],2))
-  SMART_REPL(F("%customvar8%"), toString(Settings.customVar[7],2))
-  SMART_REPL(F("%customvar9%"), toString(Settings.customVar[8],2))
-  SMART_REPL(F("%customvar10%"), toString(Settings.customVar[9],2))
-  SMART_REPL(F("%customvar11%"), toString(Settings.customVar[10],2))
-  SMART_REPL(F("%customvar12%"), toString(Settings.customVar[11],2))
-  SMART_REPL(F("%customvar13%"), toString(Settings.customVar[12],2))
-  SMART_REPL(F("%customvar14%"), toString(Settings.customVar[13],2))
-  SMART_REPL(F("%customvar15%"), toString(Settings.customVar[14],2))
-  SMART_REPL(F("%customvar16%"), toString(Settings.customVar[15],2))
+  for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
+    SMART_REPL(String(F("%customvar"))+toString(i+1,0)+String(F("%")), toString(customFloatVar[i],2))
+  }
 }
 
 String getReplacementString(const String& format, String& s) {

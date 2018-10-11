@@ -3666,6 +3666,7 @@ void handle_control() {
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
+           command.equalsIgnoreCase(F("customvar")) ||
            command.equalsIgnoreCase(F("rules"))) {
     addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
@@ -5651,22 +5652,9 @@ void handle_sysvars() {
   addSysVar_html(F("%sunrise+10m%"));
 
   addTableSeparator(F("Custom Variables"), 3, 3);
-  addSysVar_html(F("%customvar1%"));
-  addSysVar_html(F("%customvar2%"));
-  addSysVar_html(F("%customvar3%"));
-  addSysVar_html(F("%customvar4%"));
-  addSysVar_html(F("%customvar5%"));
-  addSysVar_html(F("%customvar6%"));
-  addSysVar_html(F("%customvar7%"));
-  addSysVar_html(F("%customvar8%"));
-  addSysVar_html(F("%customvar9%"));
-  addSysVar_html(F("%customvar10%"));
-  addSysVar_html(F("%customvar11%"));
-  addSysVar_html(F("%customvar12%"));
-  addSysVar_html(F("%customvar13%"));
-  addSysVar_html(F("%customvar14%"));
-  addSysVar_html(F("%customvar15%"));
-  addSysVar_html(F("%customvar16%"));
+  for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
+    addSysVar_html(String(F("%customvar"))+toString(i+1,0)+String(F("%")));
+  }
 
   addTableSeparator(F("Special Characters"), 3, 2);
   addTableSeparator(F("Degree"), 3, 3);

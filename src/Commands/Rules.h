@@ -38,7 +38,7 @@ String Command_Rules_CustomVar(struct EventStruct *event, const char* Line)
 {
 	char TmpStr1[INPUT_COMMAND_SIZE];
 	if (GetArgv(Line, TmpStr1, 3)) {
-		Settings.customVar[event->Par1-1] = event->Par2;
+		customFloatVar[event->Par1-1] = event->Par2;
 	}
 	return return_command_success();
 }
