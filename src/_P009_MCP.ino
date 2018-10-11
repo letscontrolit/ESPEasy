@@ -116,13 +116,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         //parseString(string, 3) = gpio number
 
         // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
-        if (string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
-        {
-          int par1;
-          if (validIntFromString(parseString(string, 3), par1)) {
-            string = Plugin_009_Read(par1);
+        if (string.length()>=16) {
+          if (string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
+          {
+            int par1;
+            if (validIntFromString(parseString(string, 3), par1)) {
+              string = Plugin_009_Read(par1);
+            }
+            success = true;
           }
-          success = true;
         }
         break;
       }
