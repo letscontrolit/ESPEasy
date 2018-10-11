@@ -53,7 +53,6 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("clearaccessblock"       , Command_AccessInfo_Clear);           // Network Command
 	  COMMAND_CASE("clearrtcram"            , Command_RTC_Clear);                  // RTC.h
 	  COMMAND_CASE("config"                 , Command_Task_RemoteConfig);          // Tasks.h
-    COMMAND_CASE("customvar"              , Command_Rules_CustomVar);            // Rules.h
       break;
     }
     case 'd': {
@@ -80,6 +79,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
       break;
     }
     case 'l': {
+    COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h

@@ -34,11 +34,13 @@ String Command_Rules_Events(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
-String Command_Rules_CustomVar(struct EventStruct *event, const char* Line)
+String Command_Rules_Let(struct EventStruct *event, const char* Line)
 {
 	char TmpStr1[INPUT_COMMAND_SIZE];
 	if (GetArgv(Line, TmpStr1, 3)) {
-		customFloatVar[event->Par1-1] = event->Par2;
+		float result = 0;
+		Calculate(TmpStr1, &result);
+		customFloatVar[event->Par1-1] = result;
 	}
 	return return_command_success();
 }

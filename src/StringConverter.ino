@@ -565,7 +565,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
   for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-    SMART_REPL(String(F("%customvar"))+toString(i+1,0)+String(F("%")), toString(customFloatVar[i],2))
+    SMART_REPL(String(F("%v"))+toString(i+1,0)+String(F("%")), toString(customFloatVar[i],2))
   }
 }
 

@@ -677,10 +677,10 @@ struct SecurityStruct
 
 /*********************************************************************************************\
  * Custom Variables for usage in rules and http.
- * Syntax: %customvarX%
+ * Syntax: %vX%
  * usage:
- * customvar,1,10
- * if %customvar1%=10 do ...
+ * let,1,10
+ * if %v1%=10 do ...
 \*********************************************************************************************/
 float         customFloatVar[CUSTOM_VARS_MAX];
 

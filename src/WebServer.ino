@@ -3666,7 +3666,7 @@ void handle_control() {
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
-           command.equalsIgnoreCase(F("customvar")) ||
+           command.equalsIgnoreCase(F("let")) ||
            command.equalsIgnoreCase(F("rules"))) {
     addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
@@ -5653,7 +5653,7 @@ void handle_sysvars() {
 
   addTableSeparator(F("Custom Variables"), 3, 3);
   for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-    addSysVar_html(String(F("%customvar"))+toString(i+1,0)+String(F("%")));
+    addSysVar_html(String(F("%v"))+toString(i+1,0)+String(F("%")));
   }
 
   addTableSeparator(F("Special Characters"), 3, 2);
