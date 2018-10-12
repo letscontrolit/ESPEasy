@@ -251,7 +251,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
              if (PinMonitorState[x] != state){
                String eventString = F("GPIO#");
                eventString += x;
-               eventString += F("=");
+               eventString += '=';
                eventString += state;
                rulesProcessing(eventString);
                PinMonitorState[x] = state;
@@ -340,7 +340,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               }
               UserVar[event->BaseVarIndex] = output_value;
               String log = F("SW   : Switch state ");
-              log += state ? F("1") : F("0");
+              log += state ? '1' : '0';
               log += F(" Output value ");
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
@@ -396,7 +396,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
               UserVar[event->BaseVarIndex] = output_value;
               String log = F("SW   : LongPress: Switch state ");
-              log += state ? F("1") : F("0");
+              log += state ? '1' : '0';
               log += F(" Output value ");
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
