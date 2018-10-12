@@ -564,8 +564,10 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
-  for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-    SMART_REPL(String(F("%v"))+toString(i+1,0)+String(F("%")), toString(customFloatVar[i],2))
+  if (s.indexOf("%v") != -1 && isDigit(s[2])) {
+    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
+      SMART_REPL("%v"+toString(i+1,0)+'%', String(customFloatVar[i]))
+    }
   }
 }
 
