@@ -178,11 +178,13 @@ String doFormatUserVar(byte TaskIndex, byte rel_index, bool mustCheck, bool& isv
   float f(UserVar[BaseVarIndex + rel_index]);
   if (mustCheck && !isValidFloat(f)) {
     isvalid = false;
-    String log = F("Invalid float value for TaskIndex: ");
-    log += TaskIndex;
-    log += F(" varnumber: ");
-    log += rel_index;
-    addLog(LOG_LEVEL_DEBUG, log);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("Invalid float value for TaskIndex: ");
+      log += TaskIndex;
+      log += F(" varnumber: ");
+      log += rel_index;
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
     f = 0;
   }
   return toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
@@ -564,7 +566,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
 
-  if (s.indexOf("%v") != -1 && isDigit(s[2])) {
+  const int v_index = s.indexOf("%v");
+  if (v_index != -1 && isDigit(s[v_index+2])) {
     for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
       SMART_REPL("%v"+toString(i+1,0)+'%', String(customFloatVar[i]))
     }
@@ -575,11 +578,13 @@ String getReplacementString(const String& format, String& s) {
   int startpos = s.indexOf(format);
   int endpos = s.indexOf('%', startpos + 1);
   String R = s.substring(startpos, endpos + 1);
-  String log = F("ReplacementString SunTime: ");
-  log += R;
-  log += F(" offset: ");
-  log += getSecOffset(R);
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("ReplacementString SunTime: ");
+    log += R;
+    log += F(" offset: ");
+    log += getSecOffset(R);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
   return R;
 }
 
