@@ -9,10 +9,10 @@ TaskDevicePluginConfig settings:
 0: button type (switch or dimmer)
 1: dim value
 2: button option (normal, push high, push low)
-3: send boot state (0,1)
-4: use doubleclick (0,1)
-5: use longpress (0,1)
-6: LP fired (0,1)
+3: send boot state (true,false)
+4: use doubleclick (true,false)
+5: use longpress (true,false)
+6: LP fired (true,false)
 7: doubleclick counter (=0,1,2,3)
 
 TaskDevicePluginConfigFloat settings:
@@ -47,13 +47,6 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001_DOUBLECLICK_MAX_INTERVAL 3000
 #define PLUGIN_001_LONGPRESS_MIN_INTERVAL 1000
 #define PLUGIN_001_LONGPRESS_MAX_INTERVAL 5000
-
-//unsigned int Plugin_001_clickCounterDC[TASKS_MAX];
-//unsigned long Plugin_001_clickTimeDC[TASKS_MAX];
-//unsigned long Plugin_001_clickTimeDeBounce[TASKS_MAX];
-
-//boolean  Plugin_001_firedLP[TASKS_MAX];
-//unsigned long Plugin_001_clickTimeLP[TASKS_MAX];
 
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
   return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
