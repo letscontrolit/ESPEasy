@@ -147,20 +147,6 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
   tm.Day = time + 1;     // day of month
 }
 
-void setTime(unsigned long t) {
-  sysTime = (uint32_t)t;
-  applyTimeZone(t);
-  nextSyncTime = (uint32_t)t + syncInterval;
-  prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
-  if (Settings.UseRules)
-  {
-    static bool firstUpdate = true;
-    String event = firstUpdate ? F("Time#Initialized") : F("Time#Set");
-    firstUpdate = false;
-    rulesProcessing(event);
-  }
-}
-
 uint32_t getUnixTime() {
   return sysTime;
 }
@@ -222,13 +208,23 @@ unsigned long now() {
     unsigned long  t = getNtpTime();
     if (t != 0) {
       timeSynced = true;
-      setTime(t);
+			sysTime = (uint32_t)t;
+			applyTimeZone(t);
+			nextSyncTime = (uint32_t)t + syncInterval;
+			prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
     }
   }
   uint32_t localSystime = toLocal(sysTime);
   breakTime(localSystime, tm);
   if (timeSynced) {
     calcSunRiseAndSet();
+		if (Settings.UseRules)
+		{
+			static bool firstUpdate = true;
+			String event = firstUpdate ? F("Time#Initialized") : F("Time#Set");
+			firstUpdate = false;
+			rulesProcessing(event);
+		}
   }
   return (unsigned long)localSystime;
 }
