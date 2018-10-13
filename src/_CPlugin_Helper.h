@@ -201,13 +201,15 @@ struct ControllerDelayHandlerStruct {
       max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
       attempt(0),
       max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
-      delete_oldest(false) {}
+      delete_oldest(false),
+      must_check_reply(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
     max_queue_depth = settings.MaxQueueDepth;
     max_retries = settings.MaxRetry;
     delete_oldest = settings.DeleteOldest;
+    must_check_reply = settings.MustCheckReply;
     // Set some sound limits when not configured
     if (max_queue_depth == 0) max_queue_depth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
     if (max_retries == 0) max_retries = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
@@ -314,6 +316,7 @@ struct ControllerDelayHandlerStruct {
   byte attempt;
   byte max_retries;
   bool delete_oldest;
+  bool must_check_reply;
 };
 
 ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
@@ -621,51 +624,53 @@ bool client_available(WiFiClient& client) {
   return client.available() || client.connected();
 }
 
-bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr) {
-  bool success = false;
+bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply) {
+  bool success = !must_check_reply;
   // This will send the request to the server
   client.print(postStr);
 
-  unsigned long timer = millis() + 200;
-  while (!client.available()) {
-    if (timeOutReached(timer)) return false;
-    delay(1);
-  }
-
-  // Read all the lines of the reply from server and print them to Serial
-  while (client_available(client) && !success) {
-    //   String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-      if (line.length() > 80) {
-        addLog(LOG_LEVEL_DEBUG_MORE, line.substring(0, 80));
-      } else {
-        addLog(LOG_LEVEL_DEBUG_MORE, line);
-      }
+  if (must_check_reply) {
+    unsigned long timer = millis() + 200;
+    while (!client.available()) {
+      if (timeOutReached(timer)) return false;
+      delay(1);
     }
-    if (line.startsWith(F("HTTP/1.1 2")))
-    {
-      success = true;
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("HTTP : ");
-        log += logIdentifier;
-        log += F(" Success! ");
-        log += line;
-        addLog(LOG_LEVEL_DEBUG, log);
+
+    // Read all the lines of the reply from server and print them to Serial
+    while (client_available(client) && !success) {
+      //   String line = client.readStringUntil('\n');
+      String line;
+      safeReadStringUntil(client, line, '\n');
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+        if (line.length() > 80) {
+          addLog(LOG_LEVEL_DEBUG_MORE, line.substring(0, 80));
+        } else {
+          addLog(LOG_LEVEL_DEBUG_MORE, line);
+        }
       }
-    } else if (line.startsWith(F("HTTP/1.1 4"))) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("HTTP : ");
-        log += logIdentifier;
-        log += F(" Error: ");
-        log += line;
-        addLog(LOG_LEVEL_ERROR, log);
+      if (line.startsWith(F("HTTP/1.1 2")))
+      {
+        success = true;
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("HTTP : ");
+          log += logIdentifier;
+          log += F(" Success! ");
+          log += line;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+      } else if (line.startsWith(F("HTTP/1.1 4"))) {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("HTTP : ");
+          log += logIdentifier;
+          log += F(" Error: ");
+          log += line;
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+        addLog(LOG_LEVEL_DEBUG_MORE, postStr);
       }
-      addLog(LOG_LEVEL_DEBUG_MORE, postStr);
+      yield();
     }
-    yield();
   }
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTTP : ");
@@ -679,8 +684,8 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   return success;
 }
 
-bool send_via_http(int controller_number, WiFiClient& client, const String& postStr) {
-  return send_via_http(get_formatted_Controller_number(controller_number), client, postStr);
+bool send_via_http(int controller_number, WiFiClient& client, const String& postStr, bool must_check_reply) {
+  return send_via_http(get_formatted_Controller_number(controller_number), client, postStr, must_check_reply);
 }
 
 

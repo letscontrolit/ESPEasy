@@ -34,6 +34,7 @@ before WiFi connection is made or during lost connection.
 - **Max Retries** - Maximum number of retries to send a message.
 - **Full Queue Action** - How to handle when queue is full, ignore new or delete oldest message.
 - **Client Timeout** - Timeout in msec for an network connection used by the controller.
+- **Check Reply** - When set to false, a sent message is considered always successful.
 
 
 Sample ThingSpeak configuration

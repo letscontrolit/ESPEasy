@@ -133,7 +133,7 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  return send_via_http(controller_number, client, element.txt);
+  return send_via_http(controller_number, client, element.txt, ControllerSettings.MustCheckReply);
 }
 
 

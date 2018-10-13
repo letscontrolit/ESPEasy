@@ -1185,6 +1185,7 @@ void handle_controllers() {
   const int maxqueuedepth = getFormItemInt(F("maxqueuedepth"), 10);
   const int maxretry = getFormItemInt(F("maxretry"), 10);
   String deleteoldest = WebServer.arg(F("deleteoldest"));
+  String mustcheckreply = WebServer.arg(F("mustcheckreply"));
   const int clienttimeout = getFormItemInt(F("clienttimeout"), CONTROLLER_CLIENTTIMEOUT_DFLT);
 
 
@@ -1270,6 +1271,7 @@ void handle_controllers() {
         ControllerSettings.MaxQueueDepth = maxqueuedepth;
         ControllerSettings.MaxRetry = maxretry;
         ControllerSettings.DeleteOldest = deleteoldest.toInt();
+        ControllerSettings.MustCheckReply = mustcheckreply.toInt();
         ControllerSettings.ClientTimeout = clienttimeout;
 
 
@@ -1357,6 +1359,11 @@ void handle_controllers() {
       options_delete_oldest[0] = F("Ignore New");
       options_delete_oldest[1] = F("Delete Oldest");
 
+      byte choice_mustcheckreply = ControllerSettings.MustCheckReply;
+      String options_mustcheckreply[2];
+      options_mustcheckreply[0] = F("Ignore Acknowledgement");
+      options_mustcheckreply[1] = F("Check Acknowledgement");
+
 
       byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
       if (!Protocol[ProtocolIndex].Custom)
@@ -1378,9 +1385,10 @@ void handle_controllers() {
         addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
         addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
         addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+
+        addFormSelector(F("Check Reply"), F("mustcheckreply"), 2, options_mustcheckreply, NULL, NULL, choice_mustcheckreply, true);
         addFormNumericBox( F("Client Timeout"), F("clienttimeout"), ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
         addUnit(F("ms"));
-
 
         if (Protocol[ProtocolIndex].usesAccount)
         {
@@ -3148,7 +3156,7 @@ void handle_log_JSON() {
         TXBuffer += ',';
       TXBuffer += '{';
       int loglevel;
-      stream_next_json_object_value(F("label"), getLogLevelDisplayString(i, loglevel));
+      stream_next_json_object_value(F("label"), getLogLevelDisplayStringFromIndex(i, loglevel));
       stream_last_json_object_value(F("loglevel"), String(loglevel));
     }
     TXBuffer += F("],\n");
@@ -4135,10 +4143,10 @@ void addLogLevelSelect(String name, int choice)
 {
   String options[LOG_LEVEL_NRELEMENTS + 1];
   int optionValues[LOG_LEVEL_NRELEMENTS + 1] = {0};
-  options[0] = F("None");
+  options[0] = getLogLevelDisplayString(0);
   optionValues[0] = 0;
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
-    options[i + 1] = getLogLevelDisplayString(i, optionValues[i + 1]);
+    options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
   addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice, false);
 }
@@ -5342,16 +5350,6 @@ void handle_sysinfo() {
   html_TR_TD(); TXBuffer += F("Allowed IP Range<TD>");
   TXBuffer += describeAllowedIPrange();
 
-  html_TR_TD(); TXBuffer += F("Serial Port available:<TD>");
-  TXBuffer += String(SerialAvailableForWrite());
-  TXBuffer += F(" (");
-  #if defined(ESP8266)
-    TXBuffer += Serial.availableForWrite();
-  #endif
-  TXBuffer += F(" , ");
-  TXBuffer += Serial.available();
-  TXBuffer += F(")");
-
   html_TR_TD(); TXBuffer += F("STA MAC<TD>");
 
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
@@ -5415,6 +5413,23 @@ void handle_sysinfo() {
 
    TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
    TXBuffer += String(CRCValues.binaryFilename);
+
+
+   addTableSeparator(F("System Status"), 2, 3);
+   {
+     // Actual Loglevel
+     html_TR_TD(); TXBuffer += F("Syslog Log Level:<TD>");
+     TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
+     html_TR_TD(); TXBuffer += F("Serial Log Level:<TD>");
+     TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
+     html_TR_TD(); TXBuffer += F("Web Log Level:<TD>");
+     TXBuffer += getLogLevelDisplayString(getWebLogLevel());
+     #ifdef FEATURE_SD
+     html_TR_TD(); TXBuffer += F("SD Log Level:<TD>");
+     TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
+     #endif
+   }
+
 
    addTableSeparator(F("ESP board"), 2, 3);
 
