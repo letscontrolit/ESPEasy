@@ -292,6 +292,7 @@
 #define NPLUGIN_NOT_FOUND                 255
 
 
+#define LOG_LEVEL_NONE                      0
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
 #define LOG_LEVEL_DEBUG                     3
@@ -895,12 +896,13 @@ SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
 /*********************************************************************************************\
- * ControllerSettingsStruct
+ * ControllerSettingsStruct definition
 \*********************************************************************************************/
 struct ControllerSettingsStruct
 {
   ControllerSettingsStruct() : UseDNS(false), Port(0),
-      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10), DeleteOldest(false), ClientTimeout(100) {
+      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10),
+      DeleteOldest(false), ClientTimeout(100), MustCheckReply(false) {
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -925,6 +927,7 @@ struct ControllerSettingsStruct
   unsigned int  MaxRetry;
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int  ClientTimeout;
+  boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
 
   void validate() {
     if (Port > 65535) Port = 0;
@@ -932,8 +935,9 @@ struct ControllerSettingsStruct
       MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
     if (MaxQueueDepth > CONTROLLER_DELAY_QUEUE_DEPTH_MAX) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
     if (MaxRetry > CONTROLLER_DELAY_QUEUE_RETRY_MAX) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_MAX;
-    if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX)
+    if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX) {
       ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
+    }
   }
 
   IPAddress getIP() const {
@@ -1318,10 +1322,11 @@ struct LogStruct {
 } Logging;
 
 std::deque<char> serialLogBuffer;
-unsigned long last_serial_log_emptied = 0;
+unsigned long last_serial_log_read = 0;
 
 byte highest_active_log_level = 0;
 bool log_to_serial_disabled = false;
+bool log_to_serial_disabled_temporary = false;
 // Do this in a template to prevent casting to String when not needed.
 #define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 

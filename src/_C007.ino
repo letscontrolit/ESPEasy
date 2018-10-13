@@ -78,6 +78,7 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
     Serial.println(url);
 
   return send_via_http(controller_number, client,
-    create_http_get_request(controller_number, ControllerSettings, url));
+    create_http_get_request(controller_number, ControllerSettings, url),
+    ControllerSettings.MustCheckReply);
 }
 #endif

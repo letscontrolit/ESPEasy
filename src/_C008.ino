@@ -97,7 +97,7 @@ bool do_process_c008_delay_queue(int controller_number, const C008_queue_element
     return false;
 
   String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
-  return element.checkDone(send_via_http(controller_number, client, request));
+  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
 }
 
 #endif

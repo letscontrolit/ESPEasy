@@ -137,6 +137,6 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
       F("POST"), url, jsonString.length());
   request += jsonString;
 
-  return send_via_http(controller_number, client, request);
+  return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);
 }
 #endif
