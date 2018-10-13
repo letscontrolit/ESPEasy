@@ -150,7 +150,11 @@ String SaveSettings(void)
     Settings.validate();
     err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(Settings));
     if (err.length())
-     return(err);
+      return(err);
+    // Must check this after saving, or else it is not possible to fix multiple
+    // issues which can only corrected on different pages.
+    if (!SettingsCheck(err)) return err;
+
 //  }
 
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);

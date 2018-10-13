@@ -675,6 +675,7 @@ struct SecurityStruct
   uint8_t       md5[16];
 } SecuritySettings;
 
+
 /*********************************************************************************************\
  * SettingsStruct
 \*********************************************************************************************/
@@ -694,6 +695,10 @@ struct SettingsStruct
     if (Latitude  < -90.0  || Latitude > 90.0) Latitude = 0.0;
     if (Longitude < -180.0 || Longitude > 180.0) Longitude = 0.0;
     if (VariousBits1 > (1 << 30)) VariousBits1 = 0;
+  }
+
+  bool networkSettingsEmpty() {
+    return (IP[0] == 0 && Gateway[0] == 0 && Subnet[0] == 0 && DNS[0] == 0);
   }
 
   void clearNetworkSettings() {
@@ -894,6 +899,22 @@ struct SettingsStruct
 SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
+
+
+/*********************************************************************************************\
+ *  Analyze SettingsStruct and report inconsistencies
+ *  Not a member function to be able to use the F-macro
+\*********************************************************************************************/
+bool SettingsCheck(String& error) {
+  error = "";
+  if (!Settings.networkSettingsEmpty()) {
+    if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
+      error += F("Error: Either fill all IP settings fields or leave all empty");
+    }
+  }
+
+  return error.length() == 0;
+}
 
 /*********************************************************************************************\
  * ControllerSettingsStruct definition
