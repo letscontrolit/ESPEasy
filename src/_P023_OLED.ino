@@ -228,8 +228,10 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           ? 0
           : 1;
         String arguments = String(string);
+
+        //Fixed bug #1864
         int dotPos = arguments.indexOf('.');
-        if(dotPos > -1)
+        if(dotPos > -1 && arguments.substring(dotPos,dotPos+4).equalsIgnoreCase(F("oled")))
         {
           LoadTaskSettings(event->TaskIndex);
           String name = arguments.substring(0,dotPos);
@@ -244,6 +246,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
              return false;
           }
         }
+
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)
