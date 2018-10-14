@@ -605,9 +605,6 @@ WiFiUDP portUDP;
 
 class TimingStats;
 
-#define LOADFILE_STATS  0
-#define LOOP_STATS      1
-
 /*********************************************************************************************\
  * CRCStruct
 \*********************************************************************************************/
@@ -1824,31 +1821,32 @@ unsigned long timediff_calls = 0;
 unsigned long timediff_cpu_cycles_total = 0;
 
 #define LOADFILE_STATS        0
-#define LOOP_STATS            1
-#define PLUGIN_CALL_50PS      2
-#define PLUGIN_CALL_10PS      3
-#define PLUGIN_CALL_10PSU     4
-#define PLUGIN_CALL_1PS       5
-#define SENSOR_SEND_TASK      6
-#define SEND_DATA_STATS       7
-#define COMPUTE_FORMULA_STATS 8
-#define PROC_SYS_TIMER        9
-#define SET_NEW_TIMER        10
-#define TIME_DIFF_COMPUTE    11
-#define MQTT_DELAY_QUEUE     12
-#define C001_DELAY_QUEUE     13
-#define C002_DELAY_QUEUE     14
-#define C003_DELAY_QUEUE     15
-#define C004_DELAY_QUEUE     16
-#define C005_DELAY_QUEUE     17
-#define C006_DELAY_QUEUE     18
-#define C007_DELAY_QUEUE     19
-#define C008_DELAY_QUEUE     20
-#define C009_DELAY_QUEUE     21
-#define C010_DELAY_QUEUE     22
-#define C011_DELAY_QUEUE     23
-#define C012_DELAY_QUEUE     24
-#define C013_DELAY_QUEUE     25
+#define SAVEFILE_STATS        1
+#define LOOP_STATS            2
+#define PLUGIN_CALL_50PS      3
+#define PLUGIN_CALL_10PS      4
+#define PLUGIN_CALL_10PSU     5
+#define PLUGIN_CALL_1PS       6
+#define SENSOR_SEND_TASK      7
+#define SEND_DATA_STATS       8
+#define COMPUTE_FORMULA_STATS 9
+#define PROC_SYS_TIMER       10
+#define SET_NEW_TIMER        11
+#define TIME_DIFF_COMPUTE    12
+#define MQTT_DELAY_QUEUE     13
+#define C001_DELAY_QUEUE     14
+#define C002_DELAY_QUEUE     15
+#define C003_DELAY_QUEUE     16
+#define C004_DELAY_QUEUE     17
+#define C005_DELAY_QUEUE     18
+#define C006_DELAY_QUEUE     19
+#define C007_DELAY_QUEUE     20
+#define C008_DELAY_QUEUE     21
+#define C009_DELAY_QUEUE     22
+#define C010_DELAY_QUEUE     23
+#define C011_DELAY_QUEUE     24
+#define C012_DELAY_QUEUE     25
+#define C013_DELAY_QUEUE     26
 
 
 
@@ -1857,13 +1855,14 @@ unsigned long timediff_cpu_cycles_total = 0;
 
 #define START_TIMER const unsigned statisticsTimerStart(micros());
 #define STOP_TIMER_TASK(T,F)  if (mustLogFunction(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
-#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+//#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER(L)       miscStats[L].add(usecPassedSince(statisticsTimerStart));
 
 
 String getMiscStatsName(int stat) {
     switch (stat) {
         case LOADFILE_STATS: return F("Load File");
+        case SAVEFILE_STATS: return F("Save File");
         case LOOP_STATS:     return F("Loop");
         case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s  ");
         case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s  ");

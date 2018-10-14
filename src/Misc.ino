@@ -1243,12 +1243,14 @@ byte getSerialLogLevel() {
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
     logLevelSettings = 2;
   }
+/*
   if (!serialLogActiveRead()) {
     if (logLevelSettings != 0) {
       updateLogLevelCache();
     }
     logLevelSettings = 0;
   }
+*/
   return logLevelSettings;
 }
 
@@ -1348,7 +1350,6 @@ void process_serialLogBuffer() {
       serialLogBuffer.pop_front();
     }
   }
-  updateLogLevelCache();
 }
 
 void tempDisableSerialLog(bool setToDisabled) {
