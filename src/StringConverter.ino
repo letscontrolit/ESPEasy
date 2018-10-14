@@ -288,6 +288,26 @@ String stripQuotes(const String& text) {
   return text;
 }
 
+bool safe_strncpy(char* dest, const String& source, size_t max_size) {
+  return safe_strncpy(dest, source.c_str(), max_size);
+}
+
+bool safe_strncpy(char* dest, const char* source, size_t max_size) {
+  if (max_size < 1) return false;
+  if (dest == NULL) return false;
+  if (source == NULL) return false;
+  bool result = true;
+  memset(dest, 0, max_size);
+  size_t str_length = strlen(source);
+  if (str_length >= max_size) {
+    str_length = max_size;
+    result = false;
+  }
+  strncpy(dest, source, str_length);
+  dest[max_size - 1] = 0;
+  return result;
+}
+
 /*********************************************************************************************\
    Parse a string and get the xth command or parameter in lower case
   \*********************************************************************************************/

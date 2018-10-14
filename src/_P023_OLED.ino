@@ -15,6 +15,9 @@
 #define PLUGIN_VALUENAME1_023 "OLED"
 #define PLUGIN_023_MAX_DYSPALY 2
 
+#define P23_Nlines 8        // The number of different lines which can be displayed
+#define P23_Nchars 64
+
 struct Plugin_023_OLED_SettingStruct
 {
   Plugin_023_OLED_SettingStruct(): address(0)
@@ -94,7 +97,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         int optionValues4[2] = { 1, 2 };
         addFormSelector(F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
 
-        char deviceTemplate[8][64];
+        char deviceTemplate[P23_Nlines][P23_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
@@ -117,16 +120,19 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_023_size"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_023_font_width"));
 
-        char deviceTemplate[8][64];
-        for (byte varNr = 0; varNr < 8; varNr++)
+        char deviceTemplate[P23_Nlines][P23_Nchars];
+        String error;
+        for (byte varNr = 0; varNr < P23_Nlines; varNr++)
         {
-          String arg = F("Plugin_023_template");
-          arg += varNr + 1;
-          String tmpString = WebServer.arg(arg);
-          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr])-1);
-          deviceTemplate[varNr][63]=0;
+          String argName = F("Plugin_023_template");
+          argName += varNr + 1;
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P23_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
         }
-
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         success = true;
         break;
@@ -203,7 +209,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        char deviceTemplate[8][64];
+        char deviceTemplate[P23_Nlines][P23_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         int index = Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0x3C
           ? 0

@@ -21,6 +21,9 @@ int Plugin_012_mode = 1;
 #define PLUGIN_NAME_012       "Display - LCD2004"
 #define PLUGIN_VALUENAME1_012 "LCD"
 
+#define P12_Nlines 4        // The number of different lines which can be displayed
+#define P12_Nchars 80
+
 boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -81,9 +84,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Display Size"), F("plugin_012_size"), 2, options2, optionValues2, choice2);
 
 
-        char deviceTemplate[4][80];
+        char deviceTemplate[P12_Nlines][P12_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-        for (byte varNr = 0; varNr < 4; varNr++)
+        for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
           addHtml(F("<TR><TD>Line "));
           addHtml(String(varNr + 1));
@@ -122,17 +125,19 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_12_timer"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_012_mode"));
 
-        char deviceTemplate[4][80];
-        for (byte varNr = 0; varNr < 4; varNr++)
+        char deviceTemplate[P12_Nlines][P12_Nchars];
+        String error;
+        for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          char argc[25];
-          String arg = F("Plugin_012_template");
-          arg += varNr + 1;
-          arg.toCharArray(argc, 25);
-          String tmpString = WebServer.arg(argc);
-          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr]));
+          String argName = F("Plugin_012_template");
+          argName += varNr + 1;
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P12_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
         }
-
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         success = true;
         break;
@@ -194,7 +199,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        char deviceTemplate[4][80];
+        char deviceTemplate[P12_Nlines][P12_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         for (byte x = 0; x < Plugin_012_rows; x++)

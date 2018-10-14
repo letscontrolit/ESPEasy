@@ -417,6 +417,13 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   return(SaveToFile(CustomTaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, memAddress, datasize));
 }
 
+String getCustomTaskSettingsError(byte varNr) {
+  String error = F("Error: Text too long for line ");
+  error += varNr + 1;
+  error += '\n';
+  return error;
+}
+
 
 /********************************************************************************************\
   Clear custom task settings
@@ -557,20 +564,29 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
-
+  START_TIMER;
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
-
+  {
+    String log = F("SaveToFile: free stack: ");
+    log += getCurrentFreeStack();
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  delay(1);
+  unsigned long timer = millis() + 50;
   fs::File f = SPIFFS.open(fname, "r+");
   if (f) {
     SPIFFS_CHECK(f, fname);
-
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
     byte *pointerToByteToSave = memAddress;
     for (int x = 0; x < datasize ; x++)
     {
       SPIFFS_CHECK(f.write(*pointerToByteToSave), fname);
       pointerToByteToSave++;
+      if (timeOutReached(timer)) {
+        timer += 50;
+        delay(1);
+      }
     }
     f.close();
     String log = F("FILE : Saved ");
@@ -582,6 +598,12 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     log += F(" ERROR, Cannot save to file");
     addLog(LOG_LEVEL_ERROR, log);
     return log;
+  }
+  STOP_TIMER(SAVEFILE_STATS);
+  {
+    String log = F("SaveToFile: free stack after: ");
+    log += getCurrentFreeStack();
+    addLog(LOG_LEVEL_INFO, log);
   }
 
   //OK
@@ -639,10 +661,10 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
+  delay(1);
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet), fname);
@@ -650,6 +672,7 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
   f.close();
 
   STOP_TIMER(LOADFILE_STATS);
+  delay(1);
 
   return(String());
 }

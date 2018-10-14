@@ -18,6 +18,11 @@
 
 #define PLUGIN_IMPORT 37		// This is a 'private' function used only by this import module
 
+#define P37_Nlines 4
+#define P37_Nchars 41
+
+#define P37_Payload_max_length  255
+
 // Declare a Wifi client for this plugin only
 
 // TODO TD-er: These must be kept in some vector to allow multiple instances of MQTT import.
@@ -81,7 +86,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  char deviceTemplate[4][41];		// variable for saving the subscription topics
+  char deviceTemplate[P37_Nlines][P37_Nchars];		// variable for saving the subscription topics
 
   switch (function)
   {
@@ -121,10 +126,10 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte varNr = 0; varNr < 4; varNr++)
+        for (byte varNr = 0; varNr < P37_Nlines; varNr++)
         {
         	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("Plugin_037_template")) +
-        			(varNr + 1), deviceTemplate[varNr], 40);
+        			(varNr + 1), deviceTemplate[varNr], (P37_Nchars - 1));
         }
         success = true;
         break;
@@ -133,14 +138,18 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         String argName;
-
-        for (byte varNr = 0; varNr < 4; varNr++)
+        String error;
+        for (byte varNr = 0; varNr < P37_Nlines; varNr++)
         {
           argName = F("Plugin_037_template");
           argName += varNr + 1;
-          strncpy(deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(deviceTemplate[varNr]));
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P37_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
         }
-
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         success = true;
@@ -287,7 +296,7 @@ boolean MQTTSubscribe_037()
   // Subscribe to the topics requested by ALL calls to this plugin.
   // We do this because if the connection to the broker is lost, we want to resubscribe for all instances.
 
-  char deviceTemplate[4][41];
+  char deviceTemplate[P37_Nlines][P37_Nchars];
 
   //	Loop over all tasks looking for a 037 instance
 
@@ -334,25 +343,24 @@ boolean MQTTSubscribe_037()
 //
 // handle MQTT messages
 //
-void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
+void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length_given)
 {
   // Here we have incomng MQTT messages from the mqtt import module
-  String topic = c_topic;
+  // We generate a temp event structure to pass to the plugins
+  struct EventStruct TempEvent;
+  TempEvent.String1 = c_topic; // This is the topic of the message
 
-  char cpayload[256];
-  strncpy(cpayload, (char*)b_payload, length);
-  cpayload[length] = 0;
-  String payload = cpayload;		// convert byte to char string
-  payload.trim();
+  size_t str_length = strlen((char*)b_payload);
+  if (str_length > P37_Payload_max_length) str_length = P37_Payload_max_length;
+  TempEvent.String2 = ""; // This is the payload
+  TempEvent.String2.reserve(str_length);
+  for (size_t i = 0; i < str_length; ++i) {
+    char c = ((char*)b_payload)[i];
+    TempEvent.String2 += c;
+  }
+  TempEvent.String2.trim();
 
   byte DeviceIndex = getDeviceIndex(PLUGIN_ID_037);   // This is the device index of 037 modules -there should be one!
-
-  // We generate a temp event structure to pass to the plugins
-
-  struct EventStruct TempEvent;
-
-  TempEvent.String1 = topic;                            // This is the topic of the message
-  TempEvent.String2 = payload;                          // This is the payload
 
   //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_IMPORT
 
