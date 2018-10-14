@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20181014 (since mega-20181011)
+-------------------------------------------------
+
+Release date: Sun Oct 14 04:00:13 CEST 2018
+
+Gijs Noorlander (1):
+      [#1799] Add SSID to main page
+
+TD-er (5):
+      [#1891] Generic UPD controller - send only first value from sensor
+      [Controller] Fix send only first value
+      Time#Initialized event in rules before %syshour% is set
+      [UX] Warn user for incomplete network IP settings
+      [#1895] Incorrect number bytes read I2C_read32_reg
+
+
+-------------------------------------------------
 Changes in release mega-20181011 (since mega-20181010)
 -------------------------------------------------
 
