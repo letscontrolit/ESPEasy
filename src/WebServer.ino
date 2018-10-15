@@ -1041,17 +1041,17 @@ void handle_config() {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
       MQTTclient_should_reconnect = true;
     }
-    safe_strncpy(Settings.Name, name, sizeof(Settings.Name));
+    strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
     Settings.appendUnitToHostname(isFormItemChecked(F("appendunittohostname")));
-    //safe_strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
+    //strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
-    safe_strncpy(SecuritySettings.WifiSSID, ssid, sizeof(SecuritySettings.WifiSSID));
-    //safe_strncpy(SecuritySettings.WifiKey, key.c_str(), sizeof(SecuritySettings.WifiKey));
+    strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    //strncpy(SecuritySettings.WifiKey, key.c_str(), sizeof(SecuritySettings.WifiKey));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
-    safe_strncpy(SecuritySettings.WifiSSID2, ssid2, sizeof(SecuritySettings.WifiSSID2));
-    //safe_strncpy(SecuritySettings.WifiKey2, key2.c_str(), sizeof(SecuritySettings.WifiKey2));
+    strncpy(SecuritySettings.WifiSSID2, ssid2.c_str(), sizeof(SecuritySettings.WifiSSID2));
+    //strncpy(SecuritySettings.WifiKey2, key2.c_str(), sizeof(SecuritySettings.WifiKey2));
     copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
-    //safe_strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
+    //strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
 
 
@@ -1210,11 +1210,11 @@ void handle_controllers() {
 //        ControllerSettings.MaxQueueDepth = 0;
         if (Protocol[ProtocolIndex].usesTemplate)
           CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
-        safe_strncpy(ControllerSettings.Subscribe, TempEvent.String1, sizeof(ControllerSettings.Subscribe));
-        safe_strncpy(ControllerSettings.Publish, TempEvent.String2, sizeof(ControllerSettings.Publish));
-        safe_strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3, sizeof(ControllerSettings.MQTTLwtTopic));
-        safe_strncpy(ControllerSettings.LWTMessageConnect, TempEvent.String4, sizeof(ControllerSettings.LWTMessageConnect));
-        safe_strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5, sizeof(ControllerSettings.LWTMessageDisconnect));
+        strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
+        strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
+        strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+        strncpy(ControllerSettings.LWTMessageConnect, TempEvent.String4.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+        strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
         TempEvent.String1 = "";
         TempEvent.String2 = "";
         TempEvent.String3 = "";
@@ -1245,7 +1245,7 @@ void handle_controllers() {
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
-          safe_strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
+          strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
           IPAddress IP;
           WiFi.hostByName(ControllerSettings.HostName, IP);
           for (byte x = 0; x < 4; x++)
@@ -1259,14 +1259,14 @@ void handle_controllers() {
         //copy settings to struct
         Settings.ControllerEnabled[controllerindex] = isFormItemChecked(F("controllerenabled"));
         ControllerSettings.Port = controllerport;
-        safe_strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
-        //safe_strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
+        strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
+        //strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
-        safe_strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
-        safe_strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
-        safe_strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
-        safe_strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
-        safe_strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
+        strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
+        strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+        strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+        strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
         ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
         ControllerSettings.MaxQueueDepth = maxqueuedepth;
         ControllerSettings.MaxRetry = maxretry;
@@ -1573,14 +1573,14 @@ void handle_notifications() {
         NotificationSettings.Pin1 = getFormItemInt(F("pin1"), 0);
         NotificationSettings.Pin2 = getFormItemInt(F("pin2"), 0);
         Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-        safe_strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
-        safe_strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
-        safe_strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
-        safe_strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
-        safe_strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
-        safe_strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
-        safe_strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
-        safe_strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
+        strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
+        strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
+        strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
+        strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
+        strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
+        strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
+        strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
+        strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
     // Save the settings.
@@ -3012,7 +3012,7 @@ void copyFormPassword(const String& id, char* pPassword, int maxlength)
   String password = WebServer.arg(id);
   if (password == F("*****"))   //no change?
     return;
-  safe_strncpy(pPassword, password.c_str(), maxlength);
+  strncpy(pPassword, password.c_str(), maxlength);
 }
 
 void addFormIPBox(const String& label, const String& id, const byte ip[4])
@@ -4973,8 +4973,8 @@ void handle_setup() {
   // if ssid config not set and params are both provided
   if (status == 0 && ssid.length() != 0 /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
   {
-    safe_strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
-    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
+    strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -5037,7 +5037,7 @@ void handle_setup() {
     if (refreshCount > 0)
     {
       status = 0;
-//      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
+//      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
 //      SecuritySettings.WifiKey[0] = 0;
       TXBuffer += F("<a class='button' href='setup'>Back to Setup</a><BR><BR>");
     }
