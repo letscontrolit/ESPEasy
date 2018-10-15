@@ -263,13 +263,23 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           byte mode;
           uint16_t currentState;
 
-          getPinState(PLUGIN_ID_001, event->Par1, &mode, &currentState);
-          if (mode == PIN_MODE_OUTPUT || mode == PIN_MODE_UNDEFINED) { //toggle only output pins
-            digitalWrite(event->Par1, !currentState);
-            setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, !currentState);
-            log = String(F("SW   : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
+          {
+            if (hasPinState(PLUGIN_ID_001,event->Par1)) {
+              getPinState(PLUGIN_ID_001, event->Par1, &mode, &currentState);
+            } else {
+              currentState = (digitalRead(event->Par1) == HIGH);
+              mode = PIN_MODE_OUTPUT;
+            }
+
+            if (mode != PIN_MODE_INPUT) { //toggle only output pins
+              pinMode(event->Par1, OUTPUT);
+              digitalWrite(event->Par1, !currentState);
+              setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, !currentState);
+              log = String(F("SW   : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
+              addLog(LOG_LEVEL_INFO, log);
+              SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+            }
           }
         }
 

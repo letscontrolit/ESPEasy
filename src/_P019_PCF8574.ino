@@ -147,8 +147,14 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           byte mode;
           uint16_t currentState;
 
-          getPinState(PLUGIN_ID_019, event->Par1, &mode, &currentState);
-          if (mode == PIN_MODE_OUTPUT || mode == PIN_MODE_UNDEFINED) {
+          if (hasPinState(PLUGIN_ID_019,event->Par1)) {
+            getPinState(PLUGIN_ID_019, event->Par1, &mode, &currentState);
+          } else {
+            currentState = Plugin_019_Read(event->Par1);
+            mode = PIN_MODE_OUTPUT;
+          }
+
+          if (mode != PIN_MODE_INPUT) {
             setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !currentState);
             Plugin_019_Write(event->Par1, !currentState);
             log = String(F("PCF  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
