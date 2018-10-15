@@ -91,6 +91,8 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			);
 
     String email_address = notificationsettings.Sender;
+		String address = notificationsettings.Sender;
+		address.trim();
 		int pos_less = email_address.indexOf('<');
 		if (pos_less == -1) {
 			// No email address markup
@@ -99,7 +101,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		} else {
 			String senderName = email_address.substring(0, pos_less);
 			senderName.replace("\"", ""); // Remove quotes
-			String address = email_address.substring(pos_less + 1);
+			address = email_address.substring(pos_less + 1);
 			address.replace("<", "");
 			address.replace(">", "");
 			address.trim();
@@ -108,10 +110,24 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			mailheader.replace(String(F("$emailfrom")), address);
 		}
 
-		mailheader.replace(String(F("$nodename")), Settings.Name);
-		mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
+		//mailheader.replace(String(F("$nodename")), Settings.Name);
+		//mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
 		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
-		mailheader.replace(String(F("$subject")), aSub);
+
+		int sub_left = aMesg.indexOf('{');
+		int sub_right = aMesg.indexOf('}');
+		if (sub_left == -1 || sub_right == -1) {
+		    mailheader.replace(String(F("$subject")), aSub);
+		} else {
+			String newSub = aMesg.substring(sub_left, sub_right+1);
+			aMesg.replace(newSub, "");
+			newSub.replace("{", "");
+			newSub.replace("}", "");
+			newSub.trim();
+			if (newSub.length() == 0) { newSub = aSub; }
+		  mailheader.replace(String(F("$subject")), newSub);
+		}
+
 		mailheader.replace(String(F("$espeasyversion")), String(BUILD));
 		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
@@ -121,7 +137,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			if (!NPlugin_001_MTA(client, "", F("220 "))) break;
 			if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) break;
 			if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
-			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;
+			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + address + ">", F("250 "))) break;
 
 			bool nextAddressAvailable = true;
 			int i = 0;
@@ -225,6 +241,7 @@ bool getNextMailAddress(const String& data, String& address, int index)
 	}
 	if (found > index) {
 		address = data.substring(strIndex[0], strIndex[1]);
+		address.trim();
 		return true;
 	}
 	return false;
