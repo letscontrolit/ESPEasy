@@ -1557,7 +1557,7 @@ void handle_notifications() {
 
   if (notification != -1 && !notificationindexNotSet)
   {
-    NotificationSettingsStruct NotificationSettings;
+    MakeNotificationSettings(NotificationSettings);
     if (Settings.Notification[notificationindex] != notification)
     {
       Settings.Notification[notificationindex] = notification;
@@ -1573,18 +1573,18 @@ void handle_notifications() {
         NotificationSettings.Pin1 = getFormItemInt(F("pin1"), 0);
         NotificationSettings.Pin2 = getFormItemInt(F("pin2"), 0);
         Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-        strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
-        strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
-        strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
-        strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
-        strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
-        strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
-        strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
-        strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
+        safe_strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
+        safe_strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
+        safe_strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
+        safe_strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
+        safe_strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
+        safe_strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
+        safe_strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
+        safe_strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
       }
     }
     // Save the settings.
-    addHtmlError(SaveNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettings)));
+    addHtmlError(SaveNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
     if (WebServer.hasArg(F("test"))) {
       // Perform tests with the settings in the form.
@@ -1605,10 +1605,10 @@ void handle_notifications() {
     TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
     TXBuffer += F("<TH style='width:50px;'>Nr<TH style='width:100px;'>Enabled<TH>Service<TH>Server<TH>Port");
 
-    NotificationSettingsStruct NotificationSettings;
+    MakeNotificationSettings(NotificationSettings);
     for (byte x = 0; x < NOTIFICATION_MAX; x++)
     {
-      LoadNotificationSettings(x, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+      LoadNotificationSettings(x, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
       html_TR_TD();
       TXBuffer += F("<a class='button link' href=\"notifications?index=");
       TXBuffer += x + 1;
@@ -1666,8 +1666,8 @@ void handle_notifications() {
 
     if (Settings.Notification[notificationindex])
     {
-      NotificationSettingsStruct NotificationSettings;
-      LoadNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+      MakeNotificationSettings(NotificationSettings);
+      LoadNotificationSettings(notificationindex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 
       byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
       if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)

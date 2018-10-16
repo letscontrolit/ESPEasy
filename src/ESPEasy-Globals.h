@@ -1089,6 +1089,11 @@ struct NotificationSettingsStruct
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
+typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
+#define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new NotificationSettingsStruct());\
+                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
+
+
 /*********************************************************************************************\
  * ExtraTaskSettingsStruct
 \*********************************************************************************************/
