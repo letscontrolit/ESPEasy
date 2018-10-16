@@ -40,7 +40,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
@@ -81,7 +81,7 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
 
 boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 {
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controllerIndex, ControllerSettings);
 
   if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0)) {

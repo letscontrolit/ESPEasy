@@ -132,7 +132,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 bool MQTTConnect(int controller_idx)
 {
   ++mqtt_reconnect_count;
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controller_idx, ControllerSettings);
   if (!ControllerSettings.checkHostReachable(true))
     return false;
@@ -316,7 +316,7 @@ void processMQTTdelayQueue() {
 \*********************************************************************************************/
 void MQTTStatus(String& status)
 {
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
     LoadControllerSettings(enabledMqttController, ControllerSettings);

@@ -147,7 +147,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!WiFiConnected(100)) {
     return false;
   }
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
   C011_ConfigStruct customConfig;

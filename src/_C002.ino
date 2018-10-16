@@ -35,7 +35,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
         break;
@@ -145,7 +145,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          ControllerSettingsStruct ControllerSettings;
+          MakeControllerSettings(ControllerSettings);
           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 /*
           if (!ControllerSettings.checkHostReachable(true)) {
