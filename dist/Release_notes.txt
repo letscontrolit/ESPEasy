@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20181016 (since mega-20181015)
+-------------------------------------------------
+
+Release date: Tue Oct 16 04:00:06 CEST 2018
+
+Plebs (1):
+      Fix for togglegpio without gpio initialization
+
+TD-er (1):
+      [Revert] Safe_strncpy cannot be used as generic strncpy replacement
+
+
+-------------------------------------------------
 Changes in release mega-20181015 (since mega-20181014)
 -------------------------------------------------
 
