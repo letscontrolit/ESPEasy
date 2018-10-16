@@ -33,7 +33,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         MQTTDelayHandler.configureControllerSettings(ControllerSettings);
         break;
@@ -90,7 +90,7 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
           success = false;
           break;
         }
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         statusLED(true);

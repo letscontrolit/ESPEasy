@@ -1041,17 +1041,22 @@ void handle_config() {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
       MQTTclient_should_reconnect = true;
     }
-    strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
+    // Unit name
+    safe_strncpy(Settings.Name, name.c_str(), sizeof(Settings.Name));
     Settings.appendUnitToHostname(isFormItemChecked(F("appendunittohostname")));
-    //strncpy(SecuritySettings.Password, password.c_str(), sizeof(SecuritySettings.Password));
+
+    // Password
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
-    strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
-    //strncpy(SecuritySettings.WifiKey, key.c_str(), sizeof(SecuritySettings.WifiKey));
+
+    // SSID 1
+    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
-    strncpy(SecuritySettings.WifiSSID2, ssid2.c_str(), sizeof(SecuritySettings.WifiSSID2));
-    //strncpy(SecuritySettings.WifiKey2, key2.c_str(), sizeof(SecuritySettings.WifiKey2));
+
+    // SSID 2
+    safe_strncpy(SecuritySettings.WifiSSID2, ssid2.c_str(), sizeof(SecuritySettings.WifiSSID2));
     copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
-    //strncpy(SecuritySettings.WifiAPKey, apkey.c_str(), sizeof(SecuritySettings.WifiAPKey));
+
+    // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
 
 
@@ -1192,7 +1197,7 @@ void handle_controllers() {
   //submitted data
   if (protocol != -1 && !controllerNotSet)
   {
-    ControllerSettingsStruct ControllerSettings;
+    MakeControllerSettings(ControllerSettings);
     //submitted changed protocol
     if (Settings.Protocol[controllerindex] != protocol)
     {
@@ -1210,11 +1215,11 @@ void handle_controllers() {
 //        ControllerSettings.MaxQueueDepth = 0;
         if (Protocol[ProtocolIndex].usesTemplate)
           CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
-        strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
-        strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
-        strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
-        strncpy(ControllerSettings.LWTMessageConnect, TempEvent.String4.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
-        strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        safe_strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
+        safe_strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
+        safe_strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+        safe_strncpy(ControllerSettings.LWTMessageConnect, TempEvent.String4.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+        safe_strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
         TempEvent.String1 = "";
         TempEvent.String2 = "";
         TempEvent.String3 = "";
@@ -1245,7 +1250,7 @@ void handle_controllers() {
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
-          strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
+          safe_strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
           IPAddress IP;
           WiFi.hostByName(ControllerSettings.HostName, IP);
           for (byte x = 0; x < 4; x++)
@@ -1259,14 +1264,14 @@ void handle_controllers() {
         //copy settings to struct
         Settings.ControllerEnabled[controllerindex] = isFormItemChecked(F("controllerenabled"));
         ControllerSettings.Port = controllerport;
-        strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
-        //strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
+        safe_strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
+        //safe_strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
-        strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
-        strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
-        strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
-        strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
-        strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        safe_strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
+        safe_strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
+        safe_strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
+        safe_strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
+        safe_strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
         ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
         ControllerSettings.MaxQueueDepth = maxqueuedepth;
         ControllerSettings.MaxRetry = maxretry;
@@ -1289,7 +1294,7 @@ void handle_controllers() {
     TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH style='width:70px;'>");
     TXBuffer += F("<TH style='width:50px;'>Nr<TH style='width:100px;'>Enabled<TH>Protocol<TH>Host<TH>Port");
 
-    ControllerSettingsStruct ControllerSettings;
+    MakeControllerSettings(ControllerSettings);
     for (byte x = 0; x < CONTROLLER_MAX; x++)
     {
       LoadControllerSettings(x, ControllerSettings);
@@ -1347,7 +1352,7 @@ void handle_controllers() {
 
     if (Settings.Protocol[controllerindex])
     {
-      ControllerSettingsStruct ControllerSettings;
+      MakeControllerSettings(ControllerSettings);
       LoadControllerSettings(controllerindex, ControllerSettings);
       byte choice = ControllerSettings.UseDNS;
       String options[2];
@@ -3012,7 +3017,7 @@ void copyFormPassword(const String& id, char* pPassword, int maxlength)
   String password = WebServer.arg(id);
   if (password == F("*****"))   //no change?
     return;
-  strncpy(pPassword, password.c_str(), maxlength);
+  safe_strncpy(pPassword, password.c_str(), maxlength);
 }
 
 void addFormIPBox(const String& label, const String& id, const byte ip[4])
@@ -4973,8 +4978,8 @@ void handle_setup() {
   // if ssid config not set and params are both provided
   if (status == 0 && ssid.length() != 0 /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
   {
-    strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
-    strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiKey, password.c_str(), sizeof(SecuritySettings.WifiKey));
+    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
     wifiSetupConnect = true;
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -5037,7 +5042,7 @@ void handle_setup() {
     if (refreshCount > 0)
     {
       status = 0;
-//      strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
+//      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
 //      SecuritySettings.WifiKey[0] = 0;
       TXBuffer += F("<a class='button' href='setup'>Back to Setup</a><BR><BR>");
     }

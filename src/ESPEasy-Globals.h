@@ -1058,6 +1058,11 @@ private:
 
 };
 
+typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
+#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct());\
+                                    ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
+
+
 
 /*********************************************************************************************\
  * NotificationSettingsStruct
