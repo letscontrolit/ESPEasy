@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release mega-20181017 (since mega-20181016)
+-------------------------------------------------
+
+Release date: Wed Oct 17 04:00:18 CEST 2018
+
+Gijs Noorlander (1):
+      Added checklist to the Issue_template
+
+TD-er (3):
+      [#1906] Allocate NotificationSettings on the heap
+      [#1906] Allocate ControllerSettings on the heap
+      [Stack] Add Free Stack to System Info plugin
+
+
+-------------------------------------------------
 Changes in release mega-20181016 (since mega-20181015)
 -------------------------------------------------
 
