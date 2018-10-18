@@ -154,11 +154,10 @@ void setTime(unsigned long t) {
   prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
   if (Settings.UseRules)
   {
-    static bool firstUpdate = true;
-    String event = firstUpdate ? F("Time#Initialized") : F("Time#Set");
-    firstUpdate = false;
+		String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
     rulesProcessing(event);
   }
+	statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
 }
 
 uint32_t getUnixTime() {

@@ -63,6 +63,8 @@ void Plugin_037_update_connect_status() {
   }
   if (MQTTclient_037_connected != connected) {
     MQTTclient_037_connected = !MQTTclient_037_connected;
+    P037_MQTTImport_connected  = MQTTclient_037_connected;
+
     if (Settings.UseRules) {
       String event = connected ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected");
       rulesProcessing(event);

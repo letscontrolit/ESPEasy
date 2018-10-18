@@ -599,6 +599,12 @@ bool MQTTclient_should_reconnect = true;
 bool MQTTclient_connected = false;
 int mqtt_reconnect_count = 0;
 
+//NTP status
+bool statusNTPInitialized = false;
+
+// mqtt import status
+bool P037_MQTTImport_connected = false;
+
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 

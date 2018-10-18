@@ -563,6 +563,15 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
+
+  if (s.indexOf(F("%is")) != -1) {
+    SMART_REPL(F("%ismqtt%"), String(MQTTclient_connected));
+    SMART_REPL(F("%iswifi%"), String(wifiStatus)); //0=disconnected, 1=connected, 2=got ip, 3=services initialized
+    SMART_REPL(F("%isntp%"), String(statusNTPInitialized));
+    #ifdef USES_P037
+    SMART_REPL(F("%ismqttimp%"), String(P037_MQTTImport_connected));
+    #endif // USES_P037
+  }
 }
 
 String getReplacementString(const String& format, String& s) {
