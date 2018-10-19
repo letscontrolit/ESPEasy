@@ -2252,6 +2252,7 @@ for (byte x=0; x < RULESETS_MAX; x++){
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  if (!Settings.UseRules) return;
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -2291,6 +2292,7 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 String rulesProcessingFile(const String& fileName, String& event)
 {
+  if (!Settings.UseRules) return "";
   checkRAM(F("rulesProcessingFile"));
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
     Serial.print(F("RuleDebug Processing:"));
@@ -2898,6 +2900,7 @@ boolean conditionMatch(const String& check)
   \*********************************************************************************************/
 void rulesTimers()
 {
+  if (!Settings.UseRules) return;
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
   {
     if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
@@ -2920,6 +2923,7 @@ void rulesTimers()
 
 void createRuleEvents(byte TaskIndex)
 {
+  if (!Settings.UseRules) return;
   LoadTaskSettings(TaskIndex);
   byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
