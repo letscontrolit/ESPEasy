@@ -396,6 +396,7 @@ bool getCheckWebserverArg_int(const String &key, int& value) {
   return true;
 }
 
+#define strncpy_webserver_arg(D,N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
 #define update_whenset_FormItemInt(K,V) { int tmpVal; if (getCheckWebserverArg_int(K, tmpVal)) V=tmpVal;}
 
 
@@ -1018,10 +1019,6 @@ void handle_config() {
 
   String name = WebServer.arg(F("name"));
   //String password = WebServer.arg(F("password"));
-  String ssid = WebServer.arg(F("ssid"));
-  //String key = WebServer.arg(F("key"));
-  String ssid2 = WebServer.arg(F("ssid2"));
-  //String key2 = WebServer.arg(F("key2"));
   String iprangelow = WebServer.arg(F("iprangelow"));
   String iprangehigh = WebServer.arg(F("iprangehigh"));
 
@@ -1033,6 +1030,7 @@ void handle_config() {
   String espdns = WebServer.arg(F("espdns"));
   Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
   //String apkey = WebServer.arg(F("apkey"));
+  String ssid = WebServer.arg(F("ssid"));
 
 
   if (ssid[0] != 0)
@@ -1053,7 +1051,7 @@ void handle_config() {
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
-    safe_strncpy(SecuritySettings.WifiSSID2, ssid2.c_str(), sizeof(SecuritySettings.WifiSSID2));
+    strncpy_webserver_arg(SecuritySettings.WifiSSID2, F("ssid2"));
     copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
 
     // Access point password.
@@ -1176,21 +1174,11 @@ void handle_controllers() {
 
   String usedns = WebServer.arg(F("usedns"));
   String controllerip = WebServer.arg(F("controllerip"));
-  String controllerhostname = WebServer.arg(F("controllerhostname"));
   const int controllerport = getFormItemInt(F("controllerport"), 0);
   const int protocol = getFormItemInt(F("protocol"), -1);
-  String controlleruser = WebServer.arg(F("controlleruser"));
-  String controllerpassword = WebServer.arg(F("controllerpassword"));
-  String controllersubscribe = WebServer.arg(F("controllersubscribe"));
-  String controllerpublish = WebServer.arg(F("controllerpublish"));
-  String MQTTLwtTopic = WebServer.arg(F("mqttlwttopic"));
-  String lwtmessageconnect = WebServer.arg(F("lwtmessageconnect"));
-  String lwtmessagedisconnect = WebServer.arg(F("lwtmessagedisconnect"));
   const int minimumsendinterval = getFormItemInt(F("minimumsendinterval"), 100);
   const int maxqueuedepth = getFormItemInt(F("maxqueuedepth"), 10);
   const int maxretry = getFormItemInt(F("maxretry"), 10);
-  String deleteoldest = WebServer.arg(F("deleteoldest"));
-  String mustcheckreply = WebServer.arg(F("mustcheckreply"));
   const int clienttimeout = getFormItemInt(F("clienttimeout"), CONTROLLER_CLIENTTIMEOUT_DFLT);
 
 
@@ -1250,7 +1238,7 @@ void handle_controllers() {
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
-          safe_strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
+          strncpy_webserver_arg(ControllerSettings.HostName, F("controllerhostname"));
           IPAddress IP;
           WiFi.hostByName(ControllerSettings.HostName, IP);
           for (byte x = 0; x < 4; x++)
@@ -1264,19 +1252,19 @@ void handle_controllers() {
         //copy settings to struct
         Settings.ControllerEnabled[controllerindex] = isFormItemChecked(F("controllerenabled"));
         ControllerSettings.Port = controllerport;
-        safe_strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
+        strncpy_webserver_arg(SecuritySettings.ControllerUser[controllerindex], F("controlleruser"));
         //safe_strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
-        safe_strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
-        safe_strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
-        safe_strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
-        safe_strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
-        safe_strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        strncpy_webserver_arg(ControllerSettings.Subscribe, F("controllersubscribe"));
+        strncpy_webserver_arg(ControllerSettings.Publish, F("controllerpublish"));
+        strncpy_webserver_arg(ControllerSettings.MQTTLwtTopic, F("mqttlwttopic"));
+        strncpy_webserver_arg(ControllerSettings.LWTMessageConnect, F("lwtmessageconnect"));
+        strncpy_webserver_arg(ControllerSettings.LWTMessageDisconnect, F("lwtmessagedisconnect"));
         ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
         ControllerSettings.MaxQueueDepth = maxqueuedepth;
         ControllerSettings.MaxRetry = maxretry;
-        ControllerSettings.DeleteOldest = deleteoldest.toInt();
-        ControllerSettings.MustCheckReply = mustcheckreply.toInt();
+        ControllerSettings.DeleteOldest = getFormItemInt(F("deleteoldest"), ControllerSettings.DeleteOldest);
+        ControllerSettings.MustCheckReply = getFormItemInt(F("mustcheckreply"), ControllerSettings.MustCheckReply);
         ControllerSettings.ClientTimeout = clienttimeout;
 
 
@@ -1515,18 +1503,6 @@ void html_TD(int td_cnt) {
   }
 }
 
-void html_input(const String& displayStr, const String& intString, int size, const String& value) {
-  html_TR_TD();
-  TXBuffer += displayStr;
-  TXBuffer += F(":<TD><input class='wide' type='text' name='");
-  TXBuffer += intString;
-  TXBuffer += F("' size=");
-  TXBuffer += size;
-  TXBuffer += F(" value='");
-  TXBuffer += value;
-  TXBuffer += F("'>");
-}
-
 
 //********************************************************************************
 // Web Interface notifcations page
@@ -1547,18 +1523,6 @@ void handle_notifications() {
   --notificationindex;
 
   const int notification = getFormItemInt(F("notification"), -1);
-  String domain = WebServer.arg(F("domain"));
-  String server = WebServer.arg(F("server"));
-  String sender = WebServer.arg(F("sender"));
-  String receiver = WebServer.arg(F("receiver"));
-  String subject = WebServer.arg(F("subject"));
-  String user = WebServer.arg(F("user"));
-  String pass = WebServer.arg(F("pass"));
-  String body = WebServer.arg(F("body"));
-  String notificationenabled = WebServer.arg(F("notificationenabled"));
-
-
-
 
   if (notification != -1 && !notificationindexNotSet)
   {
@@ -1578,14 +1542,15 @@ void handle_notifications() {
         NotificationSettings.Pin1 = getFormItemInt(F("pin1"), 0);
         NotificationSettings.Pin2 = getFormItemInt(F("pin2"), 0);
         Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-        safe_strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
-        safe_strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
-        safe_strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
-        safe_strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
-        safe_strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
-        safe_strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
-        safe_strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
-        safe_strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
+        strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
+        strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
+        strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
+        strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
+        strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
+        strncpy_webserver_arg(NotificationSettings.User,     F("user"));
+        strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
+        strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+
       }
     }
     // Save the settings.
@@ -1680,16 +1645,16 @@ void handle_notifications() {
 
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
-          html_input(F("Domain"), F("domain"), 64, NotificationSettings.Domain);
-          html_input(F("Server"), F("server"), 64, NotificationSettings.Server);
-          html_input(F("Port"), F("port"), 5, String(NotificationSettings.Port));
+          addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain)-1);
+          addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server)-1);
+          addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535);
 
-          html_input(F("Sender"), F("sender"), 64, NotificationSettings.Sender);
-          html_input(F("Receiver"), F("receiver"), 64, NotificationSettings.Receiver);
-          html_input(F("Subject"), F("subject"), 64, NotificationSettings.Subject);
+          addFormTextBox(F("Sender"), F("sender"), NotificationSettings.Sender, sizeof(NotificationSettings.Sender)-1);
+          addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver)-1);
+          addFormTextBox(F("Subject"), F("subject"), NotificationSettings.Subject, sizeof(NotificationSettings.Subject)-1);
 
-          html_input(F("User"), F("user"), 48, NotificationSettings.User);
-          html_input(F("Pass"), F("pass"), 32, NotificationSettings.Pass);
+          addFormTextBox(F("User"), F("user"), NotificationSettings.User, sizeof(NotificationSettings.User)-1);
+          addFormTextBox(F("Pass"), F("pass"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass)-1);
 
           html_TR_TD(); TXBuffer += F("Body:<TD><textarea name='body' rows='20' size=512 wrap='off'>");
           TXBuffer += NotificationSettings.Body;
@@ -1973,7 +1938,7 @@ void handle_devices() {
       }
 
       Settings.TaskDeviceEnabled[taskIndex] = isFormItemChecked(F("TDE"));
-      strcpy(ExtraTaskSettings.TaskDeviceName, WebServer.arg(F("TDN")).c_str());
+      strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceName, F("TDN"));
       Settings.TaskDevicePort[taskIndex] =  getFormItemInt(F("TDP"), 0);
 
       for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
@@ -1996,9 +1961,9 @@ void handle_devices() {
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
 
-        strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], WebServer.arg(String(F("TDF")) + (varNr + 1)).c_str());
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr], String(F("TDF")) + (varNr + 1));
         ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = getFormItemInt(String(F("TDVD")) + (varNr + 1));
-        strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], WebServer.arg(String(F("TDVN")) + (varNr + 1)).c_str());
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], String(F("TDVN")) + (varNr + 1));
 
         // taskdeviceformula[varNr].toCharArray(tmpString, 41);
         // strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
@@ -3959,11 +3924,6 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  char tmpString[81];
-
-  String ip = WebServer.arg(F("ip"));
-  String syslogip = WebServer.arg(F("syslogip"));
-  String ntphost = WebServer.arg(F("ntphost"));
   int timezone = getFormItemInt(F("timezone"));
   int dststartweek = getFormItemInt(F("dststartweek"));
   int dststartdow = getFormItemInt(F("dststartdow"));
@@ -3979,15 +3939,14 @@ void handle_advanced() {
   if (edit.length() != 0)
   {
     Settings.MessageDelay = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet = ip.toInt();
-    ntphost.toCharArray(tmpString, 64);
-    strcpy(Settings.NTPHost, tmpString);
+    Settings.IP_Octet = WebServer.arg(F("ip")).toInt();
+    strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = timezone;
     TimeChangeRule dst_start(dststartweek, dststartdow, dststartmonth, dststarthour, timezone);
     if (dst_start.isValid()) { Settings.DST_Start = dst_start.toFlashStoredValue(); }
     TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
-    str2ip(syslogip.c_str(), Settings.Syslog_IP);
+    str2ip(WebServer.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
@@ -5086,7 +5045,7 @@ void handle_setup() {
 //********************************************************************************
 void handle_rules() {
   checkRAM(F("handle_rules"));
-  if (!isLoggedIn()) return;
+  if (!isLoggedIn() || !Settings.UseRules) return;
   navMenuIndex = 5;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
