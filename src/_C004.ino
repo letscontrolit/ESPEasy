@@ -32,7 +32,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C004_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
@@ -94,6 +94,6 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     postDataStr.length());
   postStr += postDataStr;
 
-  return send_via_http(controller_number, client, postStr);
+  return send_via_http(controller_number, client, postStr, ControllerSettings.MustCheckReply);
 }
 #endif

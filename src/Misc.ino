@@ -812,7 +812,7 @@ void ResetFactory(void)
 
 	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
 	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
-	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
+	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
     Settings.UseNTP			= DEFAULT_USE_NTP;
 	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
@@ -850,7 +850,7 @@ void ResetFactory(void)
   SaveSettings();
 
 #if DEFAULT_CONTROLLER
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
   strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
   strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
@@ -1154,16 +1154,31 @@ void initLog()
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
-String getLogLevelDisplayString(byte index, int& logLevel) {
+String getLogLevelDisplayString(int logLevel) {
+  switch (logLevel) {
+    case LOG_LEVEL_NONE:       return F("None");
+    case LOG_LEVEL_ERROR:      return F("Error");
+    case LOG_LEVEL_INFO:       return F("Info");
+    case LOG_LEVEL_DEBUG:      return F("Debug");
+    case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
+    case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
+
+    default:
+      return "";
+  }
+}
+
+String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
   switch (index) {
-    case 0: logLevel = LOG_LEVEL_ERROR;      return F("Error");
-    case 1: logLevel = LOG_LEVEL_INFO;       return F("Info");
-    case 2: logLevel = LOG_LEVEL_DEBUG;      return F("Debug");
-    case 3: logLevel = LOG_LEVEL_DEBUG_MORE; return F("Debug More");
-    case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  return F("Debug dev");
+    case 0: logLevel = LOG_LEVEL_ERROR;      break;
+    case 1: logLevel = LOG_LEVEL_INFO;       break;
+    case 2: logLevel = LOG_LEVEL_DEBUG;      break;
+    case 3: logLevel = LOG_LEVEL_DEBUG_MORE; break;
+    case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  break;
 
     default: logLevel = -1; return "";
   }
+  return getLogLevelDisplayString(logLevel);
 }
 
 void addToLog(byte loglevel, const String& string)
@@ -1176,14 +1191,6 @@ void addToLog(byte logLevel, const __FlashStringHelper* flashString)
     checkRAM(F("addToLog"));
     String s(flashString);
     addToLog(logLevel, s.c_str());
-}
-
-bool SerialAvailableForWrite() {
-  if (!Settings.UseSerial) return false;
-  #if defined(ESP8266)
-    if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
-  #endif
-  return true;
 }
 
 void disableSerialLog() {
@@ -1207,10 +1214,20 @@ void setLogLevelFor(byte destination, byte logLevel) {
 
 void updateLogLevelCache() {
   byte max_lvl = 0;
-  max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+  if (!log_to_serial_disabled && serialLogActiveRead()) {
+    max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      Serial.setDebugOutput(true);
+  } else {
+    Serial.setDebugOutput(false);
+  }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
-  max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  if (Logging.logActiveRead()) {
+    max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  }
+#ifdef FEATURE_SD
   max_lvl = _max(max_lvl, Settings.SDLogLevel);
+#endif
   highest_active_log_level = max_lvl;
 }
 
@@ -1218,14 +1235,42 @@ bool loglevelActiveFor(byte logLevel) {
   return loglevelActive(logLevel, highest_active_log_level);
 }
 
+byte getSerialLogLevel() {
+  byte logLevelSettings = 0;
+  if (!Settings.UseSerial) return 0;
+  if (log_to_serial_disabled || log_to_serial_disabled_temporary) return 0;
+  logLevelSettings = Settings.SerialLogLevel;
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
+    logLevelSettings = 2;
+  }
+/*
+  if (!serialLogActiveRead()) {
+    if (logLevelSettings != 0) {
+      updateLogLevelCache();
+    }
+    logLevelSettings = 0;
+  }
+*/
+  return logLevelSettings;
+}
+
+byte getWebLogLevel() {
+  byte logLevelSettings = 0;
+  if (Logging.logActiveRead()) {
+    logLevelSettings = Settings.WebLogLevel;
+  } else {
+    if (Settings.WebLogLevel != 0) {
+      updateLogLevelCache();
+    }
+  }
+  return logLevelSettings;
+}
+
 boolean loglevelActiveFor(byte destination, byte logLevel) {
   byte logLevelSettings = 0;
   switch (destination) {
     case LOG_TO_SERIAL: {
-      if (!SerialAvailableForWrite()) return false;
-      logLevelSettings = Settings.SerialLogLevel;
-      if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED)
-        logLevelSettings = 2;
+      logLevelSettings = getSerialLogLevel();
       break;
     }
     case LOG_TO_SYSLOG: {
@@ -1233,11 +1278,13 @@ boolean loglevelActiveFor(byte destination, byte logLevel) {
       break;
     }
     case LOG_TO_WEBLOG: {
-      logLevelSettings = Settings.WebLogLevel;
+      logLevelSettings = getWebLogLevel();
       break;
     }
     case LOG_TO_SDCARD: {
+      #ifdef FEATURE_SD
       logLevelSettings = Settings.SDLogLevel;
+      #endif
       break;
     }
     default:
@@ -1290,22 +1337,56 @@ void addToLog(byte logLevel, const char *line)
 
 void process_serialLogBuffer() {
   if (serialLogBuffer.size() == 0) return;
-  if (timePassedSince(last_serial_log_emptied) > 10000) {
-    last_serial_log_emptied = millis();
-    serialLogBuffer.clear();
-    return;
-  }
   size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
 #if defined(ESP8266)
   snip = Serial.availableForWrite();
 #endif
-  if (snip > 0) last_serial_log_emptied = millis();
-  size_t bytes_to_write = serialLogBuffer.size();
-  if (snip < bytes_to_write) bytes_to_write = snip;
-  for (size_t i = 0; i < bytes_to_write; ++i) {
-    Serial.write(serialLogBuffer.front());
-    serialLogBuffer.pop_front();
+  if (snip > 0) {
+    last_serial_log_read = millis();
+    size_t bytes_to_write = serialLogBuffer.size();
+    if (snip < bytes_to_write) bytes_to_write = snip;
+    for (size_t i = 0; i < bytes_to_write; ++i) {
+      Serial.write(serialLogBuffer.front());
+      serialLogBuffer.pop_front();
+    }
   }
+}
+
+void tempDisableSerialLog(bool setToDisabled) {
+  if (log_to_serial_disabled_temporary == setToDisabled) return;
+
+  // FIXME TD-er: For some reason disabling serial log will not enable it again.
+  //  log_to_serial_disabled_temporary = setToDisabled;
+  //  updateLogLevelCache();
+}
+
+bool serialLogActiveRead() {
+  if (!Settings.UseSerial) return false;
+  // Some default, ESP32 doesn't have the availableForWrite function yet.
+  // Not sure how to detect read activity on an ESP32.
+  size_t tx_free = 128;
+#if defined(ESP8266)
+  tx_free = Serial.availableForWrite();
+#endif
+  static size_t prev_tx_free = 0;
+  if (tx_free < prev_tx_free) {
+    prev_tx_free = tx_free;
+    tempDisableSerialLog(false);
+    return true;
+  }
+  // Must always set it or else it will never recover from prev_tx_free == 0
+  prev_tx_free = tx_free;
+  if (timePassedSince(last_serial_log_read) > LOG_BUFFER_EXPIRE) {
+    serialLogBuffer.clear();
+    // Just add some marker to get it going again when the serial buffer is
+    // read again and the serial log level was temporary set to 0 since nothing was read.
+    if (Settings.SerialLogLevel > 0) {
+      serialLogBuffer.push_back('\n');
+    }
+    tempDisableSerialLog(true);
+    return false;
+  }
+  return true;
 }
 
 /********************************************************************************************\

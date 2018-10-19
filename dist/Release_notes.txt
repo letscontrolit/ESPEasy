@@ -1,4 +1,121 @@
 -------------------------------------------------
+Changes in release mega-20181017 (since mega-20181016)
+-------------------------------------------------
+
+Release date: Wed Oct 17 04:00:18 CEST 2018
+
+Gijs Noorlander (1):
+      Added checklist to the Issue_template
+
+TD-er (3):
+      [#1906] Allocate NotificationSettings on the heap
+      [#1906] Allocate ControllerSettings on the heap
+      [Stack] Add Free Stack to System Info plugin
+
+
+-------------------------------------------------
+Changes in release mega-20181016 (since mega-20181015)
+-------------------------------------------------
+
+Release date: Tue Oct 16 04:00:06 CEST 2018
+
+Plebs (1):
+      Fix for togglegpio without gpio initialization
+
+TD-er (1):
+      [Revert] Safe_strncpy cannot be used as generic strncpy replacement
+
+
+-------------------------------------------------
+Changes in release mega-20181015 (since mega-20181014)
+-------------------------------------------------
+
+Release date: Mon Oct 15 04:00:10 CEST 2018
+
+Plebs (2):
+      fix for bug #1864
+      Update src/_P023_OLED.ino
+
+TD-er (1):
+      [safe strncpy] Add warning when entered string is too large
+
+
+-------------------------------------------------
+Changes in release mega-20181014 (since mega-20181011)
+-------------------------------------------------
+
+Release date: Sun Oct 14 04:00:13 CEST 2018
+
+Gijs Noorlander (1):
+      [#1799] Add SSID to main page
+
+TD-er (5):
+      [#1891] Generic UPD controller - send only first value from sensor
+      [Controller] Fix send only first value
+      Time#Initialized event in rules before %syshour% is set
+      [UX] Warn user for incomplete network IP settings
+      [#1895] Incorrect number bytes read I2C_read32_reg
+
+
+-------------------------------------------------
+Changes in release mega-20181011 (since mega-20181010)
+-------------------------------------------------
+
+Release date: Thu Oct 11 04:00:24 CEST 2018
+
+TD-er (5):
+      [C009] Reduce memory usage of FHEM HTTP delay queue
+      [Controller] Set default timeout to 300 msec (was 100 msec)
+      Make sure to load ExtraTaskSettings when needed
+      [Travis Doc] Remove building documentation by Travis
+      [WebLog] Disable weblog when it is not being read
+
+
+-------------------------------------------------
+Changes in release mega-20181010 (since mega-20181009)
+-------------------------------------------------
+
+Release date: Wed Oct 10 04:00:09 CEST 2018
+
+Plebs (1):
+      Update src/_P019_PCF8574.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181009 (since mega-20181008)
+-------------------------------------------------
+
+Release date: Tue Oct  9 04:00:18 CEST 2018
+
+TD-er (7):
+      [Docs] Add favicon to documentation
+      [Docs] Add Travis check for documentation and stop build for docs only
+      [Docs] Run Travic documentation check before compiling project
+      [Docs] Disable travis_terminate for now
+      [JSON] Replace \n and \r in text fields
+      [LWIP1.4] Move back to LWIP1.4
+      [StringConverter] Some optimisations to reduce memory allocation
+
+
+-------------------------------------------------
+Changes in release mega-20181008 (since mega-20181007)
+-------------------------------------------------
+
+Release date: Mon Oct  8 04:00:09 CEST 2018
+
+Gijs Noorlander (1):
+      Added link to ReadTheDocs
+
+Grovkillen (1):
+      [Sphinx] added extension "sphinx.ext.imgconverter"
+
+TD-er (3):
+      [Sphinx] Initial setup for Sphinx documentation
+      [Docs] First ESPEasy documentation (Controllers)
+      [Docs] Added some directory structure and template
+
+
+-------------------------------------------------
 Changes in release mega-20181007 (since mega-20181006)
 -------------------------------------------------
 

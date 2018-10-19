@@ -180,15 +180,18 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_036_controler"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("plugin_036_contrast"));
 
-        String argName;
-
+        String error;
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          argName = F("Plugin_036_template");
+          String argName = F("Plugin_036_template");
           argName += varNr + 1;
-          strncpy(P036_deviceTemplate[varNr], WebServer.arg(argName).c_str(), sizeof(P036_deviceTemplate[varNr]));
+          if (!safe_strncpy(P036_deviceTemplate[varNr], WebServer.arg(argName), P36_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
         }
-
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
 
         success = true;

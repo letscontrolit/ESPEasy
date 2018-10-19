@@ -79,7 +79,7 @@
 #define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
-#define DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID   0
+#define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   0
 
 #define DEFAULT_USE_NTP                         false   // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        ""              // NTP Server Hostname
@@ -230,7 +230,7 @@
 #define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
 // Timeout of the client in msec.
 #define CONTROLLER_CLIENTTIMEOUT_MAX 1000
-#define CONTROLLER_CLIENTTIMEOUT_DFLT 100
+#define CONTROLLER_CLIENTTIMEOUT_DFLT 300
 
 
 #define PLUGIN_INIT_ALL                     1
@@ -292,6 +292,7 @@
 #define NPLUGIN_NOT_FOUND                 255
 
 
+#define LOG_LEVEL_NONE                      0
 #define LOG_LEVEL_ERROR                     1
 #define LOG_LEVEL_INFO                      2
 #define LOG_LEVEL_DEBUG                     3
@@ -610,9 +611,6 @@ WiFiUDP portUDP;
 
 class TimingStats;
 
-#define LOADFILE_STATS  0
-#define LOOP_STATS      1
-
 /*********************************************************************************************\
  * CRCStruct
 \*********************************************************************************************/
@@ -680,6 +678,7 @@ struct SecurityStruct
   uint8_t       md5[16];
 } SecuritySettings;
 
+
 /*********************************************************************************************\
  * SettingsStruct
 \*********************************************************************************************/
@@ -699,6 +698,10 @@ struct SettingsStruct
     if (Latitude  < -90.0  || Latitude > 90.0) Latitude = 0.0;
     if (Longitude < -180.0 || Longitude > 180.0) Longitude = 0.0;
     if (VariousBits1 > (1 << 30)) VariousBits1 = 0;
+  }
+
+  bool networkSettingsEmpty() {
+    return (IP[0] == 0 && Gateway[0] == 0 && Subnet[0] == 0 && DNS[0] == 0);
   }
 
   void clearNetworkSettings() {
@@ -900,13 +903,30 @@ SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 
+
 /*********************************************************************************************\
- * ControllerSettingsStruct
+ *  Analyze SettingsStruct and report inconsistencies
+ *  Not a member function to be able to use the F-macro
+\*********************************************************************************************/
+bool SettingsCheck(String& error) {
+  error = "";
+  if (!Settings.networkSettingsEmpty()) {
+    if (Settings.IP[0] == 0 || Settings.Gateway[0] == 0 || Settings.Subnet[0] == 0 || Settings.DNS[0] == 0) {
+      error += F("Error: Either fill all IP settings fields or leave all empty");
+    }
+  }
+
+  return error.length() == 0;
+}
+
+/*********************************************************************************************\
+ * ControllerSettingsStruct definition
 \*********************************************************************************************/
 struct ControllerSettingsStruct
 {
   ControllerSettingsStruct() : UseDNS(false), Port(0),
-      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10), DeleteOldest(false), ClientTimeout(100) {
+      MinimalTimeBetweenMessages(100), MaxQueueDepth(10), MaxRetry(10),
+      DeleteOldest(false), ClientTimeout(100), MustCheckReply(false) {
     for (byte i = 0; i < 4; ++i) {
       IP[i] = 0;
     }
@@ -931,6 +951,7 @@ struct ControllerSettingsStruct
   unsigned int  MaxRetry;
   boolean       DeleteOldest; // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int  ClientTimeout;
+  boolean       MustCheckReply; // When set to false, a sent message is considered always successful.
 
   void validate() {
     if (Port > 65535) Port = 0;
@@ -938,8 +959,9 @@ struct ControllerSettingsStruct
       MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
     if (MaxQueueDepth > CONTROLLER_DELAY_QUEUE_DEPTH_MAX) MaxQueueDepth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
     if (MaxRetry > CONTROLLER_DELAY_QUEUE_RETRY_MAX) MaxRetry = CONTROLLER_DELAY_QUEUE_RETRY_MAX;
-    if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX)
+    if (ClientTimeout < 10 || ClientTimeout > CONTROLLER_CLIENTTIMEOUT_MAX) {
       ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
+    }
   }
 
   IPAddress getIP() const {
@@ -1042,6 +1064,11 @@ private:
 
 };
 
+typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
+#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct());\
+                                    ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
+
+
 
 /*********************************************************************************************\
  * NotificationSettingsStruct
@@ -1072,6 +1099,11 @@ struct NotificationSettingsStruct
   char          Pass[33];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
+
+typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
+#define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new NotificationSettingsStruct());\
+                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
+
 
 /*********************************************************************************************\
  * ExtraTaskSettingsStruct
@@ -1203,18 +1235,19 @@ struct EventStruct
 #define LOG_STRUCT_MESSAGE_SIZE 128
 #ifdef ESP32
   #define LOG_STRUCT_MESSAGE_LINES 30
+  #define LOG_BUFFER_EXPIRE         30000  // Time after which a buffered log item is considered expired.
 #else
   #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
     #define LOG_STRUCT_MESSAGE_LINES 10
   #else
     #define LOG_STRUCT_MESSAGE_LINES 15
   #endif
+  #define LOG_BUFFER_EXPIRE         5000  // Time after which a buffered log item is considered expired.
 #endif
 
 struct LogStruct {
-    LogStruct() : write_idx(0), read_idx(0) {
+    LogStruct() : write_idx(0), read_idx(0), lastReadTimeStamp(0) {
       for (int i = 0; i < LOG_STRUCT_MESSAGE_LINES; ++i) {
-        Message[i].reserve(LOG_STRUCT_MESSAGE_SIZE);
         timeStamp[i] = 0;
         log_level[i] = 0;
       }
@@ -1232,6 +1265,7 @@ struct LogStruct {
       if (linelength > LOG_STRUCT_MESSAGE_SIZE-1)
         linelength = LOG_STRUCT_MESSAGE_SIZE-1;
       Message[write_idx] = "";
+      Message[write_idx].reserve(linelength);
       for (unsigned i = 0; i < linelength; ++i) {
         Message[write_idx] += *(line + i);
       }
@@ -1240,6 +1274,7 @@ struct LogStruct {
     // Read the next item and append it to the given string.
     // Returns whether new lines are available.
     bool get(String& output, const String& lineEnd) {
+      lastReadTimeStamp = millis();
       if (!isEmpty()) {
         read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
         output += formatLine(read_idx, lineEnd);
@@ -1248,6 +1283,7 @@ struct LogStruct {
     }
 
     String get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp) {
+      lastReadTimeStamp = millis();
       logLinesAvailable = false;
       if (isEmpty()) {
         return "";
@@ -1261,29 +1297,13 @@ struct LogStruct {
       return output;
     }
 
-    bool get(String& output, const String& lineEnd, int line) {
-      int tmpread((write_idx + 1+line) % LOG_STRUCT_MESSAGE_LINES);
-      if (timeStamp[tmpread] != 0) {
-        output += formatLine(tmpread, lineEnd);
-      }
-      return !isEmpty();
-    }
-
-    bool getAll(String& output, const String& lineEnd) {
-      int tmpread((write_idx + 1) % LOG_STRUCT_MESSAGE_LINES);
-      bool someAdded = false;
-      while (tmpread != write_idx) {
-        if (timeStamp[tmpread] != 0) {
-          output += formatLine(tmpread, lineEnd);
-          someAdded = true;
-        }
-        tmpread = (tmpread + 1)% LOG_STRUCT_MESSAGE_LINES;
-      }
-      return someAdded;
-    }
-
     bool isEmpty() {
       return (write_idx == read_idx);
+    }
+
+    bool logActiveRead() {
+      clearExpiredEntries();
+      return timePassedSince(lastReadTimeStamp) < LOG_BUFFER_EXPIRE;
     }
 
   private:
@@ -1309,20 +1329,38 @@ struct LogStruct {
       return output;
     }
 
+    void clearExpiredEntries() {
+      if (isEmpty()) {
+        return;
+      }
+      if (timePassedSince(lastReadTimeStamp) > LOG_BUFFER_EXPIRE) {
+        // Clear the entire log.
+        // If web log is the only log active, it will not be checked again until it is read.
+        for (read_idx = 0; read_idx < LOG_STRUCT_MESSAGE_LINES; ++read_idx) {
+          Message[read_idx] = String(); // Free also the reserved memory.
+          timeStamp[read_idx] = 0;
+          log_level[read_idx] = 0;
+        }
+        read_idx = 0;
+        write_idx = 0;
+      }
+    }
 
     int write_idx;
     int read_idx;
     unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
+    unsigned long lastReadTimeStamp;
     byte log_level[LOG_STRUCT_MESSAGE_LINES];
     String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
 
 std::deque<char> serialLogBuffer;
-unsigned long last_serial_log_emptied = 0;
+unsigned long last_serial_log_read = 0;
 
 byte highest_active_log_level = 0;
 bool log_to_serial_disabled = false;
+bool log_to_serial_disabled_temporary = false;
 // Do this in a template to prevent casting to String when not needed.
 #define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 
@@ -1799,31 +1837,32 @@ unsigned long timediff_calls = 0;
 unsigned long timediff_cpu_cycles_total = 0;
 
 #define LOADFILE_STATS        0
-#define LOOP_STATS            1
-#define PLUGIN_CALL_50PS      2
-#define PLUGIN_CALL_10PS      3
-#define PLUGIN_CALL_10PSU     4
-#define PLUGIN_CALL_1PS       5
-#define SENSOR_SEND_TASK      6
-#define SEND_DATA_STATS       7
-#define COMPUTE_FORMULA_STATS 8
-#define PROC_SYS_TIMER        9
-#define SET_NEW_TIMER        10
-#define TIME_DIFF_COMPUTE    11
-#define MQTT_DELAY_QUEUE     12
-#define C001_DELAY_QUEUE     13
-#define C002_DELAY_QUEUE     14
-#define C003_DELAY_QUEUE     15
-#define C004_DELAY_QUEUE     16
-#define C005_DELAY_QUEUE     17
-#define C006_DELAY_QUEUE     18
-#define C007_DELAY_QUEUE     19
-#define C008_DELAY_QUEUE     20
-#define C009_DELAY_QUEUE     21
-#define C010_DELAY_QUEUE     22
-#define C011_DELAY_QUEUE     23
-#define C012_DELAY_QUEUE     24
-#define C013_DELAY_QUEUE     25
+#define SAVEFILE_STATS        1
+#define LOOP_STATS            2
+#define PLUGIN_CALL_50PS      3
+#define PLUGIN_CALL_10PS      4
+#define PLUGIN_CALL_10PSU     5
+#define PLUGIN_CALL_1PS       6
+#define SENSOR_SEND_TASK      7
+#define SEND_DATA_STATS       8
+#define COMPUTE_FORMULA_STATS 9
+#define PROC_SYS_TIMER       10
+#define SET_NEW_TIMER        11
+#define TIME_DIFF_COMPUTE    12
+#define MQTT_DELAY_QUEUE     13
+#define C001_DELAY_QUEUE     14
+#define C002_DELAY_QUEUE     15
+#define C003_DELAY_QUEUE     16
+#define C004_DELAY_QUEUE     17
+#define C005_DELAY_QUEUE     18
+#define C006_DELAY_QUEUE     19
+#define C007_DELAY_QUEUE     20
+#define C008_DELAY_QUEUE     21
+#define C009_DELAY_QUEUE     22
+#define C010_DELAY_QUEUE     23
+#define C011_DELAY_QUEUE     24
+#define C012_DELAY_QUEUE     25
+#define C013_DELAY_QUEUE     26
 
 
 
@@ -1832,13 +1871,14 @@ unsigned long timediff_cpu_cycles_total = 0;
 
 #define START_TIMER const unsigned statisticsTimerStart(micros());
 #define STOP_TIMER_TASK(T,F)  if (mustLogFunction(F)) pluginStats[T*32 + F].add(usecPassedSince(statisticsTimerStart));
-#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+//#define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 #define STOP_TIMER(L)       miscStats[L].add(usecPassedSince(statisticsTimerStart));
 
 
 String getMiscStatsName(int stat) {
     switch (stat) {
         case LOADFILE_STATS: return F("Load File");
+        case SAVEFILE_STATS: return F("Save File");
         case LOOP_STATS:     return F("Loop");
         case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s  ");
         case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s  ");

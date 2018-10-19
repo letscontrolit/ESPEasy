@@ -147,19 +147,6 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
   tm.Day = time + 1;     // day of month
 }
 
-void setTime(unsigned long t) {
-  sysTime = (uint32_t)t;
-  applyTimeZone(t);
-  nextSyncTime = (uint32_t)t + syncInterval;
-  prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
-  if (Settings.UseRules)
-  {
-		String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
-    rulesProcessing(event);
-  }
-	statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
-}
-
 uint32_t getUnixTime() {
   return sysTime;
 }
@@ -221,13 +208,22 @@ unsigned long now() {
     unsigned long  t = getNtpTime();
     if (t != 0) {
       timeSynced = true;
-      setTime(t);
+			sysTime = (uint32_t)t;
+			applyTimeZone(t);
+			nextSyncTime = (uint32_t)t + syncInterval;
+			prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
     }
   }
   uint32_t localSystime = toLocal(sysTime);
   breakTime(localSystime, tm);
   if (timeSynced) {
     calcSunRiseAndSet();
+		if (Settings.UseRules)
+		{
+      String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
+      rulesProcessing(event);
+		}
+    statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
   }
   return (unsigned long)localSystime;
 }

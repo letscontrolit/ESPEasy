@@ -37,10 +37,10 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C012_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
@@ -73,16 +73,15 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
     if (element.checkDone(true))
       return true;
   }
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    return false;
+  }
   return element.checkDone(Blynk_get(element.txt[element.valuesSent], element.controller_idx));
 }
 
 boolean Blynk_get(const String& command, byte controllerIndex, float *data )
 {
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    return false;
-  }
-
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controllerIndex, ControllerSettings);
 
   if ((SecuritySettings.ControllerPassword[controllerIndex][0] == 0)) {
@@ -104,58 +103,58 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
             ControllerSettings.getHost().c_str());
   addLog(LOG_LEVEL_DEBUG, request);
   client.print(request);
+  boolean success = !ControllerSettings.MustCheckReply;
+  if (ControllerSettings.MustCheckReply || data) {
+    unsigned long timer = millis() + 200;
+    while (!client.available() && !timeOutReached(timer))
+      yield();
 
-  unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
-    yield();
+    char log[80] = {0};
 
-  boolean success = false;
-  char log[80] = {0};
-
-  // Read all the lines of the reply from server and log them
-  while (client_available(client)) {
-    String line;
-    safeReadStringUntil(client, line, '\n');
-    addLog(LOG_LEVEL_DEBUG_MORE, line);
-    // success ?
-    if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
-      strcpy_P(log, PSTR("HTTP : Success"));
-      success = true;
-    }
-    else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
-      strcpy_P(log, PSTR("HTTP : Unauthorized"));
-    }
-    else if (line.substring(0, 25) == F("HTTP/1.1 401 Unauthorized")) {
-      strcpy_P(log, PSTR("HTTP : Unauthorized"));
-    }
-    addLog(LOG_LEVEL_DEBUG, log);
-
-    // data only
-    if (data && line.startsWith("["))
-    {
-      String strValue = line;
-      byte pos = strValue.indexOf('"',2);
-      strValue = strValue.substring(2, pos);
-      strValue.trim();
-      float value = strValue.toFloat();
-      *data = value;
-      success = true;
-
-      char value_char[5] = {0};
-      strValue.toCharArray(value_char, 5);
-      sprintf_P(log, PSTR("Blynk get - %s => %s"),command.c_str(), value_char   );
+    // Read all the lines of the reply from server and log them
+    while (client_available(client)) {
+      String line;
+      safeReadStringUntil(client, line, '\n');
+      addLog(LOG_LEVEL_DEBUG_MORE, line);
+      // success ?
+      if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
+        strcpy_P(log, PSTR("HTTP : Success"));
+        success = true;
+      }
+      else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
+        strcpy_P(log, PSTR("HTTP : Unauthorized"));
+      }
+      else if (line.substring(0, 25) == F("HTTP/1.1 401 Unauthorized")) {
+        strcpy_P(log, PSTR("HTTP : Unauthorized"));
+      }
       addLog(LOG_LEVEL_DEBUG, log);
+
+      // data only
+      if (data && line.startsWith("["))
+      {
+        String strValue = line;
+        byte pos = strValue.indexOf('"',2);
+        strValue = strValue.substring(2, pos);
+        strValue.trim();
+        float value = strValue.toFloat();
+        *data = value;
+        success = true;
+
+        char value_char[5] = {0};
+        strValue.toCharArray(value_char, 5);
+        sprintf_P(log, PSTR("Blynk get - %s => %s"),command.c_str(), value_char   );
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+      yield();
     }
-    yield();
   }
-  strcpy_P(log, PSTR("HTTP : closing connection (012)"));
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (012)"));
 
   client.flush();
   client.stop();
 
   // important - backgroundtasks - free mem
-  timer = millis() + Settings.MessageDelay;
+  unsigned long timer = millis() + Settings.MessageDelay;
   while (!timeOutReached(timer))
               backgroundtasks();
 

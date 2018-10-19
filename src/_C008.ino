@@ -34,7 +34,7 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C008_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
@@ -52,10 +52,10 @@ boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C008_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
@@ -97,7 +97,7 @@ bool do_process_c008_delay_queue(int controller_number, const C008_queue_element
     return false;
 
   String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
-  return element.checkDone(send_via_http(controller_number, client, request));
+  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
 }
 
 #endif

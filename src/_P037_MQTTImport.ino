@@ -394,7 +394,7 @@ boolean MQTTConnect_037()
     Plugin_037_update_connect_status();
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(enabledMqttController, ControllerSettings);
   if (ControllerSettings.UseDNS) {
     MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
