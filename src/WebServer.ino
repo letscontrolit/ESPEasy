@@ -5648,6 +5648,15 @@ void handle_sysvars() {
   addSysVar_html(F("%vcc%"));
 #endif
 
+  addTableSeparator(F("System status"), 3, 3);
+
+  addSysVar_html(F("%iswifi%"));
+  addSysVar_html(F("%isntp%"));
+  addSysVar_html(F("%ismqtt%"));
+#ifdef USES_P037
+  addSysVar_html(F("%ismqttimp%"));
+#endif // USES_P037
+
   addTableSeparator(F("Time"), 3, 3);
   addSysVar_html(F("%lcltime%"));
   addSysVar_html(F("%lcltime_am%"));

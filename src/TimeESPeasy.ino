@@ -220,11 +220,10 @@ unsigned long now() {
     calcSunRiseAndSet();
 		if (Settings.UseRules)
 		{
-			static bool firstUpdate = true;
-			String event = firstUpdate ? F("Time#Initialized") : F("Time#Set");
-			firstUpdate = false;
-			rulesProcessing(event);
+      String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
+      rulesProcessing(event);
 		}
+    statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
   }
   return (unsigned long)localSystime;
 }
