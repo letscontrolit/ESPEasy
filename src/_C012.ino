@@ -106,8 +106,8 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   boolean success = !ControllerSettings.MustCheckReply;
   if (ControllerSettings.MustCheckReply || data) {
     unsigned long timer = millis() + 200;
-    while (!client.available() && !timeOutReached(timer))
-      yield();
+    while (!client_available(client) && !timeOutReached(timer))
+      delay(1);
 
     char log[80] = {0};
 
