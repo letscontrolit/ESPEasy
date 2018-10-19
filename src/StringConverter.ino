@@ -592,6 +592,13 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SMART_REPL(F("%unixtime%"), String(getUnixTime()))
   SMART_REPL_T(F("%sunset"), replSunSetTimeString)
   SMART_REPL_T(F("%sunrise"), replSunRiseTimeString)
+
+  const int v_index = s.indexOf("%v");
+  if (v_index != -1 && isDigit(s[v_index+2])) {
+    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
+      SMART_REPL("%v"+toString(i+1,0)+'%', String(customFloatVar[i]))
+    }
+  }
 }
 
 String getReplacementString(const String& format, String& s) {
