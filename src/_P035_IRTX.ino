@@ -205,7 +205,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           //  unsigned long IrSecondCode=0UL;
             char ircodestr[100];
             if (GetArgv(command, TmpStr1,100, 2)) IrType = TmpStr1;
-                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoul(TmpStr1, NULL, 16);
+                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoull(TmpStr1, NULL, 16);
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
                                                         }
             //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
