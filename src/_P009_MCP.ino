@@ -109,6 +109,24 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_REQUEST:
+      {
+        //parseString(string, 1) = device
+        //parseString(string, 2) = command
+        //parseString(string, 3) = gpio number
+
+        // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
+        if (string.length()>=16 && string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
+        {
+          int par1;
+          if (validIntFromString(parseString(string, 3), par1)) {
+            string = Plugin_009_Read(par1);
+          }
+          success = true;
+        }
+        break;
+      }
+
     case PLUGIN_WRITE:
       {
         String log = "";
