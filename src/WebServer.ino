@@ -3682,6 +3682,7 @@ void handle_control() {
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
+           command.equalsIgnoreCase(F("let")) ||
            command.equalsIgnoreCase(F("rules"))) {
     addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
@@ -5681,6 +5682,11 @@ void handle_sysvars() {
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
   addSysVar_html(F("%sunrise+10m%"));
+
+  addTableSeparator(F("Custom Variables"), 3, 3);
+  for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
+    addSysVar_html("%v"+toString(i+1,0)+'%');
+  }
 
   addTableSeparator(F("Special Characters"), 3, 2);
   addTableSeparator(F("Degree"), 3, 3);

@@ -339,6 +339,7 @@
 #define RULES_BUFFER_SIZE                  64
 #define NAME_FORMULA_LENGTH_MAX            40
 #define RULES_IF_MAX_NESTING_LEVEL          4
+#define CUSTOM_VARS_MAX                    16
 
 #define UDP_PACKETSIZE_MAX               2048
 
@@ -678,6 +679,15 @@ struct SecurityStruct
   uint8_t       md5[16];
 } SecuritySettings;
 
+
+/*********************************************************************************************\
+ * Custom Variables for usage in rules and http.
+ * Syntax: %vX%
+ * usage:
+ * let,1,10
+ * if %v1%=10 do ...
+\*********************************************************************************************/
+float         customFloatVar[CUSTOM_VARS_MAX];
 
 /*********************************************************************************************\
  * SettingsStruct
