@@ -401,26 +401,30 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
 
 	do {
 		//read character
-		c = input.read();
-		if (c >= 0) {
-			//found terminator, we're ok
-			if (c == terminator) {
-				return(true);
-			}
-			//found character, add to string
-			else{
-				str += char(c);
-				//string at max size?
-				if (str.length() >= maxSize) {
-					addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
-					return(false);
-				}
-			}
-		}
-    // We must run the backgroundtasks every now and then.
-    if (timeOutReached(backgroundtasks_timer)) {
-      backgroundtasks_timer += 10;
-      backgroundtasks();
+    if (input.available()) {
+  		c = input.read();
+  		if (c >= 0) {
+  			//found terminator, we're ok
+  			if (c == terminator) {
+  				return(true);
+  			}
+  			//found character, add to string
+  			else{
+  				str += char(c);
+  				//string at max size?
+  				if (str.length() >= maxSize) {
+  					addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
+  					return(false);
+  				}
+  			}
+  		}
+      // We must run the backgroundtasks every now and then.
+      if (timeOutReached(backgroundtasks_timer)) {
+        backgroundtasks_timer += 10;
+        backgroundtasks();
+      } else {
+        yield();
+      }
     } else {
       yield();
     }
@@ -620,6 +624,11 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 // See: https://github.com/esp8266/Arduino/pull/5113
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client) {
+  #ifdef ESP32
+  yield();
+  #else
+  esp_yield(); // Could be called from events
+  #endif
   return client.available() || client.connected();
 }
 
@@ -630,7 +639,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 
   if (must_check_reply) {
     unsigned long timer = millis() + 200;
-    while (!client.available()) {
+    while (!client_available(client)) {
       if (timeOutReached(timer)) return false;
       delay(1);
     }

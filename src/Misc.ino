@@ -445,8 +445,7 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  TmpStr1[0] = 0;
+  char *TmpStr1 = new char[INPUT_COMMAND_SIZE]();
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
@@ -458,6 +457,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
   if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1); }
   if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1); }
   if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1); }
+  delete[] TmpStr1;
 }
 
 /********************************************************************************************\
@@ -568,6 +568,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc) {
 
 boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
+  memset(argv, 0, argv_size);
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
@@ -2251,6 +2252,7 @@ for (byte x=0; x < RULESETS_MAX; x++){
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  if (!Settings.UseRules) return;
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -2290,6 +2292,7 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 String rulesProcessingFile(const String& fileName, String& event)
 {
+  if (!Settings.UseRules) return "";
   checkRAM(F("rulesProcessingFile"));
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
     Serial.print(F("RuleDebug Processing:"));
@@ -2585,7 +2588,7 @@ void processMatchedRule(
       {
         String tmpString = event.substring(equalsPos + 1);
 
-        char tmpParam[INPUT_COMMAND_SIZE];
+        char* tmpParam = new char[INPUT_COMMAND_SIZE];
         tmpParam[0] = 0;
 
         if (GetArgv(tmpString.c_str(),tmpParam,1)) {
@@ -2595,6 +2598,7 @@ void processMatchedRule(
         if (GetArgv(tmpString.c_str(),tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
         if (GetArgv(tmpString.c_str(),tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
         if (GetArgv(tmpString.c_str(),tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+        delete[] tmpParam;
       }
     }
 
@@ -2896,6 +2900,7 @@ boolean conditionMatch(const String& check)
   \*********************************************************************************************/
 void rulesTimers()
 {
+  if (!Settings.UseRules) return;
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
   {
     if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
@@ -2918,6 +2923,7 @@ void rulesTimers()
 
 void createRuleEvents(byte TaskIndex)
 {
+  if (!Settings.UseRules) return;
   LoadTaskSettings(TaskIndex);
   byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
