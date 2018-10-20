@@ -41,7 +41,6 @@ long cf_frequency = 0;
 uint8_t serial_in_buffer[32];
 uint8_t serial_in_byte_counter = 0;
 uint8_t serial_in_byte = 0;
-uint8_t serial_in_byte_old = 0;
 float energy_voltage = 0;         // 123.1 V
 float energy_current = 0;         // 123.123 A
 float energy_power = 0;           // 123.1 W
@@ -172,7 +171,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
             if (cse_receive_flag) {
               serial_in_buffer[serial_in_byte_counter++] = serial_in_byte;
-              if (24 >= serial_in_byte_counter) {
+              if (24 == serial_in_byte_counter) {
                 addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: packet received"));
                 CseReceived(event);
                 cse_receive_flag = 0;
@@ -185,19 +184,16 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 //                break;
               }
             } else {
-              if (0x55 == serial_in_byte_old && 0x5A == serial_in_byte) { // 0x55,0x5A - Packet header 1+2
+              if (0x5A == serial_in_byte) { // 0x5A - Packet header 2
                 cse_receive_flag = 1;
-                serial_in_buffer[0] = serial_in_byte_old; // store packet header 1
-                serial_in_byte_counter = 1;
                 addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: Header received"));
               } else {
                 serial_in_byte_counter = 0;
               }
               serial_in_buffer[serial_in_byte_counter++] = serial_in_byte;
             }
-
-            serial_in_byte_old = serial_in_byte;
             serial_in_byte = 0;           // Discard
+
 
             //          String log = F("Variable: Tag: ");
             //          log += key;
@@ -214,7 +210,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 void CseReceived(struct EventStruct *event)
 {
   uint8_t header = serial_in_buffer[0];
-  if ((header & 0xF0) == 0xF0) {
+  if ((header & 0xFC) == 0xFC) {
     addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
     return;
   }
