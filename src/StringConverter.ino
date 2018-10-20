@@ -560,6 +560,8 @@ void parseSystemVariables(String& s, boolean useURLencode)
     SMART_REPL(F("%systm_hm_am%"), getTimeString_ampm(':', false))
     SMART_REPL(F("%systime%"), getTimeString(':'))
     SMART_REPL(F("%systime_am%"), getTimeString_ampm(':'))
+    SMART_REPL(F("%sysbuild_date%"), String(CRCValues.compileDate))
+    SMART_REPL(F("%sysbuild_time%"), String(CRCValues.compileTime))
     repl(F("%sysname%"), Settings.Name, s, useURLencode);
 
     // valueString is being used by the macro.

@@ -5664,6 +5664,8 @@ void handle_sysvars() {
   addSysVar_html(F("%systm_hm_am%"));
   addSysVar_html(F("%systime%"));
   addSysVar_html(F("%systime_am%"));
+  addSysVar_html(F("%sysbuild_date%"));
+  addSysVar_html(F("%sysbuild_time%"));
   addTableSeparator(F("System"), 3, 3);
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
