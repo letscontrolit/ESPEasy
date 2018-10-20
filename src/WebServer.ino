@@ -836,13 +836,13 @@ void handle_root() {
     TXBuffer += F("<form>");
     TXBuffer += F("<table class='normal'><TH style='width:150px;' align='left'>System Info<TH align='left'>Value");
 
-    html_TR_TD(); TXBuffer += F("Unit:<TD>");
+    addRowLabel(F("Unit"));
     TXBuffer += String(Settings.Unit);
 
-    html_TR_TD(); TXBuffer += F("GIT version:<TD>");
+    addRowLabel(F("GIT version"));
     TXBuffer += BUILD_GIT;
 
-    html_TR_TD(); TXBuffer += F("Local Time:<TD>");
+    addRowLabel(F("Local Time"));
     if (Settings.UseNTP)
     {
       TXBuffer += getDateTimeString('-', ':', ' ');
@@ -850,7 +850,7 @@ void handle_root() {
     else
       TXBuffer += F("<font color='red'>NTP disabled</font>");
 
-    html_TR_TD(); TXBuffer += F("Uptime:<TD>");
+    addRowLabel(F("Uptime"));
     char strUpTime[40];
     int minutes = wdcounter / 2;
     int days = minutes / 1440;
@@ -860,7 +860,7 @@ void handle_root() {
     sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
     TXBuffer += strUpTime;
 
-    html_TR_TD(); TXBuffer += F("Load:<TD>");
+    addRowLabel(F("Load"));
     if (wdcounter > 0)
     {
       TXBuffer += String(getCPUload());
@@ -869,14 +869,14 @@ void handle_root() {
       TXBuffer += F(")");
     }
 
-    html_TR_TD(); TXBuffer += F("Free Mem:<TD>");
+    addRowLabel(F("Free Mem"));
     TXBuffer += String(freeMem);
     TXBuffer += F(" (");
     TXBuffer += String(lowestRAM);
     TXBuffer += F(" - ");
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += F(")");
-    html_TR_TD(); TXBuffer += F("Free Stack:<TD>");
+    addRowLabel(F("Free Stack"));
     TXBuffer += String(getCurrentFreeStack());
     TXBuffer += F(" (");
     TXBuffer += String(lowestFreeStack);
@@ -884,10 +884,10 @@ void handle_root() {
     TXBuffer += String(lowestFreeStackfunction);
     TXBuffer += F(")");
 
-    html_TR_TD(); TXBuffer += F("IP:<TD>");
+    addRowLabel(F("IP"));
     TXBuffer += formatIP(ip);
 
-    html_TR_TD(); TXBuffer += F("Wifi RSSI:<TD>");
+    addRowLabel(F("Wifi RSSI"));
     if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
@@ -1317,9 +1317,8 @@ void handle_controllers() {
   else
   {
     TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Controller Settings<TH>");
-    html_TR_TD(); TXBuffer += F("Protocol:");
+    addRowLabel(F("Protocol"));
     byte choice = Settings.Protocol[controllerindex];
-    html_TD();
     addSelector_Head(F("protocol"), true);
     addSelector_Item(F("- Standalone -"), 0, false, false, F(""));
     for (byte x = 0; x <= protocolCount; x++)
@@ -1469,67 +1468,6 @@ void handle_controllers() {
 }
 
 //********************************************************************************
-// HTML string re-use to keep the executable smaller
-// Flash strings are not checked for duplication.
-//********************************************************************************
-
-void html_TR_TD_highlight() {
-  TXBuffer += F("<TR class=\"highlight\">");
-  html_TD();
-}
-
-void html_TR_TD() {
-  TXBuffer += F("<TR>");
-  html_TD();
-}
-
-void html_BR() {
-  TXBuffer += F("<BR>");
-}
-
-void html_TR_TD_height(int height) {
-  TXBuffer += F("<TR><TD HEIGHT=\"");
-  TXBuffer += height;
-  TXBuffer += F("\">");
-}
-
-void html_TD() {
-  html_TD(1);
-}
-
-void html_TD(int td_cnt) {
-  for (int i = 0; i < td_cnt; ++i) {
-    TXBuffer += F("<TD>");
-  }
-}
-
-static int copyTextCounter = 0;
-
-void html_reset_copyTextCounter() {
-  copyTextCounter = 0;
-}
-
-void html_copyText_TD() {
-  ++copyTextCounter;
-  TXBuffer += F("<TD id='copyText_");
-  TXBuffer += copyTextCounter;
-  TXBuffer += F("'>");
-}
-
-void html_TR(const String& label) {
-  html_TR_TD();
-  TXBuffer += label;
-  html_TD();
-}
-
-void html_copyText_TR(const String& label) {
-  TXBuffer += F("<TR>");
-  html_copyText_TD();
-  TXBuffer += label;
-  html_copyText_TD();
-}
-
-//********************************************************************************
 // Web Interface notifcations page
 //********************************************************************************
 void handle_notifications() {
@@ -1637,9 +1575,8 @@ void handle_notifications() {
   else
   {
     TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Notification Settings<TH>");
-    html_TR_TD(); TXBuffer += F("Notification:");
+    addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
-    html_TD();
     addSelector_Head(F("notification"), true);
     addSelector_Item(F("- None -"), 0, false, false, F(""));
     for (byte x = 0; x <= notificationCount; x++)
@@ -1681,18 +1618,19 @@ void handle_notifications() {
           addFormTextBox(F("User"), F("user"), NotificationSettings.User, sizeof(NotificationSettings.User)-1);
           addFormTextBox(F("Pass"), F("pass"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass)-1);
 
-          html_TR_TD(); TXBuffer += F("Body:<TD><textarea name='body' rows='20' size=512 wrap='off'>");
+          addRowLabel(F("Body"));
+          TXBuffer += F("<textarea name='body' rows='20' size=512 wrap='off'>");
           TXBuffer += NotificationSettings.Body;
           TXBuffer += F("</textarea>");
         }
 
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
         {
-          html_TR_TD(); TXBuffer += F("1st GPIO:<TD>");
+          addRowLabel(F("1st GPIO"));
           addPinSelect(false, "pin1", NotificationSettings.Pin1);
         }
 
-        html_TR_TD(); TXBuffer += F("Enabled:<TD>");
+        addRowLabel(F("Enabled"));
         addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
 
         TempEvent.NotificationIndex = notificationindex;
@@ -2299,7 +2237,7 @@ void handle_devices() {
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
-              html_TR_TD(); TXBuffer += F("IDX:<TD>");
+              addRowLabel(F("IDX"));
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
               addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
@@ -2765,7 +2703,18 @@ void addRowLabel(const String& label)
 {
   html_TR_TD();
   TXBuffer += label;
-  TXBuffer += F(":<TD>");
+  TXBuffer += ':';
+  html_TD();
+}
+
+// Add a row label and mark it with copy markers to copy it to clipboard.
+void addRowLabel_copy(const String& label) {
+  TXBuffer += F("<TR>");
+  html_copyText_TD();
+  TXBuffer += label;
+  TXBuffer += ':';
+  html_copyText_marker();
+  html_copyText_TD();
 }
 
 void addButton(const String &url, const String &label)
@@ -2814,6 +2763,9 @@ void addCopyButton(const String &value, const String &delimiter, const String &n
   //Fix HTML
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
+  TXBuffer += " (";
+  html_copyText_marker();
+  TXBuffer += ')';
   TXBuffer += F("</button>");
 }
 
@@ -3046,6 +2998,59 @@ void addEnabled(boolean enabled)
     TXBuffer += F("<span class='enabled off'>&#10060;</span>");
 }
 
+
+//********************************************************************************
+// HTML string re-use to keep the executable smaller
+// Flash strings are not checked for duplication.
+//********************************************************************************
+
+void html_TR_TD_highlight() {
+  TXBuffer += F("<TR class=\"highlight\">");
+  html_TD();
+}
+
+void html_TR_TD() {
+  TXBuffer += F("<TR>");
+  html_TD();
+}
+
+void html_BR() {
+  TXBuffer += F("<BR>");
+}
+
+void html_TR_TD_height(int height) {
+  TXBuffer += F("<TR><TD HEIGHT=\"");
+  TXBuffer += height;
+  TXBuffer += F("\">");
+}
+
+void html_TD() {
+  html_TD(1);
+}
+
+void html_TD(int td_cnt) {
+  for (int i = 0; i < td_cnt; ++i) {
+    TXBuffer += F("<TD>");
+  }
+}
+
+static int copyTextCounter = 0;
+
+void html_reset_copyTextCounter() {
+  copyTextCounter = 0;
+}
+
+void html_copyText_TD() {
+  ++copyTextCounter;
+  TXBuffer += F("<TD id='copyText_");
+  TXBuffer += copyTextCounter;
+  TXBuffer += F("'>");
+}
+
+// Add some recognizable token to show which parts will be copied.
+void html_copyText_marker() {
+  TXBuffer += F("&#x022C4;"); //   &diam; &diamond; &Diamond; &#x022C4; &#8900;
+}
 
 //********************************************************************************
 // Add a task select dropdown list
@@ -5237,17 +5242,17 @@ void handle_sysinfo() {
 
    TXBuffer += githublogo;
 
-   html_TR_TD(); TXBuffer += F("Unit<TD>");
+   addRowLabel(F("Unit"));
    TXBuffer += Settings.Unit;
 
   if (Settings.UseNTP)
   {
 
-     html_TR_TD(); TXBuffer += F("Local Time<TD>");
+     addRowLabel(F("Local Time"));
      TXBuffer += getDateTimeString('-', ':', ' ');
   }
 
-   html_TR_TD(); TXBuffer += F("Uptime<TD>");
+   addRowLabel(F("Uptime"));
   char strUpTime[40];
   int minutes = wdcounter / 2;
   int days = minutes / 1440;
@@ -5257,7 +5262,7 @@ void handle_sysinfo() {
   sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
    TXBuffer += strUpTime;
 
-   html_TR_TD(); TXBuffer += F("Load<TD>");
+   addRowLabel(F("Load"));
   if (wdcounter > 0)
   {
      TXBuffer += getCPUload();
@@ -5266,14 +5271,14 @@ void handle_sysinfo() {
      TXBuffer += F(")");
   }
 
-   html_TR_TD(); TXBuffer += F("Free Mem<TD>");
+   addRowLabel(F("Free Mem"));
    TXBuffer += freeMem;
    TXBuffer += F(" (");
    TXBuffer += lowestRAM;
    TXBuffer += F(" - ");
    TXBuffer += lowestRAMfunction;
    TXBuffer += F(")");
-   html_TR_TD(); TXBuffer += F("Free Stack<TD>");
+   addRowLabel(F("Free Stack"));
    TXBuffer += getCurrentFreeStack();
    TXBuffer += F(" (");
    TXBuffer += lowestFreeStack;
@@ -5281,19 +5286,19 @@ void handle_sysinfo() {
    TXBuffer += lowestFreeStackfunction;
    TXBuffer += F(")");
 
-   html_TR_TD(); TXBuffer += F("Boot<TD>");
+   addRowLabel(F("Boot"));
    TXBuffer += getLastBootCauseString();
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
-   html_TR_TD(); TXBuffer += F("Reset Reason<TD>");
+   addRowLabel(F("Reset Reason"));
    TXBuffer += getResetReasonString();
 
    addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
-     html_TR_TD(); TXBuffer += F("Wifi<TD>");
+     addRowLabel(F("Wifi"));
     #if defined(ESP8266)
       byte PHYmode = wifi_get_phy_mode();
     #endif
@@ -5316,32 +5321,32 @@ void handle_sysinfo() {
      TXBuffer += WiFi.RSSI();
      TXBuffer += F(" dB)");
   }
-  html_TR_TD(); TXBuffer += F("IP config<TD>");
+  addRowLabel(F("IP config"));
   TXBuffer += useStaticIP() ? F("Static") : F("DHCP");
 
-   html_TR_TD(); TXBuffer += F("IP / subnet<TD>");
+   addRowLabel(F("IP / subnet"));
    TXBuffer += formatIP(WiFi.localIP());
    TXBuffer += F(" / ");
    TXBuffer += formatIP(WiFi.subnetMask());
 
-   html_TR_TD(); TXBuffer += F("GW<TD>");
+   addRowLabel(F("GW"));
    TXBuffer += formatIP(WiFi.gatewayIP());
 
   {
-    html_TR_TD(); TXBuffer += F("Client IP<TD>");
+    addRowLabel(F("Client IP"));
     WiFiClient client(WebServer.client());
     TXBuffer += formatIP(client.remoteIP());
   }
 
-  html_TR_TD(); TXBuffer += F("DNS<TD>");
+  addRowLabel(F("DNS"));
   TXBuffer += formatIP(WiFi.dnsIP(0));
   TXBuffer += F(" / ");
   TXBuffer += formatIP(WiFi.dnsIP(1));
 
-  html_TR_TD(); TXBuffer += F("Allowed IP Range<TD>");
+  addRowLabel(F("Allowed IP Range"));
   TXBuffer += describeAllowedIPrange();
 
-  html_TR_TD(); TXBuffer += F("STA MAC<TD>");
+  addRowLabel(F("STA MAC"));
 
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
@@ -5349,73 +5354,73 @@ void handle_sysinfo() {
   formatMAC(macread, macaddress);
   TXBuffer += macaddress;
 
-  html_TR_TD(); TXBuffer += F("AP MAC<TD>");
+  addRowLabel(F("AP MAC"));
   macread = WiFi.softAPmacAddress(mac);
   formatMAC(macread, macaddress);
   TXBuffer += macaddress;
 
-  html_TR_TD(); TXBuffer += F("SSID<TD>");
+  addRowLabel(F("SSID"));
   TXBuffer += WiFi.SSID();
   TXBuffer += F(" (");
   TXBuffer += WiFi.BSSIDstr();
   TXBuffer += F(")");
 
-  html_TR_TD(); TXBuffer += F("Channel<TD>");
+  addRowLabel(F("Channel"));
   TXBuffer += WiFi.channel();
 
-  html_TR_TD(); TXBuffer += F("Connected<TD>");
+  addRowLabel(F("Connected"));
   TXBuffer += format_msec_duration(timeDiff(lastConnectMoment, millis()));
 
-  html_TR_TD(); TXBuffer += F("Last Disconnect Reason<TD>");
+  addRowLabel(F("Last Disconnect Reason"));
   TXBuffer += getLastDisconnectReason();
 
-  html_TR_TD(); TXBuffer += F("Number reconnects<TD>");
+  addRowLabel(F("Number reconnects"));
   TXBuffer += wifi_reconnects;
 
   addTableSeparator(F("Firmware"), 2, 3);
 
-  html_copyText_TR(F("Build"));
+  addRowLabel_copy(F("Build"));
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
 
-  html_copyText_TR(F("Libraries"));
+  addRowLabel_copy(F("Libraries"));
   TXBuffer += getSystemLibraryString();
 
-  html_copyText_TR(F("GIT version"));
+  addRowLabel_copy(F("GIT version"));
   TXBuffer += BUILD_GIT;
 
-  html_copyText_TR(F("Plugins"));
+  addRowLabel_copy(F("Plugins"));
   TXBuffer += deviceCount + 1;
   TXBuffer += getPluginDescriptionString();
 
-  html_TR_TD(); TXBuffer += F("Build Md5<TD>");
+  addRowLabel(F("Build Md5"));
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
 
-   html_TR_TD(); TXBuffer += F("Md5 check<TD>");
+   addRowLabel(F("Md5 check"));
   if (! CRCValues.checkPassed())
      TXBuffer += F("<font color = 'red'>fail !</font>");
   else  TXBuffer += F("passed.");
 
-  html_copyText_TR(F("Build time"));
+  addRowLabel_copy(F("Build time"));
   TXBuffer += String(CRCValues.compileDate);
   TXBuffer += " ";
   TXBuffer += String(CRCValues.compileTime);
 
-  html_copyText_TR(F("Binary filename"));
+  addRowLabel_copy(F("Binary filename"));
   TXBuffer += String(CRCValues.binaryFilename);
 
   addTableSeparator(F("System Status"), 2, 3);
   {
     // Actual Loglevel
-    html_TR_TD(); TXBuffer += F("Syslog Log Level:<TD>");
+    addRowLabel(F("Syslog Log Level"));
     TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
-    html_TR_TD(); TXBuffer += F("Serial Log Level:<TD>");
+    addRowLabel(F("Serial Log Level"));
     TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
-    html_TR_TD(); TXBuffer += F("Web Log Level:<TD>");
+    addRowLabel(F("Web Log Level"));
     TXBuffer += getLogLevelDisplayString(getWebLogLevel());
     #ifdef FEATURE_SD
-    html_TR_TD(); TXBuffer += F("SD Log Level:<TD>");
+    addRowLabel(F("SD Log Level"));
     TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
     #endif
   }
@@ -5423,7 +5428,7 @@ void handle_sysinfo() {
 
    addTableSeparator(F("ESP board"), 2, 3);
 
-   html_TR_TD(); TXBuffer += F("ESP Chip ID<TD>");
+   addRowLabel(F("ESP Chip ID"));
   #if defined(ESP8266)
      TXBuffer += ESP.getChipId();
      TXBuffer += F(" (0x");
@@ -5432,7 +5437,7 @@ void handle_sysinfo() {
      TXBuffer += espChipId;
      TXBuffer += F(")");
 
-     html_TR_TD(); TXBuffer += F("ESP Chip Freq:<TD>");
+     addRowLabel(F("ESP Chip Freq"));
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
@@ -5449,17 +5454,17 @@ void handle_sysinfo() {
      TXBuffer += espChipIdS1;
      TXBuffer += F(")");
 
-     html_TR_TD(); TXBuffer += F("ESP Chip Freq:<TD>");
+     addRowLabel(F("ESP Chip Freq"));
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
-  html_TR_TD(); TXBuffer += F("ESP Board Name:<TD>");
+  addRowLabel(F("ESP Board Name"));
   TXBuffer += ARDUINO_BOARD;
 
 
    addTableSeparator(F("Storage"), 2, 3);
 
-   html_TR_TD(); TXBuffer += F("Flash Chip ID<TD>");
+   addRowLabel(F("Flash Chip ID"));
   #if defined(ESP8266)
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
@@ -5473,22 +5478,22 @@ void handle_sysinfo() {
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();
 
-   html_TR_TD(); TXBuffer += F("Flash Chip Real Size:<TD>");
+   addRowLabel(F("Flash Chip Real Size"));
    TXBuffer += realSize / 1024;
    TXBuffer += F(" kB");
 
-   html_TR_TD(); TXBuffer += F("Flash IDE Size:<TD>");
+   addRowLabel(F("Flash IDE Size"));
    TXBuffer += ideSize / 1024;
    TXBuffer += F(" kB");
 
   // Please check what is supported for the ESP32
   #if defined(ESP8266)
-     html_TR_TD(); TXBuffer += F("Flash IDE speed:<TD>");
+     addRowLabel(F("Flash IDE speed"));
      TXBuffer += ESP.getFlashChipSpeed() / 1000000;
      TXBuffer += F(" MHz");
 
     FlashMode_t ideMode = ESP.getFlashChipMode();
-     html_TR_TD(); TXBuffer += F("Flash IDE mode:<TD>");
+     addRowLabel(F("Flash IDE mode"));
     switch (ideMode) {
       case FM_QIO:   TXBuffer += F("QIO");  break;
       case FM_QOUT:  TXBuffer += F("QOUT"); break;
@@ -5499,13 +5504,13 @@ void handle_sysinfo() {
     }
   #endif
 
-   html_TR_TD(); TXBuffer += F("Flash Writes<TD>");
+   addRowLabel(F("Flash Writes"));
    TXBuffer += RTC.flashDayCounter;
    TXBuffer += F(" daily / ");
    TXBuffer += RTC.flashCounter;
    TXBuffer += F(" boot");
 
-   html_TR_TD(); TXBuffer += F("Sketch Size<TD>");
+   addRowLabel(F("Sketch Size"));
   #if defined(ESP8266)
    TXBuffer += ESP.getSketchSize() / 1024;
    TXBuffer += F(" kB (");
@@ -5513,7 +5518,7 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
-  html_TR_TD(); TXBuffer += F("SPIFFS Size<TD>");
+  addRowLabel(F("SPIFFS Size"));
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
@@ -5548,12 +5553,12 @@ void handle_sysinfo() {
    addTableSeparator(F("Partitions"), 2, 3,
      F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
 
-   html_TR_TD(); TXBuffer += F("Data Partition Table<TD>");
+   addRowLabel(F("Data Partition Table"));
 //   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
 //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_DATA, F(" - "), F("<BR>"));
    getPartitionTableSVG(ESP_PARTITION_TYPE_DATA, 0x5856e6);
 
-   html_TR_TD(); TXBuffer += F("App Partition Table<TD>");
+   addRowLabel(F("App Partition Table"));
 //   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
 //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
    getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
