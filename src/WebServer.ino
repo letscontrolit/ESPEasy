@@ -1503,6 +1503,31 @@ void html_TD(int td_cnt) {
   }
 }
 
+static int copyTextCounter = 0;
+
+void html_reset_copyTextCounter() {
+  copyTextCounter = 0;
+}
+
+void html_copyText_TD() {
+  ++copyTextCounter;
+  TXBuffer += F("<TD id='copyText_");
+  TXBuffer += copyTextCounter;
+  TXBuffer += F("'>");
+}
+
+void html_TR(const String& label) {
+  html_TR_TD();
+  TXBuffer += label;
+  html_TD();
+}
+
+void html_copyText_TR(const String& label) {
+  TXBuffer += F("<TR>");
+  html_copyText_TD();
+  TXBuffer += label;
+  html_copyText_TD();
+}
 
 //********************************************************************************
 // Web Interface notifcations page
@@ -5195,6 +5220,7 @@ void handle_rules() {
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
   if (!isLoggedIn()) return;
+  html_reset_copyTextCounter();
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
@@ -5348,18 +5374,18 @@ void handle_sysinfo() {
 
   addTableSeparator(F("Firmware"), 2, 3);
 
-  TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
+  html_copyText_TR(F("Build"));
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
 
-  TXBuffer += F("<TR><TD id='copyText_3'>Libraries<TD id='copyText_4'>");
+  html_copyText_TR(F("Libraries"));
   TXBuffer += getSystemLibraryString();
 
-  TXBuffer += F("<TR><TD id='copyText_5'>GIT version<TD id='copyText_6'>");
+  html_copyText_TR(F("GIT version"));
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD id='copyText_7'>Plugins<TD id='copyText_8'>");
+  html_copyText_TR(F("Plugins"));
   TXBuffer += deviceCount + 1;
   TXBuffer += getPluginDescriptionString();
 
@@ -5371,29 +5397,28 @@ void handle_sysinfo() {
      TXBuffer += F("<font color = 'red'>fail !</font>");
   else  TXBuffer += F("passed.");
 
-   TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
-   TXBuffer += String(CRCValues.compileDate);
-   TXBuffer += " ";
-   TXBuffer += String(CRCValues.compileTime);
+  html_copyText_TR(F("Build time"));
+  TXBuffer += String(CRCValues.compileDate);
+  TXBuffer += " ";
+  TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
-   TXBuffer += String(CRCValues.binaryFilename);
+  html_copyText_TR(F("Binary filename"));
+  TXBuffer += String(CRCValues.binaryFilename);
 
-
-   addTableSeparator(F("System Status"), 2, 3);
-   {
-     // Actual Loglevel
-     html_TR_TD(); TXBuffer += F("Syslog Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
-     html_TR_TD(); TXBuffer += F("Serial Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
-     html_TR_TD(); TXBuffer += F("Web Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(getWebLogLevel());
-     #ifdef FEATURE_SD
-     html_TR_TD(); TXBuffer += F("SD Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
-     #endif
-   }
+  addTableSeparator(F("System Status"), 2, 3);
+  {
+    // Actual Loglevel
+    html_TR_TD(); TXBuffer += F("Syslog Log Level:<TD>");
+    TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
+    html_TR_TD(); TXBuffer += F("Serial Log Level:<TD>");
+    TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
+    html_TR_TD(); TXBuffer += F("Web Log Level:<TD>");
+    TXBuffer += getLogLevelDisplayString(getWebLogLevel());
+    #ifdef FEATURE_SD
+    html_TR_TD(); TXBuffer += F("SD Log Level:<TD>");
+    TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
+    #endif
+  }
 
 
    addTableSeparator(F("ESP board"), 2, 3);
