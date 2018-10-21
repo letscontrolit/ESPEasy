@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20181021 (since mega-20181020)
+-------------------------------------------------
+
+Release date: Sun Oct 21 04:00:16 CEST 2018
+
+Bartlomiej Zimon (2):
+      fix for #1920     fix for out of sync, check both header bytes     proper check for abnormal state
+      Revert "fix for #1920"
+
+TD-er (6):
+      [stack usage] Allocate temp char array on heap for parsing arguments
+      Proper look for connection.
+      [Rules] Early exit on rules processing when rules not enabled
+      [#1910] Notification settings extra strings on stack
+      [#1891] Send all values for Generic UDP controller
+      [#1870] Feature request build date as system info
+
+
+-------------------------------------------------
 Changes in release mega-20181020 (since mega-20181017)
 -------------------------------------------------
 
