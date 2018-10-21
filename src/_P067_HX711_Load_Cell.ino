@@ -28,8 +28,8 @@
 #define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
-int32_t Plugin_067_OversamplingValue = 0;
-int16_t Plugin_067_OversamplingCount = 0;
+int32_t Plugin_067_OversamplingValue[TASKS_MAX];
+int16_t Plugin_067_OversamplingCount[TASKS_MAX];
 
 
 void initHX711(int16_t pinSCL, int16_t pinDOUT)
@@ -157,8 +157,8 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         if (isFormItemChecked(F("tare")))
         {
           Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = -UserVar[event->BaseVarIndex + 1];
-          Plugin_067_OversamplingValue = 0;
-          Plugin_067_OversamplingCount = 0;
+          Plugin_067_OversamplingValue[event->TaskIndex] = 0;
+          Plugin_067_OversamplingCount[event->TaskIndex] = 0;
         }
         else
         {
@@ -190,6 +190,8 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         if (pinSCL >= 0 && pinDOUT >= 0)
         {
+          Plugin_067_OversamplingValue[event->TaskIndex]=0;
+          Plugin_067_OversamplingCount[event->TaskIndex]=0;
           initHX711(pinSCL, pinDOUT);
         }
 
@@ -202,7 +204,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         int16_t pinSCL = PIN(0);
         int16_t pinDOUT = PIN(1);
 
-        if (Plugin_067_OversamplingCount < 250)
+        if (Plugin_067_OversamplingCount[event->TaskIndex] < 250)
         if (pinSCL >= 0 && pinDOUT >= 0)
         if (isReadyHX711(pinSCL, pinDOUT))
         {
@@ -210,13 +212,13 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
           if (CONFIG(0))   //Oversampling?
           {
-            Plugin_067_OversamplingValue += value;
-            Plugin_067_OversamplingCount ++;
+            Plugin_067_OversamplingValue[event->TaskIndex] += value;
+            Plugin_067_OversamplingCount[event->TaskIndex] ++;
           }
           else   //use last value
           {
-            Plugin_067_OversamplingValue = value;
-            Plugin_067_OversamplingCount = 1;
+            Plugin_067_OversamplingValue[event->TaskIndex] = value;
+            Plugin_067_OversamplingCount[event->TaskIndex] = 1;
           }
         }
 
@@ -228,11 +230,11 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
       {
         String log = F("HX711: Value: ");
 
-        if (Plugin_067_OversamplingCount > 0)
+        if (Plugin_067_OversamplingCount[event->TaskIndex] > 0)
         {
-          UserVar[event->BaseVarIndex + 1] = (float)Plugin_067_OversamplingValue / Plugin_067_OversamplingCount;
-          Plugin_067_OversamplingValue = 0;
-          Plugin_067_OversamplingCount = 0;
+          UserVar[event->BaseVarIndex + 1] = (float)Plugin_067_OversamplingValue[event->TaskIndex] / Plugin_067_OversamplingCount[event->TaskIndex];
+          Plugin_067_OversamplingValue[event->TaskIndex] = 0;
+          Plugin_067_OversamplingCount[event->TaskIndex] = 0;
 
           UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 1] + Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3];   //Offset
 
@@ -272,8 +274,8 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
           String log = F("HX711: tare");
 
           Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = -UserVar[event->BaseVarIndex + 1];
-          Plugin_067_OversamplingValue = 0;
-          Plugin_067_OversamplingCount = 0;
+          Plugin_067_OversamplingValue[event->TaskIndex] = 0;
+          Plugin_067_OversamplingCount[event->TaskIndex] = 0;
 
           addLog(LOG_LEVEL_INFO, log);
           success = true;
