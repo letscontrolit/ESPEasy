@@ -118,7 +118,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
         disableSerialLog(); // disable logging on serial port (used for CSE7766 communication)
         Settings.BaudRate = 4800; // set BaudRate for CSE7766
         Serial.flush();
-        Serial.begin(Settings.BaudRate);
+        Serial.begin(Settings.BaudRate,SERIAL_8E1);
         success = true;
         break;
       }
@@ -318,7 +318,7 @@ void CseReceived(struct EventStruct *event)
     log = F("CSE current: ");
     log += energy_current;
     addLog(LOG_LEVEL_DEBUG, log);
-    log = F("CSE piulses: ");
+    log = F("CSE pulses: ");
     log += cf_pulses;
     addLog(LOG_LEVEL_DEBUG, log);
   }
