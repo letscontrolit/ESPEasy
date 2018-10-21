@@ -28,8 +28,8 @@
 #define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
-int32_t Plugin_067_OversamplingValue[TASKS_MAX];
-int16_t Plugin_067_OversamplingCount[TASKS_MAX];
+std::map<byte, int32_t> Plugin_067_OversamplingValue;
+std::map<byte, int16_t> Plugin_067_OversamplingCount;
 
 
 void initHX711(int16_t pinSCL, int16_t pinDOUT)
@@ -280,6 +280,13 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
           success = true;
         }
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        Plugin_067_OversamplingValue.erase(event->TaskIndex);
+        Plugin_067_OversamplingCount.erase(event->TaskIndex);
         break;
       }
 
