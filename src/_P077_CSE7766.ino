@@ -161,17 +161,17 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
       }
 
 
-    case PLUGIN_SERIAL_IN:
+    case PLUGIN_TEN_PER_SECOND:
       {
         if (Plugin_077_init) {
           success = true;
-          /* ONLINE CHECKSUMMING by Bartlomiej Zimon*/
+          /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
           bool P077_found = false;
           while (Serial.available()>0 && !P077_found){ // if we have data try to find good checksum
             uint8_t serial_in_byte = Serial.read();
-            P077_checksum -= serial_in_buffer[2]; // remove from checksum data to be removed
-            memmove(serial_in_buffer,serial_in_buffer+1,sizeof(serial_in_buffer)-1);
-            serial_in_buffer[25] = serial_in_byte;
+            P077_checksum -= serial_in_buffer[2]; // substract from checksum data to be removed
+            memmove(serial_in_buffer,serial_in_buffer+1,sizeof(serial_in_buffer)-1); // scroll buffer
+            serial_in_buffer[25] = serial_in_byte; // add new data
             P077_checksum += serial_in_buffer[22]; // add online checksum
             if (P077_checksum == serial_in_buffer[23] && serial_in_buffer[1] == 0x5A){
               P077_found = true;
