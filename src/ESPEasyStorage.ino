@@ -90,6 +90,7 @@ String BuildFixes()
     Settings.Pin_Reset = -1;
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
     Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
+    Settings.OldRulesEngine = DEFAULT_RULES_OLDENGINE;
     Settings.StructSize = sizeof(Settings);
   }
   if (Settings.Build < 20103) {

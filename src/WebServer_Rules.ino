@@ -6,6 +6,11 @@
 void handle_rules_new() {
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
+  if (Settings.OldRulesEngine)
+  {
+    handle_rules();
+    return;
+  }
   checkRAM(F("handle_rules"));
   navMenuIndex = 5;
   TXBuffer.startStream();
@@ -135,6 +140,11 @@ void handle_rules_new() {
 }
 
 void handle_rules_backup(/* arguments */) {
+  if(Settings.OldRulesEngine)
+  {
+    Goto_Rules_Root();
+    return;
+  }
   #ifdef WEBSERVER_RULES_DEBUG
   Serial.println("handle rules backup");
   #endif
@@ -184,6 +194,11 @@ void handle_rules_backup(/* arguments */) {
 void handle_rules_delete(/* arguments */) {
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
+  if(Settings.OldRulesEngine)
+  {
+    Goto_Rules_Root();
+    return;
+  }
   checkRAM(F("handle_rules_delete"));
   String fileName = WebServer.arg(F("fileName"));
   fileName = fileName.substring(0,fileName.length()-4);
@@ -234,6 +249,12 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
   if(isAddNew || (originalUri.startsWith(F("/rules/"))
     && originalUri.endsWith(F(".txt")))){
+
+      if(Settings.OldRulesEngine)
+      {
+        Goto_Rules_Root();
+        return true;
+      }
 
       String eventName;
       String fileName;
@@ -415,6 +436,10 @@ bool Rule_Download(String path)
   return true;
 }
 
+void Goto_Rules_Root(/* arguments */) {
+  WebServer.sendHeader(F("Location"), F("/rules"),true);
+  WebServer.send(302, F("text/plain"),F(""));
+}
 
 bool EnumerateFileAndDirectory(String& rootPath
   , int skip

@@ -71,15 +71,33 @@ void rulesProcessing(String& event)
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  String fileName = EventToFileName(event);
-  //if exists processed the rule file
-  if(SPIFFS.exists(fileName))
-      rulesProcessingFile(fileName, event);
+  if (Settings.OldRulesEngine) {
+    for (byte x = 0; x < RULESETS_MAX; x++)
+    {
+      #if defined(ESP8266)
+        String fileName = F("rules");
+      #endif
+      #if defined(ESP32)
+        String fileName = F("/rules");
+      #endif
+      fileName += x+1;
+      fileName += F(".txt");
+      if(activeRuleSets[x])
+        rulesProcessingFile(fileName, event);
+    }
+  }
   else
-    addLog(LOG_LEVEL_DEBUG
-      , String(F("EVENT: ")) + event
-        + String(F(" is ingnored. File ")) + fileName
-        + String(F(" not found.")));
+  {
+    String fileName = EventToFileName(event);
+    //if exists processed the rule file
+    if(SPIFFS.exists(fileName))
+        rulesProcessingFile(fileName, event);
+    else
+      addLog(LOG_LEVEL_DEBUG
+        , String(F("EVENT: ")) + event
+          + String(F(" is ingnored. File ")) + fileName
+          + String(F(" not found.")));
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("EVENT: ");

@@ -73,6 +73,7 @@
 #endif
 
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_RULES_OLDENGINE                true
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      100    // Time in milliseconds to retain MQTT messages
@@ -823,6 +824,7 @@ struct SettingsStruct
     StructSize = sizeof(SettingsStruct);
     MQTTUseUnitNameAsClientId = 0;
     VariousBits1 = 0;
+    OldRulesEngine = DEFAULT_RULES_OLDENGINE;
   }
 
   void clearAll() {
@@ -942,6 +944,7 @@ struct SettingsStruct
   byte          SyslogFacility;
   uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
   boolean       MQTTUseUnitNameAsClientId;
+  boolean       OldRulesEngine;
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.

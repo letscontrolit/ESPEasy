@@ -511,11 +511,7 @@ void WebServerInit()
   WebServer.on(F("/timingstats_json"), handle_timingstats_json);
   WebServer.on(F("/timingstats"), handle_timingstats);
   WebServer.on(F("/rules"), handle_rules_new);
-  WebServer.on(F("/rules/"), []()
-  {
-    WebServer.sendHeader(F("Location"), F("/rules"),true);
-    WebServer.send(302, F("text/plain"),F(""));
-  });
+  WebServer.on(F("/rules/"), Goto_Rules_Root);
   WebServer.on(F("/rules/add"), []()
   {
     handle_rules_edit(WebServer.uri(),true);
@@ -4687,6 +4683,7 @@ void handle_advanced() {
     Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
+    Settings.OldRulesEngine = isFormItemChecked(F("oldrulesengine"));
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
@@ -4700,7 +4697,10 @@ void handle_advanced() {
 
   addFormHeader(F("Advanced Settings"));
 
+  addFormSubHeader(F("Rules Settings"));
+
   addFormCheckBox(F("Rules"), F("userules"), Settings.UseRules);
+  addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine);
 
   addFormSubHeader(F("Controller Settings"));
 
