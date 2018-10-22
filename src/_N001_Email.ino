@@ -38,8 +38,8 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 	//
 	//     if (command == F("email"))
 	//     {
-	//       NotificationSettingsStruct NotificationSettings;
-	//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+	//       MakeNotificationSettings(NotificationSettings);
+	//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 	//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
 	//       success = true;
 	//     }
@@ -48,8 +48,8 @@ boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
 
 	case NPLUGIN_NOTIFY:
 	{
-		NotificationSettingsStruct NotificationSettings;
-		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettings));
+		MakeNotificationSettings(NotificationSettings);
+		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 		String subject = NotificationSettings.Subject;
 		String body = "";
 		if (event->String1.length() > 0)
@@ -73,6 +73,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
+	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
 	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
 	if (client.connect(aHost.c_str(), notificationsettings.Port) != 1) {

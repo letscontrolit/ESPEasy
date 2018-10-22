@@ -133,7 +133,7 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  return send_via_http(controller_number, client, element.txt);
+  return send_via_http(controller_number, client, element.txt, ControllerSettings.MustCheckReply);
 }
 
 
@@ -147,7 +147,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!WiFiConnected(100)) {
     return false;
   }
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
   C011_ConfigStruct customConfig;
@@ -158,7 +158,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+  if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
   String payload = create_http_request_auth(

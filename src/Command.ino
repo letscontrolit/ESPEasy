@@ -79,6 +79,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
       break;
     }
     case 'l': {
+    COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
@@ -131,7 +132,8 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("taskclear"              , Command_Task_Clear);                 // Tasks.h
 	  COMMAND_CASE("taskclearall"           , Command_Task_ClearAll);              // Tasks.h
 	  COMMAND_CASE("taskrun"                , Command_Task_Run);                   // Tasks.h
-	  COMMAND_CASE("taskvalueset"           , Command_Task_ValueSet);              // Tasks.h
+    COMMAND_CASE("taskvalueset"           , Command_Task_ValueSet);              // Tasks.h
+    COMMAND_CASE("taskvaluetoggle"        , Command_Task_ValueToggle);           // Tasks.h
 	  COMMAND_CASE("taskvaluesetandrun"     , Command_Task_ValueSetAndRun);        // Tasks.h
 	  COMMAND_CASE("timerpause"             , Command_Timer_Pause);                // Timers.h
 	  COMMAND_CASE("timerresume"            , Command_Timer_Resume);               // Timers.h

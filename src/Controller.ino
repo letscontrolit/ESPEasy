@@ -132,7 +132,7 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 bool MQTTConnect(int controller_idx)
 {
   ++mqtt_reconnect_count;
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   LoadControllerSettings(controller_idx, ControllerSettings);
   if (!ControllerSettings.checkHostReachable(true))
     return false;
@@ -141,6 +141,7 @@ bool MQTTConnect(int controller_idx)
     updateMQTTclient_connected();
   }
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+  mqtt.setTimeout(ControllerSettings.ClientTimeout);
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -292,9 +293,9 @@ void scheduleNextMQTTdelayQueue() {
 
 void processMQTTdelayQueue() {
   START_TIMER;
-  MQTT_queue_element element;
-  if (!MQTTDelayHandler.getNext(element)) return;
-  if (MQTTclient.publish(element._topic.c_str(), element._payload.c_str(), element._retained)) {
+  MQTT_queue_element* element(MQTTDelayHandler.getNext());
+  if (element == NULL) return;
+  if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     MQTTDelayHandler.markProcessed(true);
   } else {
@@ -315,7 +316,7 @@ void processMQTTdelayQueue() {
 \*********************************************************************************************/
 void MQTTStatus(String& status)
 {
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
     LoadControllerSettings(enabledMqttController, ControllerSettings);

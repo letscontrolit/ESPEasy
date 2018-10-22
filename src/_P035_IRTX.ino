@@ -241,7 +241,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           //  unsigned long IrSecondCode=0UL;
             char ircodestr[100];
             if (GetArgv(command, TmpStr1,100, 2)) IrType = TmpStr1;
-                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoul(TmpStr1, NULL, 16);
+                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoull(TmpStr1, NULL, 16);
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
                                                         }
             //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
@@ -315,7 +315,8 @@ boolean addErrorTrue(const char *str) {
     return true;
 }
 
-
+// A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
+// of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
 //   irType: Nr. of the protocol we need to send.

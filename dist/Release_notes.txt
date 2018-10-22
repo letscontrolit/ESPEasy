@@ -1,4 +1,320 @@
 -------------------------------------------------
+Changes in release mega-20181022 (since mega-20181021)
+-------------------------------------------------
+
+Release date: Mon Oct 22 04:00:15 CEST 2018
+
+TD-er (2):
+      [Webserver] Generate copyText id names
+      [Webserver] Uniform row labels to reduce flash string size
+
+
+-------------------------------------------------
+Changes in release mega-20181021 (since mega-20181020)
+-------------------------------------------------
+
+Release date: Sun Oct 21 04:00:16 CEST 2018
+
+Bartlomiej Zimon (2):
+      fix for #1920     fix for out of sync, check both header bytes     proper check for abnormal state
+      Revert "fix for #1920"
+
+TD-er (6):
+      [stack usage] Allocate temp char array on heap for parsing arguments
+      Proper look for connection.
+      [Rules] Early exit on rules processing when rules not enabled
+      [#1910] Notification settings extra strings on stack
+      [#1891] Send all values for Generic UDP controller
+      [#1870] Feature request build date as system info
+
+
+-------------------------------------------------
+Changes in release mega-20181020 (since mega-20181017)
+-------------------------------------------------
+
+Release date: Sat Oct 20 04:00:16 CEST 2018
+
+Plebs (22):
+      Added [plugin#pcfgpio#pinstate#xx]
+      added [plugin#mcpgpio#pinstate#xx]
+      code optimization
+      some code optimizations
+      Update src/_P001_Switch.ino
+      Update src/_P001_Switch.ino
+      small fixes
+      few changes
+      Update src/_P001_Switch.ino
+      Update src/_P001_Switch.ino
+      some fixes
+      added global variables for rules
+      some fixes
+      fixes
+      fixed length check
+      some optimizations
+      modified command and variable name
+      Update src/_P001_Switch.ino
+      Update src/_P001_Switch.ino
+      optimizations
+      Update src/StringConverter.ino
+      added 4 variables to verify the system status
+
+kpalczewski (1):
+      add support for 64bit IR codes.
+
+
+-------------------------------------------------
+Changes in release mega-20181017 (since mega-20181016)
+-------------------------------------------------
+
+Release date: Wed Oct 17 04:00:18 CEST 2018
+
+Gijs Noorlander (1):
+      Added checklist to the Issue_template
+
+TD-er (3):
+      [#1906] Allocate NotificationSettings on the heap
+      [#1906] Allocate ControllerSettings on the heap
+      [Stack] Add Free Stack to System Info plugin
+
+
+-------------------------------------------------
+Changes in release mega-20181016 (since mega-20181015)
+-------------------------------------------------
+
+Release date: Tue Oct 16 04:00:06 CEST 2018
+
+Plebs (1):
+      Fix for togglegpio without gpio initialization
+
+TD-er (1):
+      [Revert] Safe_strncpy cannot be used as generic strncpy replacement
+
+
+-------------------------------------------------
+Changes in release mega-20181015 (since mega-20181014)
+-------------------------------------------------
+
+Release date: Mon Oct 15 04:00:10 CEST 2018
+
+Plebs (2):
+      fix for bug #1864
+      Update src/_P023_OLED.ino
+
+TD-er (1):
+      [safe strncpy] Add warning when entered string is too large
+
+
+-------------------------------------------------
+Changes in release mega-20181014 (since mega-20181011)
+-------------------------------------------------
+
+Release date: Sun Oct 14 04:00:13 CEST 2018
+
+Gijs Noorlander (1):
+      [#1799] Add SSID to main page
+
+TD-er (5):
+      [#1891] Generic UPD controller - send only first value from sensor
+      [Controller] Fix send only first value
+      Time#Initialized event in rules before %syshour% is set
+      [UX] Warn user for incomplete network IP settings
+      [#1895] Incorrect number bytes read I2C_read32_reg
+
+
+-------------------------------------------------
+Changes in release mega-20181011 (since mega-20181010)
+-------------------------------------------------
+
+Release date: Thu Oct 11 04:00:24 CEST 2018
+
+TD-er (5):
+      [C009] Reduce memory usage of FHEM HTTP delay queue
+      [Controller] Set default timeout to 300 msec (was 100 msec)
+      Make sure to load ExtraTaskSettings when needed
+      [Travis Doc] Remove building documentation by Travis
+      [WebLog] Disable weblog when it is not being read
+
+
+-------------------------------------------------
+Changes in release mega-20181010 (since mega-20181009)
+-------------------------------------------------
+
+Release date: Wed Oct 10 04:00:09 CEST 2018
+
+Plebs (1):
+      Update src/_P019_PCF8574.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181009 (since mega-20181008)
+-------------------------------------------------
+
+Release date: Tue Oct  9 04:00:18 CEST 2018
+
+TD-er (7):
+      [Docs] Add favicon to documentation
+      [Docs] Add Travis check for documentation and stop build for docs only
+      [Docs] Run Travic documentation check before compiling project
+      [Docs] Disable travis_terminate for now
+      [JSON] Replace \n and \r in text fields
+      [LWIP1.4] Move back to LWIP1.4
+      [StringConverter] Some optimisations to reduce memory allocation
+
+
+-------------------------------------------------
+Changes in release mega-20181008 (since mega-20181007)
+-------------------------------------------------
+
+Release date: Mon Oct  8 04:00:09 CEST 2018
+
+Gijs Noorlander (1):
+      Added link to ReadTheDocs
+
+Grovkillen (1):
+      [Sphinx] added extension "sphinx.ext.imgconverter"
+
+TD-er (3):
+      [Sphinx] Initial setup for Sphinx documentation
+      [Docs] First ESPEasy documentation (Controllers)
+      [Docs] Added some directory structure and template
+
+
+-------------------------------------------------
+Changes in release mega-20181007 (since mega-20181006)
+-------------------------------------------------
+
+Release date: Sun Oct  7 04:00:09 CEST 2018
+
+Max (2):
+      Force slash to be converted in htmlEscape
+      Fix XSS-Vulnerabilites on wifi configuration pages
+
+Plebs (3):
+      Add three new TOGGLE commands
+      fixed float to int conversion
+      added "mcpgpiotoggle" command
+
+TD-er (3):
+      [ESP32] Allow Wrover dev kit to be used for PIO debug
+      [Stack] Move Arduino 'cont' stack into user RAM
+      [SPIFFS] Make sure to close open files on SPIFFS
+
+
+-------------------------------------------------
+Changes in release mega-20181006 (since mega-20181004)
+-------------------------------------------------
+
+Release date: Sat Oct  6 04:00:13 CEST 2018
+
+TD-er (3):
+      [Stack] Increase stack to 5k and reduce stack allocations in rules
+      [WiFi] Add delay to connection attempts in ControllerSettings
+      [Build flags] Remove NO_EXTRA_4K_HEAP
+
+
+-------------------------------------------------
+Changes in release mega-20181004 (since mega-20181003)
+-------------------------------------------------
+
+Release date: Thu Oct  4 04:00:08 CEST 2018
+
+Bartlomiej Zimon (1):
+      - partial fix for #1723
+
+JojoS (1):
+      added error checking and logging
+
+JojoS62 (5):
+      added float calculation for time to distance conversion
+      added more settings: unit, filtertype and size
+      max distance depends on measurement unit
+      code clean up
+      fixed 'unused variable' warning
+
+TD-er (3):
+      [sendHttp] #1830 Set timeout and early exit on timeout reached
+      [WiFiClient] Set timeout and make it configurable for controllers
+      [Core 2.4.1] Move back to core 2.4.1 from 2.4.2
+
+Thomas (1):
+      Update _P075_Nextion.ino (#1)
+
+
+-------------------------------------------------
+Changes in release mega-20181003 (since mega-20181002)
+-------------------------------------------------
+
+Release date: Wed Oct  3 04:00:18 CEST 2018
+
+David Conran (2):
+      Acknowledge credit & origin of code used in IRTX
+      Acknowledge credit & origin of code used in _P016IR.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181002 (since mega-20181001)
+-------------------------------------------------
+
+Release date: Tue Oct  2 04:00:29 CEST 2018
+
+Plebs (1):
+      split parseTemplate function
+
+TD-er (4):
+      [#1798] Bugfix Sonoff Si7021 stability
+      [ESP32] Add default partition table for reference
+      [ESP32] Update to PIO espressif32@1.4.0
+      [Stack] Report stack usage on ESP32 and increase stack for ESP8266normal
+
+
+-------------------------------------------------
+Changes in release mega-20181001 (since mega-20180930)
+-------------------------------------------------
+
+Release date: Mon Oct  1 13:13:13 CEST 2018
+
+TD-er (4):
+      [#1824] Show stack size on main page
+      [Heap] Use NO_EXTRA_4K_HEAP to get old stack address space
+      [Stack] Check if a block sent to save on SPIFFS is stack allocated
+      [Stack] Revert move Settings from stack to heap
+
+
+-------------------------------------------------
+Changes in release mega-20180930 (since mega-20180927)
+-------------------------------------------------
+
+Release date: Sun Sep 30 04:00:24 CEST 2018
+
+JojoS (5):
+      fixed distance reading
+      on INIT, delete sensordef before adding new
+      removed sensordefs helper structure
+      changed implementation to use shared_ptr instead of helper structure
+      minor change: unit was missing for threshold in 'state' mode
+
+TD-er (2):
+      [Default Settings] Properly clear settings when reset to default
+      [Defaults] Other default initializations
+
+
+-------------------------------------------------
+Changes in release mega-20180927 (since mega-20180924)
+-------------------------------------------------
+
+Release date: Thu Sep 27 04:00:17 CEST 2018
+
+TD-er (7):
+      [ESP32] Change partition size (will clear all settings) and add plugins
+      [Travis] Uninitialized variable in P073_7DGT
+      [Stack] Move Settings from stack to heap
+      [ESP32] RTOS move handle_schedule() to core1 and increase stack
+      [Info] Add board name to the sysinfo page.
+      [ESP32] Split new partition layout to separate build
+      [Build] Add esp32test_1M8_partition build and warning on ESP32 partition
+
+
+-------------------------------------------------
 Changes in release mega-20180924 (since mega-20180923)
 -------------------------------------------------
 

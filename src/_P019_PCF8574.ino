@@ -11,7 +11,7 @@
 boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
+  static boolean switchstate[TASKS_MAX];
 
   switch (function)
   {
@@ -23,7 +23,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 8;
         Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
@@ -66,10 +66,17 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_019_Read(Settings.TaskDevicePort[event->TaskIndex]);
 
-        // if boot state must be send, inverse default state
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
-          switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
+        if (Settings.TaskDevicePin1Inversed[event->TaskIndex]){
+          UserVar[event->BaseVarIndex] = !switchstate[event->TaskIndex];
+        } else {
+          UserVar[event->BaseVarIndex] = switchstate[event->TaskIndex];
+        }
 
+        // if boot state must be send, inverse default state
+        // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
+        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0]) {
+          switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
+        }
         success = true;
         break;
       }
@@ -85,7 +92,13 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             log += state;
             addLog(LOG_LEVEL_INFO, log);
             switchstate[event->TaskIndex] = state;
-            UserVar[event->BaseVarIndex] = state;
+
+            if (Settings.TaskDevicePin1Inversed[event->TaskIndex]){
+              UserVar[event->BaseVarIndex] = !switchstate[event->TaskIndex];
+            } else {
+              UserVar[event->BaseVarIndex] = switchstate[event->TaskIndex];
+            }
+
             event->sensorType = SENSOR_TYPE_SWITCH;
             sendData(event);
           }
@@ -102,6 +115,24 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         log += UserVar[event->BaseVarIndex];
         addLog(LOG_LEVEL_INFO, log);
         success = true;
+        break;
+      }
+
+    case PLUGIN_REQUEST:
+      {
+        //parseString(string, 1) = device
+        //parseString(string, 2) = command
+        //parseString(string, 3) = gpio number
+
+        // returns pin value using syntax: [plugin#pcfgpio#pinstate#xx]
+        if (string.length()>=16 && string.substring(0,16).equalsIgnoreCase(F("pcfgpio,pinstate")))
+        {
+          int par1;
+          if (validIntFromString(parseString(string, 3), par1)) {
+            string = Plugin_019_Read(par1);
+          }
+          success = true;
+        }
         break;
       }
 
@@ -126,6 +157,28 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           }
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
+        }
+
+        if (command == F("pcfgpiotoggle"))
+        {
+          success = true;
+          byte mode;
+          uint16_t currentState;
+
+          if (hasPinState(PLUGIN_ID_019,event->Par1)) {
+            getPinState(PLUGIN_ID_019, event->Par1, &mode, &currentState);
+          } else {
+            currentState = Plugin_019_Read(event->Par1);
+            mode = PIN_MODE_OUTPUT;
+          }
+
+          if (mode != PIN_MODE_INPUT) {
+            setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !currentState);
+            Plugin_019_Write(event->Par1, !currentState);
+            log = String(F("PCF  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
+          }
         }
 
         if (command == F("pcfpulse"))

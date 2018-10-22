@@ -33,7 +33,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 			}
 			String request = do_create_http_request(hostportString, F("GET"), path);
 			addLog(LOG_LEVEL_DEBUG, request);
-			send_via_http(F("Command_HTTP_SendToHTTP"), client, request);
+			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, false);
 		}
 	}
 	return return_command_success();

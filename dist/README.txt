@@ -21,7 +21,7 @@ Build type can be:  (differ in included plugins)
 
 There is also a number of special builds:
 - normal_IR => "Normal" + IR receiver/transmitter plugins and library
-- hard_xxxxx => Special builds for some off-the-shelff hardware.
+- hard_xxxxx => Special builds for some off-the-shelf hardware.
 
 Chip can be:
 - ESP8266      => Most likely option
@@ -35,8 +35,15 @@ If so, try the "PUYA" build.
 
 MemorySize can be:
 - 1024  => 1 MB flash modules (e.g. almost all Sonoff modules)
-- 2048  => 2 MB flash modules (e.g. Shelly1)
-- 4096  => 4 MB flash modules (e.g. NodeMCU)
+- 2048  => 2 MB flash modules (e.g. Shelly1/WROOM02)
+- 4096  => 4 MB flash modules (e.g. NodeMCU/ESP32)
+
+ESP32 now has 2 builds:
+- esp32dev   Using the default partition layout (1.4 MB for the sketch)
+- esp32test_1M8_partition   Larger sketch partition (1.8MB) smaller SPIFFS (316 kB)
+
+Please note that changing between those versions will destroy the settings!
+The SPIFFS partition will be lost and that contains all settings.
 
 
 To help recover from a bad flash, there are also blank images included.

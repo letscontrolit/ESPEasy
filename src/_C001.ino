@@ -33,7 +33,7 @@ boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C001_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
@@ -118,7 +118,7 @@ bool do_process_c001_delay_queue(int controller_number, const C001_queue_element
   String request = create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt);
 
   addLog(LOG_LEVEL_DEBUG, element.txt);
-  return send_via_http(controller_number, client, request);
+  return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);
 }
 
 #endif

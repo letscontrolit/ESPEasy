@@ -32,7 +32,7 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_INIT:
       {
-        ControllerSettingsStruct ControllerSettings;
+        MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         C003_DelayHandler.configureControllerSettings(ControllerSettings);
         break;
@@ -78,7 +78,7 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
   client.print(" \n");
 
   unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
+  while (!client_available(client) && !timeOutReached(timer))
     delay(1);
 
   timer = millis() + 1000;
@@ -102,7 +102,7 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
   addLog(LOG_LEVEL_DEBUG, log);
   client.println(SecuritySettings.ControllerPassword[element.controller_idx]);
   delay(100);
-  while (client.available())
+  while (client_available(client))
     client.read();
 
   strcpy_P(log, PSTR("TELNT: Sending cmd"));

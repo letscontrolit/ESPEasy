@@ -2,11 +2,16 @@
 //#######################################################################################################
 //################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
 //###################################   Created on the work of  majklovec     ###########################
-//###################################    Revisions by BertB and ThomasB       ########################### 
-//###################################    Last Revision: Aug-03-2018 (TB)      ###########################
+//###################################    Revisions by BertB and ThomasB       ###########################
+//###################################    Last Revision: Oct-03-2018 (TB)      ###########################
 //#######################################################################################################
 //
-// Updated: Aug-03-2018, ThomasB.
+// Updated: Oct-03-2018, ThomasB.
+// Added DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
+// Added SendStatus() to post log message on browser to acknowledge HTTP write.
+// Added reserve() to minimize string memory allocations.
+//
+// Aug-03-2018 change log summary:
 // This updated Nextion Plugin introduces hardware (UART) serial as an alternative to SoftSerial.
 // Hardware serial offers more reliable communication with the Nextion display.
 // Created on the experimental Serial.swap() work of BertB.
@@ -19,6 +24,9 @@
 // Defines start here
 // *****************************************************************************************************
 
+//#define DEBUG_LOG             // Enable this to include additional info messages in log output.
+
+
 // Plug-In defines
 #define PLUGIN_075
 #define PLUGIN_ID_075 75
@@ -28,18 +36,18 @@
 #define PLUGIN_VALUENAME2_075 "value"
 
 // Configuration Settings. Custom Configuration Memory must be less than 1024 Bytes (per TD'er findings).
-//#define Nlines 12             // Custom Config, Number of user entered Command Statment Lines. DO NOT USE!
-//#define Lenlines 64           // Custom Config, Length of user entered Command Statment Lines. DO NOT USE!
-#define Nlines 10               // Custom Config, Number of user entered Command Statments. 
-#define Lenlines 51             // Custom Config, Length of user entered Command Statments.
+//#define P75_Nlines 12             // Custom Config, Number of user entered Command Statment Lines. DO NOT USE!
+//#define P75_Nchars 64           // Custom Config, Length of user entered Command Statment Lines. DO NOT USE!
+#define P75_Nlines 10               // Custom Config, Number of user entered Command Statments.
+#define P75_Nchars 51             // Custom Config, Length of user entered Command Statments.
 
 // Nextion defines
-#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySoftwareSerial).  
+#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySoftwareSerial).
 #define RXBUFFWARN RXBUFFSZ-16  // Warning, Rx buffer close to being full.
 #define TOUCH_BASE 500          // Base offset for 0X65 Touch Event Send Component ID.
 
 // Serial defines
-#define B9600    0  
+#define B9600    0
 #define B38400   1
 #define B57600   2
 #define B115200  3
@@ -50,7 +58,7 @@
 
 // Global vars
 ESPeasySoftwareSerial *SoftSerial = NULL;
-char deviceTemplate[Nlines][Lenlines]; 
+char deviceTemplate[P75_Nlines][P75_Nchars];
 int rxPin = -1;
 int txPin = -1;
 
@@ -59,10 +67,10 @@ int txPin = -1;
 // PlugIn starts here
 // *****************************************************************************************************
 
-boolean Plugin_075(byte function, struct EventStruct *event, String& string) 
+boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static uint8_t BaudCode = 0;                          // Web GUI baud rate drop down. 9600 if 0, See array for other rates. 
+  static uint8_t BaudCode = 0;                          // Web GUI baud rate drop down. 9600 if 0, See array for other rates.
   static boolean HwSerial = SOFTSERIAL;                 // Serial mode, hardware uart or softserial.
   static boolean AdvHwSerial = false;                   // Web GUI checkbox flag; false = softserial mode, true = hardware UART serial.
   static boolean IncludeValues = false;                 // Web GUI checkbox flag; false = don't send idx & value data at interval.
@@ -126,7 +134,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (!((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15))) { // Hardware Serial Compatible?
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = false;      // Not HW serial compatible, Reset Check Box.
       }
-      
+
       if (rxPin == 3 && txPin == 1) {                                      // UART USB Port?
         if(Settings.TaskDevicePluginConfig[event->TaskIndex][0]==false &&  // Hardware serial currently disabled.
          Settings.TaskDeviceEnabled[event->TaskIndex] == true) {           // Plugin is enabled.
@@ -134,10 +142,10 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == false) { // SoftSerial mode. 
+      if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == false) { // SoftSerial mode.
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = B9600;      // Reset to 9600 baud.
       }
-      
+
       if(rxPin <0 || txPin <0) {                                            // Missing serial I/O pins!
         addFormNote(F("Please configure the RX and TX sensor pins before enabling this plugin."));
         addFormSubHeader(F("")); // Blank line, vertical space.
@@ -153,13 +161,13 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       options[1] = F("38400");
       options[2] = F("57600");
       options[3] = F("115200");
-      
-      addFormSelector(F("Baud Rate"), F("plugin_075_baud"), 4, options, NULL, choice);      
+
+      addFormSelector(F("Baud Rate"), F("plugin_075_baud"), 4, options, NULL, choice);
       addFormNote(F("Un-check box for Soft Serial communication (low performance mode, 9600 Baud)."));
       addFormNote(F("Hardware Serial is available when the GPIO pins are RX=D7 and TX=D8."));
       addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
       addFormNote(F("Do <b>NOT</b> enable the Serial Log file on Tools->Advanced->Serial Port."));
-      
+
 //    ** DEVELOPER DEBUG MESSAGE AREA **
 //    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
 //    String Data = "Debug. Plugin Enable State: ";
@@ -168,12 +176,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F(""));                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
-      
-      char deviceTemplate[Nlines][Lenlines];
+
+      char deviceTemplate[P75_Nlines][P75_Nchars];
       LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-      for (byte varNr = 0; varNr < Nlines; varNr++) {
-        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_075_template")) + (varNr + 1), deviceTemplate[varNr], Lenlines-1);
-  
+      for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_075_template")) + (varNr + 1), deviceTemplate[varNr], P75_Nchars-1);
+
       }
       if( Settings.TaskDeviceTimer[event->TaskIndex]==0) { // Is interval timer disabled?
         if(IncludeValues) {
@@ -194,17 +202,18 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_WEBFORM_SAVE: {
-
-        String argName;
-
-        char deviceTemplate[Nlines][Lenlines];
-        for (byte varNr = 0; varNr < Nlines; varNr++)
+        char deviceTemplate[P75_Nlines][P75_Nchars];
+        String error;
+        for (byte varNr = 0; varNr < P75_Nlines; varNr++)
         {
-          String arg = F("Plugin_075_template");
-          arg += varNr + 1;
-          String tmpString = WebServer.arg(arg);
-          strncpy(deviceTemplate[varNr], tmpString.c_str(), sizeof(deviceTemplate[varNr])-1);
-            deviceTemplate[varNr][Lenlines-1]=0;
+          String argName = F("Plugin_075_template");
+          argName += varNr + 1;
+          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P75_Nchars)) {
+            error += getCustomTaskSettingsError(varNr);
+          }
+        }
+        if (error.length() > 0) {
+          addHtmlError(error);
         }
         if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
@@ -236,12 +245,14 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         txPin = Settings.TaskDevicePin2[event->TaskIndex];
       }
 
-      if (SoftSerial != NULL) { 
+      if (SoftSerial != NULL) {
         delete SoftSerial;
         SoftSerial = NULL;
       }
 
-      String log = F("NEXTION075 : serial pin config RX:");
+      String log;
+      log.reserve(80);                                 // Prevent re-allocation
+      log = F("NEXTION075 : serial pin config RX:");
       log += rxPin;
       log += F(", TX:");
       log += txPin;
@@ -283,7 +294,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             HwSerial = SOFTSERIAL;
             if (SoftSerial == NULL) {
                 SoftSerial = new ESPeasySoftwareSerial(rxPin, txPin, false, RXBUFFSZ);
-            } 
+            }
             SoftSerial->begin(9600);
             SoftSerial->flush();
         }
@@ -295,8 +306,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     }
 
 
-    case PLUGIN_READ: {    
-        char deviceTemplate[Nlines][Lenlines];
+    case PLUGIN_READ: {
+        char deviceTemplate[P75_Nlines][P75_Nchars];
         int RssiIndex;
         String newString;
         String tmpString;
@@ -305,7 +316,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
 // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
-        for (byte x = 0; x < Nlines; x++) {
+        for (byte x = 0; x < P75_Nlines; x++) {
           tmpString = deviceTemplate[x];
           if (tmpString.length()) {
             UcTmpString = deviceTemplate[x];
@@ -313,6 +324,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
               int barVal;
+              newString.reserve(P75_Nchars+10);               // Prevent re-allocation
               newString = tmpString.substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
               if (nbars < -100 || nbars >= 0)
@@ -345,55 +357,64 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
 
             sendCommand(newString.c_str(), HwSerial);
-            
-            String log = F("NEXTION075 : Cmd Statement Line-");
-            log += String(x+1);
-            log += F(" Sent: ");
-            log += newString;
-            addLog(LOG_LEVEL_INFO, log);
+            #ifdef DEBUG_LOG
+              String log;
+              log.reserve(P75_Nchars+50);                 // Prevent re-allocation
+              log = F("NEXTION075 : Cmd Statement Line-");
+              log += String(x+1);
+              log += F(" Sent: ");
+              log += newString;
+              addLog(LOG_LEVEL_INFO, log);
+            #endif
           }
         }
 
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
         if(IncludeValues) {
-/* 
-            String log = F("NEXTION075: Interval values data enabled, resending idx=");
-            log += String(UserVar[event->BaseVarIndex]);
-            log += F(", value=");
-            log += String(UserVar[event->BaseVarIndex+1]);
-            addLog(LOG_LEVEL_INFO, log);
-*/
+            #ifdef DEBUG_LOG
+             String log;
+             log.reserve(120);                          // Prevent re-allocation
+             log = F("NEXTION075: Interval values data enabled, resending idx=");
+             log += String(UserVar[event->BaseVarIndex]);
+             log += F(", value=");
+             log += String(UserVar[event->BaseVarIndex+1]);
+             addLog(LOG_LEVEL_INFO, log);
+            #endif
+
             success = true;
         }
         else {
-/*
-            String log = F("NEXTION075: Interval values data disabled, idx & value not resent");
-            addLog(LOG_LEVEL_INFO, log);
-*/
+            #ifdef DEBUG_LOG
+             String log = F("NEXTION075: Interval values data disabled, idx & value not resent");
+             addLog(LOG_LEVEL_INFO, log);
+            #endif
+
             success = false;
-        } 
+        }
 
         break;
     }
 
-// Nextion commands received from events (including http) get processed here. PLUGIN_WRITE 
+// Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
 // does NOT process publish commands that are sent.
     case PLUGIN_WRITE: {
-        
+
         String tmpString = string;
         int argIndex = tmpString.indexOf(',');
         if (argIndex) tmpString = tmpString.substring(0, argIndex);
-        
+
 // Enable addLog() code below to help debug plugin write problems.
 /*
+        String log;
+        log.reserve(140);                               // Prevent re-allocation
         String log = F("Nextion arg0: ");
-        log += tmpString; 
+        log += tmpString;
         log += F(", TaskDeviceName: ");
         log += getTaskDeviceName(event->TaskIndex);
         log += F(", event->TaskIndex: ");
-        log += String(event->TaskIndex); 
+        log += String(event->TaskIndex);
         log += F(", cmd str: ");
-        log += string;      
+        log += string;
         addLog(LOG_LEVEL_INFO, log);
 */
         if (tmpString.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true) { // If device names match we have a command to write.
@@ -401,11 +422,14 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             tmpString = string.substring(argIndex + 1);
             sendCommand(tmpString.c_str(), HwSerial);
 
-            String log = F("NEXTION075 : WRITE, ");
-            log += F("Command is ");
-            log += (tmpString.c_str());
-            addLog(LOG_LEVEL_INFO, log);
-
+            String log;
+            log.reserve(110);                           // Prevent re-allocation
+            log = F("NEXTION075 : WRITE = ");
+            log += tmpString;
+            #ifdef DEBUG_LOG
+              addLog(LOG_LEVEL_INFO, log);
+            #endif
+            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
             success = true;                             // Set true only if plugin found a command to execute.
         }
         break;
@@ -434,20 +458,19 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
     }
 
-    
+
     case PLUGIN_TEN_PER_SECOND: {
       uint16_t i;
       uint8_t c;
       uint8_t charCount;
-      String log;
       String Vidx;
       String Nvalue;
       String Svalue;
       String Nswitch;
       char __buffer[RXBUFFSZ+1];                        // Staging buffer.
-      
+
       if(rxPin < 0) {
-        String log = F("NEXTION075 : Missing RxD Pin Number, aborted serial receive");
+        String log = F("NEXTION075 : Missing RxD Pin, aborted serial receive");
         addLog(LOG_LEVEL_INFO, log);
         break;
       }
@@ -455,6 +478,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if(HwSerial == UARTSERIAL) {
         charCount = Serial.available();                 // Prime the Hardware Serial engine.
         if(charCount >= RXBUFFWARN) {                   // ESP8266 has 128 byte circular Rx buffer.
+            String log;
+            log.reserve(70);                           // Prevent re-allocation
             log = F("NEXTION075 : RxD UART Buffer capacity warning,");
             log += String(charCount);
             log += F(" bytes");
@@ -465,6 +490,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if(SoftSerial == NULL) break;                   // SoftSerial missing, exit.
         charCount = SoftSerial->available();            // Prime the Soft Serial engine.
         if(charCount >= RXBUFFWARN) {
+            String log;
+            log.reserve(70);                           // Prevent re-allocation
             log = F("NEXTION075 : RxD SoftSerial Buffer capacity warning, ");
             log += String(charCount);
             log += F(" bytes");
@@ -495,16 +522,20 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex + 1] = __buffer[3];
               sendData(event);
 
-              log = F("NEXTION075 : code: ");
-              log += __buffer[1];
-              log += ",";
-              log += __buffer[2];
-              log += ",";
-              log += __buffer[3];
-              addLog(LOG_LEVEL_INFO, log);
+              #ifdef DEBUG_LOG
+                String log;
+                log.reserve(70);                        // Prevent re-allocation
+                log = F("NEXTION075 : code: ");
+                log += __buffer[1];
+                log += ",";
+                log += __buffer[2];
+                log += ",";
+                log += __buffer[3];
+                addLog(LOG_LEVEL_INFO, log);
+              #endif
             }
           }
-        } 
+        }
         else {
           if (c == '|') {
             __buffer[0] = c;                                  // Store in staging buffer.
@@ -515,7 +546,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             else charCount = SoftSerial->available();
 
             if(HwSerial == UARTSERIAL) {
-                i = 1;            
+                i = 1;
                 while (Serial.available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
                   __buffer[i] = Serial.read();
                   if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
@@ -523,7 +554,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                 }
             }
             else {
-                i = 1;            
+                i = 1;
                 while (SoftSerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
                   __buffer[i] = SoftSerial->read();
                   if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
@@ -532,11 +563,16 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
 
             __buffer[i] = 0x00;
-            
+
             String tmpString = __buffer;
-            log = F("NEXTION075 : code: ");
-            log += tmpString;
-            addLog(LOG_LEVEL_INFO, log);
+
+            #ifdef DEBUG_LOG
+              String log;
+              log.reserve(50);                          // Prevent re-allocation
+              log = F("NEXTION075 : Code = ");
+              log += tmpString;
+              addLog(LOG_LEVEL_INFO, log);
+            #endif
 
             int argIndex = tmpString.indexOf(F(",i"));
             int argEnd = tmpString.indexOf(',', argIndex + 1);
@@ -568,14 +604,21 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
                 sendData(event);
 
-                log = F("NEXTION075 : Pipe Command Sent: ");
-                log += __buffer;
-                log += UserVar[event->BaseVarIndex];
+                #ifdef DEBUG_LOG
+                 String log;
+                 log.reserve(80);                       // Prevent re-allocation
+                 log = F("NEXTION075 : Pipe Command Sent: ");
+                 log += __buffer;
+                 log += UserVar[event->BaseVarIndex];
+                 addLog(LOG_LEVEL_INFO, log);
+                #endif
             }
             else {
-                log = F("NEXTION075 : Unknown Pipe Command, skipped");
+                #ifdef DEBUG_LOG
+                 String log = F("NEXTION075 : Unknown Pipe Command, skipped");
+                 addLog(LOG_LEVEL_INFO, log);
+                #endif
             }
-            addLog(LOG_LEVEL_INFO, log);
           }
         }
         if(HwSerial == UARTSERIAL) charCount = Serial.available();
@@ -590,7 +633,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 }
 
 
-void sendCommand(const char *cmd, boolean SerialMode) 
+void sendCommand(const char *cmd, boolean SerialMode)
 {
     if(txPin < 0) {
         String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");

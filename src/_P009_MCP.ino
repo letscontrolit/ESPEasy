@@ -109,6 +109,24 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_REQUEST:
+      {
+        //parseString(string, 1) = device
+        //parseString(string, 2) = command
+        //parseString(string, 3) = gpio number
+
+        // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
+        if (string.length()>=16 && string.substring(0,16).equalsIgnoreCase(F("mcpgpio,pinstate")))
+        {
+          int par1;
+          if (validIntFromString(parseString(string, 3), par1)) {
+            string = Plugin_009_Read(par1);
+          }
+          success = true;
+        }
+        break;
+      }
+
     case PLUGIN_WRITE:
       {
         String log = "";
@@ -122,6 +140,28 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
+        }
+
+        if (command == F("mcpgpiotoggle"))
+        {
+          success = true;
+          byte mode;
+          uint16_t currentState;
+
+          if (hasPinState(PLUGIN_ID_009,event->Par1)) {
+            getPinState(PLUGIN_ID_009, event->Par1, &mode, &currentState);
+          } else {
+            currentState = Plugin_009_Read(event->Par1);
+            mode = PIN_MODE_OUTPUT;
+          }
+
+          if (mode != PIN_MODE_INPUT) {
+            setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, !currentState);
+            Plugin_009_Write(event->Par1, !currentState);
+            log = String(F("MCP  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
+            addLog(LOG_LEVEL_INFO, log);
+            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_009, event->Par1, log, 0));
+          }
         }
 
         if (command == F("mcppulse"))
