@@ -237,7 +237,7 @@ static const char pgDefaultCSS[] PROGMEM = {
       "table.multirow tr:nth-child(even){background-color: #DEE6FF; }"
     "table.multirow {color: #000; width: 100%; min-width: 420px; border-collapse: collapse; }"
     // Highlight row
-    "tr.highlight td { background-color: #dbff0075; }"    
+    "tr.highlight td { background-color: #dbff0075; }"
     // inside a form
     ".note {color: #444; font-style: italic; }"
     //header with title and menu
@@ -415,8 +415,12 @@ static const char jsUpdateSensorValuesDevicePage[] PROGMEM = {
                                     "tempValue = data.Sensors[c].TaskValues[k].Value;"
                                     "decimalsValue = data.Sensors[c].TaskValues[k].NrDecimals;"
                                     "tempValue = parseFloat(tempValue).toFixed(decimalsValue);"
-                                    "document.getElementById('value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = tempValue;"
-                                    "document.getElementById('valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1)).innerHTML = data.Sensors[c].TaskValues[k].Name + ':';"
+                                    "var valueID = 'value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1);"
+                                    "var valueNameID = 'valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1);"
+                                    "var valueElement = document.getElementById(valueID);"
+                                    "var valueNameElement = document.getElementById(valueNameID);"
+                                    "if (valueElement !== null) { valueElement.innerHTML = tempValue; }"
+                                    "if (valueNameElement !== null) { valueNameElement.innerHTML = data.Sensors[c].TaskValues[k].Name + ':'; }"
                                 "}"
                             "}"
                         "}"
