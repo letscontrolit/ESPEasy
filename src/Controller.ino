@@ -142,6 +142,7 @@ bool MQTTConnect(int controller_idx)
   }
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
+  MQTTclient.setClient(mqtt);
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -207,6 +208,8 @@ bool MQTTConnect(int controller_idx)
 
   if (!MQTTresult) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
+    MQTTclient.disconnect();
+    updateMQTTclient_connected();
     return false;
   }
   MQTTclient_should_reconnect = false;
