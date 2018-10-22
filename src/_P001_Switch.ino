@@ -55,8 +55,8 @@ boolean Plugin_001_read_switch_state(struct EventStruct *event) {
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static boolean switchstate[TASKS_MAX];
-  static boolean outputstate[TASKS_MAX];
+  static byte switchstate[TASKS_MAX];
+  static byte outputstate[TASKS_MAX];
   static int8_t PinMonitor[GPIO_MAX];
   static int8_t PinMonitorState[GPIO_MAX];
 

@@ -40,7 +40,7 @@ TaskDevicePluginConfigLong settings:
 boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
+  static int8_t switchstate[TASKS_MAX];
 
   switch (function)
   {
