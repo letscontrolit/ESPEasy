@@ -269,8 +269,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         /**************************************************************************\
         20181009 - @giig1967g: new doubleclick logic is:
         if there is a 'state' change, check debounce period.
-        Then if doubleclick interval exceeded, reset Plugin_001_clickCounterDC to 0
-        Plugin_001_clickCounterDC contains the current status for doubleclick:
+        Then if doubleclick interval exceeded, reset Settings.TaskDevicePluginConfig[event->TaskIndex][7] to 0
+        Settings.TaskDevicePluginConfig[event->TaskIndex][7] contains the current status for doubleclick:
         0: start counting
         1: 1st click
         2: 2nd click
@@ -323,8 +323,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               byte output_value;
               outputstate[event->TaskIndex] = new_outputState;
               boolean sendState = new_outputState;
-              if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-                sendState = !sendState;
 
               if (Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3 && Settings.TaskDevicePluginConfig[event->TaskIndex][4])
               {
@@ -343,10 +341,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = output_value;
               String log = F("SW   : Switch state ");
               log += state ? '1' : '0';
-              log += F(" Output value ");
+              log += output_value<=1 ? F(" Output value=") : F(" Doubleclick=");
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
               sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = millis();
           }
@@ -403,6 +404,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
               sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
           }
         }

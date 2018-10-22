@@ -3,10 +3,39 @@
 //#################################### Plugin 009: MCP23017 input #######################################
 //#######################################################################################################
 
+/**************************************************\
+CONFIG
+TaskDevicePluginConfig settings:
+0: send boot state (true,false)
+1:
+2:
+3:
+4: use doubleclick (true,false)
+5: use longpress (true,false)
+6: LP fired (true,false)
+7: doubleclick counter (=0,1,2,3)
+
+TaskDevicePluginConfigFloat settings:
+0: debounce interval ms
+1: doubleclick interval ms
+2: longpress interval ms
+3:
+
+TaskDevicePluginConfigLong settings:
+0: clickTime debounce ms
+1: clickTime doubleclick ms
+2: clickTime longpress ms
+3:
+\**************************************************/
+
 #define PLUGIN_009
 #define PLUGIN_ID_009         9
 #define PLUGIN_NAME_009       "Switch input - MCP23017"
 #define PLUGIN_VALUENAME1_009 "Switch"
+#define PLUGIN_009_DOUBLECLICK_MIN_INTERVAL 1000
+#define PLUGIN_009_DOUBLECLICK_MAX_INTERVAL 3000
+#define PLUGIN_009_LONGPRESS_MIN_INTERVAL 1000
+#define PLUGIN_009_LONGPRESS_MAX_INTERVAL 5000
 
 boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 {
@@ -23,7 +52,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 16;
         Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
+        Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
@@ -49,6 +78,25 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       {
         addFormCheckBox(F("Send Boot state") ,F("plugin_009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
+        //@giig1967-20181022
+        addFormSubHeader(F("Advanced event management"));
+
+        addFormNumericBox(F("De-bounce (ms)"), F("plugin_019_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
+
+        //set minimum value for doubleclick MIN max speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
+
+        addFormCheckBox(F("Doubleclick event (3)"), F("plugin_019_dc"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("plugin_019_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_009_DOUBLECLICK_MIN_INTERVAL, PLUGIN_009_DOUBLECLICK_MAX_INTERVAL);
+
+        //set minimum value for longpress MIN max speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_009_LONGPRESS_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
+
+        addFormCheckBox(F("Longpress event (10 & 11)"), F("plugin_019_lp"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
+        addFormNumericBox(F("Longpress min. interval (ms)"), F("plugin_019_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_009_LONGPRESS_MIN_INTERVAL, PLUGIN_009_LONGPRESS_MAX_INTERVAL);
+
         success = true;
         break;
       }
@@ -56,6 +104,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("plugin_009_boot"));
+
+        //@giig1967-20181022
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("plugin_009_debounce"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("plugin_009_dc"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("plugin_009_dcmaxinterval"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = isFormItemChecked(F("plugin_009_lp"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("plugin_009_lpmininterval"));
 
         success = true;
         break;
@@ -69,29 +126,149 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
 
+        // @giig1967g-20181022: set initial UserVar of the switch
+        if (Settings.TaskDevicePin1Inversed[event->TaskIndex]){
+          UserVar[event->BaseVarIndex] = !switchstate[event->TaskIndex];
+        } else {
+          UserVar[event->BaseVarIndex] = switchstate[event->TaskIndex];
+        }
+
         // if boot state must be send, inverse default state
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
 
+        // @giig1967g-20181022: doubleclick counter = 0
+        Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
+
+        // @giig1967g-20181022: used to track if LP has fired
+        Settings.TaskDevicePluginConfig[event->TaskIndex][6]=false;
+
+        // @giig1967g-20181022: store millis for debounce, doubleclick and long press
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=millis(); //debounce timer
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis(); //doubleclick timer
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis(); //longpress timer
+
+        // @giig1967g-20181022: set minimum value for doubleclick MIN max speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
+
+        // @giig1967g-20181022: set minimum value for longpress MIN max speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_009_LONGPRESS_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
+
+        // @giig1967g-20181022: set initial UserVar of the switch
+        UserVar[event->BaseVarIndex] = switchstate[event->TaskIndex];
+
         setPinState(PLUGIN_ID_009, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, 0);
+
         success = true;
         break;
       }
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        int state = Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
-        if (state != -1)
+        const boolean state = Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
+        /**************************************************************************\
+        20181022 - @giig1967g: new doubleclick logic is:
+        if there is a 'state' change, check debounce period.
+        Then if doubleclick interval exceeded, reset Settings.TaskDevicePluginConfig[event->TaskIndex][7] to 0
+        Settings.TaskDevicePluginConfig[event->TaskIndex][7] contains the current status for doubleclick:
+        0: start counting
+        1: 1st click
+        2: 2nd click
+        3: 3rd click = doubleclick event if inside interval (calculated as: '3rd click time' minus '1st click time')
+
+        Returned EVENT value is = 3 always for doubleclick
+        In rules this can be checked:
+        on Button#Switch=3 do //will fire if doubleclick
+        \**************************************************************************/
+        if (state != -1 && state != switchstate[event->TaskIndex])
         {
-          if (state != switchstate[event->TaskIndex])
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis();
+          Settings.TaskDevicePluginConfig[event->TaskIndex][6] = false;
+
+          const unsigned long debounceTime = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
+          if (debounceTime >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) //de-bounce check
           {
+            const unsigned long deltaDC = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+            if (deltaDC >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]))
+            {
+              //reset timer for doubleclick
+              Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
+              Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis();
+            }
+            Settings.TaskDevicePluginConfig[event->TaskIndex][7]++;
+
+            switchstate[event->TaskIndex] = state;
+
+            byte output_value;
+            boolean sendState = switchstate[event->TaskIndex];
+
+            if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+              sendState = !sendState;
+
+            if (Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3 && Settings.TaskDevicePluginConfig[event->TaskIndex][4])
+            {
+              output_value = 3; //double click
+            } else {
+              output_value = state ? 1 : 0; //single click
+            }
+
+            UserVar[event->BaseVarIndex] = output_value;
+
             String log = F("MCP  : State ");
             log += state;
+            log += output_value<=1 ? F(" Output value=") : F(" Doubleclick=");
+            log += output_value;
             addLog(LOG_LEVEL_INFO, log);
-            switchstate[event->TaskIndex] = state;
-            UserVar[event->BaseVarIndex] = state;
+
             event->sensorType = SENSOR_TYPE_SWITCH;
             sendData(event);
+
+            //reset Userdata so it displays the correct state value in the web page
+            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+
+            Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = millis();
+          }
+        }
+        //check if LP is enabled and if LP has not fired yet
+        else if (Settings.TaskDevicePluginConfig[event->TaskIndex][5] && !Settings.TaskDevicePluginConfig[event->TaskIndex][6]) {
+          /**************************************************************************\
+          20181022 - @giig1967g: new longpress logic is:
+          if there is no 'state' change, check if longpress interval reached
+          When reached send longpress event.
+          Returned Event value = state + 10
+          So if state = 0 => EVENT longpress = 10
+          if state = 1 => EVENT longpress = 11
+          So we can trigger longpress for high or low contact
+
+          In rules this can be checked:
+          on Button#Switch=10 do //will fire if longpress when state = 0
+          on Button#Switch=11 do //will fire if longpress when state = 1
+          \**************************************************************************/
+          const unsigned long deltaLP = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
+          if (deltaLP >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]))
+          {
+            byte output_value;
+            Settings.TaskDevicePluginConfig[event->TaskIndex][6] = true;
+
+            boolean sendState = state;
+            if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+              sendState = !sendState;
+
+            output_value = sendState ? 1 : 0;
+            output_value = output_value + 10;
+
+            UserVar[event->BaseVarIndex] = output_value;
+            String log = F("MCP  : LongPress: Switch state ");
+            log += state ? '1' : '0';
+            log += F(" Output value ");
+            log += output_value;
+            addLog(LOG_LEVEL_INFO, log);
+            sendData(event);
+
+            //reset Userdata so it displays the correct state value in the web page
+            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
           }
         }
         success = true;
