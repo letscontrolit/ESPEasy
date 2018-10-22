@@ -39,8 +39,7 @@ long cf_pulses = 0;
 long cf_pulses_last_time = CSE_PULSES_NOT_INITIALIZED;
 long cf_frequency = 0;
 uint8_t serial_in_buffer[32];
-uint8_t serial_in_byte_counter = 0;
-uint8_t serial_in_byte = 0;
+uint8_t P077_checksum = 0;
 float energy_voltage = 0;         // 123.1 V
 float energy_current = 0;         // 123.123 A
 float energy_power = 0;           // 123.1 W
@@ -165,40 +164,26 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
     case PLUGIN_SERIAL_IN:
       {
         if (Plugin_077_init) {
-          if (Serial.available() > 0) {
-            serial_in_byte = Serial.read();
-            success = true;
+          success = true;
+          /* ONLINE CHECKSUMMING by Bartlomiej Zimon*/
+          bool P077_found = false;
+          while (Serial.available()>0 && !P077_found){ // if we have data try to find good checksum
+            uint8_t serial_in_byte = Serial.read();
+            P077_checksum -= serial_in_buffer[2]; // remove from checksum data to be removed
+            memmove(serial_in_buffer,serial_in_buffer+1,sizeof(serial_in_buffer)-1);
+            serial_in_buffer[25] = serial_in_byte;
+            P077_checksum += serial_in_buffer[22]; // add online checksum
+            if (P077_checksum == serial_in_buffer[23] && serial_in_buffer[1] == 0x5A){
+              P077_found = true;
+              addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
+              CseReceived(event);
 
-            if (cse_receive_flag) {
-              serial_in_buffer[serial_in_byte_counter++] = serial_in_byte;
-              if (24 == serial_in_byte_counter) {
-                addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: packet received"));
-                CseReceived(event);
-                cse_receive_flag = 0;
-                serial_in_byte_counter = 0;
-                // new packet received, update values
-                UserVar[event->BaseVarIndex] = energy_voltage;
-                UserVar[event->BaseVarIndex + 1] = energy_power;
-                UserVar[event->BaseVarIndex + 2] = energy_current;
-                UserVar[event->BaseVarIndex + 3] = cf_pulses;
-//                break;
-              }
-            } else {
-              if (0x5A == serial_in_byte) { // 0x5A - Packet header 2
-                cse_receive_flag = 1;
-                addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: Header received"));
-              } else {
-                serial_in_byte_counter = 0;
-              }
-              serial_in_buffer[serial_in_byte_counter++] = serial_in_byte;
+              // new packet received, update values
+              UserVar[event->BaseVarIndex] = energy_voltage;
+              UserVar[event->BaseVarIndex + 1] = energy_power;
+              UserVar[event->BaseVarIndex + 2] = energy_current;
+              UserVar[event->BaseVarIndex + 3] = cf_pulses;
             }
-            serial_in_byte = 0;           // Discard
-
-
-            //          String log = F("Variable: Tag: ");
-            //          log += key;
-            //          addLog(LOG_LEVEL_INFO, log);
-            //          success = true;
           }
         }
         break;
