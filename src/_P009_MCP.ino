@@ -40,7 +40,7 @@ TaskDevicePluginConfigLong settings:
 boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static int8_t switchstate[TASKS_MAX];
+  static int switchstate[TASKS_MAX];
 
   switch (function)
   {
@@ -124,7 +124,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         Plugin_009_Config(Settings.TaskDevicePort[event->TaskIndex], 1);
 
         // read and store current state to prevent switching at boot time
-        switchstate[event->TaskIndex] = Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
+        switchstate[event->TaskIndex] = (int) Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
 
         // @giig1967g-20181022: set initial UserVar of the switch
         if (Settings.TaskDevicePin1Inversed[event->TaskIndex]){
