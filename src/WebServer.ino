@@ -235,14 +235,18 @@ void sendHeaderBlocking(bool json) {
   yield();
 }
 
-void sendHeadandTail(const String& tmplName, boolean Tail = false) {
+void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
   String pageTemplate = "";
   int indexStart, indexEnd;
   String varName;  //, varValue;
   String fileName = tmplName;
+  String meta;
   fileName += F(".htm");
   fs::File f = SPIFFS.open(fileName, "r+");
 
+  if(rebooting){
+    meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+  }
   if (f) {
     pageTemplate.reserve(f.size());
     while (f.available()) pageTemplate += (char)f.read();
@@ -271,7 +275,11 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
           break;  // send first part of result only
         } else if (varName == F("error")) {
           getErrorNotifications();
-        } else {
+        }
+        else if(varName == F("meta")) {
+          TXBuffer += meta;
+        }
+        else {
           getWebPageTemplateVar(varName);
         }
       } else {  // no closing "}}"
@@ -598,6 +606,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "<meta charset='utf-8'/>"
         "<title>{{name}}</title>"
         "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "{{meta}}"
         "{{js}}"
         "{{css}}"
       "</head>"
@@ -808,15 +817,17 @@ void handle_root() {
     WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
-   if (!isLoggedIn()) return;
-   navMenuIndex = 0;
-   TXBuffer.startStream();
-   sendHeadandTail(F("TmplStd"),_HEAD);
+  if (!isLoggedIn()) return;
+  navMenuIndex = 0;
+  TXBuffer.startStream();
+  String sCommand = WebServer.arg(F("cmd"));
+  boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+  sendHeadandTail(F("TmplStd"),_HEAD, rebootCmd);
 
   int freeMem = ESP.getFreeHeap();
-  String sCommand = WebServer.arg(F("cmd"));
 
-  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
+
+  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (rebootCmd == false)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
     if (timerAPoff)
       timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
