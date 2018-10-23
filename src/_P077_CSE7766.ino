@@ -200,14 +200,6 @@ void CseReceived(struct EventStruct *event)
     return;
   }
 
-  // Calculate checksum
-  uint8_t checksum = 0;
-  for (byte i = 2; i < 23; i++) checksum += serial_in_buffer[i];
-  if (checksum != serial_in_buffer[23]) {
-    addLog(LOG_LEVEL_DEBUG, F("CSE: Checksum Failure"));
-    return;
-  }
-
 
   // Get chip calibration data (coefficients) and use as initial defaults
   if (HLW_UREF_PULSE == Settings.TaskDevicePluginConfig[event->TaskIndex][0]) {
