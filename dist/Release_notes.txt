@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20181023 (since mega-20181022)
+-------------------------------------------------
+
+Release date: Tue Oct 23 04:00:14 CEST 2018
+
+Kurairaito (2):
+      Update _P067_HX711_Load_Cell.ino
+      Update _P067_HX711_Load_Cell.ino
+
+TD-er (6):
+      [#1486] Allow multiple instances of rotary encoder
+      [JavaScript] Fix update values on Devices tab
+      [JavaScript] Cleanup some code duplication
+      [PubSubClient] Add delay when waiting for data and flush on disconnect
+      [WiFi timeout] Set default to 1000 msec again
+      [Docs] Add some WiFi related information to docs
+
+
+-------------------------------------------------
 Changes in release mega-20181022 (since mega-20181021)
 -------------------------------------------------
 
