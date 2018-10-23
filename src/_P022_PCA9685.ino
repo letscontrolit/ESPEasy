@@ -12,6 +12,7 @@
 
 #define PLUGIN_022_PCA9685_MODE1   0x00  // location for Mode1 register address
 #define PCA9685_MODE2   0x01  // location for Mode2 register address
+#define PCA9685_MODE2_VALUES   0x20
 #define PCA9685_LED0    0x06  // location for start of LED0 registers
 #define PCA9685_ADDRESS 0x40  // I2C address
 #define PCA9685_MAX_ADDRESS 0x7F
@@ -34,10 +35,20 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   int address = 0;
+  int mode2 = 0x10;
+  uint16_t freq = PCA9685_MAX_FREQUENCY;
+  uint16_t range = PCA9685_MAX_PWM;
   if(event != NULL && event->TaskIndex >- 1)
   {
     address = Settings.TaskDevicePort[event->TaskIndex];
+    mode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+    freq = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+    range = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
   }
+  if (freq == 0)
+    freq = PCA9685_MAX_FREQUENCY;
+  if (range == 0)
+    range = PCA9685_MAX_PWM;
 
   switch (function)
   {
@@ -76,6 +87,33 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           optionValues[i] = PCA9685_ADDRESS + i;
         }
         addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
+        
+        String m2Options[PCA9685_MODE2_VALUES];
+        int m2Values[PCA9685_MODE2_VALUES];
+        for (int i=0;i < PCA9685_MODE2_VALUES; i++)
+        {
+          m2Values[i] = i;
+          m2Options[i] = formatToHex_decimal(i);
+          if (i == 0x10)
+            m2Options[i] += F(" - (default)");
+        }
+        addFormSelector(F("MODE2"), F("plugin_022_mode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
+
+        String freqString = F("Frequency (");
+        freqString += PCA9685_MIN_FREQUENCY;
+        freqString += F("-");
+        freqString += PCA9685_MAX_FREQUENCY;
+        freqString += F(")");
+        addFormNumericBox(freqString, F("plugin_022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
+        String funitString = F("default ");
+        funitString += PCA9685_MAX_FREQUENCY;
+        addUnit(funitString);
+
+        addFormNumericBox(F("Range (1-10000)"), F("plugin_022_range"), range, 1, 10000);
+        String runitString = F("default ");
+        runitString += PCA9685_MAX_PWM;
+        addUnit(runitString);
+
         success = true;
         break;
       }
@@ -83,6 +121,16 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePort[event->TaskIndex] = getFormItemInt(F("i2c_addr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_022_mode2"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_022_freq"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_022_range"));
+        if (!IS_INIT(initializeState, (Settings.TaskDevicePort[event->TaskIndex] - PCA9685_ADDRESS)))
+        {
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] != mode2)
+            Plugin_022_writeRegister(address, PCA9685_MODE2, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] != freq)
+            Plugin_022_Frequency(address, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        }
         success = true;
         break;
       }
@@ -115,14 +163,18 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         if (command == F("pcapwm") || (istanceCommand && command == F("pwm")))
         {
           success = true;
-          log = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO ")) + String(event->Par1);
+          log = String(F("PCA 0x")) + String(address, HEX) + String(F(": PWM ")) + String(event->Par1);
           if(event->Par1 >= 0 && event->Par1 <= PCA9685_MAX_PINS)
           {
-            if(event->Par2 >=0 && event->Par2 <= PCA9685_MAX_PWM)
+            if(event->Par2 >=0 && event->Par2 <= range)
             {
-              if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS))) Plugin_022_initialize(address);
-
-              Plugin_022_Write(address, event->Par1, event->Par2);
+              if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+              {
+                Plugin_022_initialize(address);
+                Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
+                Plugin_022_Frequency(address, freq);
+              }
+              Plugin_022_Write(address, event->Par1, map(event->Par2, 0, range, 0, PCA9685_MAX_PWM));
               setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
               addLog(LOG_LEVEL_INFO, log);
               SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
@@ -135,30 +187,57 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
           }
         }
+
         if (command == F("pcafrq") || (istanceCommand && command == F("frq")))
         {
           success = true;
           if(event->Par1 >= PCA9685_MIN_FREQUENCY && event->Par1 <= PCA9685_MAX_FREQUENCY)
           {
-            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS))) Plugin_022_initialize(address);
-
+            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+            {
+              Plugin_022_initialize(address);
+              Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
+            }
             Plugin_022_Frequency(address, event->Par1);
             setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
-            log = String(F("PCA 0x")) + String(address) + String(F(": FREQ ")) + String(event->Par1);
+            log = String(F("PCA 0x")) + String(address, HEX) + String(F(": FREQ ")) + String(event->Par1);
             addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
           }
           else{
-            addLog(LOG_LEVEL_ERROR,String(F("PCA ")) + String(address, HEX) + String(F(" The frequesncy ")) + String(event->Par1) + String(F(" is out of range.")));
+            addLog(LOG_LEVEL_ERROR,String(F("PCA 0x")) + String(address, HEX) + String(F(" The frequency ")) + String(event->Par1) + String(F(" is out of range.")));
           }
+        }
 
+        if (istanceCommand && command == F("mode2"))
+        {
+          success = true;
+          if(event->Par1 >= 0 && event->Par1 < PCA9685_MODE2_VALUES)
+          {
+            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+            {
+              Plugin_022_initialize(address);
+              Plugin_022_Frequency(address, freq);
+            }
+            Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
+            log = String(F("PCA 0x")) + String(address, HEX) + String(F(": MODE2 0x")) + String(event->Par1, HEX);
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          else{
+            addLog(LOG_LEVEL_ERROR,String(F("PCA 0x")) + String(address, HEX) + String(F(" MODE2 0x")) + String(event->Par1, HEX) + String(F(" is out of range.")));
+          }
         }
 
         if (command == F("status"))
         {
           if (parseString(line, 2) == F("pca"))
           {
-            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS))) Plugin_022_initialize(address);
+            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+            {
+              Plugin_022_initialize(address);
+              Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
+              Plugin_022_Frequency(address, freq);
+            }
             success = true;
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
           }
@@ -170,7 +249,12 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           log = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO "));
           if(event->Par1>=0 && event->Par1 <= PCA9685_MAX_PINS)
           {
-            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS))) Plugin_022_initialize(address);
+            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+            {
+              Plugin_022_initialize(address);
+              Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
+              Plugin_022_Frequency(address, freq);
+            }
             int pin = event->Par1;
             if(parseString(line,2) == "all")
             {
@@ -206,7 +290,12 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           log = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO ")) + String(event->Par1);
           if(event->Par1>=0 && event->Par1 <= PCA9685_MAX_PINS)
           {
-            if (!IS_INIT(initializeState, ((address - PCA9685_ADDRESS)))) Plugin_022_initialize(address);
+            if (!IS_INIT(initializeState, (address - PCA9685_ADDRESS)))
+            {
+              Plugin_022_initialize(address);
+              Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
+              Plugin_022_Frequency(address, freq);
+            }
 
             if(event->Par2 == 0)
             {
@@ -370,7 +459,7 @@ void Plugin_022_initialize(int address)
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)0x01); // reset the device
   delay(1);
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)B10100000);  // set up for auto increment
-  Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (byte)0x10); // set to output
+  //Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (byte)0x10); // set to output
   SET_INIT(initializeState, (address - PCA9685_ADDRESS));
 }
 #endif // USES_P022
