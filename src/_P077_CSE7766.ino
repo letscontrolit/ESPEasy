@@ -161,7 +161,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
       }
 
 
-    case PLUGIN_TEN_PER_SECOND:
+    case PLUGIN_SERIAL_IN:
       {
         if (Plugin_077_init) {
           success = true;
