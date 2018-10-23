@@ -15,6 +15,7 @@ Welcome to ESPEasy's documentation!
    Controller/Controller.rst
    Plugin/Plugin.rst
    Rules/Rules.rst
+   WiFi/WiFi.rst
 
 .. raw:: latex
 
