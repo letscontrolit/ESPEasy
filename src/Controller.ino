@@ -204,7 +204,7 @@ bool MQTTConnect(int controller_idx)
   } else {
     MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   }
-  yield();
+  delay(0);
 
   if (!MQTTresult) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));

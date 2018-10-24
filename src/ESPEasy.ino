@@ -872,7 +872,7 @@ void backgroundtasks()
 {
   //checkRAM(F("backgroundtasks"));
   //always start with a yield
-  yield();
+  delay(0);
 /*
   // Remove this watchdog feed for now.
   // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
@@ -915,13 +915,13 @@ void backgroundtasks()
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
-    yield();
+    delay(0);
     ArduinoOTA.handle();
   }
 
   #endif
 
-  yield();
+  delay(0);
 
   statusLED(false);
 

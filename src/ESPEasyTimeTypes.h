@@ -184,7 +184,7 @@ private:
     if (is_idle) return;
     last_exec_time_usec = micros();
     is_idle = true;
-    yield(); // Nothing to do, so call yield for backgroundtasks
+    delay(0); // Nothing to do, so leave time for backgroundtasks
   }
 
   void recordRunning() {

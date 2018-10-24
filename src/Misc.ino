@@ -2614,7 +2614,7 @@ void processMatchedRule(
     // FIXME TD-er: This part seems a bit strange.
     // It can't schedule a call to PLUGIN_WRITE.
     // Maybe ExecuteCommand can be scheduled?
-    yield();
+    delay(0);
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
     String tmpAction(action);
     if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
@@ -2629,7 +2629,7 @@ void processMatchedRule(
       }
       ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
-    yield();
+    delay(0);
   }
 }
 
