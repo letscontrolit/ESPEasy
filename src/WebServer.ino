@@ -5414,21 +5414,27 @@ void handle_sysinfo() {
   TXBuffer += deviceCount + 1;
   TXBuffer += getPluginDescriptionString();
 
-  addRowLabel(F("Build Md5"));
-  for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
+  bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
+  if (!filenameDummy) {
+    addRowLabel(F("Build Md5"));
+    for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
 
-   addRowLabel(F("Md5 check"));
-  if (! CRCValues.checkPassed())
-     TXBuffer += F("<font color = 'red'>fail !</font>");
-  else  TXBuffer += F("passed.");
-
+     addRowLabel(F("Md5 check"));
+    if (! CRCValues.checkPassed())
+       TXBuffer += F("<font color = 'red'>fail !</font>");
+    else  TXBuffer += F("passed.");
+  }
   addRowLabel_copy(F("Build time"));
   TXBuffer += String(CRCValues.compileDate);
   TXBuffer += " ";
   TXBuffer += String(CRCValues.compileTime);
 
   addRowLabel_copy(F("Binary filename"));
-  TXBuffer += String(CRCValues.binaryFilename);
+  if (filenameDummy) {
+    TXBuffer += F("<b>Self built!</b>");
+  } else {
+    TXBuffer += String(CRCValues.binaryFilename);
+  }
 
   addTableSeparator(F("System Status"), 2, 3);
   {
