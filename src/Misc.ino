@@ -997,6 +997,11 @@ String getPluginDescriptionString() {
   #ifdef PLUGIN_BUILD_DEV
     result += F(" [Development]");
   #endif
+  #ifdef PLUGIN_DESCR
+  result += " [";
+  result += F(PLUGIN_DESCR);
+  result += ']';
+  #endif
   return result;
 }
 

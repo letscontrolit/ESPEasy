@@ -21,6 +21,7 @@ for ENV in \
   dev_ESP8266PUYA_1024\
   dev_ESP8266PUYA_1024_VCC\
   hard_SONOFF_POW\
+  hard_SONOFF_POW_R2_4M\
   hard_Shelly_1\
   esp32dev\
   esp32test_1M8_partition;\

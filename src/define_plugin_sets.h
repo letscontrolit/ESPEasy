@@ -26,6 +26,8 @@ To create/register a plugin, you have to :
  * BUILD Configs *******************************************************************
 \******************************************************************************/
 
+
+
 // IR library is large, so make a separate build including stable plugins and IR.
 #ifdef PLUGIN_BUILD_DEV_IR
     #define PLUGIN_BUILD_DEV       // add dev
@@ -78,6 +80,7 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 #ifdef PLUGIN_BUILD_IR
+    #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
     #define USES_P035      // IRTX
 #endif
@@ -89,19 +92,24 @@ To create/register a plugin, you have to :
 
 // Itead ----------------------------
 #ifdef PLUGIN_SET_SONOFF_BASIC
+    #define PLUGIN_DESCR  "Sonoff Basic"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TH10
+    #define PLUGIN_DESCR  "Sonoff TH10"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TH16
+    #define PLUGIN_DESCR  "Sonoff TH16"
     #define PLUGIN_SET_ONLY_SWITCH
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW
+    #define PLUGIN_DESCR  "Sonoff POW R1"
+
     // Undef first to prevent compiler warnings
     #undef DEFAULT_PIN_I2C_SDA
     #undef DEFAULT_PIN_I2C_SCL
@@ -115,6 +123,8 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW_R2
+    #define PLUGIN_DESCR  "Sonoff POW R2"
+
     // Undef first to prevent compiler warnings
     #undef DEFAULT_PIN_STATUS_LED
 
@@ -125,19 +135,24 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S20
+    #define PLUGIN_DESCR  "Sonoff S20"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_4CH
+    #define PLUGIN_DESCR  "Sonoff 4CH"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TOUCH
+    #define PLUGIN_DESCR  "Sonoff Touch"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 // Shelly ----------------------------
 #ifdef PLUGIN_SET_SHELLY_1
+    #define PLUGIN_DESCR  "Shelly 1"
+
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
@@ -150,10 +165,12 @@ To create/register a plugin, you have to :
 
 // Easy ----------------------------
 #ifdef PLUGIN_SET_EASY_TEMP
+    #define PLUGIN_DESCR  "Temp Hum"
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_SET_EASY_CARBON
+    #define PLUGIN_DESCR  "Carbon"
     #define PLUGIN_SET_NONE
     #define USES_P052   // SenseAir
 #endif
@@ -196,6 +213,8 @@ To create/register a plugin, you have to :
 
 // Generic ESP32 -----------------------------
 #ifdef PLUGIN_SET_GENERIC_ESP32
+    #define PLUGIN_DESCR  "Generic ESP32"
+
     #ifndef ESP32
         #define ESP32
     #endif
@@ -209,6 +228,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_TEST_ESP32
+    #define PLUGIN_DESCR  "TEST ESP32"
     #ifndef ESP32
         #define ESP32
     #endif

@@ -12,7 +12,7 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 // --- Basic Config Settings ------------------------------------------------------------------------
-#define DEFAULT_NAME        "ESP_Easy"                  // Enter your device friendly name
+#define DEFAULT_NAME        "ESP_Easy"          // Enter your device friendly name
 #define UNIT                            0                                       // Unit Number
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
 
