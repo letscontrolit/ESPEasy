@@ -893,7 +893,7 @@ void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeL
     Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
 }
 
-void addPredefinedPlugins() {
+bool addPredefinedPlugins() {
   byte taskIndex = 0;
   #ifdef GPIO_KEY1
   // Create button switch P001
@@ -936,6 +936,8 @@ void addPredefinedPlugins() {
     addSwitchPlugin(taskIndex, GPIO_REL4, F("Relay4"), false);
     ++taskIndex;
   #endif // GPIO_REL4
+  return taskIndex != 0; // Indicate something was added
+  // Also needed to make sure the variable is being used.
 }
 
 void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
