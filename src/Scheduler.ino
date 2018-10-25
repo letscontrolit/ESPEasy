@@ -269,11 +269,11 @@ void process_plugin_task_timer(unsigned long id) {
   log += id;
   addLog(LOG_LEVEL_INFO, log);
 */
+  systemTimers.erase(id);
   if (y >= 0) {
     String dummy;
     Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummy);
-  }
-  systemTimers.erase(id);
+  }  
   STOP_TIMER(PROC_SYS_TIMER);
 }
 
