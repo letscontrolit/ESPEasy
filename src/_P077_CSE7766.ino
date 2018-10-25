@@ -44,6 +44,9 @@ float energy_voltage = 0;         // 123.1 V
 float energy_current = 0;         // 123.123 A
 float energy_power = 0;           // 123.1 W
 
+//stats
+long P077_t_max = 0, P077_t_all = 0, P077_t_pkt=0, P077_t_pkt_tmp = 0;
+uint16_t P077_count_bytes = 0, P077_count_max = 0, P077_count_pkt = 0;
 
 boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 {
@@ -167,14 +170,17 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
           success = true;
           /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
           bool P077_found = false;
+          long t_start = millis();
           while (Serial.available()>0 && !P077_found){ // if we have data try to find good checksum
             uint8_t serial_in_byte = Serial.read();
+            P077_count_bytes++;
             P077_checksum -= serial_in_buffer[2]; // substract from checksum data to be removed
             memmove(serial_in_buffer,serial_in_buffer+1,sizeof(serial_in_buffer)-1); // scroll buffer
             serial_in_buffer[25] = serial_in_byte; // add new data
             P077_checksum += serial_in_buffer[22]; // add online checksum
             if (P077_checksum == serial_in_buffer[23] && serial_in_buffer[1] == 0x5A){
               P077_found = true;
+              P077_count_pkt++;
               addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
               CseReceived(event);
 
@@ -184,6 +190,38 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex + 2] = energy_current;
               UserVar[event->BaseVarIndex + 3] = cf_pulses;
             }
+          }
+
+          long t_diff = millis()-t_start;
+          P077_t_all += t_diff;
+
+          if (P077_count_pkt > 10) // bypass first 10 pkts
+            P077_t_max = max(P077_t_max, t_diff);
+          
+          if (P077_found) {
+            P077_count_max = max(P077_count_max, P077_count_bytes);
+            P077_t_pkt = t_start - P077_t_pkt_tmp;
+            P077_t_pkt_tmp = t_start;
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              String log = F("CSE: time ");
+              log += P077_t_max;
+              log += '/';
+              log += P077_t_pkt;
+              log += '/';
+              log += P077_t_all;
+              addLog(LOG_LEVEL_DEBUG, log);
+              log = F("CSE: bytes ");
+              log += P077_count_bytes;
+              log += '/';
+              log += P077_count_max;
+              addLog(LOG_LEVEL_DEBUG, log);
+              log = F("CSE: nr ");
+              log += P077_count_pkt;
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
+
+            P077_count_bytes = 0;
           }
         }
         break;
