@@ -59,8 +59,6 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
       {
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C009_queue_element element(event);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -68,7 +66,6 @@ boolean CPlugin_009(byte function, struct EventStruct *event, String& string)
         for (byte x = 0; x < valueCount; x++)
         {
           element.txt[x] = formatUserVarNoCheck(event, x);
-          element.valueNames[x] = ExtraTaskSettings.TaskDeviceValueNames[x];
         }
         success = C009_DelayHandler.addToQueue(element);
         scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime());
@@ -86,55 +83,56 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
 
-  // Create json root object
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-  root[F("module")] = String(F("ESPEasy"));
-  root[F("version")] = String(F("1.04"));
-
-  // Create nested objects
-  JsonObject& data = root.createNestedObject(String(F("data")));
-  JsonObject& ESP = data.createNestedObject(String(F("ESP")));
-  ESP[F("name")] = Settings.Name;
-  ESP[F("unit")] = Settings.Unit;
-  ESP[F("version")] = Settings.Version;
-  ESP[F("build")] = Settings.Build;
-  ESP[F("build_notes")] = String(F(BUILD_NOTES));
-  ESP[F("build_git")] = String(F(BUILD_GIT));
-  ESP[F("node_type_id")] = NODE_TYPE_ID;
-  ESP[F("sleep")] = Settings.deepSleep;
-
-  // embed IP, important if there is NAT/PAT
-  // char ipStr[20];
-  // IPAddress ip = WiFi.localIP();
-  // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  ESP[F("ip")] = WiFi.localIP().toString();
-
-  // Create nested SENSOR json object
-  JsonObject& SENSOR = data.createNestedObject(String(F("SENSOR")));
-  byte valueCount = getValueCountFromSensorType(element.sensorType);
-  // char itemNames[valueCount][2];
-  for (byte x = 0; x < valueCount; x++)
+  LoadTaskSettings(element.TaskIndex);
+  String jsonString;
   {
-    // Each sensor value get an own object (0..n)
-    // sprintf(itemNames[x],"%d",x);
-    JsonObject& val = SENSOR.createNestedObject(String(x));
-    val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
-    val[F("valueName")]  = element.valueNames[x];
-    val[F("type")]       = element.sensorType;
-    val[F("value")]      = element.txt[x];
+    // Create json root object
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& root = jsonBuffer.createObject();
+    root[F("module")] = String(F("ESPEasy"));
+    root[F("version")] = String(F("1.04"));
+
+    // Create nested objects
+    JsonObject& data = root.createNestedObject(String(F("data")));
+    JsonObject& ESP = data.createNestedObject(String(F("ESP")));
+    ESP[F("name")] = Settings.Name;
+    ESP[F("unit")] = Settings.Unit;
+    ESP[F("version")] = Settings.Version;
+    ESP[F("build")] = Settings.Build;
+    ESP[F("build_notes")] = String(F(BUILD_NOTES));
+    ESP[F("build_git")] = String(F(BUILD_GIT));
+    ESP[F("node_type_id")] = NODE_TYPE_ID;
+    ESP[F("sleep")] = Settings.deepSleep;
+
+    // embed IP, important if there is NAT/PAT
+    // char ipStr[20];
+    // IPAddress ip = WiFi.localIP();
+    // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+    ESP[F("ip")] = WiFi.localIP().toString();
+
+    // Create nested SENSOR json object
+    JsonObject& SENSOR = data.createNestedObject(String(F("SENSOR")));
+    byte valueCount = getValueCountFromSensorType(element.sensorType);
+    // char itemNames[valueCount][2];
+    for (byte x = 0; x < valueCount; x++)
+    {
+      // Each sensor value get an own object (0..n)
+      // sprintf(itemNames[x],"%d",x);
+      JsonObject& val = SENSOR.createNestedObject(String(x));
+      val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
+      val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
+      val[F("type")]       = element.sensorType;
+      val[F("value")]      = element.txt[x];
+    }
+
+    // Create json buffer
+    root.printTo(jsonString);
   }
 
-  // Create json buffer
-  String jsonString;
-  root.printTo(jsonString);
-
   // We now create a URI for the request
-  String url = F("/ESPEasy");
-
   String request = create_http_request_auth(
       controller_number, element.controller_idx, ControllerSettings,
-      F("POST"), url, jsonString.length());
+      F("POST"), F("/ESPEasy"), jsonString.length());
   request += jsonString;
 
   return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);
