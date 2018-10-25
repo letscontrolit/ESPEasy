@@ -189,6 +189,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SERIAL_IN:
       {
+        if (Plugin_020_init)
+        {
         uint8_t serial_buf[P020_BUFFER_SIZE];
         int RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         if (RXWait == 0)
@@ -278,6 +280,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         } // if rules
         success = true;
         break;
+      }
       }
 
     case PLUGIN_WRITE:
