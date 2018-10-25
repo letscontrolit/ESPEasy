@@ -157,13 +157,11 @@ public:
     size_t total = sizeof(this);
     for (int i = 0; i < VARS_PER_TASK; ++i) {
       total += txt[i].length();
-      total += valueNames[i].length();
     }
     return total;
   }
 
   String txt[VARS_PER_TASK];
-  String valueNames[VARS_PER_TASK];
   int controller_idx;
   byte TaskIndex;
   int idx;
