@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20181025 (since mega-20181023)
+-------------------------------------------------
+
+Release date: Thu Oct 25 04:00:13 CEST 2018
+
+Saverio Cisternino (1):
+      Added auto redirect to home after run reboot command from web page.
+
+TD-er (5):
+      [WDT] Change yield() to delay(0)
+      [Build] Add Sonoff POW R2 (4MB)
+      [Sonoff] Add pre-defined switch and relay + rules on factory reset
+      [Info] Remove MD5 check fail on self-built images
+      [Travis] Use variables even when no predefined plugins are added.
+
+
+-------------------------------------------------
 Changes in release mega-20181023 (since mega-20181022)
 -------------------------------------------------
 
