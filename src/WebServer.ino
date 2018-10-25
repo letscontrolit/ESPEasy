@@ -198,7 +198,7 @@ void sendContentBlocking(String& data) {
 
   TXBuffer.sentBytes += length;
   data = "";
-  yield();
+  delay(0);
 }
 
 void sendHeaderBlocking(bool json) {
@@ -232,17 +232,21 @@ void sendHeaderBlocking(bool json) {
     delay(1);
   }
 #endif
-  yield();
+  delay(0);
 }
 
-void sendHeadandTail(const String& tmplName, boolean Tail = false) {
+void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
   String pageTemplate = "";
   int indexStart, indexEnd;
   String varName;  //, varValue;
   String fileName = tmplName;
+  String meta;
   fileName += F(".htm");
   fs::File f = SPIFFS.open(fileName, "r+");
 
+  if(rebooting){
+    meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+  }
   if (f) {
     pageTemplate.reserve(f.size());
     while (f.available()) pageTemplate += (char)f.read();
@@ -271,7 +275,11 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false) {
           break;  // send first part of result only
         } else if (varName == F("error")) {
           getErrorNotifications();
-        } else {
+        }
+        else if(varName == F("meta")) {
+          TXBuffer += meta;
+        }
+        else {
           getWebPageTemplateVar(varName);
         }
       } else {  // no closing "}}"
@@ -396,6 +404,7 @@ bool getCheckWebserverArg_int(const String &key, int& value) {
   return true;
 }
 
+#define strncpy_webserver_arg(D,N) safe_strncpy(D, WebServer.arg(N).c_str(), sizeof(D));
 #define update_whenset_FormItemInt(K,V) { int tmpVal; if (getCheckWebserverArg_int(K, tmpVal)) V=tmpVal;}
 
 
@@ -597,6 +606,7 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "<meta charset='utf-8'/>"
         "<title>{{name}}</title>"
         "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "{{meta}}"
         "{{js}}"
         "{{css}}"
       "</head>"
@@ -807,15 +817,17 @@ void handle_root() {
     WebServer.send(200, "text/html", F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
-   if (!isLoggedIn()) return;
-   navMenuIndex = 0;
-   TXBuffer.startStream();
-   sendHeadandTail(F("TmplStd"),_HEAD);
+  if (!isLoggedIn()) return;
+  navMenuIndex = 0;
+  TXBuffer.startStream();
+  String sCommand = WebServer.arg(F("cmd"));
+  boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+  sendHeadandTail(F("TmplStd"),_HEAD, rebootCmd);
 
   int freeMem = ESP.getFreeHeap();
-  String sCommand = WebServer.arg(F("cmd"));
 
-  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) != 0)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
+
+  if ((strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) != 0) && (rebootCmd == false)&& (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
   {
     if (timerAPoff)
       timerAPoff = millis() + 2000L;  //user has reached the main page - AP can be switched off in 2..3 sec
@@ -835,13 +847,13 @@ void handle_root() {
     TXBuffer += F("<form>");
     TXBuffer += F("<table class='normal'><TH style='width:150px;' align='left'>System Info<TH align='left'>Value");
 
-    html_TR_TD(); TXBuffer += F("Unit:<TD>");
+    addRowLabel(F("Unit"));
     TXBuffer += String(Settings.Unit);
 
-    html_TR_TD(); TXBuffer += F("GIT version:<TD>");
+    addRowLabel(F("GIT version"));
     TXBuffer += BUILD_GIT;
 
-    html_TR_TD(); TXBuffer += F("Local Time:<TD>");
+    addRowLabel(F("Local Time"));
     if (Settings.UseNTP)
     {
       TXBuffer += getDateTimeString('-', ':', ' ');
@@ -849,7 +861,7 @@ void handle_root() {
     else
       TXBuffer += F("<font color='red'>NTP disabled</font>");
 
-    html_TR_TD(); TXBuffer += F("Uptime:<TD>");
+    addRowLabel(F("Uptime"));
     char strUpTime[40];
     int minutes = wdcounter / 2;
     int days = minutes / 1440;
@@ -859,7 +871,7 @@ void handle_root() {
     sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
     TXBuffer += strUpTime;
 
-    html_TR_TD(); TXBuffer += F("Load:<TD>");
+    addRowLabel(F("Load"));
     if (wdcounter > 0)
     {
       TXBuffer += String(getCPUload());
@@ -868,14 +880,14 @@ void handle_root() {
       TXBuffer += F(")");
     }
 
-    html_TR_TD(); TXBuffer += F("Free Mem:<TD>");
+    addRowLabel(F("Free Mem"));
     TXBuffer += String(freeMem);
     TXBuffer += F(" (");
     TXBuffer += String(lowestRAM);
     TXBuffer += F(" - ");
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += F(")");
-    html_TR_TD(); TXBuffer += F("Free Stack:<TD>");
+    addRowLabel(F("Free Stack"));
     TXBuffer += String(getCurrentFreeStack());
     TXBuffer += F(" (");
     TXBuffer += String(lowestFreeStack);
@@ -883,10 +895,10 @@ void handle_root() {
     TXBuffer += String(lowestFreeStackfunction);
     TXBuffer += F(")");
 
-    html_TR_TD(); TXBuffer += F("IP:<TD>");
+    addRowLabel(F("IP"));
     TXBuffer += formatIP(ip);
 
-    html_TR_TD(); TXBuffer += F("Wifi RSSI:<TD>");
+    addRowLabel(F("Wifi RSSI"));
     if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
@@ -1018,10 +1030,6 @@ void handle_config() {
 
   String name = WebServer.arg(F("name"));
   //String password = WebServer.arg(F("password"));
-  String ssid = WebServer.arg(F("ssid"));
-  //String key = WebServer.arg(F("key"));
-  String ssid2 = WebServer.arg(F("ssid2"));
-  //String key2 = WebServer.arg(F("key2"));
   String iprangelow = WebServer.arg(F("iprangelow"));
   String iprangehigh = WebServer.arg(F("iprangehigh"));
 
@@ -1033,6 +1041,7 @@ void handle_config() {
   String espdns = WebServer.arg(F("espdns"));
   Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
   //String apkey = WebServer.arg(F("apkey"));
+  String ssid = WebServer.arg(F("ssid"));
 
 
   if (ssid[0] != 0)
@@ -1053,7 +1062,7 @@ void handle_config() {
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
-    safe_strncpy(SecuritySettings.WifiSSID2, ssid2.c_str(), sizeof(SecuritySettings.WifiSSID2));
+    strncpy_webserver_arg(SecuritySettings.WifiSSID2, F("ssid2"));
     copyFormPassword(F("key2"), SecuritySettings.WifiKey2, sizeof(SecuritySettings.WifiKey2));
 
     // Access point password.
@@ -1176,21 +1185,11 @@ void handle_controllers() {
 
   String usedns = WebServer.arg(F("usedns"));
   String controllerip = WebServer.arg(F("controllerip"));
-  String controllerhostname = WebServer.arg(F("controllerhostname"));
   const int controllerport = getFormItemInt(F("controllerport"), 0);
   const int protocol = getFormItemInt(F("protocol"), -1);
-  String controlleruser = WebServer.arg(F("controlleruser"));
-  String controllerpassword = WebServer.arg(F("controllerpassword"));
-  String controllersubscribe = WebServer.arg(F("controllersubscribe"));
-  String controllerpublish = WebServer.arg(F("controllerpublish"));
-  String MQTTLwtTopic = WebServer.arg(F("mqttlwttopic"));
-  String lwtmessageconnect = WebServer.arg(F("lwtmessageconnect"));
-  String lwtmessagedisconnect = WebServer.arg(F("lwtmessagedisconnect"));
   const int minimumsendinterval = getFormItemInt(F("minimumsendinterval"), 100);
   const int maxqueuedepth = getFormItemInt(F("maxqueuedepth"), 10);
   const int maxretry = getFormItemInt(F("maxretry"), 10);
-  String deleteoldest = WebServer.arg(F("deleteoldest"));
-  String mustcheckreply = WebServer.arg(F("mustcheckreply"));
   const int clienttimeout = getFormItemInt(F("clienttimeout"), CONTROLLER_CLIENTTIMEOUT_DFLT);
 
 
@@ -1250,7 +1249,7 @@ void handle_controllers() {
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
-          safe_strncpy(ControllerSettings.HostName, controllerhostname.c_str(), sizeof(ControllerSettings.HostName));
+          strncpy_webserver_arg(ControllerSettings.HostName, F("controllerhostname"));
           IPAddress IP;
           WiFi.hostByName(ControllerSettings.HostName, IP);
           for (byte x = 0; x < 4; x++)
@@ -1264,19 +1263,19 @@ void handle_controllers() {
         //copy settings to struct
         Settings.ControllerEnabled[controllerindex] = isFormItemChecked(F("controllerenabled"));
         ControllerSettings.Port = controllerport;
-        safe_strncpy(SecuritySettings.ControllerUser[controllerindex], controlleruser.c_str(), sizeof(SecuritySettings.ControllerUser[0]));
+        strncpy_webserver_arg(SecuritySettings.ControllerUser[controllerindex], F("controlleruser"));
         //safe_strncpy(SecuritySettings.ControllerPassword[controllerindex], controllerpassword.c_str(), sizeof(SecuritySettings.ControllerPassword[0]));
         copyFormPassword(F("controllerpassword"), SecuritySettings.ControllerPassword[controllerindex], sizeof(SecuritySettings.ControllerPassword[0]));
-        safe_strncpy(ControllerSettings.Subscribe, controllersubscribe.c_str(), sizeof(ControllerSettings.Subscribe));
-        safe_strncpy(ControllerSettings.Publish, controllerpublish.c_str(), sizeof(ControllerSettings.Publish));
-        safe_strncpy(ControllerSettings.MQTTLwtTopic, MQTTLwtTopic.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
-        safe_strncpy(ControllerSettings.LWTMessageConnect, lwtmessageconnect.c_str(), sizeof(ControllerSettings.LWTMessageConnect));
-        safe_strncpy(ControllerSettings.LWTMessageDisconnect, lwtmessagedisconnect.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
+        strncpy_webserver_arg(ControllerSettings.Subscribe, F("controllersubscribe"));
+        strncpy_webserver_arg(ControllerSettings.Publish, F("controllerpublish"));
+        strncpy_webserver_arg(ControllerSettings.MQTTLwtTopic, F("mqttlwttopic"));
+        strncpy_webserver_arg(ControllerSettings.LWTMessageConnect, F("lwtmessageconnect"));
+        strncpy_webserver_arg(ControllerSettings.LWTMessageDisconnect, F("lwtmessagedisconnect"));
         ControllerSettings.MinimalTimeBetweenMessages = minimumsendinterval;
         ControllerSettings.MaxQueueDepth = maxqueuedepth;
         ControllerSettings.MaxRetry = maxretry;
-        ControllerSettings.DeleteOldest = deleteoldest.toInt();
-        ControllerSettings.MustCheckReply = mustcheckreply.toInt();
+        ControllerSettings.DeleteOldest = getFormItemInt(F("deleteoldest"), ControllerSettings.DeleteOldest);
+        ControllerSettings.MustCheckReply = getFormItemInt(F("mustcheckreply"), ControllerSettings.MustCheckReply);
         ControllerSettings.ClientTimeout = clienttimeout;
 
 
@@ -1329,9 +1328,8 @@ void handle_controllers() {
   else
   {
     TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Controller Settings<TH>");
-    html_TR_TD(); TXBuffer += F("Protocol:");
+    addRowLabel(F("Protocol"));
     byte choice = Settings.Protocol[controllerindex];
-    html_TD();
     addSelector_Head(F("protocol"), true);
     addSelector_Item(F("- Standalone -"), 0, false, false, F(""));
     for (byte x = 0; x <= protocolCount; x++)
@@ -1481,54 +1479,6 @@ void handle_controllers() {
 }
 
 //********************************************************************************
-// HTML string re-use to keep the executable smaller
-// Flash strings are not checked for duplication.
-//********************************************************************************
-
-void html_TR_TD_highlight() {
-  TXBuffer += F("<TR class=\"highlight\">");
-  html_TD();
-}
-
-void html_TR_TD() {
-  TXBuffer += F("<TR>");
-  html_TD();
-}
-
-void html_BR() {
-  TXBuffer += F("<BR>");
-}
-
-void html_TR_TD_height(int height) {
-  TXBuffer += F("<TR><TD HEIGHT=\"");
-  TXBuffer += height;
-  TXBuffer += F("\">");
-}
-
-void html_TD() {
-  html_TD(1);
-}
-
-void html_TD(int td_cnt) {
-  for (int i = 0; i < td_cnt; ++i) {
-    TXBuffer += F("<TD>");
-  }
-}
-
-void html_input(const String& displayStr, const String& intString, int size, const String& value) {
-  html_TR_TD();
-  TXBuffer += displayStr;
-  TXBuffer += F(":<TD><input class='wide' type='text' name='");
-  TXBuffer += intString;
-  TXBuffer += F("' size=");
-  TXBuffer += size;
-  TXBuffer += F(" value='");
-  TXBuffer += value;
-  TXBuffer += F("'>");
-}
-
-
-//********************************************************************************
 // Web Interface notifcations page
 //********************************************************************************
 void handle_notifications() {
@@ -1547,18 +1497,6 @@ void handle_notifications() {
   --notificationindex;
 
   const int notification = getFormItemInt(F("notification"), -1);
-  String domain = WebServer.arg(F("domain"));
-  String server = WebServer.arg(F("server"));
-  String sender = WebServer.arg(F("sender"));
-  String receiver = WebServer.arg(F("receiver"));
-  String subject = WebServer.arg(F("subject"));
-  String user = WebServer.arg(F("user"));
-  String pass = WebServer.arg(F("pass"));
-  String body = WebServer.arg(F("body"));
-  String notificationenabled = WebServer.arg(F("notificationenabled"));
-
-
-
 
   if (notification != -1 && !notificationindexNotSet)
   {
@@ -1578,14 +1516,15 @@ void handle_notifications() {
         NotificationSettings.Pin1 = getFormItemInt(F("pin1"), 0);
         NotificationSettings.Pin2 = getFormItemInt(F("pin2"), 0);
         Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-        safe_strncpy(NotificationSettings.Domain, domain.c_str(), sizeof(NotificationSettings.Domain));
-        safe_strncpy(NotificationSettings.Server, server.c_str(), sizeof(NotificationSettings.Server));
-        safe_strncpy(NotificationSettings.Sender, sender.c_str(), sizeof(NotificationSettings.Sender));
-        safe_strncpy(NotificationSettings.Receiver, receiver.c_str(), sizeof(NotificationSettings.Receiver));
-        safe_strncpy(NotificationSettings.Subject, subject.c_str(), sizeof(NotificationSettings.Subject));
-        safe_strncpy(NotificationSettings.User, user.c_str(), sizeof(NotificationSettings.User));
-        safe_strncpy(NotificationSettings.Pass, pass.c_str(), sizeof(NotificationSettings.Pass));
-        safe_strncpy(NotificationSettings.Body, body.c_str(), sizeof(NotificationSettings.Body));
+        strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
+        strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
+        strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
+        strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
+        strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
+        strncpy_webserver_arg(NotificationSettings.User,     F("user"));
+        strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
+        strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+
       }
     }
     // Save the settings.
@@ -1647,9 +1586,8 @@ void handle_notifications() {
   else
   {
     TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Notification Settings<TH>");
-    html_TR_TD(); TXBuffer += F("Notification:");
+    addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
-    html_TD();
     addSelector_Head(F("notification"), true);
     addSelector_Item(F("- None -"), 0, false, false, F(""));
     for (byte x = 0; x <= notificationCount; x++)
@@ -1680,29 +1618,30 @@ void handle_notifications() {
 
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
-          html_input(F("Domain"), F("domain"), 64, NotificationSettings.Domain);
-          html_input(F("Server"), F("server"), 64, NotificationSettings.Server);
-          html_input(F("Port"), F("port"), 5, String(NotificationSettings.Port));
+          addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain)-1);
+          addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server)-1);
+          addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535);
 
-          html_input(F("Sender"), F("sender"), 64, NotificationSettings.Sender);
-          html_input(F("Receiver"), F("receiver"), 64, NotificationSettings.Receiver);
-          html_input(F("Subject"), F("subject"), 64, NotificationSettings.Subject);
+          addFormTextBox(F("Sender"), F("sender"), NotificationSettings.Sender, sizeof(NotificationSettings.Sender)-1);
+          addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver)-1);
+          addFormTextBox(F("Subject"), F("subject"), NotificationSettings.Subject, sizeof(NotificationSettings.Subject)-1);
 
-          html_input(F("User"), F("user"), 48, NotificationSettings.User);
-          html_input(F("Pass"), F("pass"), 32, NotificationSettings.Pass);
+          addFormTextBox(F("User"), F("user"), NotificationSettings.User, sizeof(NotificationSettings.User)-1);
+          addFormTextBox(F("Pass"), F("pass"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass)-1);
 
-          html_TR_TD(); TXBuffer += F("Body:<TD><textarea name='body' rows='20' size=512 wrap='off'>");
+          addRowLabel(F("Body"));
+          TXBuffer += F("<textarea name='body' rows='20' size=512 wrap='off'>");
           TXBuffer += NotificationSettings.Body;
           TXBuffer += F("</textarea>");
         }
 
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
         {
-          html_TR_TD(); TXBuffer += F("1st GPIO:<TD>");
+          addRowLabel(F("1st GPIO"));
           addPinSelect(false, "pin1", NotificationSettings.Pin1);
         }
 
-        html_TR_TD(); TXBuffer += F("Enabled:<TD>");
+        addRowLabel(F("Enabled"));
         addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
 
         TempEvent.NotificationIndex = notificationindex;
@@ -1844,6 +1783,51 @@ void addIPaccessControlSelect(String name, int choice)
 // Web Interface device page
 //********************************************************************************
 //19480 (11128)
+
+// change of device: cleanup old device and reset default settings
+void setTaskDevice_to_TaskIndex(byte taskdevicenumber, byte taskIndex) {
+  struct EventStruct TempEvent;
+  TempEvent.TaskIndex = taskIndex;
+  String dummy;
+
+  //let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
+  PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+  taskClear(taskIndex, false); // clear settings, but do not save
+  ClearCustomTaskSettings(taskIndex);
+
+  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
+  if (taskdevicenumber != 0) // set default values if a new device has been selected
+  {
+    //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); //the plugin should populate ExtraTaskSettings with its default values.
+  } else {
+    // New task is empty task, thus save config now.
+    SaveTaskSettings(taskIndex);
+    SaveSettings();
+  }
+}
+
+void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
+                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
+    LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
+    byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
+    if (taskdevicetimer > 0) {
+      Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
+    } else {
+      if (!Device[DeviceIndex].TimerOptional) // Set default delay, unless it's optional...
+        Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
+      else
+        Settings.TaskDeviceTimer[taskIndex] = 0;
+    }
+    Settings.TaskDeviceEnabled[taskIndex] = enabled;
+    safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
+    if (pin1 >= 0) Settings.TaskDevicePin1[taskIndex] = pin1;
+    if (pin2 >= 0) Settings.TaskDevicePin2[taskIndex] = pin2;
+    if (pin3 >= 0) Settings.TaskDevicePin3[taskIndex] = pin3;
+    SaveTaskSettings(taskIndex);
+}
+
+
 void handle_devices() {
   checkRAM(F("handle_devices"));
   if (!isLoggedIn()) return;
@@ -1937,56 +1921,32 @@ void handle_devices() {
   // FIXME TD-er: Might have to clear any caches here.
   if (edit != 0  && !taskIndexNotSet) // when form submitted
   {
-    if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber) // change of device: cleanup old device and reset default settings
+    if (Settings.TaskDeviceNumber[taskIndex] != taskdevicenumber)
     {
-      //let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
-      TempEvent.TaskIndex = taskIndex;
-      PluginCall(PLUGIN_EXIT, &TempEvent, dummyString);
-
-      taskClear(taskIndex, false); // clear settings, but do not save
-      ClearCustomTaskSettings(taskIndex);
-
-      Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-      if (taskdevicenumber != 0) // set default values if a new device has been selected
-      {
-        //NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
-        if (ExtraTaskSettings.TaskIndex != taskIndex) // if field set empty, reload defaults
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString); //the plugin should populate ExtraTaskSettings with its default values.
-      } else {
-        SaveTaskSettings(taskIndex);
-        SaveSettings();
-      }
+      // change of device: cleanup old device and reset default settings
+      setTaskDevice_to_TaskIndex(taskdevicenumber, taskIndex);
     }
     else if (taskdevicenumber != 0) //save settings
     {
       Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
-
-      if (taskdevicetimer > 0)
-        Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
-      else
-      {
-        if (!Device[DeviceIndex].TimerOptional) // Set default delay, unless it's optional...
-          Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
-        else
-          Settings.TaskDeviceTimer[taskIndex] = 0;
-      }
-
-      Settings.TaskDeviceEnabled[taskIndex] = isFormItemChecked(F("TDE"));
-      strcpy(ExtraTaskSettings.TaskDeviceName, WebServer.arg(F("TDN")).c_str());
-      Settings.TaskDevicePort[taskIndex] =  getFormItemInt(F("TDP"), 0);
+      int pin1 = -1;
+      int pin2 = -1;
+      int pin3 = -1;
+      update_whenset_FormItemInt(F("taskdevicepin1"), pin1);
+      update_whenset_FormItemInt(F("taskdevicepin2"), pin2);
+      update_whenset_FormItemInt(F("taskdevicepin3"), pin3);
+      setBasicTaskValues(taskIndex, taskdevicetimer,
+                         isFormItemChecked(F("TDE")), WebServer.arg(F("TDN")),
+                         pin1, pin2, pin3);
+      Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
 
       for (byte controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
       {
-
         Settings.TaskDeviceID[controllerNr][taskIndex] = getFormItemInt(String(F("TDID")) + (controllerNr + 1));
         Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(String(F("TDSD")) + (controllerNr + 1));
       }
 
-      update_whenset_FormItemInt(F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
-      update_whenset_FormItemInt(F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
-      update_whenset_FormItemInt(F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
-
+      DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
       if (Device[DeviceIndex].PullUpOption)
         Settings.TaskDevicePin1PullUp[taskIndex] = isFormItemChecked(F("TDPPU"));
 
@@ -1995,10 +1955,9 @@ void handle_devices() {
 
       for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
       {
-
-        strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], WebServer.arg(String(F("TDF")) + (varNr + 1)).c_str());
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr], String(F("TDF")) + (varNr + 1));
         ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = getFormItemInt(String(F("TDVD")) + (varNr + 1));
-        strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], WebServer.arg(String(F("TDVN")) + (varNr + 1)).c_str());
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], String(F("TDVN")) + (varNr + 1));
 
         // taskdeviceformula[varNr].toCharArray(tmpString, 41);
         // strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
@@ -2309,7 +2268,7 @@ void handle_devices() {
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
-              html_TR_TD(); TXBuffer += F("IDX:<TD>");
+              addRowLabel(F("IDX"));
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
               addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
@@ -2775,7 +2734,18 @@ void addRowLabel(const String& label)
 {
   html_TR_TD();
   TXBuffer += label;
-  TXBuffer += F(":<TD>");
+  TXBuffer += ':';
+  html_TD();
+}
+
+// Add a row label and mark it with copy markers to copy it to clipboard.
+void addRowLabel_copy(const String& label) {
+  TXBuffer += F("<TR>");
+  html_copyText_TD();
+  TXBuffer += label;
+  TXBuffer += ':';
+  html_copyText_marker();
+  html_copyText_TD();
 }
 
 void addButton(const String &url, const String &label)
@@ -2824,6 +2794,9 @@ void addCopyButton(const String &value, const String &delimiter, const String &n
   //Fix HTML
   TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
   TXBuffer += name;
+  TXBuffer += " (";
+  html_copyText_marker();
+  TXBuffer += ')';
   TXBuffer += F("</button>");
 }
 
@@ -3056,6 +3029,59 @@ void addEnabled(boolean enabled)
     TXBuffer += F("<span class='enabled off'>&#10060;</span>");
 }
 
+
+//********************************************************************************
+// HTML string re-use to keep the executable smaller
+// Flash strings are not checked for duplication.
+//********************************************************************************
+
+void html_TR_TD_highlight() {
+  TXBuffer += F("<TR class=\"highlight\">");
+  html_TD();
+}
+
+void html_TR_TD() {
+  TXBuffer += F("<TR>");
+  html_TD();
+}
+
+void html_BR() {
+  TXBuffer += F("<BR>");
+}
+
+void html_TR_TD_height(int height) {
+  TXBuffer += F("<TR><TD HEIGHT=\"");
+  TXBuffer += height;
+  TXBuffer += F("\">");
+}
+
+void html_TD() {
+  html_TD(1);
+}
+
+void html_TD(int td_cnt) {
+  for (int i = 0; i < td_cnt; ++i) {
+    TXBuffer += F("<TD>");
+  }
+}
+
+static int copyTextCounter = 0;
+
+void html_reset_copyTextCounter() {
+  copyTextCounter = 0;
+}
+
+void html_copyText_TD() {
+  ++copyTextCounter;
+  TXBuffer += F("<TD id='copyText_");
+  TXBuffer += copyTextCounter;
+  TXBuffer += F("'>");
+}
+
+// Add some recognizable token to show which parts will be copied.
+void html_copyText_marker() {
+  TXBuffer += F("&#x022C4;"); //   &diam; &diamond; &Diamond; &#x022C4; &#8900;
+}
 
 //********************************************************************************
 // Add a task select dropdown list
@@ -3959,11 +3985,6 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  char tmpString[81];
-
-  String ip = WebServer.arg(F("ip"));
-  String syslogip = WebServer.arg(F("syslogip"));
-  String ntphost = WebServer.arg(F("ntphost"));
   int timezone = getFormItemInt(F("timezone"));
   int dststartweek = getFormItemInt(F("dststartweek"));
   int dststartdow = getFormItemInt(F("dststartdow"));
@@ -3979,15 +4000,14 @@ void handle_advanced() {
   if (edit.length() != 0)
   {
     Settings.MessageDelay = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet = ip.toInt();
-    ntphost.toCharArray(tmpString, 64);
-    strcpy(Settings.NTPHost, tmpString);
+    Settings.IP_Octet = WebServer.arg(F("ip")).toInt();
+    strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = timezone;
     TimeChangeRule dst_start(dststartweek, dststartdow, dststartmonth, dststarthour, timezone);
     if (dst_start.isValid()) { Settings.DST_Start = dst_start.toFlashStoredValue(); }
     TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
-    str2ip(syslogip.c_str(), Settings.Syslog_IP);
+    str2ip(WebServer.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
@@ -5086,7 +5106,7 @@ void handle_setup() {
 //********************************************************************************
 void handle_rules() {
   checkRAM(F("handle_rules"));
-  if (!isLoggedIn()) return;
+  if (!isLoggedIn() || !Settings.UseRules) return;
   navMenuIndex = 5;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
@@ -5236,6 +5256,7 @@ void handle_rules() {
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
   if (!isLoggedIn()) return;
+  html_reset_copyTextCounter();
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
@@ -5252,17 +5273,17 @@ void handle_sysinfo() {
 
    TXBuffer += githublogo;
 
-   html_TR_TD(); TXBuffer += F("Unit<TD>");
+   addRowLabel(F("Unit"));
    TXBuffer += Settings.Unit;
 
   if (Settings.UseNTP)
   {
 
-     html_TR_TD(); TXBuffer += F("Local Time<TD>");
+     addRowLabel(F("Local Time"));
      TXBuffer += getDateTimeString('-', ':', ' ');
   }
 
-   html_TR_TD(); TXBuffer += F("Uptime<TD>");
+   addRowLabel(F("Uptime"));
   char strUpTime[40];
   int minutes = wdcounter / 2;
   int days = minutes / 1440;
@@ -5272,7 +5293,7 @@ void handle_sysinfo() {
   sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
    TXBuffer += strUpTime;
 
-   html_TR_TD(); TXBuffer += F("Load<TD>");
+   addRowLabel(F("Load"));
   if (wdcounter > 0)
   {
      TXBuffer += getCPUload();
@@ -5281,14 +5302,14 @@ void handle_sysinfo() {
      TXBuffer += F(")");
   }
 
-   html_TR_TD(); TXBuffer += F("Free Mem<TD>");
+   addRowLabel(F("Free Mem"));
    TXBuffer += freeMem;
    TXBuffer += F(" (");
    TXBuffer += lowestRAM;
    TXBuffer += F(" - ");
    TXBuffer += lowestRAMfunction;
    TXBuffer += F(")");
-   html_TR_TD(); TXBuffer += F("Free Stack<TD>");
+   addRowLabel(F("Free Stack"));
    TXBuffer += getCurrentFreeStack();
    TXBuffer += F(" (");
    TXBuffer += lowestFreeStack;
@@ -5296,19 +5317,19 @@ void handle_sysinfo() {
    TXBuffer += lowestFreeStackfunction;
    TXBuffer += F(")");
 
-   html_TR_TD(); TXBuffer += F("Boot<TD>");
+   addRowLabel(F("Boot"));
    TXBuffer += getLastBootCauseString();
    TXBuffer += F(" (");
    TXBuffer += RTC.bootCounter;
    TXBuffer += F(")");
-   html_TR_TD(); TXBuffer += F("Reset Reason<TD>");
+   addRowLabel(F("Reset Reason"));
    TXBuffer += getResetReasonString();
 
    addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
   {
-     html_TR_TD(); TXBuffer += F("Wifi<TD>");
+     addRowLabel(F("Wifi"));
     #if defined(ESP8266)
       byte PHYmode = wifi_get_phy_mode();
     #endif
@@ -5331,32 +5352,32 @@ void handle_sysinfo() {
      TXBuffer += WiFi.RSSI();
      TXBuffer += F(" dB)");
   }
-  html_TR_TD(); TXBuffer += F("IP config<TD>");
+  addRowLabel(F("IP config"));
   TXBuffer += useStaticIP() ? F("Static") : F("DHCP");
 
-   html_TR_TD(); TXBuffer += F("IP / subnet<TD>");
+   addRowLabel(F("IP / subnet"));
    TXBuffer += formatIP(WiFi.localIP());
    TXBuffer += F(" / ");
    TXBuffer += formatIP(WiFi.subnetMask());
 
-   html_TR_TD(); TXBuffer += F("GW<TD>");
+   addRowLabel(F("GW"));
    TXBuffer += formatIP(WiFi.gatewayIP());
 
   {
-    html_TR_TD(); TXBuffer += F("Client IP<TD>");
+    addRowLabel(F("Client IP"));
     WiFiClient client(WebServer.client());
     TXBuffer += formatIP(client.remoteIP());
   }
 
-  html_TR_TD(); TXBuffer += F("DNS<TD>");
+  addRowLabel(F("DNS"));
   TXBuffer += formatIP(WiFi.dnsIP(0));
   TXBuffer += F(" / ");
   TXBuffer += formatIP(WiFi.dnsIP(1));
 
-  html_TR_TD(); TXBuffer += F("Allowed IP Range<TD>");
+  addRowLabel(F("Allowed IP Range"));
   TXBuffer += describeAllowedIPrange();
 
-  html_TR_TD(); TXBuffer += F("STA MAC<TD>");
+  addRowLabel(F("STA MAC"));
 
   uint8_t mac[] = {0, 0, 0, 0, 0, 0};
   uint8_t* macread = WiFi.macAddress(mac);
@@ -5364,82 +5385,87 @@ void handle_sysinfo() {
   formatMAC(macread, macaddress);
   TXBuffer += macaddress;
 
-  html_TR_TD(); TXBuffer += F("AP MAC<TD>");
+  addRowLabel(F("AP MAC"));
   macread = WiFi.softAPmacAddress(mac);
   formatMAC(macread, macaddress);
   TXBuffer += macaddress;
 
-  html_TR_TD(); TXBuffer += F("SSID<TD>");
+  addRowLabel(F("SSID"));
   TXBuffer += WiFi.SSID();
   TXBuffer += F(" (");
   TXBuffer += WiFi.BSSIDstr();
   TXBuffer += F(")");
 
-  html_TR_TD(); TXBuffer += F("Channel<TD>");
+  addRowLabel(F("Channel"));
   TXBuffer += WiFi.channel();
 
-  html_TR_TD(); TXBuffer += F("Connected<TD>");
+  addRowLabel(F("Connected"));
   TXBuffer += format_msec_duration(timeDiff(lastConnectMoment, millis()));
 
-  html_TR_TD(); TXBuffer += F("Last Disconnect Reason<TD>");
+  addRowLabel(F("Last Disconnect Reason"));
   TXBuffer += getLastDisconnectReason();
 
-  html_TR_TD(); TXBuffer += F("Number reconnects<TD>");
+  addRowLabel(F("Number reconnects"));
   TXBuffer += wifi_reconnects;
 
   addTableSeparator(F("Firmware"), 2, 3);
 
-  TXBuffer += F("<TR><TD id='copyText_1'>Build<TD id='copyText_2'>");
+  addRowLabel_copy(F("Build"));
   TXBuffer += BUILD;
   TXBuffer += F(" ");
   TXBuffer += F(BUILD_NOTES);
 
-  TXBuffer += F("<TR><TD id='copyText_3'>Libraries<TD id='copyText_4'>");
+  addRowLabel_copy(F("Libraries"));
   TXBuffer += getSystemLibraryString();
 
-  TXBuffer += F("<TR><TD id='copyText_5'>GIT version<TD id='copyText_6'>");
+  addRowLabel_copy(F("GIT version"));
   TXBuffer += BUILD_GIT;
 
-  TXBuffer += F("<TR><TD id='copyText_7'>Plugins<TD id='copyText_8'>");
+  addRowLabel_copy(F("Plugins"));
   TXBuffer += deviceCount + 1;
   TXBuffer += getPluginDescriptionString();
 
-  html_TR_TD(); TXBuffer += F("Build Md5<TD>");
-  for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
+  bool filenameDummy = String(CRCValues.binaryFilename).startsWith(F("ThisIsTheDummy"));
+  if (!filenameDummy) {
+    addRowLabel(F("Build Md5"));
+    for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
 
-   html_TR_TD(); TXBuffer += F("Md5 check<TD>");
-  if (! CRCValues.checkPassed())
-     TXBuffer += F("<font color = 'red'>fail !</font>");
-  else  TXBuffer += F("passed.");
+     addRowLabel(F("Md5 check"));
+    if (! CRCValues.checkPassed())
+       TXBuffer += F("<font color = 'red'>fail !</font>");
+    else  TXBuffer += F("passed.");
+  }
+  addRowLabel_copy(F("Build time"));
+  TXBuffer += String(CRCValues.compileDate);
+  TXBuffer += " ";
+  TXBuffer += String(CRCValues.compileTime);
 
-   TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
-   TXBuffer += String(CRCValues.compileDate);
-   TXBuffer += " ";
-   TXBuffer += String(CRCValues.compileTime);
+  addRowLabel_copy(F("Binary filename"));
+  if (filenameDummy) {
+    TXBuffer += F("<b>Self built!</b>");
+  } else {
+    TXBuffer += String(CRCValues.binaryFilename);
+  }
 
-   TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
-   TXBuffer += String(CRCValues.binaryFilename);
-
-
-   addTableSeparator(F("System Status"), 2, 3);
-   {
-     // Actual Loglevel
-     html_TR_TD(); TXBuffer += F("Syslog Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
-     html_TR_TD(); TXBuffer += F("Serial Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
-     html_TR_TD(); TXBuffer += F("Web Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(getWebLogLevel());
-     #ifdef FEATURE_SD
-     html_TR_TD(); TXBuffer += F("SD Log Level:<TD>");
-     TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
-     #endif
-   }
+  addTableSeparator(F("System Status"), 2, 3);
+  {
+    // Actual Loglevel
+    addRowLabel(F("Syslog Log Level"));
+    TXBuffer += getLogLevelDisplayString(Settings.SyslogLevel);
+    addRowLabel(F("Serial Log Level"));
+    TXBuffer += getLogLevelDisplayString(getSerialLogLevel());
+    addRowLabel(F("Web Log Level"));
+    TXBuffer += getLogLevelDisplayString(getWebLogLevel());
+    #ifdef FEATURE_SD
+    addRowLabel(F("SD Log Level"));
+    TXBuffer += getLogLevelDisplayString(Settings.SDLogLevel);
+    #endif
+  }
 
 
    addTableSeparator(F("ESP board"), 2, 3);
 
-   html_TR_TD(); TXBuffer += F("ESP Chip ID<TD>");
+   addRowLabel(F("ESP Chip ID"));
   #if defined(ESP8266)
      TXBuffer += ESP.getChipId();
      TXBuffer += F(" (0x");
@@ -5448,7 +5474,7 @@ void handle_sysinfo() {
      TXBuffer += espChipId;
      TXBuffer += F(")");
 
-     html_TR_TD(); TXBuffer += F("ESP Chip Freq:<TD>");
+     addRowLabel(F("ESP Chip Freq"));
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
@@ -5465,17 +5491,17 @@ void handle_sysinfo() {
      TXBuffer += espChipIdS1;
      TXBuffer += F(")");
 
-     html_TR_TD(); TXBuffer += F("ESP Chip Freq:<TD>");
+     addRowLabel(F("ESP Chip Freq"));
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
-  html_TR_TD(); TXBuffer += F("ESP Board Name:<TD>");
+  addRowLabel(F("ESP Board Name"));
   TXBuffer += ARDUINO_BOARD;
 
 
    addTableSeparator(F("Storage"), 2, 3);
 
-   html_TR_TD(); TXBuffer += F("Flash Chip ID<TD>");
+   addRowLabel(F("Flash Chip ID"));
   #if defined(ESP8266)
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
@@ -5489,22 +5515,22 @@ void handle_sysinfo() {
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();
 
-   html_TR_TD(); TXBuffer += F("Flash Chip Real Size:<TD>");
+   addRowLabel(F("Flash Chip Real Size"));
    TXBuffer += realSize / 1024;
    TXBuffer += F(" kB");
 
-   html_TR_TD(); TXBuffer += F("Flash IDE Size:<TD>");
+   addRowLabel(F("Flash IDE Size"));
    TXBuffer += ideSize / 1024;
    TXBuffer += F(" kB");
 
   // Please check what is supported for the ESP32
   #if defined(ESP8266)
-     html_TR_TD(); TXBuffer += F("Flash IDE speed:<TD>");
+     addRowLabel(F("Flash IDE speed"));
      TXBuffer += ESP.getFlashChipSpeed() / 1000000;
      TXBuffer += F(" MHz");
 
     FlashMode_t ideMode = ESP.getFlashChipMode();
-     html_TR_TD(); TXBuffer += F("Flash IDE mode:<TD>");
+     addRowLabel(F("Flash IDE mode"));
     switch (ideMode) {
       case FM_QIO:   TXBuffer += F("QIO");  break;
       case FM_QOUT:  TXBuffer += F("QOUT"); break;
@@ -5515,13 +5541,13 @@ void handle_sysinfo() {
     }
   #endif
 
-   html_TR_TD(); TXBuffer += F("Flash Writes<TD>");
+   addRowLabel(F("Flash Writes"));
    TXBuffer += RTC.flashDayCounter;
    TXBuffer += F(" daily / ");
    TXBuffer += RTC.flashCounter;
    TXBuffer += F(" boot");
 
-   html_TR_TD(); TXBuffer += F("Sketch Size<TD>");
+   addRowLabel(F("Sketch Size"));
   #if defined(ESP8266)
    TXBuffer += ESP.getSketchSize() / 1024;
    TXBuffer += F(" kB (");
@@ -5529,7 +5555,7 @@ void handle_sysinfo() {
    TXBuffer += F(" kB free)");
   #endif
 
-  html_TR_TD(); TXBuffer += F("SPIFFS Size<TD>");
+  addRowLabel(F("SPIFFS Size"));
   {
   #if defined(ESP8266)
     fs::FSInfo fs_info;
@@ -5564,12 +5590,12 @@ void handle_sysinfo() {
    addTableSeparator(F("Partitions"), 2, 3,
      F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
 
-   html_TR_TD(); TXBuffer += F("Data Partition Table<TD>");
+   addRowLabel(F("Data Partition Table"));
 //   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
 //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_DATA, F(" - "), F("<BR>"));
    getPartitionTableSVG(ESP_PARTITION_TYPE_DATA, 0x5856e6);
 
-   html_TR_TD(); TXBuffer += F("App Partition Table<TD>");
+   addRowLabel(F("App Partition Table"));
 //   TXBuffer += getPartitionTableHeader(F(" - "), F("<BR>"));
 //   TXBuffer += getPartitionTable(ESP_PARTITION_TYPE_APP , F(" - "), F("<BR>"));
    getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
@@ -5597,7 +5623,7 @@ void addSysVar_html(const String& input) {
   parseSystemVariables(replacement, true); // URL encoded
   parseStandardConversions(replacement, true);
   TXBuffer += replacement;
-  yield();
+  delay(0);
 }
 
 
@@ -5664,6 +5690,8 @@ void handle_sysvars() {
   addSysVar_html(F("%systm_hm_am%"));
   addSysVar_html(F("%systime%"));
   addSysVar_html(F("%systime_am%"));
+  addSysVar_html(F("%sysbuild_date%"));
+  addSysVar_html(F("%sysbuild_time%"));
   addTableSeparator(F("System"), 3, 3);
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));

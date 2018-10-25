@@ -445,8 +445,7 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  TmpStr1[0] = 0;
+  char *TmpStr1 = new char[INPUT_COMMAND_SIZE]();
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
@@ -458,6 +457,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
   if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1); }
   if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1); }
   if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1); }
+  delete[] TmpStr1;
 }
 
 /********************************************************************************************\
@@ -568,6 +568,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc) {
 
 boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
+  memset(argv, 0, argv_size);
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
@@ -842,7 +843,12 @@ void ResetFactory(void)
 	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
 */
 
+#ifdef PLUGIN_DESCR
+  strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
+#endif
 
+  addPredefinedPlugins();
+  addPredefinedRules();
 
 
 
@@ -870,6 +876,108 @@ void ResetFactory(void)
   WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot();
+}
+
+void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeLow) {
+  setTaskDevice_to_TaskIndex(1, taskIndex);
+  setBasicTaskValues(
+    taskIndex,
+    0,            // taskdevicetimer
+    true,         // enabled
+    name,         // name
+    gpio,         // pin1
+    -1,            // pin2
+    -1);           // pin3
+  Settings.TaskDevicePin1PullUp[taskIndex] = true;
+  if (activeLow)
+    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+}
+
+bool addPredefinedPlugins() {
+  byte taskIndex = 0;
+  #ifdef GPIO_KEY1
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY1, F("Button1"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY1
+  #ifdef GPIO_KEY2
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY2, F("Button2"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY2
+  #ifdef GPIO_KEY3
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY3, F("Button3"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY3
+  #ifdef GPIO_KEY4
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY4, F("Button4"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY4
+
+  #ifdef GPIO_REL1
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL1, F("Relay1"), false);
+    ++taskIndex;
+  #endif // GPIO_REL1
+  #ifdef GPIO_REL2
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL2, F("Relay2"), false);
+    ++taskIndex;
+  #endif // GPIO_REL2
+  #ifdef GPIO_REL3
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL3, F("Relay3"), false);
+    ++taskIndex;
+  #endif // GPIO_REL3
+  #ifdef GPIO_REL4
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL4, F("Relay4"), false);
+    ++taskIndex;
+  #endif // GPIO_REL4
+  return taskIndex != 0; // Indicate something was added
+  // Also needed to make sure the variable is being used.
+}
+
+void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
+  Settings.UseRules = true;
+  String fileName;
+  #if defined(ESP32)
+    fileName += '/';
+  #endif
+  fileName += F("rules1.txt");
+  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
+  rule.replace(F("BNR"), String(buttonNumber));
+  rule.replace(F("GNR"), String(relay_gpio));
+  String result = appendLineToFile(fileName, rule);
+  if (result.length() > 0) {
+    addLog(LOG_LEVEL_ERROR, result);
+  }
+}
+
+void addPredefinedRules() {
+  #ifdef GPIO_KEY1
+    #ifdef GPIO_REL1
+      addButtonRelayRule(1, GPIO_REL1);
+    #endif // GPIO_REL1
+  #endif // GPIO_KEY1
+  #ifdef GPIO_KEY2
+    #ifdef GPIO_REL2
+      addButtonRelayRule(2, GPIO_REL2);
+    #endif // GPIO_REL2
+  #endif // GPIO_KEY2
+  #ifdef GPIO_KEY3
+    #ifdef GPIO_REL3
+      addButtonRelayRule(3, GPIO_REL3);
+    #endif // GPIO_REL3
+  #endif // GPIO_KEY3
+  #ifdef GPIO_KEY4
+    #ifdef GPIO_REL4
+      addButtonRelayRule(4, GPIO_REL4);
+    #endif // GPIO_REL4
+  #endif // GPIO_KEY4
+
 }
 
 
@@ -995,6 +1103,11 @@ String getPluginDescriptionString() {
   #endif
   #ifdef PLUGIN_BUILD_DEV
     result += F(" [Development]");
+  #endif
+  #ifdef PLUGIN_DESCR
+  result += " [";
+  result += F(PLUGIN_DESCR);
+  result += ']';
   #endif
   return result;
 }
@@ -2251,6 +2364,7 @@ for (byte x=0; x < RULESETS_MAX; x++){
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  if (!Settings.UseRules) return;
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -2290,6 +2404,7 @@ void rulesProcessing(String& event)
   \*********************************************************************************************/
 String rulesProcessingFile(const String& fileName, String& event)
 {
+  if (!Settings.UseRules) return "";
   checkRAM(F("rulesProcessingFile"));
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
     Serial.print(F("RuleDebug Processing:"));
@@ -2585,7 +2700,7 @@ void processMatchedRule(
       {
         String tmpString = event.substring(equalsPos + 1);
 
-        char tmpParam[INPUT_COMMAND_SIZE];
+        char* tmpParam = new char[INPUT_COMMAND_SIZE];
         tmpParam[0] = 0;
 
         if (GetArgv(tmpString.c_str(),tmpParam,1)) {
@@ -2595,6 +2710,7 @@ void processMatchedRule(
         if (GetArgv(tmpString.c_str(),tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
         if (GetArgv(tmpString.c_str(),tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
         if (GetArgv(tmpString.c_str(),tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+        delete[] tmpParam;
       }
     }
 
@@ -2610,7 +2726,7 @@ void processMatchedRule(
     // FIXME TD-er: This part seems a bit strange.
     // It can't schedule a call to PLUGIN_WRITE.
     // Maybe ExecuteCommand can be scheduled?
-    yield();
+    delay(0);
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
     String tmpAction(action);
     if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
@@ -2625,7 +2741,7 @@ void processMatchedRule(
       }
       ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
-    yield();
+    delay(0);
   }
 }
 
@@ -2896,6 +3012,7 @@ boolean conditionMatch(const String& check)
   \*********************************************************************************************/
 void rulesTimers()
 {
+  if (!Settings.UseRules) return;
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
   {
     if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
@@ -2918,6 +3035,7 @@ void rulesTimers()
 
 void createRuleEvents(byte TaskIndex)
 {
+  if (!Settings.UseRules) return;
   LoadTaskSettings(TaskIndex);
   byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);

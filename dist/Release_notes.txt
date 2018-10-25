@@ -1,4 +1,70 @@
 -------------------------------------------------
+Changes in release mega-20181025 (since mega-20181023)
+-------------------------------------------------
+
+Release date: Thu Oct 25 04:00:13 CEST 2018
+
+Saverio Cisternino (1):
+      Added auto redirect to home after run reboot command from web page.
+
+TD-er (5):
+      [WDT] Change yield() to delay(0)
+      [Build] Add Sonoff POW R2 (4MB)
+      [Sonoff] Add pre-defined switch and relay + rules on factory reset
+      [Info] Remove MD5 check fail on self-built images
+      [Travis] Use variables even when no predefined plugins are added.
+
+
+-------------------------------------------------
+Changes in release mega-20181023 (since mega-20181022)
+-------------------------------------------------
+
+Release date: Tue Oct 23 04:00:14 CEST 2018
+
+Kurairaito (2):
+      Update _P067_HX711_Load_Cell.ino
+      Update _P067_HX711_Load_Cell.ino
+
+TD-er (6):
+      [#1486] Allow multiple instances of rotary encoder
+      [JavaScript] Fix update values on Devices tab
+      [JavaScript] Cleanup some code duplication
+      [PubSubClient] Add delay when waiting for data and flush on disconnect
+      [WiFi timeout] Set default to 1000 msec again
+      [Docs] Add some WiFi related information to docs
+
+
+-------------------------------------------------
+Changes in release mega-20181022 (since mega-20181021)
+-------------------------------------------------
+
+Release date: Mon Oct 22 04:00:15 CEST 2018
+
+TD-er (2):
+      [Webserver] Generate copyText id names
+      [Webserver] Uniform row labels to reduce flash string size
+
+
+-------------------------------------------------
+Changes in release mega-20181021 (since mega-20181020)
+-------------------------------------------------
+
+Release date: Sun Oct 21 04:00:16 CEST 2018
+
+Bartlomiej Zimon (2):
+      fix for #1920     fix for out of sync, check both header bytes     proper check for abnormal state
+      Revert "fix for #1920"
+
+TD-er (6):
+      [stack usage] Allocate temp char array on heap for parsing arguments
+      Proper look for connection.
+      [Rules] Early exit on rules processing when rules not enabled
+      [#1910] Notification settings extra strings on stack
+      [#1891] Send all values for Generic UDP controller
+      [#1870] Feature request build date as system info
+
+
+-------------------------------------------------
 Changes in release mega-20181020 (since mega-20181017)
 -------------------------------------------------
 

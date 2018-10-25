@@ -106,8 +106,8 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
   boolean success = !ControllerSettings.MustCheckReply;
   if (ControllerSettings.MustCheckReply || data) {
     unsigned long timer = millis() + 200;
-    while (!client.available() && !timeOutReached(timer))
-      yield();
+    while (!client_available(client) && !timeOutReached(timer))
+      delay(1);
 
     char log[80] = {0};
 
@@ -145,7 +145,7 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
         sprintf_P(log, PSTR("Blynk get - %s => %s"),command.c_str(), value_char   );
         addLog(LOG_LEVEL_DEBUG, log);
       }
-      yield();
+      delay(0);
     }
   }
   addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (012)"));

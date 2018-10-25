@@ -26,6 +26,8 @@ To create/register a plugin, you have to :
  * BUILD Configs *******************************************************************
 \******************************************************************************/
 
+
+
 // IR library is large, so make a separate build including stable plugins and IR.
 #ifdef PLUGIN_BUILD_DEV_IR
     #define PLUGIN_BUILD_DEV       // add dev
@@ -78,6 +80,7 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 #ifdef PLUGIN_BUILD_IR
+    #define PLUGIN_DESCR  "IR"
     #define USES_P016      // IR
     #define USES_P035      // IRTX
 #endif
@@ -89,19 +92,29 @@ To create/register a plugin, you have to :
 
 // Itead ----------------------------
 #ifdef PLUGIN_SET_SONOFF_BASIC
+    #define PLUGIN_DESCR  "Sonoff Basic"
     #define PLUGIN_SET_ONLY_SWITCH
+
+    // Pre-defined setup parameters
+    #define GPIO_KEY1     0              // Button
+    #define GPIO_REL1     12             // Red Led and Relay (0 = Off, 1 = On)
+    #define DEFAULT_PIN_STATUS_LED 13    // Green Led (0 = On, 1 = Off)
 #endif
 
-#ifdef PLUGIN_SET_SONOFF_TH10
-    #define PLUGIN_SET_ONLY_SWITCH
-#endif
-
-#ifdef PLUGIN_SET_SONOFF_TH16
+#ifdef PLUGIN_SET_SONOFF_TH1x
+    #define PLUGIN_DESCR  "Sonoff TH10/TH16"
     #define PLUGIN_SET_ONLY_SWITCH
     #define PLUGIN_SET_ONLY_TEMP_HUM
+
+    // Pre-defined setup parameters
+    #define GPIO_KEY1     0              // Button
+    #define GPIO_REL1     12             // Red Led and Relay (0 = Off, 1 = On)
+    #define DEFAULT_PIN_STATUS_LED 13    // Green Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW
+    #define PLUGIN_DESCR  "Sonoff POW R1"
+
     // Undef first to prevent compiler warnings
     #undef DEFAULT_PIN_I2C_SDA
     #undef DEFAULT_PIN_I2C_SCL
@@ -111,33 +124,67 @@ To create/register a plugin, you have to :
     #define USES_P076
     #define DEFAULT_PIN_I2C_SDA    4
     #define DEFAULT_PIN_I2C_SCL    2  // GPIO5 conflicts with HLW8012 Sel output
-    #define DEFAULT_PIN_STATUS_LED 15 // GPIO15 Blue Led (0 = On, 1 = Off)
+
+    // Pre-defined setup parameters
+    #define GPIO_KEY1     0           // Button
+    #define GPIO_REL1     12          // Red Led and Relay (0 = Off, 1 = On)
+    #define DEFAULT_PIN_STATUS_LED 15 // Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW_R2
+    #define PLUGIN_DESCR  "Sonoff POW R2"
+
     // Undef first to prevent compiler warnings
     #undef DEFAULT_PIN_STATUS_LED
 
     #define PLUGIN_SET_ONLY_SWITCH
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	// CSE7766
-    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
+
+    // Pre-defined setup parameters
+    #define GPIO_KEY1     0              // Button
+    #define GPIO_REL1     12             // Red Led and Relay (0 = Off, 1 = On)
+    #define DEFAULT_PIN_STATUS_LED 13    // Blue Led (0 = On, 1 = Off)
 #endif
 
-#ifdef PLUGIN_SET_SONOFF_S20
+#ifdef PLUGIN_SET_SONOFF_S2x
+    #define PLUGIN_DESCR  "Sonoff S20/22/26"
     #define PLUGIN_SET_ONLY_SWITCH
+
+    // Pre-defined setup parameters
+    #define GPIO_KEY1     0              // Button
+    #define GPIO_REL1     12             // Red Led and Relay (0 = Off, 1 = On)
+    #define DEFAULT_PIN_STATUS_LED 13    // Green Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_4CH
+    #define PLUGIN_DESCR  "Sonoff 4CH"
     #define PLUGIN_SET_ONLY_SWITCH
+
+    #define DEFAULT_PIN_I2C_SDA    3  // GPIO4 conflicts with GPIO_REL3
+    #define DEFAULT_PIN_I2C_SCL    2  // GPIO5 conflicts with GPIO_REL2
+
+    // Pre-defined setup parameters
+    #define GPIO_KEY1     0           // Button 1
+    #define GPIO_KEY2     9           // Button 2
+    #define GPIO_KEY3     10          // Button 3
+    #define GPIO_KEY4     14          // Button 4
+    #define GPIO_REL1     12          // Red Led and Relay1 (0 = Off, 1 = On)
+    #define GPIO_REL2     5           // Red Led and Relay2 (0 = Off, 1 = On)
+    #define GPIO_REL3     4           // Red Led and Relay3 (0 = Off, 1 = On)
+    #define GPIO_REL4     15          // Red Led and Relay4 (0 = Off, 1 = On)
+    #define DEFAULT_PIN_STATUS_LED 13 // Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TOUCH
+    #define PLUGIN_DESCR  "Sonoff Touch"
     #define PLUGIN_SET_ONLY_SWITCH
 #endif
 
 // Shelly ----------------------------
 #ifdef PLUGIN_SET_SHELLY_1
+    #define PLUGIN_DESCR  "Shelly 1"
+
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
@@ -150,10 +197,12 @@ To create/register a plugin, you have to :
 
 // Easy ----------------------------
 #ifdef PLUGIN_SET_EASY_TEMP
+    #define PLUGIN_DESCR  "Temp Hum"
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
 #ifdef PLUGIN_SET_EASY_CARBON
+    #define PLUGIN_DESCR  "Carbon"
     #define PLUGIN_SET_NONE
     #define USES_P052   // SenseAir
 #endif
@@ -196,6 +245,8 @@ To create/register a plugin, you have to :
 
 // Generic ESP32 -----------------------------
 #ifdef PLUGIN_SET_GENERIC_ESP32
+    #define PLUGIN_DESCR  "Generic ESP32"
+
     #ifndef ESP32
         #define ESP32
     #endif
@@ -209,6 +260,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_TEST_ESP32
+    #define PLUGIN_DESCR  "TEST ESP32"
     #ifndef ESP32
         #define ESP32
     #endif

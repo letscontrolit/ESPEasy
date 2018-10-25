@@ -142,6 +142,7 @@ bool MQTTConnect(int controller_idx)
   }
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
+  MQTTclient.setClient(mqtt);
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -203,10 +204,12 @@ bool MQTTConnect(int controller_idx)
   } else {
     MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   }
-  yield();
+  delay(0);
 
   if (!MQTTresult) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
+    MQTTclient.disconnect();
+    updateMQTTclient_connected();
     return false;
   }
   MQTTclient_should_reconnect = false;
@@ -293,9 +296,9 @@ void scheduleNextMQTTdelayQueue() {
 
 void processMQTTdelayQueue() {
   START_TIMER;
-  MQTT_queue_element element;
-  if (!MQTTDelayHandler.getNext(element)) return;
-  if (MQTTclient.publish(element._topic.c_str(), element._payload.c_str(), element._retained)) {
+  MQTT_queue_element* element(MQTTDelayHandler.getNext());
+  if (element == NULL) return;
+  if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     MQTTDelayHandler.markProcessed(true);
   } else {

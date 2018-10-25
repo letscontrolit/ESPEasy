@@ -532,6 +532,7 @@ void loop()
     }
     // Flush outstanding MQTT messages
     runPeriodicalMQTT();
+    flushAndDisconnectAllClients();
 
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
@@ -545,6 +546,14 @@ bool checkConnectionsEstablished() {
     return MQTTclient_connected;
   }
   return true;
+}
+
+void flushAndDisconnectAllClients() {
+  if (MQTTclient.connected()) {
+    MQTTclient.disconnect();
+    updateMQTTclient_connected();
+  }
+  /// FIXME TD-er: add call to all controllers (delay queue) to flush all data.
 }
 
 void runPeriodicalMQTT() {
@@ -863,7 +872,7 @@ void backgroundtasks()
 {
   //checkRAM(F("backgroundtasks"));
   //always start with a yield
-  yield();
+  delay(0);
 /*
   // Remove this watchdog feed for now.
   // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
@@ -906,13 +915,13 @@ void backgroundtasks()
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
-    yield();
+    delay(0);
     ArduinoOTA.handle();
   }
 
   #endif
 
-  yield();
+  delay(0);
 
   statusLED(false);
 

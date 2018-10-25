@@ -12,7 +12,7 @@
 // You can always change these during runtime and save to eeprom
 // After loading firmware, issue a 'reset' command to load the defaults.
 // --- Basic Config Settings ------------------------------------------------------------------------
-#define DEFAULT_NAME        "ESP_Easy"                  // Enter your device friendly name
+#define DEFAULT_NAME        "ESP_Easy"          // Enter your device friendly name
 #define UNIT                            0                                       // Unit Number
 #define DEFAULT_DELAY       60                  // Sleep Delay in seconds
 
@@ -229,8 +229,8 @@
 #define CONTROLLER_DELAY_QUEUE_RETRY_MAX   10
 #define CONTROLLER_DELAY_QUEUE_RETRY_DFLT  10
 // Timeout of the client in msec.
-#define CONTROLLER_CLIENTTIMEOUT_MAX 1000
-#define CONTROLLER_CLIENTTIMEOUT_DFLT 300
+#define CONTROLLER_CLIENTTIMEOUT_MAX     1000
+#define CONTROLLER_CLIENTTIMEOUT_DFLT    1000
 
 
 #define PLUGIN_INIT_ALL                     1
@@ -1198,22 +1198,36 @@ struct ExtraTaskSettingsStruct
 struct EventStruct
 {
   EventStruct() :
+    Data(NULL), idx(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     Source(0), TaskIndex(TASKS_MAX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
-    BaseVarIndex(0), idx(0), sensorType(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
-    OriginTaskIndex(0), Data(NULL) {}
+    BaseVarIndex(0), sensorType(0), OriginTaskIndex(0) {}
   EventStruct(const struct EventStruct& event):
-        Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
-        , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
-        , BaseVarIndex(event.BaseVarIndex), idx(event.idx), sensorType(event.sensorType)
-        , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
-        , OriginTaskIndex(event.OriginTaskIndex)
-        , String1(event.String1)
+          String1(event.String1)
         , String2(event.String2)
         , String3(event.String3)
         , String4(event.String4)
         , String5(event.String5)
-        , Data(event.Data) {}
+        , Data(event.Data)
+        , idx(event.idx)
+        , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
+        , Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
+        , ProtocolIndex(event.ProtocolIndex), NotificationIndex(event.NotificationIndex)
+        , BaseVarIndex(event.BaseVarIndex), sensorType(event.sensorType)
+        , OriginTaskIndex(event.OriginTaskIndex)
+         {}
 
+  String String1;
+  String String2;
+  String String3;
+  String String4;
+  String String5;
+  byte *Data;
+  int idx;
+  int Par1;
+  int Par2;
+  int Par3;
+  int Par4;
+  int Par5;
   byte Source;
   byte TaskIndex; // index position in TaskSettings array, 0-11
   byte ControllerIndex; // index position in Settings.Controller, 0-3
@@ -1222,20 +1236,8 @@ struct EventStruct
   //Edwin: Not needed, and wasnt used. We can determine the protocol index with getNotificationProtocolIndex(NotificationIndex)
   // byte NotificationProtocolIndex; // index position in notification array, depending on which controller plugins are loaded.
   byte BaseVarIndex;
-  int idx;
   byte sensorType;
-  int Par1;
-  int Par2;
-  int Par3;
-  int Par4;
-  int Par5;
   byte OriginTaskIndex;
-  String String1;
-  String String2;
-  String String3;
-  String String4;
-  String String5;
-  byte *Data;
 };
 
 
@@ -1394,16 +1396,16 @@ struct DeviceStruct
   byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   byte VType;   // Type of value the plugin will return, used only for Domoticz
   byte Ports;   // Port to use when device has multiple I/O pins  (N.B. not used much)
-  byte ValueCount;            // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
-  boolean PullUpOption;       // Allow to set internal pull-up resistors.
-  boolean InverseLogicOption; // Allow to invert the boolean state (e.g. a switch)
-  boolean FormulaOption;      // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
-  boolean Custom;
-  boolean SendDataOption;     // Allow to send data to a controller.
-  boolean GlobalSyncOption;   // No longer used. Was used for ESPeasy values sync between nodes
-  boolean TimerOption;        // Allow to set the "Interval" timer for the plugin.
-  boolean TimerOptional;      // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
-  boolean DecimalsOnly;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
+  byte ValueCount;             // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
+  bool PullUpOption : 1;       // Allow to set internal pull-up resistors.
+  bool InverseLogicOption : 1; // Allow to invert the boolean state (e.g. a switch)
+  bool FormulaOption : 1;      // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
+  bool Custom : 1;
+  bool SendDataOption : 1;     // Allow to send data to a controller.
+  bool GlobalSyncOption : 1;   // No longer used. Was used for ESPeasy values sync between nodes
+  bool TimerOption : 1;        // Allow to set the "Interval" timer for the plugin.
+  bool TimerOptional : 1;      // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
+  bool DecimalsOnly;           // Allow to set the number of decimals (otherwise treated a 0 decimals)
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 DeviceVector Device;
@@ -1468,16 +1470,16 @@ NodesMap Nodes;
 struct systemTimerStruct
 {
   systemTimerStruct() :
-    timer(0), plugin(0), TaskIndex(-1), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0) {}
+    timer(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0), TaskIndex(-1), plugin(0) {}
 
   unsigned long timer;
-  byte plugin;
-  int16_t TaskIndex;
   int Par1;
   int Par2;
   int Par3;
   int Par4;
   int Par5;
+  int16_t TaskIndex;
+  byte plugin;
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 
@@ -1486,11 +1488,11 @@ std::map<unsigned long, systemTimerStruct> systemTimers;
 \*********************************************************************************************/
 struct pinStatesStruct
 {
-  pinStatesStruct() : plugin(0), index(0), mode(0), value(0) {}
+  pinStatesStruct() : value(0), plugin(0), index(0), mode(0) {}
+  uint16_t value;
   byte plugin;
   byte index;
   byte mode;
-  uint16_t value;
 } pinStates[PINSTATE_TABLE_MAX];
 
 
