@@ -423,10 +423,10 @@ bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned i
         backgroundtasks_timer += 10;
         backgroundtasks();
       } else {
-        yield();
+        delay(0);
       }
     } else {
-      yield();
+      delay(0);
     }
 	} while (!timeOutReached(timer));
 
@@ -624,11 +624,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 // See: https://github.com/esp8266/Arduino/pull/5113
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client) {
-  #ifdef ESP32
-  yield();
-  #else
-  esp_yield(); // Could be called from events
-  #endif
+  delay(0);
   return client.available() || client.connected();
 }
 
@@ -677,7 +673,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
         }
         addLog(LOG_LEVEL_DEBUG_MORE, postStr);
       }
-      yield();
+      delay(0);
     }
   }
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

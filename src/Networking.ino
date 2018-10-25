@@ -623,7 +623,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
   uint32_t timer = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
   uint32_t min_delay = timeout_ms / 20;
   if (min_delay < 10) {
-    yield(); // Allow at least once time for backgroundtasks
+    delay(0); // Allow at least once time for backgroundtasks
     min_delay = 10;
   }
   // Apparently something needs network, perform check to see if it is ready now.

@@ -227,9 +227,9 @@ void ExecuteCommand(byte source, const char *Line)
   if (source == VALUE_SOURCE_WEB_FRONTEND) {
     // Must run immediately, to see result in web frontend
     String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
-    yield();
+    delay(0);
     SendStatus(source, status);
-    yield();
+    delay(0);
   } else {
     // Schedule to run async
     schedule_command_timer((char*)&cmd[0], &TempEvent, Line);

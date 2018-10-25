@@ -41,6 +41,19 @@ String flashGuard()
 //use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
 #define FLASH_GUARD() { String flashErr=flashGuard(); if (flashErr.length()) return(flashErr); }
 
+
+String appendLineToFile(const String& fname, const String& line) {
+  fs::File f = SPIFFS.open(fname, "a+");
+  SPIFFS_CHECK(f, fname.c_str());
+  const size_t lineLength = line.length();
+  for (size_t i = 0; i < lineLength; ++i) {
+    SPIFFS_CHECK(f.write(line[i]), fname.c_str());
+  }
+  f.close();
+  return "";
+}
+
+
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
   \*********************************************************************************************/

@@ -11,7 +11,7 @@ void serial()
 {
   while (Serial.available())
   {
-    yield();
+    delay(0);
     SerialInByte = Serial.read();
     if (SerialInByte == 255) // binary data...
     {

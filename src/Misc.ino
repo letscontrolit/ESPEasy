@@ -843,7 +843,12 @@ void ResetFactory(void)
 	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
 */
 
+#ifdef PLUGIN_DESCR
+  strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
+#endif
 
+  addPredefinedPlugins();
+  addPredefinedRules();
 
 
 
@@ -871,6 +876,108 @@ void ResetFactory(void)
   WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot();
+}
+
+void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeLow) {
+  setTaskDevice_to_TaskIndex(1, taskIndex);
+  setBasicTaskValues(
+    taskIndex,
+    0,            // taskdevicetimer
+    true,         // enabled
+    name,         // name
+    gpio,         // pin1
+    -1,            // pin2
+    -1);           // pin3
+  Settings.TaskDevicePin1PullUp[taskIndex] = true;
+  if (activeLow)
+    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+}
+
+bool addPredefinedPlugins() {
+  byte taskIndex = 0;
+  #ifdef GPIO_KEY1
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY1, F("Button1"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY1
+  #ifdef GPIO_KEY2
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY2, F("Button2"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY2
+  #ifdef GPIO_KEY3
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY3, F("Button3"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY3
+  #ifdef GPIO_KEY4
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY4, F("Button4"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY4
+
+  #ifdef GPIO_REL1
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL1, F("Relay1"), false);
+    ++taskIndex;
+  #endif // GPIO_REL1
+  #ifdef GPIO_REL2
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL2, F("Relay2"), false);
+    ++taskIndex;
+  #endif // GPIO_REL2
+  #ifdef GPIO_REL3
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL3, F("Relay3"), false);
+    ++taskIndex;
+  #endif // GPIO_REL3
+  #ifdef GPIO_REL4
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL4, F("Relay4"), false);
+    ++taskIndex;
+  #endif // GPIO_REL4
+  return taskIndex != 0; // Indicate something was added
+  // Also needed to make sure the variable is being used.
+}
+
+void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
+  Settings.UseRules = true;
+  String fileName;
+  #if defined(ESP32)
+    fileName += '/';
+  #endif
+  fileName += F("rules1.txt");
+  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
+  rule.replace(F("BNR"), String(buttonNumber));
+  rule.replace(F("GNR"), String(relay_gpio));
+  String result = appendLineToFile(fileName, rule);
+  if (result.length() > 0) {
+    addLog(LOG_LEVEL_ERROR, result);
+  }
+}
+
+void addPredefinedRules() {
+  #ifdef GPIO_KEY1
+    #ifdef GPIO_REL1
+      addButtonRelayRule(1, GPIO_REL1);
+    #endif // GPIO_REL1
+  #endif // GPIO_KEY1
+  #ifdef GPIO_KEY2
+    #ifdef GPIO_REL2
+      addButtonRelayRule(2, GPIO_REL2);
+    #endif // GPIO_REL2
+  #endif // GPIO_KEY2
+  #ifdef GPIO_KEY3
+    #ifdef GPIO_REL3
+      addButtonRelayRule(3, GPIO_REL3);
+    #endif // GPIO_REL3
+  #endif // GPIO_KEY3
+  #ifdef GPIO_KEY4
+    #ifdef GPIO_REL4
+      addButtonRelayRule(4, GPIO_REL4);
+    #endif // GPIO_REL4
+  #endif // GPIO_KEY4
+
 }
 
 
@@ -996,6 +1103,11 @@ String getPluginDescriptionString() {
   #endif
   #ifdef PLUGIN_BUILD_DEV
     result += F(" [Development]");
+  #endif
+  #ifdef PLUGIN_DESCR
+  result += " [";
+  result += F(PLUGIN_DESCR);
+  result += ']';
   #endif
   return result;
 }
@@ -2614,7 +2726,7 @@ void processMatchedRule(
     // FIXME TD-er: This part seems a bit strange.
     // It can't schedule a call to PLUGIN_WRITE.
     // Maybe ExecuteCommand can be scheduled?
-    yield();
+    delay(0);
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
     String tmpAction(action);
     if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
@@ -2629,7 +2741,7 @@ void processMatchedRule(
       }
       ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
-    yield();
+    delay(0);
   }
 }
 

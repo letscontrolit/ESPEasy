@@ -194,7 +194,7 @@ boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForP
 			return false;
 		}
 
-		yield();
+		delay(0);
 
 		// String line = client.readStringUntil('\n');
 		String line;

@@ -59,7 +59,7 @@ void handle_schedule() {
   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
   const unsigned long id = mixed_id & mask;
 
-  yield(); // See: https://github.com/letscontrolit/ESPEasy/issues/1818#issuecomment-425351328
+  delay(0); // See: https://github.com/letscontrolit/ESPEasy/issues/1818#issuecomment-425351328
 
   switch (timerType) {
     case CONST_INTERVAL_TIMER:
@@ -434,9 +434,9 @@ void process_system_event_queue() {
             EventQueue.front().cmd.c_str(),
             &EventQueue.front().event,
             EventQueue.front().line.c_str());
-        yield();
+        delay(0);
         SendStatus(EventQueue.front().event.Source, status);
-        yield();
+        delay(0);
         break;
       }
   }
