@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20181026 (since mega-20181025)
+-------------------------------------------------
+
+Release date: Fri Oct 26 04:00:22 CEST 2018
+
+Bartlomiej Zimon (7):
+      CSE7766 uses 8E1 serial connection
+      Ser2Net catch serial data only if plugin used
+      CSE7766 add online checksumming, autosyncing without data loos
+      move to PLUGIN_TEN_PER_SECOND     update comments
+      move to PLUGIN_SERIAL_IN from PLUGIN_TEN_PER_SECOND - serial commandline uses our data
+      optimization - remove double checksum check
+      CSE7766 - add some stats to debug log
+
+Saverio Cisternino (1):
+      Fixed plugin timer processing do not start, when call setPluginTaskTimer in PLUGIN_TIMER_IN
+
+TD-er (1):
+      [C009] Reduce memory usage for C009 controller.
+
+
+-------------------------------------------------
 Changes in release mega-20181025 (since mega-20181023)
 -------------------------------------------------
 
