@@ -215,12 +215,15 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
               log += P077_count_bytes;
               log += '/';
               log += P077_count_max;
+              log += '/';
+              log += Serial.available();
               addLog(LOG_LEVEL_DEBUG, log);
               log = F("CSE: nr ");
               log += P077_count_pkt;
               addLog(LOG_LEVEL_DEBUG, log);
             }
 
+            P077_t_all = 0;
             P077_count_bytes = 0;
           }
         }
