@@ -90,7 +90,7 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
   if (readErr == SDM_ERR_NO_ERROR) {                                            //if no timeout...
 
-    if(sdmSer.available() == FRAMESIZE) {
+    if(sdmSer.available() >= FRAMESIZE) {
 
       for(int n=0; n<FRAMESIZE; n++) {
         sdmarr[n] = sdmSer.read();
@@ -119,7 +119,11 @@ float SDM::readVal(uint16_t reg, uint8_t node) {
 
   if (readErr != SDM_ERR_NO_ERROR) {                                            //if error then copy temp error value to global val and increment global error counter
     readingerrcode = readErr;
-    readingerrcount++;
+    readingerrcount++; 
+  }
+
+  while (sdmSer.available() > 0)  {                                             //read redundant serial bytes, if any
+    sdmSer.read();
   }
 
 #ifndef USE_HARDWARESERIAL
