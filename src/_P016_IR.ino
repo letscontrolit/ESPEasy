@@ -168,6 +168,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           // Display the basic output of what we found.
           log += resultToHumanReadableBasic(&results);
           addLog(LOG_LEVEL_INFO, log);
+          displayRawToReadableB32Hex();
+
           // Display any extra A/C info if we have it.
           // Display the human readable state of an A/C message if we can.
           log = "";
@@ -234,6 +236,132 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
       }
   }
   return success;
+}
+
+
+#define PCT_TOLERANCE       7u
+#define pct_tolerance(v)    ((v) / (100u / PCT_TOLERANCE))
+//#define MIN_TOLERANCE       10u
+//#define get_tolerance(v)    (pct_tolerance(v) > MIN_TOLERANCE? pct_tolerance(v) : MIN_TOLERANCE)
+#define get_tolerance(v)    (pct_tolerance(v))
+#define MIN_VIABLE_DIV      40u
+#define to_32hex(c)         ((c) < 10 ? (c) + '0' : (c) + 'A' - 10)
+
+// This function attempts to convert the raw IR timings buffer to a short string that can be sent over as
+// an IRSEND HTTP/MQTT command. It analyzes the timings, and searches for a common denominator which can be
+// used to compress the values. If found, it then produces a string consisting of B32 Hex digit for each
+// timing value, appended by the denominators for Pulse and Blank. This string can then be used in an
+// IRSEND command. An important advantage of this string over the current IRSEND RAW B32 format implemented 
+// by GusPS is that it allows easy inspections and modifications after the code is constructed.
+//     
+// Author: Gilad Raz (jazzgil)  23sep2018
+
+void displayRawToReadableB32Hex() {
+    String line;
+    uint16_t div[2];
+
+    // print the values: either pulses or blanks
+    for (uint16_t i = 1; i < results.rawlen; i++)
+        line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
+    addLog(LOG_LEVEL_DEBUG, line);
+
+    // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks). 
+    for (uint16_t p = 0; p < 2; p++) {
+        uint16_t cd = 0xFFFFU;      // current divisor
+        // find the lowest value to start the divisor with.
+        for (uint16_t i = 1 + p; i < results.rawlen; i += 2) {
+            uint16_t val = results.rawbuf[i] * RAWTICK;
+            if (cd > val) cd = val;
+        }
+        
+        uint16_t bstDiv = -1, bstAvg = 0xFFFFU;
+        float bstMul = 5000;
+        cd += get_tolerance(cd) + 1;
+        //Serial.println(String("p="+ uint64ToString(p, 10) + " start cd=" + uint64ToString(cd, 10)).c_str());
+        // find the best divisor based on lowest avg err, within allowed tolerance.
+        while (--cd >= MIN_VIABLE_DIV) {
+            uint32_t avg = 0;
+            uint16_t totTms = 0;
+            // calculate average error for current divisor, and verify it's within tolerance for all timings.
+            for (uint16_t i = 1 + p; i < results.rawlen; i += 2) {
+                uint16_t val = results.rawbuf[i] * RAWTICK;
+                uint16_t rmdr = val >= cd ? val % cd : cd - val;
+                if (rmdr > get_tolerance(val)) { avg = 0xFFFFU; break; }
+                avg += rmdr;
+                totTms += val / cd + (cd > val? 1 : 0);
+            }
+            if (avg == 0xFFFFU) continue;
+            avg /= results.rawlen / 2;
+            float avgTms = (float)totTms / (results.rawlen / 2);
+            if (avgTms <= bstMul && avg < bstAvg) {
+                bstMul = avgTms;
+                bstAvg = avg;
+                bstDiv = cd;
+                //Serial.println(String("p="+ uint64ToString(p, 10) + " cd=" + uint64ToString(cd, 10) +"  avgErr=" + uint64ToString(avg, 10) + " totTms="+ uint64ToString(totTms, 10) + " avgTms="+ uint64ToString((uint16_t)(avgTms*10), 10) ).c_str());
+            }
+        }
+        if (bstDiv == 0xFFFFU) {
+            addLog(LOG_LEVEL_INFO, "No proper divisor found. Try again...");
+            return;
+        }
+        div[p] = bstDiv;
+
+        line = String(p? "Blank: " : "Pulse: ") + " divisor=" + uint64ToString(bstDiv, 10)
+            +"  avgErr=" + uint64ToString(bstAvg, 10) + " avgMul="+ uint64ToString((uint16_t)bstMul, 10)
+            +'.'+ ((char)((bstMul - (uint16_t)bstMul) * 10 )+ '0');
+        addLog(LOG_LEVEL_DEBUG, line);
+    }
+
+    // Generate the B32 Hex string, per the divisors found.
+    uint16_t total = results.rawlen - 1, tmOut[total];
+    //line = "Timing muls ("+ uint64ToString(total, 10) + "): ";
+
+    for (unsigned int i = 0; i < total; i++) {
+        uint16_t val = results.rawbuf[i+1] * RAWTICK;
+        unsigned int dv = div[(i) & 1];
+        unsigned int tm = val / dv + (val % dv > dv / 2? 1 : 0);
+        tmOut[i] = tm;
+        //line += uint64ToString(tm, 10) + ",";
+    }
+    //Serial.println(line);
+
+    char out[total];
+    unsigned int iOut = 0, s = 2, d = 0;
+    for (; s+1 < total; d = s, s += 2) {
+        unsigned int vals = 2;
+        while (s+1 < total && tmOut[s] == tmOut[d] && tmOut[s+1] == tmOut[d+1]) {
+            vals += 2;
+            s += 2;
+        }
+        if (iOut + 5 > sizeof(out) || tmOut[d] >= 32*32 || tmOut[d+1] >= 32*32 || vals >= 64) {
+            addLog(LOG_LEVEL_INFO, "Raw code too long. Try again...");
+            return;
+        }
+
+        if (vals > 4 || (vals == 4 && (tmOut[d] >= 32 || tmOut[d+1] >= 32))) {
+            out[iOut++] = '*';
+            out[iOut++] = to_32hex(vals / 2);
+            vals = 2;
+        }
+        while (vals--)
+            iOut = storeB32Hex(out, iOut, tmOut[d++]);
+    }
+    while (d < total)
+        iOut = storeB32Hex(out, iOut, tmOut[d++]);
+
+    out[iOut] = 0;
+    line = "IRSEND,RAW2," + String(out) + ",38," + uint64ToString(div[0], 10) +','+ uint64ToString(div[1], 10);
+    addLog(LOG_LEVEL_INFO, line);
+}
+
+unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val) {
+    if (val >= 32) {
+        out[iOut++] = '^';
+        out[iOut++] = to_32hex(val/32);
+        val %= 32;
+    }
+    out[iOut++] = to_32hex(val);
+    return iOut;
 }
 
 #endif // USES_P016
