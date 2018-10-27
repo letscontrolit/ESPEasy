@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20181027 (since mega-20181026)
+-------------------------------------------------
+
+Release date: Sat Oct 27 04:00:12 CEST 2018
+
+Bartlomiej Zimon (1):
+      CSE7766 - fix stats plus add buffer fill level
+
+Gilad (7):
+      Add IR RAW2 Reading / Transmitting.
+      Add IR RAW2 Reading / Transmitting.
+      Add IR RAW2 Reading / Transmitting - fixed ambiguity.
+      Add IR RAW2 Reading / Transmitting - added a safety check.
+      Improved IR RAW2 format to support RLE.
+      Fixed warnings...
+      Fixed warnings...
+
+Gilad Raz (1):
+      Increased buffer size. Added constants.
+
+Plebs (4):
+      doubleclick and longpress for PCF and MCP
+      fixed a display bug
+      final fixes
+      fixed as requested
+
+
+-------------------------------------------------
 Changes in release mega-20181026 (since mega-20181025)
 -------------------------------------------------
 
