@@ -3,17 +3,7 @@
 
 #include <stdint.h>
 #include <list>
-
-struct  timeStruct {
-  timeStruct() : Second(0), Minute(0), Hour(0), Wday(0), Day(0), Month(0), Year(0) {}
-  uint8_t Second;
-  uint8_t Minute;
-  uint8_t Hour;
-  uint8_t Wday;   // day of week, sunday is day 1
-  uint8_t Day;
-  uint8_t Month;
-  uint8_t Year;   // offset from 1970;
-};
+#include <time.h>
 
 // convenient constants for TimeChangeRules
 enum week_t {Last=0, First, Second, Third, Fourth};

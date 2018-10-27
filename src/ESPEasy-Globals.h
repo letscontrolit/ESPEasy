@@ -259,6 +259,7 @@
 #define PLUGIN_GET_CONFIG                  24
 #define PLUGIN_UNCONDITIONAL_POLL          25
 #define PLUGIN_REQUEST                     26
+#define PLUGIN_TIME_CHANGE                 27
 
 #define CPLUGIN_PROTOCOL_ADD                1
 #define CPLUGIN_PROTOCOL_TEMPLATE           2
@@ -304,7 +305,7 @@
 #define CMD_WIFI_DISCONNECT               135
 
 #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-  #define DEVICES_MAX                      75
+  #define DEVICES_MAX                      85
 #else
   #ifdef ESP32
     #define DEVICES_MAX                      75

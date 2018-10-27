@@ -11,93 +11,96 @@
 #define SECS_PER_YEAR (SECS_PER_WEEK * 52UL)
 #define SECS_YR_2000  (946684800UL) // the time at the start of y2k
 #define LEAP_YEAR(Y)     ( ((1970+Y)>0) && !((1970+Y)%4) && ( ((1970+Y)%100) || !((1970+Y)%400) ) )
+#include <time.h>
 
-timeStruct tm;
+struct tm tm;
 uint32_t syncInterval = 3600;  // time sync will be attempted after this many seconds
 uint32_t sysTime = 0;
 uint32_t prevMillis = 0;
 uint32_t nextSyncTime = 0;
-timeStruct tsRise, tsSet;
-timeStruct sunRise;
-timeStruct sunSet;
+struct tm tsRise, tsSet;
+struct tm sunRise;
+struct tm sunSet;
 
 byte PrevMinutes = 0;
 
 float sunDeclination(int doy) {
-	// Declination of the sun in radians
-	// Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average declinations (2008-2027)
-	return 0.409526325277017 * sin(0.0169060504029192 * (doy - 80.0856919827619));
+  // Declination of the sun in radians
+  // Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average declinations (2008-2027)
+  return 0.409526325277017 * sin(0.0169060504029192 * (doy - 80.0856919827619));
 }
 
 float diurnalArc(float dec, float lat) {
-	// Duration of the half sun path in hours (time from sunrise to the highest level in the south)
-	float rad = 0.0174532925; // = pi/180.0
-	float height = -50.0 / 60.0 * rad;
-	float latRad = lat * rad;
-	return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536;
+  // Duration of the half sun path in hours (time from sunrise to the highest level in the south)
+  float rad = 0.0174532925; // = pi/180.0
+  float height = -50.0 / 60.0 * rad;
+  float latRad = lat * rad;
+  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536;
 }
 
 float equationOfTime(int doy) {
-	// Difference between apparent and mean solar time
-	// Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average equation of time (2008-2027)
-	return -0.170869921174742 * sin(0.0336997028793971 * doy + 0.465419984181394) - 0.129890681040717 * sin(0.0178674832556871 * doy - 0.167936777524864);
+  // Difference between apparent and mean solar time
+  // Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average equation of time (2008-2027)
+  return -0.170869921174742 * sin(0.0336997028793971 * doy + 0.465419984181394) - 0.129890681040717 * sin(0.0178674832556871 * doy - 0.167936777524864);
 }
 
 int dayOfYear(int year, int month, int day) {
-	// Algorithm borrowed from DateToOrdinal by Ritchie Lawrence, www.commandline.co.uk
-	int z = 14 - month;
-	z /= 12;
-	int y = year + 4800 - z;
-	int m = month + 12 * z - 3;
-	int j = 153 * m + 2;
-	j = j / 5 + day + y * 365 + y / 4 - y / 100 + y / 400 - 32045;
-	y = year + 4799;
-	int k = y * 365 + y / 4 - y / 100 + y / 400 - 31738;
-	return j - k + 1;
+  // Algorithm borrowed from DateToOrdinal by Ritchie Lawrence, www.commandline.co.uk
+  int z = 14 - month;
+  z /= 12;
+  int y = year + 4800 - z;
+  int m = month + 12 * z - 3;
+  int j = 153 * m + 2;
+  j = j / 5 + day + y * 365 + y / 4 - y / 100 + y / 400 - 32045;
+  y = year + 4799;
+  int k = y * 365 + y / 4 - y / 100 + y / 400 - 31738;
+  return j - k + 1;
 }
 
 void calcSunRiseAndSet() {
-	int doy = dayOfYear(tm.Year, tm.Month, tm.Day);
-	float eqt = equationOfTime(doy);
-	float dec = sunDeclination(doy);
-	float da = diurnalArc(dec, Settings.Latitude);
-	float rise = 12 - da - eqt;
-	float set = 12 + da - eqt;
-  tsRise.Hour = (int)rise;
-  tsRise.Minute = (rise - (int)rise) * 60.0;
-  tsSet.Hour = (int)set;
-  tsSet.Minute = (set - (int)set) * 60.0;
-  tsRise.Day = tsSet.Day = tm.Day;
-  tsRise.Month = tsSet.Month = tm.Month;
-  tsRise.Year = tsSet.Year = tm.Year;
+  int doy = dayOfYear(tm.tm_year, tm.tm_mon, tm.tm_mday);
+  float eqt = equationOfTime(doy);
+  float dec = sunDeclination(doy);
+  float da = diurnalArc(dec, Settings.Latitude);
+  float rise = 12 - da - eqt;
+  float set = 12 + da - eqt;
+  tsRise.tm_hour = (int)rise;
+  tsRise.tm_min = (rise - (int)rise) * 60.0;
+  tsSet.tm_hour = (int)set;
+  tsSet.tm_min = (set - (int)set) * 60.0;
+  tsRise.tm_mday = tsSet.tm_mday = tm.tm_mday;
+  tsRise.tm_mon = tsSet.tm_mon = tm.tm_mon;
+  tsRise.tm_year = tsSet.tm_year = tm.tm_year;
   // Now apply the longitude
-	int secOffset_longitude = -1.0 * (Settings.Longitude / 15.0) * 3600;
-	tsSet = addSeconds(tsSet, secOffset_longitude, false);
-	tsRise = addSeconds(tsRise, secOffset_longitude, false);
+  int secOffset_longitude = -1.0 * (Settings.Longitude / 15.0) * 3600;
+  tsSet = addSeconds(tsSet, secOffset_longitude, false);
+  tsRise = addSeconds(tsRise, secOffset_longitude, false);
+
   breakTime(toLocal(makeTime(tsRise)), sunRise);
   breakTime(toLocal(makeTime(tsSet)), sunSet);
 }
 
-timeStruct getSunRise(int secOffset) {
-	return addSeconds(tsRise, secOffset, true);
+
+struct tm getSunRise(int secOffset) {
+  return addSeconds(tsRise, secOffset, true);
 }
 
-timeStruct getSunSet(int secOffset) {
-	return addSeconds(tsSet, secOffset, true);
+struct tm getSunSet(int secOffset) {
+  return addSeconds(tsSet, secOffset, true);
 }
 
-timeStruct addSeconds(const timeStruct& ts, int seconds, bool toLocalTime) {
-	unsigned long time = makeTime(ts);
-	time += seconds;
-	if (toLocalTime) {
-		time = toLocal(time);
-	}
-	timeStruct result;
-	breakTime(time, result);
-	return result;
+struct tm addSeconds(const struct tm& ts, int seconds, bool toLocalTime) {
+  unsigned long time = makeTime(ts);
+  time += seconds;
+  if (toLocalTime) {
+    time = toLocal(time);
+  }
+  struct tm result;
+  breakTime(time, result);
+  return result;
 }
 
-void breakTime(unsigned long timeInput, struct timeStruct &tm) {
+void breakTime(unsigned long timeInput, struct tm &tm) {
   uint8_t year;
   uint8_t month, monthLength;
   uint32_t time;
@@ -105,20 +108,20 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
   const uint8_t monthDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
   time = (uint32_t)timeInput;
-  tm.Second = time % 60;
+  tm.tm_sec = time % 60;
   time /= 60; // now it is minutes
-  tm.Minute = time % 60;
+  tm.tm_min = time % 60;
   time /= 60; // now it is hours
-  tm.Hour = time % 24;
+  tm.tm_hour = time % 24;
   time /= 24; // now it is days
-  tm.Wday = ((time + 4) % 7) + 1;  // Sunday is day 1
+  tm.tm_wday = ((time + 4) % 7) + 1;  // Sunday is day 1
 
   year = 0;
   days = 0;
   while ((unsigned)(days += (LEAP_YEAR(year) ? 366 : 365)) <= time) {
     year++;
   }
-  tm.Year = year; // year is offset from 1970
+  tm.tm_year = year; // year is offset from 1970
 
   days -= LEAP_YEAR(year) ? 366 : 365;
   time  -= days; // now it is days in this year, starting at 0
@@ -143,8 +146,8 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
       break;
     }
   }
-  tm.Month = month + 1;  // jan is month 1
-  tm.Day = time + 1;     // day of month
+  tm.tm_mon = month + 1;  // jan is month 1
+  tm.tm_mday = time + 1;     // day of month
 }
 
 uint32_t getUnixTime() {
@@ -152,27 +155,27 @@ uint32_t getUnixTime() {
 }
 
 int getSecOffset(const String& format) {
-	int position_minus = format.indexOf('-');
-	int position_plus = format.indexOf('+');
-	if (position_minus == -1 && position_plus == -1)
-	  return 0;
-	int sign_position = _max(position_minus, position_plus);
-	int position_percent = format.indexOf('%', sign_position);
-	if (position_percent == -1) {
-		return 0;
-	}
-	String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
-	if (!isInt(valueStr)) return 0;
-	int value = valueStr.toInt();
-	switch (format.charAt(position_percent - 1)) {
-		case 'm':
-		case 'M':
-		  return value * 60;
-		case 'h':
-		case 'H':
-			return value * 3600;
-	}
-	return value;
+  int position_minus = format.indexOf('-');
+  int position_plus = format.indexOf('+');
+  if (position_minus == -1 && position_plus == -1)
+    return 0;
+  int sign_position = _max(position_minus, position_plus);
+  int position_percent = format.indexOf('%', sign_position);
+  if (position_percent == -1) {
+    return 0;
+  }
+  String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
+  if (!isInt(valueStr)) return 0;
+  int value = valueStr.toInt();
+  switch (format.charAt(position_percent - 1)) {
+    case 'm':
+    case 'M':
+      return value * 60;
+    case 'h':
+    case 'H':
+      return value * 3600;
+  }
+  return value;
 }
 
 String getSunriseTimeString(char delimiter) {
@@ -184,14 +187,14 @@ String getSunsetTimeString(char delimiter) {
 }
 
 String getSunriseTimeString(char delimiter, int secOffset) {
-	if (secOffset == 0)
-		return getSunriseTimeString(delimiter);
+  if (secOffset == 0)
+    return getSunriseTimeString(delimiter);
   return getTimeString(getSunRise(secOffset), delimiter, false, false);
 }
 
 String getSunsetTimeString(char delimiter, int secOffset) {
-	if (secOffset == 0)
-		return getSunsetTimeString(delimiter);
+  if (secOffset == 0)
+    return getSunsetTimeString(delimiter);
   return getTimeString(getSunSet(secOffset), delimiter, false, false);
 }
 
@@ -208,74 +211,75 @@ unsigned long now() {
     unsigned long  t = getNtpTime();
     if (t != 0) {
       timeSynced = true;
-			sysTime = (uint32_t)t;
-			applyTimeZone(t);
-			nextSyncTime = (uint32_t)t + syncInterval;
-			prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
+      sysTime = (uint32_t)t;
+      applyTimeZone(t);
+      nextSyncTime = (uint32_t)t + syncInterval;
+      prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
     }
   }
   uint32_t localSystime = toLocal(sysTime);
   breakTime(localSystime, tm);
   if (timeSynced) {
     calcSunRiseAndSet();
-		if (Settings.UseRules)
-		{
+    PluginCall(PLUGIN_TIME_CHANGE, NULL, dummyString);
+    if (Settings.UseRules)
+    {
       String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
       rulesProcessing(event);
-		}
+    }
     statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
   }
   return (unsigned long)localSystime;
 }
 
 int year(unsigned long t) {
-  timeStruct tmp;
+  struct tm tmp;
   breakTime(t, tmp);
-  return 1970 + tmp.Year;
+  return 1970 + tmp.tm_year;
 }
 
 int weekday(unsigned long t) {
-  timeStruct tmp;
+  struct tm tmp;
   breakTime(t, tmp);
-  return tmp.Wday;
+  return tmp.tm_wday;
 }
 
 
 
 int year()
 {
-  return 1970 + tm.Year;
+  return 1970 + tm.tm_year;
 }
 
 byte month()
 {
-	return tm.Month;
+  return tm.tm_mon;
 }
 
 byte day()
 {
-	return tm.Day;
+  return tm.tm_mday;
 }
 
 byte hour()
 {
-  return tm.Hour;
+  return tm.tm_hour;
 }
 
 byte minute()
 {
-  return tm.Minute;
+  return tm.tm_min;
 }
 
 byte second()
 {
-	return tm.Second;
+  return tm.tm_sec;
 }
 
 // day of week, sunday is day 1
 int weekday()
 {
-  return tm.Wday;
+  return tm.tm_wday;
 }
 
 String weekday_str()
@@ -294,10 +298,10 @@ void initTime()
 void checkTime()
 {
   now();
-  if (tm.Minute != PrevMinutes)
+  if (tm.tm_min != PrevMinutes)
   {
     PluginCall(PLUGIN_CLOCK_IN, 0, dummyString);
-    PrevMinutes = tm.Minute;
+    PrevMinutes = tm.tm_min;
     if (Settings.UseRules)
     {
       String event;
@@ -352,8 +356,8 @@ unsigned long getNtpTime()
   }
 
   WiFiUDP udp;
-	if (!beginWiFiUDP_randomPort(udp))
-	  return 0;
+  if (!beginWiFiUDP_randomPort(udp))
+    return 0;
 
   const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
   byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
@@ -372,17 +376,17 @@ unsigned long getNtpTime()
   packetBuffer[13]  = 0x4E;
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
-	if (udp.beginPacket(timeServerIP, 123) == 0) { //NTP requests are to port 123
-		udp.stop();
-		return 0;
-	}
+  if (udp.beginPacket(timeServerIP, 123) == 0) { //NTP requests are to port 123
+    udp.stop();
+    return 0;
+  }
   udp.write(packetBuffer, NTP_PACKET_SIZE);
   udp.endPacket();
 
   uint32_t beginWait = millis();
   while (!timeOutReached(beginWait + 1000)) {
     int size = udp.parsePacket();
-		int remotePort = udp.remotePort();
+    int remotePort = udp.remotePort();
     if (size >= NTP_PACKET_SIZE && remotePort == 123) {
       udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
@@ -391,19 +395,19 @@ unsigned long getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-			if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-	      String log = F("NTP  : NTP replied: ");
-	      log += timePassedSince(beginWait);
-	      log += F(" mSec");
-	      addLog(LOG_LEVEL_DEBUG_MORE, log);
-			}
-			udp.stop();
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+        String log = F("NTP  : NTP replied: ");
+        log += timePassedSince(beginWait);
+        log += F(" mSec");
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
+      }
+      udp.stop();
       return secsSince1900 - 2208988800UL;
     }
     delay(10);
   }
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
-	udp.stop();
+  udp.stop();
   return 0;
 }
 
@@ -418,7 +422,7 @@ unsigned long getNtpTime()
 // Returned value is positive when "next" is after "prev"
 long timeDiff(const unsigned long prev, const unsigned long next)
 {
-	unsigned long start = ESP.getCycleCount();
+  unsigned long start = ESP.getCycleCount();
   long signed_diff = 0;
   // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
   const unsigned long half_max_unsigned_long = 2147483647u; // = 2^31 -1
@@ -445,11 +449,11 @@ long timeDiff(const unsigned long prev, const unsigned long next)
       signed_diff = static_cast<long>((ULONG_MAX - prev) + next + 1u);
     }
   }
-	unsigned long end = ESP.getCycleCount();
-	if (end > start) {
-		++timediff_calls;
-		timediff_cpu_cycles_total += (end - start);
-	}
+  unsigned long end = ESP.getCycleCount();
+  if (end > start) {
+    ++timediff_calls;
+    timediff_cpu_cycles_total += (end - start);
+  }
   return signed_diff;
 }
 
@@ -545,10 +549,10 @@ String timeLong2String(unsigned long lngTime)
 
 // returns the current Date separated by the given delimiter
 // date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
-String getDateString(const timeStruct& ts, char delimiter) {
+String getDateString(const struct tm& ts, char delimiter) {
   char DateString[20]; //19 digits plus the null char
-  const int year = 1970 + ts.Year;
-  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.Month, delimiter, ts.Day);
+  const int year = 1970 + ts.tm_year;
+  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon, delimiter, ts.tm_mday);
   return DateString;
 }
 
@@ -556,37 +560,40 @@ String getDateString(char delimiter)
 {
   return getDateString(tm, delimiter);
 }
-
+String getDateString(const struct tm& ts)
+{
+  return getDateString(tm, ':');
+}
 // returns the current Date without delimiter
 // date format example: 20161231 (YYYYMMDD)
 String getDateString()
 {
-	return getDateString('\0');
+  return getDateString('\0');
 }
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String getTimeString(const timeStruct& ts, char delimiter, bool am_pm, bool show_seconds)
+String getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds)
 {
   char TimeString[20]; //19 digits plus the null char
   if (am_pm) {
-    uint8_t hour(ts.Hour % 12);
+    uint8_t hour(ts.tm_hour % 12);
     if (hour == 0) { hour = 12; }
-    const char a_or_p = ts.Hour < 12 ? 'A' : 'P';
+    const char a_or_p = ts.tm_hour < 12 ? 'A' : 'P';
     if (show_seconds) {
       sprintf_P(TimeString, PSTR("%d%c%02d%c%02d %cM"),
-        hour, delimiter, ts.Minute, delimiter, ts.Second, a_or_p);
+        hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
     } else {
       sprintf_P(TimeString, PSTR("%d%c%02d %cM"),
-        hour, delimiter, ts.Minute, a_or_p);
+        hour, delimiter, ts.tm_min, a_or_p);
     }
   } else {
     if (show_seconds) {
       sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
-        ts.Hour, delimiter, ts.Minute, delimiter, ts.Second);
+        ts.tm_hour, delimiter, ts.tm_min, delimiter, ts.tm_sec);
     } else {
       sprintf_P(TimeString, PSTR("%d%c%02d"),
-        ts.Hour, delimiter, ts.Minute);
+        ts.tm_hour, delimiter, ts.tm_min);
     }
   }
   return TimeString;
@@ -606,24 +613,29 @@ String getTimeString_ampm(char delimiter, bool show_seconds /*=true*/)
 // time format example: 235959 (HHMMSS)
 String getTimeString()
 {
-	return getTimeString('\0');
+  return getTimeString('\0');
 }
 
 String getTimeString_ampm()
 {
-	return getTimeString_ampm('\0');
+  return getTimeString_ampm('\0');
 }
 
 // returns the current Date and Time separated by the given delimiter
 // if called like this: getDateTimeString('\0', '\0', '\0');
 // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-String getDateTimeString(const timeStruct& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
+String getDateTimeString(const struct tm& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
 {
-	String ret = getDateString(ts, dateDelimiter);
-	if (dateTimeDelimiter != '\0')
-		ret += dateTimeDelimiter;
-	ret += getTimeString(ts, timeDelimiter, am_pm, true);
-	return ret;
+  String ret = getDateString(ts, dateDelimiter);
+  if (dateTimeDelimiter != '\0')
+    ret += dateTimeDelimiter;
+  ret += getTimeString(ts, timeDelimiter, am_pm, true);
+  return ret;
+}
+
+String getDateTimeString(const struct tm& ts)
+{
+  return getDateTimeString(ts,'-', ':', ' ', false);
 }
 
 String getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) {
@@ -642,7 +654,7 @@ unsigned long string2TimeLong(const String &str)
   // format 0000WWWWAAAABBBBCCCCDDDD
   // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
 
-	#define TmpStr1Length 10
+  #define TmpStr1Length 10
   char command[20];
   char TmpStr1[TmpStr1Length];
   int w, x, y;
@@ -689,7 +701,7 @@ unsigned long string2TimeLong(const String &str)
       }
     }
   }
-	#undef TmpStr1Length
+  #undef TmpStr1Length
   return lngTime;
 }
 
