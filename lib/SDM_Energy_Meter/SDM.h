@@ -136,6 +136,14 @@
 #define SDM630_EXPORT_REACTIVE_ENERGY       0x004E                              //VARh
 #define SDM630_TOTAL_SYSTEM_POWER_DEMAND    0x0054                              //W
 #define SDM630_MAXIMUM_TOTAL_SYSTEM_POWER   0x0056                              //W
+#define SDM630_PHASE_1_LN_VOLTS_THD         0x00EA                              //%
+#define SDM630_PHASE_2_LN_VOLTS_THD         0x00EC                              //%
+#define SDM630_PHASE_3_LN_VOLTS_THD         0x00EE                              //%
+#define SDM630_AVERAGE_VOLTS_THD            0x00F8                              //%
+#define SDM630_PHASE_1_CURRENT_THD          0x00F0                              //%
+#define SDM630_PHASE_2_CURRENT_THD          0x00F2                              //%
+#define SDM630_PHASE_3_CURRENT_THD          0x00F4                              //%
+#define SDM630_AVERAGE_CURRENT_THD          0x00FA                              //%
 
 #define SDM_B_05                            0x00                                //BYTE 5
 #define SDM_B_06                            0x02                                //BYTE 6
@@ -176,7 +184,7 @@ class SDM {
     long _baud = SDM_UART_BAUD;
     int _dere_pin = DERE_PIN;
     uint16_t readingerrcode = SDM_ERR_NO_ERROR;                                 //4 = timeout; 3 = not enough bytes; 2 = number of bytes OK but bytes b0,b1 or b2 wrong, 1 = crc error
-    uint16_t readingerrcount = 0;                                               //total errors couter
+    uint16_t readingerrcount = 0;                                               //total errors couter 
     uint16_t calculateCRC(uint8_t *array, uint8_t num);
 };
 #endif //SDM_h
