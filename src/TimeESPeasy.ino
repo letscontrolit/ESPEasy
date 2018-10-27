@@ -419,7 +419,7 @@ bool getNtpTime(double& unixTime_d)
 			double delay_compensation = static_cast<double>(total_delay) / 2000.0;
 			unixTime_d += delay_compensation;
 
-			if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+			if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 				String log = F("NTP  : NTP replied: delay ");
 				log += total_delay;
 				log += F(" mSec");
@@ -432,7 +432,7 @@ bool getNtpTime(double& unixTime_d)
 				}
 				log += String(fractpart, 3);
 				log += F(" seconds");
-				addLog(LOG_LEVEL_DEBUG_MORE, log);
+				addLog(LOG_LEVEL_INFO, log);
 			}
 			udp.stop();
 
