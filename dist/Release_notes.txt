@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181028 (since mega-20181027)
+-------------------------------------------------
+
+Release date: Sun Oct 28 04:00:09 CET 2018
+
+Saverio Cisternino (5):
+      [CRON] Replace timeStruct with standard tm
+      [CRON] Plugin
+      [CRON] Add event PLUGIN_TIME_CHANGE
+      [CRON] Intercept event PLUGIN_TIME_CHANGE
+      [CRON] Fixed Daily flash write rate exceeded!
+
+TD-er (2):
+      [Cron] Rename plugin name to match naming convention
+      [Eastron] Make configurable and allow for multiple values read (#1684)
+
+
+-------------------------------------------------
 Changes in release mega-20181027 (since mega-20181026)
 -------------------------------------------------
 
