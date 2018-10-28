@@ -244,8 +244,25 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
 
     for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
+    
+    bool crc_ok = Plugin_004_DS_crc8(ScratchPad);
 
-    if (!Plugin_004_DS_crc8(ScratchPad))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("DS: SP: ");
+
+        for (byte x = 0; x < 9; x++)
+        {
+            if (x != 0)
+                log += ',';
+            log += String(ScratchPad[x], HEX);
+        }
+
+        if (crc_ok)
+            log += F(",OK");
+        addLog(LOG_LEVEL_DEBUG, log);
+    }
+
+    if (!crc_ok)
     {
         *value = 0;
         return false;
