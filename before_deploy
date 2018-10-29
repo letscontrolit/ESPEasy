@@ -11,6 +11,8 @@ for ENV in \
   normal_ESP8266_4096 \
   normal_ESP8285_1024 \
   normal_IR_ESP8266_4096 \
+  normal_core_241_ESP8266_1024 \
+  normal_core_241_ESP8266_4096 \
   test_ESP8266_1024\
   test_ESP8266_4096\
   test_ESP8266_4096_VCC\

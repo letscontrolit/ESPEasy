@@ -22,6 +22,7 @@ Build type can be:  (differ in included plugins)
 There is also a number of special builds:
 - normal_IR => "Normal" + IR receiver/transmitter plugins and library
 - hard_xxxxx => Special builds for some off-the-shelf hardware.
+- normal_core_241 => "Normal" using core 2.4.1, since 2.4.2 has issues with PWM
 
 Chip can be:
 - ESP8266      => Most likely option
