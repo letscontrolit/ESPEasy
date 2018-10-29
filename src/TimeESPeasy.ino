@@ -1,7 +1,7 @@
 
 /********************************************************************************************\
-  Time stuff
-  \*********************************************************************************************/
+   Time stuff
+ \*********************************************************************************************/
 
 #define SECS_PER_MIN  (60UL)
 #define SECS_PER_HOUR (3600UL)
@@ -15,7 +15,7 @@
 
 struct tm tm;
 uint32_t syncInterval = 3600;  // time sync will be attempted after this many seconds
-uint32_t sysTime = 0;
+double sysTime = 0.0; // Use high resolution double to get better sync between nodes when using NTP
 uint32_t prevMillis = 0;
 uint32_t nextSyncTime = 0;
 struct tm tsRise, tsSet;
@@ -123,22 +123,22 @@ void breakTime(unsigned long timeInput, struct tm &tm) {
   }
   tm.tm_year = year; // year is offset from 1970
 
-  days -= LEAP_YEAR(year) ? 366 : 365;
-  time  -= days; // now it is days in this year, starting at 0
+	days -= LEAP_YEAR(year) ? 366 : 365;
+	time -= days; // now it is days in this year, starting at 0
 
-  days = 0;
-  month = 0;
-  monthLength = 0;
-  for (month = 0; month < 12; month++) {
-    if (month == 1) { // february
-      if (LEAP_YEAR(year)) {
-        monthLength = 29;
-      } else {
-        monthLength = 28;
-      }
-    } else {
-      monthLength = monthDays[month];
-    }
+	days = 0;
+	month = 0;
+	monthLength = 0;
+	for (month = 0; month < 12; month++) {
+		if (month == 1) { // february
+			if (LEAP_YEAR(year)) {
+				monthLength = 29;
+			} else {
+				monthLength = 28;
+			}
+		} else {
+			monthLength = monthDays[month];
+		}
 
     if (time >= monthLength) {
       time -= monthLength;
@@ -150,8 +150,9 @@ void breakTime(unsigned long timeInput, struct tm &tm) {
   tm.tm_mday = time + 1;     // day of month
 }
 
-uint32_t getUnixTime() {
-  return sysTime;
+uint32_t getUnixTime()
+{
+	return static_cast<uint32_t>(sysTime);
 }
 
 int getSecOffset(const String& format) {
@@ -203,32 +204,30 @@ unsigned long now() {
   // calculate number of seconds passed since last call to now()
   bool timeSynced = false;
   const long msec_passed = timePassedSince(prevMillis);
-  const long seconds_passed = msec_passed / 1000;
-  sysTime += seconds_passed;
-  prevMillis += seconds_passed * 1000;
-  if (nextSyncTime <= sysTime) {
-    // nextSyncTime & sysTime are in seconds
-    unsigned long  t = getNtpTime();
-    if (t != 0) {
-      timeSynced = true;
-      sysTime = (uint32_t)t;
-      applyTimeZone(t);
-      nextSyncTime = (uint32_t)t + syncInterval;
-      prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
-    }
-  }
-  uint32_t localSystime = toLocal(sysTime);
-  breakTime(localSystime, tm);
-  if (timeSynced) {
-    calcSunRiseAndSet();
-    PluginCall(PLUGIN_TIME_CHANGE, NULL, dummyString);
-    if (Settings.UseRules)
-    {
-      String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
-      rulesProcessing(event);
-    }
-    statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
-  }
+	sysTime += static_cast<double>(msec_passed) / 1000.0;
+	prevMillis += msec_passed;
+	if (nextSyncTime <= sysTime) {
+		// nextSyncTime & sysTime are in seconds
+		double unixTime_d;
+		if (getNtpTime(unixTime_d)) {
+			prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
+			timeSynced = true;
+			sysTime = unixTime_d;
+
+			applyTimeZone(unixTime_d);
+			nextSyncTime = (uint32_t)unixTime_d + syncInterval;
+		}
+	}
+	uint32_t localSystime = toLocal(sysTime);
+	breakTime(localSystime, tm);
+	if (timeSynced) {
+		calcSunRiseAndSet();
+		if (Settings.UseRules) {
+			String event = statusNTPInitialized ? F("Time#Set") : F("Time#Initialized");
+			rulesProcessing(event);
+		}
+		statusNTPInitialized = true; //@giig1967g: setting system variable %isntp%
+	}
   return (unsigned long)localSystime;
 }
 
@@ -284,15 +283,15 @@ int weekday()
 
 String weekday_str()
 {
-  const int wday(weekday() - 1); // here: Count from Sunday = 0
-  const String weekDays = F("SunMonTueWedThuFriSat");
-  return weekDays.substring(wday * 3, wday * 3 + 3);
+	const int wday(weekday() - 1); // here: Count from Sunday = 0
+	const String weekDays = F("SunMonTueWedThuFriSat");
+	return weekDays.substring(wday * 3, wday * 3 + 3);
 }
 
 void initTime()
 {
-  nextSyncTime = 0;
-  now();
+	nextSyncTime = 0;
+	now();
 }
 
 void checkTime()
@@ -322,50 +321,49 @@ void checkTime()
 }
 
 
-unsigned long getNtpTime()
+bool getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !WiFiConnected(10)) {
-    return 0;
-  }
-  IPAddress timeServerIP;
-  String log = F("NTP  : NTP host ");
-  if (Settings.NTPHost[0] != 0) {
-    WiFi.hostByName(Settings.NTPHost, timeServerIP);
-    log += Settings.NTPHost;
-    // When single set host fails, retry again in a minute
-    nextSyncTime = sysTime + 20;
-  }
-  else {
-    // Have to do a lookup eacht time, since the NTP pool always returns another IP
-    String ntpServerName = String(random(0, 3));
-    ntpServerName += F(".pool.ntp.org");
-    WiFi.hostByName(ntpServerName.c_str(), timeServerIP);
-    log += ntpServerName;
-    // When pool host fails, retry can be much sooner
-    nextSyncTime = sysTime + 5;
-  }
+	if (!Settings.UseNTP || !WiFiConnected(10)) {
+		return false;
+	}
+	IPAddress timeServerIP;
+	String log = F("NTP  : NTP host ");
+	if (Settings.NTPHost[0] != 0) {
+		WiFi.hostByName(Settings.NTPHost, timeServerIP);
+		log += Settings.NTPHost;
+		// When single set host fails, retry again in a minute
+		nextSyncTime = sysTime + 20;
+	}else  {
+		// Have to do a lookup eacht time, since the NTP pool always returns another IP
+		String ntpServerName = String(random(0, 3));
+		ntpServerName += F(".pool.ntp.org");
+		WiFi.hostByName(ntpServerName.c_str(), timeServerIP);
+		log += ntpServerName;
+		// When pool host fails, retry can be much sooner
+		nextSyncTime = sysTime + 5;
+	}
 
-  log += F(" (");
-  log += timeServerIP.toString();
-  log += F(")");
+	log += F(" (");
+	log += timeServerIP.toString();
+	log += F(")");
 
-  if (!hostReachable(timeServerIP)) {
-    log += F(" unreachable");
-    addLog(LOG_LEVEL_INFO, log);
-    return 0;
-  }
+	if (!hostReachable(timeServerIP)) {
+		log += F(" unreachable");
+		addLog(LOG_LEVEL_INFO, log);
+		return false;
+	}
 
   WiFiUDP udp;
   if (!beginWiFiUDP_randomPort(udp))
     return 0;
 
-  const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
-  byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
+	const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+	byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
-  log += F(" queried");
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+	log += F(" queried");
+	addLog(LOG_LEVEL_DEBUG_MORE, log);
 
-  while (udp.parsePacket() > 0) ; // discard any previously received packets
+	while (udp.parsePacket() > 0) ; // discard any previously received packets
 
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
   packetBuffer[0] = 0b11100011;   // LI, Version, Mode
@@ -383,39 +381,75 @@ unsigned long getNtpTime()
   udp.write(packetBuffer, NTP_PACKET_SIZE);
   udp.endPacket();
 
-  uint32_t beginWait = millis();
-  while (!timeOutReached(beginWait + 1000)) {
-    int size = udp.parsePacket();
-    int remotePort = udp.remotePort();
-    if (size >= NTP_PACKET_SIZE && remotePort == 123) {
-      udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
-      unsigned long secsSince1900;
-      // convert four bytes starting at location 40 to a long integer
-      secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
-      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-      secsSince1900 |= (unsigned long)packetBuffer[43];
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-        String log = F("NTP  : NTP replied: ");
-        log += timePassedSince(beginWait);
-        log += F(" mSec");
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
-      }
-      udp.stop();
-      return secsSince1900 - 2208988800UL;
-    }
-    delay(10);
-  }
-  addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
-  udp.stop();
-  return 0;
+
+
+	uint32_t beginWait = millis();
+	while (!timeOutReached(beginWait + 1000)) {
+		int size = udp.parsePacket();
+		int remotePort = udp.remotePort();
+		if (size >= NTP_PACKET_SIZE && remotePort == 123) {
+			udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
+
+			// For more detailed info on improving accuracy, see:
+			// https://github.com/lettier/ntpclient/issues/4#issuecomment-360703503
+			// For now, we simply use half the reply time as delay compensation.
+
+			unsigned long secsSince1900;
+			// convert four bytes starting at location 40 to a long integer
+			// TX time is used here.
+			secsSince1900 = (unsigned long)packetBuffer[40] << 24;
+			secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+			secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+			secsSince1900 |= (unsigned long)packetBuffer[43];
+			uint32_t txTm = secsSince1900 - 2208988800UL;
+
+			unsigned long txTm_f;
+			txTm_f = (unsigned long)packetBuffer[44] << 24;
+			txTm_f |= (unsigned long)packetBuffer[45] << 16;
+			txTm_f |= (unsigned long)packetBuffer[46] << 8;
+			txTm_f |= (unsigned long)packetBuffer[47];
+			// Convert seconds to double
+			unixTime_d = static_cast<double>(txTm);
+			// Add fractional part.
+			unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
+
+			long total_delay = timePassedSince(beginWait);
+			// compensate for the delay by adding half the total delay
+			// N.B. unixTime_d is in seconds and delay in msec.
+			double delay_compensation = static_cast<double>(total_delay) / 2000.0;
+			unixTime_d += delay_compensation;
+
+			if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+				String log = F("NTP  : NTP replied: delay ");
+				log += total_delay;
+				log += F(" mSec");
+				log += F(" Accuracy increased by ");
+				double fractpart, intpart;
+				fractpart = modf(unixTime_d, &intpart);
+				if (fractpart < delay_compensation) {
+					// We gained more than 1 second in accuracy
+					fractpart += 1.0;
+				}
+				log += String(fractpart, 3);
+				log += F(" seconds");
+				addLog(LOG_LEVEL_INFO, log);
+			}
+			udp.stop();
+
+			return true;
+		}
+		delay(10);
+	}
+	addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
+	udp.stop();
+	return false;
 }
 
 
 
 /********************************************************************************************\
-  Unsigned long Timer timeOut check
-\*********************************************************************************************/
+   Unsigned long Timer timeOut check
+ \*********************************************************************************************/
 
 // Return the time difference as a signed value, taking into account the timers may overflow.
 // Returned timediff is between -24.9 days and +24.9 days.
@@ -482,69 +516,69 @@ void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
   timer += step;
   const long passed = timePassedSince(timer);
   if (passed < 0) {
-    // Event has not yet happened, which is fine.
-    return;
-  }
-  if (static_cast<unsigned long>(passed) > step) {
-    // No need to keep running behind, start again.
-    timer = millis() + step;
-    return;
-  }
-  // Try to get in sync again.
-  timer = millis() + (step - passed);
+		// Event has not yet happened, which is fine.
+		return;
+	}
+	if (static_cast<unsigned long>(passed) > step) {
+		// No need to keep running behind, start again.
+		timer = millis() + step;
+		return;
+	}
+	// Try to get in sync again.
+	timer = millis() + (step - passed);
 }
 
 
 /********************************************************************************************\
-  Convert  a 32 bit integer into a string like "Sun,12:30"
-  \*********************************************************************************************/
+   Convert  a 32 bit integer into a string like "Sun,12:30"
+ \*********************************************************************************************/
 String timeLong2String(unsigned long lngTime)
 {
-  unsigned long x = 0;
-  String time = "";
+	unsigned long x = 0;
+	String time = "";
 
-  x = (lngTime >> 16) & 0xf;
-  if (x == 0x0f)
-    x = 0;
-  String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
-  time = weekDays.substring(x * 3, x * 3 + 3);
-  time += ",";
+	x = (lngTime >> 16) & 0xf;
+	if (x == 0x0f)
+		x = 0;
+	String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
+	time = weekDays.substring(x * 3, x * 3 + 3);
+	time += ",";
 
-  x = (lngTime >> 12) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
+	x = (lngTime >> 12) & 0xf;
+	if (x == 0xf)
+		time += "*";
+	else if (x == 0xe)
+		time += "-";
+	else
+		time += x;
 
-  x = (lngTime >> 8) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
+	x = (lngTime >> 8) & 0xf;
+	if (x == 0xf)
+		time += "*";
+	else if (x == 0xe)
+		time += "-";
+	else
+		time += x;
 
-  time += ":";
+	time += ":";
 
-  x = (lngTime >> 4) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
+	x = (lngTime >> 4) & 0xf;
+	if (x == 0xf)
+		time += "*";
+	else if (x == 0xe)
+		time += "-";
+	else
+		time += x;
 
-  x = (lngTime) & 0xf;
-  if (x == 0xf)
-    time += "*";
-  else if (x == 0xe)
-    time += "-";
-  else
-    time += x;
+	x = (lngTime) & 0xf;
+	if (x == 0xf)
+		time += "*";
+	else if (x == 0xe)
+		time += "-";
+	else
+		time += x;
 
-  return time;
+	return time;
 }
 
 // returns the current Date separated by the given delimiter
@@ -558,7 +592,7 @@ String getDateString(const struct tm& ts, char delimiter) {
 
 String getDateString(char delimiter)
 {
-  return getDateString(tm, delimiter);
+	return getDateString(tm, delimiter);
 }
 String getDateString(const struct tm& ts)
 {
@@ -601,12 +635,12 @@ String getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_
 
 String getTimeString(char delimiter, bool show_seconds /*=true*/)
 {
-  return getTimeString(tm, delimiter, false, show_seconds);
+	return getTimeString(tm, delimiter, false, show_seconds);
 }
 
 String getTimeString_ampm(char delimiter, bool show_seconds /*=true*/)
 {
-  return getTimeString(tm, delimiter, true, show_seconds);
+	return getTimeString(tm, delimiter, true, show_seconds);
 }
 
 // returns the current Time without delimiter
@@ -647,12 +681,12 @@ String getDateTimeString_ampm(char dateDelimiter, char timeDelimiter,  char date
 }
 
 /********************************************************************************************\
-  Convert a string like "Sun,12:30" into a 32 bit integer
-  \*********************************************************************************************/
+   Convert a string like "Sun,12:30" into a 32 bit integer
+ \*********************************************************************************************/
 unsigned long string2TimeLong(const String &str)
 {
-  // format 0000WWWWAAAABBBBCCCCDDDD
-  // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
+	// format 0000WWWWAAAABBBBCCCCDDDD
+	// WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
 
   #define TmpStr1Length 10
   char command[20];
@@ -672,8 +706,8 @@ unsigned long string2TimeLong(const String &str)
     String day = TmpStr1;
     String weekDays = F("allsunmontuewedthufrisatwrkwkd");
     y = weekDays.indexOf(TmpStr1) / 3;
-    if (y == 0)
-      y = 0xf; // wildcard is 0xf
+		if (y == 0)
+			y = 0xf; // wildcard is 0xf
     lngTime |= (unsigned long)y << 16;
   }
 
@@ -706,8 +740,8 @@ unsigned long string2TimeLong(const String &str)
 }
 
 /********************************************************************************************\
-  Match clock event
-  \*********************************************************************************************/
+   Match clock event
+ \*********************************************************************************************/
 boolean matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
 {
   unsigned long Mask;
@@ -738,6 +772,6 @@ boolean matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
     }
 
   if (clockEvent == clockSet)
-    return true;
-  return false;
+		return true;
+	return false;
 }
