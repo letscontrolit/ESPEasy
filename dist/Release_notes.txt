@@ -1,4 +1,19 @@
 -------------------------------------------------
+Changes in release mega-20181029 (since mega-20181028)
+-------------------------------------------------
+
+Release date: Mon Oct 29 04:00:08 CET 2018
+
+Bartlomiej Zimon (2):
+      Dallas: add ScratchPad to debug log - OK suffix means data integrity ok (no communication problems)
+      Dallas: use reset timming from OneWire lib
+
+TD-er (2):
+      [NTP] Improve NTP accuracy
+      [NTP] Change log level for NTP success to INFO
+
+
+-------------------------------------------------
 Changes in release mega-20181028 (since mega-20181027)
 -------------------------------------------------
 
