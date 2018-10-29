@@ -140,6 +140,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	// CSE7766
+    #define USES_P081   // Cron
 
     // Pre-defined setup parameters
     #define GPIO_KEY1     0              // Button
