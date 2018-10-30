@@ -33,7 +33,7 @@ do
   BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
   cp .pioenvs/${ENV}/firmware.bin $BIN
   python2 crc2.py $BIN
-  mv $BIN "dist/ESP_Easy_${VERSION}_${ENV}.bin"
+  mv $BIN "dist/BIN/ESP_Easy_${VERSION}_${ENV}.bin"
 done
 
 
