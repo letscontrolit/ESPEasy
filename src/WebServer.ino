@@ -493,8 +493,13 @@ void WebServerInit()
   WebServer.on(F("/favicon.ico"), handle_favicon);
 
   #if defined(ESP8266)
-    if (getFlashRealSizeInBytes() > 524288)
+  {
+    uint32_t maxSketchSize;
+    bool use2step;
+    if (OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&WebServer);
+    }
+  }
   #endif
 
   #if defined(ESP8266)
@@ -3355,17 +3360,23 @@ void handle_tools() {
 
 #if defined(ESP8266)
   {
-    const uint32_t flashSize = getFlashRealSizeInBytes();
-    if (flashSize > 524288)
     {
-      addFormSubHeader(F("Firmware"));
-      html_TR_TD_height(30);
-      addWideButton(F("update"), F("Load"), F(""));
-      addHelpButton(F("EasyOTA"));
-      html_TD();
-      TXBuffer += F("Load a new firmware");
-      if (flashSize <= 1048576) {
-        TXBuffer += F(" <b>WARNING</b> only use 2-step OTA update and sketch < 604 kB");
+      uint32_t maxSketchSize;
+      bool use2step;
+      if (OTA_possible(maxSketchSize, use2step)) {
+        addFormSubHeader(F("Firmware"));
+        html_TR_TD_height(30);
+        addWideButton(F("update"), F("Load"), F(""));
+        addHelpButton(F("EasyOTA"));
+        html_TD();
+        TXBuffer += F("Load a new firmware");
+        if (use2step) {
+          TXBuffer += F(" <b>WARNING</b> only use 2-step OTA update and sketch < ");
+        } else {
+          TXBuffer += F(" Max sketch size: ");
+        }
+        TXBuffer += maxSketchSize / 1024;
+        TXBuffer += F(" kB");
       }
     }
   }
