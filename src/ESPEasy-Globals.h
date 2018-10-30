@@ -602,9 +602,6 @@ const byte DNS_PORT = 53;
 IPAddress apIP(DEFAULT_AP_IP);
 DNSServer dnsServer;
 bool dnsServerActive = false;
-#ifdef FEATURE_MDNS
-MDNSResponder mdns;
-#endif
 
 // MQTT client
 WiFiClient mqtt;
