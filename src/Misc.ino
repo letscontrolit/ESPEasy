@@ -1640,6 +1640,8 @@ String parseTemplate(String &tmpString, byte lineSize)
   //String tmpStringMid = "";
   newString.reserve(lineSize);
 
+  parseSystemVariables(tmpString, false);
+
   // replace task template variables
   int leftBracketIndex = tmpString.indexOf('[');
   if (leftBracketIndex == -1)
@@ -1676,6 +1678,12 @@ String parseTemplate(String &tmpString, byte lineSize)
             tmpString.replace('#', ',');
             if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
               newString += tmpString;
+          }
+          else if (deviceName.equalsIgnoreCase(F("Var"))) {
+            String tmpString = tmpStringMid.substring(4);
+            if (tmpString.length()>0 && isDigit(tmpString[0]) && tmpString.toInt()>0 && tmpString.toInt()<=CUSTOM_VARS_MAX){
+              newString += String(customFloatVar[tmpString.toInt()-1]);
+            }
           }
           else
             for (byte y = 0; y < TASKS_MAX; y++)
@@ -1729,7 +1737,7 @@ String parseTemplate(String &tmpString, byte lineSize)
       LoadTaskSettings(currentTaskIndex);
   }
 
-  parseSystemVariables(newString, false);
+  //parseSystemVariables(newString, false);
   parseStandardConversions(newString, false);
 
   // padding spaces
@@ -2495,7 +2503,7 @@ void parseCompleteNonCommentLine(
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
     // This to avoid waisting CPU time...
-    line = parseTemplate(line, line.length());
+
 
     if (match && !fakeIfBlock) {
       // substitution of %eventvalue% is made here so it can be used on if statement too
@@ -2509,10 +2517,22 @@ void parseCompleteNonCommentLine(
         if (equalsPos > 0)
         {
           String tmpString = event.substring(equalsPos + 1);
-          line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+          //line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+          char* tmpParam = new char[INPUT_COMMAND_SIZE];
+          tmpParam[0] = 0;
+
+          if (GetArgv(tmpString.c_str(),tmpParam,1)) {
+             line.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
+             line.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
+          }
+          if (GetArgv(tmpString.c_str(),tmpParam,2)) line.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
+          if (GetArgv(tmpString.c_str(),tmpParam,3)) line.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
+          if (GetArgv(tmpString.c_str(),tmpParam,4)) line.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+          delete[] tmpParam;
         }
       }
     }
+    line = parseTemplate(line, line.length());
   }
   line.trim();
 
@@ -2616,14 +2636,16 @@ void processMatchedRule(
         else
         {
           String check = lcAction.substring(split + 7);
-          log = F("Lev.");
-          log += String(ifBlock);
-          log += F(": [elseif ");
-          log += check;
-          log += "]=";
-          condition[ifBlock-1] = conditionMatchExtended(check);
-          log += toString(condition[ifBlock-1]);
-          addLog(LOG_LEVEL_DEBUG, log);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [elseif ");
+            log += check;
+            log += "]=";
+            condition[ifBlock-1] = conditionMatchExtended(check);
+            log += toString(condition[ifBlock-1]);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
         }
       }
     }
@@ -2639,15 +2661,17 @@ void processMatchedRule(
         {
           ifBlock++;
           String check = lcAction.substring(split + 3);
-          log = F("Lev.");
-          log += String(ifBlock);
-          log += F(": [if ");
-          log += check;
-          log += F("]=");
           condition[ifBlock-1] = conditionMatchExtended(check);
           ifBranche[ifBlock-1] = true;
-          log += toString(condition[ifBlock-1]);
-          addLog(LOG_LEVEL_DEBUG, log);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [if ");
+            log += check;
+            log += F("]=");
+            log += toString(condition[ifBlock-1]);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
         }
         else
           fakeIfBlock++;
