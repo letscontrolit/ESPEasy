@@ -629,7 +629,31 @@ bool client_available(WiFiClient& client) {
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply) {
   bool success = !must_check_reply;
   // This will send the request to the server
-  client.print(postStr);
+  byte written = client.print(postStr);
+  if (written != (postStr.length()%256)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("HTTP : ");
+      log += logIdentifier;
+      log += F(" Error: could not write to client (");
+      log += written;
+      log += "/";
+      log += postStr.length();
+      log += ")";
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    success = false;
+  } else {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("HTTP : ");
+      log += logIdentifier;
+      log += F(" written to client (");
+      log += written;
+      log += "/";
+      log += postStr.length();
+      log += ")";
+      addLog(LOG_LEVEL_DEBUG, log);
+    }    
+  }
 
   if (must_check_reply) {
     unsigned long timer = millis() + 200;
