@@ -628,14 +628,24 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
                 //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
                 #if defined(ESP8266)
-                  servo1.attach(event->Par2);
-                  servo1.write(event->Par3);
+                  //SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
+                  if (event->Par3 >= 9000) {
+                    servo1.detach();
+                   
+                  }else{
+                    servo1.attach(event->Par2);
+                    servo1.write(event->Par3);
+                  }
                 #endif
                 break;
               case 2:
                 #if defined(ESP8266)
+                if (event->Par3 >= 9000) {
+                  servo2.detach();
+                }else{
                   servo2.attach(event->Par2);
                   servo2.write(event->Par3);
+                }
                 #endif
                 break;
             }
