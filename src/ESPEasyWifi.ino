@@ -105,11 +105,10 @@ void processGotIP() {
   }
 
   #ifdef FEATURE_MDNS
-
+    bool mdns_started = MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP());
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : ");
-      if (MDNS.begin(WifiGetHostname().c_str(), WiFi.localIP())) {
-
+      if (mdns_started) {
         log += F("mDNS started, with name: ");
         log += WifiGetHostname();
         log += F(".local");
@@ -138,6 +137,11 @@ void processGotIP() {
 //  WiFi.scanDelete();
   wifiStatus = ESPEASY_WIFI_SERVICES_INITIALIZED;
   setWebserverRunning(true);
+  #ifdef FEATURE_MDNS
+  if (mdns_started) {
+    MDNS.addService("http", "tcp", 80);
+  }
+  #endif
   wifi_connect_attempt = 0;
   if (wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
