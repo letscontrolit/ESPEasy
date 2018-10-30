@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20181030 (since mega-20181029)
+-------------------------------------------------
+
+Release date: Tue Oct 30 04:00:07 CET 2018
+
+James Tutton (2):
+      Added Special Case to allow Servo to be disabled
+      Fixed missing ;
+
+TD-er (1):
+      [Core 2.4.2] Set core 2.4.2 as default platform
+
+svmac (1):
+      P022_PCA9685 Enhancements
+
+
+-------------------------------------------------
 Changes in release mega-20181029 (since mega-20181028)
 -------------------------------------------------
 
