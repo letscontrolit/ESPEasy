@@ -112,14 +112,14 @@ boolean Blynk_get(const String& command, byte controllerIndex, float *data )
     char log[80] = {0};
 
     // Read all the lines of the reply from server and log them
-    while (client_available(client)) {
+    while (client_available(client) && !success) {
       String line;
       safeReadStringUntil(client, line, '\n');
       addLog(LOG_LEVEL_DEBUG_MORE, line);
       // success ?
       if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
         strcpy_P(log, PSTR("HTTP : Success"));
-        success = true;
+        if (!data) success = true;
       }
       else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
