@@ -203,7 +203,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
-        addFormSelector(F("Auto Base Calibration"), F("plugin_049_abcdisable"), 2, options, optionValues, choice);
+        addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
         byte choiceFilter = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String filteroptions[5] = { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
@@ -212,7 +212,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           PLUGIN_049_FILTER_FAST,
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
-        addFormSelector(F("Filter"), F("plugin_049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
+        addFormSelector(F("Filter"), F("p049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
 
         success = true;
         break;
@@ -220,7 +220,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        const int formValue = getFormItemInt(F("plugin_049_abcdisable"));
+        const int formValue = getFormItemInt(F("p049_abcdisable"));
         boolean new_ABC_disable = (formValue == ABC_disabled);
         if (Plugin_049_ABC_Disable != new_ABC_disable) {
           // Setting changed in the webform.
@@ -228,7 +228,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           Plugin_049_ABC_Disable = new_ABC_disable;
         }
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = formValue;
-        const int filterValue = getFormItemInt(F("plugin_049_filter"));
+        const int filterValue = getFormItemInt(F("p049_filter"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = filterValue;
         success = true;
         break;

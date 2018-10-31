@@ -83,7 +83,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       LoadCustomTaskSettings(event->TaskIndex, (byte*)&expression, PLUGIN_081_EXPRESSION_SIZE);
 
       addFormTextBox(F("CRON Expression")
-        , F("plugin_081_cron_exp")
+        , F("p081_cron_exp")
         , expression
         , 39);
 
@@ -95,7 +95,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     {
       String log;
       char expression[PLUGIN_081_EXPRESSION_SIZE];
-      strncpy(expression,  WebServer.arg(F("plugin_081_cron_exp")).c_str() , sizeof(expression));
+      strncpy(expression,  WebServer.arg(F("p081_cron_exp")).c_str() , sizeof(expression));
       if(/*strcmp(expression, state.Expression)*/1 != 0)
       {
         cron_expr expr;

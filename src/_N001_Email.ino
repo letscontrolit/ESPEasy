@@ -188,7 +188,7 @@ boolean NPlugin_001_MTA(WiFiClient& client, String aStr, const String &aWaitForP
 	backgroundtasks();
 	while (true) {
 		if (timeOutReached(timer)) {
-			String log = F("Plugin_001_MTA: timeout. ");
+			String log = F("NPlugin_001_MTA: timeout. ");
 			log += aStr;
 			addLog(LOG_LEVEL_ERROR, log);
 			return false;

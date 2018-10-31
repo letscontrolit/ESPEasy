@@ -250,7 +250,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       {
         const uint8_t i2cAddress = Plugin_028_i2c_addr(event);
         P028_sensordata& sensor = P028_sensors[i2cAddress];
-        addFormSelectorI2C(F("plugin_028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
+        addFormSelectorI2C(F("p028_bme280_i2c"), 2, Plugin_28_i2c_addresses, i2cAddress);
         if (sensor.sensorID != Unknown_DEVICE) {
           String detectedString = F("Detected: ");
           detectedString += sensor.getFullDeviceName();
@@ -258,10 +258,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         }
         addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(F("Altitude"), F("plugin_028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         addUnit(F("m"));
 
-        addFormNumericBox(F("Temperature offset"), F("plugin_028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         addUnit(F("x 0.1C"));
         String offsetNote = F("Offset in units of 0.1 degree Celcius");
         if (sensor.hasHumidity()) {
@@ -275,11 +275,11 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        const uint8_t i2cAddress = getFormItemInt(F("plugin_028_bme280_i2c"));
+        const uint8_t i2cAddress = getFormItemInt(F("p028_bme280_i2c"));
         Plugin_028_check(i2cAddress); // Check id device is present
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = i2cAddress;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_028_bme280_elev"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_028_bme280_tempoffset"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p028_bme280_elev"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p028_bme280_tempoffset"));
         success = true;
         break;
       }

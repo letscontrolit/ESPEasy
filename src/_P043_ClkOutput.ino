@@ -50,7 +50,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-        	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("plugin_043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
+        	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("p043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
 //          addHtml(F("<TR><TD>Day,Time "));
 //          addHtml(x+1);
 //          addHtml(F(":<TD><input type='text' name='plugin_043_clock"));
@@ -61,7 +61,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
           addHtml(F(" "));
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-          addSelector(String(F("plugin_043_state")) + (x), 3, options, NULL, NULL, choice, false);
+          addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice, false);
         }
         success = true;
         break;
@@ -71,12 +71,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
       {
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-          String argc = F("plugin_043_clock");
+          String argc = F("p043_clock");
           argc += x;
           String plugin1 = WebServer.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
 
-          argc = F("plugin_043_state");
+          argc = F("p043_state");
           argc += x;
           String plugin2 = WebServer.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();

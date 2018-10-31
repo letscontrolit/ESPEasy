@@ -154,7 +154,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         options[7] = F("Unknown 2, byte 16");
         options[8] = F("Unknown 3, byte 19");
 
-        addFormSelector(F("Plugin function"), F("plugin_046"), nrchoices, options, NULL, choice);
+        addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
 
         if (choice==0) {
           addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));
@@ -232,7 +232,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_046"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p046"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == 0) {
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("taskdevicepin1"));
           Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("taskdevicepin2"));
