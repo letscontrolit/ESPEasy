@@ -288,8 +288,10 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
     }
   }
   if (shouldReboot) {
-    //we only add this here as a seperate chucnk to prevent using too much memory at once
-    TXBuffer += jsReboot;
+    //we only add this here as a seperate chunk to prevent using too much memory at once
+    html_add_script(false);
+    TXBuffer += DATA_REBOOT_JS;
+    html_add_script_end();
   }
 }
 
@@ -732,7 +734,7 @@ void getWebPageTemplateVar(const String& varName )
     {
       TXBuffer += F("<style>");
       // Send CSS per chunk to avoid sending either too short or too large strings.
-      TXBuffer += pgDefaultCSS;
+      TXBuffer += DATA_ESPEASY_DEFAULT_MIN_CSS;
       TXBuffer += F("</style>");
     }
   }
@@ -783,7 +785,7 @@ void writeDefaultCSS(void)
         log += F(" bytes)");
         addLog(LOG_LEVEL_INFO, log);
       }
-      defaultCSS= PGMT(pgDefaultCSS);
+      defaultCSS= PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
       f.write((const unsigned char*)defaultCSS.c_str(), defaultCSS.length());   //note: content must be in RAM - a write of F("XXX") does not work
       f.close();
     }
@@ -2030,7 +2032,9 @@ void handle_devices() {
   // show all tasks as table
   if (taskIndexNotSet)
   {
-    TXBuffer += jsUpdateSensorValuesDevicePage;
+    html_add_script(true);
+    TXBuffer += DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS;
+    html_add_script_end();
     html_table_class_multirow();
     html_TR();
     html_table_header("", 70);
@@ -3180,6 +3184,19 @@ void html_add_autosubmit_form() {
            "\n//--></script>");
 }
 
+void html_add_script(bool defer) {
+  TXBuffer += F("<script");
+  if (defer) {
+    TXBuffer += F(" defer");
+  }
+  TXBuffer += F(" type='text/JavaScript'>");
+}
+
+void html_add_script_end() {
+  TXBuffer += F("</script>");
+}
+
+
 //********************************************************************************
 // Add a task select dropdown list
 //********************************************************************************
@@ -3264,7 +3281,9 @@ void handle_log() {
   addCheckBox(F("autoscroll"), true);
   TXBuffer += F("<BR></body>");
 
-  TXBuffer += jsFetchAndParseLog;
+  html_add_script(true);
+  TXBuffer += DATA_FETCH_AND_PARSE_LOG_JS;
+  html_add_script_end();
 
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
@@ -5212,7 +5231,7 @@ void handle_setup() {
       TXBuffer += F("timedRefresh(");
       TXBuffer += wait;
       TXBuffer += F(");");
-      TXBuffer += F("</script>");
+      html_add_script_end();
       TXBuffer += F("seconds while trying to connect");
     }
     refreshCount++;
@@ -5389,20 +5408,23 @@ void handle_sysinfo() {
   int freeMem = ESP.getFreeHeap();
 
   addHeader(true,  TXBuffer.buf);
-   TXBuffer += printWebString;
-   TXBuffer += F("<form>");
+  TXBuffer += printWebString;
+  TXBuffer += F("<form>");
 
-   // the table header
-   html_table_class_normal();
-   html_TR();
-   html_table_header(F("System Info"));
-   TXBuffer += F("<TH align='left'>");
-   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
+  // the table header
+  html_table_class_normal();
+  html_TR();
+  html_table_header(F("System Info"));
+  TXBuffer += F("<TH align='left'>");
+  addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
-   TXBuffer += githublogo;
+  TXBuffer += githublogo;
+  html_add_script(false);
+  TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
+  html_add_script_end();
 
-   addRowLabel(F("Unit"));
-   TXBuffer += Settings.Unit;
+  addRowLabel(F("Unit"));
+  TXBuffer += Settings.Unit;
 
   if (Settings.UseNTP)
   {
