@@ -1681,8 +1681,10 @@ String parseTemplate(String &tmpString, byte lineSize)
           }
           else if (deviceName.equalsIgnoreCase(F("Var"))) {
             String tmpString = tmpStringMid.substring(4);
-            if (tmpString.length()>0 && isDigit(tmpString[0]) && tmpString.toInt()>0 && tmpString.toInt()<=CUSTOM_VARS_MAX){
-              newString += String(customFloatVar[tmpString.toInt()-1]);
+            if (tmpString.length()>0 && isDigit(tmpString[0])) {
+              const int varNum = tmpString.toInt();
+              if (varNum > 0 && varNum <= CUSTOM_VARS_MAX)
+                newString += String(customFloatVar[varNum-1]);
             }
           }
           else
