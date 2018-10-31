@@ -3398,6 +3398,21 @@ void play_rtttl(uint8_t _pin, const char *p )
 
 //#endif
 
+bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
+#if defined(ESP8266)
+  maxSketchSize = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const bool otaPossible = maxSketchSize > SMALLEST_OTA_IMAGE;
+  use2step = maxSketchSize < ESP.getSketchSize();
+  if (use2step) {
+    const uint32_t totalSketchSpace = ESP.getFreeSketchSpace() + ESP.getSketchSize();
+    maxSketchSize = totalSketchSpace - SMALLEST_OTA_IMAGE;
+  }
+  if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
+  return otaPossible;
+#else
+  return false;
+#endif
+}
 
 #ifdef FEATURE_ARDUINO_OTA
 /********************************************************************************************\

@@ -519,6 +519,8 @@ bool showSettingsFileLayout = false;
   #ifdef FEATURE_MDNS
     #include <ESP8266mDNS.h>
   #endif
+  #define SMALLEST_OTA_IMAGE 272*1024 // smallest known 2-step OTA image
+  #define MAX_SKETCH_SIZE 1044464
   #ifdef FEATURE_ARDUINO_OTA
     #include <ArduinoOTA.h>
     #include <ESP8266mDNS.h>

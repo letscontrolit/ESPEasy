@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20181031 (since mega-20181030)
+-------------------------------------------------
+
+Release date: Wed Oct 31 04:00:10 CET 2018
+
+Bartłomiej Zimoń (1):
+      BlynkGet fix loop #1951
+
+Jimmy Westberg (7):
+      [Flasher] Added ESP.Easy.Flasher.exe
+      [Deploy] Added sub folder for BIN files
+      [Flasher] Updated to 0.02.001
+      [Deploy] small letters are the standard
+      [Flasher] Updated to 0.02.002
+      [Path] folder rename 1
+      [Path] folder rename 2
+
+TD-er (1):
+      [OTA] Add OTA info and disable when not enough space
+
+
+-------------------------------------------------
 Changes in release mega-20181030 (since mega-20181029)
 -------------------------------------------------
 
