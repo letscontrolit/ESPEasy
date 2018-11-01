@@ -1,4 +1,27 @@
 -------------------------------------------------
+Changes in release mega-20181101 (since mega-20181031)
+-------------------------------------------------
+
+Release date: Thu Nov  1 04:00:08 CET 2018
+
+Bartłomiej Zimoń (1):
+      BlynkGet add timeout 1,5s.
+
+Grovkillen (4):
+      [README] added more info about ESP.Easy.Flasher
+      [README] fixed some \r\n
+      [Deploy] "source" folder was named "Source"
+      [README] removed IRC link... we're not there.
+
+Jimmy Westberg (1):
+      [Flasher] updated flasher (some minor error)
+
+Plebs (2):
+      Update src/Misc.ino
+      Update src/Misc.ino
+
+
+-------------------------------------------------
 Changes in release mega-20181031 (since mega-20181030)
 -------------------------------------------------
 
