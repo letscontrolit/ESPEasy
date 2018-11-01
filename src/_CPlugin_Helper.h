@@ -630,7 +630,11 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   bool success = !must_check_reply;
   // This will send the request to the server
   byte written = client.print(postStr);
-  if (written != (postStr.length()%256)) {
+  // as of 2018/11/01 the print function only returns one byte (upd to 256 chars sent). However if the string sent can be longer than this therefore we calculate modulo 256.
+  // see discussion here https://github.com/letscontrolit/ESPEasy/pull/1979
+  // and implementation here https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/src/include/ClientContext.h#L437-L467
+  // this needs to be adjusted if the WiFiClient.print method changes.
+  if (written != (postStr.length()%256)) { 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("HTTP : ");
       log += logIdentifier;
