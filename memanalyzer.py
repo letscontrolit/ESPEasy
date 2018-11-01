@@ -135,17 +135,17 @@ try:
     libs.sort()
 
     #which plugins to test?
-    # if len(sys.argv)>2:
-    #     test_plugins=sys.argv[2:]
-    # else:
-    #     test_plugins=plugins
-    # test_plugins.sort()
+    if len(sys.argv)>2:
+        plugins=sys.argv[2:]
+    else:
+        plugins=plugins
+    plugins.sort()
 
     print("Analysing ESPEasy memory usage for env {} ...\n".format(env))
 
     #### disable all plugins and to get base size
-     for plugin in plugins:
-         disable_plugin(plugin)
+    for plugin in plugins:
+        disable_plugin(plugin)
 
 
     # for lib in libs:
