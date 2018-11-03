@@ -387,6 +387,10 @@ void clearAccessBlock()
 //********************************************************************************
 //#include "core_version.h"
 #define HTML_SYMBOL_WARNING "&#9888;"
+#define HTML_SYMBOL_INPUT   "&#8656;"
+#define HTML_SYMBOL_OUTPUT  "&#8658;"
+#define HTML_SYMBOL_I_O     "&#8660;"
+
 
 #if defined(ESP8266)
   #define TASKS_PER_PAGE 12
@@ -1708,18 +1712,22 @@ void handle_hardware() {
     Settings.Pin_i2c_scl     = getFormItemInt(F("pscl"));
     Settings.InitSPI = isFormItemChecked(F("initspi"));      // SPI Init
     Settings.Pin_sd_cs  = getFormItemInt(F("sd"));
-    Settings.PinBootStates[0]  =  getFormItemInt(F("p0"));
-    Settings.PinBootStates[2]  =  getFormItemInt(F("p2"));
-    Settings.PinBootStates[4]  =  getFormItemInt(F("p4"));
-    Settings.PinBootStates[5]  =  getFormItemInt(F("p5"));
-    Settings.PinBootStates[9]  =  getFormItemInt(F("p9"));
-    Settings.PinBootStates[10] =  getFormItemInt(F("p10"));
-    Settings.PinBootStates[12] =  getFormItemInt(F("p12"));
-    Settings.PinBootStates[13] =  getFormItemInt(F("p13"));
-    Settings.PinBootStates[14] =  getFormItemInt(F("p14"));
-    Settings.PinBootStates[15] =  getFormItemInt(F("p15"));
-    Settings.PinBootStates[16] =  getFormItemInt(F("p16"));
-
+    int gpio = 0;
+    // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
+    while (gpio < MAX_GPIO  && gpio < 17) {
+      if (Settings.UseSerial && (gpio == 1 || gpio == 3)) {
+        // do not add the pin state select for these pins.
+      } else {
+        int pinnr = -1;
+        bool input, output, warning;
+        if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+          String int_pinlabel = "p";
+          int_pinlabel += gpio;
+          Settings.PinBootStates[gpio] = getFormItemInt(int_pinlabel);
+        }
+      }
+      ++gpio;
+    }
     addHtmlError(SaveSettings());
   }
 
@@ -1751,17 +1759,27 @@ void handle_hardware() {
 #endif
 
   addFormSubHeader(F("GPIO boot states"));
-  addFormPinStateSelect(F("Pin mode 0 (D3)"), F("p0"), Settings.PinBootStates[0]);
-  addFormPinStateSelect(F("Pin mode 2 (D4)"), F("p2"), Settings.PinBootStates[2]);
-  addFormPinStateSelect(F("Pin mode 4 (D2)"), F("p4"), Settings.PinBootStates[4]);
-  addFormPinStateSelect(F("Pin mode 5 (D1)"), F("p5"), Settings.PinBootStates[5]);
-  addFormPinStateSelect(F("Pin mode 9 (D11)"), F("p9"), Settings.PinBootStates[9]);
-  addFormPinStateSelect(F("Pin mode 10 (D12)"), F("p10"), Settings.PinBootStates[10]);
-  addFormPinStateSelect(F("Pin mode 12 (D6)"), F("p12"), Settings.PinBootStates[12]);
-  addFormPinStateSelect(F("Pin mode 13 (D7)"), F("p13"), Settings.PinBootStates[13]);
-  addFormPinStateSelect(F("Pin mode 14 (D5)"), F("p14"), Settings.PinBootStates[14]);
-  addFormPinStateSelect(F("Pin mode 15 (D8)"), F("p15"), Settings.PinBootStates[15]);
-  addFormPinStateSelect(F("Pin mode 16 (D0)"), F("p16"), Settings.PinBootStates[16]);
+  int gpio = 0;
+  // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
+  while (gpio < MAX_GPIO  && gpio < 17) {
+    bool enabled = true;
+    if (Settings.UseSerial && (gpio == 1 || gpio == 3)) {
+      // do not add the pin state select for these pins.
+      enabled = false;
+    }
+    int pinnr = -1;
+    bool input, output, warning;
+    if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+      String label;
+      label.reserve(32);
+      label = F("Pin mode ");
+      label += createGPIO_label(gpio, pinnr, input, output, warning);
+      String int_pinlabel = "p";
+      int_pinlabel += gpio;
+      addFormPinStateSelect(label, int_pinlabel, Settings.PinBootStates[gpio], enabled);
+    }
+    ++gpio;
+  }
   addFormSeparator(2);
 
   html_TR_TD();
@@ -1778,16 +1796,16 @@ void handle_hardware() {
 //********************************************************************************
 // Add a GPIO pin select dropdown list
 //********************************************************************************
-void addFormPinStateSelect(const String& label, const String& id, int choice)
+void addFormPinStateSelect(const String& label, const String& id, int choice, bool enabled)
 {
   addRowLabel(label);
-  addPinStateSelect(id, choice);
+  addPinStateSelect(id, choice, enabled);
 }
 
-void addPinStateSelect(String name, int choice)
+void addPinStateSelect(String name, int choice, bool enabled)
 {
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
-  addSelector(name, 4, options, NULL, NULL, choice, false);
+  addSelector(name, 4, options, NULL, NULL, choice, false, enabled);
 }
 
 //********************************************************************************
@@ -2529,124 +2547,145 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 
 
 //********************************************************************************
-// Add a GPIO pin select dropdown list for both 8266 and 8285
+// Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
 //********************************************************************************
-#if defined(ESP8285)
-// Code for the ESP8285
+String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warning) {
+  if (gpio < 0) return F("- None -");
+  String result;
+  result.reserve(24);
+  result = F("GPIO-");
+  result += gpio;
+  if (pinnr >= 0) {
+    result += F(" (D");
+    result += pinnr;
+    result += ')';
+  }
+  if (input != output) {
+    result += ' ';
+    result += input ? F(HTML_SYMBOL_INPUT) : F(HTML_SYMBOL_OUTPUT);
+  }
+  if (warning) {
+    result += ' ';
+    result += F(HTML_SYMBOL_WARNING);
+  }
+  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+  if (serialPinConflict) {
+    if (gpio == 1) { result += F(" TX0"); }
+    if (gpio == 3) { result += F(" RX0"); }
+  }
+  return result;
+}
+
+void addPinSelect(boolean forI2C, String name,  int choice)
+{
+  #ifdef ESP32
+    #define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
+  #else
+    #define NR_ITEMS_PIN_DROPDOWN  14 // 13 GPIO + 1
+  #endif
+
+  String * gpio_labels = new String[NR_ITEMS_PIN_DROPDOWN];
+  int * gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
+
+  // At i == 0 && gpio == -1, add the "- None -" option first
+  int i = 0;
+  int gpio = -1;
+  while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
+    int pinnr = -1;
+    bool input, output, warning;
+    if (getGpioInfo(gpio, pinnr, input, output, warning) || i == 0) {
+      gpio_labels[i] = createGPIO_label(gpio, pinnr, input, output, warning);
+      gpio_numbers[i] = gpio;
+      ++i;
+    }
+    ++gpio;
+  }
+  renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, name, choice, NR_ITEMS_PIN_DROPDOWN);
+  delete[] gpio_numbers;
+  delete[] gpio_labels;
+  #undef NR_ITEMS_PIN_DROPDOWN
+}
+
+#ifdef ESP32
 
 //********************************************************************************
 // Add a GPIO pin select dropdown list
 //********************************************************************************
-void addPinSelect(boolean forI2C, String name,  int choice)
-{
-  String options[18];
-  options[0] = F("- None -");
-  options[1] = F("GPIO-0 (D3)");
-  options[2] = F("GPIO-1 (D10)");
-  options[3] = F("GPIO-2 (D4)");
-  options[4] = F("GPIO-3 (D9)");
-  options[5] = F("GPIO-4 (D2)");
-  options[6] = F("GPIO-5 (D1)");
-  options[7] = F("GPIO-6");
-  options[8] = F("GPIO-7");
-  options[9] = F("GPIO-8");
-  options[10] = F("GPIO-9 (D11)");
-  options[11] = F("GPIO-10 (D12)");
-  options[12] = F("GPIO-11");
-  options[13] = F("GPIO-12 (D6)");
-  options[14] = F("GPIO-13 (D7)");
-  options[15] = F("GPIO-14 (D5)");
-  options[16] = F("GPIO-15 (D8)");
-  options[17] = F("GPIO-16 (D0)");
-  int optionValues[18];
-  optionValues[0] = -1;
-  optionValues[1] = 0;
-  optionValues[2] = 1;
-  optionValues[3] = 2;
-  optionValues[4] = 3;
-  optionValues[5] = 4;
-  optionValues[6] = 5;
-  optionValues[7] = 6;
-  optionValues[8] = 7;
-  optionValues[9] = 8;
-  optionValues[10] = 9;
-  optionValues[11] = 10;
-  optionValues[12] = 11;
-  optionValues[13] = 12;
-  optionValues[14] = 13;
-  optionValues[15] = 14;
-  optionValues[16] = 15;
-  optionValues[17] = 16;
-  renderHTMLForPinSelect(options, optionValues, forI2C, name, choice, 18);
+bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
+  pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
 
-}
+  // Input GPIOs:  0-19, 21-23, 25-27, 32-39
+  // Output GPIOs: 0-19, 21-23, 25-27, 32-33
+  input = gpio <= 39;
+  output = gpio <= 33;
+  if (gpio < 0 || gpio == 20 || gpio == 24 || (gpio > 27 && gpio < 32)) {
+    input = false;
+    output = false;
+  }
+  if (input == false && output == false) {
+    return false;
+  }
+
+  // GPIO 0 & 2 can't be used as an input. State during boot is dependent on boot mode.
+  warning = (gpio == 0 || gpio == 2);
+  if (gpio == 12) {
+    // If driven High, flash voltage (VDD_SDIO) is 1.8V not default 3.3V.
+    // Has internal pull-down, so unconnected = Low = 3.3V.
+    // May prevent flashing and/or booting if 3.3V flash is used and this pin is
+    // pulled high, causing the flash to brownout.
+    // See the ESP32 datasheet for more details.
+    warning = true;
+  }
+  if (gpio == 15) {
+    // If driven Low, silences boot messages printed by the ROM bootloader.
+    // Has an internal pull-up, so unconnected = High = normal output.
+    warning = true;
+  }
+  return true;
+};
 
 #else
-#if defined(ESP8266)
-// Code for the ESP8266
 
-//********************************************************************************
-// Add a GPIO pin select dropdown list
-//********************************************************************************
-void addPinSelect(boolean forI2C, String name,  int choice)
-{
-  String options[14];
-  options[0] = F("- None -");
-  options[1] = F("GPIO-0 (D3)");
-  options[2] = F("GPIO-1 (D10)");
-  options[3] = F("GPIO-2 (D4)");
-  options[4] = F("GPIO-3 (D9)");
-  options[5] = F("GPIO-4 (D2)");
-  options[6] = F("GPIO-5 (D1)");
-  options[7] = F("GPIO-9 (D11) " HTML_SYMBOL_WARNING);
-  options[8] = F("GPIO-10 (D12)");
-  options[9] = F("GPIO-12 (D6)");
-  options[10] = F("GPIO-13 (D7)");
-  options[11] = F("GPIO-14 (D5)");
-  options[12] = F("GPIO-15 (D8)");
-  options[13] = F("GPIO-16 (D0)");
-  int optionValues[14];
-  optionValues[0] = -1;
-  optionValues[1] = 0;
-  optionValues[2] = 1;
-  optionValues[3] = 2;
-  optionValues[4] = 3;
-  optionValues[5] = 4;
-  optionValues[6] = 5;
-  optionValues[7] = 9;
-  optionValues[8] = 10;
-  optionValues[9] = 12;
-  optionValues[10] = 13;
-  optionValues[11] = 14;
-  optionValues[12] = 15;
-  optionValues[13] = 16;
-  renderHTMLForPinSelect(options, optionValues, forI2C, name, choice, 14);
-}
-#endif
-
-#if defined(ESP32)
-//********************************************************************************
-// Add a GPIO pin select dropdown list
-//********************************************************************************
-void addPinSelect(boolean forI2C, String name,  int choice)
-{
-  String * options = new String[PIN_D_MAX+1];
-  int * optionValues = new int[PIN_D_MAX+1];
-  options[0] = F("- None -");
-  optionValues[0] = -1;
-  for(byte x=1; x < PIN_D_MAX+1; x++)
-  {
-    options[x] = F("GPIO-");
-    options[x] += x;
-    optionValues[x] = x;
+// return true when pin can be used.
+bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
+  pinnr = -1;
+  input = true;
+  output = true;
+  // GPIO 0, 2 & 15 can't be used as an input. State during boot is dependent on boot mode.
+  warning = (gpio == 0 || gpio == 2 || gpio == 15);
+  switch (gpio) {
+    case  0: pinnr =  3; break;
+    case  1: pinnr = 10; break;
+    case  2: pinnr =  4; break;
+    case  3: pinnr =  9; break;
+    case  4: pinnr =  2; break;
+    case  5: pinnr =  1; break;
+    case  6: // GPIO 6 .. 8  is used for flash
+    case  7:
+    case  8: pinnr = -1; break;
+    case  9: pinnr = 11; break; // On ESP8266 used for flash
+    case 10: pinnr = 12; break; // On ESP8266 used for flash
+    case 11: pinnr = -1; break;
+    case 12: pinnr =  6; break;
+    case 13: pinnr =  7; break;
+    case 14: pinnr =  5; break;
+    // GPIO-15 Can't be used as an input. There is an external pull-down on this pin.
+    case 15: pinnr =  8; input = false; break;
+    case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
-  renderHTMLForPinSelect(options, optionValues, forI2C, name, choice, PIN_D_MAX+1);
-  delete[] optionValues;
-  delete[] options;
+  #ifndef ESP8285
+  if (gpio == 9 || gpio == 10) {
+    // On ESP8266 used for flash
+    warning = true;
+  }
+  #endif
+  if (pinnr < 0) {
+    input = false;
+    output = false;
+    return false;
+  }
+  return true;
 }
-#endif
-
-
 #endif
 
 //********************************************************************************
@@ -2698,13 +2737,20 @@ void addFormSelector(const String& label, const String& id, int optionCount, con
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
 }
 
-void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
+void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange) {
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
+}
+
+void addSelector(const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange, bool enabled)
 {
   int index;
 
   TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += id;
   TXBuffer += F("'");
+  if (!enabled) {
+    TXBuffer += F(" disabled");
+  }
   if (reloadonchange)
     TXBuffer += F(" onchange='return dept_onchange(frmselect)'>");
   TXBuffer += F(">");

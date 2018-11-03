@@ -4,31 +4,33 @@
 
 void hardwareInit()
 {
-
   // set GPIO pins state if not set to default
-  for (byte x=0; x < 17; x++)
-    if (Settings.PinBootStates[x] != 0)
-      switch(Settings.PinBootStates[x])
+  for (byte gpio = 0; gpio < 17; ++gpio) {
+    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    if (!serialPinConflict && Settings.PinBootStates[gpio] != 0) {
+      switch(Settings.PinBootStates[gpio])
       {
         case 1:
-          pinMode(x,OUTPUT);
-          digitalWrite(x,LOW);
-          setPinState(1, x, PIN_MODE_OUTPUT, LOW);
+          pinMode(gpio,OUTPUT);
+          digitalWrite(gpio,LOW);
+          setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
           break;
         case 2:
-          pinMode(x,OUTPUT);
-          digitalWrite(x,HIGH);
-          setPinState(1, x, PIN_MODE_OUTPUT, HIGH);
+          pinMode(gpio,OUTPUT);
+          digitalWrite(gpio,HIGH);
+          setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
           break;
         case 3:
-          pinMode(x,INPUT_PULLUP);
-          setPinState(1, x, PIN_MODE_INPUT, 0);
+          pinMode(gpio,INPUT_PULLUP);
+          setPinState(1, gpio, PIN_MODE_INPUT, 0);
           break;
       }
+    }
+  }
 
   if (Settings.Pin_Reset != -1)
     pinMode(Settings.Pin_Reset,INPUT_PULLUP);
- 
+
   // configure hardware pins according to eeprom settings.
   if (Settings.Pin_i2c_sda != -1)
   {
@@ -42,7 +44,7 @@ void hardwareInit()
         addLog(LOG_LEVEL_INFO, log);
         #if defined(ESP8266)
           Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
-        #endif        
+        #endif
       }
   }
 
@@ -105,7 +107,7 @@ void checkResetFactoryPin(){
   if (Settings.Pin_Reset == -1)
     return;
 
-  if (digitalRead(Settings.Pin_Reset) == 0){ // active low reset pin  
+  if (digitalRead(Settings.Pin_Reset) == 0){ // active low reset pin
     factoryResetCounter++; // just count every second
   }
   else
@@ -118,9 +120,8 @@ void checkResetFactoryPin(){
     #endif
     #if defined(ESP32)
       ESP.restart();
-    #endif    
+    #endif
 
     factoryResetCounter = 0; // count was < 3, reset counter
   }
 }
-

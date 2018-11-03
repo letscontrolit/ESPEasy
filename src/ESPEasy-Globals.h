@@ -316,9 +316,11 @@
 
 #if defined(ESP8266)
   #define TASKS_MAX                          12 // max 12!
+  #define MAX_GPIO                           16
 #endif
 #if defined(ESP32)
   #define TASKS_MAX                          32
+  #define MAX_GPIO                           39
 #endif
 
 #define CONTROLLER_MAX                      3 // max 4!
@@ -836,7 +838,7 @@ struct SettingsStruct
   int8_t        Pin_i2c_scl;
   int8_t        Pin_status_led;
   int8_t        Pin_sd_cs;
-  int8_t        PinBootStates[17];
+  int8_t        PinBootStates[17];  // FIXME TD-er: this is ESP8266 number of pins. ESP32 has double.
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
   byte          SyslogLevel;
