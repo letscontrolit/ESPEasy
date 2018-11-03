@@ -237,21 +237,16 @@ void sendHeaderBlocking(bool json) {
 
 void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
   String pageTemplate = "";
-  int indexStart, indexEnd;
-  String varName;  //, varValue;
   String fileName = tmplName;
-  String meta;
   fileName += F(".htm");
   fs::File f = SPIFFS.open(fileName, "r+");
 
-  if(rebooting){
-    meta = F("<meta http-equiv='refresh' content='10 url=/'>");
-  }
   if (f) {
     pageTemplate.reserve(f.size());
     while (f.available()) pageTemplate += (char)f.read();
     f.close();
   } else {
+    // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
   checkRAM(F("sendWebPage"));
@@ -263,12 +258,21 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
         11 + // Size of "{{content}}"
         pageTemplate.indexOf(F("{{content}}")));  // advance beyond content key
   } else {
-    while ((indexStart = pageTemplate.indexOf(F("{{"))) >= 0) {
-      TXBuffer += pageTemplate.substring(0, indexStart);
-      pageTemplate = pageTemplate.substring(indexStart);
-      if ((indexEnd = pageTemplate.indexOf(F("}}"))) > 0) {
-        varName = pageTemplate.substring(2, indexEnd);
-        pageTemplate = pageTemplate.substring(indexEnd + 2);
+    int indexStart = 0;
+    int indexEnd = 0;
+    int readPos = 0; // Position of data sent to TXBuffer
+    String varName;  //, varValue;
+    String meta;
+    if(rebooting){
+      meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+    }
+    while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
+      TXBuffer += pageTemplate.substring(readPos, indexStart);
+      readPos = indexStart;
+      if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
+        varName = pageTemplate.substring(indexStart + 2, indexEnd);
+        indexStart = indexEnd + 2;
+        readPos = indexEnd + 2;
         varName.toLowerCase();
 
         if (varName == F("content")) {  // is var == page content?
@@ -283,7 +287,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
           getWebPageTemplateVar(varName);
         }
       } else {  // no closing "}}"
-        pageTemplate = pageTemplate.substring(2);  // eat "{{"
+        // eat "{{"
+        readPos += 2;
+        indexStart += 2;
       }
     }
   }
@@ -542,6 +548,7 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
+  tmpl.reserve(576);
   const bool addJS = true;
   const bool addMeta = true;
   if (tmplName == F("TmplAP"))
