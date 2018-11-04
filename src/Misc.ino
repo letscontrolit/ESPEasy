@@ -2638,13 +2638,13 @@ void processMatchedRule(
         else
         {
           String check = lcAction.substring(split + 7);
+          condition[ifBlock-1] = conditionMatchExtended(check);
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             log = F("Lev.");
             log += String(ifBlock);
             log += F(": [elseif ");
             log += check;
-            log += "]=";
-            condition[ifBlock-1] = conditionMatchExtended(check);
+            log += F("]=");
             log += toString(condition[ifBlock-1]);
             addLog(LOG_LEVEL_DEBUG, log);
           }
@@ -2681,10 +2681,12 @@ void processMatchedRule(
       else
       {
         fakeIfBlock++;
-        log = F("Lev.");
-        log += String(ifBlock);
-        log = F(": Error: IF Nesting level exceeded!");
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          log = F("Lev.");
+          log += String(ifBlock);
+          log = F(": Error: IF Nesting level exceeded!");
+          addLog(LOG_LEVEL_ERROR, log);
+        }
       }
       isCommand = false;
     }
@@ -2764,6 +2766,7 @@ void processMatchedRule(
           log += tmpAction;
           addLog(LOG_LEVEL_ERROR, log);
         }
+        // TODO: assign here modified action???
       }
       ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
