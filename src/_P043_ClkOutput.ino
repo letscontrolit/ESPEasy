@@ -44,7 +44,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         String options[3];
-        options[0] = F("");
+        options[0] = "";
         options[1] = F("Off");
         options[2] = F("On");
 
@@ -57,9 +57,9 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 //          addHtml(x);
 //          addHtml(F("' value='"));
 //          addHtml(timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]));
-//          addHtml(F("'>"));
+//          addHtml("'>");
 
-          addHtml(F(" "));
+          addHtml(" ");
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
           addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice, false);
         }

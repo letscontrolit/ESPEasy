@@ -101,9 +101,9 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
         String freqString = F("Frequency (");
         freqString += PCA9685_MIN_FREQUENCY;
-        freqString += F("-");
+        freqString += '-';
         freqString += PCA9685_MAX_FREQUENCY;
-        freqString += F(")");
+        freqString += ')';
         addFormNumericBox(freqString, F("p022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
         String funitString = F("default ");
         funitString += PCA9685_MAX_FREQUENCY;
@@ -146,8 +146,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           LoadTaskSettings(event->TaskIndex);
           String name = line.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
+          name.replace("[","");
+          name.replace("]","");
           if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             line = line.substring(dotPos + 1);

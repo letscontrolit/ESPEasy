@@ -448,9 +448,9 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
               log += ppm;
               log += F(" Temp/S/U values: ");
               log += temp;
-              log += F("/");
+              log += '/';
               log += s;
-              log += F("/");
+              log += '/';
               log += u;
               addLog(LOG_LEVEL_INFO, log);
               break;
@@ -470,7 +470,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
               String log = F("MHZ19: Unknown response:");
               for (int i = 0; i < 9; ++i) {
-                log += F(" ");
+                log += ' ';
                 log += String(mhzResp[i], HEX);
               }
               addLog(LOG_LEVEL_INFO, log);

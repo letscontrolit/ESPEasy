@@ -109,7 +109,7 @@ String formatToHex_decimal(unsigned long value) {
 
 String formatToHex_decimal(unsigned long value, unsigned long factor) {
   String result = formatToHex(value);
-  result += F(" (");
+  result += " (";
   if (factor > 1) {
     result += formatHumanReadable(value, factor);
   } else {
@@ -227,7 +227,7 @@ void wrap_String(const String& string, const String& wrap, String& result) {
 String to_json_object_value(const String& object, const String& value) {
   String result;
   result.reserve(object.length() + value.length() + 6);
-  wrap_String(object, F("\""), result);
+  wrap_String(object, "\"", result);
   result += F(":");
   if (value.length() == 0) {
     // Empty string
@@ -240,9 +240,9 @@ String to_json_object_value(const String& object, const String& value) {
       tmpValue.replace('\n', '^');
       tmpValue.replace('\r', '^');
       tmpValue.replace('"', '\'');
-      wrap_String(tmpValue, F("\""), result);
+      wrap_String(tmpValue, "\"", result);
     } else {
-      wrap_String(value, F("\""), result);
+      wrap_String(value, "\"", result);
     }
   } else {
     // It is a numerical
@@ -536,9 +536,9 @@ void parseSystemVariables(String& s, boolean useURLencode)
   #if FEATURE_ADC_VCC
     repl(F("%vcc%"), String(vcc), s, useURLencode);
   #endif
-  repl(F("%CR%"), F("\r"), s, useURLencode);
-  repl(F("%LF%"), F("\n"), s, useURLencode);
-  repl(F("%SP%"), F(" "), s, useURLencode); //space
+  repl(F("%CR%"), "\r", s, useURLencode);
+  repl(F("%LF%"), "\n", s, useURLencode);
+  repl(F("%SP%"), " ", s, useURLencode); //space
   repl(F("%R%"), F("\\r"), s, useURLencode);
   repl(F("%N%"), F("\\n"), s, useURLencode);
   SMART_REPL(F("%ip4%"),WiFi.localIP().toString().substring(WiFi.localIP().toString().lastIndexOf('.')+1)) //4th IP octet

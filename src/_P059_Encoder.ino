@@ -128,7 +128,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
             setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         addLog(LOG_LEVEL_INFO, log);
 

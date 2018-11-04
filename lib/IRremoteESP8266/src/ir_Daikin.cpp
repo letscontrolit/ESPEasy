@@ -442,7 +442,7 @@ std::string IRDaikinESP::renderTime(uint16_t timemins) {
   ret = uint64ToString(hours) + ":";
   mins = timemins - (hours * 60);
   if (mins < 10)
-    ret += "0";
+    ret += '0';
   ret += uint64ToString(mins);
   return ret;
 }

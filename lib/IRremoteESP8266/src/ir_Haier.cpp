@@ -327,10 +327,10 @@ std::string IRHaierAC::timeToString(const uint16_t nr_mins) {
   std::string result = "";
 #endif  // ARDUINO
 
-  if (nr_mins / 24 < 10)  result += "0";  // Zero pad.
+  if (nr_mins / 24 < 10)  result += '0';  // Zero pad.
   result += uint64ToString(nr_mins / 60);
   result += ":";
-  if (nr_mins % 60 < 10)  result += "0";  // Zero pad.
+  if (nr_mins % 60 < 10)  result += '0';  // Zero pad.
   result += uint64ToString(nr_mins % 60);
   return result;
 }
@@ -382,7 +382,7 @@ std::string IRHaierAC::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Mode: " + uint64ToString(getMode());
   switch (getMode()) {
     case HAIER_AC_AUTO:
@@ -430,7 +430,7 @@ std::string IRHaierAC::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Sleep: ";
   if (getSleep())
     result += "On";
@@ -724,7 +724,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Mode: " + uint64ToString(getMode());
   switch (getMode()) {
     case HAIER_AC_YRW02_AUTO:
@@ -777,7 +777,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Swing: " + uint64ToString(getSwing()) + " (";
   switch (getSwing()) {
     case HAIER_AC_YRW02_SWING_OFF:
@@ -801,7 +801,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Sleep: ";
   if (getSleep())
     result += "On";

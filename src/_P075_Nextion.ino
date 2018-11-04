@@ -148,7 +148,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       if(rxPin <0 || txPin <0) {                                            // Missing serial I/O pins!
         addFormNote(F("Please configure the RX and TX sensor pins before enabling this plugin."));
-        addFormSubHeader(F("")); // Blank line, vertical space.
+        addFormSubHeader(""); // Blank line, vertical space.
       }
 
       addFormSeparator(2);
@@ -174,7 +174,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 //    Data += String(datax);
 //    addFormNote(Data);
 
-      addFormSubHeader(F(""));                          // Blank line, vertical space.
+      addFormSubHeader("");                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
 
       char deviceTemplate[P75_Nlines][P75_Nchars];

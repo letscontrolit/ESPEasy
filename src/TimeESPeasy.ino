@@ -309,11 +309,11 @@ void checkTime()
       event += weekday_str();
       event += ",";
       if (hour() < 10)
-        event += "0";
+        event += '0';
       event += hour();
       event += ":";
       if (minute() < 10)
-        event += "0";
+        event += '0';
       event += minute();
       rulesProcessing(event);
     }
@@ -343,9 +343,9 @@ bool getNtpTime(double& unixTime_d)
 		nextSyncTime = sysTime + 5;
 	}
 
-	log += F(" (");
+	log += " (";
 	log += timeServerIP.toString();
-	log += F(")");
+	log += ')';
 
 	if (!hostReachable(timeServerIP)) {
 		log += F(" unreachable");
@@ -548,7 +548,7 @@ String timeLong2String(unsigned long lngTime)
 	if (x == 0xf)
 		time += "*";
 	else if (x == 0xe)
-		time += "-";
+		time += '-';
 	else
 		time += x;
 
@@ -556,7 +556,7 @@ String timeLong2String(unsigned long lngTime)
 	if (x == 0xf)
 		time += "*";
 	else if (x == 0xe)
-		time += "-";
+		time += '-';
 	else
 		time += x;
 
@@ -566,7 +566,7 @@ String timeLong2String(unsigned long lngTime)
 	if (x == 0xf)
 		time += "*";
 	else if (x == 0xe)
-		time += "-";
+		time += '-';
 	else
 		time += x;
 
@@ -574,7 +574,7 @@ String timeLong2String(unsigned long lngTime)
 	if (x == 0xf)
 		time += "*";
 	else if (x == 0xe)
-		time += "-";
+		time += '-';
 	else
 		time += x;
 

@@ -203,7 +203,7 @@ void C013_Receive(struct EventStruct *event) {
       String log = (F("C013 : msg "));
       for (byte x = 1; x < 6; x++)
       {
-        log += " ";
+        log += ' ';
         log += (int)event->Data[x];
       }
       addLog(LOG_LEVEL_DEBUG_MORE, log);

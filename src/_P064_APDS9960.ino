@@ -160,9 +160,9 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
             case DIR_FAR:     log += F("FAR");     break;
             default:          log += F("NONE");    break;
           }
-          log += F(" (");
+          log += " (";
           log += gesture;
-          log += F(")");
+          log += ')';
 
           UserVar[event->BaseVarIndex] = (float)gesture;
           event->sensorType = SENSOR_TYPE_SWITCH;

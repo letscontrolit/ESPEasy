@@ -360,7 +360,7 @@ bool validP1char(char ch) {
     if (serialdebug) {
       Serial.print(F("faulty char>"));
       Serial.print(ch);
-      Serial.println(F("<"));
+      Serial.println("<");
     }
     return false;
   }

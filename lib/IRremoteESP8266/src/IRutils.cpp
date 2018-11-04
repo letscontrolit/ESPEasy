@@ -216,7 +216,7 @@ std::string resultToSourceCode(const decode_results *results) {
     output += uint64ToString(usecs, 10);
     if (i < results->rawlen - 1)
       output += ", ";  // ',' not needed on the last one
-    if (i % 2 == 0)  output += " ";  // Extra if it was even.
+    if (i % 2 == 0)  output += ' ';  // Extra if it was even.
   }
 
   // End declaration
@@ -226,7 +226,7 @@ std::string resultToSourceCode(const decode_results *results) {
   output += "  // " + typeToString(results->decode_type, results->repeat);
   // Only display the value if the decode type doesn't have an A/C state.
   if (!hasACState(results->decode_type))
-    output += " " + uint64ToString(results->value, 16);
+    output += ' ' + uint64ToString(results->value, 16);
   output += "\n";
 
   // Now dump "known" codes
@@ -237,7 +237,7 @@ std::string resultToSourceCode(const decode_results *results) {
       output += "uint8_t state[" + uint64ToString(nbytes) + "] = {";
       for (uint16_t i = 0; i < nbytes; i++) {
         output += "0x";
-        if (results->state[i] < 0x10)  output += "0";
+        if (results->state[i] < 0x10)  output += '0';
         output += uint64ToString(results->state[i], 16);
         if (i < nbytes - 1)
           output += ", ";
@@ -278,7 +278,7 @@ std::string resultToTimingInfo(const decode_results *results) {
 
   for (uint16_t i = 1; i < results->rawlen; i++) {
     if (i % 2 == 0)
-      output += "-";  // even
+      output += '-';  // even
     else
       output += "   +";  // odd
     value = uint64ToString(results->rawbuf[i] * RAWTICK);
@@ -312,7 +312,7 @@ std::string resultToHumanReadableBasic(const decode_results *results) {
   if (hasACState(results->decode_type)) {
 #if DECODE_AC
       for (uint16_t i = 0; results->bits > i * 8; i++) {
-        if (results->state[i] < 0x10)  output += "0";  // Zero pad
+        if (results->state[i] < 0x10)  output += '0';  // Zero pad
         output += uint64ToString(results->state[i], 16);
       }
 #endif  // DECODE_AC

@@ -65,7 +65,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
               // find all suitable devices
               addRowLabel(F("Device Address"));
               addSelector_Head(F("p080_dev"), false);
-              addSelector_Item("", -1, false, false, F(""));
+              addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;
               Plugin_080_DS_reset();
@@ -76,12 +76,12 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
                   for (byte j = 0; j < 8; j++)
                   {
                       option += String(tmpAddress[j], HEX);
-                      if (j < 7) option += F("-");
+                      if (j < 7) option += '-';
                   }
                   bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
                   // check for DS1990A
                   if ( tmpAddress[0] == 0x01) {
-                      addSelector_Item(option, count, selected, false, F(""));
+                      addSelector_Item(option, count, selected, false, "");
                   }
 
 
@@ -116,7 +116,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             for (byte x = 0; x < 8; x++)
             {
                 if (x != 0)
-                    string += "-";
+                    string += '-';
                 // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
             success = true;
@@ -462,7 +462,7 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
     for (byte j = 0; j < 8; j++)
     {
       log += String(addr[j], HEX);
-      if (j < 7) log += F("-");
+      if (j < 7) log += '-';
     }
     log += F(" found: ");
     Plugin_080_DS_reset_search();
@@ -471,9 +471,9 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
        for (byte j = 0; j < 8; j++)
        {
          log += String(tmpaddr[j], HEX);
-         if (j < 7) log += F("-");
+         if (j < 7) log += '-';
        }
-       log += F(",");
+       log += ',';
        if (memcmp(addr,tmpaddr,8)==0)
        {
          log += F("Success. Button was found");

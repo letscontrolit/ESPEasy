@@ -116,11 +116,11 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options2[4];
-        options2[0] = F("1");
-        options2[1] = F("2");
-        options2[2] = F("3");
-        options2[3] = F("4");
-        int optionValues2[4] = { 1, 2, 3, 4 };
+        int optionValues2[4];
+        for (int i = 0; i < 4; ++i) {
+          options2[i] = String(i + 1);
+          optionValues2[i] = i + 1;
+        }
         addFormSelector(F("Lines per Frame"), F("p036_nlines"), 4, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
@@ -454,12 +454,12 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
     log += tmpString;
     log += F("'  hex:");
     for (int i = 0; i < tmpString.length(); ++i) {
-      log += F(" ");
+      log += ' ';
       log += String(tmpString[i], HEX);
     }
     log += F(" out hex:");
     for (int i = 0; i < result.length(); ++i) {
-      log += F(" ");
+      log += ' ';
       log += String(result[i], HEX);
     }
     addLog(LOG_LEVEL_INFO, log);

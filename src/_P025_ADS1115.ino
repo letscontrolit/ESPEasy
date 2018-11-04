@@ -189,7 +189,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
             float normalized = (float)(value - adc1) / (float)(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
-            log += F(" ");
+            log += ' ';
             log += UserVar[event->BaseVarIndex];
           }
         }

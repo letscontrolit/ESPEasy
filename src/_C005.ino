@@ -118,7 +118,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
           String log = F("MQTT : ");
           log += tmppubname;
-          log += " ";
+          log += ' ';
           log += value;
           addLog(LOG_LEVEL_DEBUG, log);
         }

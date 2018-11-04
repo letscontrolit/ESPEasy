@@ -131,7 +131,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           const float pm10 = Plugin_056_SDS->GetPM10_();
           String log = F("SDS  : act ");
           log += pm2_5;
-          log += F(" ");
+          log += ' ';
           log += pm10;
           addLog(LOG_LEVEL_DEBUG, log);
 

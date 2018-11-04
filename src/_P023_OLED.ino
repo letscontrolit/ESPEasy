@@ -241,8 +241,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         {
           LoadTaskSettings(event->TaskIndex);
           String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
+          name.replace("[","");
+          name.replace("]","");
           if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             arguments = arguments.substring(dotPos+1);

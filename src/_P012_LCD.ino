@@ -94,7 +94,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           addHtml(String(varNr + 1));
           addHtml(F("' value='"));
           addHtml(deviceTemplate[varNr]);
-          addHtml(F("'>"));
+          addHtml("'>");
         }
 
 
@@ -252,7 +252,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           if (Plugin_012_mode == 2){
               lcd->setCursor(colPos, rowPos);
               for (byte i = colPos; i < Plugin_012_cols; i++) {
-                  lcd->print(F(" "));
+                  lcd->print(" ");
               }
           }
 
