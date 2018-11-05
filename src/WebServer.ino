@@ -500,6 +500,7 @@ void WebServerInit()
   WebServer.on(F("/advanced"), handle_advanced);
   WebServer.on(F("/setup"), handle_setup);
   WebServer.on(F("/json"), handle_json);
+  WebServer.on(F("/stat/timing/json"), handle_timingstats_json);
   WebServer.on(F("/rules"), handle_rules);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
@@ -3907,13 +3908,13 @@ void handle_control() {
   \*********************************************************************************************/
 
 void stream_to_json_object_value(const String& object, const String& value) {
-  TXBuffer += "\"";
+  TXBuffer += '\"';
   TXBuffer += object;
   TXBuffer += "\":";
   if (value.length() == 0 || !isFloat(value)) {
-    TXBuffer += "\"";
+    TXBuffer += '\"';
     TXBuffer += value;
-    TXBuffer += "\"";
+    TXBuffer += '\"';
   } else {
     TXBuffer += value;
   }
@@ -4133,6 +4134,67 @@ void handle_json()
     stream_last_json_object_value(F("TTL"), String(ttl_json * 1000));
   }
 
+  TXBuffer.endStream();
+}
+
+//********************************************************************************
+// JSON formatted timing statistics
+//********************************************************************************
+
+void stream_timing_stats_json(unsigned long count, unsigned long minVal, unsigned long maxVal, float avg) {
+  stream_next_json_object_value(F("count"), String(count));
+  stream_next_json_object_value(F("min"), String(minVal));
+  stream_next_json_object_value(F("max"), String(maxVal));
+  stream_next_json_object_value(F("avg"), String(avg));
+}
+
+void stream_plugin_function_timing_stats_json(
+      const String& object,
+      unsigned long count, unsigned long minVal, unsigned long maxVal, float avg) {
+  TXBuffer += "{\"";
+  TXBuffer += object;
+  TXBuffer += "\":{";
+  stream_timing_stats_json(count, minVal, maxVal, avg);
+  stream_last_json_object_value(F("unit"), F("usec"));
+}
+
+void stream_plugin_timing_stats_json(int pluginId) {
+  String P_name = "";
+  Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+  TXBuffer += '{';
+  stream_next_json_object_value(F("name"), P_name);
+  stream_next_json_object_value(F("id"), String(pluginId));
+  stream_json_start_array(F("function"));
+}
+
+void stream_json_start_array(const String& label) {
+  TXBuffer += '\"';
+  TXBuffer += label;
+  TXBuffer += F("\": [\n");
+}
+
+void stream_json_end_array_element(bool isLast) {
+  if (isLast) {
+    TXBuffer += "]\n";
+  } else {
+    TXBuffer += ",\n";
+  }
+}
+
+void stream_json_end_object_element(bool isLast) {
+  TXBuffer += '}';
+  if (!isLast) {
+    TXBuffer += ',';
+  }
+  TXBuffer += '\n';
+}
+
+
+void handle_timingstats_json() {
+  TXBuffer.startJsonStream();
+  TXBuffer += '{';
+  jsonStatistics(false);
+  TXBuffer += '}';
   TXBuffer.endStream();
 }
 
