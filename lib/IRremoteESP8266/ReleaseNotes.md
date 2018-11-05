@@ -1,5 +1,69 @@
 # Release Notes
 
+## _v2.5.2 (20181021)_
+
+**[Bug Fixes]**
+- Add missing send() method to IRPanasonicAC class. (#545)
+- Add missing sendWhirlpoolAC() to IRMQTTServer.ino (#558)
+
+**[Features]**
+- Add IR receiving support to IRMQTTServer. (#543)
+- Pioneer support (#547)
+- Add support for a second LG protocol variant. (#552)
+- Support for short Panasonic A/C messages. (#553)
+- Add support for Panasonic CKP series A/Cs. (#554)
+- Experimental timer/clock support for Panasonic A/Cs. (#546)
+- Add Made With Magic (MWM) support (#557)
+
+**[Misc]**
+- Grammar and typo fixes (#541, #549)
+- Increase Panasonic A/C message tolerances. (#542)
+- Added command mode2_decode in tools/ (#557)
+- General code style cleanup (#560)
+
+
+## _v2.5.1 (20181002)_
+
+**[Bug Fixes]**
+- Correct the byte used for Samsung AC Swing. (#529)
+- Fix not sending Samsung A/C messages in IRMQTTServer. (#529)
+
+**[Features]**
+- Experimental support for Electra A/C messages. (#528)
+- Experimental support for Panasonic A/C messages. (#535)
+- Samsung A/C fixes & improvements (#529)
+- IRMQTTServer v0.6.0 (#530)
+
+**[Misc]**
+- Change required WifiManager lib version to v0.14
+- Add alias for RAWTICK to kRawTick. (#535)
+- Update sendLutron() status. (#515)
+- Remove leftover debug message in IRrecvDumpV2 (#526)
+
+
+## _v2.5.0 (20180919)_
+
+**[Bug Fixes]**
+- Fix HTML menu error for GICABLE in IRMQTTServer. (#516)
+- Fix Mitsubishi A/C mode setting. (#514)
+- Add missing ',' in auto analyse tool generated code. (#513)
+- Fix Fujitsu checksum validation. (#501)
+- Remove errant Repeat debug statement in IRMQTTServer. (#507)
+
+**[Features]**
+- Mitsubishi A/C decode improvements. (#514)
+- Basic support for Whirlpool A/C messages. (#511)
+- Basic support for Samsung A/C messages. (#512)
+- Experimental support for detailed Samsung A/C messages. (#521)
+- Experimental support for detailed Coolix A/C messages. (#518)
+- Experimental support for Lutron protocol. (#516)
+- Calculate and use average values for timings in analysing tool. (#513)
+
+**[Misc]**
+- Style change from using #define's for constants to `const kConstantName`.
+- Improve the JVC example code.
+
+
 ## _v2.4.3 (20180727)_
 
 **[Bug Fixes]**
