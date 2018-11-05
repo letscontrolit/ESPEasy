@@ -4225,10 +4225,11 @@ void handle_timingstats_json() {
 // HTML table formatted timing statistics
 //********************************************************************************
 void format_using_threshhold(unsigned long value) {
-  if (value > 100000) {
-    html_B(String(value));
+  float value_msec = value / 1000.0;
+  if (value > TIMING_STATS_THRESHOLD) {
+    html_B(String(value_msec, 3));
   } else {
-    TXBuffer += String(value);
+    TXBuffer += String(value_msec, 3);
   }
 }
 
@@ -4258,7 +4259,7 @@ void stream_timing_statistics(bool clearStats) {
           const int pluginId = x.first/32;
           String P_name = "";
           Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
-          if (x.second.thresholdExceeded(100000)) {
+          if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
             html_TR_TD_highlight();
           } else {
             html_TR_TD();
@@ -4275,7 +4276,7 @@ void stream_timing_statistics(bool clearStats) {
   }
   for (auto& x: miscStats) {
       if (!x.second.isEmpty()) {
-          if (x.second.thresholdExceeded(100000)) {
+          if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
             html_TR_TD_highlight();
           } else {
             html_TR_TD();
@@ -4300,7 +4301,7 @@ void handle_timingstats() {
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
   html_TR();
-  TXBuffer += F("<TH>Description<TH>Function<TH>#calls<TH>call/sec<TH>min<TH>Avg<TH>max");
+  TXBuffer += F("<TH>Description<TH>Function<TH>#calls<TH>call/sec<TH>min (ms)<TH>Avg (ms)<TH>max (ms)");
   stream_timing_statistics(true);
 
   TXBuffer += F("</table>");

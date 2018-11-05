@@ -218,6 +218,8 @@
 #define TIMER_C012_DELAY_QUEUE             16
 #define TIMER_C013_DELAY_QUEUE             17
 
+#define TIMING_STATS_THRESHOLD         100000
+
 // Minimum delay between messages for a controller to send in msec.
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
 #define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
