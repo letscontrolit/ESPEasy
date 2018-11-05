@@ -157,7 +157,6 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
 
-
   //warm boot
   if (readFromRTC())
   {
@@ -671,8 +670,9 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
-    String log = F("SYS  : Reset 24h counters");
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
+    }
   }
 
   if (Settings.ConnectionFailuresThreshold)

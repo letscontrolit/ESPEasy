@@ -143,12 +143,12 @@ void deepSleep(int delay)
   //first time deep sleep? offer a way to escape
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
-    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
-      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
       return;
     }
   }
@@ -169,7 +169,7 @@ void deepSleepStart(int delay)
   if (delay > 4294 || delay < 0)
     delay = 4294;   //max sleep time ~1.2h
 
-  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   #if defined(ESP8266)
     ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
   #endif
@@ -668,7 +668,8 @@ uint32_t progMemMD5check(){
     CRCValues.numberOfCRCBytes = 0;
     memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
     if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
-        addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
+        if (loglevelActiveFor(LOG_LEVEL_INFO))
+          addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
         return 0;
     }
     MD5Builder md5;
@@ -688,10 +689,12 @@ uint32_t progMemMD5check(){
    md5.calculate();
    md5.getBytes(CRCValues.runTimeMD5);
    if ( CRCValues.checkPassed())  {
-      addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
+        addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
       return CRCValues.numberOfCRCBytes;
    }
-   addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
+   if (loglevelActiveFor(LOG_LEVEL_INFO))
+     addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
 
@@ -952,7 +955,7 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);
   if (result.length() > 0) {
-    addLog(LOG_LEVEL_ERROR, result);
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, result);
   }
 }
 
@@ -1537,7 +1540,7 @@ boolean saveToRTC()
   #else
     if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
     {
-      addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
       return(false);
     }
     else
@@ -1613,7 +1616,7 @@ boolean readUserVarFromRTC()
     ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
     if (!ret || sumRTC != sumRAM)
     {
-      addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
       memset(buffer, 0, size);
     }
     return ret;
@@ -2324,13 +2327,15 @@ int CalculateParam(char *TmpStr) {
           errorDesc = F("Unknown error");
           break;
         }
-        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
-        addLog(LOG_LEVEL_ERROR, log);
-        log = F("CALCULATE PARAM ERROR details: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += round(param);
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+          addLog(LOG_LEVEL_ERROR, log);
+          log = F("CALCULATE PARAM ERROR details: ");
+          log += TmpStr;
+          log += F(" = ");
+          log += round(param);
+          addLog(LOG_LEVEL_ERROR, log);
+        }
       } else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
@@ -2429,7 +2434,7 @@ String rulesProcessingFile(const String& fileName, String& event)
   nestingLevel++;
   if (nestingLevel > RULES_MAX_NESTING_LEVEL)
   {
-    addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
     return (log);
   }

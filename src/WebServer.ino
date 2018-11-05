@@ -158,7 +158,7 @@ public:
       }
       */
     } else {
-      addLog(LOG_LEVEL_DEBUG, String("Webpage skipped: low memory: ") + finalRam);
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
       lowMemorySkip = false;
     }
   }
@@ -168,7 +168,8 @@ void sendContentBlocking(String& data) {
   checkRAM(F("sendContentBlocking"));
   uint32_t freeBeforeSend = ESP.getFreeHeap();
   const uint32_t length = data.length();
-  addLog(LOG_LEVEL_DEBUG_DEV, String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV))
+    addLog(LOG_LEVEL_DEBUG_DEV, String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length);
   freeBeforeSend = ESP.getFreeHeap();
   if (TXBuffer.beforeTXRam > freeBeforeSend)
     TXBuffer.beforeTXRam = freeBeforeSend;
@@ -523,10 +524,10 @@ void setWebserverRunning(bool state) {
       webserver_init = true;
     }
     WebServer.begin();
-    addLog(LOG_LEVEL_INFO, F("Webserver: start"));
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     WebServer.stop();
-    addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
   webserver_state = state;
 }
@@ -992,18 +993,18 @@ void handle_root() {
     // disconnect here could result into a crash/reboot...
     if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
     {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
     if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
     {
-      addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
       cmd_within_mainloop = CMD_REBOOT;
     }
    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
     {
-      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
       TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
@@ -1052,7 +1053,7 @@ void handle_config() {
   if (ssid[0] != 0)
   {
     if (strcmp(Settings.Name, name.c_str()) != 0) {
-      addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
       MQTTclient_should_reconnect = true;
     }
     // Unit name
@@ -3271,6 +3272,7 @@ void handle_tools() {
     if (webrequest.length() > 0)
     {
       struct EventStruct TempEvent;
+      webrequest=parseTemplate(webrequest,webrequest.length());  //@giig1967g: parseTemplate before executing the command
       parseCommandString(&TempEvent, webrequest);
       TempEvent.Source = VALUE_SOURCE_WEB_FRONTEND;
       if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
@@ -3710,6 +3712,10 @@ void handle_control() {
 
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO,String(F("HTTP: ")) + webrequest);
+  webrequest=parseTemplate(webrequest,webrequest.length());
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
+
   if (command == F("event"))
   {
     eventBuffer = webrequest.substring(6);
@@ -3721,7 +3727,6 @@ void handle_control() {
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
     WebServer.send(200, "text/html", "OK");
     return;
