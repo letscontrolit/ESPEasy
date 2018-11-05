@@ -1786,32 +1786,32 @@ String getLogLine(const TimingStats& stats) {
 
 String getPluginFunctionName(int function) {
     switch(function) {
-        case PLUGIN_INIT_ALL:              return F("INIT_ALL            ");
-        case PLUGIN_INIT:                  return F("INIT                ");
-        case PLUGIN_READ:                  return F("READ                ");
-        case PLUGIN_ONCE_A_SECOND:         return F("ONCE_A_SECOND       ");
-        case PLUGIN_TEN_PER_SECOND:        return F("TEN_PER_SECOND      ");
-        case PLUGIN_DEVICE_ADD:            return F("DEVICE_ADD          ");
-        case PLUGIN_EVENTLIST_ADD:         return F("EVENTLIST_ADD       ");
-        case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE        ");
-        case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD        ");
-        case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES ");
-        case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME      ");
+        case PLUGIN_INIT_ALL:              return F("INIT_ALL");
+        case PLUGIN_INIT:                  return F("INIT");
+        case PLUGIN_READ:                  return F("READ");
+        case PLUGIN_ONCE_A_SECOND:         return F("ONCE_A_SECOND");
+        case PLUGIN_TEN_PER_SECOND:        return F("TEN_PER_SECOND");
+        case PLUGIN_DEVICE_ADD:            return F("DEVICE_ADD");
+        case PLUGIN_EVENTLIST_ADD:         return F("EVENTLIST_ADD");
+        case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE");
+        case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD");
+        case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES");
+        case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
         case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
-        case PLUGIN_WRITE:                 return F("WRITE               ");
-        case PLUGIN_EVENT_OUT:             return F("EVENT_OUT           ");
-        case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG ");
-        case PLUGIN_SERIAL_IN:             return F("SERIAL_IN           ");
-        case PLUGIN_UDP_IN:                return F("UDP_IN              ");
-        case PLUGIN_CLOCK_IN:              return F("CLOCK_IN            ");
-        case PLUGIN_TIMER_IN:              return F("TIMER_IN            ");
-        case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND    ");
-        case PLUGIN_SET_CONFIG:            return F("SET_CONFIG          ");
-        case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES ");
-        case PLUGIN_EXIT:                  return F("EXIT                ");
-        case PLUGIN_GET_CONFIG:            return F("GET_CONFIG          ");
-        case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL  ");
-        case PLUGIN_REQUEST:               return F("REQUEST             ");
+        case PLUGIN_WRITE:                 return F("WRITE");
+        case PLUGIN_EVENT_OUT:             return F("EVENT_OUT");
+        case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG");
+        case PLUGIN_SERIAL_IN:             return F("SERIAL_IN");
+        case PLUGIN_UDP_IN:                return F("UDP_IN");
+        case PLUGIN_CLOCK_IN:              return F("CLOCK_IN");
+        case PLUGIN_TIMER_IN:              return F("TIMER_IN");
+        case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND");
+        case PLUGIN_SET_CONFIG:            return F("SET_CONFIG");
+        case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
+        case PLUGIN_EXIT:                  return F("EXIT");
+        case PLUGIN_GET_CONFIG:            return F("GET_CONFIG");
+        case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
+        case PLUGIN_REQUEST:               return F("REQUEST");
     }
     return F("Unknown");
 }
@@ -1897,17 +1897,17 @@ String getMiscStatsName(int stat) {
         case LOADFILE_STATS: return F("Load File");
         case SAVEFILE_STATS: return F("Save File");
         case LOOP_STATS:     return F("Loop");
-        case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s  ");
-        case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s  ");
+        case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s");
+        case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s");
         case PLUGIN_CALL_10PSU:     return F("Plugin call 10 p/s U");
-        case PLUGIN_CALL_1PS:       return F("Plugin call  1 p/s  ");
-        case SENSOR_SEND_TASK:      return F("SensorSendTask()    ");
-        case SEND_DATA_STATS:       return F("sendData()          ");
-        case COMPUTE_FORMULA_STATS: return F("Compute formula     ");
-        case PROC_SYS_TIMER:        return F("proc_system_timer() ");
-        case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
-        case TIME_DIFF_COMPUTE:     return F("timeDiff()          ");
-        case MQTT_DELAY_QUEUE:      return F("Delay queue     MQTT");
+        case PLUGIN_CALL_1PS:       return F("Plugin call  1 p/s");
+        case SENSOR_SEND_TASK:      return F("SensorSendTask()");
+        case SEND_DATA_STATS:       return F("sendData()");
+        case COMPUTE_FORMULA_STATS: return F("Compute formula");
+        case PROC_SYS_TIMER:        return F("proc_system_timer()");
+        case SET_NEW_TIMER:         return F("setNewTimerAt()");
+        case TIME_DIFF_COMPUTE:     return F("timeDiff()");
+        case MQTT_DELAY_QUEUE:      return F("Delay queue MQTT");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:
@@ -1922,7 +1922,7 @@ String getMiscStatsName(int stat) {
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
         {
-          String result = F("Delay queue     ");
+          String result = F("Delay queue ");
           result += get_formatted_Controller_number(static_cast<int>(stat - C001_DELAY_QUEUE + 1));
           return result;
         }

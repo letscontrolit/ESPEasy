@@ -1,3 +1,4 @@
+/*
 void logStatistics(byte loglevel, bool clearStats) {
   if (loglevelActiveFor(loglevel)) {
     String log;
@@ -40,7 +41,7 @@ void logStatistics(byte loglevel, bool clearStats) {
     }
   }
 }
-
+*/
 void jsonStatistics(bool clearStats) {
   bool firstPlugin = true;
   bool firstFunction = true;
