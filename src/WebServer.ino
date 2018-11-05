@@ -500,7 +500,8 @@ void WebServerInit()
   WebServer.on(F("/advanced"), handle_advanced);
   WebServer.on(F("/setup"), handle_setup);
   WebServer.on(F("/json"), handle_json);
-  WebServer.on(F("/stat/timing/json"), handle_timingstats_json);
+  WebServer.on(F("/timingstats_json"), handle_timingstats_json);
+  WebServer.on(F("/timingstats"), handle_timingstats);
   WebServer.on(F("/rules"), handle_rules);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
@@ -3458,6 +3459,11 @@ void handle_tools() {
   TXBuffer += F("Open JSON output");
 
   html_TR_TD_height(30);
+  addWideButton(F("timingstats"), F("Timing stats"), "");
+  html_TD();
+  TXBuffer += F("Open timing statistics of system");
+
+  html_TR_TD_height(30);
   addWideButton(F("pinstates"), F("Pin state buffer"), "");
   html_TD();
   TXBuffer += F("Show Pin state buffer");
@@ -4195,6 +4201,57 @@ void handle_timingstats_json() {
   TXBuffer += '{';
   jsonStatistics(false);
   TXBuffer += '}';
+  TXBuffer.endStream();
+}
+
+//********************************************************************************
+// HTML table formatted timing statistics
+//********************************************************************************
+void stream_timing_statistics(bool clearStats) {
+  for (auto& x: pluginStats) {
+      if (!x.second.isEmpty()) {
+          const int pluginId = x.first/32;
+          String P_name = "";
+          Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+          html_TR_TD();
+          TXBuffer += F("P_");
+          TXBuffer += pluginId + 1;
+          TXBuffer += '_';
+          TXBuffer += P_name;
+          html_TD();
+          TXBuffer += getPluginFunctionName(x.first%32);
+          html_TD();
+          TXBuffer += getLogLine(x.second);
+          if (clearStats) x.second.reset();
+      }
+  }
+  for (auto& x: miscStats) {
+      if (!x.second.isEmpty()) {
+          html_TR_TD();
+          TXBuffer += getMiscStatsName(x.first);
+          html_TD(2);
+          TXBuffer += getLogLine(x.second);
+          if (clearStats) x.second.reset();
+      }
+  }
+  if (clearStats) {
+    timediff_calls = 0;
+    timediff_cpu_cycles_total = 0;
+  }
+}
+
+void handle_timingstats() {
+  checkRAM(F("handle_timingstats"));
+  navMenuIndex = 7;
+  TXBuffer.startStream();
+  sendHeadandTail_stdtemplate(_HEAD);
+  html_table_class_multirow();
+  html_TR();
+  TXBuffer += F("<TH>Description<TH>Function<TH>Timing");
+  stream_timing_statistics(false);
+
+  TXBuffer += F("</table>");
+  sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
 
@@ -5496,6 +5553,7 @@ void handle_rules() {
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
   if (!isLoggedIn()) return;
+  navMenuIndex = 7;
   html_reset_copyTextCounter();
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
