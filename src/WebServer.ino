@@ -3113,6 +3113,23 @@ void addEnabled(boolean enabled)
 // HTML string re-use to keep the executable smaller
 // Flash strings are not checked for duplication.
 //********************************************************************************
+void wrap_html_tag(const String& tag, const String& text) {
+  TXBuffer += '<';
+  TXBuffer += tag;
+  TXBuffer += '>';
+  TXBuffer += text;
+  TXBuffer += "</";
+  TXBuffer += tag;
+  TXBuffer += '>';
+}
+
+void html_B(const String& text) {
+  wrap_html_tag("b", text);
+}
+
+void html_U(const String& text) {
+  wrap_html_tag("u", text);
+}
 
 void html_TR_TD_highlight() {
   TXBuffer += F("<TR class=\"highlight\">");
@@ -4207,36 +4224,72 @@ void handle_timingstats_json() {
 //********************************************************************************
 // HTML table formatted timing statistics
 //********************************************************************************
+void format_using_threshhold(unsigned long value) {
+  if (value > 100000) {
+    html_B(String(value));
+  } else {
+    TXBuffer += String(value);
+  }
+}
+
+void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
+    unsigned long minVal, maxVal;
+    unsigned int c = stats.getMinMax(minVal, maxVal);
+
+    html_TD();
+    TXBuffer += c;
+    html_TD();
+    float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0;
+    TXBuffer += call_per_sec;
+    html_TD();
+    format_using_threshhold(minVal);
+    html_TD();
+    format_using_threshhold(stats.getAvg());
+    html_TD();
+    format_using_threshhold(maxVal);
+}
+
+
+
 void stream_timing_statistics(bool clearStats) {
+  long timeSinceLastReset = timePassedSince(timingstats_last_reset);
   for (auto& x: pluginStats) {
       if (!x.second.isEmpty()) {
           const int pluginId = x.first/32;
           String P_name = "";
           Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
-          html_TR_TD();
+          if (x.second.thresholdExceeded(100000)) {
+            html_TR_TD_highlight();
+          } else {
+            html_TR_TD();
+          }
           TXBuffer += F("P_");
           TXBuffer += pluginId + 1;
           TXBuffer += '_';
           TXBuffer += P_name;
           html_TD();
           TXBuffer += getPluginFunctionName(x.first%32);
-          html_TD();
-          TXBuffer += getLogLine(x.second);
+          stream_html_timing_stats(x.second, timeSinceLastReset);
           if (clearStats) x.second.reset();
       }
   }
   for (auto& x: miscStats) {
       if (!x.second.isEmpty()) {
-          html_TR_TD();
+          if (x.second.thresholdExceeded(100000)) {
+            html_TR_TD_highlight();
+          } else {
+            html_TR_TD();
+          }
           TXBuffer += getMiscStatsName(x.first);
-          html_TD(2);
-          TXBuffer += getLogLine(x.second);
+          html_TD();
+          stream_html_timing_stats(x.second, timeSinceLastReset);
           if (clearStats) x.second.reset();
       }
   }
   if (clearStats) {
     timediff_calls = 0;
     timediff_cpu_cycles_total = 0;
+    timingstats_last_reset = millis();
   }
 }
 
@@ -4247,8 +4300,8 @@ void handle_timingstats() {
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
   html_TR();
-  TXBuffer += F("<TH>Description<TH>Function<TH>Timing");
-  stream_timing_statistics(false);
+  TXBuffer += F("<TH>Description<TH>Function<TH>#calls<TH>call/sec<TH>min<TH>Avg<TH>max");
+  stream_timing_statistics(true);
 
   TXBuffer += F("</table>");
   sendHeadandTail_stdtemplate(_TAIL);

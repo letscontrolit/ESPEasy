@@ -1758,6 +1758,13 @@ class TimingStats {
           return _count;
       }
 
+      bool thresholdExceeded(unsigned long threshold) const {
+        if (_count == 0) {
+            return false;
+        }
+        return _maxVal > threshold;
+      }
+
     private:
       float _timeTotal;
       unsigned int _count;
@@ -1765,6 +1772,7 @@ class TimingStats {
       unsigned long _minVal;
 };
 
+/*
 String getLogLine(const TimingStats& stats) {
     unsigned long minVal, maxVal;
     unsigned int c = stats.getMinMax(minVal, maxVal);
@@ -1781,8 +1789,7 @@ String getLogLine(const TimingStats& stats) {
     log += F(" usec");
     return log;
 }
-
-
+*/
 
 String getPluginFunctionName(int function) {
     switch(function) {
@@ -1852,6 +1859,7 @@ std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> miscStats;
 unsigned long timediff_calls = 0;
 unsigned long timediff_cpu_cycles_total = 0;
+unsigned long timingstats_last_reset = 0;
 
 #define LOADFILE_STATS        0
 #define SAVEFILE_STATS        1
