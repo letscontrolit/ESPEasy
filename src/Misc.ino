@@ -1613,7 +1613,7 @@ boolean readUserVarFromRTC()
     ret &= system_rtc_mem_read(RTC_BASE_USERVAR+(size>>2), (byte*)&sumRTC, 4);
     if (!ret || sumRTC != sumRAM)
     {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Checksum error on reading RTC user var"));
       memset(buffer, 0, size);
     }
     return ret;
