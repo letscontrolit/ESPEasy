@@ -25,6 +25,7 @@ install:
   - pip install -U platformio sphinx recommonmark sphinx_bootstrap_theme
 
 script:
+  - platformio update
   # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
   - cd patches; ./check_puya_patch; cd ..
 
