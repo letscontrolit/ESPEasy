@@ -143,12 +143,12 @@ void deepSleep(int delay)
   //first time deep sleep? offer a way to escape
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
     {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
+      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
       return;
     }
   }
@@ -169,7 +169,7 @@ void deepSleepStart(int delay)
   if (delay > 4294 || delay < 0)
     delay = 4294;   //max sleep time ~1.2h
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
+  addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   #if defined(ESP8266)
     ESP.deepSleep((uint32_t)delay * 1000000, WAKE_RF_DEFAULT);
   #endif
@@ -668,8 +668,7 @@ uint32_t progMemMD5check(){
     CRCValues.numberOfCRCBytes = 0;
     memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
     if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
-        if (loglevelActiveFor(LOG_LEVEL_INFO))
-          addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
+        addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
         return 0;
     }
     MD5Builder md5;
@@ -689,12 +688,10 @@ uint32_t progMemMD5check(){
    md5.calculate();
    md5.getBytes(CRCValues.runTimeMD5);
    if ( CRCValues.checkPassed())  {
-      if (loglevelActiveFor(LOG_LEVEL_INFO))
-        addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
+      addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
       return CRCValues.numberOfCRCBytes;
    }
-   if (loglevelActiveFor(LOG_LEVEL_INFO))
-     addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
+   addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
 
@@ -955,7 +952,7 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);
   if (result.length() > 0) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, result);
+    addLog(LOG_LEVEL_ERROR, result);
   }
 }
 
@@ -1540,7 +1537,7 @@ boolean saveToRTC()
   #else
     if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte*)&RTC, sizeof(RTC)) || !readFromRTC())
     {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
+      addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
       return(false);
     }
     else
@@ -2434,7 +2431,7 @@ String rulesProcessingFile(const String& fileName, String& event)
   nestingLevel++;
   if (nestingLevel > RULES_MAX_NESTING_LEVEL)
   {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
+    addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
     return (log);
   }

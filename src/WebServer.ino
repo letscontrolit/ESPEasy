@@ -158,7 +158,7 @@ public:
       }
       */
     } else {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
+      addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
       lowMemorySkip = false;
     }
   }
@@ -524,10 +524,10 @@ void setWebserverRunning(bool state) {
       webserver_init = true;
     }
     WebServer.begin();
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("Webserver: start"));
+    addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
     WebServer.stop();
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
+    addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
   webserver_state = state;
 }
@@ -993,18 +993,18 @@ void handle_root() {
     // disconnect here could result into a crash/reboot...
     if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
     {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+      addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
       cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     }
 
     if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
     {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+      addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
       cmd_within_mainloop = CMD_REBOOT;
     }
    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
     {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
       TXBuffer+= F("OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>");
       TXBuffer.endStream();
@@ -1053,7 +1053,7 @@ void handle_config() {
   if (ssid[0] != 0)
   {
     if (strcmp(Settings.Name, name.c_str()) != 0) {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
+      addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
       MQTTclient_should_reconnect = true;
     }
     // Unit name
@@ -3712,9 +3712,9 @@ void handle_control() {
 
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO,String(F("HTTP: ")) + webrequest);
+  addLog(LOG_LEVEL_INFO,String(F("HTTP: ")) + webrequest);
   webrequest=parseTemplate(webrequest,webrequest.length());
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
+  addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
 
   if (command == F("event"))
   {

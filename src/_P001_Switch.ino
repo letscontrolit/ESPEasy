@@ -507,7 +507,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             }
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
@@ -532,7 +532,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               digitalWrite(event->Par1, !currentState);
               setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, !currentState);
               log = String(F("SW   : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, log);
               SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
             }
           }
@@ -580,7 +580,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             #endif
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
@@ -596,7 +596,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             digitalWrite(event->Par1, !event->Par2);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
@@ -618,7 +618,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             setPluginTaskTimer(timer, PLUGIN_ID_001, event->TaskIndex, event->Par1, inversePinStateValue);
             log = String(F("SW   : GPIO ")) + String(event->Par1) +
                   String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
@@ -656,7 +656,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
           setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);
           log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
         }
 
@@ -700,7 +700,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             play_rtttl(event->Par1, tmpString.c_str());
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("SW   : ")) + string;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
@@ -715,7 +715,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             tone_espEasy(event->Par1, event->Par2, event->Par3);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("SW   : ")) + string;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
