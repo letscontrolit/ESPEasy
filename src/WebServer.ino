@@ -5865,6 +5865,10 @@ void handle_sysinfo() {
     // Where manufacturer is 0xE0 and device is 0x4016.
      TXBuffer += F("Vendor: ");
      TXBuffer += formatToHex(flashChipId & 0xFF);
+     if ((flashChipId & 0x000000ff) == 0x85) { // 0x146085 PUYA
+       TXBuffer += F(" (PUYA)");
+       TXBuffer += F(HTML_SYMBOL_WARNING);
+     }
      TXBuffer += F(" Device: ");
      uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
      TXBuffer += formatToHex(flashDevice);
