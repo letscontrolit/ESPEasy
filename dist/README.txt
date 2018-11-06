@@ -55,8 +55,16 @@ To help recover from a bad flash, there are also blank images included.
 When the wrong image is flashed, or the module behaves unstable, or is in a reboot loop,
 flash these images first and then the right image for the module.
 
-Another great flash tool can be found here: (Windows only)
-  https://github.com/Grovkillen/ESP_Easy_Flasher
+ESP.Easy.Flasher.exe...
+... is the new flashing tool for ESP Easy. You need to run it in elevated mode (as admin)
+for it to fetch the COM ports correctly. If you want you may save YOUR settings using the
+"Save as default settings" button in the lower left corner. If the window is too big or
+too small you can experiment with the "Pixels Per Inch" variable in the
+..\Settings\Default.ini file. Setting it to =96 is working for most users but the
+application will try to find the most optimal value by default. Sometimes it fails to
+do that. More information about the tool is found here: 
+https://github.com/Grovkillen/ESP_Easy_Flasher
 
+Further reading:
 For more information, see: https://github.com/letscontrolit/ESPEasy
 Or our forum: https://www.letscontrolit.com/forum/

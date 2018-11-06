@@ -42,12 +42,12 @@ done
 #rm -rf dist/Source 2>/dev/null
 rm -rf dist/Docs 2>/dev/null
 
-mkdir -p dist/Source
-#mkdir -p dist/Docs
-cp -r lib dist/Source/
-cp -r src dist/Source/
-#cp -r docs/build/ dist/Docs/
-cp platformio.ini dist/Source/
+mkdir -p dist/source
+#mkdir -p dist/docs
+cp -r lib dist/source/
+cp -r src dist/source/
+#cp -r docs/build/ dist/docs/
+cp platformio.ini dist/source/
 
 cd dist
 

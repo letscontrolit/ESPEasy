@@ -104,7 +104,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Modbus Address"), F("p078_dev_id"), P078_DEV_ID, 1, 247);
 
         String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
-        addFormSelector(F("Model Type"), F("p078_model"), 3, options_model, NULL, P078_MODEL );
+        addFormSelector(F("Model Type"), F("p078_model"), 4, options_model, NULL, P078_MODEL );
 
         String options_baudrate[6];
         for (int i = 0; i < 6; ++i) {

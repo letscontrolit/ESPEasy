@@ -1,4 +1,84 @@
 -------------------------------------------------
+Changes in release mega-20181106 (since mega-20181105)
+-------------------------------------------------
+
+Release date: Tue Nov  6 04:00:10 CET 2018
+
+Grovkillen (1):
+      [Flasher] fixed ip bug fixed
+
+
+-------------------------------------------------
+Changes in release mega-20181105 (since mega-20181101)
+-------------------------------------------------
+
+Release date: Mon Nov  5 04:00:10 CET 2018
+
+Bartlomiej Zimon (2):
+      fix for #1986
+      Eastron - save modbus id and enable SDM630 model      partial fix for #1684
+
+Grovkillen (1):
+      [Memanalyzer] cmd args are back (un-commented)
+
+Jimmy Westberg (2):
+      Revert "[Flasher] updated flasher (some minor error)"
+      [Memanalyzer] try to fix the memanalyzer not analyzing all plugins
+
+kpalczewski (1):
+      bump lib IRremoteESP8266 to 2.5.2 and add send Pioneer support for 035 IR plugin.
+
+stefan (2):
+      Add sent/return value check to client.print()
+      Add comment why we check for %256
+
+
+-------------------------------------------------
+Changes in release mega-20181101 (since mega-20181031)
+-------------------------------------------------
+
+Release date: Thu Nov  1 04:00:08 CET 2018
+
+Bartłomiej Zimoń (1):
+      BlynkGet add timeout 1,5s.
+
+Grovkillen (4):
+      [README] added more info about ESP.Easy.Flasher
+      [README] fixed some \r\n
+      [Deploy] "source" folder was named "Source"
+      [README] removed IRC link... we're not there.
+
+Jimmy Westberg (1):
+      [Flasher] updated flasher (some minor error)
+
+Plebs (2):
+      Update src/Misc.ino
+      Update src/Misc.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181031 (since mega-20181030)
+-------------------------------------------------
+
+Release date: Wed Oct 31 04:00:10 CET 2018
+
+Bartłomiej Zimoń (1):
+      BlynkGet fix loop #1951
+
+Jimmy Westberg (7):
+      [Flasher] Added ESP.Easy.Flasher.exe
+      [Deploy] Added sub folder for BIN files
+      [Flasher] Updated to 0.02.001
+      [Deploy] small letters are the standard
+      [Flasher] Updated to 0.02.002
+      [Path] folder rename 1
+      [Path] folder rename 2
+
+TD-er (1):
+      [OTA] Add OTA info and disable when not enough space
+
+
+-------------------------------------------------
 Changes in release mega-20181030 (since mega-20181029)
 -------------------------------------------------
 

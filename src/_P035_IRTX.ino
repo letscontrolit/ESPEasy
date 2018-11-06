@@ -15,6 +15,8 @@ IRsend *Plugin_035_irSender;
 #define PLUGIN_035
 #define PLUGIN_ID_035         35
 #define PLUGIN_NAME_035       "Communication - IR Transmit"
+#define STATE_SIZE_MAX        53U
+#define PRONTO_MIN_LENGTH     6U
 
 #define from_32hex(c) ((((c) | ('A' ^ 'a')) - '0') % 39)
 
@@ -290,6 +292,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("HitachiAC1"))) parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
             if (IrType.equalsIgnoreCase(F("HitachiAC2"))) parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
             if (IrType.equalsIgnoreCase(F("GICable"))) Plugin_035_irSender->sendGICable(IrCode);
+			if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
           }
 
           addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
