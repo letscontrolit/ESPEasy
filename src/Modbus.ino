@@ -133,7 +133,7 @@ bool Modbus::handle() {
       LogString += F("reading bytes: ");
       for (int a = 0; a < 9; a++) {
         payLoad = ModbusClient->read();
-        LogString += (payLoad);  LogString += F(" ");
+        LogString += (payLoad);  LogString += ' ';
       }
       LogString += F("> ");
       if (payLoad > 8) {

@@ -201,7 +201,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
                log += m_tempdiff;
                log += F(" C; ");
                log += m_power;
-               log += F(" ");
+               log += ' ';
                log += m_flow;
                log += F(" L/H");
 //              addLog(LOG_LEVEL_INFO, log);

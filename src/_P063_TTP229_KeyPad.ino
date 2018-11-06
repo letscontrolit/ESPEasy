@@ -131,7 +131,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
         String log = F("Tkey : GPIO: ");
         log += pinSCL;
-        log += F(" ");
+        log += ' ';
         log += pinSDO;
         addLog(LOG_LEVEL_INFO, log);
 

@@ -73,9 +73,9 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
         int optionValues[2] = { 0x77, 0x76 };
-        addFormSelectorI2C(F("plugin_032_ms5611_i2c"), 2, optionValues, choice);
+        addFormSelectorI2C(F("p032_ms5611_i2c"), 2, optionValues, choice);
 
-        addFormNumericBox(F("Altitude [m]"), F("plugin_032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude [m]"), F("p032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         success = true;
         break;
@@ -83,8 +83,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_032_ms5611_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_032_ms5611_elev"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p032_ms5611_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p032_ms5611_elev"));
         success = true;
         break;
       }

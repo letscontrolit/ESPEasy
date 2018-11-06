@@ -73,7 +73,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           //options[x] = F("0x");
           //options[x] += String(optionValues[x], HEX);
         }
-        addFormSelectorI2C(F("plugin_012_adr"), 16, optionValues, choice);
+        addFormSelectorI2C(F("p012_adr"), 16, optionValues, choice);
 
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -81,7 +81,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         options2[0] = F("2 x 16");
         options2[1] = F("4 x 20");
         int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Display Size"), F("plugin_012_size"), 2, options2, optionValues2, choice2);
+        addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
 
 
         char deviceTemplate[P12_Nlines][P12_Nchars];
@@ -94,7 +94,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           addHtml(String(varNr + 1));
           addHtml(F("' value='"));
           addHtml(deviceTemplate[varNr]);
-          addHtml(F("'>"));
+          addHtml("'>");
         }
 
 
@@ -112,7 +112,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         options3[1] = F("Truncate exceeding message");
         options3[2] = F("Clear then truncate exceeding message");
         int optionValues3[3] = { 0,1,2 };
-        addFormSelector(F("LCD command Mode"), F("plugin_012_mode"), 3, options3, optionValues3, Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         success = true;
         break;
@@ -120,16 +120,16 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_012_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_012_size"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p012_adr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p012_size"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_12_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_012_mode"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p012_mode"));
 
         char deviceTemplate[P12_Nlines][P12_Nchars];
         String error;
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          String argName = F("Plugin_012_template");
+          String argName = F("p012_template");
           argName += varNr + 1;
           if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P12_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
@@ -252,7 +252,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           if (Plugin_012_mode == 2){
               lcd->setCursor(colPos, rowPos);
               for (byte i = colPos; i < Plugin_012_cols; i++) {
-                  lcd->print(F(" "));
+                  lcd->print(" ");
               }
           }
 

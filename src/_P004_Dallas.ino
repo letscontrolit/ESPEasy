@@ -65,8 +65,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
               // find all suitable devices
               addRowLabel(F("Device Address"));
-              addSelector_Head(F("plugin_004_dev"), false);
-              addSelector_Item("", -1, false, false, F(""));
+              addSelector_Head(F("p004_dev"), false);
+              addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;
               Plugin_004_DS_reset();
@@ -77,10 +77,10 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                   for (byte j = 0; j < 8; j++)
                   {
                       option += String(tmpAddress[j], HEX);
-                      if (j < 7) option += F("-");
+                      if (j < 7) option += '-';
                   }
                   bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-                  addSelector_Item(option, count, selected, false, F(""));
+                  addSelector_Item(option, count, selected, false, "");
                   count ++;
               }
               addSelector_Foot();
@@ -92,7 +92,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                   resolutionChoice = 9;
               String resultsOptions[4] = { F("9"), F("10"), F("11"), F("12") };
               int resultsOptionValues[4] = { 9, 10, 11, 12 };
-              addFormSelector(F("Device Resolution"), F("plugin_004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+              addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
               addHtml(F(" Bit"));
             }
             success = true;
@@ -106,11 +106,11 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             // save the address for selected device and store into extra tasksettings
             Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
             if (Plugin_004_DallasPin != -1){
-              Plugin_004_DS_scan(getFormItemInt(F("plugin_004_dev")), addr);
+              Plugin_004_DS_scan(getFormItemInt(F("p004_dev")), addr);
               for (byte x = 0; x < 8; x++)
                   ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
-              Plugin_004_DS_setResolution(addr, getFormItemInt(F("plugin_004_res")));
+              Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")));
               Plugin_004_DS_startConvertion(addr);
             }
             success = true;
@@ -122,7 +122,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             for (byte x = 0; x < 8; x++)
             {
                 if (x != 0)
-                    string += "-";
+                    string += '-';
                 string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
             success = true;
@@ -244,7 +244,7 @@ boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float * value)
 
     for (byte i = 0; i < 9; i++) // read 9 bytes
         ScratchPad[i] = Plugin_004_DS_read();
-    
+
     bool crc_ok = Plugin_004_DS_crc8(ScratchPad);
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

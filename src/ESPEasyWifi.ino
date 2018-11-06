@@ -14,7 +14,7 @@ void processConnect() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
-    log += F(" (");
+    log += " (";
     log += WiFi.BSSIDstr();
     log += F(") Ch: ");
     log += last_channel;
@@ -47,7 +47,7 @@ void processDisconnect() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Disconnected! Reason: '");
     log += getLastDisconnectReason();
-    log += F("'");
+    log += '\'';
     if (lastConnectedDuration > 0) {
       log += F(" Connected for ");
       log += format_msec_duration(lastConnectedDuration);
@@ -77,7 +77,7 @@ void processGotIP() {
       log += F("DHCP IP: ");
     }
     log += formatIP(ip);
-    log += F(" (");
+    log += " (";
     log += WifiGetHostname();
     log += F(") GW: ");
     log += formatIP(gw);
@@ -419,7 +419,7 @@ String WifiGetAPssid()
 {
   String ssid(Settings.Name);
   if (Settings.appendUnitToHostname()) {
-    ssid+=F("_");
+    ssid+="_";
     ssid+=Settings.Unit;
   }
   return (ssid);
@@ -431,8 +431,8 @@ String WifiGetAPssid()
 String WifiGetHostname()
 {
   String hostname(WifiGetAPssid());
-  hostname.replace(F(" "), F("-"));
-  hostname.replace(F("_"), F("-")); // See RFC952
+  hostname.replace(" ", "-");
+  hostname.replace("_", "-"); // See RFC952
   return (hostname);
 }
 
@@ -689,7 +689,7 @@ String formatScanResult(int i, const String& separator) {
   result += separator;
   result += F("Ch:");
   result += WiFi.channel(i);
-  result += F(" (");
+  result += " (";
   result += WiFi.RSSI(i);
   result += F("dBm) ");
   switch (WiFi.encryptionType(i)) {
@@ -836,7 +836,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 
 
 String getLastDisconnectReason() {
-  String reason = F("(");
+  String reason = "(";
   reason += lastDisconnectReason;
   reason += F(") ");
   switch (lastDisconnectReason) {

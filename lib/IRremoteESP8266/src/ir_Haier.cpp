@@ -359,7 +359,7 @@ std::string IRHaierAC::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Mode: " + uint64ToString(getMode());
   switch (getMode()) {
     case kHaierAcAuto:
@@ -407,7 +407,7 @@ std::string IRHaierAC::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Sleep: ";
   if (getSleep())
     result += "On";
@@ -674,7 +674,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Mode: " + uint64ToString(getMode());
   switch (getMode()) {
     case kHaierAcYrw02Auto:
@@ -727,7 +727,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Swing: " + uint64ToString(getSwing()) + " (";
   switch (getSwing()) {
     case kHaierAcYrw02SwingOff:
@@ -751,7 +751,7 @@ std::string IRHaierACYRW02::toString() {
     default:
       result += "Unknown";
   }
-  result += ")";
+  result += ')';
   result += ", Sleep: ";
   if (getSleep())
     result += "On";

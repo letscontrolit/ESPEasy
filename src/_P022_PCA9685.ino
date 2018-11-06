@@ -97,19 +97,19 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           if (i == 0x10)
             m2Options[i] += F(" - (default)");
         }
-        addFormSelector(F("MODE2"), F("plugin_022_mode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
+        addFormSelector(F("MODE2"), F("p022_mode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
 
         String freqString = F("Frequency (");
         freqString += PCA9685_MIN_FREQUENCY;
-        freqString += F("-");
+        freqString += '-';
         freqString += PCA9685_MAX_FREQUENCY;
-        freqString += F(")");
-        addFormNumericBox(freqString, F("plugin_022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
+        freqString += ')';
+        addFormNumericBox(freqString, F("p022_freq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
         String funitString = F("default ");
         funitString += PCA9685_MAX_FREQUENCY;
         addUnit(funitString);
 
-        addFormNumericBox(F("Range (1-10000)"), F("plugin_022_range"), range, 1, 10000);
+        addFormNumericBox(F("Range (1-10000)"), F("p022_range"), range, 1, 10000);
         String runitString = F("default ");
         runitString += PCA9685_MAX_PWM;
         addUnit(runitString);
@@ -121,9 +121,9 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         Settings.TaskDevicePort[event->TaskIndex] = getFormItemInt(F("i2c_addr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_022_mode2"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_022_freq"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_022_range"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p022_mode2"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p022_freq"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p022_range"));
         if (!IS_INIT(initializeState, (Settings.TaskDevicePort[event->TaskIndex] - PCA9685_ADDRESS)))
         {
           if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] != mode2)
@@ -146,8 +146,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           LoadTaskSettings(event->TaskIndex);
           String name = line.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
+          name.replace("[","");
+          name.replace("]","");
           if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             line = line.substring(dotPos + 1);

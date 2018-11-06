@@ -221,7 +221,7 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   for (byte i=0; i<10; i++)
   {
     log += String(buffer[i], 16);
-    log += F(" ");
+    log += ' ';
   }
   addLog(LOG_LEVEL_DEBUG, log);
 }

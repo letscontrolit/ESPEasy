@@ -151,9 +151,9 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
-  log += F(" (");
+  log += " (";
   log += getSystemLibraryString();
-  log += F(")");
+  log += ')';
   addLog(LOG_LEVEL_INFO, log);
 
 
@@ -256,9 +256,9 @@ void setup()
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
   log += getPluginDescriptionString();
-  log += F(" (");
+  log += " (";
   log += getSystemLibraryString();
-  log += F(")");
+  log += ')';
   addLog(LOG_LEVEL_INFO, log);
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
@@ -755,7 +755,7 @@ void runOncePerSecond()
 void logTimerStatistics() {
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
-  logStatistics(loglevel, true);
+//  logStatistics(loglevel, true);
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
     queueLog += msecTimerHandler.getQueueStats();

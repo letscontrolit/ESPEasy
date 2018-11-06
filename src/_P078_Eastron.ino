@@ -101,16 +101,16 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           P078_QUERY3 = P078_QUERY3_DFLT;
           P078_QUERY4 = P078_QUERY4_DFLT;
         }
-        addFormNumericBox(F("Modbus Address"), F("plugin_078_dev_id"), P078_DEV_ID, 1, 247);
+        addFormNumericBox(F("Modbus Address"), F("p078_dev_id"), P078_DEV_ID, 1, 247);
 
         String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
-        addFormSelector(F("Model Type"), F("plugin_078_model"), 4, options_model, NULL, P078_MODEL );
+        addFormSelector(F("Model Type"), F("p078_model"), 4, options_model, NULL, P078_MODEL );
 
         String options_baudrate[6];
         for (int i = 0; i < 6; ++i) {
           options_baudrate[i] = String(p078_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), F("plugin_078_baudrate"), 6, options_baudrate, NULL, P078_BAUDRATE );
+        addFormSelector(F("Baud Rate"), F("p078_baudrate"), 6, options_baudrate, NULL, P078_BAUDRATE );
 
         if (P078_MODEL == 0 && P078_BAUDRATE > 3)
           addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
@@ -122,10 +122,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         for (int i = 0; i < 10; ++i) {
           options_query[i] = p078_getQueryString(i);
         }
-        addFormSelector(F("Variable 1"), F("plugin_078_query1"), 10, options_query, NULL, P078_QUERY1);
-        addFormSelector(F("Variable 2"), F("plugin_078_query2"), 10, options_query, NULL, P078_QUERY2);
-        addFormSelector(F("Variable 3"), F("plugin_078_query3"), 10, options_query, NULL, P078_QUERY3);
-        addFormSelector(F("Variable 4"), F("plugin_078_query4"), 10, options_query, NULL, P078_QUERY4);
+        addFormSelector(F("Variable 1"), F("p078_query1"), 10, options_query, NULL, P078_QUERY1);
+        addFormSelector(F("Variable 2"), F("p078_query2"), 10, options_query, NULL, P078_QUERY2);
+        addFormSelector(F("Variable 3"), F("p078_query3"), 10, options_query, NULL, P078_QUERY3);
+        addFormSelector(F("Variable 4"), F("p078_query4"), 10, options_query, NULL, P078_QUERY4);
 
         success = true;
         break;
@@ -133,14 +133,13 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_078"));
-          P078_MODEL = getFormItemInt(F("plugin_078_model"));
-          P078_BAUDRATE = getFormItemInt(F("plugin_078_baudrate"));
-          P078_DEV_ID = getFormItemInt(F("plugin_078_dev_id"));
-          P078_QUERY1 = getFormItemInt(F("plugin_078_query1"));
-          P078_QUERY2 = getFormItemInt(F("plugin_078_query2"));
-          P078_QUERY3 = getFormItemInt(F("plugin_078_query3"));
-          P078_QUERY4 = getFormItemInt(F("plugin_078_query4"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p078"));
+          P078_MODEL = getFormItemInt(F("p078_model"));
+          P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
+          P078_QUERY1 = getFormItemInt(F("p078_query1"));
+          P078_QUERY2 = getFormItemInt(F("p078_query2"));
+          P078_QUERY3 = getFormItemInt(F("p078_query3"));
+          P078_QUERY4 = getFormItemInt(F("p078_query4"));
 
           Plugin_078_init = false; // Force device setup next time
           success = true;

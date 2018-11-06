@@ -155,7 +155,7 @@ bool MQTTConnect(int controller_idx)
   if(Settings.MQTTUseUnitNameAsClientId){
     clientid = Settings.Name;
     if (Settings.Unit != 0) { // only append non-zero unit number
-      clientid += F("_");
+      clientid += '_';
       clientid += Settings.Unit;
     }
   }
@@ -169,7 +169,7 @@ bool MQTTConnect(int controller_idx)
   // To overcome this issue, append the number of reconnects to the client ID to
   // make it different from the previous one.
   if (wifi_reconnects >= 1) {
-    clientid += F("_");
+    clientid += '_';
     clientid += wifi_reconnects;
   }
 

@@ -344,7 +344,7 @@ std::string resultToSourceCode(const decode_results *results) {
   output += "  // " + typeToString(results->decode_type, results->repeat);
   // Only display the value if the decode type doesn't have an A/C state.
   if (!hasACState(results->decode_type))
-    output += " " + uint64ToString(results->value, 16);
+    output += ' ' + uint64ToString(results->value, 16);
   output += "\n";
 
   // Now dump "known" codes
@@ -395,7 +395,7 @@ std::string resultToTimingInfo(const decode_results *results) {
 
   for (uint16_t i = 1; i < results->rawlen; i++) {
     if (i % 2 == 0)
-      output += "-";  // even
+      output += '-';  // even
     else
       output += "   +";  // odd
     value = uint64ToString(results->rawbuf[i] * kRawTick);

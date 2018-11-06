@@ -290,13 +290,13 @@ String timeSince(uint32_t const start) {
     result += String(days) + " day";
   if (days > 1)  result += "s";
   if (hours)
-    result += " " + String(hours) + " hour";
+    result += ' ' + String(hours) + " hour";
   if (hours > 1)  result += "s";
   if (minutes)
-    result += " " + String(minutes) + " minute";
+    result += ' ' + String(minutes) + " minute";
   if (minutes > 1)  result += "s";
   if (seconds)
-    result += " " + String(seconds) + " second";
+    result += ' ' + String(seconds) + " second";
   if (seconds > 1)  result += "s";
   result.trim();
   return result + " ago";
@@ -1003,7 +1003,7 @@ void handleNotFound() {
   message += server.args();
   message += "\n";
   for (uint8_t i=0; i < server.args(); i++)
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    message += ' ' + server.argName(i) + ": " + server.arg(i) + "\n";
   server.send(404, "text/plain", message);
 }
 

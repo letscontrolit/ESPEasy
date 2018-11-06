@@ -84,12 +84,12 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(F("Send Boot state") ,F("plugin_009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormCheckBox(F("Send Boot state") ,F("p009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         //@giig1967-20181022
         addFormSubHeader(F("Advanced event management"));
 
-        addFormNumericBox(F("De-bounce (ms)"), F("plugin_009_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
+        addFormNumericBox(F("De-bounce (ms)"), F("p009_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
 
         //set minimum value for doubleclick MIN max speed
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL)
@@ -102,9 +102,9 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         buttonDC[2] = F("Active only on HIGH (EVENT=3)");
         buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
         int buttonDCValues[4] = {PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH,PLUGIN_009_DC_BOTH};
-        addFormSelector(F("Doubleclick event"), F("plugin_009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
 
-        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("plugin_009_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_009_DOUBLECLICK_MIN_INTERVAL, PLUGIN_009_DOUBLECLICK_MAX_INTERVAL);
+        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p009_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_009_DOUBLECLICK_MIN_INTERVAL, PLUGIN_009_DOUBLECLICK_MAX_INTERVAL);
 
         //set minimum value for longpress MIN max speed
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_009_LONGPRESS_MIN_INTERVAL)
@@ -118,9 +118,9 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
 
         int buttonLPValues[4] = {PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH,PLUGIN_009_LONGPRESS_BOTH};
-        addFormSelector(F("Longpress event"), F("plugin_009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
 
-        addFormNumericBox(F("Longpress min. interval (ms)"), F("plugin_009_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_009_LONGPRESS_MIN_INTERVAL, PLUGIN_009_LONGPRESS_MAX_INTERVAL);
+        addFormNumericBox(F("Longpress min. interval (ms)"), F("p009_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_009_LONGPRESS_MIN_INTERVAL, PLUGIN_009_LONGPRESS_MAX_INTERVAL);
 
         success = true;
         break;
@@ -128,16 +128,16 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("plugin_009_boot"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("p009_boot"));
 
         //@giig1967-20181022
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("plugin_009_debounce"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p009_debounce"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_009_dc"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("plugin_009_dcmaxinterval"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p009_dc"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p009_dcmaxinterval"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_009_lp"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("plugin_009_lpmininterval"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p009_lp"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p009_lpmininterval"));
 
         success = true;
         break;

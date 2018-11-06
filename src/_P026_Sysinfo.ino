@@ -53,7 +53,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         options[8] = F("IP 4.Octet");
         options[9] = F("Web activity");
         options[10] = F("Free Stack");
-        addFormSelector(F("Indicator"), F("plugin_026"), 11, options, NULL, choice);
+        addFormSelector(F("Indicator"), F("p026"), 11, options, NULL, choice);
 
         success = true;
         break;
@@ -61,7 +61,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_026"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p026"));
         success = true;
         break;
       }

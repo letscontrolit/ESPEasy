@@ -1088,7 +1088,7 @@ uint32_t getFlashRealSizeInBytes() {
 String getSystemBuildString() {
   String result;
   result += BUILD;
-  result += F(" ");
+  result += ' ';
   result += F(BUILD_NOTES);
   return result;
 }
@@ -1132,9 +1132,9 @@ String getSystemLibraryString() {
 String getLWIPversion() {
   String result;
   result += LWIP_VERSION_MAJOR;
-  result += F(".");
+  result += '.';
   result += LWIP_VERSION_MINOR;
-  result += F(".");
+  result += '.';
   result += LWIP_VERSION_REVISION;
   if (LWIP_VERSION_IS_RC) {
     result += F("-RC");
@@ -1744,7 +1744,7 @@ String parseTemplate(String &tmpString, byte lineSize)
 
   // padding spaces
   while (newString.length() < lineSize)
-    newString += " ";
+    newString += ' ';
   checkRAM(F("parseTemplate3"));
   return newString;
 }
@@ -1839,7 +1839,7 @@ void transformValue(
             value = val == inverted ? F("OUT") : F(" IN");
             break;
           case 'Z' :// return "0" or "1"
-            value = val == inverted ? F("0") : F("1");
+            value = val == inverted ? "0" : "1";
             break;
           case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
             {
@@ -1905,7 +1905,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
                   for (byte f = 0; f < filler; f++)
-                    newString += " ";
+                    newString += ' ';
                 }
               }
               break;
@@ -1916,7 +1916,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0' ; //48
                   for (byte f = 0; f < filler; f++)
-                    value += " ";
+                    value += ' ';
                 }
               }
               break;
@@ -1961,14 +1961,14 @@ void transformValue(
       {
         int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
         for (byte f = 0; f < filler; f++)
-          newString += " ";
+          newString += ' ';
       }
       {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String logFormatted = F("DEBUG: Formatted String='");
           logFormatted += newString;
           logFormatted += value;
-          logFormatted += "'";
+          logFormatted += '\'';
           addLog(LOG_LEVEL_DEBUG, logFormatted);
         }
       }
@@ -1981,7 +1981,7 @@ void transformValue(
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
-      logParsed += "'";
+      logParsed += '\'';
       addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
   }
@@ -2461,7 +2461,7 @@ String rulesProcessingFile(const String& fileName, String& event)
       }
       else
       {      // if line complete, parse this rule
-        line.replace(F("\r"), "");
+        line.replace("\r", "");
         if (line.substring(0, 2) != F("//") && line.length() > 0)
         {
           parseCompleteNonCommentLine(
@@ -2480,7 +2480,7 @@ String rulesProcessingFile(const String& fileName, String& event)
 
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
-  return (F(""));
+  return ("");
 }
 
 void parseCompleteNonCommentLine(
@@ -2785,8 +2785,8 @@ boolean ruleMatch(String& event, String& rule)
   String tmpRule = rule;
 
   //Ignore escape char
-  tmpRule.replace(F("["),F(""));
-  tmpRule.replace(F("]"),F(""));
+  tmpRule.replace("[","");
+  tmpRule.replace("]","");
 
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
@@ -3100,15 +3100,15 @@ void SendValueLogger(byte TaskIndex)
     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
     {
       logger += getDateString('-');
-      logger += F(" ");
+      logger += ' ';
       logger += getTimeString(':');
-      logger += F(",");
+      logger += ',';
       logger += Settings.Unit;
-      logger += F(",");
+      logger += ',';
       logger += getTaskDeviceName(TaskIndex);
-      logger += F(",");
+      logger += ',';
       logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      logger += F(",");
+      logger += ',';
       logger += formatUserVarNoCheck(TaskIndex, varNr);
       logger += F("\r\n");
     }
@@ -3178,7 +3178,7 @@ class RamTracker{
               traces[bestCase]+= nextAction[readPtr];
               traces[bestCase]+= "-> ";
               traces[bestCase]+= String(nextActionStartMemory[readPtr]);
-              traces[bestCase]+= " ";
+              traces[bestCase]+= ' ';
               readPtr++;
               if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
             }

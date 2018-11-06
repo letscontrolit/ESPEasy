@@ -44,7 +44,6 @@ To create/register a plugin, you have to :
     #define PLUGIN_BUILD_IR
 #endif
 
-
 #ifdef PLUGIN_BUILD_DEV
     #define  PLUGIN_SET_EXPERIMENTAL
     #define  CONTROLLER_SET_EXPERIMENTAL
@@ -70,6 +69,46 @@ To create/register a plugin, you have to :
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
 #endif
+
+#ifdef PLUGIN_BUILD_MINIMAL_OTA
+    #define PLUGIN_DESCR  "Minimal 1M OTA"
+
+    #define CONTROLLER_SET_NONE
+
+    #define USES_C001   // Domoticz HTTP
+    #define USES_C002   // Domoticz MQTT
+    #define USES_C005   // OpenHAB MQTT
+//    #define USES_C006   // PiDome MQTT
+    #define USES_C008   // Generic HTTP
+    #define USES_C009   // FHEM HTTP
+//    #define USES_C010   // Generic UDP
+    #define USES_C013   // ESPEasy P2P network
+
+    #define NOTIFIER_SET_STABLE
+    #define PLUGIN_SET_NONE
+
+    #ifndef USES_P001
+        #define USES_P001   // switch
+    #endif
+    #ifndef USES_P026
+      #define USES_P026   // SysInfo
+    #endif
+    #ifndef USES_P033
+      #define USES_P033   // Dummy
+    #endif
+    #ifndef USES_P037
+//        #define USES_P037   // MQTTImport
+    #endif
+
+    #ifndef USES_P004
+//        #define USES_P004   // Dallas
+    #endif
+    #ifndef USES_P005
+//        #define USES_P005   // DHT
+    #endif
+
+#endif
+
 
 
 /******************************************************************************\
@@ -332,9 +371,6 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P028
         #define USES_P028   // BME280
-    #endif
-    #ifndef USES_P030
-        #define USES_P030   // BMP280
     #endif
 #endif
 

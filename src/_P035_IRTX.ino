@@ -146,7 +146,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                         buf[idx++] = c0 * IrBLen;
                         //print the number of 0s just for debuging/info purpouses
                         for (uint t = 0; t < c0; t++)
-                          printWebString += F("0");
+                          printWebString += '0';
                       }
                       //So, as we receive a "1", and processed the counted 0s
                       //sending them as a ms timing into the buffer, we clear
@@ -167,7 +167,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                           buf[idx++] = c1 * IrPLen;
                           //print the number of 1s just for debugging/info purposes
                           for (uint t = 0; t < c1; t++)
-                            printWebString += F("1");
+                            printWebString += '1';
                         }
                         //So, as we receive a "0", and processed the counted 1s
                         //sending them as a ms timing into the buffer, we clear
@@ -188,13 +188,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 if (c0 > 0) {
                   buf[idx++] = c0 * IrBLen;
                   for (uint t = 0; t < c0; t++)
-                    printWebString += F("0");
+                    printWebString += '0';
                 }
                 //If we have pendings 1s
                 if (c1 > 0) {
                   buf[idx++] = c1 * IrPLen;
                   for (uint t = 0; t < c1; t++)
-                    printWebString += F("1");
+                    printWebString += '1';
                 }
 
                 printWebString += F("<BR>");

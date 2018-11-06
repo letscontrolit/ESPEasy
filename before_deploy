@@ -24,7 +24,8 @@ for ENV in \
   dev_ESP8266PUYA_1024_VCC\
   hard_SONOFF_POW\
   hard_SONOFF_POW_R2_4M\
-  hard_Shelly_1\
+  minimal_ESP8266_1024_OTA\
+  minimal_ESP8285_1024_OTA\
   esp32dev\
   esp32test_1M8_partition;\
 do
