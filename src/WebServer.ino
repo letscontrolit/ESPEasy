@@ -158,7 +158,7 @@ public:
       }
       */
     } else {
-      addLog(LOG_LEVEL_DEBUG, String("Webpage skipped: low memory: ") + finalRam);
+      addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
       lowMemorySkip = false;
     }
   }
@@ -3435,6 +3435,7 @@ void handle_tools() {
     if (webrequest.length() > 0)
     {
       struct EventStruct TempEvent;
+      webrequest=parseTemplate(webrequest,webrequest.length());  //@giig1967g: parseTemplate before executing the command
       parseCommandString(&TempEvent, webrequest);
       TempEvent.Source = VALUE_SOURCE_WEB_FRONTEND;
       if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
@@ -3884,6 +3885,10 @@ void handle_control() {
 
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
+  addLog(LOG_LEVEL_INFO,String(F("HTTP: ")) + webrequest);
+  webrequest=parseTemplate(webrequest,webrequest.length());
+  addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
+
   if (command == F("event"))
   {
     eventBuffer = webrequest.substring(6);
@@ -3895,7 +3900,6 @@ void handle_control() {
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
     WebServer.send(200, "text/html", "OK");
     return;
@@ -5863,11 +5867,24 @@ void handle_sysinfo() {
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
-     TXBuffer += F("Vendor: ");
-     TXBuffer += formatToHex(flashChipId & 0xFF);
-     TXBuffer += F(" Device: ");
-     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-     TXBuffer += formatToHex(flashDevice);
+    TXBuffer += F("Vendor: ");
+    TXBuffer += formatToHex(flashChipId & 0xFF);
+
+    #ifdef PUYASUPPORT
+    if (ESP.flashIsPuya()) {
+      TXBuffer += F(" (PUYA, supported)");
+    }
+    #else
+    if ((flashChipId & 0x000000ff) == 0x85)  // 0x146085 PUYA
+    {
+      TXBuffer += F(" (PUYA");
+      TXBuffer += F(HTML_SYMBOL_WARNING);
+      TXBuffer += ')';
+    }
+    #endif
+    TXBuffer += F(" Device: ");
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    TXBuffer += formatToHex(flashDevice);
   #endif
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();

@@ -183,7 +183,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_009_LONGPRESS_MIN_INTERVAL)
           Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
 
-        setPinState(PLUGIN_ID_009, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, 0);
+        setPinState(PLUGIN_ID_009, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
 
         success = true;
         break;
@@ -251,14 +251,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
               UserVar[event->BaseVarIndex] = output_value;
 
-              String log = F("MCP  : Port=");
-              log += Settings.TaskDevicePort[event->TaskIndex];
-              log += F(" State=");
-              log += state;
-              log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
-
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("MCP  : Port=");
+                log += Settings.TaskDevicePort[event->TaskIndex];
+                log += F(" State=");
+                log += state;
+                log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               event->sensorType = SENSOR_TYPE_SWITCH;
               sendData(event);
 
@@ -306,13 +307,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               output_value = output_value + 10;
 
               UserVar[event->BaseVarIndex] = output_value;
-              String log = F("MCP  : LongPress: Port=");
-              log += Settings.TaskDevicePort[event->TaskIndex];
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("MCP  : LongPress: Port=");
+                log += Settings.TaskDevicePort[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
 
               //reset Userdata so it displays the correct state value in the web page
@@ -323,10 +326,12 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           //set UserVar and switchState = -1 and send EVENT to notify user
           UserVar[event->BaseVarIndex] = state;
           switchstate[event->TaskIndex] = state;
-          String log = F("MCP  : Port=");
-          log += Settings.TaskDevicePort[event->TaskIndex];
-          log += F(" is offline (EVENT= -1)");
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("MCP  : Port=");
+            log += Settings.TaskDevicePort[event->TaskIndex];
+            log += F(" is offline (EVENT= -1)");
+            addLog(LOG_LEVEL_INFO, log);
+          }
           sendData(event);
         }
         success = true;
@@ -337,11 +342,13 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       {
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
-        String log = F("MCP   : Port=");
-        log += Settings.TaskDevicePort[event->TaskIndex];
-        log += F(" State=");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("MCP   : Port=");
+          log += Settings.TaskDevicePort[event->TaskIndex];
+          log += F(" State=");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }

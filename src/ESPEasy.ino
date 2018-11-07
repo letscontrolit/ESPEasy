@@ -157,7 +157,6 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
 
-
   //warm boot
   if (readFromRTC())
   {
@@ -409,6 +408,8 @@ void updateLoopStats() {
     return;
   }
   const long usecSince = usecPassedSince(lastLoopStart);
+  miscStats[LOOP_STATS].add(usecSince);
+
   loop_usec_duration_total += usecSince;
   lastLoopStart = micros();
   if (usecSince <= 0 || usecSince > 10000000)
@@ -671,8 +672,7 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
-    String log = F("SYS  : Reset 24h counters");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
   }
 
   if (Settings.ConnectionFailuresThreshold)

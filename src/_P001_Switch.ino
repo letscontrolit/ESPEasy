@@ -212,7 +212,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
 
         // @giig1967g-20181022: if it is in the device list we assume it's an input pin
-        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, 0);
+        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
 
         // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_001_read_switch_state(event);
@@ -382,14 +382,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 }
               }
               UserVar[event->BaseVarIndex] = output_value;
-
-              String log = F("SW  : GPIO=");
-              log += Settings.TaskDevicePin1[event->TaskIndex];
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : GPIO=");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
 
               //reset Userdata so it displays the correct state value in the web page
@@ -453,13 +454,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               output_value = output_value + 10;
 
               UserVar[event->BaseVarIndex] = output_value;
-              String log = F("SW  : LongPress: GPIO= ");
-              log += Settings.TaskDevicePin1[event->TaskIndex];
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : LongPress: GPIO= ");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
 
               //reset Userdata so it displays the correct state value in the web page
@@ -476,9 +479,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       {
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
-        String log = F("SW   : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SW   : State ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }
