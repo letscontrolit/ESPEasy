@@ -481,6 +481,9 @@ void loop()
     wifiSetupConnect = false;
   }
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    // WiFi connection is not yet available, so introduce some extra delays to
+    // help the background tasks managing wifi connections
+    delay(1);
     if (wifiStatus >= ESPEASY_WIFI_CONNECTED) processConnect();
     if (wifiStatus >= ESPEASY_WIFI_GOT_IP) processGotIP();
     if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) processDisconnect();

@@ -898,7 +898,7 @@ void handle_root() {
     TXBuffer += formatIP(ip);
 
     addRowLabel(F("Wifi RSSI"));
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+    if (WiFiConnected())
     {
       TXBuffer += String(WiFi.RSSI());
       TXBuffer += F(" dB (");
@@ -5312,7 +5312,7 @@ void handle_setup() {
 
   addHeader(false,TXBuffer.buf);
 
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+  if (WiFiConnected())
   {
     addHtmlError(SaveSettings());
     const IPAddress ip = WiFi.localIP();
@@ -5688,7 +5688,7 @@ void handle_sysinfo() {
 
    addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+  if (WiFiConnected())
   {
      addRowLabel(F("Wifi"));
     #if defined(ESP8266)

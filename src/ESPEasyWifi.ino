@@ -241,11 +241,23 @@ void processScanDone() {
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
-  setWifiMode(WIFI_OFF);
-  setWifiMode(WIFI_STA);
+//  setWifiMode(WIFI_OFF);
+//  setWifiMode(WIFI_STA);
   lastDisconnectMoment = millis();
   processedDisconnect = false;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+}
+
+void connectionCheckHandler()
+{
+  if (reconnectChecker == false && !WiFiConnected()){
+    reconnectChecker = true;
+    resetWiFi();
+    WiFi.reconnect();
+  }
+  else if (WiFiConnected() && reconnectChecker == true){
+    reconnectChecker = false;
+  }
 }
 
 void WifiScanAsync() {
@@ -443,7 +455,13 @@ bool useStaticIP() {
 
 bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  return wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (WiFi.isConnected()) return true;
+    // else wifiStatus is no longer in sync.
+    resetWiFi();
+  }
+  delay(1);
+  return false;
 }
 
 void WiFiConnectRelaxed() {
@@ -645,6 +663,8 @@ void WifiDisconnect()
     wifi_station_disconnect();
     ETS_UART_INTR_ENABLE();
   #endif
+  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
 }
 
 

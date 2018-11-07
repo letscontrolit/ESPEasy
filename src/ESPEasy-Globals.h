@@ -1636,16 +1636,7 @@ Ticker connectionCheck;
 #endif
 
 bool reconnectChecker = false;
-void connectionCheckHandler()
-{
-  if (reconnectChecker == false && !WiFiConnected()){
-    reconnectChecker = true;
-    WiFi.reconnect();
-  }
-  else if (WiFiConnected() && reconnectChecker == true){
-    reconnectChecker = false;
-  }
-}
+void connectionCheckHandler();
 
 bool useStaticIP();
 
