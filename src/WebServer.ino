@@ -204,14 +204,15 @@ void sendContentBlocking(String& data) {
 void sendHeaderBlocking(bool json) {
   checkRAM(F("sendHeaderBlocking"));
   WebServer.client().flush();
+  String contenttype;
+  if (json)
+    contenttype = F("application/json");
+  else
+    contenttype = F("text/html");
+
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-
-  if (json)
-    WebServer.sendHeader(F("Content-Type"), F("application/json"), true);
-  else
-    WebServer.sendHeader(F("Content-Type"), F("text/html"), true);
-
+  WebServer.sendHeader(F("Content-Type"), contenttype, true);
   WebServer.sendHeader(F("Accept-Ranges"), F("none"));
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
@@ -225,12 +226,7 @@ void sendHeaderBlocking(bool json) {
   if (freeBeforeSend < 4000) timeout = 1000;
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-
-  if (json)
-    WebServer.sendHeader(F("Content-Type"), F("application/json"), true);
-  else
-    WebServer.sendHeader(F("Content-Type"), F("text/html"), true);
-
+  WebServer.sendHeader(F("Content-Type"), contenttype, true);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   if (json)
     WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
