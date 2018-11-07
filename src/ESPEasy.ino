@@ -248,6 +248,12 @@ void setup()
 
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
+  if (Settings.UseRules && isDeepSleepEnabled())
+  {
+    String event = F("System#NoSleep=");
+    event += Settings.deepSleep;
+    rulesProcessing(event);
+  }
 
   PluginInit();
   CPluginInit();
@@ -499,6 +505,13 @@ void loop()
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
      // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
+     if (Settings.UseRules && isDeepSleepEnabled())
+     {
+        String event = F("System#NoSleep=");
+        event += Settings.deepSleep;
+        rulesProcessing(event);
+     }
+
 
      RTC.bootFailedCount = 0;
      saveToRTC();
