@@ -691,7 +691,7 @@ uint32_t progMemMD5check(){
       addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
       return CRCValues.numberOfCRCBytes;
    }
-   addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
+   addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
 
@@ -2324,13 +2324,15 @@ int CalculateParam(char *TmpStr) {
           errorDesc = F("Unknown error");
           break;
         }
-        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
-        addLog(LOG_LEVEL_ERROR, log);
-        log = F("CALCULATE PARAM ERROR details: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += round(param);
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+          addLog(LOG_LEVEL_ERROR, log);
+          log = F("CALCULATE PARAM ERROR details: ");
+          log += TmpStr;
+          log += F(" = ");
+          log += round(param);
+          addLog(LOG_LEVEL_ERROR, log);
+        }
       } else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");

@@ -158,7 +158,7 @@ public:
       }
       */
     } else {
-      addLog(LOG_LEVEL_DEBUG, String("Webpage skipped: low memory: ") + finalRam);
+      addLog(LOG_LEVEL_ERROR, String("Webpage skipped: low memory: ") + finalRam);
       lowMemorySkip = false;
     }
   }
@@ -3435,6 +3435,7 @@ void handle_tools() {
     if (webrequest.length() > 0)
     {
       struct EventStruct TempEvent;
+      webrequest=parseTemplate(webrequest,webrequest.length());  //@giig1967g: parseTemplate before executing the command
       parseCommandString(&TempEvent, webrequest);
       TempEvent.Source = VALUE_SOURCE_WEB_FRONTEND;
       if (!PluginCall(PLUGIN_WRITE, &TempEvent, webrequest))
@@ -3884,6 +3885,10 @@ void handle_control() {
 
   // in case of event, store to buffer and return...
   String command = parseString(webrequest, 1);
+  addLog(LOG_LEVEL_INFO,String(F("HTTP: ")) + webrequest);
+  webrequest=parseTemplate(webrequest,webrequest.length());
+  addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
+
   if (command == F("event"))
   {
     eventBuffer = webrequest.substring(6);
@@ -3895,7 +3900,6 @@ void handle_control() {
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||
            command.equalsIgnoreCase(F("rules"))) {
-    addLog(LOG_LEVEL_INFO,String(F("HTTP : ")) + webrequest);
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
     WebServer.send(200, "text/html", "OK");
     return;

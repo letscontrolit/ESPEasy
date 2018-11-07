@@ -31,9 +31,11 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	String tmpcmd;
 	tmpcmd = cmd;
 	tmpcmd.toLowerCase();
-	String log = F("Command: ");
-	log += tmpcmd;
-	addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  	String log = F("Command: ");
+  	log += tmpcmd;
+  	addLog(LOG_LEVEL_INFO, log);
+  }
 	char cmd_lc[INPUT_COMMAND_SIZE];
 	tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
@@ -166,10 +168,12 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     default:
       break;
   }
-  String errorUnknown = F("Command unknown: \"");
-	errorUnknown += cmd_lc;
-	errorUnknown += '\"';
-	addLog(LOG_LEVEL_INFO, errorUnknown);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String errorUnknown = F("Command unknown: \"");
+  	errorUnknown += cmd_lc;
+  	errorUnknown += '\"';
+  	addLog(LOG_LEVEL_INFO, errorUnknown);
+  }
 	return F("\nUnknown command!");
 
   #undef COMMAND_CASE
