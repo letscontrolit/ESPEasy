@@ -1,6 +1,6 @@
 diff -urN 2.3.0.orig/cores/esp8266/Esp.cpp 2.3.0/cores/esp8266/Esp.cpp
 --- 2.3.0.orig/cores/esp8266/Esp.cpp	2016-06-21 08:06:45.000000000 +0000
-+++ 2.3.0/cores/esp8266/Esp.cpp	2018-11-07 11:28:34.852866182 +0000
++++ 2.3.0/cores/esp8266/Esp.cpp	2018-11-07 11:37:34.310886948 +0000
 @@ -507,11 +507,33 @@
      return rc == 0;
  }
@@ -8,7 +8,7 @@ diff -urN 2.3.0.orig/cores/esp8266/Esp.cpp 2.3.0/cores/esp8266/Esp.cpp
 +static uint32_t flash_chip_id = 0;
 +
 +bool EspClass::flashIsPuya(){
-+    return ((flash_chip_id & 0x000000ff) == 0x85) // 0x146085 PUYA
++    return ((flash_chip_id & 0x000000ff) == 0x85); // 0x146085 PUYA
 +}
 +
  bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size) {
