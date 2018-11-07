@@ -6,7 +6,7 @@ diff -urN 2.3.0.orig/cores/esp8266/Esp.cpp 2.3.0/cores/esp8266/Esp.cpp
  }
 
 +bool EspClass::flashIsPuya(){
-+    return ((flash_chip_id & 0x000000ff) == 0x85) // 0x146085 PUYA
++    return ((getFlashChipId() & 0x000000ff) == 0x85); // 0x146085 PUYA
 +}
 +
  bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size) {

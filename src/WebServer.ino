@@ -5871,7 +5871,7 @@ void handle_sysinfo() {
     TXBuffer += formatToHex(flashChipId & 0xFF);
 
     #ifdef PUYASUPPORT
-    if (Esp.flashIsPuya()) {
+    if (ESP.flashIsPuya()) {
       TXBuffer += F(" (PUYA, supported)");
     }
     #else
