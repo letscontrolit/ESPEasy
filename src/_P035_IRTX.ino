@@ -292,7 +292,8 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("HitachiAC1"))) parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
             if (IrType.equalsIgnoreCase(F("HitachiAC2"))) parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
             if (IrType.equalsIgnoreCase(F("GICable"))) Plugin_035_irSender->sendGICable(IrCode);
-			if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
+            if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
+            if (IrType.equalsIgnoreCase(F("MWM"))) parseStringAndSendAirCon(MWM, ircodestr);
           }
 
           addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
@@ -389,6 +390,17 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
     case HITACHI_AC2:
       stateSize = HITACHI_AC2_STATE_LENGTH;
       break;
+    case MWM:
+      // MWM has variable size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, (uint16_t) 3);
+      // Cap the maximum size.
+      stateSize = std::min(stateSize, kStateSizeMax);
+      break;
     default:  // Not a protocol we expected. Abort.
    //   debug("Unexpected AirCon protocol detected. Ignoring.");
       return;
@@ -482,6 +494,11 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
 #if SEND_HITACHI_AC2
     case HITACHI_AC2:
       Plugin_035_irSender->sendHitachiAC2(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
+#if SEND_MWM_
+    case MWM:
+      Plugin_035_irSender->sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
       break;
 #endif
   }
