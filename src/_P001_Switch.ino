@@ -211,12 +211,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         else
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
 
-        // @giig1967g-20181022: if it is in the device list we assume it's an input pin
-        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
-
         // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_001_read_switch_state(event);
         outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
+
+        // @giig1967g-20181022: if it is in the device list we assume it's an input pin
+        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
 
         // if boot state must be send, inverse default state
         // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
