@@ -408,6 +408,8 @@ void updateLoopStats() {
     return;
   }
   const long usecSince = usecPassedSince(lastLoopStart);
+  miscStats[LOOP_STATS].add(usecSince);
+
   loop_usec_duration_total += usecSince;
   lastLoopStart = micros();
   if (usecSince <= 0 || usecSince > 10000000)

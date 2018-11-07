@@ -20,8 +20,6 @@ for ENV in \
   dev_ESP8266_1024\
   dev_ESP8266_4096\
   dev_ESP8285_1024\
-  dev_ESP8266PUYA_1024\
-  dev_ESP8266PUYA_1024_VCC\
   hard_SONOFF_POW\
   hard_SONOFF_POW_R2_4M\
   minimal_ESP8266_1024_OTA\
