@@ -5863,15 +5863,24 @@ void handle_sysinfo() {
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
-     TXBuffer += F("Vendor: ");
-     TXBuffer += formatToHex(flashChipId & 0xFF);
-     if ((flashChipId & 0x000000ff) == 0x85) { // 0x146085 PUYA
-       TXBuffer += F(" (PUYA)");
-       TXBuffer += F(HTML_SYMBOL_WARNING);
-     }
-     TXBuffer += F(" Device: ");
-     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-     TXBuffer += formatToHex(flashDevice);
+    TXBuffer += F("Vendor: ");
+    TXBuffer += formatToHex(flashChipId & 0xFF);
+
+    #ifdef PUYASUPPORT
+    if (Esp.flashIsPuya()) {
+      TXBuffer += F(" (PUYA, supported)");
+    }
+    #else
+    if ((flashChipId & 0x000000ff) == 0x85)  // 0x146085 PUYA
+    {
+      TXBuffer += F(" (PUYA");
+      TXBuffer += F(HTML_SYMBOL_WARNING);
+      TXBuffer += ')';
+    }
+    #endif
+    TXBuffer += F(" Device: ");
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    TXBuffer += formatToHex(flashDevice);
   #endif
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();

@@ -1125,6 +1125,10 @@ String getSystemLibraryString() {
     result += F(", LWIP: ");
     result += getLWIPversion();
   #endif
+  #ifdef PUYASUPPORT
+    result += F(" PUYA support");
+  #endif
+
   return result;
 }
 
