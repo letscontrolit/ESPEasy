@@ -21,6 +21,7 @@
 #define P078_QUERY2   Settings.TaskDevicePluginConfig[event->TaskIndex][4]
 #define P078_QUERY3   Settings.TaskDevicePluginConfig[event->TaskIndex][5]
 #define P078_QUERY4   Settings.TaskDevicePluginConfig[event->TaskIndex][6]
+#define P078_DEPIN    Settings.TaskDevicePin3[event->TaskIndex]
 
 #define P078_DEV_ID_DFLT     1
 #define P078_MODEL_DFLT      0  // SDM120C
@@ -51,7 +52,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_078;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;     // connected through 2 datapins
+        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;     // connected through 3 datapins
         Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -86,6 +87,14 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           p078_getQueryValueString(P078_QUERY3), sizeof(ExtraTaskSettings.TaskDeviceValueNames[2]));
         safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[3],
           p078_getQueryValueString(P078_QUERY4), sizeof(ExtraTaskSettings.TaskDeviceValueNames[3]));
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = F("GPIO RX");
+        event->String2 = F("GPIO TX");
+        event->String3 = F("GPIO DE (optional)");
         break;
       }
 
@@ -161,7 +170,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SDM;
           Plugin_078_SDM=NULL;
         }
-        Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, NOT_A_PIN);
+        Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
         Plugin_078_SDM->begin();
         success = true;
         break;
