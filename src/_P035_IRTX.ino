@@ -256,6 +256,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("Sherwood"))) Plugin_035_irSender->sendSherwood(IrCode);
             if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode);
             if (IrType.equalsIgnoreCase(F("LG"))) Plugin_035_irSender->sendLG(IrCode); 
+            if (IrType.equalsIgnoreCase(F("LG2"))) Plugin_035_irSender->sendLG2(IrCode); 
             if (IrType.equalsIgnoreCase(F("SharpRaw"))) Plugin_035_irSender->sendSharpRaw(IrBits);                         
             if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode);
             if (IrType.equalsIgnoreCase(F("Denon"))) Plugin_035_irSender->sendDenon(IrCode);
@@ -263,36 +264,45 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("DISH"))) Plugin_035_irSender->sendDISH(IrCode);
             if (IrType.equalsIgnoreCase(F("Panasonic64"))) Plugin_035_irSender->sendPanasonic64(IrCode);
             if (IrType.equalsIgnoreCase(F("Panasonic"))) Plugin_035_irSender->sendPanasonic64(IrCode);
-            //if (IrType.equalsIgnoreCase(F("PANASONIC"))) Plugin_035_irSender->sendPanasonic(IrCode); // not sure if this works
             if (IrType.equalsIgnoreCase(F("RC5"))) Plugin_035_irSender->sendRC5(IrCode);
+           if (IrType.equalsIgnoreCase(F("RC5X"))) Plugin_035_irSender->sendRC5(IrCode);
             if (IrType.equalsIgnoreCase(F("RC6"))) Plugin_035_irSender->sendRC6(IrCode);
             if (IrType.equalsIgnoreCase(F("RCMM"))) Plugin_035_irSender->sendRCMM(IrCode);
             if (IrType.equalsIgnoreCase(F("COOLIX"))) Plugin_035_irSender->sendCOOLIX(IrCode);
             if (IrType.equalsIgnoreCase(F("Whynter"))) Plugin_035_irSender->sendWhynter(IrCode);
             if (IrType.equalsIgnoreCase(F("Mitsubishi"))) Plugin_035_irSender->sendMitsubishi(IrCode);
             if (IrType.equalsIgnoreCase(F("Mitsubishi2"))) Plugin_035_irSender->sendMitsubishi2(IrCode);
-            if (IrType.equalsIgnoreCase(F("MitsubishiAC"))) parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
-            if (IrType.equalsIgnoreCase(F("FujitsuAC"))) parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
             if (IrType.equalsIgnoreCase(F("GC"))) parseStringAndSendGC(ircodestr);                           //Needs testing
-            if (IrType.equalsIgnoreCase(F("Kelvinator"))) parseStringAndSendAirCon(KELVINATOR, ircodestr);
-            if (IrType.equalsIgnoreCase(F("Daikin"))) parseStringAndSendAirCon(DAIKIN, ircodestr);
-            if (IrType.equalsIgnoreCase(F("AiwaRCT501"))) Plugin_035_irSender->sendAiwaRCT501(IrCode);
-            if (IrType.equalsIgnoreCase(F("GREE"))) parseStringAndSendAirCon(GREE, ircodestr);
+            if (IrType.equalsIgnoreCase(F("AIWA_RC_T501"))) Plugin_035_irSender->sendAiwaRCT501(IrCode);
             if (IrType.equalsIgnoreCase(F("Pronto"))) parseStringAndSendPronto(ircodestr, 0);               //Needs testing
-            if (IrType.equalsIgnoreCase(F("Argo"))) parseStringAndSendAirCon(ARGO, ircodestr);
-            if (IrType.equalsIgnoreCase(F("Trotec"))) parseStringAndSendAirCon(TROTEC, ircodestr);
             if (IrType.equalsIgnoreCase(F("Nikai"))) Plugin_035_irSender->sendNikai(IrCode);
-            if (IrType.equalsIgnoreCase(F("ToshibaAC"))) parseStringAndSendAirCon(TOSHIBA_AC, ircodestr);
             if (IrType.equalsIgnoreCase(F("Midea"))) Plugin_035_irSender->sendMidea(IrCode);
             if (IrType.equalsIgnoreCase(F("MagiQuest"))) Plugin_035_irSender->sendMagiQuest(IrCode);
             if (IrType.equalsIgnoreCase(F("Lasertag"))) Plugin_035_irSender->sendLasertag(IrCode);
-            if (IrType.equalsIgnoreCase(F("CarrierAC"))) Plugin_035_irSender->sendCarrierAC(IrCode);
-            if (IrType.equalsIgnoreCase(F("HaierAC"))) parseStringAndSendAirCon(HAIER_AC, ircodestr);
-            if (IrType.equalsIgnoreCase(F("HitachiAC"))) parseStringAndSendAirCon(HITACHI_AC, ircodestr);
-            if (IrType.equalsIgnoreCase(F("HitachiAC1"))) parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
-            if (IrType.equalsIgnoreCase(F("HitachiAC2"))) parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
+            if (IrType.equalsIgnoreCase(F("CARRIER_AC"))) Plugin_035_irSender->sendCarrierAC(IrCode);
             if (IrType.equalsIgnoreCase(F("GICable"))) Plugin_035_irSender->sendGICable(IrCode);
-			if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
+			      if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
+            if (IrType.equalsIgnoreCase(F("LUTRON"))) Plugin_035_irSender->sendLutron(IrCode);
+            
+            if (IrType.equalsIgnoreCase(F("MITSUBISHI_AC"))) parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("FUJITSU_AC"))) parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("Kelvinator"))) parseStringAndSendAirCon(KELVINATOR, ircodestr);
+            if (IrType.equalsIgnoreCase(F("Daikin"))) parseStringAndSendAirCon(DAIKIN, ircodestr);
+            if (IrType.equalsIgnoreCase(F("GREE"))) parseStringAndSendAirCon(GREE, ircodestr);
+            if (IrType.equalsIgnoreCase(F("Argo"))) parseStringAndSendAirCon(ARGO, ircodestr);
+            if (IrType.equalsIgnoreCase(F("Trotec"))) parseStringAndSendAirCon(TROTEC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("TOSHIBA_AC"))) parseStringAndSendAirCon(TOSHIBA_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("HAIER_AC"))) parseStringAndSendAirCon(HAIER_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("HITACHI_AC"))) parseStringAndSendAirCon(HITACHI_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("HITACHI_AC1"))) parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
+            if (IrType.equalsIgnoreCase(F("HITACHI_AC2"))) parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
+            if (IrType.equalsIgnoreCase(F("ELECTRA_AC"))) parseStringAndSendAirCon(ELECTRA_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("PANASONIC_AC"))) parseStringAndSendAirCon(PANASONIC_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("HAIER_AC_YRW02"))) parseStringAndSendAirCon(HAIER_AC_YRW02, ircodestr);
+            if (IrType.equalsIgnoreCase(F("SAMSUNG_AC"))) parseStringAndSendAirCon(SAMSUNG_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("WHIRLPOOL_AC"))) parseStringAndSendAirCon(WHIRLPOOL_AC, ircodestr);
+            if (IrType.equalsIgnoreCase(F("MWM"))) parseStringAndSendAirCon(MWM, ircodestr);    
+           // NEC (non-strict)?
           }
 
           addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
@@ -324,7 +334,7 @@ boolean addErrorTrue(const char *str) {
 // Args:
 //   irType: Nr. of the protocol we need to send.
 //   str: A hexadecimal string containing the state to be sent.
-void parseStringAndSendAirCon(const uint16_t irType, const String str) {
+bool  parseStringAndSendAirCon(const uint16_t irType, const String str) {
   uint8_t strOffset = 0;
   uint8_t state[STATE_SIZE_MAX] = {0};  // All array elements are set to 0.
   uint16_t stateSize = 0;
@@ -335,30 +345,36 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
   uint16_t inputLength = str.length() - strOffset;
   if (inputLength == 0) {
  //   debug("Zero length AirCon code encountered. Ignored.");
-    return;  // No input. Abort.
+    return false;  // No input. Abort.
   }
 
   switch (irType) {  // Get the correct state size for the protocol.
     case KELVINATOR:
-      stateSize = KELVINATOR_STATE_LENGTH;
+      stateSize = kKelvinatorStateLength;
       break;
     case TOSHIBA_AC:
-      stateSize = TOSHIBA_AC_STATE_LENGTH;
+      stateSize = kToshibaACStateLength;
       break;
     case DAIKIN:
-      stateSize = DAIKIN_COMMAND_LENGTH;
+      stateSize = kDaikinStateLength;
+      break;
+    case ELECTRA_AC:
+      stateSize = kElectraAcStateLength;
       break;
     case MITSUBISHI_AC:
-      stateSize = MITSUBISHI_AC_STATE_LENGTH;
+      stateSize = kMitsubishiACStateLength;
+      break;
+    case PANASONIC_AC:
+      stateSize = kPanasonicAcStateLength;
       break;
     case TROTEC:
-      stateSize = TROTEC_COMMAND_LENGTH;
+      stateSize = kTrotecStateLength;
       break;
     case ARGO:
-      stateSize = ARGO_COMMAND_LENGTH;
+      stateSize = kArgoStateLength;
       break;
     case GREE:
-      stateSize = GREE_STATE_LENGTH;
+      stateSize = kGreeStateLength;
       break;
     case FUJITSU_AC:
       // Fujitsu has four distinct & different size states, so make a best guess
@@ -368,34 +384,66 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
       stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
-                           (uint16_t) (FUJITSU_AC_STATE_LENGTH_SHORT - 1));
+                           (uint16_t) (kFujitsuAcStateLengthShort - 1));
       // If we think it isn't a "short" message.
-      if (stateSize > FUJITSU_AC_STATE_LENGTH_SHORT)
+      if (stateSize > kFujitsuAcStateLengthShort)
         // Then it has to be at least the smaller version of the "normal" size.
-        stateSize = std::max(stateSize,
-                             (uint16_t) (FUJITSU_AC_STATE_LENGTH - 1));
+        stateSize = std::max(stateSize, (uint16_t) (kFujitsuAcStateLength - 1));
       // Lastly, it should never exceed the maximum "normal" size.
-      stateSize = std::min(stateSize, (uint16_t) FUJITSU_AC_STATE_LENGTH);
+      stateSize = std::min(stateSize, kFujitsuAcStateLength);
       break;
     case HAIER_AC:
-      stateSize = HAIER_AC_STATE_LENGTH;
+      stateSize = kHaierACStateLength;
+      break;
+    case HAIER_AC_YRW02:
+      stateSize = kHaierACYRW02StateLength;
       break;
     case HITACHI_AC:
-      stateSize = HITACHI_AC_STATE_LENGTH;
+      stateSize = kHitachiAcStateLength;
       break;
     case HITACHI_AC1:
-      stateSize = HITACHI_AC1_STATE_LENGTH;
+      stateSize = kHitachiAc1StateLength;
       break;
     case HITACHI_AC2:
-      stateSize = HITACHI_AC2_STATE_LENGTH;
+      stateSize = kHitachiAc2StateLength;
+      break;
+    case WHIRLPOOL_AC:
+      stateSize = kWhirlpoolAcStateLength;
+      break;
+    case SAMSUNG_AC:
+      // Samsung has two distinct & different size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
+      // If we think it isn't a "normal" message.
+      if (stateSize > kSamsungAcStateLength)
+        // Then it probably the extended size.
+        stateSize = std::max(stateSize,
+                             (uint16_t) (kSamsungAcExtendedStateLength));
+      // Lastly, it should never exceed the maximum "extended" size.
+      stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
+      break;
+    case MWM:
+      // MWM has variable size states, so make a best guess
+      // which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize, (uint16_t) 3);
+      // Cap the maximum size.
+      stateSize = std::min(stateSize, kStateSizeMax);
       break;
     default:  // Not a protocol we expected. Abort.
    //   debug("Unexpected AirCon protocol detected. Ignoring.");
-      return;
+      return false;
   }
   if (inputLength > stateSize * 2) {
    // debug("AirCon code to large for the given protocol.");
-    return;
+    return false;
   }
 
   // Ptr to the least significant byte of the resulting state for this protocol.
@@ -412,7 +460,7 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
         c = c - 'a' + 10;
     } else {
     //  debug("Aborting! Non-hexadecimal char found in AirCon state: " + str);
-      return;
+      return false;
     }
     if (i % 2 == 1) {  // Odd: Upper half of the byte.
       *statePtr += (c << 4);
@@ -469,6 +517,11 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
       Plugin_035_irSender->sendHaierAC(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
+#if SEND_HAIER_AC_YRW02
+    case HAIER_AC_YRW02:
+      Plugin_035_irSender->sendHaierACYRW02(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
 #if SEND_HITACHI_AC
     case HITACHI_AC:
       Plugin_035_irSender->sendHitachiAC(reinterpret_cast<uint8_t *>(state));
@@ -484,9 +537,38 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
       Plugin_035_irSender->sendHitachiAC2(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
+#if SEND_WHIRLPOOL_AC
+    case WHIRLPOOL_AC:
+      Plugin_035_irSender->sendWhirlpoolAC(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
+#if SEND_SAMSUNG_AC
+    case SAMSUNG_AC:
+      Plugin_035_irSender->sendSamsungAC(reinterpret_cast<uint8_t *>(state), stateSize);
+      break;
+#endif
+#if SEND_ELECTRA_AC
+    case ELECTRA_AC:
+      Plugin_035_irSender->sendElectraAC(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
+#if SEND_PANASONIC_AC
+    case PANASONIC_AC:
+      Plugin_035_irSender->sendPanasonicAC(reinterpret_cast<uint8_t *>(state));
+      break;
+#endif
+#if SEND_MWM
+    case MWM:
+      Plugin_035_irSender->.sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
+      break;
+#endif
+    default:
+      //debug("Unexpected AirCon type in send request. Not sent.");
+      return false;
   }
-  
+  return true;  // We were successful as far as we can tell.
 }
+
 
 #if SEND_PRONTO
 // Parse a Pronto Hex String/code and send it.
