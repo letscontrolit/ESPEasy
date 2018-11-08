@@ -559,7 +559,7 @@ bool  parseStringAndSendAirCon(const uint16_t irType, const String str) {
 #endif
 #if SEND_MWM
     case MWM:
-      Plugin_035_irSender->.sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
+      Plugin_035_irSender->sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
       break;
 #endif
     default:
