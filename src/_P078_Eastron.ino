@@ -143,6 +143,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
           Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p078"));
+          P078_DEV_ID = getFormItemInt(F("p078_dev_id"));
           P078_MODEL = getFormItemInt(F("p078_model"));
           P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
           P078_QUERY1 = getFormItemInt(F("p078_query1"));
