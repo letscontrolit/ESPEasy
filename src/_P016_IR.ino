@@ -149,9 +149,12 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           case PLUGIN_EXIT:
       {
         {
-          if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
+          if (irReceiver != 0)
+          { 
+          irReceiver->disableIRIn(); // Stop the receiver
           delete irReceiver;
           irReceiver = 0;
+          }
         }
         success = true;
         break;
