@@ -73,7 +73,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
         char command[120];
         command[0] = 0;
-        char TmpStr1[100];
+        char TmpStr1[200];
         TmpStr1[0] = 0;
         string.toCharArray(command, 120);
 
@@ -88,7 +88,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
           #endif
 
-          if (GetArgv(command, TmpStr1, 100, 2)) IrType = TmpStr1;
+          if (GetArgv(command, TmpStr1, 200, 2)) IrType = TmpStr1;
 
           if (IrType.equalsIgnoreCase(F("RAW")) || IrType.equalsIgnoreCase(F("RAW2"))) {
             String IrRaw;
@@ -96,10 +96,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
-            if (GetArgv(command, TmpStr1, 100, 3)) IrRaw = TmpStr1;
-            if (GetArgv(command, TmpStr1, 100, 4)) IrHz = str2int(TmpStr1);
-            if (GetArgv(command, TmpStr1, 100, 5)) IrPLen = str2int(TmpStr1);
-            if (GetArgv(command, TmpStr1, 100, 6)) IrBLen = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 200, 3)) IrRaw = TmpStr1;
+            if (GetArgv(command, TmpStr1, 200, 4)) IrHz = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 200, 5)) IrPLen = str2int(TmpStr1);
+            if (GetArgv(command, TmpStr1, 200, 6)) IrBLen = str2int(TmpStr1);
 
             printWebString += F("<a href='https://en.wikipedia.org/wiki/Base32#base32hex'>Base32Hex</a> RAW Code: ");
             printWebString += IrRaw;
@@ -241,14 +241,14 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           } else {
            // unsigned int IrRepeat=0;
           //  unsigned long IrSecondCode=0UL;
-            char ircodestr[100];
-            if (GetArgv(command, TmpStr1,100, 2)) IrType = TmpStr1;
-                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoull(TmpStr1, NULL, 16);
-                                                          memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
+            char ircodestr[200];
+            if (GetArgv(command, TmpStr1,200, 2)) IrType = TmpStr1;
+                       if (GetArgv(command, TmpStr1, 200, 3)){ IrCode = strtoull(TmpStr1, NULL, 16);
+                                                          memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*200);
                                                         }
-            //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            //if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
-            //if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
+            //if (GetArgv(command, TmpStr1, 200, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
+            //if (GetArgv(command, TmpStr1, 200, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
+            //if (GetArgv(command, TmpStr1, 200, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
             
             //Comented out need char[] for input Needs fixing
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode);
