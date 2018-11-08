@@ -90,7 +90,7 @@ const uint16_t kMinUnknownSize = 12;
 // ==================== end of TUNEABLE PARAMETERS ====================
 
 
-IRrecv *irReceiver = null;
+IRrecv *irReceiver = NULL;
 decode_results results;
 
 boolean Plugin_016(byte function, struct EventStruct *event, String& string)
