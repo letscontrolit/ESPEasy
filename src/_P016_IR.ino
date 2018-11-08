@@ -137,7 +137,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
         }
-        if (irReceiver != 0 && irPin == -1) // what is the purpose of this?
+        if (irReceiver != 0 && irPin == -1)
         {
           irReceiver->disableIRIn();
           delete irReceiver;
@@ -149,7 +149,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           case PLUGIN_EXIT:
       {
         {
-          irReceiver->disableIRIn();
+          if (irReceiver != 0) irReceiver->disableIRIn(); // Stop the receiver
           delete irReceiver;
           irReceiver = 0;
         }
