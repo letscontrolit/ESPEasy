@@ -95,14 +95,14 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 
 	case PLUGIN_WEBFORM_LOAD: {
     String i2c_addres_string = formatToHex(Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-		addFormTextBox(F("I2C Address (Hex)"), F("plugin_079_adr"), i2c_addres_string, 4);
+		addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
 
 		success = true;
 		break;
 	}
 
 	case PLUGIN_WEBFORM_SAVE: {
-		String i2c_address = WebServer.arg(F("plugin_079_adr"));
+		String i2c_address = WebServer.arg(F("p079_adr"));
 		Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int)strtol(i2c_address.c_str(), 0, 16);
 
 		success = true;
@@ -219,7 +219,7 @@ void WemosMotor::setfreq(uint32_t freq)
 	Wire.write((byte)(freq >> 8));
 	Wire.write((byte)freq);
 	Wire.endTransmission();     // stop transmitting
-	yield();
+	delay(0);
 }
 
 /* setmotor() -- set motor
@@ -271,7 +271,7 @@ void WemosMotor::setmotor(uint8_t dir, float pwm_val)
 	Wire.write((byte)_pwm_val);
 	Wire.endTransmission();     // stop transmitting
 
-	yield();
+	delay(0);
 }
 
 void WemosMotor::setmotor(uint8_t dir)

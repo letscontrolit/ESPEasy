@@ -75,17 +75,17 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormTextBox(F("I2C Address (Hex)"), F("plugin_047_i2cSoilMoisture_i2cAddress"), 
+      	addFormTextBox(F("I2C Address (Hex)"), F("p047_i2cSoilMoisture_i2cAddress"), 
             formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
-        addFormCheckBox(F("Send sensor to sleep"), F("plugin_047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormCheckBox(F("Send sensor to sleep"), F("p047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-        addFormCheckBox(F("Check sensor version") ,F("plugin_047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Check sensor version") ,F("p047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         addFormSeparator(2);
 
-        addFormCheckBox(F("Change Sensor address"),F("plugin_047_changeAddr"), false);
-      	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), 
+        addFormCheckBox(F("Change Sensor address"),F("p047_changeAddr"), false);
+      	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("p047_i2cSoilMoisture_changeAddr"), 
             formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
         addFormSeparator(2);
@@ -96,17 +96,17 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_047_i2cSoilMoisture_i2cAddress"));
+        String plugin1 = WebServer.arg(F("p047_i2cSoilMoisture_i2cAddress"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("plugin_047_sleep"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("p047_sleep"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_047_version"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("p047_version"));
 
-        String plugin4 = WebServer.arg(F("plugin_047_i2cSoilMoisture_changeAddr"));
+        String plugin4 = WebServer.arg(F("p047_i2cSoilMoisture_changeAddr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (int) strtol(plugin4.c_str(), 0, 16);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("plugin_047_changeAddr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("p047_changeAddr"));
         success = true;
         break;
       }

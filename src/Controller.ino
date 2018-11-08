@@ -15,6 +15,8 @@ void sendData(struct EventStruct *event)
 //  if (!Settings.TaskDeviceSendData[event->TaskIndex])
 //    return false;
 
+/*
+  // Disabed for now, using buffers at controller side.
   if (Settings.MessageDelay != 0)
   {
     const long dif = timePassedSince(lastSend);
@@ -31,6 +33,7 @@ void sendData(struct EventStruct *event)
       //   backgroundtasks();
     }
   }
+*/
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
@@ -39,21 +42,25 @@ void sendData(struct EventStruct *event)
     event->ControllerIndex = x;
     event->idx = Settings.TaskDeviceID[x][event->TaskIndex];
     if (Settings.TaskDeviceSendData[event->ControllerIndex][event->TaskIndex] &&
-        Settings.ControllerEnabled[event->ControllerIndex] && Settings.Protocol[event->ControllerIndex])
+        Settings.ControllerEnabled[event->ControllerIndex] &&
+        Settings.Protocol[event->ControllerIndex])
     {
       event->ProtocolIndex = getProtocolIndex(Settings.Protocol[event->ControllerIndex]);
       if (validUserVar(event)) {
         CPlugin_ptr[event->ProtocolIndex](CPLUGIN_PROTOCOL_SEND, event, dummyString);
       } else {
-        String log = F("Invalid value detected for controller ");
-        String controllerName;
-        CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
-        log += controllerName;
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("Invalid value detected for controller ");
+          String controllerName;
+          CPlugin_ptr[event->ProtocolIndex](CPLUGIN_GET_DEVICENAME, event, controllerName);
+          log += controllerName;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
       }
     }
   }
 
+  // FIXME TD-er: This PLUGIN_EVENT_OUT seems to be unused.
   PluginCall(PLUGIN_EVENT_OUT, event, dummyString);
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
@@ -125,8 +132,8 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
 bool MQTTConnect(int controller_idx)
 {
   ++mqtt_reconnect_count;
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(controller_idx, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  MakeControllerSettings(ControllerSettings);
+  LoadControllerSettings(controller_idx, ControllerSettings);
   if (!ControllerSettings.checkHostReachable(true))
     return false;
   if (MQTTclient.connected()) {
@@ -134,6 +141,8 @@ bool MQTTConnect(int controller_idx)
     updateMQTTclient_connected();
   }
   mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+  mqtt.setTimeout(ControllerSettings.ClientTimeout);
+  MQTTclient.setClient(mqtt);
   if (ControllerSettings.UseDNS) {
     MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
   } else {
@@ -146,13 +155,22 @@ bool MQTTConnect(int controller_idx)
   if(Settings.MQTTUseUnitNameAsClientId){
     clientid = Settings.Name;
     if (Settings.Unit != 0) { // only append non-zero unit number
-      clientid += F("_");
+      clientid += '_';
       clientid += Settings.Unit;
     }
   }
   else{
     clientid = F("ESPClient_");
     clientid += WiFi.macAddress();
+  }
+  // Work-around for 'lost connections' to the MQTT broker.
+  // If the broker thinks the connection is still alive, a reconnect from the
+  // client will be refused.
+  // To overcome this issue, append the number of reconnects to the client ID to
+  // make it different from the previous one.
+  if (wifi_reconnects >= 1) {
+    clientid += '_';
+    clientid += wifi_reconnects;
   }
 
   String LWTTopic = ControllerSettings.MQTTLwtTopic;
@@ -186,10 +204,12 @@ bool MQTTConnect(int controller_idx)
   } else {
     MQTTresult = MQTTclient.connect(clientid.c_str(), LWTTopic.c_str(), willQos, willRetain, LWTMessageDisconnect.c_str());
   }
-  yield();
+  delay(0);
 
   if (!MQTTresult) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Failed to connect to broker"));
+    MQTTclient.disconnect();
+    updateMQTTclient_connected();
     return false;
   }
   MQTTclient_should_reconnect = false;
@@ -265,12 +285,33 @@ void SendStatus(byte source, String status)
 
 boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, boolean retained)
 {
-  if (MQTTclient.publish(topic, payload, retained)) {
+  const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+void scheduleNextMQTTdelayQueue() {
+  scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
+}
+
+void processMQTTdelayQueue() {
+  START_TIMER;
+  MQTT_queue_element* element(MQTTDelayHandler.getNext());
+  if (element == NULL) return;
+  if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
-    return true;
+    MQTTDelayHandler.markProcessed(true);
+  } else {
+    MQTTDelayHandler.markProcessed(false);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("MQTT : process MQTT queue not published, ");
+      log += MQTTDelayHandler.sendQueue.size();
+      log += F(" items left in queue");
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
   }
-  addLog(LOG_LEVEL_DEBUG, F("MQTT : publish failed"));
-  return false;
+  scheduleNextMQTTdelayQueue();
+  STOP_TIMER(MQTT_DELAY_QUEUE);
 }
 
 /*********************************************************************************************\
@@ -278,10 +319,10 @@ boolean MQTTpublish(int controller_idx, const char* topic, const char* payload, 
 \*********************************************************************************************/
 void MQTTStatus(String& status)
 {
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController >= 0) {
-    LoadControllerSettings(enabledMqttController, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+    LoadControllerSettings(enabledMqttController, ControllerSettings);
     String pubname = ControllerSettings.Subscribe;
     pubname.replace(F("/#"), F("/status"));
     parseSystemVariables(pubname, false);

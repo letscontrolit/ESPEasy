@@ -1,9 +1,11 @@
+|Latest Nightly  | Build Status | Patreon | Ko-Fi | PayPal |
+|-------|-------|-------|-------|-------|
+| [![GitHub version](https://img.shields.io/github/release/letscontrolit/ESPEasy/all.svg)](https://github.com/letscontrolit/ESPEasy/releases/latest) | [![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy) | [![donate](https://img.shields.io/badge/donate-Patreon-blue.svg)](https://www.patreon.com/GrovkillenTDer) | [![donate](https://img.shields.io/badge/donate-KoFi-blue.svg)](https://ko-fi.com/grovkillentder) | [![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://www.paypal.me/espeasy) |
+
+For ways to *support* us, see [this announcement on the forum](https://www.letscontrolit.com/forum/viewtopic.php?f=14&t=5787), or have a look at the [Patreon](https://www.patreon.com/GrovkillenTDer), [Ko-Fi](https://ko-fi.com/grovkillentder) or [PayPal](https://www.paypal.me/espeasy) links above.
+
 # ESPEasy (development branch)
 
-Badge  | Info  |
--------|-------|
-[![Build Status](https://travis-ci.org/letscontrolit/ESPEasy.svg?branch=mega)](https://travis-ci.org/letscontrolit/ESPEasy) | build status |
-[![GitHub version](https://img.shields.io/github/release/letscontrolit/ESPEasy/all.svg)](https://github.com/letscontrolit/ESPEasy/releases/latest) | latest nightly |
 
 Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Introduction
 
@@ -39,4 +41,4 @@ ESPEasy_mega-20180102_dev_ESP8285_1024.bin     | ESP8285 with 1Mb flash  | Stabl
 
 Details and discussion are on the Experimental forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
 
-We're also on IRC: #ESPEasy @freenode
+Automated builds of the (new) documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/)

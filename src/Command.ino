@@ -31,9 +31,11 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	String tmpcmd;
 	tmpcmd = cmd;
 	tmpcmd.toLowerCase();
-	String log = F("Command: ");
-	log += tmpcmd;
-	addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  	String log = F("Command: ");
+  	log += tmpcmd;
+  	addLog(LOG_LEVEL_INFO, log);
+  }
 	char cmd_lc[INPUT_COMMAND_SIZE];
 	tmpcmd.toCharArray(cmd_lc, tmpcmd.length() + 1);
   switch (cmd_lc[0]) {
@@ -79,6 +81,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
       break;
     }
     case 'l': {
+    COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
@@ -131,7 +134,8 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("taskclear"              , Command_Task_Clear);                 // Tasks.h
 	  COMMAND_CASE("taskclearall"           , Command_Task_ClearAll);              // Tasks.h
 	  COMMAND_CASE("taskrun"                , Command_Task_Run);                   // Tasks.h
-	  COMMAND_CASE("taskvalueset"           , Command_Task_ValueSet);              // Tasks.h
+    COMMAND_CASE("taskvalueset"           , Command_Task_ValueSet);              // Tasks.h
+    COMMAND_CASE("taskvaluetoggle"        , Command_Task_ValueToggle);           // Tasks.h
 	  COMMAND_CASE("taskvaluesetandrun"     , Command_Task_ValueSetAndRun);        // Tasks.h
 	  COMMAND_CASE("timerpause"             , Command_Timer_Pause);                // Timers.h
 	  COMMAND_CASE("timerresume"            , Command_Timer_Resume);               // Timers.h
@@ -164,10 +168,12 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     default:
       break;
   }
-  String errorUnknown = F("Command unknown: \"");
-	errorUnknown += cmd_lc;
-	errorUnknown += '\"';
-	addLog(LOG_LEVEL_INFO, errorUnknown);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String errorUnknown = F("Command unknown: \"");
+  	errorUnknown += cmd_lc;
+  	errorUnknown += '\"';
+  	addLog(LOG_LEVEL_INFO, errorUnknown);
+  }
 	return F("\nUnknown command!");
 
   #undef COMMAND_CASE
@@ -216,18 +222,18 @@ void ExecuteCommand(byte source, const char *Line)
 	// since commands can originate from anywhere.
 	TempEvent.Source = source;
 	GetArgv(Line, cmd, 1);
-	if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = str2int(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = str2int(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = str2int(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = str2int(TmpStr1);
-	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = str2int(TmpStr1);
+  if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = CalculateParam(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = CalculateParam(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = CalculateParam(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1);
+	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1);
 
   if (source == VALUE_SOURCE_WEB_FRONTEND) {
     // Must run immediately, to see result in web frontend
     String status = doExecuteCommand((char*)&cmd[0], &TempEvent, Line);
-    yield();
+    delay(0);
     SendStatus(source, status);
-    yield();
+    delay(0);
   } else {
     // Schedule to run async
     schedule_command_timer((char*)&cmd[0], &TempEvent, Line);

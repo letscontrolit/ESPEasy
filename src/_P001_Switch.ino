@@ -3,6 +3,31 @@
 //#################################### Plugin 001: Input Switch #########################################
 //#######################################################################################################
 
+/**************************************************\
+CONFIG
+TaskDevicePluginConfig settings:
+0: button type (switch or dimmer)
+1: dim value
+2: button option (normal, push high, push low)
+3: send boot state (true,false)
+4: use doubleclick (0,1,2,3)
+5: use longpress (0,1,2,3)
+6: LP fired (true,false)
+7: doubleclick counter (=0,1,2,3)
+
+TaskDevicePluginConfigFloat settings:
+0: debounce interval ms
+1: doubleclick interval ms
+2: longpress interval ms
+3:
+
+TaskDevicePluginConfigLong settings:
+0: clickTime debounce ms
+1: clickTime doubleclick ms
+2: clickTime longpress ms
+3:
+\**************************************************/
+
 #define PLUGIN_001
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input - Switch"
@@ -18,6 +43,18 @@
 #define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH 0
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
+#define PLUGIN_001_DOUBLECLICK_MIN_INTERVAL 1000
+#define PLUGIN_001_DOUBLECLICK_MAX_INTERVAL 3000
+#define PLUGIN_001_LONGPRESS_MIN_INTERVAL 1000
+#define PLUGIN_001_LONGPRESS_MAX_INTERVAL 5000
+#define PLUGIN_001_DC_DISABLED 0
+#define PLUGIN_001_DC_LOW 1
+#define PLUGIN_001_DC_HIGH 2
+#define PLUGIN_001_DC_BOTH 3
+#define PLUGIN_001_LONGPRESS_DISABLED 0
+#define PLUGIN_001_LONGPRESS_LOW 1
+#define PLUGIN_001_LONGPRESS_HIGH 2
+#define PLUGIN_001_LONGPRESS_BOTH 3
 
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
   return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
@@ -26,8 +63,8 @@ boolean Plugin_001_read_switch_state(struct EventStruct *event) {
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static boolean switchstate[TASKS_MAX];
-  static boolean outputstate[TASKS_MAX];
+  static byte switchstate[TASKS_MAX];
+  static byte outputstate[TASKS_MAX];
   static int8_t PinMonitor[GPIO_MAX];
   static int8_t PinMonitorState[GPIO_MAX];
 
@@ -69,7 +106,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         options[1] = F("Dimmer");
         int optionValues[2] = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const byte switchtype = P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
+        addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
@@ -84,10 +121,51 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
         int buttonOptionValues[3] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH};
-        addFormSelector(F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
-        addFormCheckBox(F("Send Boot state"),F("plugin_001_boot"),
+        addFormCheckBox(F("Send Boot state"),F("p001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+
+        addFormSubHeader(F("Advanced event management"));
+
+        addFormNumericBox(F("De-bounce (ms)"), F("p001_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
+
+        //set minimum value for doubleclick MIN max speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
+
+        byte choiceDC = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+        String buttonDC[4];
+        buttonDC[0] = F("Disabled");
+        buttonDC[1] = F("Active only on LOW (EVENT=3)");
+        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
+        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        int buttonDCValues[4] = {PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH,PLUGIN_001_DC_BOTH};
+
+        addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+
+        //addFormCheckBox(F("Doubleclick event (3)"), F("p001_dc"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p001_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
+
+        //set minimum value for longpress MIN max speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
+
+        byte choiceLP = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        String buttonLP[4];
+        buttonLP[0] = F("Disabled");
+        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
+        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
+        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+        int buttonLPValues[4] = {PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH,PLUGIN_001_LONGPRESS_BOTH};
+        addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+
+        //addFormCheckBox(F("Longpress event (10 & 11)"), F("p001_lp"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
+        addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
+
+        //TO-DO: add Extra-Long Press event
+        //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("p001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        //addFormNumericBox(F("Extra-Longpress min. interval (ms)"), F("p001_elpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 500, 2000);
 
         success = true;
         break;
@@ -95,15 +173,27 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_001_type"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p001_type"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER)
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_001_dimvalue"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p001_dimvalue"));
         }
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_001_button"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p001_button"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_boot"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p001_boot"));
+
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p001_debounce"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p001_dc"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p001_dcmaxinterval"));
+
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p001_lp"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p001_lpmininterval"));
+
+        //TO-DO: add Extra-Long Press event
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("p001_elp"));
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("p001_elpmininterval"));
 
         success = true;
         break;
@@ -121,30 +211,62 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         else
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
 
-        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, 0);
-
+        // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_001_read_switch_state(event);
         outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
 
+        // @giig1967g-20181022: if it is in the device list we assume it's an input pin
+        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
+
         // if boot state must be send, inverse default state
+        // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
         {
           switchstate[event->TaskIndex] = !switchstate[event->TaskIndex];
           outputstate[event->TaskIndex] = !outputstate[event->TaskIndex];
         }
+
+        // set initial UserVar of the switch
+        if (Settings.TaskDevicePin1Inversed[event->TaskIndex]){
+          UserVar[event->BaseVarIndex] = !switchstate[event->TaskIndex];
+        } else {
+          UserVar[event->BaseVarIndex] = switchstate[event->TaskIndex];
+        }
+
+        // counter = 0
+        Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
+
+        //used to track if LP has fired
+        Settings.TaskDevicePluginConfig[event->TaskIndex][6]=false;
+
+        //store millis for debounce, doubleclick and long press
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=millis(); //debounce timer
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis(); //doubleclick timer
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis(); //longpress timer
+
+        //set minimum value for doubleclick MIN interval speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
+
+        //set minimum value for longpress MIN interval speed
+        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
+
         success = true;
         break;
       }
 
     case PLUGIN_REQUEST:
       {
-        String device = parseString(string, 1);
-        String command = parseString(string, 2);
-        String strPar1 = parseString(string, 3);
-        if (device == F("gpio") && command == F("pinstate"))
+        //String device = parseString(string, 1);
+        //String command = parseString(string, 2);
+        //String strPar1 = parseString(string, 3);
+
+        // returns pin value using syntax: [plugin#gpio#pinstate#xx]
+        if (string.length()>=13 && string.substring(0,13).equalsIgnoreCase(F("gpio,pinstate")))
         {
           int par1;
-          if (validIntFromString(strPar1, par1)) {
+            if (validIntFromString(parseString(string, 3), par1)) {
             string = digitalRead(par1);
           }
           success = true;
@@ -161,7 +283,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
              if (PinMonitorState[x] != state){
                String eventString = F("GPIO#");
                eventString += x;
-               eventString += F("=");
+               eventString += '=';
                eventString += state;
                rulesProcessing(eventString);
                PinMonitorState[x] = state;
@@ -173,51 +295,182 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
       {
         const boolean state = Plugin_001_read_switch_state(event);
+
+        /**************************************************************************\
+        20181009 - @giig1967g: new doubleclick logic is:
+        if there is a 'state' change, check debounce period.
+        Then if doubleclick interval exceeded, reset Settings.TaskDevicePluginConfig[event->TaskIndex][7] to 0
+        Settings.TaskDevicePluginConfig[event->TaskIndex][7] contains the current status for doubleclick:
+        0: start counting
+        1: 1st click
+        2: 2nd click
+        3: 3rd click = doubleclick event if inside interval (calculated as: '3rd click time' minus '1st click time')
+
+        Returned EVENT value is = 3 always for doubleclick
+        In rules this can be checked:
+        on Button#Switch=3 do //will fire if doubleclick
+        \**************************************************************************/
+
         if (state != switchstate[event->TaskIndex])
         {
-          switchstate[event->TaskIndex] = state;
-          const boolean currentOutputState = outputstate[event->TaskIndex];
-          boolean new_outputState = currentOutputState;
-          switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
-            case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
-                new_outputState = state;
-              break;
-            case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
-              if (!state)
-                new_outputState = !currentOutputState;
-              break;
-            case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
-              if (state)
-                new_outputState = !currentOutputState;
-              break;
-          }
+          //reset timer for long press
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis();
+          Settings.TaskDevicePluginConfig[event->TaskIndex][6] = false;
 
-          // send if output needs to be changed
-          if (currentOutputState != new_outputState)
+          const unsigned long debounceTime = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
+          if (debounceTime >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) //de-bounce check
           {
-            outputstate[event->TaskIndex] = new_outputState;
-            boolean sendState = new_outputState;
-            if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-              sendState = !sendState;
-
-            byte output_value = sendState ? 1 : 0;
-            event->sensorType = SENSOR_TYPE_SWITCH;
-            if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
-              if (sendState) {
-                output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-                // Only set type to being dimmer when setting a value else it is "switched off".
-                event->sensorType = SENSOR_TYPE_DIMMER;
-              }
+            const unsigned long deltaDC = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+            if ((deltaDC >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1])) ||
+                 Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3)
+            {
+              //reset timer for doubleclick
+              Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
+              Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis();
             }
-            UserVar[event->BaseVarIndex] = output_value;
-            String log = F("SW   : Switch state ");
-            log += state ? F("1") : F("0");
-            log += F(" Output value ");
-            log += output_value;
-            addLog(LOG_LEVEL_INFO, log);
-            sendData(event);
+
+//just to simplify the reading of the code
+#define COUNTER Settings.TaskDevicePluginConfig[event->TaskIndex][7]
+#define DC Settings.TaskDevicePluginConfig[event->TaskIndex][4]
+
+              //check settings for doubleclick according to the settings
+              if ( COUNTER!=0 || ( COUNTER==0 && (DC==3 || (DC==1 && state==0) || (DC==2 && state==1))) )
+                Settings.TaskDevicePluginConfig[event->TaskIndex][7]++;
+#undef DC
+#undef COUNTER
+
+            switchstate[event->TaskIndex] = state;
+            const boolean currentOutputState = outputstate[event->TaskIndex];
+            boolean new_outputState = currentOutputState;
+            switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+            {
+              case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
+                  new_outputState = state;
+                break;
+              case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+                if (!state)
+                  new_outputState = !currentOutputState;
+                break;
+              case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+                if (state)
+                  new_outputState = !currentOutputState;
+                break;
+            }
+
+            // send if output needs to be changed
+            if (currentOutputState != new_outputState)
+            {
+              byte output_value;
+              outputstate[event->TaskIndex] = new_outputState;
+              boolean sendState = new_outputState;
+
+              if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+                sendState = !sendState;
+
+              if (Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3 && Settings.TaskDevicePluginConfig[event->TaskIndex][4]>0)
+              {
+                output_value = 3; //double click
+              } else {
+                output_value = sendState ? 1 : 0; //single click
+              }
+              event->sensorType = SENSOR_TYPE_SWITCH;
+              if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
+                if (sendState) {
+                  output_value = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+                  // Only set type to being dimmer when setting a value else it is "switched off".
+                  event->sensorType = SENSOR_TYPE_DIMMER;
+                }
+              }
+              UserVar[event->BaseVarIndex] = output_value;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : GPIO=");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
+              sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+            }
+            Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = millis();
           }
         }
+
+//just to simplify the reading of the code
+#define LP Settings.TaskDevicePluginConfig[event->TaskIndex][5]
+#define FIRED Settings.TaskDevicePluginConfig[event->TaskIndex][6]
+
+        //check if LP is enabled and if LP has not fired yet
+        else if (!FIRED && (LP==3 ||(LP==1 && state==0)||(LP==2 && state==1) ) ) {
+
+#undef LP
+#undef FIRED
+
+          /**************************************************************************\
+          20181009 - @giig1967g: new longpress logic is:
+          if there is no 'state' change, check if longpress interval reached
+          When reached send longpress event.
+          Returned Event value = state + 10
+          So if state = 0 => EVENT longpress = 10
+          if state = 1 => EVENT longpress = 11
+          So we can trigger longpress for high or low contact
+
+          In rules this can be checked:
+          on Button#Switch=10 do //will fire if longpress when state = 0
+          on Button#Switch=11 do //will fire if longpress when state = 1
+          \**************************************************************************/
+          const unsigned long deltaLP = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
+          if (deltaLP >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]))
+          {
+            byte output_value;
+            byte needToSendEvent = false;
+
+            Settings.TaskDevicePluginConfig[event->TaskIndex][6] = true;
+
+            switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
+            {
+              case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
+                  needToSendEvent = true;
+                break;
+              case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+                if (!state)
+                  needToSendEvent = true;
+                break;
+              case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+                if (state)
+                  needToSendEvent = true;
+                break;
+            }
+
+            if (needToSendEvent) {
+              boolean sendState = state;
+              if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+                sendState = !sendState;
+              output_value = sendState ? 1 : 0;
+              output_value = output_value + 10;
+
+              UserVar[event->BaseVarIndex] = output_value;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : LongPress: GPIO= ");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
+              sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+            }
+          }
+        }
+
         success = true;
         break;
       }
@@ -226,9 +479,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       {
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
-        String log = F("SW   : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SW   : State ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }
@@ -254,6 +509,32 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
             addLog(LOG_LEVEL_INFO, log);
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+          }
+        }
+
+        if (command == F("gpiotoggle"))
+        {
+          success = true;
+          byte mode;
+          uint16_t currentState;
+
+          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
+          {
+            if (hasPinState(PLUGIN_ID_001,event->Par1)) {
+              getPinState(PLUGIN_ID_001, event->Par1, &mode, &currentState);
+            } else {
+              currentState = (digitalRead(event->Par1) == HIGH);
+              mode = PIN_MODE_OUTPUT;
+            }
+
+            if (mode != PIN_MODE_INPUT) { //toggle only output pins
+              pinMode(event->Par1, OUTPUT);
+              digitalWrite(event->Par1, !currentState);
+              setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, !currentState);
+              log = String(F("SW   : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(!currentState);
+              addLog(LOG_LEVEL_INFO, log);
+              SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
+            }
           }
         }
 
@@ -352,14 +633,24 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
                 //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
                 #if defined(ESP8266)
-                  servo1.attach(event->Par2);
-                  servo1.write(event->Par3);
+                  //SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
+                  if (event->Par3 >= 9000) {
+                    servo1.detach();
+
+                  }else{
+                    servo1.attach(event->Par2);
+                    servo1.write(event->Par3);
+                  }
                 #endif
                 break;
               case 2:
                 #if defined(ESP8266)
+                if (event->Par3 >= 9000) {
+                  servo2.detach();
+                }else{
                   servo2.attach(event->Par2);
                   servo2.write(event->Par3);
+                }
                 #endif
                 break;
             }

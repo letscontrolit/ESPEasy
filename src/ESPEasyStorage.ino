@@ -41,6 +41,19 @@ String flashGuard()
 //use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
 #define FLASH_GUARD() { String flashErr=flashGuard(); if (flashErr.length()) return(flashErr); }
 
+
+String appendLineToFile(const String& fname, const String& line) {
+  fs::File f = SPIFFS.open(fname, "a+");
+  SPIFFS_CHECK(f, fname.c_str());
+  const size_t lineLength = line.length();
+  for (size_t i = 0; i < lineLength; ++i) {
+    SPIFFS_CHECK(f.write(line[i]), fname.c_str());
+  }
+  f.close();
+  return "";
+}
+
+
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
   \*********************************************************************************************/
@@ -77,7 +90,7 @@ String BuildFixes()
     Settings.UseRTOSMultitasking = false;
     Settings.Pin_Reset = -1;
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
-    Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
+    Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
     Settings.StructSize = sizeof(Settings);
   }
 
@@ -113,7 +126,7 @@ void fileSystemCheck()
     {
       ResetFactory();
     }
-    f.close();
+    if (f) f.close();
   }
   else
   {
@@ -147,9 +160,14 @@ String SaveSettings(void)
     // Settings have changed, save to file.
     memcpy(Settings.md5, tmp_md5, 16);
 */
+    Settings.validate();
     err=SaveToFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof(Settings));
     if (err.length())
-     return(err);
+      return(err);
+    // Must check this after saving, or else it is not possible to fix multiple
+    // issues which can only corrected on different pages.
+    if (!SettingsCheck(err)) return err;
+
 //  }
 
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
@@ -182,6 +200,7 @@ String LoadSettings()
   err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof( SettingsStruct));
   if (err.length())
     return(err);
+  Settings.validate();
 
     // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 /*
@@ -217,6 +236,51 @@ String LoadSettings()
   setUseStaticIP(useStaticIP());
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
   return(err);
+}
+
+/********************************************************************************************\
+  Disable Plugin, based on bootFailedCount
+  \*********************************************************************************************/
+byte disablePlugin(byte bootFailedCount) {
+  for (byte i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.TaskDeviceEnabled[i]) {
+      --bootFailedCount;
+      if (bootFailedCount == 0) {
+        Settings.TaskDeviceEnabled[i] = false;
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+/********************************************************************************************\
+  Disable Controller, based on bootFailedCount
+  \*********************************************************************************************/
+byte disableController(byte bootFailedCount) {
+  for (byte i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.ControllerEnabled[i]) {
+      --bootFailedCount;
+      if (bootFailedCount == 0) {
+        Settings.ControllerEnabled[i] = false;
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+/********************************************************************************************\
+  Disable Notification, based on bootFailedCount
+  \*********************************************************************************************/
+byte disableNotification(byte bootFailedCount) {
+  for (byte i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.NotificationEnabled[i]) {
+      --bootFailedCount;
+      if (bootFailedCount == 0) {
+        Settings.NotificationEnabled[i] = false;
+      }
+    }
+  }
+  return bootFailedCount;
 }
 
 /********************************************************************************************\
@@ -366,6 +430,13 @@ String SaveCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
   return(SaveToFile(CustomTaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, memAddress, datasize));
 }
 
+String getCustomTaskSettingsError(byte varNr) {
+  String error = F("Error: Text too long for line ");
+  error += varNr + 1;
+  error += '\n';
+  return error;
+}
+
 
 /********************************************************************************************\
   Clear custom task settings
@@ -388,20 +459,25 @@ String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 /********************************************************************************************\
   Save Controller settings to SPIFFS
   \*********************************************************************************************/
-String SaveControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
+String SaveControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings)
 {
   checkRAM(F("SaveControllerSettings"));
-  return SaveToFile(ControllerSettings_Type, ControllerIndex, (char*)FILE_CONFIG, memAddress, datasize);
+  controller_settings.validate(); // Make sure the saved controller settings have proper values.
+  return SaveToFile(ControllerSettings_Type, ControllerIndex,
+                    (char*)FILE_CONFIG, (byte*)&controller_settings, sizeof(controller_settings));
 }
 
 
 /********************************************************************************************\
   Load Controller settings to SPIFFS
   \*********************************************************************************************/
-String LoadControllerSettings(int ControllerIndex, byte* memAddress, int datasize)
-{
+String LoadControllerSettings(int ControllerIndex, ControllerSettingsStruct& controller_settings) {
   checkRAM(F("LoadControllerSettings"));
-  return(LoadFromFile(ControllerSettings_Type, ControllerIndex, (char*)FILE_CONFIG, memAddress, datasize));
+  String result =
+    LoadFromFile(ControllerSettings_Type, ControllerIndex,
+                 (char*)FILE_CONFIG, (byte*)&controller_settings, sizeof(controller_settings));
+  controller_settings.validate(); // Make sure the loaded controller settings have proper values.
+  return result;
 }
 
 
@@ -466,13 +542,15 @@ String InitFile(const char* fname, int datasize)
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "w");
-  SPIFFS_CHECK(f, fname);
+  if (f) {
+    SPIFFS_CHECK(f, fname);
 
-  for (int x = 0; x < datasize ; x++)
-  {
-    SPIFFS_CHECK(f.write(0), fname);
+    for (int x = 0; x < datasize ; x++)
+    {
+      SPIFFS_CHECK(f.write(0), fname);
+    }
+    f.close();
   }
-  f.close();
 
   //OK
   return String();
@@ -483,6 +561,15 @@ String InitFile(const char* fname, int datasize)
   \*********************************************************************************************/
 String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
 {
+#ifndef ESP32
+  if (allocatedOnStack(memAddress)) {
+    String log = F("SaveToFile: ");
+    log += fname;
+    log += F(" ERROR, Data allocated on stack");
+    addLog(LOG_LEVEL_ERROR, log);
+//    return log;  // FIXME TD-er: Should this be considered a breaking error?
+  }
+#endif
   if (index < 0) {
     String log = F("SaveToFile: ");
     log += fname;
@@ -490,24 +577,47 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
-
+  START_TIMER;
   checkRAM(F("SaveToFile"));
   FLASH_GUARD();
-
-  fs::File f = SPIFFS.open(fname, "r+");
-  SPIFFS_CHECK(f, fname);
-
-  SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
-  byte *pointerToByteToSave = memAddress;
-  for (int x = 0; x < datasize ; x++)
   {
-    SPIFFS_CHECK(f.write(*pointerToByteToSave), fname);
-    pointerToByteToSave++;
+    String log = F("SaveToFile: free stack: ");
+    log += getCurrentFreeStack();
+    addLog(LOG_LEVEL_INFO, log);
   }
-  f.close();
-  String log = F("FILE : Saved ");
-  log=log+fname;
-  addLog(LOG_LEVEL_INFO, log);
+  delay(1);
+  unsigned long timer = millis() + 50;
+  fs::File f = SPIFFS.open(fname, "r+");
+  if (f) {
+    SPIFFS_CHECK(f, fname);
+    SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    byte *pointerToByteToSave = memAddress;
+    for (int x = 0; x < datasize ; x++)
+    {
+      SPIFFS_CHECK(f.write(*pointerToByteToSave), fname);
+      pointerToByteToSave++;
+      if (timeOutReached(timer)) {
+        timer += 50;
+        delay(1);
+      }
+    }
+    f.close();
+    String log = F("FILE : Saved ");
+    log=log+fname;
+    addLog(LOG_LEVEL_INFO, log);
+  } else {
+    String log = F("SaveToFile: ");
+    log += fname;
+    log += F(" ERROR, Cannot save to file");
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
+  STOP_TIMER(SAVEFILE_STATS);
+  {
+    String log = F("SaveToFile: free stack after: ");
+    log += getCurrentFreeStack();
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   //OK
   return String();
@@ -530,14 +640,22 @@ String ClearInFile(char* fname, int index, int datasize)
   FLASH_GUARD();
 
   fs::File f = SPIFFS.open(fname, "r+");
-  SPIFFS_CHECK(f, fname);
+  if (f) {
+    SPIFFS_CHECK(f, fname);
 
-  SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
-  for (int x = 0; x < datasize ; x++)
-  {
-    SPIFFS_CHECK(f.write(0), fname);
+    SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    for (int x = 0; x < datasize ; x++)
+    {
+      SPIFFS_CHECK(f.write(0), fname);
+    }
+    f.close();
+  } else {
+    String log = F("ClearInFile: ");
+    log += fname;
+    log += F(" ERROR, Cannot save to file");
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
   }
-  f.close();
 
   //OK
   return String();
@@ -556,10 +674,10 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
+  delay(1);
   START_TIMER;
 
   checkRAM(F("LoadFromFile"));
-
   fs::File f = SPIFFS.open(fname, "r+");
   SPIFFS_CHECK(f, fname);
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet), fname);
@@ -567,6 +685,7 @@ String LoadFromFile(char* fname, int offset, byte* memAddress, int datasize)
   f.close();
 
   STOP_TIMER(LOADFILE_STATS);
+  delay(1);
 
   return(String());
 }

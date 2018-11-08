@@ -30,6 +30,15 @@ String Command_Task_ValueSet(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
+String Command_Task_ValueToggle(struct EventStruct *event, const char* Line)
+{
+	const int result = round(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]);
+	if (result == 0 || result == 1) {
+	  UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = !result;
+	}
+	return return_command_success();
+}
+
 String Command_Task_ValueSetAndRun(struct EventStruct *event, const char* Line)
 {
 	char TmpStr1[INPUT_COMMAND_SIZE];

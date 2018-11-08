@@ -23,6 +23,85 @@ void tcpCleanup()
  }
 #endif
 
+
+// For keeping track of 'cont' stack
+// See: https://github.com/esp8266/Arduino/issues/2557
+//      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
+//      https://github.com/letscontrolit/ESPEasy/issues/1824
+#ifdef ESP32
+// FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
+uint32_t getCurrentFreeStack() {
+  register uint8_t *sp asm("a1");
+  return (sp - pxTaskGetStackStart(NULL));
+}
+
+uint32_t getFreeStackWatermark() {
+  return uxTaskGetStackHighWaterMark(NULL);
+}
+
+// FIXME TD-er: Must check if these functions are also needed for ESP32.
+bool canYield() { return true; }
+
+#else
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
+// All version before core 2.4.2
+extern "C" {
+#include <cont.h>
+  extern cont_t g_cont;
+}
+
+uint32_t getCurrentFreeStack() {
+  register uint32_t *sp asm("a1");
+  return 4 * (sp - g_cont.stack);
+}
+
+uint32_t getFreeStackWatermark() {
+  return cont_get_free_stack(&g_cont);
+}
+
+bool canYield() {
+  return cont_can_yield(&g_cont);
+}
+
+bool allocatedOnStack(const void* address) {
+  register uint32_t *sp asm("a1");
+  if (sp < address) return false;
+  return g_cont.stack < address;
+}
+
+
+#else
+// All version from core 2.4.2
+// See: https://github.com/esp8266/Arduino/pull/5018
+//      https://github.com/esp8266/Arduino/pull/4553
+extern "C" {
+#include <cont.h>
+  extern cont_t* g_pcont;
+}
+
+uint32_t getCurrentFreeStack() {
+  // https://github.com/esp8266/Arduino/issues/2557
+  register uint32_t *sp asm("a1");
+  return 4 * (sp - g_pcont->stack);
+}
+
+uint32_t getFreeStackWatermark() {
+  return cont_get_free_stack(g_pcont);
+}
+
+bool canYield() {
+  return cont_can_yield(g_pcont);
+}
+
+bool allocatedOnStack(const void* address) {
+  register uint32_t *sp asm("a1");
+  if (sp < address) return false;
+  return g_pcont->stack < address;
+}
+
+#endif // ARDUINO_ESP8266_RELEASE_2_x_x
+#endif // ESP32
+
 bool isDeepSleepEnabled()
 {
   if (!Settings.deepSleep)
@@ -65,6 +144,11 @@ void deepSleep(int delay)
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
     addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    if (Settings.UseRules && isDeepSleepEnabled())
+      {
+        String event = F("System#NoSleep=30");
+        rulesProcessing(event);
+      }
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
@@ -203,6 +287,19 @@ boolean hasPinState(byte plugin, byte index)
       return true;
     }
   return false;
+}
+
+
+/*********************************************************************************************\
+   Bitwise operators
+  \*********************************************************************************************/
+bool getBitFromUL(uint32_t number, byte bitnr) {
+  return (number >> bitnr) & 1UL;
+}
+
+void setBitToUL(uint32_t& number, byte bitnr, bool value) {
+  uint32_t newbit = value ? 1UL : 0UL;
+  number ^= (-newbit ^ number) & (1UL << bitnr);
 }
 
 
@@ -353,23 +450,19 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char command[INPUT_COMMAND_SIZE];
-  command[0] = 0;
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  TmpStr1[0] = 0;
-
-  string.toCharArray(command, INPUT_COMMAND_SIZE);
+  char *TmpStr1 = new char[INPUT_COMMAND_SIZE]();
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
   event->Par4 = 0;
   event->Par5 = 0;
 
-  if (GetArgv(command, TmpStr1, 2)) event->Par1 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 3)) event->Par2 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 4)) event->Par3 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 5)) event->Par4 = str2int(TmpStr1);
-  if (GetArgv(command, TmpStr1, 6)) event->Par5 = str2int(TmpStr1);
+  if (GetArgv(string.c_str(), TmpStr1, 2)) { event->Par1 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 3)) { event->Par2 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1); }
+  if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1); }
+  delete[] TmpStr1;
 }
 
 /********************************************************************************************\
@@ -404,7 +497,7 @@ String checkTaskSettings(byte taskIndex) {
     }
   }
   for (int i = 0; i < TASKS_MAX; ++i) {
-    if (i != taskIndex) {
+    if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
       LoadTaskSettings(i);
       if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
         if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
@@ -480,15 +573,19 @@ boolean GetArgv(const char *string, char *argv, unsigned int argc) {
 
 boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
 {
+  memset(argv, 0, argv_size);
+  size_t string_len = strlen(string);
   unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
   char c, d;
   boolean parenthesis = false;
   char matching_parenthesis = '"';
 
-  while (string_pos < strlen(string))
+  while (string_pos < string_len)
   {
     c = string[string_pos];
-    d = string[string_pos + 1];
+    d = 0;
+    if ((string_pos + 1) < string_len)
+      d = string[string_pos + 1];
 
     if       (!parenthesis && c == ' ' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d == ',') {}
@@ -599,7 +696,7 @@ uint32_t progMemMD5check(){
       addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
       return CRCValues.numberOfCRCBytes;
    }
-   addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
+   addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
 
@@ -721,7 +818,7 @@ void ResetFactory(void)
 
 	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
 	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
-	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNANE_AS_CLIENTID;
+	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
     Settings.UseNTP			= DEFAULT_USE_NTP;
 	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
@@ -751,7 +848,12 @@ void ResetFactory(void)
 	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
 */
 
+#ifdef PLUGIN_DESCR
+  strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
+#endif
 
+  addPredefinedPlugins();
+  addPredefinedRules();
 
 
 
@@ -759,7 +861,7 @@ void ResetFactory(void)
   SaveSettings();
 
 #if DEFAULT_CONTROLLER
-  ControllerSettingsStruct ControllerSettings;
+  MakeControllerSettings(ControllerSettings);
   strcpy_P(ControllerSettings.Subscribe, PSTR(DEFAULT_SUB));
   strcpy_P(ControllerSettings.Publish, PSTR(DEFAULT_PUB));
   strcpy_P(ControllerSettings.MQTTLwtTopic, PSTR(DEFAULT_MQTT_LWT_TOPIC));
@@ -768,7 +870,7 @@ void ResetFactory(void)
   str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
   ControllerSettings.HostName[0]=0;
   ControllerSettings.Port = DEFAULT_PORT;
-  SaveControllerSettings(0, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+  SaveControllerSettings(0, ControllerSettings);
 #endif
   checkRAM(F("ResetFactory2"));
   Serial.println(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
@@ -779,6 +881,108 @@ void ResetFactory(void)
   WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot();
+}
+
+void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeLow) {
+  setTaskDevice_to_TaskIndex(1, taskIndex);
+  setBasicTaskValues(
+    taskIndex,
+    0,            // taskdevicetimer
+    true,         // enabled
+    name,         // name
+    gpio,         // pin1
+    -1,            // pin2
+    -1);           // pin3
+  Settings.TaskDevicePin1PullUp[taskIndex] = true;
+  if (activeLow)
+    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+}
+
+bool addPredefinedPlugins() {
+  byte taskIndex = 0;
+  #ifdef GPIO_KEY1
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY1, F("Button1"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY1
+  #ifdef GPIO_KEY2
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY2, F("Button2"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY2
+  #ifdef GPIO_KEY3
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY3, F("Button3"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY3
+  #ifdef GPIO_KEY4
+  // Create button switch P001
+  addSwitchPlugin(taskIndex, GPIO_KEY4, F("Button4"), true);
+  ++taskIndex;
+  #endif // GPIO_KEY4
+
+  #ifdef GPIO_REL1
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL1, F("Relay1"), false);
+    ++taskIndex;
+  #endif // GPIO_REL1
+  #ifdef GPIO_REL2
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL2, F("Relay2"), false);
+    ++taskIndex;
+  #endif // GPIO_REL2
+  #ifdef GPIO_REL3
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL3, F("Relay3"), false);
+    ++taskIndex;
+  #endif // GPIO_REL3
+  #ifdef GPIO_REL4
+    // Create relay switch P001
+    addSwitchPlugin(taskIndex, GPIO_REL4, F("Relay4"), false);
+    ++taskIndex;
+  #endif // GPIO_REL4
+  return taskIndex != 0; // Indicate something was added
+  // Also needed to make sure the variable is being used.
+}
+
+void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
+  Settings.UseRules = true;
+  String fileName;
+  #if defined(ESP32)
+    fileName += '/';
+  #endif
+  fileName += F("rules1.txt");
+  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
+  rule.replace(F("BNR"), String(buttonNumber));
+  rule.replace(F("GNR"), String(relay_gpio));
+  String result = appendLineToFile(fileName, rule);
+  if (result.length() > 0) {
+    addLog(LOG_LEVEL_ERROR, result);
+  }
+}
+
+void addPredefinedRules() {
+  #ifdef GPIO_KEY1
+    #ifdef GPIO_REL1
+      addButtonRelayRule(1, GPIO_REL1);
+    #endif // GPIO_REL1
+  #endif // GPIO_KEY1
+  #ifdef GPIO_KEY2
+    #ifdef GPIO_REL2
+      addButtonRelayRule(2, GPIO_REL2);
+    #endif // GPIO_REL2
+  #endif // GPIO_KEY2
+  #ifdef GPIO_KEY3
+    #ifdef GPIO_REL3
+      addButtonRelayRule(3, GPIO_REL3);
+    #endif // GPIO_REL3
+  #endif // GPIO_KEY3
+  #ifdef GPIO_KEY4
+    #ifdef GPIO_REL4
+      addButtonRelayRule(4, GPIO_REL4);
+    #endif // GPIO_REL4
+  #endif // GPIO_KEY4
+
 }
 
 
@@ -889,7 +1093,7 @@ uint32_t getFlashRealSizeInBytes() {
 String getSystemBuildString() {
   String result;
   result += BUILD;
-  result += F(" ");
+  result += ' ';
   result += F(BUILD_NOTES);
   return result;
 }
@@ -904,6 +1108,11 @@ String getPluginDescriptionString() {
   #endif
   #ifdef PLUGIN_BUILD_DEV
     result += F(" [Development]");
+  #endif
+  #ifdef PLUGIN_DESCR
+  result += " [";
+  result += F(PLUGIN_DESCR);
+  result += ']';
   #endif
   return result;
 }
@@ -921,6 +1130,10 @@ String getSystemLibraryString() {
     result += F(", LWIP: ");
     result += getLWIPversion();
   #endif
+  #ifdef PUYASUPPORT
+    result += F(" PUYA support");
+  #endif
+
   return result;
 }
 
@@ -928,9 +1141,9 @@ String getSystemLibraryString() {
 String getLWIPversion() {
   String result;
   result += LWIP_VERSION_MAJOR;
-  result += F(".");
+  result += '.';
   result += LWIP_VERSION_MINOR;
-  result += F(".");
+  result += '.';
   result += LWIP_VERSION_REVISION;
   if (LWIP_VERSION_IS_RC) {
     result += F("-RC");
@@ -1063,19 +1276,34 @@ void initLog()
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
-String getLogLevelDisplayString(byte index, int& logLevel) {
-  switch (index) {
-    case 0: logLevel = LOG_LEVEL_ERROR;      return F("Error");
-    case 1: logLevel = LOG_LEVEL_INFO;       return F("Info");
-    case 2: logLevel = LOG_LEVEL_DEBUG;      return F("Debug");
-    case 3: logLevel = LOG_LEVEL_DEBUG_MORE; return F("Debug More");
-    case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  return F("Debug dev");
+String getLogLevelDisplayString(int logLevel) {
+  switch (logLevel) {
+    case LOG_LEVEL_NONE:       return F("None");
+    case LOG_LEVEL_ERROR:      return F("Error");
+    case LOG_LEVEL_INFO:       return F("Info");
+    case LOG_LEVEL_DEBUG:      return F("Debug");
+    case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
+    case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
 
-    default: logLevel = -1; return "";
+    default:
+      return "";
   }
 }
 
-void addToLog(byte loglevel, String& string)
+String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
+  switch (index) {
+    case 0: logLevel = LOG_LEVEL_ERROR;      break;
+    case 1: logLevel = LOG_LEVEL_INFO;       break;
+    case 2: logLevel = LOG_LEVEL_DEBUG;      break;
+    case 3: logLevel = LOG_LEVEL_DEBUG_MORE; break;
+    case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  break;
+
+    default: logLevel = -1; return "";
+  }
+  return getLogLevelDisplayString(logLevel);
+}
+
+void addToLog(byte loglevel, const String& string)
 {
   addToLog(loglevel, string.c_str());
 }
@@ -1085,14 +1313,6 @@ void addToLog(byte logLevel, const __FlashStringHelper* flashString)
     checkRAM(F("addToLog"));
     String s(flashString);
     addToLog(logLevel, s.c_str());
-}
-
-bool SerialAvailableForWrite() {
-  if (!Settings.UseSerial) return false;
-  #if defined(ESP8266)
-    if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
-  #endif
-  return true;
 }
 
 void disableSerialLog() {
@@ -1116,10 +1336,20 @@ void setLogLevelFor(byte destination, byte logLevel) {
 
 void updateLogLevelCache() {
   byte max_lvl = 0;
-  max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+  if (!log_to_serial_disabled && serialLogActiveRead()) {
+    max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+      Serial.setDebugOutput(true);
+  } else {
+    Serial.setDebugOutput(false);
+  }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
-  max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  if (Logging.logActiveRead()) {
+    max_lvl = _max(max_lvl, Settings.WebLogLevel);
+  }
+#ifdef FEATURE_SD
   max_lvl = _max(max_lvl, Settings.SDLogLevel);
+#endif
   highest_active_log_level = max_lvl;
 }
 
@@ -1127,14 +1357,42 @@ bool loglevelActiveFor(byte logLevel) {
   return loglevelActive(logLevel, highest_active_log_level);
 }
 
+byte getSerialLogLevel() {
+  byte logLevelSettings = 0;
+  if (!Settings.UseSerial) return 0;
+  if (log_to_serial_disabled || log_to_serial_disabled_temporary) return 0;
+  logLevelSettings = Settings.SerialLogLevel;
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
+    logLevelSettings = 2;
+  }
+/*
+  if (!serialLogActiveRead()) {
+    if (logLevelSettings != 0) {
+      updateLogLevelCache();
+    }
+    logLevelSettings = 0;
+  }
+*/
+  return logLevelSettings;
+}
+
+byte getWebLogLevel() {
+  byte logLevelSettings = 0;
+  if (Logging.logActiveRead()) {
+    logLevelSettings = Settings.WebLogLevel;
+  } else {
+    if (Settings.WebLogLevel != 0) {
+      updateLogLevelCache();
+    }
+  }
+  return logLevelSettings;
+}
+
 boolean loglevelActiveFor(byte destination, byte logLevel) {
   byte logLevelSettings = 0;
   switch (destination) {
     case LOG_TO_SERIAL: {
-      if (!SerialAvailableForWrite()) return false;
-      logLevelSettings = Settings.SerialLogLevel;
-      if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED)
-        logLevelSettings = 2;
+      logLevelSettings = getSerialLogLevel();
       break;
     }
     case LOG_TO_SYSLOG: {
@@ -1142,11 +1400,13 @@ boolean loglevelActiveFor(byte destination, byte logLevel) {
       break;
     }
     case LOG_TO_WEBLOG: {
-      logLevelSettings = Settings.WebLogLevel;
+      logLevelSettings = getWebLogLevel();
       break;
     }
     case LOG_TO_SDCARD: {
+      #ifdef FEATURE_SD
       logLevelSettings = Settings.SDLogLevel;
+      #endif
       break;
     }
     default:
@@ -1162,10 +1422,23 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addToLog(byte logLevel, const char *line)
 {
+  const size_t line_length = strlen(line);
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    Serial.print(millis());
-    Serial.print(F(" : "));
-    Serial.println(line);
+    int roomLeft = ESP.getFreeHeap() - 5000;
+    if (roomLeft > 0) {
+      String timestamp_log(millis());
+      timestamp_log += F(" : ");
+      for (size_t i = 0; i < timestamp_log.length(); ++i) {
+        serialLogBuffer.push_back(timestamp_log[i]);
+      }
+      size_t pos = 0;
+      while (pos < line_length && pos < static_cast<size_t>(roomLeft)) {
+        serialLogBuffer.push_back(line[pos]);
+        ++pos;
+      }
+      serialLogBuffer.push_back('\r');
+      serialLogBuffer.push_back('\n');
+    }
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
@@ -1184,6 +1457,59 @@ void addToLog(byte logLevel, const char *line)
 #endif
 }
 
+void process_serialLogBuffer() {
+  if (serialLogBuffer.size() == 0) return;
+  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
+#if defined(ESP8266)
+  snip = Serial.availableForWrite();
+#endif
+  if (snip > 0) {
+    last_serial_log_read = millis();
+    size_t bytes_to_write = serialLogBuffer.size();
+    if (snip < bytes_to_write) bytes_to_write = snip;
+    for (size_t i = 0; i < bytes_to_write; ++i) {
+      Serial.write(serialLogBuffer.front());
+      serialLogBuffer.pop_front();
+    }
+  }
+}
+
+void tempDisableSerialLog(bool setToDisabled) {
+  if (log_to_serial_disabled_temporary == setToDisabled) return;
+
+  // FIXME TD-er: For some reason disabling serial log will not enable it again.
+  //  log_to_serial_disabled_temporary = setToDisabled;
+  //  updateLogLevelCache();
+}
+
+bool serialLogActiveRead() {
+  if (!Settings.UseSerial) return false;
+  // Some default, ESP32 doesn't have the availableForWrite function yet.
+  // Not sure how to detect read activity on an ESP32.
+  size_t tx_free = 128;
+#if defined(ESP8266)
+  tx_free = Serial.availableForWrite();
+#endif
+  static size_t prev_tx_free = 0;
+  if (tx_free < prev_tx_free) {
+    prev_tx_free = tx_free;
+    tempDisableSerialLog(false);
+    return true;
+  }
+  // Must always set it or else it will never recover from prev_tx_free == 0
+  prev_tx_free = tx_free;
+  if (timePassedSince(last_serial_log_read) > LOG_BUFFER_EXPIRE) {
+    serialLogBuffer.clear();
+    // Just add some marker to get it going again when the serial buffer is
+    // read again and the serial log level was temporary set to 0 since nothing was read.
+    if (Settings.SerialLogLevel > 0) {
+      serialLogBuffer.push_back('\n');
+    }
+    tempDisableSerialLog(true);
+    return false;
+  }
+  return true;
+}
 
 /********************************************************************************************\
   Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -1320,8 +1646,10 @@ String parseTemplate(String &tmpString, byte lineSize)
 {
   checkRAM(F("parseTemplate"));
   String newString = "";
-  String tmpStringMid = "";
+  //String tmpStringMid = "";
   newString.reserve(lineSize);
+
+  parseSystemVariables(tmpString, false);
 
   // replace task template variables
   int leftBracketIndex = tmpString.indexOf('[');
@@ -1339,7 +1667,7 @@ String parseTemplate(String &tmpString, byte lineSize)
       int rightBracketIndex = tmpString.indexOf(']');
       if (rightBracketIndex >= 0)
       {
-        tmpStringMid = tmpString.substring(0, rightBracketIndex);
+        String tmpStringMid = tmpString.substring(0, rightBracketIndex);
         tmpString = tmpString.substring(rightBracketIndex + 1);
         int hashtagIndex = tmpStringMid.indexOf('#');
         if (hashtagIndex >= 0) {
@@ -1360,6 +1688,14 @@ String parseTemplate(String &tmpString, byte lineSize)
             if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
               newString += tmpString;
           }
+          else if (deviceName.equalsIgnoreCase(F("Var"))) {
+            String tmpString = tmpStringMid.substring(4);
+            if (tmpString.length()>0 && isDigit(tmpString[0])) {
+              const int varNum = tmpString.toInt();
+              if (varNum > 0 && varNum <= CUSTOM_VARS_MAX)
+                newString += String(customFloatVar[varNum-1]);
+            }
+          }
           else
             for (byte y = 0; y < TASKS_MAX; y++)
             {
@@ -1376,232 +1712,14 @@ String parseTemplate(String &tmpString, byte lineSize)
                       if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[z]))
                       {
                         // here we know the task and value, so find the uservar
+                        // Try to format and transform the values
+                        // y = taskNr
+                        // z = var_of_task
                         match = true;
                         bool isvalid;
                         String value = formatUserVar(y, z, isvalid);
                         if (isvalid) {
-                          // start changes by giig1967g - 2018-04-20
-                          // Syntax: [task#value#transformation#justification]
-                          // valueFormat="transformation#justification"
-                          if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
-                          {
-                            String valueJust = "";
-
-                            hashtagIndex = valueFormat.indexOf('#');
-                            if (hashtagIndex >= 0)
-                            {
-                              valueJust = valueFormat.substring(hashtagIndex + 1); //Justification part
-                              valueFormat = valueFormat.substring(0, hashtagIndex); //Transformation part
-                            }
-
-                            // valueFormat="transformation"
-                            // valueJust="justification"
-                            if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
-                            {
-                              const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
-                              const float valFloat = value.toFloat();
-
-                              String tempValueFormat = valueFormat;
-                              int tempValueFormatLength = tempValueFormat.length();
-                              const int invertedIndex = tempValueFormat.indexOf('!');
-                              const bool inverted = invertedIndex >= 0 ? 1 : 0;
-                              if (inverted)
-                                tempValueFormat.remove(invertedIndex,1);
-
-                              const int rightJustifyIndex = tempValueFormat.indexOf('R');
-                              const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
-                              if (rightJustify)
-                                tempValueFormat.remove(rightJustifyIndex,1);
-
-                              tempValueFormatLength = tempValueFormat.length(); //needed because could have been changed after '!' and 'R' removal
-
-                              //Check Transformation syntax
-                              if (tempValueFormatLength > 0)
-                              {
-                                switch (tempValueFormat[0])
-                                  {
-                                  case 'V': //value = value without transformations
-                                    break;
-                                  case 'O':
-                                    value = val == inverted ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
-                                    break;
-                                  case 'C':
-                                    value = val == inverted ? F("CLOSE") : F(" OPEN");
-                                    break;
-                                  case 'M':
-                                    value = val == inverted ? F("AUTO") : F(" MAN");
-                                    break;
-                                  case 'm':
-                                    value = val == inverted ? F("A") : F("M");
-                                    break;
-                                  case 'H':
-                                    value = val == inverted ? F("COLD") : F(" HOT");
-                                    break;
-                                  case 'U':
-                                    value = val == inverted ? F("DOWN") : F("  UP");
-                                    break;
-                                  case 'u':
-                                    value = val == inverted ? F("D") : F("U");
-                                    break;
-                                  case 'Y':
-                                    value = val == inverted ? F(" NO") : F("YES");
-                                    break;
-                                  case 'y':
-                                    value = val == inverted ? F("N") : F("Y");
-                                    break;
-                                  case 'X':
-                                    value = val == inverted ? F("O") : F("X");
-                                    break;
-                                  case 'I':
-                                    value = val == inverted ? F("OUT") : F(" IN");
-                                    break;
-                                  case 'Z' :// return "0" or "1"
-                                    value = val == inverted ? F("0") : F("1");
-                                    break;
-                                  case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
-                                    {
-                                      int x;
-                                      int y;
-                                      x = 0;
-                                      y = 0;
-
-                                      switch (tempValueFormatLength)
-                                      {
-                                        case 2: //Dx
-                                          if (isDigit(tempValueFormat[1]))
-                                          {
-                                            x = (int)tempValueFormat[1]-'0';
-                                          }
-                                          break;
-                                        case 3: //D.y
-                                          if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
-                                          {
-                                            y = (int)tempValueFormat[2]-'0';
-                                          }
-                                          break;
-                                        case 4: //Dx.y
-                                          if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
-                                          {
-                                            x = (int)tempValueFormat[1]-'0';
-                                            y = (int)tempValueFormat[3]-'0';
-                                          }
-                                          break;
-                                        case 1: //D
-                                        default: //any other combination x=0; y=0;
-                                          break;
-                                      }
-                                      value = toString(valFloat,y);
-                                      int indexDot;
-                                      indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
-                                      for (byte f = 0; f < (x - indexDot); f++)
-                                        value = "0" + value;
-                                      break;
-                                    }
-                                  case 'F' :// FLOOR (round down)
-                                    value = (int)floorf(valFloat);
-                                    break;
-                                  case 'E' :// CEILING (round up)
-                                    value = (int)ceilf(valFloat);
-                                    break;
-                                  default:
-                                    value = F("ERR");
-                                    break;
-                                  }
-
-                                  // Check Justification syntax
-                                  const int valueJustLength = valueJust.length();
-                                  if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
-                                  {
-                                    value.trim(); //remove right justification spaces for backward compatibility
-                                    switch (valueJust[0])
-                                    {
-                                    case 'P' :// Prefix Fill with n spaces: Pn
-                                      if (valueJustLength > 1)
-                                      {
-                                        if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
-                                        {
-                                          int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
-                                          for (byte f = 0; f < filler; f++)
-                                            newString += " ";
-                                        }
-                                      }
-                                      break;
-                                    case 'S' :// Suffix Fill with n spaces: Sn
-                                      if (valueJustLength > 1)
-                                      {
-                                        if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
-                                        {
-                                          int filler = valueJust[1] - value.length() - '0' ; //48
-                                          for (byte f = 0; f < filler; f++)
-                                            value += " ";
-                                        }
-                                      }
-                                      break;
-                                    case 'L': //left part of the string
-                                      if (valueJustLength > 1)
-                                      {
-                                        if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
-                                        {
-                                          value = value.substring(0,(int)valueJust[1]-'0');
-                                        }
-                                      }
-                                      break;
-                                    case 'R': //Right part of the string
-                                      if (valueJustLength > 1)
-                                      {
-                                        if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
-                                        {
-                                          value = value.substring(std::max(0,(int)value.length()-((int)valueJust[1]-'0')));
-                                         }
-                                      }
-                                      break;
-                                    case 'U': //Substring Ux.y where x=firstChar and y=number of characters
-                                      if (valueJustLength > 1)
-                                      {
-                                        if (isDigit(valueJust[1]) && valueJust[2]=='.' && isDigit(valueJust[3]) && valueJust[1] > '0' && valueJust[3] > '0')
-                                        {
-                                          value = value.substring(std::min((int)value.length(),(int)valueJust[1]-'0'-1),(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
-                                        }
-                                        else
-                                        {
-                                          newString += F("ERR");
-                                        }
-                                      }
-                                      break;
-                                    default:
-                                      newString += F("ERR");
-                                      break;
-                                  }
-                                }
-                              }
-                              if (rightJustify)
-                              {
-                                int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-                                for (byte f = 0; f < filler; f++)
-                                  newString += " ";
-                              }
-                              {
-                                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                                  String logFormatted = F("DEBUG: Formatted String='");
-                                  logFormatted += newString;
-                                  logFormatted += value;
-                                  logFormatted += "'";
-                                  addLog(LOG_LEVEL_DEBUG, logFormatted);
-                                }
-                              }
-                            }
-                          }
-                          //end of changes by giig1967g - 2018-04-18
-
-                          newString += String(value);
-                          {
-                            if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-                              String logParsed = F("DEBUG DEV: Parsed String='");
-                              logParsed += newString;
-                              logParsed += "'";
-                              addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
-                            }
-                          }
+                          transformValue(newString, lineSize, value, valueFormat, tmpString);
                           break;
                         }
                       }
@@ -1630,14 +1748,253 @@ String parseTemplate(String &tmpString, byte lineSize)
       LoadTaskSettings(currentTaskIndex);
   }
 
-  parseSystemVariables(newString, false);
+  //parseSystemVariables(newString, false);
   parseStandardConversions(newString, false);
 
   // padding spaces
   while (newString.length() < lineSize)
-    newString += " ";
+    newString += ' ';
   checkRAM(F("parseTemplate3"));
   return newString;
+}
+
+/********************************************************************************************\
+  Transform values
+\*********************************************************************************************/
+// Syntax: [task#value#transformation#justification]
+// valueFormat="transformation#justification"
+void transformValue(
+	String& newString,
+  byte lineSize,
+	String value,
+	String& valueFormat,
+  const String &tmpString)
+{
+  checkRAM(F("transformValue"));
+
+  // start changes by giig1967g - 2018-04-20
+  // Syntax: [task#value#transformation#justification]
+  // valueFormat="transformation#justification"
+  if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+  {
+    String valueJust = "";
+
+    int hashtagIndex = valueFormat.indexOf('#');
+    if (hashtagIndex >= 0)
+    {
+      valueJust = valueFormat.substring(hashtagIndex + 1); //Justification part
+      valueFormat = valueFormat.substring(0, hashtagIndex); //Transformation part
+    }
+
+    // valueFormat="transformation"
+    // valueJust="justification"
+    if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+    {
+      const int val = value == "0" ? 0 : 1; //to be used for GPIO status (0 or 1)
+      const float valFloat = value.toFloat();
+
+      String tempValueFormat = valueFormat;
+      int tempValueFormatLength = tempValueFormat.length();
+      const int invertedIndex = tempValueFormat.indexOf('!');
+      const bool inverted = invertedIndex >= 0 ? 1 : 0;
+      if (inverted)
+        tempValueFormat.remove(invertedIndex,1);
+
+      const int rightJustifyIndex = tempValueFormat.indexOf('R');
+      const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
+      if (rightJustify)
+        tempValueFormat.remove(rightJustifyIndex,1);
+
+      tempValueFormatLength = tempValueFormat.length(); //needed because could have been changed after '!' and 'R' removal
+
+      //Check Transformation syntax
+      if (tempValueFormatLength > 0)
+      {
+        switch (tempValueFormat[0])
+          {
+          case 'V': //value = value without transformations
+            break;
+          case 'O':
+            value = val == inverted ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
+            break;
+          case 'C':
+            value = val == inverted ? F("CLOSE") : F(" OPEN");
+            break;
+          case 'M':
+            value = val == inverted ? F("AUTO") : F(" MAN");
+            break;
+          case 'm':
+            value = val == inverted ? F("A") : F("M");
+            break;
+          case 'H':
+            value = val == inverted ? F("COLD") : F(" HOT");
+            break;
+          case 'U':
+            value = val == inverted ? F("DOWN") : F("  UP");
+            break;
+          case 'u':
+            value = val == inverted ? F("D") : F("U");
+            break;
+          case 'Y':
+            value = val == inverted ? F(" NO") : F("YES");
+            break;
+          case 'y':
+            value = val == inverted ? F("N") : F("Y");
+            break;
+          case 'X':
+            value = val == inverted ? F("O") : F("X");
+            break;
+          case 'I':
+            value = val == inverted ? F("OUT") : F(" IN");
+            break;
+          case 'Z' :// return "0" or "1"
+            value = val == inverted ? "0" : "1";
+            break;
+          case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
+            {
+              int x;
+              int y;
+              x = 0;
+              y = 0;
+
+              switch (tempValueFormatLength)
+              {
+                case 2: //Dx
+                  if (isDigit(tempValueFormat[1]))
+                  {
+                    x = (int)tempValueFormat[1]-'0';
+                  }
+                  break;
+                case 3: //D.y
+                  if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
+                  {
+                    y = (int)tempValueFormat[2]-'0';
+                  }
+                  break;
+                case 4: //Dx.y
+                  if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
+                  {
+                    x = (int)tempValueFormat[1]-'0';
+                    y = (int)tempValueFormat[3]-'0';
+                  }
+                  break;
+                case 1: //D
+                default: //any other combination x=0; y=0;
+                  break;
+              }
+              value = toString(valFloat,y);
+              int indexDot;
+              indexDot = value.indexOf('.') > 0 ? value.indexOf('.') : value.length();
+              for (byte f = 0; f < (x - indexDot); f++)
+                value = "0" + value;
+              break;
+            }
+          case 'F' :// FLOOR (round down)
+            value = (int)floorf(valFloat);
+            break;
+          case 'E' :// CEILING (round up)
+            value = (int)ceilf(valFloat);
+            break;
+          default:
+            value = F("ERR");
+            break;
+          }
+
+          // Check Justification syntax
+          const int valueJustLength = valueJust.length();
+          if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
+          {
+            value.trim(); //remove right justification spaces for backward compatibility
+            switch (valueJust[0])
+            {
+            case 'P' :// Prefix Fill with n spaces: Pn
+              if (valueJustLength > 1)
+              {
+                if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
+                {
+                  int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
+                  for (byte f = 0; f < filler; f++)
+                    newString += ' ';
+                }
+              }
+              break;
+            case 'S' :// Suffix Fill with n spaces: Sn
+              if (valueJustLength > 1)
+              {
+                if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                {
+                  int filler = valueJust[1] - value.length() - '0' ; //48
+                  for (byte f = 0; f < filler; f++)
+                    value += ' ';
+                }
+              }
+              break;
+            case 'L': //left part of the string
+              if (valueJustLength > 1)
+              {
+                if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                {
+                  value = value.substring(0,(int)valueJust[1]-'0');
+                }
+              }
+              break;
+            case 'R': //Right part of the string
+              if (valueJustLength > 1)
+              {
+                if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                {
+                  value = value.substring(std::max(0,(int)value.length()-((int)valueJust[1]-'0')));
+                 }
+              }
+              break;
+            case 'U': //Substring Ux.y where x=firstChar and y=number of characters
+              if (valueJustLength > 1)
+              {
+                if (isDigit(valueJust[1]) && valueJust[2]=='.' && isDigit(valueJust[3]) && valueJust[1] > '0' && valueJust[3] > '0')
+                {
+                  value = value.substring(std::min((int)value.length(),(int)valueJust[1]-'0'-1),(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
+                }
+                else
+                {
+                  newString += F("ERR");
+                }
+              }
+              break;
+            default:
+              newString += F("ERR");
+              break;
+          }
+        }
+      }
+      if (rightJustify)
+      {
+        int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
+        for (byte f = 0; f < filler; f++)
+          newString += ' ';
+      }
+      {
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String logFormatted = F("DEBUG: Formatted String='");
+          logFormatted += newString;
+          logFormatted += value;
+          logFormatted += '\'';
+          addLog(LOG_LEVEL_DEBUG, logFormatted);
+        }
+      }
+    }
+  }
+  //end of changes by giig1967g - 2018-04-18
+
+  newString += String(value);
+  {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+      String logParsed = F("DEBUG DEV: Parsed String='");
+      logParsed += newString;
+      logParsed += '\'';
+      addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+    }
+  }
+  checkRAM(F("transformValue2"));
 }
 
 /********************************************************************************************\
@@ -1655,7 +2012,8 @@ float globalstack[STACK_SIZE];
 float *sp = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
+#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
+#define is_unary_operator(c)  (c == '!')
 
 int push(float value)
 {
@@ -1688,8 +2046,21 @@ float apply_operator(char op, float first, float second)
       return first * second;
     case '/':
       return first / second;
+    case '%':
+      return round(first) % round(second);
     case '^':
       return pow(first, second);
+    default:
+      return 0;
+  }
+}
+
+float apply_unary_operator(char op, float first)
+{
+  switch (op)
+  {
+    case '!':
+      return (round(first) == 0) ? 1 : 0;
     default:
       return 0;
   }
@@ -1714,8 +2085,14 @@ int RPNCalculate(char* token)
 
     if (push(apply_operator(token[0], first, second)))
       return CALCULATE_ERROR_STACK_OVERFLOW;
-  }
-  else // Als er nog een is, dan deze ophalen
+  } else if (is_unary_operator(token[0]) && token[1] == 0)
+  {
+    float first = pop();
+
+    if (push(apply_unary_operator(token[0], first)))
+      return CALCULATE_ERROR_STACK_OVERFLOW;
+
+  } else // Als er nog een is, dan deze ophalen
     if (push(atof(token))) // is het een waarde, dan op de stack plaatsen
       return CALCULATE_ERROR_STACK_OVERFLOW;
 
@@ -1731,10 +2108,13 @@ int op_preced(const char c)
 {
   switch (c)
   {
+    case '!':
+      return 4;
     case '^':
       return 3;
     case '*':
     case '/':
+    case '%':
       return 2;
     case '+':
     case '-':
@@ -1752,8 +2132,10 @@ bool op_left_assoc(const char c)
     case '/':
     case '+':
     case '-':
+    case '%':
       return true;     // left to right
-      //case '!': return false;    // right to left
+    case '!':
+      return false;    // right to left
   }
   return false;
 }
@@ -1767,8 +2149,10 @@ unsigned int op_arg_count(const char c)
     case '/':
     case '+':
     case '-':
+    case '%':
       return 2;
-      //case '!': return 1;
+    case '!':
+      return 1;
   }
   return 0;
 }
@@ -1788,6 +2172,12 @@ int Calculate(const char *input, float* result)
   //*sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
   oc=c=0;
+
+  if (input[0] == '=') {
+    ++strpos;
+    c = *strpos;
+  }
+
   while (strpos < strend)
   {
     // read one token from the input stream
@@ -1803,7 +2193,7 @@ int Calculate(const char *input, float* result)
       }
 
       // If the token is an operator, op1, then:
-      else if (is_operator(c))
+      else if (is_operator(c) || is_unary_operator(c))
       {
         *(TokenPos) = 0;
         error = RPNCalculate(token);
@@ -1913,6 +2303,58 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
+int CalculateParam(char *TmpStr) {
+  int returnValue;
+
+  // Minimize calls to the Calulate function.
+  // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
+  if (TmpStr[0] != '=') {
+    returnValue=str2int(TmpStr);
+  } else {
+    float param=0;
+    TmpStr[0] = ' '; //replace '=' with space
+    int returnCode=Calculate(TmpStr, &param);
+    if (returnCode!=CALCULATE_OK) {
+      String errorDesc;
+      switch (returnCode) {
+        case CALCULATE_ERROR_STACK_OVERFLOW:
+          errorDesc = F("Stack Overflow");
+          break;
+        case CALCULATE_ERROR_BAD_OPERATOR:
+          errorDesc = F("Bad Operator");
+          break;
+        case CALCULATE_ERROR_PARENTHESES_MISMATCHED:
+          errorDesc = F("Parenthesis mismatch");
+          break;
+        case CALCULATE_ERROR_UNKNOWN_TOKEN:
+          errorDesc = F("Unknown token");
+          break;
+        default:
+          errorDesc = F("Unknown error");
+          break;
+        }
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+          addLog(LOG_LEVEL_ERROR, log);
+          log = F("CALCULATE PARAM ERROR details: ");
+          log += TmpStr;
+          log += F(" = ");
+          log += round(param);
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+      } else {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("CALCULATE PARAM: ");
+        log += TmpStr;
+        log += F(" = ");
+        log += round(param);
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+    }
+    returnValue=round(param); //return integer only as it's valid only for device and task id
+  }
+  return returnValue;
+}
 
 void checkRuleSets(){
 for (byte x=0; x < RULESETS_MAX; x++){
@@ -1943,6 +2385,7 @@ for (byte x=0; x < RULESETS_MAX; x++){
   \*********************************************************************************************/
 void rulesProcessing(String& event)
 {
+  if (!Settings.UseRules) return;
   checkRAM(F("rulesProcessing"));
   unsigned long timer = millis();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -1973,14 +2416,16 @@ void rulesProcessing(String& event)
     log += F(" milliSeconds");
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  backgroundtasks();
 
 }
 
 /********************************************************************************************\
   Rules processing
   \*********************************************************************************************/
-String rulesProcessingFile(String fileName, String& event)
+String rulesProcessingFile(const String& fileName, String& event)
 {
+  if (!Settings.UseRules) return "";
   checkRAM(F("rulesProcessingFile"));
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
     Serial.print(F("RuleDebug Processing:"));
@@ -2007,10 +2452,10 @@ String rulesProcessingFile(String fileName, String& event)
   bool match = false;
   bool codeBlock = false;
   bool isCommand = false;
-  bool conditional = false;
-  bool condition = false;
-  bool ifBranche = false;
-  bool ifBrancheJustMatch = false;
+  bool condition[RULES_IF_MAX_NESTING_LEVEL];
+  bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
+  byte ifBlock = 0;
+  byte fakeIfBlock = 0;
 
   byte buf[RULES_BUFFER_SIZE];
   int len = 0;
@@ -2027,24 +2472,26 @@ String rulesProcessingFile(String fileName, String& event)
       }
       else
       {      // if line complete, parse this rule
-        line.replace(F("\r"), "");
+        line.replace("\r", "");
         if (line.substring(0, 2) != F("//") && line.length() > 0)
         {
           parseCompleteNonCommentLine(
             line, event, log,
             match, codeBlock, isCommand,
-            conditional, condition,
-            ifBranche, ifBrancheJustMatch);
+            condition, ifBranche,
+            ifBlock, fakeIfBlock);
+          backgroundtasks();
         }
 
         line = "";
       }
     }
   }
+  if (f) f.close();
 
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
-  return (F(""));
+  return ("");
 }
 
 void parseCompleteNonCommentLine(
@@ -2054,10 +2501,11 @@ void parseCompleteNonCommentLine(
     bool& match,
     bool& codeBlock,
     bool& isCommand,
-    bool& conditional,
-    bool& condition,
-    bool& ifBranche,
-    bool& ifBrancheJustMatch) {
+    bool condition[],
+    bool ifBranche[],
+    byte& ifBlock,
+    byte& fakeIfBlock)
+{
   isCommand = true;
 
   // Strip comments
@@ -2068,6 +2516,35 @@ void parseCompleteNonCommentLine(
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
     // This to avoid waisting CPU time...
+
+
+    if (match && !fakeIfBlock) {
+      // substitution of %eventvalue% is made here so it can be used on if statement too
+      if (event.charAt(0) == '!')
+      {
+        line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with literal event string if starting with '!'
+      }
+      else
+      {
+        int equalsPos = event.indexOf("=");
+        if (equalsPos > 0)
+        {
+          String tmpString = event.substring(equalsPos + 1);
+          //line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+          char* tmpParam = new char[INPUT_COMMAND_SIZE];
+          tmpParam[0] = 0;
+
+          if (GetArgv(tmpString.c_str(),tmpParam,1)) {
+             line.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
+             line.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
+          }
+          if (GetArgv(tmpString.c_str(),tmpParam,2)) line.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
+          if (GetArgv(tmpString.c_str(),tmpParam,3)) line.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
+          if (GetArgv(tmpString.c_str(),tmpParam,4)) line.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+          delete[] tmpParam;
+        }
+      }
+    }
     line = parseTemplate(line, line.length());
   }
   line.trim();
@@ -2083,6 +2560,8 @@ void parseCompleteNonCommentLine(
   {
     if (line.startsWith(F("on ")))
     {
+      ifBlock = 0;
+      fakeIfBlock = 0;
       line = line.substring(3);
       int split = line.indexOf(F(" do"));
       if (split != -1)
@@ -2119,6 +2598,8 @@ void parseCompleteNonCommentLine(
     isCommand = false;
     codeBlock = false;
     match = false;
+    ifBlock = 0;
+    fakeIfBlock = 0;
   }
 
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
@@ -2135,8 +2616,8 @@ void parseCompleteNonCommentLine(
     processMatchedRule(
       lcAction, action, event, log,
       match, codeBlock, isCommand,
-      conditional, condition,
-      ifBranche, ifBrancheJustMatch);
+      condition, ifBranche,
+      ifBlock, fakeIfBlock);
   }
 }
 
@@ -2145,70 +2626,107 @@ void processMatchedRule(
   bool& match,
   bool& codeBlock,
   bool& isCommand,
-  bool& conditional,
-  bool& condition,
-  bool& ifBranche,
-  bool& ifBrancheJustMatch)
+  bool condition[],
+  bool ifBranche[],
+  byte& ifBlock,
+  byte& fakeIfBlock)
 {
-  int split = lcAction.indexOf(F("if ")); // check for optional "if" condition
-  if (!lcAction.startsWith(F("elseif "))) {
-    if (split != -1)
-    { // There is some 'if ' in the string.
-      conditional = true;
-      String check = lcAction.substring(split + 3);
-
-      log = F("[if ");
-      log += check;
-      log += F("]=");
-      condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-      if(condition == true)
-      {
-         ifBrancheJustMatch = true;
-      }
-      ifBranche = true;
+  if (fakeIfBlock)
+    isCommand = false;
+  else if (ifBlock)
+    if (condition[ifBlock-1] != ifBranche[ifBlock-1])
       isCommand = false;
-      log += toString(condition);
-      addLog(LOG_LEVEL_DEBUG, log);
+  int split = lcAction.indexOf(F("elseif ")); // check for optional "elseif" condition
+  if (split != -1)
+  {
+    isCommand = false;
+    if (ifBlock && !fakeIfBlock)
+    {
+      if (ifBranche[ifBlock-1])
+      {
+        if (condition[ifBlock-1])
+          ifBranche[ifBlock-1] = false;
+        else
+        {
+          String check = lcAction.substring(split + 7);
+          condition[ifBlock-1] = conditionMatchExtended(check);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [elseif ");
+            log += check;
+            log += F("]=");
+            log += toString(condition[ifBlock-1]);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        }
+      }
     }
   }
   else
-  { // Starts with 'elseif '
-    String check = lcAction.substring(7);
-    log = F("[elseif ");
-    log += check;
-    log += "]=";
-    condition = ifBrancheJustMatch == false && conditionMatchExtended(check);
-    if(condition == true)
+  {
+    split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+    if (split != -1)
     {
-       ifBrancheJustMatch = true;
+      if (ifBlock < RULES_IF_MAX_NESTING_LEVEL)
+      {
+        if (isCommand)
+        {
+          ifBlock++;
+          String check = lcAction.substring(split + 3);
+          condition[ifBlock-1] = conditionMatchExtended(check);
+          ifBranche[ifBlock-1] = true;
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [if ");
+            log += check;
+            log += F("]=");
+            log += toString(condition[ifBlock-1]);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        }
+        else
+          fakeIfBlock++;
+      }
+      else
+      {
+        fakeIfBlock++;
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          log = F("Lev.");
+          log += String(ifBlock);
+          log = F(": Error: IF Nesting level exceeded!");
+          addLog(LOG_LEVEL_ERROR, log);
+        }
+      }
+      isCommand = false;
     }
-    ifBranche = true;
-    isCommand = false;
-    log += toString(condition);
-    addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  if (lcAction == "else") // in case of an "else" block of actions, set ifBranche to false
+  if ((lcAction == F("else")) && !fakeIfBlock) // in case of an "else" block of actions, set ifBranche to false
   {
-    ifBranche = false;
+    ifBranche[ifBlock-1] = false;
     isCommand = false;
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("else = ");
-      log += toString(conditional && (condition == ifBranche));
+      log = F("Lev.");
+      log += String(ifBlock);
+      log += F(": [else]=");
+      log += toString(condition[ifBlock-1] == ifBranche[ifBlock-1]);
       addLog(LOG_LEVEL_DEBUG, log);
     }
   }
 
-  if (lcAction == "endif") // conditional block ends here
+  if (lcAction == F("endif")) // conditional block ends here
   {
-    conditional = false;
+    if (fakeIfBlock)
+      fakeIfBlock--;
+    else if (ifBlock)
+      ifBlock--;
     isCommand = false;
-    ifBranche = false;
-    ifBrancheJustMatch = false;
   }
 
   // process the action if it's a command and unconditional, or conditional and the condition matches the if or else block.
-  if (isCommand && ((!conditional) || (conditional && (condition == ifBranche))))
+  if (isCommand)
   {
     if (event.charAt(0) == '!')
     {
@@ -2220,7 +2738,18 @@ void processMatchedRule(
       if (equalsPos > 0)
       {
         String tmpString = event.substring(equalsPos + 1);
-        action.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% in actions with the actual value from the event
+
+        char* tmpParam = new char[INPUT_COMMAND_SIZE];
+        tmpParam[0] = 0;
+
+        if (GetArgv(tmpString.c_str(),tmpParam,1)) {
+           action.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
+           action.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
+        }
+        if (GetArgv(tmpString.c_str(),tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
+        if (GetArgv(tmpString.c_str(),tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
+        if (GetArgv(tmpString.c_str(),tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+        delete[] tmpParam;
       }
     }
 
@@ -2236,7 +2765,7 @@ void processMatchedRule(
     // FIXME TD-er: This part seems a bit strange.
     // It can't schedule a call to PLUGIN_WRITE.
     // Maybe ExecuteCommand can be scheduled?
-    yield();
+    delay(0);
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly alter the string.
     String tmpAction(action);
     if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
@@ -2248,10 +2777,11 @@ void processMatchedRule(
           log += tmpAction;
           addLog(LOG_LEVEL_ERROR, log);
         }
+        // TODO: assign here modified action???
       }
       ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
-    yield();
+    delay(0);
   }
 }
 
@@ -2266,24 +2796,26 @@ boolean ruleMatch(String& event, String& rule)
   String tmpRule = rule;
 
   //Ignore escape char
-  tmpRule.replace(F("["),F(""));
-  tmpRule.replace(F("]"),F(""));
+  tmpRule.replace("[","");
+  tmpRule.replace("]","");
 
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
   {
-    int pos = rule.indexOf('#');
-    if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
-      {
-        tmpEvent = event.substring(0,rule.length());
-        tmpRule = rule;
-      }
-
-    pos = rule.indexOf('*');
+    int pos = rule.indexOf('*');
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
       {
         tmpEvent = event.substring(0,pos-1);
         tmpRule = rule.substring(0,pos-1);
+      }
+    else
+      {
+        pos = rule.indexOf('#');
+        if (pos == -1) // no # sign in rule, use 'wildcard' match on event 'source'
+          {
+            tmpEvent = event.substring(0,rule.length());
+            tmpRule = rule;
+          }
       }
 
     if (tmpEvent.equalsIgnoreCase(tmpRule))
@@ -2520,6 +3052,7 @@ boolean conditionMatch(const String& check)
   \*********************************************************************************************/
 void rulesTimers()
 {
+  if (!Settings.UseRules) return;
   for (byte x = 0; x < RULES_TIMER_MAX; x++)
   {
     if (!RulesTimer[x].paused && RulesTimer[x].timestamp != 0L) // timer active?
@@ -2542,6 +3075,7 @@ void rulesTimers()
 
 void createRuleEvents(byte TaskIndex)
 {
+  if (!Settings.UseRules) return;
   LoadTaskSettings(TaskIndex);
   byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
   byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[TaskIndex]);
@@ -2577,15 +3111,15 @@ void SendValueLogger(byte TaskIndex)
     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
     {
       logger += getDateString('-');
-      logger += F(" ");
+      logger += ' ';
       logger += getTimeString(':');
-      logger += F(",");
+      logger += ',';
       logger += Settings.Unit;
-      logger += F(",");
+      logger += ',';
       logger += getTaskDeviceName(TaskIndex);
-      logger += F(",");
+      logger += ',';
       logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      logger += F(",");
+      logger += ',';
       logger += formatUserVarNoCheck(TaskIndex, varNr);
       logger += F("\r\n");
     }
@@ -2655,7 +3189,7 @@ class RamTracker{
               traces[bestCase]+= nextAction[readPtr];
               traces[bestCase]+= "-> ";
               traces[bestCase]+= String(nextActionStartMemory[readPtr]);
-              traces[bestCase]+= " ";
+              traces[bestCase]+= ' ';
               readPtr++;
               if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
             }
@@ -2707,11 +3241,15 @@ void checkRAM( const __FlashStringHelper* flashString)
   myRamTracker.registerRamState(s);
 
   uint32_t freeRAM = FreeMem();
-
   if (freeRAM < lowestRAM)
   {
     lowestRAM = freeRAM;
     lowestRAMfunction = flashString;
+  }
+  uint32_t freeStack = getFreeStackWatermark();
+  if (freeStack < lowestFreeStack) {
+    lowestFreeStack = freeStack;
+    lowestFreeStackfunction = flashString;
   }
 }
 
@@ -2900,6 +3438,21 @@ void play_rtttl(uint8_t _pin, const char *p )
 
 //#endif
 
+bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
+#if defined(ESP8266)
+  maxSketchSize = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const bool otaPossible = maxSketchSize > SMALLEST_OTA_IMAGE;
+  use2step = maxSketchSize < ESP.getSketchSize();
+  if (use2step) {
+    const uint32_t totalSketchSpace = ESP.getFreeSketchSpace() + ESP.getSketchSize();
+    maxSketchSize = totalSketchSpace - SMALLEST_OTA_IMAGE;
+  }
+  if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
+  return otaPossible;
+#else
+  return false;
+#endif
+}
 
 #ifdef FEATURE_ARDUINO_OTA
 /********************************************************************************************\

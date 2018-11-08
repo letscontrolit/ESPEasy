@@ -11,6 +11,8 @@ for ENV in \
   normal_ESP8266_4096 \
   normal_ESP8285_1024 \
   normal_IR_ESP8266_4096 \
+  normal_core_241_ESP8266_1024 \
+  normal_core_241_ESP8266_4096 \
   test_ESP8266_1024\
   test_ESP8266_4096\
   test_ESP8266_4096_VCC\
@@ -18,26 +20,32 @@ for ENV in \
   dev_ESP8266_1024\
   dev_ESP8266_4096\
   dev_ESP8285_1024\
-  dev_ESP8266PUYA_1024\
-  dev_ESP8266PUYA_1024_VCC\
   hard_SONOFF_POW\
-  esp32dev;\
+  hard_SONOFF_POW_R2_4M\
+  minimal_ESP8266_1024_OTA\
+  minimal_ESP8285_1024_OTA\
+  esp32dev\
+  esp32test_1M8_partition;\
 do
   echo
   echo "### Deploying environment $ENV for version $VERSION"
   BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
   cp .pioenvs/${ENV}/firmware.bin $BIN
   python2 crc2.py $BIN
-  mv $BIN "dist/ESP_Easy_${VERSION}_${ENV}.bin"
+  mv $BIN "dist/bin/ESP_Easy_${VERSION}_${ENV}.bin"
 done
 
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
-rm -rf dist/Source 2>/dev/null
-mkdir dist/Source
-cp -r lib dist/Source/
-cp -r src dist/Source/
-cp platformio.ini dist/Source/
+#rm -rf dist/Source 2>/dev/null
+rm -rf dist/Docs 2>/dev/null
+
+mkdir -p dist/source
+#mkdir -p dist/docs
+cp -r lib dist/source/
+cp -r src dist/source/
+#cp -r docs/build/ dist/docs/
+cp platformio.ini dist/source/
 
 cd dist
 

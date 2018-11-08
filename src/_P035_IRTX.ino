@@ -15,6 +15,10 @@ IRsend *Plugin_035_irSender;
 #define PLUGIN_035
 #define PLUGIN_ID_035         35
 #define PLUGIN_NAME_035       "Communication - IR Transmit"
+#define STATE_SIZE_MAX        53U
+#define PRONTO_MIN_LENGTH     6U
+
+#define from_32hex(c) ((((c) | ('A' ^ 'a')) - '0') % 39)
 
 boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 {
@@ -86,7 +90,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (GetArgv(command, TmpStr1, 100, 2)) IrType = TmpStr1;
 
-          if (IrType.equalsIgnoreCase(F("RAW"))) {
+          if (IrType.equalsIgnoreCase(F("RAW")) || IrType.equalsIgnoreCase(F("RAW2"))) {
             String IrRaw;
             uint16_t IrHz=0; 
             unsigned int IrPLen=0;
@@ -115,86 +119,120 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
             uint16_t buf[200]; 
             uint16_t idx = 0;
-            unsigned int c0 = 0; //count consecutives 0s
-            unsigned int c1 = 0; //count consecutives 1s
+            if (IrType.equalsIgnoreCase(F("RAW"))) {
+                unsigned int c0 = 0; //count consecutives 0s
+                unsigned int c1 = 0; //count consecutives 1s
 
-            printWebString += F("Interpreted RAW Code: ");
-            //Loop throught every char in RAW string
-            for(unsigned int i = 0; i < IrRaw.length(); i++)
-            {
-              //Get the decimal value from base32 table
-              //See: https://en.wikipedia.org/wiki/Base32#base32hex
-              char c = ((IrRaw[i] | ('A' ^ 'a')) - '0') % 39;
+                printWebString += F("Interpreted RAW Code: ");
+                //Loop throught every char in RAW string
+                for(unsigned int i = 0; i < IrRaw.length(); i++)
+                {
+                  //Get the decimal value from base32 table
+                  //See: https://en.wikipedia.org/wiki/Base32#base32hex
+                  char c = from_32hex(IrRaw[i]);
 
-              //Loop through 5 LSB (bits 16, 8, 4, 2, 1)
-              for (unsigned int shft = 1; shft < 6; shft++)
-              {
-                //if bit is 1 (5th position - 00010000 = 16)
-                if ((c & 16) != 0) {
-                  //add 1 to counter c1
-                  c1++;
-                  //if we already have any 0s in counting (the previous
-                  //bit was 0)
-                  if (c0 > 0) {
-                    //add the total ms into the buffer (number of 0s multiplied
-                    //by defined blank length ms)
-                    buf[idx++] = c0 * IrBLen;
-                    //print the number of 0s just for debuging/info purpouses
-                    for (uint t = 0; t < c0; t++)
-                      printWebString += F("0");
-                  }
-                  //So, as we receive a "1", and processed the counted 0s
-                  //sending them as a ms timing into the buffer, we clear
-                  //the 0s counter
-                  c0 = 0;
-                } else {
-                  //So, bit is 0
+                  //Loop through 5 LSB (bits 16, 8, 4, 2, 1)
+                  for (unsigned int shft = 1; shft < 6; shft++)
+                  {
+                    //if bit is 1 (5th position - 00010000 = 16)
+                    if ((c & 16) != 0) {
+                      //add 1 to counter c1
+                      c1++;
+                      //if we already have any 0s in counting (the previous
+                      //bit was 0)
+                      if (c0 > 0) {
+                        //add the total ms into the buffer (number of 0s multiplied
+                        //by defined blank length ms)
+                        buf[idx++] = c0 * IrBLen;
+                        //print the number of 0s just for debuging/info purpouses
+                        for (uint t = 0; t < c0; t++)
+                          printWebString += '0';
+                      }
+                      //So, as we receive a "1", and processed the counted 0s
+                      //sending them as a ms timing into the buffer, we clear
+                      //the 0s counter
+                      c0 = 0;
+                    } else {
+                      //So, bit is 0
 
-                  //On first call, ignore 0s (suppress left-most 0s)
-                  if (c0+c1 != 0) {
-                    //add 1 to counter c0
-                    c0++;
-                    //if we already have any 1s in counting (the previous
-                    //bit was 1)
-                    if (c1 > 0) {
-                      //add the total ms into the buffer (number of 1s
-                      //multiplied by defined pulse length ms)
-                      buf[idx++] = c1 * IrPLen;
-                      //print the number of 1s just for debugging/info purposes
-                      for (uint t = 0; t < c1; t++)
-                        printWebString += F("1");
+                      //On first call, ignore 0s (suppress left-most 0s)
+                      if (c0+c1 != 0) {
+                        //add 1 to counter c0
+                        c0++;
+                        //if we already have any 1s in counting (the previous
+                        //bit was 1)
+                        if (c1 > 0) {
+                          //add the total ms into the buffer (number of 1s
+                          //multiplied by defined pulse length ms)
+                          buf[idx++] = c1 * IrPLen;
+                          //print the number of 1s just for debugging/info purposes
+                          for (uint t = 0; t < c1; t++)
+                            printWebString += '1';
+                        }
+                        //So, as we receive a "0", and processed the counted 1s
+                        //sending them as a ms timing into the buffer, we clear
+                        //the 1s counter
+                        c1 = 0;
+                      }
                     }
-                    //So, as we receive a "0", and processed the counted 1s
-                    //sending them as a ms timing into the buffer, we clear
-                    //the 1s counter
-                    c1 = 0;
+                    //shift to left the "c" variable to process the next bit that is
+                    //in 5th position (00010000 = 16)
+                    c <<= 1;
                   }
                 }
-                //shift to left the "c" variable to process the next bit that is
-                //in 5th position (00010000 = 16)
-                c <<= 1;
-              }
+
+                //Finally, we need to process the last counted bit that we were
+                //processing
+
+                //If we have pendings 0s
+                if (c0 > 0) {
+                  buf[idx++] = c0 * IrBLen;
+                  for (uint t = 0; t < c0; t++)
+                    printWebString += '0';
+                }
+                //If we have pendings 1s
+                if (c1 > 0) {
+                  buf[idx++] = c1 * IrPLen;
+                  for (uint t = 0; t < c1; t++)
+                    printWebString += '1';
+                }
+
+                printWebString += F("<BR>");
+
+            } else {        // RAW2
+                for (unsigned int i = 0, total = IrRaw.length(), gotRep = 0, rep = 0; i < total;) {
+                   char c = IrRaw[i++];
+                   if (c == '*') {
+                       if (i+2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf))
+                           return addErrorTrue("Invalid RAW2 B32 encoding!");
+                       gotRep = 2;
+                   } else {
+                       if ((c == '^' && i+1 >= total) || idx == sizeof(buf))
+                           return addErrorTrue("Invalid RAW2 B32 encoding!");
+
+                       uint16_t irLen = (idx & 1)? IrBLen : IrPLen;
+                       if (c == '^') {
+                           buf[idx++] = (from_32hex(IrRaw[i]) * 32 + from_32hex(IrRaw[i+1])) * irLen;
+                           i += 2;
+                       } else
+                           buf[idx++] = from_32hex(c) * irLen;
+
+                       if (--gotRep == 0) {
+                           while (--rep) {
+                               buf[idx] = buf[idx-2];
+                               buf[idx+1] = buf[idx-1];
+                               idx += 2;
+                           }
+                       }
+                   }
+                }
             }
 
-            //Finally, we need to process the last counted bit that we were
-            //processing
-
-            //If we have pendings 0s
-            if (c0 > 0) {
-              buf[idx] = c0 * IrBLen;
-              for (uint t = 0; t < c0; t++)
-                printWebString += F("0");
-            }
-            //If we have pendings 1s
-            if (c1 > 0) {
-              buf[idx] = c1 * IrPLen;
-              for (uint t = 0; t < c1; t++)
-                printWebString += F("1");
-            }
-
-            printWebString += F("<BR>");
-
-            Plugin_035_irSender->sendRaw(buf, idx+1, IrHz);
+            Plugin_035_irSender->sendRaw(buf, idx, IrHz);
+            //String line = "";
+            //for (int i = 0; i < idx; i++)
+            //    line += uint64ToString(buf[i], 10) + ",";
+            //Serial.println(line);
 
             //sprintf_P(log, PSTR("IR Params1: Hz:%u - PLen: %u - BLen: %u"), IrHz, IrPLen, IrBLen);
             //addLog(LOG_LEVEL_INFO, log);
@@ -205,7 +243,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           //  unsigned long IrSecondCode=0UL;
             char ircodestr[100];
             if (GetArgv(command, TmpStr1,100, 2)) IrType = TmpStr1;
-                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoul(TmpStr1, NULL, 16);
+                       if (GetArgv(command, TmpStr1, 100, 3)){ IrCode = strtoull(TmpStr1, NULL, 16);
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
                                                         }
             //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
@@ -254,9 +292,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("HitachiAC1"))) parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
             if (IrType.equalsIgnoreCase(F("HitachiAC2"))) parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
             if (IrType.equalsIgnoreCase(F("GICable"))) Plugin_035_irSender->sendGICable(IrCode);
+			if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
           }
 
-          addLog(LOG_LEVEL_INFO, F("IRTX :IR Code Sent"));
+          addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
           if (printToWeb)
           {
             printWebString += F("IR Code Sent ");
@@ -274,7 +313,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+boolean addErrorTrue(const char *str) {
+    addLog(LOG_LEVEL_ERROR, str);
+    return true;
+}
 
+// A lot of the following code has been taken directly (with permission) from the IRMQTTServer.ino example code
+// of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266)
 // Parse an Air Conditioner A/C Hex String/code and send it.
 // Args:
 //   irType: Nr. of the protocol we need to send.

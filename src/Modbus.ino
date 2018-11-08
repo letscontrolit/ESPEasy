@@ -70,7 +70,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   resultReceived = false;
   ModbusClient = new WiFiClient();
   ModbusClient->setNoDelay(true);
-  ModbusClient->setTimeout(200);
+  ModbusClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
   timeout = millis();
   ModbusClient->flush();
 
@@ -133,7 +133,7 @@ bool Modbus::handle() {
       LogString += F("reading bytes: ");
       for (int a = 0; a < 9; a++) {
         payLoad = ModbusClient->read();
-        LogString += (payLoad);  LogString += F(" ");
+        LogString += (payLoad);  LogString += ' ';
       }
       LogString += F("> ");
       if (payLoad > 8) {

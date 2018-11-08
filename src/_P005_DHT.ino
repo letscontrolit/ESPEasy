@@ -9,6 +9,19 @@
 #define PLUGIN_VALUENAME1_005 "Temperature"
 #define PLUGIN_VALUENAME2_005 "Humidity"
 
+#define P005_DHT11    11
+#define P005_DHT12    12
+#define P005_DHT22    22
+#define P005_AM2301   23
+#define P005_SI7021   70
+
+#define P005_error_no_reading          1
+#define P005_error_protocol_timeout    2
+#define P005_error_checksum_error      3
+#define P005_error_invalid_NAN_reading 4
+#define P005_info_temperature          5
+#define P005_info_humidity             6
+
 uint8_t Plugin_005_DHT_Pin;
 
 boolean Plugin_005(byte function, struct EventStruct *event, String& string)
@@ -49,9 +62,9 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
-        int indices[] = { 11, 22, 12, 23, 70 };
+        int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
 
-        addFormSelector(F("DHT Type"), F("plugin_005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
+        addFormSelector(F("DHT Type"), F("p005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
 
         success = true;
         break;
@@ -59,7 +72,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_005_dhttype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p005_dhttype"));
 
         success = true;
         break;
@@ -67,92 +80,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        byte dht_dat[5];
-        byte i;
-        boolean error = false;
-
-        byte Par3 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_005_DHT_Pin = Settings.TaskDevicePin1[event->TaskIndex];
-
-        pinMode(Plugin_005_DHT_Pin, OUTPUT);
-        digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
-        if(Par3 == 11 || Par3 == 22 || Par3 == 12)  delay(18);
-        else if (Par3 == 23 )         delayMicroseconds(900);
-        else if (Par3 == 70 )         delayMicroseconds(500);
-        pinMode(Plugin_005_DHT_Pin, INPUT);                 // change pin to input
-        delayMicroseconds(50);
-
-        error = waitState(0);
-        if(error)
-        {   logError(event, F("DHT  : no Reading !"));
-            break;
-        }
-        error = waitState(1);
-        if(error)
-        {   logError(event, F("DHT  : no Reading !"));
-            break;
-        }
-        noInterrupts();
-        error = waitState(0);
-        if(error)
-        {   logError(event, F("DHT  : no Reading !"));
-            break;
-        }
-        for (i = 0; i < 5; i++)
-        {
-            byte data = Plugin_005_read_dht_dat();
-            if(data == -1)
-            {   logError(event, F("DHT  : protocol timeout!"));
-                break;
-            }
-            dht_dat[i] = data;
-        }
-        interrupts();
-
-              // Checksum calculation is a Rollover Checksum by design!
-        byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
-        if (dht_dat[4] != dht_check_sum)
-        {
-            logError(event, F("DHT  : checksum error!"));
-            break;
-        }
-
-        float temperature = NAN;
-        float humidity = NAN;
-        if (Par3 == 11)
-        {
-          temperature = float(dht_dat[2]); // Temperature
-          humidity = float(dht_dat[0]); // Humidity
-        }
-        else if (Par3 == 12)
-        {
-            temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
-            if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
-            humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0; // Humidity
-        }
-        else if (Par3 == 22 || Par3 == 23 || Par3 == 70)
-        {
-          if (dht_dat[2] & 0x80) // negative temperature
-            temperature = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
-          else
-            temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
-          humidity = 0.1 * word(dht_dat[0], dht_dat[1]); // Humidity
-        }
-
-        if (temperature == NAN || humidity == NAN)
-        {     logError(event, F("DHT  : invalid NAN reading !"));
-              break;
-        }
-
-        UserVar[event->BaseVarIndex] = temperature;
-        UserVar[event->BaseVarIndex + 1] = humidity;
-        String log = F("DHT  : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        log = F("DHT  : Humidity: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
-        success = true;
+        success = P005_do_plugin_read(event);
         break;
       }
   }
@@ -163,27 +91,143 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 /*********************************************************************************************\
 * DHT sub to log an error
 \*********************************************************************************************/
-void logError(struct EventStruct *event, String text)
+void P005_log(struct EventStruct *event, int logNr)
 {
+  bool isError = true;
+  String text = F("DHT  : ");
+  switch (logNr) {
+    case P005_error_no_reading:          text += F("No Reading"); break;
+    case P005_error_protocol_timeout:    text += F("Protocol Timeout"); break;
+    case P005_error_checksum_error:      text += F("Checksum Error"); break;
+    case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
+    case P005_info_temperature:
+      text += F("Temperature: ");
+      text += UserVar[event->BaseVarIndex];
+      isError = false;
+      break;
+    case P005_info_humidity:
+      text += F("Humidity: ");
+      text += UserVar[event->BaseVarIndex + 1];
+      isError = false;
+      break;
+  }
   addLog(LOG_LEVEL_INFO, text);
-  UserVar[event->BaseVarIndex] = NAN;
-  UserVar[event->BaseVarIndex + 1] = NAN;
+  if (isError) {
+    UserVar[event->BaseVarIndex] = NAN;
+    UserVar[event->BaseVarIndex + 1] = NAN;
+  }
 }
 
 /*********************************************************************************************\
-* DHT sub to wait until a pin is in a certiin state
+* DHT sub to wait until a pin is in a certain state
 \*********************************************************************************************/
-boolean waitState(int state)
+boolean P005_waitState(int state)
 {
-  byte counter = 0;
-  while (( digitalRead(Plugin_005_DHT_Pin) != state) && (counter < 100))
+  unsigned long timeout = micros() + 100;
+  while (digitalRead(Plugin_005_DHT_Pin) != state)
   {
+    if (usecTimeOutReached(timeout)) return false;
     delayMicroseconds(1);
-    counter++;
   }
-  if( counter < 100) return false;
   return true;
 }
+
+/*********************************************************************************************\
+* Perform the actual reading + interpreting of data.
+\*********************************************************************************************/
+bool P005_do_plugin_read(struct EventStruct *event) {
+  byte i;
+
+  byte Par3 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+  Plugin_005_DHT_Pin = Settings.TaskDevicePin1[event->TaskIndex];
+
+  pinMode(Plugin_005_DHT_Pin, OUTPUT);
+  digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
+  switch (Par3) {
+    case P005_DHT11:
+    case P005_DHT22:
+    case P005_DHT12:  delay(18); break;  // FIXME TD-er: Must this be so long?
+    case P005_AM2301: delayMicroseconds(900); break;
+    case P005_SI7021: delayMicroseconds(500); break;
+  }
+  switch (Par3) {
+    case P005_DHT11:
+    case P005_DHT22:
+    case P005_DHT12:
+    case P005_AM2301:
+      pinMode(Plugin_005_DHT_Pin, INPUT);
+      delayMicroseconds(50);
+      break;
+    case P005_SI7021:
+      // See: https://github.com/letscontrolit/ESPEasy/issues/1798
+      digitalWrite(Plugin_005_DHT_Pin, HIGH);
+      delayMicroseconds(20);
+      pinMode(Plugin_005_DHT_Pin, INPUT);
+      break;
+  }
+  if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
+  noInterrupts();
+  if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
+  bool readingAborted = false;
+  byte dht_dat[5];
+  for (i = 0; i < 5 && !readingAborted; i++)
+  {
+      byte data = Plugin_005_read_dht_dat();
+      if(data == -1)
+      {   P005_log(event, P005_error_protocol_timeout);
+          readingAborted = true;
+      }
+      dht_dat[i] = data;
+  }
+  interrupts();
+  if (readingAborted)
+    return false;
+
+        // Checksum calculation is a Rollover Checksum by design!
+  byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
+  if (dht_dat[4] != dht_check_sum)
+  {
+      P005_log(event, P005_error_checksum_error);
+      return false;
+  }
+
+  float temperature = NAN;
+  float humidity = NAN;
+  switch (Par3) {
+    case P005_DHT11:
+      temperature = float(dht_dat[2]); // Temperature
+      humidity = float(dht_dat[0]); // Humidity
+      break;
+    case P005_DHT12:
+      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
+      if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
+      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0; // Humidity
+      break;
+    case P005_DHT22:
+    case P005_AM2301:
+    case P005_SI7021:
+      if (dht_dat[2] & 0x80) // negative temperature
+        temperature = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
+      else
+        temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
+      humidity = 0.1 * word(dht_dat[0], dht_dat[1]); // Humidity
+      break;
+  }
+
+  if (temperature == NAN || humidity == NAN)
+  {     P005_log(event, P005_error_invalid_NAN_reading);
+        return false;
+  }
+
+  UserVar[event->BaseVarIndex] = temperature;
+  UserVar[event->BaseVarIndex + 1] = humidity;
+  P005_log(event, P005_info_temperature);
+  P005_log(event, P005_info_humidity);
+  return true;
+}
+
+
 
 /*********************************************************************************************\
 * DHT sub to get an 8 bit value from the receiving bitstream
@@ -192,31 +236,13 @@ int Plugin_005_read_dht_dat(void)
 {
   byte i = 0;
   byte result = 0;
-  byte counter = 0;
   for (i = 0; i < 8; i++)
   {
-    while ((!digitalRead(Plugin_005_DHT_Pin)) && (counter < 100))
-    {
-      delayMicroseconds(1);
-      counter++;
-    }
-    if (counter >= 100)
-    {
-      return -1;
-    }
+    if (!P005_waitState(1))  return -1;
     delayMicroseconds(35); // was 30
     if (digitalRead(Plugin_005_DHT_Pin))
       result |= (1 << (7 - i));
-    counter = 0;
-    while ((digitalRead(Plugin_005_DHT_Pin)) && (counter < 100))
-    {
-      delayMicroseconds(1);
-      counter++;
-    }
-    if (counter >= 100)
-    {
-      return -1;
-    }
+    if (!P005_waitState(0))  return -1;
   }
   return result;
 }

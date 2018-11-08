@@ -22,7 +22,7 @@
 
 #include <QEIx4.h>
 
-QEIx4* Plugin_059_QE = NULL;
+std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -108,12 +108,13 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_059_QE)
-          Plugin_059_QE = new QEIx4;
+        // create sensor instance and add to std::map
+        P_059_sensordefs.erase(event->TaskIndex);
+        P_059_sensordefs[event->TaskIndex] = std::shared_ptr<QEIx4>(new QEIx4);
 
-        Plugin_059_QE->begin(PIN(0),PIN(1),PIN(2),CONFIG(0));
-        Plugin_059_QE->setLimit(CONFIG_L(0), CONFIG_L(1));
-        Plugin_059_QE->setIndexTrigger(true);
+        P_059_sensordefs[event->TaskIndex]->begin(PIN(0),PIN(1),PIN(2),CONFIG(0));
+        P_059_sensordefs[event->TaskIndex]->setLimit(CONFIG_L(0), CONFIG_L(1));
+        P_059_sensordefs[event->TaskIndex]->setIndexTrigger(true);
 
         ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
 
@@ -127,7 +128,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
             setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         addLog(LOG_LEVEL_INFO, log);
 
@@ -135,13 +136,19 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        P_059_sensordefs.erase(event->TaskIndex);
+        break;
+      }
+
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_059_QE)
+        if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-          if (Plugin_059_QE->hasChanged())
+          if (P_059_sensordefs[event->TaskIndex]->hasChanged())
           {
-            long c = Plugin_059_QE->read();
+            long c = P_059_sensordefs[event->TaskIndex]->read();
             UserVar[event->BaseVarIndex] = (float)c;
             event->sensorType = SENSOR_TYPE_SWITCH;
 
@@ -159,9 +166,9 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        if (Plugin_059_QE)
+        if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-          UserVar[event->BaseVarIndex] = (float)Plugin_059_QE->read();
+          UserVar[event->BaseVarIndex] = (float)P_059_sensordefs[event->TaskIndex]->read();
         }
         success = true;
         break;
@@ -169,7 +176,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        if (Plugin_059_QE)
+        if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
             String log = "";
             String command = parseString(string, 1);
@@ -179,7 +186,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
               {
                 log = String(F("QEI  : ")) + string;
                 addLog(LOG_LEVEL_INFO, log);
-                Plugin_059_QE->write(event->Par1);
+                P_059_sensordefs[event->TaskIndex]->write(event->Par1);
               }
               success = true; // Command is handled.
             }

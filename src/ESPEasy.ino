@@ -83,6 +83,8 @@
 // Define globals before plugin sets to allow a personal override of the selected plugins
 #include "ESPEasy-Globals.h"
 #include "define_plugin_sets.h"
+// Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
+#include "_CPlugin_Helper.h"
 
 // Blynk_get prototype
 boolean Blynk_get(const String& command, byte controllerIndex,float *data = NULL );
@@ -104,9 +106,14 @@ int firstEnabledBlynkController() {
 \*********************************************************************************************/
 void setup()
 {
+#ifdef ESP8266_DISABLE_EXTRA4K
+  disable_extra4k_at_link_time();
+#endif
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   WiFi.setAutoReconnect(false);
   setWifiMode(WIFI_OFF);
+  lowestFreeStack = getFreeStackWatermark();
+  lowestRAM = FreeMem();
 
   Plugin_id.resize(PLUGIN_MAX);
   Task_id_to_Plugin_id.resize(TASKS_MAX);
@@ -116,8 +123,6 @@ void setup()
     for(byte x = 0; x < 16; x++)
       ledChannelPin[x] = -1;
   #endif
-
-  lowestRAM = FreeMem();
 
   Serial.begin(115200);
   // Serial.print("\n\n\nBOOOTTT\n\n\n");
@@ -146,16 +151,16 @@ void setup()
 
   String log = F("\n\n\rINIT : Booting version: ");
   log += BUILD_GIT;
-  log += F(" (");
+  log += " (";
   log += getSystemLibraryString();
-  log += F(")");
+  log += ')';
   addLog(LOG_LEVEL_INFO, log);
-
 
 
   //warm boot
   if (readFromRTC())
   {
+    RTC.bootFailedCount++;
     RTC.bootCounter++;
     readUserVarFromRTC();
 
@@ -191,6 +196,16 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
+    byte toDisable = RTC.bootFailedCount - 10;
+    toDisable = disablePlugin(toDisable);
+    if (toDisable != 0) {
+      toDisable = disableController(toDisable);
+    }
+    if (toDisable != 0) {
+      toDisable = disableNotification(toDisable);
+    }
+  }
 
 //  setWifiMode(WIFI_STA);
   checkRuleSets();
@@ -233,6 +248,12 @@ void setup()
 
   timermqtt_interval = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
+  if (Settings.UseRules && isDeepSleepEnabled())
+  {
+    String event = F("System#NoSleep=");
+    event += Settings.deepSleep;
+    rulesProcessing(event);
+  }
 
   PluginInit();
   CPluginInit();
@@ -240,9 +261,9 @@ void setup()
   log = F("INFO : Plugins: ");
   log += deviceCount + 1;
   log += getPluginDescriptionString();
-  log += F(" (");
+  log += " (";
   log += getSystemLibraryString();
-  log += F(")");
+  log += ')';
   addLog(LOG_LEVEL_INFO, log);
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
@@ -302,9 +323,17 @@ void setup()
     if(UseRTOSMultitasking){
       log = F("RTOS : Launching tasks");
       addLog(LOG_LEVEL_INFO, log);
-      xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 8192, NULL, 1, NULL, 1);
+      xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, NULL, 1, NULL, 1);
       xTaskCreatePinnedToCore(RTOS_TaskSerial, "RTOS_TaskSerial", 8192, NULL, 1, NULL, 1);
       xTaskCreatePinnedToCore(RTOS_Task10ps, "RTOS_Task10ps", 8192, NULL, 1, NULL, 1);
+      xTaskCreatePinnedToCore(
+                    RTOS_HandleSchedule,   /* Function to implement the task */
+                    "RTOS_HandleSchedule", /* Name of the task */
+                    16384,      /* Stack size in words */
+                    NULL,       /* Task input parameter */
+                    1,          /* Priority of the task */
+                    NULL,       /* Task handle. */
+                    1);         /* Core where the task should run */
     }
   #endif
 
@@ -351,6 +380,14 @@ void RTOS_Task10ps( void * parameter )
     run10TimesPerSecond();
  }
 }
+
+void RTOS_HandleSchedule( void * parameter )
+{
+ while (true){
+    handle_schedule();
+ }
+}
+
 #endif
 
 int firstEnabledMQTTController() {
@@ -377,6 +414,8 @@ void updateLoopStats() {
     return;
   }
   const long usecSince = usecPassedSince(lastLoopStart);
+  miscStats[LOOP_STATS].add(usecSince);
+
   loop_usec_duration_total += usecSince;
   lastLoopStart = micros();
   if (usecSince <= 0 || usecSince > 10000000)
@@ -433,8 +472,11 @@ int getLoopCountPerSec() {
 \*********************************************************************************************/
 void loop()
 {
+  /*
+  //FIXME TD-er: No idea what this does.
   if(MainLoopCall_ptr)
       MainLoopCall_ptr();
+  */
 
   updateLoopStats();
 
@@ -462,8 +504,18 @@ void loop()
   if (firstLoopConnectionsEstablished) {
      firstLoop = false;
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     schedule_all_task_device_timers();
-   }
+     // schedule_all_task_device_timers(); Disabled for now, since we are now using queues for controllers.
+     if (Settings.UseRules && isDeepSleepEnabled())
+     {
+        String event = F("System#NoSleep=");
+        event += Settings.deepSleep;
+        rulesProcessing(event);
+     }
+
+
+     RTC.bootFailedCount = 0;
+     saveToRTC();
+  }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
@@ -478,7 +530,10 @@ void loop()
   //normal mode, run each task when its time
   else
   {
-    handle_schedule();
+    if (!UseRTOSMultitasking) {
+      // On ESP32 the schedule is executed on the 2nd core.
+      handle_schedule();
+    }
   }
 
   backgroundtasks();
@@ -491,6 +546,7 @@ void loop()
     }
     // Flush outstanding MQTT messages
     runPeriodicalMQTT();
+    flushAndDisconnectAllClients();
 
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
@@ -504,6 +560,14 @@ bool checkConnectionsEstablished() {
     return MQTTclient_connected;
   }
   return true;
+}
+
+void flushAndDisconnectAllClients() {
+  if (MQTTclient.connected()) {
+    MQTTclient.disconnect();
+    updateMQTTclient_connected();
+  }
+  /// FIXME TD-er: add call to all controllers (delay queue) to flush all data.
 }
 
 void runPeriodicalMQTT() {
@@ -529,11 +593,34 @@ void runPeriodicalMQTT() {
   }
 }
 
+String getMQTT_state() {
+  switch (MQTTclient.state()) {
+    case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
+    case MQTT_CONNECTION_LOST        : return F("Connection lost");
+    case MQTT_CONNECT_FAILED         : return F("Connect failed");
+    case MQTT_DISCONNECTED           : return F("Disconnected");
+    case MQTT_CONNECTED              : return F("Connected");
+    case MQTT_CONNECT_BAD_PROTOCOL   : return F("Connect bad protocol");
+    case MQTT_CONNECT_BAD_CLIENT_ID  : return F("Connect bad client_id");
+    case MQTT_CONNECT_UNAVAILABLE    : return F("Connect unavailable");
+    case MQTT_CONNECT_BAD_CREDENTIALS: return F("Connect bad credentials");
+    case MQTT_CONNECT_UNAUTHORIZED   : return F("Connect unauthorized");
+    default: return "";
+  }
+}
+
 void updateMQTTclient_connected() {
   if (MQTTclient_connected != MQTTclient.connected()) {
     MQTTclient_connected = !MQTTclient_connected;
-    if (!MQTTclient_connected)
-      addLog(LOG_LEVEL_ERROR, F("MQTT : Connection lost"));
+    if (!MQTTclient_connected) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String connectionError = F("MQTT : Connection lost, state: ");
+        connectionError += getMQTT_state();
+        addLog(LOG_LEVEL_ERROR, connectionError);
+      }
+    } else {
+      schedule_all_tasks_using_MQTT_controller();
+    }
     if (Settings.UseRules) {
       String event = MQTTclient_connected ? F("MQTT#Connected") : F("MQTT#Disconnected");
       rulesProcessing(event);
@@ -598,8 +685,7 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
-    String log = F("SYS  : Reset 24h counters");
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
   }
 
   if (Settings.ConnectionFailuresThreshold)
@@ -682,7 +768,7 @@ void runOncePerSecond()
 void logTimerStatistics() {
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
-  logStatistics(loglevel, true);
+//  logStatistics(loglevel, true);
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
     queueLog += msecTimerHandler.getQueueStats();
@@ -775,13 +861,10 @@ void SensorSendTask(byte TaskIndex)
       {
         if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
         {
-          String spreValue = String(preValue[varNr]);
           String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
-          float value = UserVar[varIndex + varNr];
+          formula.replace(F("%pvalue%"), String(preValue[varNr]));
+          formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
           float result = 0;
-          String svalue = String(value);
-          formula.replace(F("%pvalue%"), spreValue);
-          formula.replace(F("%value%"), svalue);
           byte error = Calculate(formula.c_str(), &result);
           if (error == 0)
             UserVar[varIndex + varNr] = result;
@@ -802,7 +885,17 @@ void backgroundtasks()
 {
   //checkRAM(F("backgroundtasks"));
   //always start with a yield
-  yield();
+  delay(0);
+/*
+  // Remove this watchdog feed for now.
+  // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
+
+  #ifdef ESP32
+  // Have to find a similar function to call ESP32's esp_task_wdt_feed();
+  #else
+  ESP.wdtFeed();
+  #endif
+*/
 
   //prevent recursion!
   if (runningBackgroundTasks)
@@ -814,7 +907,7 @@ void backgroundtasks()
   #if defined(ESP8266)
     tcpCleanup();
   #endif
-
+  process_serialLogBuffer();
   if(!UseRTOSMultitasking){
     if (Settings.UseSerial)
       if (Serial.available())
@@ -835,13 +928,13 @@ void backgroundtasks()
   //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
-    yield();
+    delay(0);
     ArduinoOTA.handle();
   }
 
   #endif
 
-  yield();
+  delay(0);
 
   statusLED(false);
 

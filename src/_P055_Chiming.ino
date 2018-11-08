@@ -195,7 +195,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
             digitalWrite(pin, Plugin_055_Data->lowActive);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         if (Plugin_055_Data->lowActive)
           log += F("!");
@@ -236,7 +236,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           String param = parseStringToEndKeepCase(string, 3);
           if (name.length() > 0 && param.length() > 0) {
             Plugin_055_WriteChime(name, param);
-            Plugin_055_AddStringFIFO(F("1"));
+            Plugin_055_AddStringFIFO("1");
           }
           success = true;
         }
@@ -312,7 +312,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
             String log = F("Chime: Process '");
             log += c;
-            log += "'";
+            log += '\'';
             addLog(LOG_LEVEL_DEBUG, log);
 
             switch (c)
@@ -459,7 +459,7 @@ void Plugin_055_WriteChime(const String& name, const String& tokens)
 
   String log = F("Chime: write ");
   log += fileName;
-  log += F(" ");
+  log += ' ';
 
   fs::File f = SPIFFS.open(fileName, "w");
   if (f)
@@ -481,7 +481,7 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
 
   String log = F("Chime: read ");
   log += fileName;
-  log += F(" ");
+  log += ' ';
 
   tokens = "";
   fs::File f = SPIFFS.open(fileName, "r+");

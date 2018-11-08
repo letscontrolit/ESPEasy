@@ -39,12 +39,14 @@ long cf_pulses = 0;
 long cf_pulses_last_time = CSE_PULSES_NOT_INITIALIZED;
 long cf_frequency = 0;
 uint8_t serial_in_buffer[32];
-uint8_t serial_in_byte_counter = 0;
-uint8_t serial_in_byte = 0;
+uint8_t P077_checksum = 0;
 float energy_voltage = 0;         // 123.1 V
 float energy_current = 0;         // 123.123 A
 float energy_power = 0;           // 123.1 W
 
+//stats
+long P077_t_max = 0, P077_t_all = 0, P077_t_pkt=0, P077_t_pkt_tmp = 0;
+uint16_t P077_count_bytes = 0, P077_count_max = 0, P077_count_pkt = 0;
 
 boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 {
@@ -84,13 +86,13 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNumericBox(F("U Ref"), F("plugin_077_URef"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormNumericBox(F("U Ref"), F("p077_URef"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
         addUnit(F("uSec"));
 
-        addFormNumericBox(F("I Ref"), F("plugin_077_IRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("I Ref"), F("p077_IRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         addUnit(F("uSec"));
 
-        addFormNumericBox(F("P Ref"), F("plugin_077_PRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("P Ref"), F("p077_PRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         addUnit(F("uSec"));
         addFormNote(F("Use 0 to read values stored on chip / default values"));
 
@@ -100,9 +102,9 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_077_URef"));;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_077_IRef"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_077_PRef"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p077_URef"));;
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p077_IRef"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p077_PRef"));
         success = true;
         break;
       }
@@ -118,7 +120,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
         disableSerialLog(); // disable logging on serial port (used for CSE7766 communication)
         Settings.BaudRate = 4800; // set BaudRate for CSE7766
         Serial.flush();
-        Serial.begin(Settings.BaudRate);
+        Serial.begin(Settings.BaudRate,SERIAL_8E1);
         success = true;
         break;
       }
@@ -165,40 +167,64 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
     case PLUGIN_SERIAL_IN:
       {
         if (Plugin_077_init) {
-          if (Serial.available() > 0) {
-            serial_in_byte = Serial.read();
-            success = true;
+          success = true;
+          /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
+          bool P077_found = false;
+          long t_start = millis();
+          while (Serial.available()>0 && !P077_found){ // if we have data try to find good checksum
+            uint8_t serial_in_byte = Serial.read();
+            P077_count_bytes++;
+            P077_checksum -= serial_in_buffer[2]; // substract from checksum data to be removed
+            memmove(serial_in_buffer,serial_in_buffer+1,sizeof(serial_in_buffer)-1); // scroll buffer
+            serial_in_buffer[25] = serial_in_byte; // add new data
+            P077_checksum += serial_in_buffer[22]; // add online checksum
+            if (P077_checksum == serial_in_buffer[23] && serial_in_buffer[1] == 0x5A){
+              P077_found = true;
+              P077_count_pkt++;
+              addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
+              CseReceived(event);
 
-            if (cse_receive_flag) {
-              serial_in_buffer[serial_in_byte_counter++] = serial_in_byte;
-              if (24 == serial_in_byte_counter) {
-                addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: packet received"));
-                CseReceived(event);
-                cse_receive_flag = 0;
-                serial_in_byte_counter = 0;
-                // new packet received, update values
-                UserVar[event->BaseVarIndex] = energy_voltage;
-                UserVar[event->BaseVarIndex + 1] = energy_power;
-                UserVar[event->BaseVarIndex + 2] = energy_current;
-                UserVar[event->BaseVarIndex + 3] = cf_pulses;
-//                break;
-              }
-            } else {
-              if (0x5A == serial_in_byte) { // 0x5A - Packet header 2
-                cse_receive_flag = 1;
-                addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: Header received"));
-              } else {
-                serial_in_byte_counter = 0;
-              }
-              serial_in_buffer[serial_in_byte_counter++] = serial_in_byte;
+              // new packet received, update values
+              UserVar[event->BaseVarIndex] = energy_voltage;
+              UserVar[event->BaseVarIndex + 1] = energy_power;
+              UserVar[event->BaseVarIndex + 2] = energy_current;
+              UserVar[event->BaseVarIndex + 3] = cf_pulses;
             }
-            serial_in_byte = 0;           // Discard
+          }
 
+          long t_diff = millis()-t_start;
+          P077_t_all += t_diff;
 
-            //          String log = F("Variable: Tag: ");
-            //          log += key;
-            //          addLog(LOG_LEVEL_INFO, log);
-            //          success = true;
+          if (P077_count_pkt > 10) // bypass first 10 pkts
+            P077_t_max = max(P077_t_max, t_diff);
+
+          if (P077_found) {
+            P077_count_max = max(P077_count_max, P077_count_bytes);
+            P077_t_pkt = t_start - P077_t_pkt_tmp;
+            P077_t_pkt_tmp = t_start;
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              String log = F("CSE: time ");
+              log += P077_t_max;
+              log += '/';
+              log += P077_t_pkt;
+              log += '/';
+              log += P077_t_all;
+              addLog(LOG_LEVEL_DEBUG, log);
+              log = F("CSE: bytes ");
+              log += P077_count_bytes;
+              log += '/';
+              log += P077_count_max;
+              log += '/';
+              log += Serial.available();
+              addLog(LOG_LEVEL_DEBUG, log);
+              log = F("CSE: nr ");
+              log += P077_count_pkt;
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
+
+            P077_t_all = 0;
+            P077_count_bytes = 0;
           }
         }
         break;
@@ -212,14 +238,6 @@ void CseReceived(struct EventStruct *event)
   uint8_t header = serial_in_buffer[0];
   if ((header & 0xFC) == 0xFC) {
     addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
-    return;
-  }
-
-  // Calculate checksum
-  uint8_t checksum = 0;
-  for (byte i = 2; i < 23; i++) checksum += serial_in_buffer[i];
-  if (checksum != serial_in_buffer[23]) {
-    addLog(LOG_LEVEL_DEBUG, F("CSE: Checksum Failure"));
     return;
   }
 
@@ -318,7 +336,7 @@ void CseReceived(struct EventStruct *event)
     log = F("CSE current: ");
     log += energy_current;
     addLog(LOG_LEVEL_DEBUG, log);
-    log = F("CSE piulses: ");
+    log = F("CSE pulses: ");
     log += cf_pulses;
     addLog(LOG_LEVEL_DEBUG, log);
   }

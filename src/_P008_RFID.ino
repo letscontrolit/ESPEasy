@@ -130,14 +130,14 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
           int optionValues[2];
           optionValues[0] = 26;
           optionValues[1] = 34;
-          addFormSelector(F("Wiegand Type"), F("plugin_008_type"), 2, options, optionValues, choice);
+          addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
           success = true;
           break;
         }
 
       case PLUGIN_WEBFORM_SAVE:
         {
-          String plugin1 = WebServer.arg(F("plugin_008_type"));
+          String plugin1 = WebServer.arg(F("p008_type"));
           Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
           success = true;
           break;

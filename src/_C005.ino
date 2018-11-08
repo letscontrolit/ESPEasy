@@ -31,6 +31,14 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = F("/%sysname%/#");
@@ -84,15 +92,15 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         if (!ControllerSettings.checkHostReachable(true)) {
             success = false;
             break;
         }
         statusLED(true);
 
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         String pubname = ControllerSettings.Publish;
@@ -110,7 +118,7 @@ boolean CPlugin_005(byte function, struct EventStruct *event, String& string)
           MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), Settings.MQTTRetainFlag);
           String log = F("MQTT : ");
           log += tmppubname;
-          log += " ";
+          log += ' ';
           log += value;
           addLog(LOG_LEVEL_DEBUG, log);
         }

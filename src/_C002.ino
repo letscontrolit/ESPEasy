@@ -33,6 +33,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = F("domoticz/out");
@@ -137,12 +145,14 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
       {
         if (event->idx != 0)
         {
-          ControllerSettingsStruct ControllerSettings;
-          LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+          MakeControllerSettings(ControllerSettings);
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+/*
           if (!ControllerSettings.checkHostReachable(true)) {
             success = false;
             break;
           }
+*/
           StaticJsonBuffer<200> jsonBuffer;
 
           JsonObject& root = jsonBuffer.createObject();

@@ -12,7 +12,7 @@
 
 #define PLUGIN_080
 #define PLUGIN_ID_080         80
-#define PLUGIN_NAME_080       "Input - iButton"
+#define PLUGIN_NAME_080       "Input - iButton [TESTING]"
 #define PLUGIN_VALUENAME1_080 "iButton"
 
 int8_t Plugin_080_DallasPin;
@@ -64,8 +64,8 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
 
               // find all suitable devices
               addRowLabel(F("Device Address"));
-              addSelector_Head(F("plugin_080_dev"), false);
-              addSelector_Item("", -1, false, false, F(""));
+              addSelector_Head(F("p080_dev"), false);
+              addSelector_Item("", -1, false, false, "");
               uint8_t tmpAddress[8];
               byte count = 0;
               Plugin_080_DS_reset();
@@ -76,12 +76,12 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
                   for (byte j = 0; j < 8; j++)
                   {
                       option += String(tmpAddress[j], HEX);
-                      if (j < 7) option += F("-");
+                      if (j < 7) option += '-';
                   }
                   bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
                   // check for DS1990A
                   if ( tmpAddress[0] == 0x01) {
-                      addSelector_Item(option, count, selected, false, F(""));
+                      addSelector_Item(option, count, selected, false, "");
                   }
 
 
@@ -101,7 +101,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             Plugin_080_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
             // byte devCount =
             if (Plugin_080_DallasPin != -1){
-              Plugin_080_DS_scan(getFormItemInt(F("plugin_080_dev")), addr);
+              Plugin_080_DS_scan(getFormItemInt(F("p080_dev")), addr);
               for (byte x = 0; x < 8; x++)
                   ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
@@ -116,7 +116,7 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             for (byte x = 0; x < 8; x++)
             {
                 if (x != 0)
-                    string += "-";
+                    string += '-';
                 // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
             success = true;
@@ -442,7 +442,7 @@ uint8_t Plugin_080_DS_read_bit(void)
 boolean Plugin_080_DS_readiButton(byte addr[8])
 {
     // maybe this is needed to trigger the reading
-    byte ScratchPad[12];
+//    byte ScratchPad[12];
 
     Plugin_080_DS_reset();
     Plugin_080_DS_write(0x55); // Choose ROM
@@ -451,8 +451,8 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
 
     Plugin_080_DS_write(0xBE); // Read scratchpad
 
-    for (byte i = 0; i < 9; i++) // read 9 bytes
-        ScratchPad[i] = Plugin_080_DS_read();
+//    for (byte i = 0; i < 9; i++) // read 9 bytes
+//        ScratchPad[i] = Plugin_080_DS_read();
     // end maybe this is needed to trigger the reading
 
     byte tmpaddr[8];
@@ -462,7 +462,7 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
     for (byte j = 0; j < 8; j++)
     {
       log += String(addr[j], HEX);
-      if (j < 7) log += F("-");
+      if (j < 7) log += '-';
     }
     log += F(" found: ");
     Plugin_080_DS_reset_search();
@@ -471,9 +471,9 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
        for (byte j = 0; j < 8; j++)
        {
          log += String(tmpaddr[j], HEX);
-         if (j < 7) log += F("-");
+         if (j < 7) log += '-';
        }
-       log += F(",");
+       log += ',';
        if (memcmp(addr,tmpaddr,8)==0)
        {
          log += F("Success. Button was found");

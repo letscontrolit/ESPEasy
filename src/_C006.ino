@@ -31,6 +31,14 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = F("/Home/#");
@@ -82,12 +90,12 @@ boolean CPlugin_006(byte function, struct EventStruct *event, String& string)
           success = false;
           break;
         }
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         statusLED(true);
 
-        if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
         String pubname = ControllerSettings.Publish;

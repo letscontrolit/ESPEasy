@@ -107,20 +107,21 @@ void checkUDP()
                 for (byte x = 0; x < 4; x++)
                   ip[x] = packetBuffer[x + 8];
 
-                if (unit < UNIT_MAX)
-                {
+                Nodes[unit].age = 0; // Create a new element when not present
+                NodesMap::iterator it = Nodes.find(unit);
+                if (it != Nodes.end()) {
                   for (byte x = 0; x < 4; x++)
-                    Nodes[unit].ip[x] = packetBuffer[x + 8];
-                  Nodes[unit].age = 0; // reset 'age counter'
+                    it->second.ip[x] = packetBuffer[x + 8];
+                  it->second.age = 0; // reset 'age counter'
                   if (len >= 41) // extended packet size
                   {
-                    // FIXME TD-er: Memory leak waiting to happen.
-                    Nodes[unit].build = packetBuffer[13] + 256*packetBuffer[14];
-                    if (Nodes[unit].nodeName==0)
-                        Nodes[unit].nodeName =  (char *)malloc(26);
-                    memcpy(Nodes[unit].nodeName,reinterpret_cast<byte*>(&packetBuffer[15]), 25);
-                    Nodes[unit].nodeName[25]=0;
-                    Nodes[unit].nodeType = packetBuffer[40];
+                    it->second.build = packetBuffer[13] + 256*packetBuffer[14];
+                    char tmpNodeName[26] = {0};
+                    memcpy(&tmpNodeName[0], reinterpret_cast<byte*>(&packetBuffer[15]), 25);
+                    tmpNodeName[25] = 0;
+                    it->second.nodeName = tmpNodeName;
+                    it->second.nodeName.trim();
+                    it->second.nodeType = packetBuffer[40];
                   }
                 }
 
@@ -166,17 +167,17 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   if (!WiFiConnected(100)) {
     return;
   }
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
   if (destUnit != 0)
   {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (int x = firstUnit; x <= lastUnit; x++)
-  {
-    sendUDP(x, (byte*)data, dataLength);
+    sendUDP(destUnit, (byte*)data, dataLength);
     delay(10);
+  } else {
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        sendUDP(it->first, (byte*)data, dataLength);
+        delay(10);
+      }
+    }
   }
   delay(50);
 }
@@ -190,9 +191,18 @@ void sendUDP(byte unit, byte* data, byte size)
   if (!WiFiConnected(100)) {
     return;
   }
-  if (unit != 255)
-    if (Nodes[unit].ip[0] == 0)
+
+  IPAddress remoteNodeIP;
+  if (unit == 255)
+    remoteNodeIP = {255,255,255,255};
+  else {
+    NodesMap::iterator it = Nodes.find(unit);
+    if (it == Nodes.end())
       return;
+    if (it->second.ip[0] == 0)
+      return;
+    remoteNodeIP = it->second.ip;
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
@@ -201,12 +211,6 @@ void sendUDP(byte unit, byte* data, byte size)
   }
 
   statusLED(true);
-
-  IPAddress remoteNodeIP;
-  if (unit == 255)
-    remoteNodeIP = {255,255,255,255};
-  else
-    remoteNodeIP = Nodes[unit].ip;
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
   portUDP.write(data, size);
   portUDP.endPacket();
@@ -218,14 +222,17 @@ void sendUDP(byte unit, byte* data, byte size)
   \*********************************************************************************************/
 void refreshNodeList()
 {
-  for (byte counter = 0; counter < UNIT_MAX; counter++)
-  {
-    if (Nodes[counter].ip[0] != 0)
-    {
-      Nodes[counter].age++;  // increment age counter
-      if (Nodes[counter].age > 10) // if entry to old, clear this node ip from the list.
-        for (byte x = 0; x < 4; x++)
-          Nodes[counter].ip[x] = 0;
+  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ) {
+    bool mustRemove = true;
+    if (it->second.ip[0] != 0) {
+      if (it->second.age < 10) {
+        it->second.age++;
+        mustRemove = false;
+        ++it;
+      }
+    }
+    if (mustRemove) {
+      it = Nodes.erase(it);
     }
   }
 }
@@ -277,15 +284,17 @@ void sendSysInfoUDP(byte repeats)
       delay(500);
   }
 
-  // store my own info also in the list...
-  if (Settings.Unit < UNIT_MAX)
+  Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  // store my own info also in the list
+  NodesMap::iterator it = Nodes.find(Settings.Unit);
+  if (it != Nodes.end())
   {
     IPAddress ip = WiFi.localIP();
     for (byte x = 0; x < 4; x++)
-      Nodes[Settings.Unit].ip[x] = ip[x];
-    Nodes[Settings.Unit].age = 0;
-    Nodes[Settings.Unit].build = Settings.Build;
-    Nodes[Settings.Unit].nodeType = NODE_TYPE_ID;
+      it->second.ip[x] = ip[x];
+    it->second.age = 0;
+    it->second.build = Settings.Build;
+    it->second.nodeType = NODE_TYPE_ID;
   }
 }
 
@@ -614,7 +623,7 @@ bool WiFiConnected(uint32_t timeout_ms) {
   uint32_t timer = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
   uint32_t min_delay = timeout_ms / 20;
   if (min_delay < 10) {
-    yield(); // Allow at least once time for backgroundtasks
+    delay(0); // Allow at least once time for backgroundtasks
     min_delay = 10;
   }
   // Apparently something needs network, perform check to see if it is ready now.
