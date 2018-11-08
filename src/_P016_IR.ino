@@ -90,7 +90,7 @@ const uint16_t kMinUnknownSize = 12;
 // ==================== end of TUNEABLE PARAMETERS ====================
 
 
-IRrecv *irReceiver;
+IRrecv *irReceiver = null;
 decode_results results;
 
 boolean Plugin_016(byte function, struct EventStruct *event, String& string)
@@ -137,9 +137,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
         }
-        if (irReceiver != 0 && irPin == -1)
+        if (irReceiver != 0 && irPin == -1) // what is the purpose of this?
         {
-          Serial.println(F("IR Removed"));
           irReceiver->disableIRIn();
           delete irReceiver;
           irReceiver = 0;
@@ -147,6 +146,17 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         success = true;
         break;
       }
+          case PLUGIN_EXIT:
+      {
+        {
+          irReceiver->disableIRIn();
+          delete irReceiver;
+          irReceiver = 0;
+        }
+        success = true;
+        break;
+      }
+      
 
     case PLUGIN_TEN_PER_SECOND:
       {
