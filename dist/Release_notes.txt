@@ -1,4 +1,33 @@
 -------------------------------------------------
+Changes in release mega-20181108 (since mega-20181107)
+-------------------------------------------------
+
+Release date: Thu Nov  8 04:00:09 CET 2018
+
+Bartlomiej Zimon (2):
+      Add optional DE PIN configuration     Add gpio names to form     fix for #1684
+      Sysinfo update to 4 values
+
+Plebs (4):
+      bug fixes
+      cleaned if from addLog as per uzi18 comment
+      final cleanup
+      BUG fix
+
+TD-er (6):
+      [PUYA] Apply generic patch on all builds checking for PUYA flash
+      [Travis] Update platformIO packages before build
+      [PUYA] Add PUYA patch v3 to check if patch is applied
+      [PUYA] Fix patch v3 for PUYA support
+      [PUYA] share static flash_chip_id among functions
+      [PUYA] Fix typo in patch
+
+stefan (2):
+      Amend nosleep command to accept awake time
+      Add System#NoSleep=<time> event
+
+
+-------------------------------------------------
 Changes in release mega-20181107 (since mega-20181106)
 -------------------------------------------------
 
