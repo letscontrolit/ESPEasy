@@ -212,13 +212,12 @@ void sendHeaderBlocking(bool json) {
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader(F("Content-Type"), contenttype, true);
   WebServer.sendHeader(F("Accept-Ranges"), F("none"));
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
   if (json)
     WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
-  WebServer.send(200);
+  WebServer.send(200, contenttype, "");
 #else
   unsigned int timeout = 0;
   uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -226,11 +225,10 @@ void sendHeaderBlocking(bool json) {
   if (freeBeforeSend < 4000) timeout = 1000;
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader(F("Content-Type"), contenttype, true);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   if (json)
     WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
-  WebServer.send(200);
+  WebServer.send(200, contenttype, "");
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
