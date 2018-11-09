@@ -3916,17 +3916,21 @@ void handle_control() {
   printToWeb = true;
   printWebString = "";
 
-  if (printToWebJSON)
+  bool unknownCmd = false;
+  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
+  else if (remoteConfig(&TempEvent, webrequest));
+  else unknownCmd = true;
+
+  if (printToWebJSON) // it is setted in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();
   else
     TXBuffer.startStream();
 
-  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
-  else if (remoteConfig(&TempEvent, webrequest));
+  if (unknownCmd)
+	TXBuffer += F("Unknown or restricted command!");
   else
-    TXBuffer += F("Unknown or restricted command!");
+	TXBuffer += printWebString;
 
-  TXBuffer += printWebString;
   TXBuffer.endStream();
 
   printWebString = "";
