@@ -3893,11 +3893,11 @@ void handle_control() {
   webrequest=parseTemplate(webrequest,webrequest.length());
   addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
 
+  bool handledCmd = false;
   if (command == F("event"))
   {
     eventBuffer = webrequest.substring(6);
-    WebServer.send(200, "text/html", "OK");
-    return;
+    handledCmd = true;
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
@@ -3905,8 +3905,12 @@ void handle_control() {
            command.equalsIgnoreCase(F("let")) ||
            command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
-    WebServer.send(200, "text/html", "OK");
-    return;
+    handledCmd = true;
+  }
+
+  if (handledCmd) {
+	WebServer.send(200, F("text/html"), "OK");
+	return;
   }
 
   struct EventStruct TempEvent;
