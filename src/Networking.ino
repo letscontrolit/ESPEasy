@@ -11,7 +11,7 @@
   \*********************************************************************************************/
 void syslog(byte logLevel, const char *message)
 {
-  if (Settings.Syslog_IP[0] != 0 && wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+  if (Settings.Syslog_IP[0] != 0 && WiFiConnected())
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);

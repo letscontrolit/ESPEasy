@@ -393,7 +393,7 @@ void statusLED(boolean traffic)
   else
   {
 
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+    if (WiFiConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
