@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20181110 (since mega-20181109)
+-------------------------------------------------
+
+Release date: Sat Nov 10 04:00:08 CET 2018
+
+Bartlomiej Zimon (4):
+      HTTP responses have duplicate Content-Types     fix for #2018
+      remove double strings for contenttype
+      remove old duplication
+      properly send content-type header     fix for #2022
+
+TD-er (2):
+      [ESP32] Upgrade core lib to espressif32@1.5.0
+      [WiFi] Improve disconnect detection and run delay(1) when not connected
+
+
+-------------------------------------------------
 Changes in release mega-20181109 (since mega-20181108)
 -------------------------------------------------
 
