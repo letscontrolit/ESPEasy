@@ -1,6 +1,11 @@
 
 #define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
+bool unprocessedWifiEvents() {
+  if (processedConnect && processedGetIP && processedDisconnect) return false;
+  return true;
+}
+
 //********************************************************************************
 // Functions to process the data gathered from the events.
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
@@ -488,7 +493,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
     wifi_station_set_hostname(hostname);
   #endif
