@@ -37,7 +37,7 @@ String Command_UPD_SendTo(struct EventStruct *event, const char* Line)
 
 String Command_UDP_SendToUPD(struct EventStruct *event, const char* Line)
 {
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (WiFiConnected()) {
     String strLine = Line;
     String ip = parseString(strLine, 2);
     String port = parseString(strLine, 3);

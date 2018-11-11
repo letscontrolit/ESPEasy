@@ -92,9 +92,9 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO RX");
-        event->String2 = F("GPIO TX");
-        event->String3 = F("GPIO DE (optional)");
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(false);
+        event->String3 = formatGpioName_output_optional("DE");
         break;
       }
 
@@ -142,7 +142,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p078"));
+          P078_DEV_ID = getFormItemInt(F("p078_dev_id"));
           P078_MODEL = getFormItemInt(F("p078_model"));
           P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
           P078_QUERY1 = getFormItemInt(F("p078_query1"));

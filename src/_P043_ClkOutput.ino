@@ -41,6 +41,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Clock Event"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         String options[3];

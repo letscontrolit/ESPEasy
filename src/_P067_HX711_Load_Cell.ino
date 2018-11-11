@@ -114,8 +114,8 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; SCL");
-        event->String2 = F("GPIO &larr; DOUT");
+        event->String1 = formatGpioName_output("SCL");
+        event->String2 = formatGpioName_input("DOUT");
         break;
       }
 
@@ -137,11 +137,11 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Calibration Enabled"), F("p067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         addFormNumericBox(F("Point 1"), F("p067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
-        addHtml(F(" &#8793; "));
+        html_add_estimate_symbol();
         addTextBox(F("p067_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-        addHtml(F(" &#8793; "));
+        html_add_estimate_symbol();
         addTextBox(F("p067_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;

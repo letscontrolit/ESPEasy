@@ -77,6 +77,14 @@ boolean Plugin_076(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output("SEL");
+        event->String2 = formatGpioName_input("CF1");
+        event->String3 = formatGpioName_input("CF");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormNote(F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));

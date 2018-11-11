@@ -7,7 +7,7 @@
 #include <IRremoteESP8266.h>
 #endif
 #include <IRsend.h>
-#include <IRutils.h>    
+#include <IRutils.h>
 
 IRsend *Plugin_035_irSender;
 
@@ -42,6 +42,12 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output("LED");
         break;
       }
 
@@ -92,7 +98,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (IrType.equalsIgnoreCase(F("RAW")) || IrType.equalsIgnoreCase(F("RAW2"))) {
             String IrRaw;
-            uint16_t IrHz=0; 
+            uint16_t IrHz=0;
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
@@ -117,7 +123,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += IrBLen;
             printWebString += F("<BR>");
 
-            uint16_t buf[200]; 
+            uint16_t buf[200];
             uint16_t idx = 0;
             if (IrType.equalsIgnoreCase(F("RAW"))) {
                 unsigned int c0 = 0; //count consecutives 0s
@@ -249,7 +255,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //if (GetArgv(command, TmpStr1, 200, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
             //if (GetArgv(command, TmpStr1, 200, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
             //if (GetArgv(command, TmpStr1, 200, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
-            
+
             //Comented out need char[] for input Needs fixing
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode);
             if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode);
