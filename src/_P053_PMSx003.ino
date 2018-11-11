@@ -214,7 +214,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         {
           event->String1 = formatGpioName_RX(false);
           event->String2 = formatGpioName_TX(false);
-          event->String3 = formatGpioName_output(F("Reset");
+          event->String3 = formatGpioName_output(F("Reset"));
           break;
         }
 

@@ -135,8 +135,8 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] <= 0)   //Plugin_055_millisPauseTime
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = 400;
 
+        // FIXME TD-er: Should we add support for 4 pin definitions?
         addFormPinSelect(formatGpioName_output(F("Driver#8")), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
-
 
         addFormSubHeader(F("Timing"));
 

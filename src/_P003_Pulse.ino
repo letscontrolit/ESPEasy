@@ -63,6 +63,12 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_input(F("Pulse"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormNumericBox(F("Debounce Time (mSec)"), F("p003")

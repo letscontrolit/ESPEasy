@@ -64,6 +64,12 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Trigger"));
+        event->String2 = formatGpioName_input(F("Echo, 5V"));
+        break;
+      }
 
     case PLUGIN_WEBFORM_LOAD:
       {

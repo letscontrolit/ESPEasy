@@ -2280,7 +2280,7 @@ void handle_devices() {
           if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE)
             addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
           if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL)
-            addFormPinSelect( TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
+            addFormPinSelect(TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
           if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
             addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
         }

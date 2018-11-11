@@ -133,6 +133,12 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Data"));
+        break;
+      }
+      
     case PLUGIN_WEBFORM_LOAD:
       {
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));

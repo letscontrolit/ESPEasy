@@ -44,6 +44,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_bidirectional(F("Reset"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormNumericBox(F("TCP Port"), F("p020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);

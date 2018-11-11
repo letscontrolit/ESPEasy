@@ -59,6 +59,14 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_056));
         break;
       }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(true); // optional
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         if (Plugin_056_hasTxPin(event)) {
@@ -83,12 +91,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           success = true;
           break;
         }
-    case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        event->String1 = formatGpioName_RX(false);
-        event->String2 = formatGpioName_TX(true);
-        break;
-      }
 
     case PLUGIN_INIT:
       {

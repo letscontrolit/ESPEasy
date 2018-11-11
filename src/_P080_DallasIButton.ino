@@ -51,6 +51,12 @@ boolean Plugin_080(byte function, struct EventStruct * event, String& string)
             break;
         }
 
+        case PLUGIN_GET_DEVICEGPIONAMES:
+          {
+            event->String1 = formatGpioName_bidirectional(F("1-Wire"));
+            break;
+          }
+
         case PLUGIN_WEBFORM_LOAD:
         {
             uint8_t savedAddress[8];

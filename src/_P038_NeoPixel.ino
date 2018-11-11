@@ -66,6 +66,8 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
         int indices[] = { 1, 2 };
 
       	addFormNumericBox(F("Led Count"), F("p038_leds"), Settings.TaskDevicePluginConfig[event->TaskIndex][0],1,999);
+
+        // FIXME TD-er: Why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("GPIO"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
         addFormSelector(F("Strip Type"), F("p038_strip"), 2, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][1] );
 
