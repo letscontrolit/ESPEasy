@@ -47,7 +47,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_TX();
+        event->String1 = formatGpioName_output("LED");
         break;
       }
 
