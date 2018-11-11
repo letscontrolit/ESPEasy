@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20181111 (since mega-20181110)
+-------------------------------------------------
+
+Release date: Sun Nov 11 04:00:06 CET 2018
+
+Bartlomiej Zimon (2):
+      Webserver /control proper Content type     it sets printToWebJSON during PLUGIN_WRITE/SendStatus     fix for #2018
+      Webserver optimize /control early handled commands
+
+TD-er (1):
+      [JavaScript] Append zero termination to embedded progmem data
+
+
+-------------------------------------------------
 Changes in release mega-20181110 (since mega-20181109)
 -------------------------------------------------
 
