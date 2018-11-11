@@ -82,11 +82,11 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Calibration Enabled"), F("p060_cal"), CONFIG(3));
 
         addFormNumericBox(F("Point 1"), F("p060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 4095);
-        addHtml(F(" &#8793; "));
+        html_add_estimate_symbol();
         addTextBox(F("p060_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 4095);
-        addHtml(F(" &#8793; "));
+        html_add_estimate_symbol();
         addTextBox(F("p060_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;

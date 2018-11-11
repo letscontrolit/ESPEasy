@@ -85,8 +85,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         }
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &larr; TX");
-        event->String2 = F("GPIO &#8674; RX (optional)");
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(true);
         break;
       }
 

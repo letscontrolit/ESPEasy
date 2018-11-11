@@ -114,13 +114,13 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       rxPin = Settings.TaskDevicePin1[event->TaskIndex];
       txPin = Settings.TaskDevicePin2[event->TaskIndex];
 
-      event->String1 = F("GPIO SS RX &larr; ");
-      event->String2 = F("GPIO SS TX &rarr; ");
+      event->String1 = formatGpioName_input(F("SS RX");
+      event->String2 = formatGpioName_output(F("SS TX");
 
       if(AdvHwSerial == true) {
         if ((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15)) {
-            event->String1 = F("GPIO HW RX &larr; ");
-            event->String2 = F("GPIO HW TX &rarr; ");
+          event->String1 = formatGpioName_input(F("HW RX");
+          event->String2 = formatGpioName_output(F("HW TX");
         }
       }
       break;
