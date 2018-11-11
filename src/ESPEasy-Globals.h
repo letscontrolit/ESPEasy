@@ -1490,6 +1490,12 @@ struct systemTimerStruct
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 
+enum gpio_direction {
+  gpio_input,
+  gpio_output,
+  gpio_bidirectional
+};
+
 /*********************************************************************************************\
  * pinStatesStruct
 \*********************************************************************************************/

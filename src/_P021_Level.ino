@@ -43,6 +43,12 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Level low"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         // char tmpString[128];

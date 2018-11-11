@@ -52,6 +52,13 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_input(F("D0 (Green, 5V)"));
+        event->String2 = formatGpioName_input(F("D1 (White, 5V)"));
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         Plugin_008_init = true;

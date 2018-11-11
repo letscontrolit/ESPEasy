@@ -104,6 +104,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
         addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);

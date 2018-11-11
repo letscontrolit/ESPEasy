@@ -63,6 +63,13 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(false);
+        break;
+      }
+
       case PLUGIN_WRITE:
           {
       			String cmd = parseString(string, 1);

@@ -80,6 +80,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
       	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
+        // FIXME TD-er: Why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
       	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);

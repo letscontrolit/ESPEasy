@@ -56,6 +56,13 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_bidirectional(F("Data"));
+        event->String2 = formatGpioName_output(F("SCK"));
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         Plugin_031_init = true;
