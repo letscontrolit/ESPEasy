@@ -273,7 +273,7 @@ String formatGpioName_output_optional(const String& label) {
 }
 
 // RX/TX are the only signals which are crossed, so they must be labelled like this:
-// "GPIO <-- RX" and "GPIO <-- TX"
+// "GPIO <-- TX" and "GPIO --> RX"
 String formatGpioName_TX(bool optional) {
   return formatGpioName("RX", gpio_output, optional);
 }
