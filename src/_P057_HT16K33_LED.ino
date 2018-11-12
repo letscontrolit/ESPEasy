@@ -45,7 +45,6 @@
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
 
-
 #define PLUGIN_057
 #define PLUGIN_ID_057         57
 #define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
@@ -99,8 +98,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         addFormSubHeader(F("7-Seg. Clock"));
 
         int16_t choice = CONFIG(1);
-        String options[2] = { F("none"), F("7-Seg. HH:MM") };
-        addFormSelector(F("Clock Type"), F("clocktype"), 2, options, NULL, choice);
+        String options[3] = {F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)")};
+        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
 
         addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
         addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);
@@ -290,9 +289,17 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         byte hours = hour();
         byte minutes = minute();
 
+        // 12 hour clock
+        if (CONFIG(1) == 2) {
+          hours = hours % 12;
+          if (hours == 0) {
+            hours = 12;
+          }
+        }
+
         //Plugin_057_M->ClearRowBuffer();
         if (hours >= 10)
-          Plugin_057_M->SetDigit(CONFIG(2), hours/10);
+          Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
         else
           Plugin_057_M->SetRow(CONFIG(2), 0);   //empty seg
         Plugin_057_M->SetDigit(CONFIG(3), hours%10);
