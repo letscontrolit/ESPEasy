@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181112 (since mega-20181111)
+-------------------------------------------------
+
+Release date: Mon Nov 12 04:00:07 CET 2018
+
+Bartlomiej Zimon (1):
+      Eastron fix for model selection     issue #1684
+
+TD-er (6):
+      [Cleanup] Uniform labels for GPIO pins (existing labels)
+      [Cleanup] Uniform labels for GPIO pins
+      [Cleanup] Change label for P035_IRTX
+      [SPIFFS] perform delay during save per page break
+      Improve comments
+      [WiFi] Make sure unhandled WiFi events will be processed
+
+
+-------------------------------------------------
 Changes in release mega-20181111 (since mega-20181110)
 -------------------------------------------------
 
