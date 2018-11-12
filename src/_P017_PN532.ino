@@ -68,6 +68,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
         success = true;
         break;
@@ -136,7 +137,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             String log = F("PN532: Tag: ");
             log += key;
             tempcounter++;
-            log += " ";
+            log += ' ';
             log += tempcounter;
             addLog(LOG_LEVEL_INFO, log);
             sendData(event);
@@ -177,7 +178,7 @@ boolean Plugin_017_Init(int8_t resetPin)
     log += String((versiondata >> 24) & 0xFF, HEX);
     log += F(" FW: ");
     log += String((versiondata >> 16) & 0xFF, HEX);
-    log += F(".");
+    log += '.';
     log += String((versiondata >> 8) & 0xFF, HEX);
     addLog(LOG_LEVEL_INFO, log);
   }

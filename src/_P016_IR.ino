@@ -133,6 +133,12 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_input(F("IR"));
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
@@ -251,9 +257,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
 // an IRSEND HTTP/MQTT command. It analyzes the timings, and searches for a common denominator which can be
 // used to compress the values. If found, it then produces a string consisting of B32 Hex digit for each
 // timing value, appended by the denominators for Pulse and Blank. This string can then be used in an
-// IRSEND command. An important advantage of this string over the current IRSEND RAW B32 format implemented 
+// IRSEND command. An important advantage of this string over the current IRSEND RAW B32 format implemented
 // by GusPS is that it allows easy inspections and modifications after the code is constructed.
-//     
+//
 // Author: Gilad Raz (jazzgil)  23sep2018
 
 void displayRawToReadableB32Hex() {
@@ -265,7 +271,7 @@ void displayRawToReadableB32Hex() {
         line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
     addLog(LOG_LEVEL_DEBUG, line);
 
-    // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks). 
+    // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks).
     for (uint16_t p = 0; p < 2; p++) {
         uint16_t cd = 0xFFFFU;      // current divisor
         // find the lowest value to start the divisor with.
@@ -273,7 +279,7 @@ void displayRawToReadableB32Hex() {
             uint16_t val = results.rawbuf[i] * RAWTICK;
             if (cd > val) cd = val;
         }
-        
+
         uint16_t bstDiv = -1, bstAvg = 0xFFFFU;
         float bstMul = 5000;
         cd += get_tolerance(cd) + 1;

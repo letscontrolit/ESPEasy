@@ -7,7 +7,7 @@
 #include <IRremoteESP8266.h>
 #endif
 #include <IRsend.h>
-#include <IRutils.h>    
+#include <IRutils.h>
 
 IRsend *Plugin_035_irSender;
 
@@ -15,6 +15,8 @@ IRsend *Plugin_035_irSender;
 #define PLUGIN_035
 #define PLUGIN_ID_035         35
 #define PLUGIN_NAME_035       "Communication - IR Transmit"
+#define STATE_SIZE_MAX        53U
+#define PRONTO_MIN_LENGTH     6U
 
 #define from_32hex(c) ((((c) | ('A' ^ 'a')) - '0') % 39)
 
@@ -40,6 +42,12 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output("LED");
         break;
       }
 
@@ -90,7 +98,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
 
           if (IrType.equalsIgnoreCase(F("RAW")) || IrType.equalsIgnoreCase(F("RAW2"))) {
             String IrRaw;
-            uint16_t IrHz=0; 
+            uint16_t IrHz=0;
             unsigned int IrPLen=0;
             unsigned int IrBLen=0;
 
@@ -115,7 +123,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             printWebString += IrBLen;
             printWebString += F("<BR>");
 
-            uint16_t buf[200]; 
+            uint16_t buf[200];
             uint16_t idx = 0;
             if (IrType.equalsIgnoreCase(F("RAW"))) {
                 unsigned int c0 = 0; //count consecutives 0s
@@ -144,7 +152,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                         buf[idx++] = c0 * IrBLen;
                         //print the number of 0s just for debuging/info purpouses
                         for (uint t = 0; t < c0; t++)
-                          printWebString += F("0");
+                          printWebString += '0';
                       }
                       //So, as we receive a "1", and processed the counted 0s
                       //sending them as a ms timing into the buffer, we clear
@@ -165,7 +173,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                           buf[idx++] = c1 * IrPLen;
                           //print the number of 1s just for debugging/info purposes
                           for (uint t = 0; t < c1; t++)
-                            printWebString += F("1");
+                            printWebString += '1';
                         }
                         //So, as we receive a "0", and processed the counted 1s
                         //sending them as a ms timing into the buffer, we clear
@@ -186,13 +194,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                 if (c0 > 0) {
                   buf[idx++] = c0 * IrBLen;
                   for (uint t = 0; t < c0; t++)
-                    printWebString += F("0");
+                    printWebString += '0';
                 }
                 //If we have pendings 1s
                 if (c1 > 0) {
                   buf[idx++] = c1 * IrPLen;
                   for (uint t = 0; t < c1; t++)
-                    printWebString += F("1");
+                    printWebString += '1';
                 }
 
                 printWebString += F("<BR>");
@@ -245,16 +253,16 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*100);
                                                         }
             //if (GetArgv(command, TmpStr1, 100, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            //if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
+            //if (GetArgv(command, TmpStr1, 100, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well.
             //if (GetArgv(command, TmpStr1, 100, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
-            
+
             //Comented out need char[] for input Needs fixing
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode);
             if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode);
             if (IrType.equalsIgnoreCase(F("Sherwood"))) Plugin_035_irSender->sendSherwood(IrCode);
             if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode);
-            if (IrType.equalsIgnoreCase(F("LG"))) Plugin_035_irSender->sendLG(IrCode); 
-            if (IrType.equalsIgnoreCase(F("SharpRaw"))) Plugin_035_irSender->sendSharpRaw(IrBits);                         
+            if (IrType.equalsIgnoreCase(F("LG"))) Plugin_035_irSender->sendLG(IrCode);
+            if (IrType.equalsIgnoreCase(F("SharpRaw"))) Plugin_035_irSender->sendSharpRaw(IrBits);
             if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode);
             if (IrType.equalsIgnoreCase(F("Denon"))) Plugin_035_irSender->sendDenon(IrCode);
             if (IrType.equalsIgnoreCase(F("SanyoLC7461"))) Plugin_035_irSender->sendSanyoLC7461(IrCode);
@@ -290,6 +298,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("HitachiAC1"))) parseStringAndSendAirCon(HITACHI_AC1, ircodestr);
             if (IrType.equalsIgnoreCase(F("HitachiAC2"))) parseStringAndSendAirCon(HITACHI_AC2, ircodestr);
             if (IrType.equalsIgnoreCase(F("GICable"))) Plugin_035_irSender->sendGICable(IrCode);
+			if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
           }
 
           addLog(LOG_LEVEL_INFO, (String("IRTX :IR Code Sent: ") + IrType).c_str());
@@ -482,7 +491,7 @@ void parseStringAndSendAirCon(const uint16_t irType, const String str) {
       break;
 #endif
   }
-  
+
 }
 
 #if SEND_PRONTO

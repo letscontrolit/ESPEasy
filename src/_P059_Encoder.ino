@@ -72,9 +72,9 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &larr; A");
-        event->String2 = F("GPIO &larr; B");
-        event->String3 = F("GPIO &#8672; I (optional)");
+        event->String1 = formatGpioName_input(F("A (CLK)"));
+        event->String2 = formatGpioName_input(F("B (DT)"));
+        event->String3 = formatGpioName_input_optional(F("I (Z)"));
         break;
       }
 
@@ -128,7 +128,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
             setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         addLog(LOG_LEVEL_INFO, log);
 

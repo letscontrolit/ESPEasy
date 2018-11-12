@@ -114,8 +114,8 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; SCL");
-        event->String2 = F("GPIO &larr; DOUT");
+        event->String1 = formatGpioName_output("SCL");
+        event->String2 = formatGpioName_input("DOUT");
         break;
       }
 
@@ -128,21 +128,21 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
         addFormSelector(F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
 
-        addFormTextBox(F("Offset"), F("Plugin_067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
+        addFormTextBox(F("Offset"), F("p067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
         addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));
         addCheckBox(F("tare"), 0);   //always off
 
         addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(F("Calibration Enabled"), F("Plugin_067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormCheckBox(F("Calibration Enabled"), F("p067_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(F("Point 1"), F("Plugin_067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("Plugin_067_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("p067_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
+        html_add_estimate_symbol();
+        addTextBox(F("p067_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(F("Point 2"), F("Plugin_067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("Plugin_067_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("p067_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        html_add_estimate_symbol();
+        addTextBox(F("p067_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -162,16 +162,16 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         }
         else
         {
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = getFormItemFloat(F("Plugin_067_offset"));
+          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = getFormItemFloat(F("p067_offset"));
         }
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("Plugin_067_cal"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p067_cal"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("Plugin_067_adc1"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("Plugin_067_out1"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("p067_adc1"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("p067_out1"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("Plugin_067_adc2"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("Plugin_067_out2"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("p067_adc2"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("p067_out2"));
 
         success = true;
         break;

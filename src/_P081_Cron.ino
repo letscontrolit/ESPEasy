@@ -83,7 +83,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       LoadCustomTaskSettings(event->TaskIndex, (byte*)&expression, PLUGIN_081_EXPRESSION_SIZE);
 
       addFormTextBox(F("CRON Expression")
-        , F("plugin_081_cron_exp")
+        , F("p081_cron_exp")
         , expression
         , 39);
 
@@ -95,7 +95,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     {
       String log;
       char expression[PLUGIN_081_EXPRESSION_SIZE];
-      strncpy(expression,  WebServer.arg(F("plugin_081_cron_exp")).c_str() , sizeof(expression));
+      strncpy(expression,  WebServer.arg(F("p081_cron_exp")).c_str() , sizeof(expression));
       if(/*strcmp(expression, state.Expression)*/1 != 0)
       {
         cron_expr expr;
@@ -131,7 +131,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_ERROR, log);
         }
         log = SaveCustomTaskSettings(event->TaskIndex, (byte*)&expression, PLUGIN_081_EXPRESSION_SIZE);
-        if(log != F(""))
+        if(log != "")
         {
             log = String(PSTR(PLUGIN_NAME_081)) + String(F(": Saving ")) + log;
             addLog(LOG_LEVEL_ERROR, log);
@@ -295,42 +295,42 @@ void PrintCronExp(struct cron_expr_t e) {
   for (int i = 0; i < 8; i++)
   {
     Serial.print(e.seconds[i]);
-    Serial.print(F(","));
+    Serial.print(",");
   }
   Serial.println();
   Serial.print(F("Minutes:"));
   for (int i = 0; i < 8; i++)
   {
     Serial.print(e.minutes[i]);
-    Serial.print(F(","));
+    Serial.print(",");
   }
   Serial.println();
   Serial.print(F("hours:"));
   for (int i = 0; i < 3; i++)
   {
     Serial.print(e.hours[i]);
-    Serial.print(F(","));
+    Serial.print(",");
   }
   Serial.println();
   Serial.print(F("months:"));
   for (int i = 0; i < 2; i++)
   {
     Serial.print(e.months[i]);
-    Serial.print(F(","));
+    Serial.print(",");
   }
   Serial.println();
   Serial.print(F("days_of_week:"));
   for (int i = 0; i < 1; i++)
   {
     Serial.print(e.days_of_week[i]);
-    Serial.print(F(","));
+    Serial.print(",");
   }
   Serial.println();
   Serial.print(F("days_of_month:"));
   for (int i = 0; i < 4; i++)
   {
     Serial.print(e.days_of_month[i]);
-    Serial.print(F(","));
+    Serial.print(",");
   }
   Serial.println();
   Serial.println(F("END=DUMP Cron Expression==="));

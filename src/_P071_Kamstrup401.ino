@@ -57,6 +57,13 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(false);
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         Plugin_071_init = true;
@@ -201,7 +208,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
                log += m_tempdiff;
                log += F(" C; ");
                log += m_power;
-               log += F(" ");
+               log += ' ';
                log += m_flow;
                log += F(" L/H");
 //              addLog(LOG_LEVEL_INFO, log);

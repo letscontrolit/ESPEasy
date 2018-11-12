@@ -63,15 +63,21 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_input(F("Pulse"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("Debounce Time (mSec)"), F("plugin_003")
+      	addFormNumericBox(F("Debounce Time (mSec)"), F("p003")
       			, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
-        addFormSelector(F("Counter Type"), F("plugin_003_countertype"), 4, options, NULL, choice );
+        addFormSelector(F("Counter Type"), F("p003_countertype"), 4, options, NULL, choice );
 
         if (choice !=0)
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
@@ -87,7 +93,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         modeValues[2] = RISING;
         modeValues[3] = FALLING;
 
-        addFormSelector(F("Mode Type"), F("plugin_003_raisetype"), 4, modeRaise, modeValues, choice2 );
+        addFormSelector(F("Mode Type"), F("p003_raisetype"), 4, modeRaise, modeValues, choice2 );
 
         success = true;
         break;
@@ -95,9 +101,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_003"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_003_countertype"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_003_raisetype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p003"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p003_countertype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p003_raisetype"));
         success = true;
         break;
       }

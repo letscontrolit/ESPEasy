@@ -218,6 +218,8 @@
 #define TIMER_C012_DELAY_QUEUE             16
 #define TIMER_C013_DELAY_QUEUE             17
 
+#define TIMING_STATS_THRESHOLD         100000
+
 // Minimum delay between messages for a controller to send in msec.
 #define CONTROLLER_DELAY_QUEUE_DELAY_MAX   3600000
 #define CONTROLLER_DELAY_QUEUE_DELAY_DFLT  100
@@ -316,9 +318,11 @@
 
 #if defined(ESP8266)
   #define TASKS_MAX                          12 // max 12!
+  #define MAX_GPIO                           16
 #endif
 #if defined(ESP32)
   #define TASKS_MAX                          32
+  #define MAX_GPIO                           39
 #endif
 
 #define CONTROLLER_MAX                      3 // max 4!
@@ -519,6 +523,8 @@ bool showSettingsFileLayout = false;
   #ifdef FEATURE_MDNS
     #include <ESP8266mDNS.h>
   #endif
+  #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
+  #define MAX_SKETCH_SIZE 1044464
   #ifdef FEATURE_ARDUINO_OTA
     #include <ArduinoOTA.h>
     #include <ESP8266mDNS.h>
@@ -834,7 +840,7 @@ struct SettingsStruct
   int8_t        Pin_i2c_scl;
   int8_t        Pin_status_led;
   int8_t        Pin_sd_cs;
-  int8_t        PinBootStates[17];
+  int8_t        PinBootStates[17];  // FIXME TD-er: this is ESP8266 number of pins. ESP32 has double.
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
   byte          SyslogLevel;
@@ -1484,6 +1490,12 @@ struct systemTimerStruct
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 
+enum gpio_direction {
+  gpio_input,
+  gpio_output,
+  gpio_bidirectional
+};
+
 /*********************************************************************************************\
  * pinStatesStruct
 \*********************************************************************************************/
@@ -1630,16 +1642,7 @@ Ticker connectionCheck;
 #endif
 
 bool reconnectChecker = false;
-void connectionCheckHandler()
-{
-  if (reconnectChecker == false && !WiFiConnected()){
-    reconnectChecker = true;
-    WiFi.reconnect();
-  }
-  else if (WiFiConnected() && reconnectChecker == true){
-    reconnectChecker = false;
-  }
-}
+void connectionCheckHandler();
 
 bool useStaticIP();
 
@@ -1754,6 +1757,13 @@ class TimingStats {
           return _count;
       }
 
+      bool thresholdExceeded(unsigned long threshold) const {
+        if (_count == 0) {
+            return false;
+        }
+        return _maxVal > threshold;
+      }
+
     private:
       float _timeTotal;
       unsigned int _count;
@@ -1761,6 +1771,7 @@ class TimingStats {
       unsigned long _minVal;
 };
 
+/*
 String getLogLine(const TimingStats& stats) {
     unsigned long minVal, maxVal;
     unsigned int c = stats.getMinMax(minVal, maxVal);
@@ -1777,37 +1788,36 @@ String getLogLine(const TimingStats& stats) {
     log += F(" usec");
     return log;
 }
-
-
+*/
 
 String getPluginFunctionName(int function) {
     switch(function) {
-        case PLUGIN_INIT_ALL:              return F("INIT_ALL            ");
-        case PLUGIN_INIT:                  return F("INIT                ");
-        case PLUGIN_READ:                  return F("READ                ");
-        case PLUGIN_ONCE_A_SECOND:         return F("ONCE_A_SECOND       ");
-        case PLUGIN_TEN_PER_SECOND:        return F("TEN_PER_SECOND      ");
-        case PLUGIN_DEVICE_ADD:            return F("DEVICE_ADD          ");
-        case PLUGIN_EVENTLIST_ADD:         return F("EVENTLIST_ADD       ");
-        case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE        ");
-        case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD        ");
-        case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES ");
-        case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME      ");
+        case PLUGIN_INIT_ALL:              return F("INIT_ALL");
+        case PLUGIN_INIT:                  return F("INIT");
+        case PLUGIN_READ:                  return F("READ");
+        case PLUGIN_ONCE_A_SECOND:         return F("ONCE_A_SECOND");
+        case PLUGIN_TEN_PER_SECOND:        return F("TEN_PER_SECOND");
+        case PLUGIN_DEVICE_ADD:            return F("DEVICE_ADD");
+        case PLUGIN_EVENTLIST_ADD:         return F("EVENTLIST_ADD");
+        case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE");
+        case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD");
+        case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES");
+        case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
         case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
-        case PLUGIN_WRITE:                 return F("WRITE               ");
-        case PLUGIN_EVENT_OUT:             return F("EVENT_OUT           ");
-        case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG ");
-        case PLUGIN_SERIAL_IN:             return F("SERIAL_IN           ");
-        case PLUGIN_UDP_IN:                return F("UDP_IN              ");
-        case PLUGIN_CLOCK_IN:              return F("CLOCK_IN            ");
-        case PLUGIN_TIMER_IN:              return F("TIMER_IN            ");
-        case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND    ");
-        case PLUGIN_SET_CONFIG:            return F("SET_CONFIG          ");
-        case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES ");
-        case PLUGIN_EXIT:                  return F("EXIT                ");
-        case PLUGIN_GET_CONFIG:            return F("GET_CONFIG          ");
-        case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL  ");
-        case PLUGIN_REQUEST:               return F("REQUEST             ");
+        case PLUGIN_WRITE:                 return F("WRITE");
+        case PLUGIN_EVENT_OUT:             return F("EVENT_OUT");
+        case PLUGIN_WEBFORM_SHOW_CONFIG:   return F("WEBFORM_SHOW_CONFIG");
+        case PLUGIN_SERIAL_IN:             return F("SERIAL_IN");
+        case PLUGIN_UDP_IN:                return F("UDP_IN");
+        case PLUGIN_CLOCK_IN:              return F("CLOCK_IN");
+        case PLUGIN_TIMER_IN:              return F("TIMER_IN");
+        case PLUGIN_FIFTY_PER_SECOND:      return F("FIFTY_PER_SECOND");
+        case PLUGIN_SET_CONFIG:            return F("SET_CONFIG");
+        case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
+        case PLUGIN_EXIT:                  return F("EXIT");
+        case PLUGIN_GET_CONFIG:            return F("GET_CONFIG");
+        case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
+        case PLUGIN_REQUEST:               return F("REQUEST");
     }
     return F("Unknown");
 }
@@ -1848,6 +1858,7 @@ std::map<int,TimingStats> pluginStats;
 std::map<int,TimingStats> miscStats;
 unsigned long timediff_calls = 0;
 unsigned long timediff_cpu_cycles_total = 0;
+unsigned long timingstats_last_reset = 0;
 
 #define LOADFILE_STATS        0
 #define SAVEFILE_STATS        1
@@ -1893,17 +1904,17 @@ String getMiscStatsName(int stat) {
         case LOADFILE_STATS: return F("Load File");
         case SAVEFILE_STATS: return F("Save File");
         case LOOP_STATS:     return F("Loop");
-        case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s  ");
-        case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s  ");
+        case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s");
+        case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s");
         case PLUGIN_CALL_10PSU:     return F("Plugin call 10 p/s U");
-        case PLUGIN_CALL_1PS:       return F("Plugin call  1 p/s  ");
-        case SENSOR_SEND_TASK:      return F("SensorSendTask()    ");
-        case SEND_DATA_STATS:       return F("sendData()          ");
-        case COMPUTE_FORMULA_STATS: return F("Compute formula     ");
-        case PROC_SYS_TIMER:        return F("proc_system_timer() ");
-        case SET_NEW_TIMER:         return F("setNewTimerAt()     ");
-        case TIME_DIFF_COMPUTE:     return F("timeDiff()          ");
-        case MQTT_DELAY_QUEUE:      return F("Delay queue     MQTT");
+        case PLUGIN_CALL_1PS:       return F("Plugin call  1 p/s");
+        case SENSOR_SEND_TASK:      return F("SensorSendTask()");
+        case SEND_DATA_STATS:       return F("sendData()");
+        case COMPUTE_FORMULA_STATS: return F("Compute formula");
+        case PROC_SYS_TIMER:        return F("proc_system_timer()");
+        case SET_NEW_TIMER:         return F("setNewTimerAt()");
+        case TIME_DIFF_COMPUTE:     return F("timeDiff()");
+        case MQTT_DELAY_QUEUE:      return F("Delay queue MQTT");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:
@@ -1918,7 +1929,7 @@ String getMiscStatsName(int stat) {
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
         {
-          String result = F("Delay queue     ");
+          String result = F("Delay queue ");
           result += get_formatted_Controller_number(static_cast<int>(stat - C001_DELAY_QUEUE + 1));
           return result;
         }

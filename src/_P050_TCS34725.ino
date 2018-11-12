@@ -78,7 +78,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
         optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
         optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
-        addFormSelector(F("Integration Time"), F("plugin_050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
 
         byte choiceMode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String optionsMode2[4];
@@ -91,7 +91,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         optionValuesMode2[1] = TCS34725_GAIN_4X;
         optionValuesMode2[2] = TCS34725_GAIN_16X;
         optionValuesMode2[3] = TCS34725_GAIN_60X;
-        addFormSelector(F("Gain"), F("plugin_050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+        addFormSelector(F("Gain"), F("p050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
 
         success = true;
         break;
@@ -99,9 +99,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_050_integrationTime"));
+        String plugin1 = WebServer.arg(F("p050_integrationTime"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
-        String plugin2 = WebServer.arg(F("plugin_050_gain"));
+        String plugin2 = WebServer.arg(F("p050_gain"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = plugin2.toInt();
 
         success = true;

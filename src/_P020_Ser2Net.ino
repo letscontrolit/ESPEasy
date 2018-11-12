@@ -44,11 +44,17 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_bidirectional(F("Reset"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("TCP Port"), F("plugin_020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(F("Baud Rate"), F("plugin_020_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(F("Data bits"), F("plugin_020_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("p020_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("p020_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("p020_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -59,13 +65,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         optionValues[0] = 0;
         optionValues[1] = 2;
         optionValues[2] = 3;
-        addFormSelector(F("Parity"), F("plugin_020_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("p020_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(F("Stop bits"), F("plugin_020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("p020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("plugin_020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -73,7 +79,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         options2[0] = F("None");
         options2[1] = F("Generic");
         options2[2] = F("RFLink");
-        addFormSelector(F("Event processing"), F("plugin_020_events"), 3, options2, NULL, choice2);
+        addFormSelector(F("Event processing"), F("p020_events"), 3, options2, NULL, choice2);
 
         success = true;
         break;
@@ -81,13 +87,13 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("plugin_020_port"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("plugin_020_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("plugin_020_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("plugin_020_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("plugin_020_stop"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_020_rxwait"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_020_events"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("p020_port"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("p020_baud"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p020_data"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p020_parity"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p020_stop"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p020_rxwait"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p020_events"));
         success = true;
         break;
       }

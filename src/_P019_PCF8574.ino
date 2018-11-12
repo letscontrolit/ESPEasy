@@ -84,12 +84,12 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(F("Send Boot state"), F("plugin_019_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormCheckBox(F("Send Boot state"), F("p019_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         //@giig1967-20181022
         addFormSubHeader(F("Advanced event management"));
 
-        addFormNumericBox(F("De-bounce (ms)"), F("plugin_019_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
+        addFormNumericBox(F("De-bounce (ms)"), F("p019_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
 
         //set minimum value for doubleclick MIN max speed
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_019_DOUBLECLICK_MIN_INTERVAL)
@@ -102,9 +102,9 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         buttonDC[2] = F("Active only on HIGH (EVENT=3)");
         buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
         int buttonDCValues[4] = {PLUGIN_019_DC_DISABLED, PLUGIN_019_DC_LOW, PLUGIN_019_DC_HIGH,PLUGIN_019_DC_BOTH};
-        addFormSelector(F("Doubleclick event"), F("plugin_019_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p019_dc"), 4, buttonDC, buttonDCValues, choiceDC);
 
-        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("plugin_019_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_019_DOUBLECLICK_MIN_INTERVAL, PLUGIN_019_DOUBLECLICK_MAX_INTERVAL);
+        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p019_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_019_DOUBLECLICK_MIN_INTERVAL, PLUGIN_019_DOUBLECLICK_MAX_INTERVAL);
 
         //set minimum value for longpress MIN max speed
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_019_LONGPRESS_MIN_INTERVAL)
@@ -117,9 +117,9 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
         buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
         int buttonLPValues[4] = {PLUGIN_019_LONGPRESS_DISABLED, PLUGIN_019_LONGPRESS_LOW, PLUGIN_019_LONGPRESS_HIGH,PLUGIN_019_LONGPRESS_BOTH};
-        addFormSelector(F("Longpress event"), F("plugin_019_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+        addFormSelector(F("Longpress event"), F("p019_lp"), 4, buttonLP, buttonLPValues, choiceLP);
 
-        addFormNumericBox(F("Longpress min. interval (ms)"), F("plugin_019_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_019_LONGPRESS_MIN_INTERVAL, PLUGIN_019_LONGPRESS_MAX_INTERVAL);
+        addFormNumericBox(F("Longpress min. interval (ms)"), F("p019_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_019_LONGPRESS_MIN_INTERVAL, PLUGIN_019_LONGPRESS_MAX_INTERVAL);
 
         success = true;
         break;
@@ -127,16 +127,16 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("plugin_019_boot"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("p019_boot"));
 
         //@giig1967-20181022
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("plugin_019_debounce"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p019_debounce"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_019_dc"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("plugin_019_dcmaxinterval"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p019_dc"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p019_dcmaxinterval"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_019_lp"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("plugin_019_lpmininterval"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p019_lp"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p019_lpmininterval"));
 
         success = true;
         break;
@@ -180,7 +180,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_019_LONGPRESS_MIN_INTERVAL;
 
         // @giig1967g-20181022: if it is in the device list we assume it's an input pin
-        setPinState(PLUGIN_ID_019, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, 0);
+        setPinState(PLUGIN_ID_019, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
 
         success = true;
         break;
@@ -249,14 +249,15 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
               UserVar[event->BaseVarIndex] = output_value;
 
-              String log = F("PCF  : Port=");
-              log += Settings.TaskDevicePort[event->TaskIndex];
-              log += F(" State=");
-              log += state;
-              log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
-
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("PCF  : Port=");
+                log += Settings.TaskDevicePort[event->TaskIndex];
+                log += F(" State=");
+                log += state;
+                log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               event->sensorType = SENSOR_TYPE_SWITCH;
               sendData(event);
 
@@ -303,13 +304,15 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               output_value = output_value + 10;
 
               UserVar[event->BaseVarIndex] = output_value;
-              String log = F("PCF  : LongPress: Port= ");
-              log += Settings.TaskDevicePort[event->TaskIndex];
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("PCF  : LongPress: Port= ");
+                log += Settings.TaskDevicePort[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
 
               //reset Userdata so it displays the correct state value in the web page
@@ -320,10 +323,12 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           //set UserVar and switchState = -1 and send EVENT to notify user
           UserVar[event->BaseVarIndex] = state;
           switchstate[event->TaskIndex] = state;
-          String log = F("PCF  : Port=");
-          log += Settings.TaskDevicePort[event->TaskIndex];
-          log += F(" is offline (EVENT= -1)");
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("PCF  : Port=");
+            log += Settings.TaskDevicePort[event->TaskIndex];
+            log += F(" is offline (EVENT= -1)");
+            addLog(LOG_LEVEL_INFO, log);
+          }
           sendData(event);
         }
         success = true;
@@ -334,9 +339,11 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
       {
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
-        String log = F("PCF  : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("PCF  : State ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }

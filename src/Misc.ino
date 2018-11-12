@@ -144,6 +144,11 @@ void deepSleep(int delay)
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
     addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    if (Settings.UseRules && isDeepSleepEnabled())
+      {
+        String event = F("System#NoSleep=30");
+        rulesProcessing(event);
+      }
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
@@ -221,7 +226,69 @@ int8_t getTaskIndexByName(String TaskNameSearch)
   return -1;
 }
 
+/*********************************************************************************************\
+   Device GPIO name functions to share flash strings
+  \*********************************************************************************************/
+String formatGpioName(const String& label, gpio_direction direction, bool optional) {
+  int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
+  if (optional) {
+    reserveLength += 11;
+  }
+  String result;
+  result.reserve(reserveLength);
+  result += F("GPIO ");
+  switch (direction) {
+    case gpio_input:         result += F("&larr; "); break;
+    case gpio_output:        result += F("&rarr; "); break;
+    case gpio_bidirectional: result += F("&#8644; "); break;
+  }
+  result += label;
+  if (optional)
+    result += F("(optional)");
+  return result;
+}
 
+String formatGpioName(const String& label, gpio_direction direction) {
+  return formatGpioName(label, direction, false);
+}
+
+String formatGpioName_input(const String& label) {
+  return formatGpioName(label, gpio_input, false);
+}
+
+String formatGpioName_output(const String& label) {
+  return formatGpioName(label, gpio_output, false);
+}
+
+String formatGpioName_bidirectional(const String& label) {
+  return formatGpioName(label, gpio_bidirectional, false);
+}
+
+String formatGpioName_input_optional(const String& label) {
+  return formatGpioName(label, gpio_input, true);
+}
+
+String formatGpioName_output_optional(const String& label) {
+  return formatGpioName(label, gpio_output, true);
+}
+
+// RX/TX are the only signals which are crossed, so they must be labelled like this:
+// "GPIO <-- TX" and "GPIO --> RX"
+String formatGpioName_TX(bool optional) {
+  return formatGpioName("RX", gpio_output, optional);
+}
+
+String formatGpioName_RX(bool optional) {
+  return formatGpioName("TX", gpio_input, optional);
+}
+
+String formatGpioName_TX_HW(bool optional) {
+  return formatGpioName("RX (HW)", gpio_output, optional);
+}
+
+String formatGpioName_RX_HW(bool optional) {
+  return formatGpioName("TX (HW)", gpio_input, optional);
+}
 
 /*********************************************************************************************\
    set pin mode & state (info table)
@@ -388,7 +455,7 @@ void statusLED(boolean traffic)
   else
   {
 
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+    if (WiFiConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -691,7 +758,7 @@ uint32_t progMemMD5check(){
       addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...OK"));
       return CRCValues.numberOfCRCBytes;
    }
-   addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
+   addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
 
@@ -1088,7 +1155,7 @@ uint32_t getFlashRealSizeInBytes() {
 String getSystemBuildString() {
   String result;
   result += BUILD;
-  result += F(" ");
+  result += ' ';
   result += F(BUILD_NOTES);
   return result;
 }
@@ -1125,6 +1192,10 @@ String getSystemLibraryString() {
     result += F(", LWIP: ");
     result += getLWIPversion();
   #endif
+  #ifdef PUYASUPPORT
+    result += F(" PUYA support");
+  #endif
+
   return result;
 }
 
@@ -1132,9 +1203,9 @@ String getSystemLibraryString() {
 String getLWIPversion() {
   String result;
   result += LWIP_VERSION_MAJOR;
-  result += F(".");
+  result += '.';
   result += LWIP_VERSION_MINOR;
-  result += F(".");
+  result += '.';
   result += LWIP_VERSION_REVISION;
   if (LWIP_VERSION_IS_RC) {
     result += F("-RC");
@@ -1640,6 +1711,8 @@ String parseTemplate(String &tmpString, byte lineSize)
   //String tmpStringMid = "";
   newString.reserve(lineSize);
 
+  parseSystemVariables(tmpString, false);
+
   // replace task template variables
   int leftBracketIndex = tmpString.indexOf('[');
   if (leftBracketIndex == -1)
@@ -1676,6 +1749,14 @@ String parseTemplate(String &tmpString, byte lineSize)
             tmpString.replace('#', ',');
             if (PluginCall(PLUGIN_REQUEST, 0, tmpString))
               newString += tmpString;
+          }
+          else if (deviceName.equalsIgnoreCase(F("Var"))) {
+            String tmpString = tmpStringMid.substring(4);
+            if (tmpString.length()>0 && isDigit(tmpString[0])) {
+              const int varNum = tmpString.toInt();
+              if (varNum > 0 && varNum <= CUSTOM_VARS_MAX)
+                newString += String(customFloatVar[varNum-1]);
+            }
           }
           else
             for (byte y = 0; y < TASKS_MAX; y++)
@@ -1729,12 +1810,12 @@ String parseTemplate(String &tmpString, byte lineSize)
       LoadTaskSettings(currentTaskIndex);
   }
 
-  parseSystemVariables(newString, false);
+  //parseSystemVariables(newString, false);
   parseStandardConversions(newString, false);
 
   // padding spaces
   while (newString.length() < lineSize)
-    newString += " ";
+    newString += ' ';
   checkRAM(F("parseTemplate3"));
   return newString;
 }
@@ -1829,7 +1910,7 @@ void transformValue(
             value = val == inverted ? F("OUT") : F(" IN");
             break;
           case 'Z' :// return "0" or "1"
-            value = val == inverted ? F("0") : F("1");
+            value = val == inverted ? "0" : "1";
             break;
           case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
             {
@@ -1895,7 +1976,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
                   for (byte f = 0; f < filler; f++)
-                    newString += " ";
+                    newString += ' ';
                 }
               }
               break;
@@ -1906,7 +1987,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0' ; //48
                   for (byte f = 0; f < filler; f++)
-                    value += " ";
+                    value += ' ';
                 }
               }
               break;
@@ -1951,14 +2032,14 @@ void transformValue(
       {
         int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
         for (byte f = 0; f < filler; f++)
-          newString += " ";
+          newString += ' ';
       }
       {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String logFormatted = F("DEBUG: Formatted String='");
           logFormatted += newString;
           logFormatted += value;
-          logFormatted += "'";
+          logFormatted += '\'';
           addLog(LOG_LEVEL_DEBUG, logFormatted);
         }
       }
@@ -1971,7 +2052,7 @@ void transformValue(
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
-      logParsed += "'";
+      logParsed += '\'';
       addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
   }
@@ -2314,13 +2395,15 @@ int CalculateParam(char *TmpStr) {
           errorDesc = F("Unknown error");
           break;
         }
-        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
-        addLog(LOG_LEVEL_ERROR, log);
-        log = F("CALCULATE PARAM ERROR details: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += round(param);
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+          addLog(LOG_LEVEL_ERROR, log);
+          log = F("CALCULATE PARAM ERROR details: ");
+          log += TmpStr;
+          log += F(" = ");
+          log += round(param);
+          addLog(LOG_LEVEL_ERROR, log);
+        }
       } else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
@@ -2451,7 +2534,7 @@ String rulesProcessingFile(const String& fileName, String& event)
       }
       else
       {      // if line complete, parse this rule
-        line.replace(F("\r"), "");
+        line.replace("\r", "");
         if (line.substring(0, 2) != F("//") && line.length() > 0)
         {
           parseCompleteNonCommentLine(
@@ -2470,7 +2553,7 @@ String rulesProcessingFile(const String& fileName, String& event)
 
   nestingLevel--;
   checkRAM(F("rulesProcessingFile2"));
-  return (F(""));
+  return ("");
 }
 
 void parseCompleteNonCommentLine(
@@ -2495,7 +2578,7 @@ void parseCompleteNonCommentLine(
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the "on" (no codeBlock)
     // This to avoid waisting CPU time...
-    line = parseTemplate(line, line.length());
+
 
     if (match && !fakeIfBlock) {
       // substitution of %eventvalue% is made here so it can be used on if statement too
@@ -2509,10 +2592,22 @@ void parseCompleteNonCommentLine(
         if (equalsPos > 0)
         {
           String tmpString = event.substring(equalsPos + 1);
-          line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+          //line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
+          char* tmpParam = new char[INPUT_COMMAND_SIZE];
+          tmpParam[0] = 0;
+
+          if (GetArgv(tmpString.c_str(),tmpParam,1)) {
+             line.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
+             line.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
+          }
+          if (GetArgv(tmpString.c_str(),tmpParam,2)) line.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
+          if (GetArgv(tmpString.c_str(),tmpParam,3)) line.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
+          if (GetArgv(tmpString.c_str(),tmpParam,4)) line.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
+          delete[] tmpParam;
         }
       }
     }
+    line = parseTemplate(line, line.length());
   }
   line.trim();
 
@@ -2616,14 +2711,16 @@ void processMatchedRule(
         else
         {
           String check = lcAction.substring(split + 7);
-          log = F("Lev.");
-          log += String(ifBlock);
-          log += F(": [elseif ");
-          log += check;
-          log += "]=";
           condition[ifBlock-1] = conditionMatchExtended(check);
-          log += toString(condition[ifBlock-1]);
-          addLog(LOG_LEVEL_DEBUG, log);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [elseif ");
+            log += check;
+            log += F("]=");
+            log += toString(condition[ifBlock-1]);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
         }
       }
     }
@@ -2639,15 +2736,17 @@ void processMatchedRule(
         {
           ifBlock++;
           String check = lcAction.substring(split + 3);
-          log = F("Lev.");
-          log += String(ifBlock);
-          log += F(": [if ");
-          log += check;
-          log += F("]=");
           condition[ifBlock-1] = conditionMatchExtended(check);
           ifBranche[ifBlock-1] = true;
-          log += toString(condition[ifBlock-1]);
-          addLog(LOG_LEVEL_DEBUG, log);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [if ");
+            log += check;
+            log += F("]=");
+            log += toString(condition[ifBlock-1]);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
         }
         else
           fakeIfBlock++;
@@ -2655,10 +2754,12 @@ void processMatchedRule(
       else
       {
         fakeIfBlock++;
-        log = F("Lev.");
-        log += String(ifBlock);
-        log = F(": Error: IF Nesting level exceeded!");
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          log = F("Lev.");
+          log += String(ifBlock);
+          log = F(": Error: IF Nesting level exceeded!");
+          addLog(LOG_LEVEL_ERROR, log);
+        }
       }
       isCommand = false;
     }
@@ -2738,6 +2839,7 @@ void processMatchedRule(
           log += tmpAction;
           addLog(LOG_LEVEL_ERROR, log);
         }
+        // TODO: assign here modified action???
       }
       ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
     }
@@ -2756,8 +2858,8 @@ boolean ruleMatch(String& event, String& rule)
   String tmpRule = rule;
 
   //Ignore escape char
-  tmpRule.replace(F("["),F(""));
-  tmpRule.replace(F("]"),F(""));
+  tmpRule.replace("[","");
+  tmpRule.replace("]","");
 
   // Special handling of literal string events, they should start with '!'
   if (event.charAt(0) == '!')
@@ -3071,15 +3173,15 @@ void SendValueLogger(byte TaskIndex)
     for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
     {
       logger += getDateString('-');
-      logger += F(" ");
+      logger += ' ';
       logger += getTimeString(':');
-      logger += F(",");
+      logger += ',';
       logger += Settings.Unit;
-      logger += F(",");
+      logger += ',';
       logger += getTaskDeviceName(TaskIndex);
-      logger += F(",");
+      logger += ',';
       logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      logger += F(",");
+      logger += ',';
       logger += formatUserVarNoCheck(TaskIndex, varNr);
       logger += F("\r\n");
     }
@@ -3149,7 +3251,7 @@ class RamTracker{
               traces[bestCase]+= nextAction[readPtr];
               traces[bestCase]+= "-> ";
               traces[bestCase]+= String(nextActionStartMemory[readPtr]);
-              traces[bestCase]+= " ";
+              traces[bestCase]+= ' ';
               readPtr++;
               if (readPtr >=TRACEENTRIES) readPtr=0;      // wrap around read pointer
             }
@@ -3398,6 +3500,21 @@ void play_rtttl(uint8_t _pin, const char *p )
 
 //#endif
 
+bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
+#if defined(ESP8266)
+  maxSketchSize = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const bool otaPossible = maxSketchSize > SMALLEST_OTA_IMAGE;
+  use2step = maxSketchSize < ESP.getSketchSize();
+  if (use2step) {
+    const uint32_t totalSketchSpace = ESP.getFreeSketchSpace() + ESP.getSketchSize();
+    maxSketchSize = totalSketchSpace - SMALLEST_OTA_IMAGE;
+  }
+  if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
+  return otaPossible;
+#else
+  return false;
+#endif
+}
 
 #ifdef FEATURE_ARDUINO_OTA
 /********************************************************************************************\

@@ -21,6 +21,7 @@
 #define P078_QUERY2   Settings.TaskDevicePluginConfig[event->TaskIndex][4]
 #define P078_QUERY3   Settings.TaskDevicePluginConfig[event->TaskIndex][5]
 #define P078_QUERY4   Settings.TaskDevicePluginConfig[event->TaskIndex][6]
+#define P078_DEPIN    Settings.TaskDevicePin3[event->TaskIndex]
 
 #define P078_DEV_ID_DFLT     1
 #define P078_MODEL_DFLT      0  // SDM120C
@@ -51,7 +52,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_078;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;     // connected through 2 datapins
+        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;     // connected through 3 datapins
         Device[deviceCount].VType = SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -89,6 +90,14 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(false);
+        event->String3 = formatGpioName_output_optional("DE");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
@@ -101,16 +110,16 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           P078_QUERY3 = P078_QUERY3_DFLT;
           P078_QUERY4 = P078_QUERY4_DFLT;
         }
-        addFormNumericBox(F("Modbus Address"), F("plugin_078_dev_id"), P078_DEV_ID, 1, 247);
+        addFormNumericBox(F("Modbus Address"), F("p078_dev_id"), P078_DEV_ID, 1, 247);
 
         String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
-        addFormSelector(F("Model Type"), F("plugin_078_model"), 3, options_model, NULL, P078_MODEL );
+        addFormSelector(F("Model Type"), F("p078_model"), 4, options_model, NULL, P078_MODEL );
 
         String options_baudrate[6];
         for (int i = 0; i < 6; ++i) {
           options_baudrate[i] = String(p078_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), F("plugin_078_baudrate"), 6, options_baudrate, NULL, P078_BAUDRATE );
+        addFormSelector(F("Baud Rate"), F("p078_baudrate"), 6, options_baudrate, NULL, P078_BAUDRATE );
 
         if (P078_MODEL == 0 && P078_BAUDRATE > 3)
           addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
@@ -122,10 +131,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         for (int i = 0; i < 10; ++i) {
           options_query[i] = p078_getQueryString(i);
         }
-        addFormSelector(F("Variable 1"), F("plugin_078_query1"), 10, options_query, NULL, P078_QUERY1);
-        addFormSelector(F("Variable 2"), F("plugin_078_query2"), 10, options_query, NULL, P078_QUERY2);
-        addFormSelector(F("Variable 3"), F("plugin_078_query3"), 10, options_query, NULL, P078_QUERY3);
-        addFormSelector(F("Variable 4"), F("plugin_078_query4"), 10, options_query, NULL, P078_QUERY4);
+        addFormSelector(F("Variable 1"), F("p078_query1"), 10, options_query, NULL, P078_QUERY1);
+        addFormSelector(F("Variable 2"), F("p078_query2"), 10, options_query, NULL, P078_QUERY2);
+        addFormSelector(F("Variable 3"), F("p078_query3"), 10, options_query, NULL, P078_QUERY3);
+        addFormSelector(F("Variable 4"), F("p078_query4"), 10, options_query, NULL, P078_QUERY4);
 
         success = true;
         break;
@@ -133,13 +142,13 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_078"));
-          P078_MODEL = getFormItemInt(F("plugin_078_model"));
-          P078_BAUDRATE = getFormItemInt(F("plugin_078_baudrate"));
-          P078_QUERY1 = getFormItemInt(F("plugin_078_query1"));
-          P078_QUERY2 = getFormItemInt(F("plugin_078_query2"));
-          P078_QUERY3 = getFormItemInt(F("plugin_078_query3"));
-          P078_QUERY4 = getFormItemInt(F("plugin_078_query4"));
+          P078_DEV_ID = getFormItemInt(F("p078_dev_id"));
+          P078_MODEL = getFormItemInt(F("p078_model"));
+          P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
+          P078_QUERY1 = getFormItemInt(F("p078_query1"));
+          P078_QUERY2 = getFormItemInt(F("p078_query2"));
+          P078_QUERY3 = getFormItemInt(F("p078_query3"));
+          P078_QUERY4 = getFormItemInt(F("p078_query4"));
 
           Plugin_078_init = false; // Force device setup next time
           success = true;
@@ -161,7 +170,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SDM;
           Plugin_078_SDM=NULL;
         }
-        Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, NOT_A_PIN);
+        Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
         Plugin_078_SDM->begin();
         success = true;
         break;
@@ -185,10 +194,12 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_078_init)
         {
-          UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, P078_DEV_ID);
-          UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, P078_DEV_ID);
-          UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, P078_DEV_ID);
-          UserVar[event->BaseVarIndex + 3] = p078_readVal(P078_QUERY4, P078_DEV_ID);
+          int model = P078_MODEL;
+          byte dev_id = P078_DEV_ID;
+          UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
+          UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
+          UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, dev_id, model);
+          UserVar[event->BaseVarIndex + 3] = p078_readVal(P078_QUERY4, dev_id, model);
           success = true;
           break;
         }
@@ -198,12 +209,14 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-float p078_readVal(byte query, byte node) {
+float p078_readVal(byte query, byte node, unsigned int model) {
   if (Plugin_078_SDM == NULL) return 0.0;
-  const float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, node), node);
+  const float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EASTRON: (");
     log += node;
+    log += ',';
+    log += model;
     log += ") ";
     log += p078_getQueryString(query);
     log += ": ";
@@ -213,8 +226,8 @@ float p078_readVal(byte query, byte node) {
   return _tempvar;
 }
 
-unsigned int p078_getRegister(byte query, byte node) {
-  if (node == 0) { // SDM120C
+unsigned int p078_getRegister(byte query, byte model) {
+  if (model == 0) { // SDM120C
     switch (query) {
       case 0: return SDM120C_VOLTAGE;
       case 1: return SDM120C_CURRENT;
@@ -227,7 +240,7 @@ unsigned int p078_getRegister(byte query, byte node) {
       case 8: return SDM120C_EXPORT_ACTIVE_ENERGY;
       case 9: return SDM120C_TOTAL_ACTIVE_ENERGY;
     }
-  } else if (node == 1) { // SDM220T
+  } else if (model == 1) { // SDM220T
     switch (query) {
       case 0: return SDM220T_VOLTAGE;
       case 1: return SDM220T_CURRENT;
@@ -240,7 +253,7 @@ unsigned int p078_getRegister(byte query, byte node) {
       case 8: return SDM220T_EXPORT_ACTIVE_ENERGY;
       case 9: return SDM220T_TOTAL_ACTIVE_ENERGY;
     }
-  } else if (node == 2) { // SDM230
+  } else if (model == 2) { // SDM230
     switch (query) {
       case 0: return SDM230_VOLTAGE;
       case 1: return SDM230_CURRENT;
@@ -253,7 +266,7 @@ unsigned int p078_getRegister(byte query, byte node) {
       case 8: return SDM230_EXPORT_ACTIVE_ENERGY;
       case 9: return SDM230_CURRENT_RESETTABLE_TOTAL_ACTIVE_ENERGY;
     }
-  } else if (node == 3) { // SDM630
+  } else if (model == 3) { // SDM630
     switch (query) {
       case 0: return SDM630_VOLTAGE_AVERAGE;
       case 1: return SDM630_CURRENTSUM;

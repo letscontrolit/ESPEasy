@@ -1,6 +1,11 @@
 
 #define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
+bool unprocessedWifiEvents() {
+  if (processedConnect && processedGetIP && processedDisconnect) return false;
+  return true;
+}
+
 //********************************************************************************
 // Functions to process the data gathered from the events.
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
@@ -14,7 +19,7 @@ void processConnect() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
-    log += F(" (");
+    log += " (";
     log += WiFi.BSSIDstr();
     log += F(") Ch: ");
     log += last_channel;
@@ -47,7 +52,7 @@ void processDisconnect() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Disconnected! Reason: '");
     log += getLastDisconnectReason();
-    log += F("'");
+    log += '\'';
     if (lastConnectedDuration > 0) {
       log += F(" Connected for ");
       log += format_msec_duration(lastConnectedDuration);
@@ -77,7 +82,7 @@ void processGotIP() {
       log += F("DHCP IP: ");
     }
     log += formatIP(ip);
-    log += F(" (");
+    log += " (";
     log += WifiGetHostname();
     log += F(") GW: ");
     log += formatIP(gw);
@@ -241,11 +246,23 @@ void processScanDone() {
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
-  setWifiMode(WIFI_OFF);
-  setWifiMode(WIFI_STA);
+//  setWifiMode(WIFI_OFF);
+//  setWifiMode(WIFI_STA);
   lastDisconnectMoment = millis();
   processedDisconnect = false;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+}
+
+void connectionCheckHandler()
+{
+  if (reconnectChecker == false && !WiFiConnected()){
+    reconnectChecker = true;
+    resetWiFi();
+    WiFi.reconnect();
+  }
+  else if (WiFiConnected() && reconnectChecker == true){
+    reconnectChecker = false;
+  }
 }
 
 void WifiScanAsync() {
@@ -419,7 +436,7 @@ String WifiGetAPssid()
 {
   String ssid(Settings.Name);
   if (Settings.appendUnitToHostname()) {
-    ssid+=F("_");
+    ssid+="_";
     ssid+=Settings.Unit;
   }
   return (ssid);
@@ -431,8 +448,8 @@ String WifiGetAPssid()
 String WifiGetHostname()
 {
   String hostname(WifiGetAPssid());
-  hostname.replace(F(" "), F("-"));
-  hostname.replace(F("_"), F("-")); // See RFC952
+  hostname.replace(" ", "-");
+  hostname.replace("_", "-"); // See RFC952
   return (hostname);
 }
 
@@ -443,7 +460,13 @@ bool useStaticIP() {
 
 bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  return wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (WiFi.isConnected()) return true;
+    // else wifiStatus is no longer in sync.
+    resetWiFi();
+  }
+  delay(1);
+  return false;
 }
 
 void WiFiConnectRelaxed() {
@@ -470,7 +493,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
     wifi_station_set_hostname(hostname);
   #endif
@@ -645,6 +668,8 @@ void WifiDisconnect()
     wifi_station_disconnect();
     ETS_UART_INTR_ENABLE();
   #endif
+  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
 }
 
 
@@ -689,7 +714,7 @@ String formatScanResult(int i, const String& separator) {
   result += separator;
   result += F("Ch:");
   result += WiFi.channel(i);
-  result += F(" (");
+  result += " (";
   result += WiFi.RSSI(i);
   result += F("dBm) ");
   switch (WiFi.encryptionType(i)) {
@@ -836,7 +861,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 
 
 String getLastDisconnectReason() {
-  String reason = F("(");
+  String reason = "(";
   reason += lastDisconnectReason;
   reason += F(") ");
   switch (lastDisconnectReason) {

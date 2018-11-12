@@ -64,6 +64,12 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Trigger"));
+        event->String2 = formatGpioName_input(F("Echo, 5V"));
+        break;
+      }
 
     case PLUGIN_WEBFORM_LOAD:
       {
@@ -87,31 +93,31 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         int optionValuesOpMode[2] = { 0, 1 };
         optionsOpMode[0] = F("Value");
         optionsOpMode[1] = F("State");
-        addFormSelector(F("Mode"), F("plugin_013_mode"), 2, optionsOpMode, optionValuesOpMode, operatingMode);
+        addFormSelector(F("Mode"), F("p013_mode"), 2, optionsOpMode, optionValuesOpMode, operatingMode);
 
         if (operatingMode == OPMODE_STATE)
         {
-        	addFormNumericBox(F("Threshold"), F("plugin_013_threshold"), threshold);
+        	addFormNumericBox(F("Threshold"), F("p013_threshold"), threshold);
           addUnit(strUnit);
         }
-        addFormNumericBox(F("Max Distance"), F("plugin_013_max_distance"), max_distance, 0, 500);
+        addFormNumericBox(F("Max Distance"), F("p013_max_distance"), max_distance, 0, 500);
         addUnit(strUnit);
 
         String optionsUnit[2];
         int optionValuesUnit[2] = { 0, 1 };
         optionsUnit[0] = F("Metric");
         optionsUnit[1] = F("Imperial");
-        addFormSelector(F("Unit"), F("plugin_013_Unit"), 2, optionsUnit, optionValuesUnit, measuringUnit);
+        addFormSelector(F("Unit"), F("p013_Unit"), 2, optionsUnit, optionValuesUnit, measuringUnit);
 
         String optionsFilter[2];
         int optionValuesFilter[2] = { 0, 1 };
         optionsFilter[0] = F("None");
         optionsFilter[1] = F("Median");
-        addFormSelector(F("Filter"), F("plugin_013_FilterType"), 2, optionsFilter, optionValuesFilter, filterType);
+        addFormSelector(F("Filter"), F("p013_FilterType"), 2, optionsFilter, optionValuesFilter, filterType);
 
         // enable filtersize option if filter is used,
         if (filterType != FILTER_NONE)
-        	addFormNumericBox(F("Filter size"), F("plugin_013_FilterSize"), filterSize, 2, 20);
+        	addFormNumericBox(F("Filter size"), F("p013_FilterSize"), filterSize, 2, 20);
 
         success = true;
         break;
@@ -122,15 +128,15 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         int16_t operatingMode = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         int16_t filterType = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_013_mode"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p013_mode"));
         if (operatingMode == OPMODE_STATE)
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_013_threshold"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_013_max_distance"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p013_threshold"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p013_max_distance"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_013_Unit"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_013_FilterType"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p013_Unit"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p013_FilterType"));
         if (filterType != FILTER_NONE)
-          Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_013_FilterSize"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p013_FilterSize"));
 
         success = true;
         break;

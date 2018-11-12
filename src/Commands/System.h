@@ -4,7 +4,9 @@
 
 String Command_System_NoSleep(struct EventStruct *event, const char* Line)
 {
-	Settings.deepSleep = 0;
+	if (event->Par1 > 0)
+		Settings.deepSleep = event->Par1; // set deep Sleep awake time
+	else Settings.deepSleep = 0;
 	return return_command_success();
 }
 

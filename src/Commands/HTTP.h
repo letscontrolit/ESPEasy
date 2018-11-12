@@ -4,7 +4,7 @@
 
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
-	if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+	if (WiFiConnected()) {
 		String strLine = Line;
 		String host = parseString(strLine, 2);
 		String port = parseString(strLine, 3);

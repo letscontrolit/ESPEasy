@@ -42,5 +42,3 @@ ESPEasy_mega-20180102_dev_ESP8285_1024.bin     | ESP8285 with 1Mb flash  | Stabl
 Details and discussion are on the Experimental forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
 
 Automated builds of the (new) documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/)
-
-We're also on IRC: #ESPEasy @freenode

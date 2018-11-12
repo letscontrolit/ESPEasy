@@ -36,7 +36,7 @@ String Command_MQTT_messageDelay(struct EventStruct *event, const char* Line)
 
 String Command_MQTT_Publish(struct EventStruct *event, const char* Line)
 {
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (WiFiConnected()) {
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
     int enabledMqttController = firstEnabledMQTTController();
     if (enabledMqttController >= 0) {
@@ -47,7 +47,12 @@ String Command_MQTT_Publish(struct EventStruct *event, const char* Line)
       {
         String topic = eventName.substring(0, index);
         String value = eventName.substring(index + 1);
-        MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+
+        //@giig1967g: if payload starts with '=' then treat it as a Formula end evaluate accordingly
+        if (value.c_str()[0]!='=')
+          MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
+        else
+          MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), Settings.MQTTRetainFlag);
       }
       return return_command_success();
     }

@@ -75,19 +75,19 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
         int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
         addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
 
-        addFormCheckBox(F("Oversampling"), F("plugin_060_oversampling"), CONFIG(1));
+        addFormCheckBox(F("Oversampling"), F("p060_oversampling"), CONFIG(1));
 
         addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(F("Calibration Enabled"), F("plugin_060_cal"), CONFIG(3));
+        addFormCheckBox(F("Calibration Enabled"), F("p060_cal"), CONFIG(3));
 
-        addFormNumericBox(F("Point 1"), F("plugin_060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 4095);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("plugin_060_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("p060_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], 0, 4095);
+        html_add_estimate_symbol();
+        addTextBox(F("p060_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(F("Point 2"), F("plugin_060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 4095);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("plugin_060_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("p060_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], 0, 4095);
+        html_add_estimate_symbol();
+        addTextBox(F("p060_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -97,15 +97,15 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
       {
         CONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        CONFIG(1) = isFormItemChecked(F("plugin_060_oversampling"));
+        CONFIG(1) = isFormItemChecked(F("p060_oversampling"));
 
-        CONFIG(3) = isFormItemChecked(F("plugin_060_cal"));
+        CONFIG(3) = isFormItemChecked(F("p060_cal"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("plugin_060_adc1"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_060_out1"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("p060_adc1"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("p060_out1"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("plugin_060_adc2"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("plugin_060_out2"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("p060_adc2"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("p060_out2"));
 
         success = true;
         break;

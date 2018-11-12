@@ -67,7 +67,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
           string += F("<option value='");
           string += methods[i] + "'";
           string += methods[i].equals(customConfig.HttpMethod) ? F(" selected='selected'") : F("");
-          string += F(">");
+          string += '>';
           string += methods[i];
           string += F("</option>");
         }
@@ -78,11 +78,11 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string += F("' value='");
         string += customConfig.HttpUri;
 
-        string += F("'>");
+        string += "'>";
 
         string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
         string += C011_HTTP_HEADER_MAX_LEN-1;
-        string += F("'>");
+        string += "'>";
         escapeBuffer=customConfig.HttpHeader;
         htmlEscape(escapeBuffer);
         string += escapeBuffer;
@@ -90,7 +90,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
         string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
         string += C011_HTTP_BODY_MAX_LEN-1;
-        string += F("'>");
+        string += "'>";
         escapeBuffer=customConfig.HttpBody;
         htmlEscape(escapeBuffer);
         string += escapeBuffer;
@@ -211,7 +211,7 @@ void DeleteNotNeededValues(String &s, byte numberOfValuesWanted)
   		{
         String p = s.substring(startIndex,endIndex+4);
         //remove the whole string including tokens
-				s.replace(p, F(""));
+				s.replace(p, "");
 
         //find next ones
         startIndex=s.indexOf(startToken);

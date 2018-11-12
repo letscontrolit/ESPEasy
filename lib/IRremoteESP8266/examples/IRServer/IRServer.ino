@@ -4,7 +4,7 @@
  * Copyright 2015 Mark Szabo
  *
  * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
- * as specified by IR_LED below.
+ * as specified by kIrLed below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -36,15 +36,15 @@
 #include <IRsend.h>
 #include <WiFiClient.h>
 
-const char* ssid = ".....";
-const char* password = ".....";
+const char* kSsid = ".....";
+const char* kPassword = ".....";
 MDNSResponder mdns;
 
 ESP8266WebServer server(80);
 
-#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 
-IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
+IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
 
 void handleRoot() {
   server.send(200, "text/html",
@@ -82,7 +82,7 @@ void handleNotFound() {
   message += server.args();
   message += "\n";
   for (uint8_t i = 0; i < server.args(); i++)
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    message += ' ' + server.argName(i) + ": " + server.arg(i) + "\n";
   server.send(404, "text/plain", message);
 }
 
@@ -90,7 +90,7 @@ void setup(void) {
   irsend.begin();
 
   Serial.begin(115200);
-  WiFi.begin(ssid, password);
+  WiFi.begin(kSsid, kPassword);
   Serial.println("");
 
   // Wait for connection
@@ -100,7 +100,7 @@ void setup(void) {
   }
   Serial.println("");
   Serial.print("Connected to ");
-  Serial.println(ssid);
+  Serial.println(kSsid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP().toString());
 

@@ -71,7 +71,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         int optionValues[1] = { TSL2591_ADDR };
-        addFormSelectorI2C(F("plugin_074_i2c_addr"), 1, optionValues, TSL2591_ADDR);   //Only for display I2C address
+        addFormSelectorI2C(F("p074_i2c_addr"), 1, optionValues, TSL2591_ADDR);   //Only for display I2C address
 
 
 //        tsl.setTiming(TSL2591_INTEGRATIONTIME_100MS);  // shortest integration time (bright light)
@@ -82,7 +82,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
         // tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS);  // longest integration time (dim light)
 
         String optionsMode[6] = { F("100ms"), F("200ms"), F("300ms"), F("400ms"), F("500ms"), F("600ms") };
-        addFormSelector(F("Integration Time"), F("plugin_074_itime"), 6, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Integration Time"), F("p074_itime"), 6, optionsMode, NULL, CONFIG(1));
 
 
 //        TSL2591_GAIN_LOW                  = 0x00,    // low gain (1x)
@@ -95,7 +95,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
           F("medium gain (25x)"),
           F("medium gain (428x)"),
           F("max gain (9876x)") };
-        addFormSelector(F("Value Mapping"), F("plugin_074_gain"), 4, optionsGain, NULL, CONFIG(2));
+        addFormSelector(F("Value Mapping"), F("p074_gain"), 4, optionsGain, NULL, CONFIG(2));
 
         success = true;
         break;
@@ -103,9 +103,9 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        //CONFIG(0) = getFormItemInt(F("plugin_074_i2c_addr"));
-        CONFIG(1) = getFormItemInt(F("plugin_074_itime"));
-        CONFIG(2) = getFormItemInt(F("plugin_074_gain"));
+        //CONFIG(0) = getFormItemInt(F("p074_i2c_addr"));
+        CONFIG(1) = getFormItemInt(F("p074_itime"));
+        CONFIG(2) = getFormItemInt(F("p074_gain"));
 
         success = true;
         break;

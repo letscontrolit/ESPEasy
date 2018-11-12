@@ -48,7 +48,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Digital"), F("Analog") };
-        addFormSelector(F("Port Type"), F("plugin_011"), 2, options, NULL, choice);
+        addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
         success = true;
         break;
@@ -56,7 +56,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_011"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p011"));
         success = true;
         break;
       }

@@ -41,27 +41,33 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Clock Event"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         String options[3];
-        options[0] = F("");
+        options[0] = "";
         options[1] = F("Off");
         options[2] = F("On");
 
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-        	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("plugin_043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
+        	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("p043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
 //          addHtml(F("<TR><TD>Day,Time "));
 //          addHtml(x+1);
 //          addHtml(F(":<TD><input type='text' name='plugin_043_clock"));
 //          addHtml(x);
 //          addHtml(F("' value='"));
 //          addHtml(timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]));
-//          addHtml(F("'>"));
+//          addHtml("'>");
 
-          addHtml(F(" "));
+          addHtml(" ");
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-          addSelector(String(F("plugin_043_state")) + (x), 3, options, NULL, NULL, choice, false);
+          addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice, false);
         }
         success = true;
         break;
@@ -71,12 +77,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
       {
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
-          String argc = F("plugin_043_clock");
+          String argc = F("p043_clock");
           argc += x;
           String plugin1 = WebServer.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
 
-          argc = F("plugin_043_state");
+          argc = F("p043_state");
           argc += x;
           String plugin2 = WebServer.arg(argc);
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();

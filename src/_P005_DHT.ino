@@ -59,12 +59,18 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_bidirectional(F("Data"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
         int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
 
-        addFormSelector(F("DHT Type"), F("plugin_005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
+        addFormSelector(F("DHT Type"), F("p005_dhttype"), 5, options, indices, Settings.TaskDevicePluginConfig[event->TaskIndex][0] );
 
         success = true;
         break;
@@ -72,7 +78,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_005_dhttype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p005_dhttype"));
 
         success = true;
         break;

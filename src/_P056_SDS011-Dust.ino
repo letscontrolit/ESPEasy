@@ -59,10 +59,18 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_056));
         break;
       }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(true); // optional
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         if (Plugin_056_hasTxPin(event)) {
-          addFormNumericBox(F("Sleep time"), F("plugin_056_sleeptime"),
+          addFormNumericBox(F("Sleep time"), F("p056_sleeptime"),
                             Settings.TaskDevicePluginConfig[event->TaskIndex][0],
                             0, 30);
           addUnit(F("Minutes"));
@@ -74,21 +82,15 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         {
           if (Plugin_056_hasTxPin(event)) {
             // Communications to device should work.
-            const int newsleeptime = getFormItemInt(F("plugin_056_sleeptime"));
+            const int newsleeptime = getFormItemInt(F("p056_sleeptime"));
             if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] != newsleeptime) {
-              Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_056_sleeptime"));
+              Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p056_sleeptime"));
               Plugin_056_setWorkingPeriod(newsleeptime);
             }
           }
           success = true;
           break;
         }
-    case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        event->String1 = F("GPIO &larr; TX");
-        event->String2 = F("GPIO &#8674; RX (optional)");
-        break;
-      }
 
     case PLUGIN_INIT:
       {
@@ -131,7 +133,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           const float pm10 = Plugin_056_SDS->GetPM10_();
           String log = F("SDS  : act ");
           log += pm2_5;
-          log += F(" ");
+          log += ' ';
           log += pm10;
           addLog(LOG_LEVEL_DEBUG, log);
 

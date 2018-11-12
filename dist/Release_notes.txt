@@ -1,4 +1,212 @@
 -------------------------------------------------
+Changes in release mega-20181112 (since mega-20181111)
+-------------------------------------------------
+
+Release date: Mon Nov 12 04:00:07 CET 2018
+
+Bartlomiej Zimon (1):
+      Eastron fix for model selection     issue #1684
+
+TD-er (6):
+      [Cleanup] Uniform labels for GPIO pins (existing labels)
+      [Cleanup] Uniform labels for GPIO pins
+      [Cleanup] Change label for P035_IRTX
+      [SPIFFS] perform delay during save per page break
+      Improve comments
+      [WiFi] Make sure unhandled WiFi events will be processed
+
+
+-------------------------------------------------
+Changes in release mega-20181111 (since mega-20181110)
+-------------------------------------------------
+
+Release date: Sun Nov 11 04:00:06 CET 2018
+
+Bartlomiej Zimon (2):
+      Webserver /control proper Content type     it sets printToWebJSON during PLUGIN_WRITE/SendStatus     fix for #2018
+      Webserver optimize /control early handled commands
+
+TD-er (1):
+      [JavaScript] Append zero termination to embedded progmem data
+
+
+-------------------------------------------------
+Changes in release mega-20181110 (since mega-20181109)
+-------------------------------------------------
+
+Release date: Sat Nov 10 04:00:08 CET 2018
+
+Bartlomiej Zimon (4):
+      HTTP responses have duplicate Content-Types     fix for #2018
+      remove double strings for contenttype
+      remove old duplication
+      properly send content-type header     fix for #2022
+
+TD-er (2):
+      [ESP32] Upgrade core lib to espressif32@1.5.0
+      [WiFi] Improve disconnect detection and run delay(1) when not connected
+
+
+-------------------------------------------------
+Changes in release mega-20181109 (since mega-20181108)
+-------------------------------------------------
+
+Release date: Fri Nov  9 04:00:10 CET 2018
+
+Bartlomiej Zimon (1):
+      add p078_dev_id to form save
+
+
+-------------------------------------------------
+Changes in release mega-20181108 (since mega-20181107)
+-------------------------------------------------
+
+Release date: Thu Nov  8 04:00:09 CET 2018
+
+Bartlomiej Zimon (2):
+      Add optional DE PIN configuration     Add gpio names to form     fix for #1684
+      Sysinfo update to 4 values
+
+Plebs (4):
+      bug fixes
+      cleaned if from addLog as per uzi18 comment
+      final cleanup
+      BUG fix
+
+TD-er (6):
+      [PUYA] Apply generic patch on all builds checking for PUYA flash
+      [Travis] Update platformIO packages before build
+      [PUYA] Add PUYA patch v3 to check if patch is applied
+      [PUYA] Fix patch v3 for PUYA support
+      [PUYA] share static flash_chip_id among functions
+      [PUYA] Fix typo in patch
+
+stefan (2):
+      Amend nosleep command to accept awake time
+      Add System#NoSleep=<time> event
+
+
+-------------------------------------------------
+Changes in release mega-20181107 (since mega-20181106)
+-------------------------------------------------
+
+Release date: Wed Nov  7 04:00:08 CET 2018
+
+TD-er (14):
+      [Cleanup] Reduce build image size by 2k by wrapping flash strings
+      [Cleanup] Reduce length HTML form data IDs to reduce sketch size
+      [Cleanup] Minify JavaScript and CSS to reduce sketch size
+      [1MB OTA] Add small build to allow for 1MB OTA
+      [Cleanup] Make single definition for pin description
+      [OTA] Add ESP8285 1M OTA minimal build
+      [Cleanup] Strip HTML templates into sections to remove duplicate strings
+      [Cleanup] Increase load speed and lower memory usage rendering web page
+      [Cleanup] Do not use F-macro for short strings
+      [timing stats] Add http://<ip>/stat/timing/json to view timing stats
+      [timingstats] Implement HTML table of timing stats
+      [timingstats] Disable timing stats in log
+      [timingstats] Improve table layout of timing stats
+      [timingstats] Show stats in msec instead of usec.
+
+
+-------------------------------------------------
+Changes in release mega-20181106 (since mega-20181105)
+-------------------------------------------------
+
+Release date: Tue Nov  6 04:00:10 CET 2018
+
+Grovkillen (1):
+      [Flasher] fixed ip bug fixed
+
+
+-------------------------------------------------
+Changes in release mega-20181105 (since mega-20181101)
+-------------------------------------------------
+
+Release date: Mon Nov  5 04:00:10 CET 2018
+
+Bartlomiej Zimon (2):
+      fix for #1986
+      Eastron - save modbus id and enable SDM630 model      partial fix for #1684
+
+Grovkillen (1):
+      [Memanalyzer] cmd args are back (un-commented)
+
+Jimmy Westberg (2):
+      Revert "[Flasher] updated flasher (some minor error)"
+      [Memanalyzer] try to fix the memanalyzer not analyzing all plugins
+
+kpalczewski (1):
+      bump lib IRremoteESP8266 to 2.5.2 and add send Pioneer support for 035 IR plugin.
+
+stefan (2):
+      Add sent/return value check to client.print()
+      Add comment why we check for %256
+
+
+-------------------------------------------------
+Changes in release mega-20181101 (since mega-20181031)
+-------------------------------------------------
+
+Release date: Thu Nov  1 04:00:08 CET 2018
+
+Bartłomiej Zimoń (1):
+      BlynkGet add timeout 1,5s.
+
+Grovkillen (4):
+      [README] added more info about ESP.Easy.Flasher
+      [README] fixed some \r\n
+      [Deploy] "source" folder was named "Source"
+      [README] removed IRC link... we're not there.
+
+Jimmy Westberg (1):
+      [Flasher] updated flasher (some minor error)
+
+Plebs (2):
+      Update src/Misc.ino
+      Update src/Misc.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181031 (since mega-20181030)
+-------------------------------------------------
+
+Release date: Wed Oct 31 04:00:10 CET 2018
+
+Bartłomiej Zimoń (1):
+      BlynkGet fix loop #1951
+
+Jimmy Westberg (7):
+      [Flasher] Added ESP.Easy.Flasher.exe
+      [Deploy] Added sub folder for BIN files
+      [Flasher] Updated to 0.02.001
+      [Deploy] small letters are the standard
+      [Flasher] Updated to 0.02.002
+      [Path] folder rename 1
+      [Path] folder rename 2
+
+TD-er (1):
+      [OTA] Add OTA info and disable when not enough space
+
+
+-------------------------------------------------
+Changes in release mega-20181030 (since mega-20181029)
+-------------------------------------------------
+
+Release date: Tue Oct 30 04:00:07 CET 2018
+
+James Tutton (2):
+      Added Special Case to allow Servo to be disabled
+      Fixed missing ;
+
+TD-er (1):
+      [Core 2.4.2] Set core 2.4.2 as default platform
+
+svmac (1):
+      P022_PCA9685 Enhancements
+
+
+-------------------------------------------------
 Changes in release mega-20181029 (since mega-20181028)
 -------------------------------------------------
 

@@ -80,6 +80,12 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("CS"));
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         // Get CS Pin
@@ -113,7 +119,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         options[1] = F("MAX 31855");
         //options[2] = F("MAX 31865");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(F("Adapter IC"), F("plugin_039_maxtype"), 2, options, optionValues, choice);
+        addFormSelector(F("Adapter IC"), F("p039_maxtype"), 2, options, optionValues, choice);
 
         success = true;
         break;
@@ -121,7 +127,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_039_maxtype"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p039_maxtype"));
         success = true;
         break;
       }

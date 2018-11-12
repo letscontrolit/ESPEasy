@@ -49,20 +49,26 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Data"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("Red"), F("plugin_041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
-      	addFormNumericBox(F("Green"), F("plugin_041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
-      	addFormNumericBox(F("Blue"), F("plugin_041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
+      	addFormNumericBox(F("Red"), F("p041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+      	addFormNumericBox(F("Green"), F("p041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+      	addFormNumericBox(F("Blue"), F("p041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_041_red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_041_green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_041_blue"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p041_red"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p041_green"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p041_blue"));
         Plugin_041_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Plugin_041_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         Plugin_041_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];

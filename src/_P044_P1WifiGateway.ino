@@ -66,9 +66,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("p044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("p044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -76,13 +76,14 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         options[1] = F("Even");
         options[2] = F("Odd");
         int optionValues[3] = { 0, 2, 3 };
-        addFormSelector(F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("p044_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
+        // FIXME TD-er: Why isn't this using the normal pin selection functions?
       	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -90,12 +91,12 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("plugin_044_port"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("plugin_044_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("plugin_044_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("plugin_044_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("plugin_044_stop"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_044_rxwait"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("p044_port"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("p044_baud"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p044_data"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p044_parity"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p044_stop"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p044_rxwait"));
 
         success = true;
         break;
@@ -360,7 +361,7 @@ bool validP1char(char ch) {
     if (serialdebug) {
       Serial.print(F("faulty char>"));
       Serial.print(ch);
-      Serial.println(F("<"));
+      Serial.println("<");
     }
     return false;
   }

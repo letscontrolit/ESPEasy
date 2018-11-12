@@ -122,7 +122,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         int optionValues[2];
         optionValues[0] = 0x68;
         optionValues[1] = 0x69;
-        addFormSelectorI2C(F("plugin_045_address"), 2, optionValues, choice);
+        addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
         addFormNote(F("ADDR Low=0x68, High=0x69"));
 
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
@@ -137,7 +137,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         options[7] = F("G-force X");
         options[8] = F("G-force Y");
         options[9] = F("G-force Z");
-        addFormSelector(F("Function"), F("plugin_045_function"), 10, options, NULL, choice);
+        addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
 
         if (choice == 0) {
           // If this is instance function 0, setup webform for additional vars
@@ -146,9 +146,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           addHtml(F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>"));
           addHtml(F("value. A value of 0 disables movement detection for that axis."));
 
-        	addFormNumericBox(F("Detection threshold X"), F("plugin_045_threshold_x"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 65535);
-        	addFormNumericBox(F("Detection threshold Y"), F("plugin_045_threshold_y"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], 0, 65535);
-        	addFormNumericBox(F("Detection threshold Z"), F("plugin_045_threshold_z"), Settings.TaskDevicePluginConfig[event->TaskIndex][4], 0, 65535);
+        	addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 65535);
+        	addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), Settings.TaskDevicePluginConfig[event->TaskIndex][3], 0, 65535);
+        	addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), Settings.TaskDevicePluginConfig[event->TaskIndex][4], 0, 65535);
 
           addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
           addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
@@ -157,8 +157,8 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped."));
           addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
 
-        	addFormNumericBox(F("Min. detection count"), F("plugin_045_threshold_counter"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 0, 999999);
-        	addFormNumericBox(F("Detection window"), F("plugin_045_threshold_window"), Settings.TaskDevicePluginConfig[event->TaskIndex][6], 0, 999999);
+        	addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), Settings.TaskDevicePluginConfig[event->TaskIndex][5], 0, 999999);
+        	addFormNumericBox(F("Detection window"), F("p045_threshold_window"), Settings.TaskDevicePluginConfig[event->TaskIndex][6], 0, 999999);
 
         }
         success = true;
@@ -168,13 +168,13 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         // Save the vars
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_045_address"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_045_function"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_045_threshold_x"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_045_threshold_y"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_045_threshold_z"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_045_threshold_counter"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("plugin_045_threshold_window"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p045_address"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p045_function"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p045_threshold_x"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p045_threshold_y"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p045_threshold_z"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p045_threshold_counter"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p045_threshold_window"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][6] < Settings.TaskDevicePluginConfig[event->TaskIndex][5]) {
           Settings.TaskDevicePluginConfig[event->TaskIndex][6] = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
         }

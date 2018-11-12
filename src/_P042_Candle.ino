@@ -133,6 +133,12 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Data"));
+        break;
+      }
+      
     case PLUGIN_WEBFORM_LOAD:
       {
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
@@ -166,14 +172,14 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         if (Candle_color == ColorDefault) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(F(">"));
+          addHtml(">");
         }
         addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
         addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
         if (Candle_color == ColorSelected) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(F(">"));
+          addHtml(">");
         }
         addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
 
@@ -187,7 +193,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
         addHtml(hexvalue);
-        addHtml(F("'>"));
+        addHtml("'>");
         addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
         addNumericBox(F("web_RGB_Green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
         addNumericBox(F("web_RGB_Blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
@@ -206,7 +212,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
         addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
         addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
-        addHtml(F("}"));
+        addHtml("}");
         addHtml(F("</script>"));
 
         addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));

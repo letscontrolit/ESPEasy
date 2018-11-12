@@ -99,6 +99,19 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        // FIXME TD-er: This plugin is handling too much.
+        // - switch/dimmer input
+        // - PWM output
+        // - switch output (relays)
+        // - servo output
+        // - sending pulses
+        // - playing tunes
+        event->String1 = formatGpioName_bidirectional("");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         String options[2];
@@ -106,7 +119,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         options[1] = F("Dimmer");
         int optionValues[2] = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const byte switchtype = P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("plugin_001_type"), 2, options, optionValues, switchtype);
+        addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
@@ -121,14 +134,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonOptions[1] = F("Push Button Active Low");
         buttonOptions[2] = F("Push Button Active High");
         int buttonOptionValues[3] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH};
-        addFormSelector(F("Switch Button Type"), F("plugin_001_button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
-        addFormCheckBox(F("Send Boot state"),F("plugin_001_boot"),
+        addFormCheckBox(F("Send Boot state"),F("p001_boot"),
         		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
         addFormSubHeader(F("Advanced event management"));
 
-        addFormNumericBox(F("De-bounce (ms)"), F("plugin_001_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
+        addFormNumericBox(F("De-bounce (ms)"), F("p001_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
 
         //set minimum value for doubleclick MIN max speed
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
@@ -142,10 +155,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
         int buttonDCValues[4] = {PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH,PLUGIN_001_DC_BOTH};
 
-        addFormSelector(F("Doubleclick event"), F("plugin_001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
 
-        //addFormCheckBox(F("Doubleclick event (3)"), F("plugin_001_dc"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
-        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("plugin_001_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
+        //addFormCheckBox(F("Doubleclick event (3)"), F("p001_dc"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p001_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
 
         //set minimum value for longpress MIN max speed
         if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
@@ -158,14 +171,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
         buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
         int buttonLPValues[4] = {PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH,PLUGIN_001_LONGPRESS_BOTH};
-        addFormSelector(F("Longpress event"), F("plugin_001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+        addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
 
-        //addFormCheckBox(F("Longpress event (10 & 11)"), F("plugin_001_lp"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
-        addFormNumericBox(F("Longpress min. interval (ms)"), F("plugin_001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
+        //addFormCheckBox(F("Longpress event (10 & 11)"), F("p001_lp"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
+        addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
 
         //TO-DO: add Extra-Long Press event
-        //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("plugin_001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-        //addFormNumericBox(F("Extra-Longpress min. interval (ms)"), F("plugin_001_elpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 500, 2000);
+        //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("p001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+        //addFormNumericBox(F("Extra-Longpress min. interval (ms)"), F("p001_elpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 500, 2000);
 
         success = true;
         break;
@@ -173,27 +186,27 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_001_type"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p001_type"));
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == PLUGIN_001_TYPE_DIMMER)
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_001_dimvalue"));
+          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p001_dimvalue"));
         }
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_001_button"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p001_button"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_001_boot"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p001_boot"));
 
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("plugin_001_debounce"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p001_debounce"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_001_dc"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("plugin_001_dcmaxinterval"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p001_dc"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p001_dcmaxinterval"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("plugin_001_lp"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("plugin_001_lpmininterval"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p001_lp"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p001_lpmininterval"));
 
         //TO-DO: add Extra-Long Press event
-        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("plugin_001_elp"));
-        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("plugin_001_elpmininterval"));
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("p001_elp"));
+        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("p001_elpmininterval"));
 
         success = true;
         break;
@@ -211,12 +224,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         else
           pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT);
 
-        // @giig1967g-20181022: if it is in the device list we assume it's an input pin
-        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, 0);
-
         // read and store current state to prevent switching at boot time
         switchstate[event->TaskIndex] = Plugin_001_read_switch_state(event);
         outputstate[event->TaskIndex] = switchstate[event->TaskIndex];
+
+        // @giig1967g-20181022: if it is in the device list we assume it's an input pin
+        setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
 
         // if boot state must be send, inverse default state
         // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
@@ -382,14 +395,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 }
               }
               UserVar[event->BaseVarIndex] = output_value;
-
-              String log = F("SW  : GPIO=");
-              log += Settings.TaskDevicePin1[event->TaskIndex];
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : GPIO=");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
 
               //reset Userdata so it displays the correct state value in the web page
@@ -453,13 +467,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               output_value = output_value + 10;
 
               UserVar[event->BaseVarIndex] = output_value;
-              String log = F("SW  : LongPress: GPIO= ");
-              log += Settings.TaskDevicePin1[event->TaskIndex];
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += F(" Output value=");
-              log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : LongPress: GPIO= ");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += state ? '1' : '0';
+                log += F(" Output value=");
+                log += output_value;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
 
               //reset Userdata so it displays the correct state value in the web page
@@ -476,9 +492,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       {
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
-        String log = F("SW   : State ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SW   : State ");
+          log += UserVar[event->BaseVarIndex];
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }
@@ -628,14 +646,24 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
                 //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
                 #if defined(ESP8266)
-                  servo1.attach(event->Par2);
-                  servo1.write(event->Par3);
+                  //SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
+                  if (event->Par3 >= 9000) {
+                    servo1.detach();
+
+                  }else{
+                    servo1.attach(event->Par2);
+                    servo1.write(event->Par3);
+                  }
                 #endif
                 break;
               case 2:
                 #if defined(ESP8266)
+                if (event->Par3 >= 9000) {
+                  servo2.detach();
+                }else{
                   servo2.attach(event->Par2);
                   servo2.write(event->Par3);
+                }
                 #endif
                 break;
             }

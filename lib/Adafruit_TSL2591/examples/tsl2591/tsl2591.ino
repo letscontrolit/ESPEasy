@@ -33,7 +33,7 @@ void displaySensorDetails(void)
   Serial.print  (F("Min Value:    ")); Serial.print(sensor.min_value); Serial.println(F(" lux"));
   Serial.print  (F("Resolution:   ")); Serial.print(sensor.resolution); Serial.println(F(" lux"));  
   Serial.println(F("------------------------------------"));
-  Serial.println(F(""));
+  Serial.println("");
   delay(500);
 }
 
@@ -81,7 +81,7 @@ void configureSensor(void)
   Serial.print((tsl.getTiming() + 1) * 100, DEC); 
   Serial.println(F(" ms"));
   Serial.println(F("------------------------------------"));
-  Serial.println(F(""));
+  Serial.println("");
 }
 
 

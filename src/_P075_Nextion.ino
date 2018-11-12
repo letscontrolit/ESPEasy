@@ -114,13 +114,13 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       rxPin = Settings.TaskDevicePin1[event->TaskIndex];
       txPin = Settings.TaskDevicePin2[event->TaskIndex];
 
-      event->String1 = F("GPIO SS RX &larr; ");
-      event->String2 = F("GPIO SS TX &rarr; ");
+      event->String1 = formatGpioName_RX(false);
+      event->String2 = formatGpioName_TX(false);
 
       if(AdvHwSerial == true) {
         if ((rxPin == 3 && txPin == 1) || (rxPin == 13 && txPin == 15)) {
-            event->String1 = F("GPIO HW RX &larr; ");
-            event->String2 = F("GPIO HW TX &rarr; ");
+          event->String1 = formatGpioName_RX_HW(false);
+          event->String2 = formatGpioName_TX_HW(false);
         }
       }
       break;
@@ -148,7 +148,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       if(rxPin <0 || txPin <0) {                                            // Missing serial I/O pins!
         addFormNote(F("Please configure the RX and TX sensor pins before enabling this plugin."));
-        addFormSubHeader(F("")); // Blank line, vertical space.
+        addFormSubHeader(""); // Blank line, vertical space.
       }
 
       addFormSeparator(2);
@@ -162,7 +162,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       options[2] = F("57600");
       options[3] = F("115200");
 
-      addFormSelector(F("Baud Rate"), F("plugin_075_baud"), 4, options, NULL, choice);
+      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, NULL, choice);
       addFormNote(F("Un-check box for Soft Serial communication (low performance mode, 9600 Baud)."));
       addFormNote(F("Hardware Serial is available when the GPIO pins are RX=D7 and TX=D8."));
       addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
@@ -174,13 +174,13 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 //    Data += String(datax);
 //    addFormNote(Data);
 
-      addFormSubHeader(F(""));                          // Blank line, vertical space.
+      addFormSubHeader("");                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
 
       char deviceTemplate[P75_Nlines][P75_Nchars];
       LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
       for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_075_template")) + (varNr + 1), deviceTemplate[varNr], P75_Nchars-1);
+        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), deviceTemplate[varNr], P75_Nchars-1);
 
       }
       if( Settings.TaskDeviceTimer[event->TaskIndex]==0) { // Is interval timer disabled?
@@ -206,7 +206,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         String error;
         for (byte varNr = 0; varNr < P75_Nlines; varNr++)
         {
-          String argName = F("Plugin_075_template");
+          String argName = F("p075_template");
           argName += varNr + 1;
           if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P75_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
@@ -219,7 +219,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
         }
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("AdvHwSerial"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_075_baud"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p075_baud"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("IncludeValues"));
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 

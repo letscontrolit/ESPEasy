@@ -84,15 +84,21 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        // No pins selectable, all hard coded
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormNumericBox(F("U Ref"), F("plugin_077_URef"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormNumericBox(F("U Ref"), F("p077_URef"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
         addUnit(F("uSec"));
 
-        addFormNumericBox(F("I Ref"), F("plugin_077_IRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("I Ref"), F("p077_IRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         addUnit(F("uSec"));
 
-        addFormNumericBox(F("P Ref"), F("plugin_077_PRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormNumericBox(F("P Ref"), F("p077_PRef"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
         addUnit(F("uSec"));
         addFormNote(F("Use 0 to read values stored on chip / default values"));
 
@@ -102,9 +108,9 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_077_URef"));;
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_077_IRef"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_077_PRef"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p077_URef"));;
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p077_IRef"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p077_PRef"));
         success = true;
         break;
       }
@@ -197,7 +203,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
 
           if (P077_count_pkt > 10) // bypass first 10 pkts
             P077_t_max = max(P077_t_max, t_diff);
-          
+
           if (P077_found) {
             P077_count_max = max(P077_count_max, P077_count_bytes);
             P077_t_pkt = t_start - P077_t_pkt_tmp;

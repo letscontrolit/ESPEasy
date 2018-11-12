@@ -67,7 +67,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         #define ADS1115_I2C_OPTION 4
         byte addr = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
-        addFormSelectorI2C(F("plugin_025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+        addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
 
         addFormSubHeader(F("Input"));
 
@@ -81,7 +81,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           F("8x gain (FS=0.512V)"),
           F("16x gain (FS=0.256V)")
         };
-        addFormSelector(F("Gain"), F("plugin_025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
+        addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
 
         #define ADS1115_MUX_OPTION 8
         byte mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -95,19 +95,19 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           F("AIN2 - GND (Single-Ended)"),
           F("AIN3 - GND (Single-Ended)"),
         };
-        addFormSelector(F("Input Multiplexer"), F("plugin_025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
+        addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
 
         addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(F("Calibration Enabled"), F("plugin_025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addFormCheckBox(F("Calibration Enabled"), F("p025_cal"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
 
-        addFormNumericBox(F("Point 1"), F("plugin_025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("plugin_025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
+        addFormNumericBox(F("Point 1"), F("p025_adc1"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][0], -32768, 32767);
+        html_add_estimate_symbol();
+        addTextBox(F("p025_out1"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0], 3), 10);
 
-        addFormNumericBox(F("Point 2"), F("plugin_025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], -32768, 32767);
-        addHtml(F(" &#8793; "));
-        addTextBox(F("plugin_025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
+        addFormNumericBox(F("Point 2"), F("p025_adc2"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1], -32768, 32767);
+        html_add_estimate_symbol();
+        addTextBox(F("p025_out2"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1], 3), 10);
 
         success = true;
         break;
@@ -115,19 +115,19 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_025_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p025_i2c"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_025_gain"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p025_gain"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_025_mode"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p025_mode"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_025_cal"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p025_cal"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("plugin_025_adc1"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_025_out1"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = getFormItemInt(F("p025_adc1"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("p025_out1"));
 
-        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("plugin_025_adc2"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("plugin_025_out2"));
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = getFormItemInt(F("p025_adc2"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("p025_out2"));
 
         Plugin_025_init = false; // Force device setup next time
         success = true;
@@ -189,7 +189,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
             float normalized = (float)(value - adc1) / (float)(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
-            log += F(" ");
+            log += ' ';
             log += UserVar[event->BaseVarIndex];
           }
         }

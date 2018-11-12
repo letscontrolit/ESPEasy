@@ -29,9 +29,11 @@ String Command_GetORSetIP(struct EventStruct *event,
 	char TmpStr1[INPUT_COMMAND_SIZE];
 	if (GetArgv(Line, TmpStr1, arg + 1)) {
 		if (!str2ip(TmpStr1, IP)) {
-			return return_result(event, F("Invalid parameter."));
+			String result = F("Invalid parameter: ");
+			result += TmpStr1;
+			return return_result(event, result);
 		}
-	}else  {
+	} else {
 		Serial.println();
 		String result = targetDescription;
 		if (useStaticIP()) {

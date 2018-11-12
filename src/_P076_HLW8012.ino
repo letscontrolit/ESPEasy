@@ -77,15 +77,23 @@ boolean Plugin_076(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output("SEL");
+        event->String2 = formatGpioName_input("CF1");
+        event->String3 = formatGpioName_input("CF");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormNote(F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
         addFormSubHeader(F("Calibration Values"));
         double hlwMultipliers[3];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
-        addFormTextBox(F("Current Multiplier"), F("plugin_076_currmult"), String(hlwMultipliers[0], 2), 25);
-        addFormTextBox(F("Voltage Multiplier"), F("plugin_076_voltmult"), String(hlwMultipliers[1], 2), 25);
-        addFormTextBox(F("Power Multiplier"),   F("plugin_076_powmult"),  String(hlwMultipliers[2], 2), 25);
+        addFormTextBox(F("Current Multiplier"), F("p076_currmult"), String(hlwMultipliers[0], 2), 25);
+        addFormTextBox(F("Voltage Multiplier"), F("p076_voltmult"), String(hlwMultipliers[1], 2), 25);
+        addFormTextBox(F("Power Multiplier"),   F("p076_powmult"),  String(hlwMultipliers[2], 2), 25);
         success = true;
         break;
       }
@@ -94,11 +102,11 @@ boolean Plugin_076(byte function, struct EventStruct *event, String& string)
       {
         double hlwMultipliers[3];
         String tmpString, arg1;
-          arg1 = F("plugin_076_currmult"); tmpString = WebServer.arg(arg1);
+          arg1 = F("p076_currmult"); tmpString = WebServer.arg(arg1);
           hlwMultipliers[0] = atof(tmpString.c_str());
-          arg1 = F("plugin_076_voltmult"); tmpString = WebServer.arg(arg1);
+          arg1 = F("p076_voltmult"); tmpString = WebServer.arg(arg1);
           hlwMultipliers[1] = atof(tmpString.c_str());
-          arg1 = F("plugin_076_powmult");  tmpString = WebServer.arg(arg1);
+          arg1 = F("p076_powmult");  tmpString = WebServer.arg(arg1);
           hlwMultipliers[2] = atof(tmpString.c_str());
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&hlwMultipliers, sizeof(hlwMultipliers));
         if (PLUGIN_076_DEBUG) {

@@ -80,30 +80,31 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("3C"), F("3D") };*/
         int optionValues[2] = { 0x3C, 0x3D };
-        addFormSelectorI2C(F("plugin_023_adr"), 2, optionValues, choice);
+        addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
 
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         String options2[2] = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("plugin_023_rotate"), 2, options2, optionValues2, choice2);
+        addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
 
         byte choice3 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
         String options3[3] = { F("128x64"), F("128x32"), F("64x48") };
         int optionValues3[3] = { 1, 3, 2 };
-        addFormSelector(F("Display Size"), F("plugin_023_size"), 3, options3, optionValues3, choice3);
+        addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
 
         byte choice4 = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
         String options4[2] = { F("Normal"), F("Optimized") };
         int optionValues4[2] = { 1, 2 };
-        addFormSelector(F("Font Width"), F("plugin_023_font_width"), 2, options4, optionValues4, choice4);
+        addFormSelector(F("Font Width"), F("p023_font_width"), 2, options4, optionValues4, choice4);
 
         char deviceTemplate[P23_Nlines][P23_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < 8; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("Plugin_023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p023_template")) + (varNr + 1), deviceTemplate[varNr], 64);
         }
 
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
         addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
@@ -114,17 +115,17 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_023_adr"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_023_rotate"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p023_adr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p023_rotate"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_23_timer"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("plugin_023_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("plugin_023_font_width"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p023_size"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p023_font_width"));
 
         char deviceTemplate[P23_Nlines][P23_Nchars];
         String error;
         for (byte varNr = 0; varNr < P23_Nlines; varNr++)
         {
-          String argName = F("Plugin_023_template");
+          String argName = F("p023_template");
           argName += varNr + 1;
           if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(argName), P23_Nchars)) {
             error += getCustomTaskSettingsError(varNr);
@@ -241,8 +242,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         {
           LoadTaskSettings(event->TaskIndex);
           String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
+          name.replace("[","");
+          name.replace("]","");
           if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
           {
             arguments = arguments.substring(dotPos+1);

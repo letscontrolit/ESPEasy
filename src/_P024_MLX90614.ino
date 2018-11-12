@@ -78,7 +78,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
         options[0] = F("IR object temperature");
         optionValues[1] = (0x06);
         options[1] = F("Ambient temperature");
-        addFormSelector(F("Option"), F("plugin_024_option"), MLX90614_OPTION, options, optionValues, choice);
+        addFormSelector(F("Option"), F("p024_option"), MLX90614_OPTION, options, optionValues, choice);
 
         success = true;
         break;
@@ -86,7 +86,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_024_option"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p024_option"));
         Plugin_024_init = false; // Force device setup next time
         success = true;
         break;
