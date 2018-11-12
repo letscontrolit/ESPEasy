@@ -652,6 +652,9 @@ int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg);
 I2Cdev i2cdev;
 
+bool safe_strncpy(char* dest, const String& source, size_t max_size);
+bool safe_strncpy(char* dest, const char* source, size_t max_size);
+
 /*********************************************************************************************\
  * SecurityStruct
 \*********************************************************************************************/
@@ -994,7 +997,7 @@ struct ControllerSettingsStruct
   }
 
   void setHostname(const String& controllerhostname) {
-    strncpy(HostName, controllerhostname.c_str(), sizeof(HostName));
+    safe_strncpy(HostName, controllerhostname.c_str(), sizeof(HostName));
     updateIPcache();
   }
 
