@@ -3600,20 +3600,23 @@ void handle_pinstates() {
   TXBuffer += F("<TH>Plugin");
   addHelpButton(F("Official_plugin_list"));
   TXBuffer += F("<TH>GPIO<TH>Mode<TH>Value/State<TH>Output<TH>Task<TH>Monitor<TH>Command");
-  for (std::map<unsigned char,portStatusStruct>::iterator it=P001_PortStatus.begin(); it!=P001_PortStatus.end(); ++it) {
+  for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
+  {
     html_TR_TD(); TXBuffer += "P";
-//    if (pinStates[x].plugin < 100) //TODO:  giig1967g split plugin/port
-//    {
+    const uint16_t plugin = getPluginFromKey(it->first);
+    const uint16_t port = getPortFromKey(it->first);
+
+    if (plugin < 100)
+    {
       TXBuffer += '0';
-//    }
-//    if (pinStates[x].plugin < 10)
-//    {
+    }
+    if (plugin < 10)
+    {
       TXBuffer += '0';
-//    }
-//    TXBuffer += pinStates[x].plugin;
-    TXBuffer += "1";
+    }
+    TXBuffer += plugin;
     html_TD();
-    TXBuffer += it->first;
+    TXBuffer += port;
     html_TD();
     byte mode = it->second.mode;
     switch (mode)

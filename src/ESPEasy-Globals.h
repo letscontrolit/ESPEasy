@@ -1952,7 +1952,7 @@ String getMiscStatsName(int stat) {
     }
     return F("Unknown");
 }
-
+/*
 struct portStatusStruct
 {
   portStatusStruct() : state(-1), output(-1), mode(0), monitor(0), task(0),command(0) {}
@@ -1962,9 +1962,24 @@ struct portStatusStruct
   byte monitor;
   byte task;
   byte command;
+};*/
+
+struct portStatusStruct {
+  portStatusStruct() : state(-1), output(-1), mode(0), task(0), monitor(0), command(0), previousPort(0), spare1(0) {}
+
+  int8_t state : 2; //-1,0,1
+  int8_t output : 2; //-1,0,1
+
+  uint8_t mode : 3; //5 current values (max. 8)
+  uint8_t task : 4; //0-15
+  uint8_t monitor : 1; //0,1
+
+  uint8_t command : 1; //0,1
+  uint8_t previousPort : 6;
+  uint8_t spare1 : 1;
 };
 
-std::map<unsigned char, portStatusStruct > P001_PortStatus;
+std::map<uint32_t, portStatusStruct > globalMapPortStatus;
 
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor

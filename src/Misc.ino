@@ -303,6 +303,12 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
   \*********************************************************************************************/
 String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
 {
+  //TODO: giig1967g: rimuovere funzione
+  addLog(LOG_LEVEL_INFO,F("ERROR called OLD getPinStateJSON"));
+  return "ERROR called OLD getPinStateJSON";
+}
+String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSearchValue)
+{
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
@@ -310,10 +316,10 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
   String reply = "";
   boolean found = false;
 
-  if (search && existPortStatus(index))
+  if (search && existPortStatus(key))
   {
-    mode = P001_PortStatus[index].mode;
-    value = P001_PortStatus[index].state;
+    mode = globalMapPortStatus[key].mode;
+    value = globalMapPortStatus[key].state;
     found = true;
   }
 /*  {
@@ -332,9 +338,9 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
     reply += F("{\n\"log\": \"");
     reply += log.substring(7, 32); // truncate to 25 chars, max MQTT message size = 128 including header...
     reply += F("\",\n\"plugin\": ");
-    reply += plugin;
+    reply += getPluginFromKey(key);
     reply += F(",\n\"pin\": ");
-    reply += index;
+    reply += getPortFromKey(key);
     reply += F(",\n\"mode\": \"");
     switch (mode)
     {
@@ -3543,3 +3549,95 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
   return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
                      (112.0 + 0.9 * temperature), 8);
 }
+
+/***************************************************
+*                                                  *
+* Functions for managing the status data structure *
+*                                                  *
+****************************************************/
+
+void saveOrCreatePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+  if (!existPortStatus(key)) { // KEY doesn't exist; creating it
+    globalMapPortStatus.insert (std::pair<unsigned char,portStatusStruct>(key,tempStatus));
+  } else {
+    globalMapPortStatus[key] = tempStatus;
+  }
+}
+
+void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+  if (tempStatus.task<=0 && tempStatus.monitor<=0 && tempStatus.command<=0)
+    globalMapPortStatus.erase(key);
+  else
+    globalMapPortStatus[key] = tempStatus;
+}
+
+/* USO: globalMapPortStatus[]
+bool loadPortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+  bool retValue = false;
+  //check if KEY exists:
+  std::map<uint32_t,portStatusStruct>::iterator it;
+  it = globalMapPortStatus.find(key);
+  if (it != globalMapPortStatus.end()) {  //if KEY exists...
+    tempStatus = it->second;
+    retValue = true;
+  }
+  return retValue;
+}*/
+
+bool existPortStatus(uint32_t key) {
+  bool retValue = false;
+  //check if KEY exists:
+  std::map<uint32_t,portStatusStruct>::iterator it;
+  it = globalMapPortStatus.find(key);
+  if (it != globalMapPortStatus.end()) {  //if KEY exists...
+    retValue = true;
+  }
+  return retValue;
+}
+
+void removeTaskFromPort(uint32_t key) {
+  if (existPortStatus(key)) {
+    globalMapPortStatus[key].task--;
+    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0)
+      globalMapPortStatus.erase(key);
+  }
+}
+
+void removeMonitorFromPort(uint32_t key) {
+  if (existPortStatus(key)) {
+    globalMapPortStatus[key].monitor=0;
+    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0)
+      globalMapPortStatus.erase(key);
+  }
+}
+
+void addMonitorToPort(uint32_t key) {
+  globalMapPortStatus[key].monitor=1;
+}
+
+uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber) {
+  return (uint32_t) pluginNumber << 16 | portNumber;
+}
+
+uint16_t getPluginFromKey(uint32_t key) {
+  return (uint16_t)(key >> 16);
+}
+
+uint16_t getPortFromKey(uint32_t key) {
+  return (uint16_t)(key);
+}
+
+/*****
+setStateForMonitor(key)
+	per ogni key in lista con monitor = 1 do
+	state=read pinState(key)
+  create GPIO#
+
+addMonitorToPort(key)
+	controlla se esiste già la KEY
+	se NON esiste -> crea la KEY con valori state=0,mode=0,monitor=0,task=0
+	monitor=1
+
+
+
+******/

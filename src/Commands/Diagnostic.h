@@ -110,27 +110,27 @@ String Command_logentry(struct EventStruct *event, const char* Line)
 
 void logPortStatus(String from) {
   String log;
-  log=F("PORT STATUS COUNT. FROM=");
+  log=F("PortStatus structure: Called from=");
   log+=from;
-  log+=F("COUNT=");
-  log+=P001_PortStatus.size();
+  log+=F(" Count=");
+  log+=globalMapPortStatus.size();
   addLog(LOG_LEVEL_INFO,log);
 
-  for (std::map<unsigned char,portStatusStruct>::iterator it=P001_PortStatus.begin(); it!=P001_PortStatus.end(); ++it) {
-    log = F("PORT STATUS: ");
-    log += F("PORT=");
-    log += it->first;
-    log += F(" state=");
+  for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+    log = F("PortStatus detail: ");
+    log += F("Port=");
+    log += getPortFromKey(it->first);
+    log += F(" State=");
     log += it->second.state;
-    log += F(" output=");
+    log += F(" Output=");
     log += it->second.output;
-    log += F(" mode=");
+    log += F(" Mode=");
     log += it->second.mode;
-    log += F(" task=");
+    log += F(" Task=");
     log += it->second.task;
-    log += F(" monitor=");
+    log += F(" Monitor=");
     log += it->second.monitor;
-    log += F(" command=");
+    log += F(" Command=");
     log += it->second.command;
     addLog(LOG_LEVEL_INFO,log);
   }
