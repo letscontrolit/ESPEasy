@@ -3599,7 +3599,55 @@ void handle_pinstates() {
   html_TR();
   TXBuffer += F("<TH>Plugin");
   addHelpButton(F("Official_plugin_list"));
-  TXBuffer += F("<TH>GPIO<TH>Mode<TH>Value/State");
+  TXBuffer += F("<TH>GPIO<TH>Mode<TH>Value/State<TH>Output<TH>Task<TH>Monitor<TH>Command");
+  for (std::map<unsigned char,portStatusStruct>::iterator it=P001_PortStatus.begin(); it!=P001_PortStatus.end(); ++it) {
+    html_TR_TD(); TXBuffer += "P";
+//    if (pinStates[x].plugin < 100) //TODO:  giig1967g split plugin/port
+//    {
+      TXBuffer += '0';
+//    }
+//    if (pinStates[x].plugin < 10)
+//    {
+      TXBuffer += '0';
+//    }
+//    TXBuffer += pinStates[x].plugin;
+    TXBuffer += "1";
+    html_TD();
+    TXBuffer += it->first;
+    html_TD();
+    byte mode = it->second.mode;
+    switch (mode)
+    {
+      case PIN_MODE_UNDEFINED:
+        TXBuffer += F("Undefined");
+        break;
+      case PIN_MODE_INPUT:
+        TXBuffer += F("Input");
+        break;
+      case PIN_MODE_OUTPUT:
+        TXBuffer += F("Output");
+        break;
+      case PIN_MODE_PWM:
+        TXBuffer += F("PWM");
+        break;
+      case PIN_MODE_SERVO:
+        TXBuffer += F("servo");
+        break;
+    }
+    html_TD();
+    TXBuffer += it->second.state;
+    html_TD();
+    TXBuffer += it->second.output;
+    html_TD();
+    TXBuffer += it->second.task;
+    html_TD();
+    TXBuffer += it->second.monitor;
+    html_TD();
+    TXBuffer += it->second.command;
+  }
+
+
+/*
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if (pinStates[x].plugin != 0)
     {
@@ -3638,7 +3686,7 @@ void handle_pinstates() {
       html_TD();
       TXBuffer += pinStates[x].value;
     }
-
+*/
   TXBuffer += F("</table>");
     sendHeadandTail_stdtemplate(_TAIL);
     TXBuffer.endStream();
@@ -3899,6 +3947,8 @@ void handle_control() {
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||
+           command.equalsIgnoreCase(F("logportstatus")) ||
+           command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
     WebServer.send(200, "text/html", "OK");

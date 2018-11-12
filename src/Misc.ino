@@ -310,8 +310,13 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
   String reply = "";
   boolean found = false;
 
-  if (search)
+  if (search && existPortStatus(index))
   {
+    mode = P001_PortStatus[index].mode;
+    value = P001_PortStatus[index].state;
+    found = true;
+  }
+/*  {
     for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
       if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
       {
@@ -321,7 +326,7 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
         break;
       }
   }
-
+*/
   if (!search || (search && found))
   {
     reply += F("{\n\"log\": \"");

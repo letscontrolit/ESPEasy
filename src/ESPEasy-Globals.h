@@ -801,7 +801,7 @@ struct SettingsStruct
       TaskDeviceSendData[i][task] = false;
     }
     TaskDeviceNumber[task] = 0;
-    OLD_TaskDeviceID[task] = 0;
+    OLD_TaskDeviceID[task] = 0; //UNUSED: this can be removed
     TaskDevicePin1[task] = -1;
     TaskDevicePin2[task] = -1;
     TaskDevicePin3[task] = -1;
@@ -866,7 +866,7 @@ struct SettingsStruct
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
   byte          TaskDeviceNumber[TASKS_MAX];
-  unsigned int  OLD_TaskDeviceID[TASKS_MAX];
+  unsigned int  OLD_TaskDeviceID[TASKS_MAX];  //UNUSED: this can be removed
   union {
     struct {
       int8_t        TaskDevicePin1[TASKS_MAX];
@@ -919,7 +919,20 @@ struct SettingsStruct
 SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
+//TODO giig1967g: replace with map?
+struct PinValuesStruct
+{
 
+union {
+  struct {
+    int8_t        OldTaskDevicePin1[TASKS_MAX];
+    int8_t        OldTaskDevicePin2[TASKS_MAX];
+    int8_t        OldTaskDevicePin3[TASKS_MAX];
+    byte          OldTaskDevicePort[TASKS_MAX];
+  };
+  int8_t        OldTaskDevicePin[4][TASKS_MAX];
+};
+} oldSettings;
 
 /*********************************************************************************************\
  *  Analyze SettingsStruct and report inconsistencies
@@ -1939,6 +1952,20 @@ String getMiscStatsName(int stat) {
     }
     return F("Unknown");
 }
+
+struct portStatusStruct
+{
+  portStatusStruct() : state(-1), output(-1), mode(0), monitor(0), task(0),command(0) {}
+  int16_t state; //-1
+  int16_t output; //-1
+  byte mode; //0=UNDEFINED
+  byte monitor;
+  byte task;
+  byte command;
+};
+
+std::map<unsigned char, portStatusStruct > P001_PortStatus;
+
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.

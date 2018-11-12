@@ -108,4 +108,46 @@ String Command_logentry(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
+void logPortStatus(String from) {
+  String log;
+  log=F("PORT STATUS COUNT. FROM=");
+  log+=from;
+  log+=F("COUNT=");
+  log+=P001_PortStatus.size();
+  addLog(LOG_LEVEL_INFO,log);
+
+  for (std::map<unsigned char,portStatusStruct>::iterator it=P001_PortStatus.begin(); it!=P001_PortStatus.end(); ++it) {
+    log = F("PORT STATUS: ");
+    log += F("PORT=");
+    log += it->first;
+    log += F(" state=");
+    log += it->second.state;
+    log += F(" output=");
+    log += it->second.output;
+    log += F(" mode=");
+    log += it->second.mode;
+    log += F(" task=");
+    log += it->second.task;
+    log += F(" monitor=");
+    log += it->second.monitor;
+    log += F(" command=");
+    log += it->second.command;
+    addLog(LOG_LEVEL_INFO,log);
+  }
+}
+
+//TODO: giig1967g sistemare
+String Command_LogPortStatus(struct EventStruct *event, const char* Line)
+{
+	logPortStatus("Rules");
+	return return_command_success();
+}
+
+String Command_JSONPortStatus(struct EventStruct *event, const char* Line)
+{
+	addLog(LOG_LEVEL_INFO,F("JSON Port Status: Command not implemented yet."));
+	return return_command_success();
+}
+
+
 #endif // COMMAND_DIAGNOSTIC_H
