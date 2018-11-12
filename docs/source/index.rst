@@ -1,3 +1,12 @@
+.. ESP Easy colors (set in cutom.css)
+.. role:: blue
+.. role:: red
+.. role:: green
+.. role:: yellow
+.. role:: orange
+.. role:: cyan
+.. role:: purple
+
 .. ESPEasy documentation master file, created by
    sphinx-quickstart on Sat Oct 06 22:34:34 2018.
    You can adapt this file completely to your liking, but it should at least
