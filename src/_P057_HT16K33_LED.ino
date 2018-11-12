@@ -281,6 +281,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_ONCE_A_SECOND:
     case PLUGIN_CLOCK_IN:
       {
         if (!Plugin_057_M || CONFIG(1) == 0)
@@ -289,22 +290,35 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         byte hours = hour();
         byte minutes = minute();
 
-        // 12 hour clock
-        if (CONFIG(1) == 2) {
+        // Plugin_057_M->ClearRowBuffer();
+        Plugin_057_M->SetDigit(CONFIG(5), minutes % 10);
+        Plugin_057_M->SetDigit(CONFIG(4), minutes / 10);
+
+        if (CONFIG(1) == 1) {         // 24-hour clock
+          // 24-hour clock shows leading zero
+          Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
+          Plugin_057_M->SetDigit(CONFIG(3), hours % 10);
+        } else if (CONFIG(1) == 2) {  // 12-hour clock
+          if (hours < 12) {
+            // to set AM marker, get buffer and add decimal to it.
+            Plugin_057_M->SetRow(CONFIG(5), (Plugin_057_M->GetRow(CONFIG(5)) | 0x80));
+          }
+
           hours = hours % 12;
           if (hours == 0) {
             hours = 12;
           }
+
+          Plugin_057_M->SetDigit(CONFIG(3), hours % 10);
+
+          if (hours < 10) {
+            // 12-hour clock will show empty segment when hours < 10
+            Plugin_057_M->SetRow(CONFIG(2), 0);
+          } else {
+            Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
+          }
         }
 
-        //Plugin_057_M->ClearRowBuffer();
-        if (hours >= 10)
-          Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
-        else
-          Plugin_057_M->SetRow(CONFIG(2), 0);   //empty seg
-        Plugin_057_M->SetDigit(CONFIG(3), hours%10);
-        Plugin_057_M->SetDigit(CONFIG(4), minutes/10);
-        Plugin_057_M->SetDigit(CONFIG(5), minutes%10);
         //if (CONFIG(6) >= 0)
         //  Plugin_057_M->SetRow(CONFIG(6), CONFIG(7));
         Plugin_057_M->TransmitRowBuffer();
