@@ -44,6 +44,25 @@
 
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
+// Clock Display:
+// This plugin also allows a "clock" mode. In clock mode the display will show
+// the current system time. The "7-Seg. Clock" needs to be configured for this
+// mode to work. Each segment number (0..5) needs to be set based on your
+// display. 
+//
+// For my _Adafruit 0.56" 4-Digit 7-Segment FeatherWing Display_ these
+// settings are as follows:
+//    Xx:xx = 0, xX:xx = 1, 
+//    xx:Xx = 3, xx:xX = 4
+//    Seg. for Colon is 2 with a value of 2
+//
+// Any other data written to the display will show and be replaced at the next 
+// clock cycle, e.g. when the plugin received 'PLUGIN_CLOCK_IN'.
+//
+// NOTE: The system time is set via NTP as part of the Core ESPEasy firmware.
+// There is no configuration here to set or manipulate the time, only to
+// display it.
+
 #define PLUGIN_057
 #define PLUGIN_ID_057         57
 #define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
