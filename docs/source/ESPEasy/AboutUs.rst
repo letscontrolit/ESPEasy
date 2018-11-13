@@ -4,7 +4,7 @@ The ESP Easy project is being handled by the core team of TD-er and Grovkillen.
 TD-er being the head of backend and Grovkillen being head of the frontend.
 We both dig down into eachothers areas of responsible on a daily basis though.
 
-Other than us we have around 100 volontars that helping us maintain
+Other than us we have around 100 voluntears that helping us maintain
 and improve the source code.
 
 History
@@ -119,8 +119,8 @@ Aug 2018 (New core team)
 With both Mvb and Psy0rz having little time to spend on the project two of the
 most eager contributors Grovkillen (mainly wiki documentation and help tools
 at that time) and TD-er (had already implemented the event based Wifi and
-also introduced chunked webpage). The aim for the core team is to take ESP
-Easy and make it as great as can be by dedicating full time commitment to
+also introduced chunked webpage) stepped in. The aim for the core team is to
+make the ESP Easy OS as great as can be by dedicating full time commitment to
 the project.
 
 User count was at this point approximitly around 32 000 and 24 hour download
