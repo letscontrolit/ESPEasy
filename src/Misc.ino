@@ -3598,7 +3598,7 @@ bool existPortStatus(uint32_t key) {
 void removeTaskFromPort(uint32_t key) {
   if (existPortStatus(key)) {
     globalMapPortStatus[key].task--;
-    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0)
+    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
       globalMapPortStatus.erase(key);
   }
 }
@@ -3606,7 +3606,7 @@ void removeTaskFromPort(uint32_t key) {
 void removeMonitorFromPort(uint32_t key) {
   if (existPortStatus(key)) {
     globalMapPortStatus[key].monitor=0;
-    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0)
+    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
       globalMapPortStatus.erase(key);
   }
 }

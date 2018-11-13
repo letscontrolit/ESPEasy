@@ -353,6 +353,7 @@
 #define PIN_MODE_OUTPUT                     2
 #define PIN_MODE_PWM                        3
 #define PIN_MODE_SERVO                      4
+#define PIN_MODE_INPUT_PULLUP               5
 
 #define SEARCH_PIN_STATE                 true
 #define NO_SEARCH_PIN_STATE             false
@@ -919,20 +920,6 @@ struct SettingsStruct
 SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
-//TODO giig1967g: replace with map?
-struct PinValuesStruct
-{
-
-union {
-  struct {
-    int8_t        OldTaskDevicePin1[TASKS_MAX];
-    int8_t        OldTaskDevicePin2[TASKS_MAX];
-    int8_t        OldTaskDevicePin3[TASKS_MAX];
-    byte          OldTaskDevicePort[TASKS_MAX];
-  };
-  int8_t        OldTaskDevicePin[4][TASKS_MAX];
-};
-} oldSettings;
 
 /*********************************************************************************************\
  *  Analyze SettingsStruct and report inconsistencies
@@ -1965,18 +1952,18 @@ struct portStatusStruct
 };*/
 
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), mode(0), task(0), monitor(0), command(0), previousPort(0), spare1(0) {}
+  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
 
   int8_t state : 2; //-1,0,1
   int8_t output : 2; //-1,0,1
+  int8_t command : 2; //0,1
+  int8_t init : 2; //0,1
 
-  uint8_t mode : 3; //5 current values (max. 8)
-  uint8_t task : 4; //0-15
+  uint8_t mode : 3; //6 current values (max. 8)
+  uint8_t task : 4; //0-15 (max. 16)
   uint8_t monitor : 1; //0,1
 
-  uint8_t command : 1; //0,1
-  uint8_t previousPort : 6;
-  uint8_t spare1 : 1;
+  int8_t previousTask : 8;
 };
 
 std::map<uint32_t, portStatusStruct > globalMapPortStatus;

@@ -130,8 +130,12 @@ void logPortStatus(String from) {
     log += it->second.task;
     log += F(" Monitor=");
     log += it->second.monitor;
-    log += F(" Command=");
+		log += F(" Command=");
     log += it->second.command;
+		log += F(" Init=");
+    log += it->second.init;
+		log += F(" PreviousTask=");
+    log += it->second.previousTask;		
     addLog(LOG_LEVEL_INFO,log);
   }
 }

@@ -3599,7 +3599,7 @@ void handle_pinstates() {
   html_TR();
   TXBuffer += F("<TH>Plugin");
   addHelpButton(F("Official_plugin_list"));
-  TXBuffer += F("<TH>GPIO<TH>Mode<TH>Value/State<TH>Output<TH>Task<TH>Monitor<TH>Command");
+  TXBuffer += F("<TH>GPIO<TH>Mode<TH>Value/State<TH>Task<TH>Monitor<TH>Command<TH>Init");
   for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
   {
     html_TR_TD(); TXBuffer += "P";
@@ -3627,6 +3627,9 @@ void handle_pinstates() {
       case PIN_MODE_INPUT:
         TXBuffer += F("Input");
         break;
+      case PIN_MODE_INPUT_PULLUP:
+        TXBuffer += F("Input PullUp");
+        break;
       case PIN_MODE_OUTPUT:
         TXBuffer += F("Output");
         break;
@@ -3640,13 +3643,13 @@ void handle_pinstates() {
     html_TD();
     TXBuffer += it->second.state;
     html_TD();
-    TXBuffer += it->second.output;
-    html_TD();
     TXBuffer += it->second.task;
     html_TD();
     TXBuffer += it->second.monitor;
     html_TD();
     TXBuffer += it->second.command;
+    html_TD();
+    TXBuffer += it->second.init;
   }
 
 
