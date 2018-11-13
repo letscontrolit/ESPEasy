@@ -2,17 +2,24 @@ Rules
 *****
 Introduction
 ============
-Along with ESP Easy R108, a new feature was enabled, named Rules. Rules can be used to create very simple flows to control devices on your ESP.
+Along with ESP Easy R108, a new feature was enabled, named Rules.
+Rules can be used to create very simple flows to control devices on your ESP.
 
 Enable Rules
 ------------
 To enable rules, go to Tools/Advanced and check the Rules checkbox.
 
-After clicking Submit, you will find a new page added. Here you can start experimenting with Rules:
+After clicking Submit, you will find a new page added. Here you can start
+experimenting with Rules:
 
-The example above shows an experiment with a LED, connected via a resistor of 1k to GPIO12 and to ground.
+[ADD_GUI_PICTURE]
 
-A virtual switch needs to be created in the "Devices" section to allow the reading the state of the LED (on or off). The Device needs to be "Switch Input" with the following settings:
+The example above shows an experiment with a LED, connected via a resistor of
+1k to GPIO12 and to ground.
+
+A virtual switch needs to be created in the "Devices" section to allow the
+reading the state of the LED (on or off). The Device needs to be "Switch Input"
+with the following settings:
 
 * Device Name - E1SW1
 * Enabled - Ticked
@@ -27,10 +34,10 @@ Enjoy.
 
 Syntax
 ------
-The syntax of a rule can be single line: 
+The syntax of a rule can be single line:
 
 .. code-block:: html
-  
+
   on <trigger> do <action> endon
 
 or multi-line (need to be closed with an "endon"):
@@ -72,8 +79,12 @@ If the "else" part is not needed it can be removed:
 AND/OR
 ------
 
-Only simple if/else was possible in older versions, there was this workaround for the limitation of not being able to nest. An "event" can be called from a "trigger". This possibilty of nesting events is also limited , due to its consumption of stack space (IRAM). Depending on plug-ins in use this might lead to unpredictiable, unreliable behaviour, advice is not to exceed 3 levels of nesting.
-[http://www.letscontrolit.com/forum/viewtopic.php?f=4&t=5102&start=10#p26738 link Forum discussion]
+Only simple if/else was possible in older versions, there was this workaround
+for the limitation of not being able to nest. An "event" can be called from a
+"trigger". This possibility of nesting events is also limited , due to its
+consumption of stack space (IRAM). Depending on plug-ins in use this might
+lead to unpredictable, unreliable behavior, advice is not to exceed 3 levels
+of nesting.
 
 .. code-block:: html
 
@@ -82,7 +93,7 @@ Only simple if/else was possible in older versions, there was this workaround fo
     event,<EventName1>
   endif
  endon
- 
+
  on <EventName1> do
   if <test2>
     <action>
@@ -100,7 +111,7 @@ As of mega-201803.. we have the possibility to use AND/OR:
     event,not_ok
    endif
  endon
- 
+
  on test2 do
    if [test#a]=1 and [test#b]=1 and [test#c]=1
     event,ok
@@ -108,7 +119,7 @@ As of mega-201803.. we have the possibility to use AND/OR:
     event,not_ok
    endif
  endon
- 
+
  on test3 do
    if [test#a]=1 and [test#b]=1 or [test#c]=0
     event,ok
@@ -116,7 +127,7 @@ As of mega-201803.. we have the possibility to use AND/OR:
     event,not_ok
    endif
  endon
- 
+
  on test4 do
    if [test#a]=0
     event,ok
@@ -125,7 +136,8 @@ As of mega-201803.. we have the possibility to use AND/OR:
    endif
  endon
 
-Up to two AND/OR can be used per if statement, that means that you can test three float values and if the statement is true/false corresponding action will take place.
+Up to two AND/OR can be used per if statement, that means that you can test
+three float values and if the statement is true/false corresponding action will take place.
 
 Trigger
 -------
@@ -153,11 +165,11 @@ Where the "inequality function" is a simple check:
 .. code-block:: html
 
  equal (=) to
- less (<) than 
+ less (<) than
  greater (>) than
  less or equal (<=) to
  greater or equal (>=) to
- not equal (!= or <>) to 
+ not equal (!= or <>) to
 
  DeviceName#ValueName<<value>
  DeviceName#ValueName=<value>
@@ -169,20 +181,21 @@ Where the "inequality function" is a simple check:
 
 (System) events
 ---------------
-Some special cases are these system triggers which is triggered upon boot/reboot/time/sleep etc. of the unit: 
+Some special cases are these system triggers which is triggered upon
+boot/reboot/time/sleep etc. of the unit:
 
-.. csv-table:: 
+.. csv-table::
    :header: "Event", "Info", "Example"
    :widths: 10, 30, 15
 
    "
    <taskname>#<valuename>
    ","
-   As described already, each task can produced one or more events, one each for each measured value. You should not name your devices and value names so that the combination equals to any of the below listed system events!
+   As described already, each task can produced one or more events, one for each measured value. You should not name your devices and value names so that the combination equals to any of the below listed system events!
    ","
-   
+
    .. code-block:: html
-   
+
      on [DHT11Outside#Temperature]>20 do
       GPIO,2,1
      endon
@@ -193,9 +206,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered after power on.
    ","
-   
+
    .. code-block:: html
-   
+
      on System#Wake do
 	  GPIO,15,1
 	 endon
@@ -206,9 +219,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered at boot time.
    ","
-   
+
    .. code-block:: html
-   
+
      on System#Boot do
 	  GPIO,2,1
 	  timerSet,1,30
@@ -220,9 +233,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered just before the ESP goes to deep sleep.
    ","
-   
+
    .. code-block:: html
-   
+
      on System#Sleep do
 	  GPIO,2,0
 	 endon
@@ -233,9 +246,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered when the ESP has connected to broker.
    ","
-   
+
    .. code-block:: html
-   
+
      on MQTT#Connected do
 	  Publish %sysname%/status,First message!
 	 endon
@@ -246,9 +259,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered when the ESP has disconnected from the broker.
    ","
-   
+
    .. code-block:: html
-   
+
      on MQTT#Disconnected do
 	  Reboot
 	 endon
@@ -259,9 +272,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered when the ESP has connected to broker (the MQTT Import plugin uses a separate connection than the generic one).
    ","
-   
+
    .. code-block:: html
-   
+
      on MQTTimport#Connected do
 	  Publish,%sysname%/status,MQTT Import is now operational
 	 endon
@@ -272,9 +285,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered when the ESP has disconnected from the broker (the MQTT Import plugin uses a separate connection than the generic one).
    ","
-   
+
    .. code-block:: html
-   
+
      on MQTTimport#Disconnected do
 	  Reboot
 	 endon
@@ -283,11 +296,11 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    "
    WiFi#Connected
    ","
-   Triggered when the ESP has connected to wifi.
+   Triggered when the ESP has connected to Wi-Fi.
    ","
-   
+
    .. code-block:: html
-   
+
      on WiFi#Connected do
 	  SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
 	 endon
@@ -296,11 +309,11 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    "
    WiFi#ChangedAccesspoint
    ","
-   Triggered when the ESP has changed to access point, will also trigger first time the unit connects to the wifi.
+   Triggered when the ESP has changed to access point, will also trigger first time the unit connects to the Wi-Fi.
    ","
-   
+
    .. code-block:: html
-   
+
      on MQTTimport#Connected do
 	  Publish %sysname%/status,AP changed
 	 endon
@@ -311,9 +324,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered when (someone) has tried to login to a ESP unit with admin password enabled, but have failed to enter correct password.
    ","
-   
+
    .. code-block:: html
-   
+
      on Login#Failed do
 	  Publish %sysname%/warning,Intruder alert!
 	 endon
@@ -324,9 +337,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered the first time (after boot) NTP is updating the unit.
    ","
-   
+
    .. code-block:: html
-   
+
      on Time#Initialized do
 	  Publish %sysname%/Time,%systime%
 	 endon
@@ -337,9 +350,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered when the time is set by an update from NTP.
    ","
-   
+
    .. code-block:: html
-   
+
      on Time#Set do
 	  Publish %sysname%/Time,%systime%
 	  Publish %sysname%/NTP,Updated time at: %systime%
@@ -351,9 +364,9 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    As described already, triggered when a rules timer ends (setting a timer to 0 will disable the timer).
    ","
-   
+
    .. code-block:: html
-   
+
      on Rules#Timer=1 do
 	  GPIO,2,1
 	 endon
@@ -364,17 +377,17 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    ","
    Triggered every minute with day and time like: Mon,12:30 or Tue,14:45. You can define triggers on specific days or all days using 'All' for days indicator. You can also use wildcards in the time setting like All,**:00 to run every hour.
    ","
-   
+
    .. code-block:: html
-   
+
      on Clock#Time=All,12:00 do //will run once a day at noon
 	  GPIO,2,1
 	 endon
-	 
+
 	 on Clock#Time=All,**:30 do //will run half past every hour
-	  GPIO,2,1 
+	  GPIO,2,1
 	 endon
-	 
+
 	 on Clock#Time=All,%sunrise% do //will run at sunrise  (%sunset% is also available)
 	  GPIO,2,1
 	 endon
@@ -388,13 +401,15 @@ Test
 
  <test>
 
-As described in the trigger section the test is a check done by checking if the DeviceName#ValueName is meeting a criteria:
+As described in the trigger section the test is a check done by checking
+if the DeviceName#ValueName is meeting a criteria:
 
 .. code-block:: html
 
  [DeviceName#ValueName]<inequality function><value>
 
-Where the value must be a float value with a dot as decimal sign. The DeviceName#ValueName is closed by (square) brackets "[" and "]".
+Where the value must be a float value with a dot as decimal sign. The
+DeviceName#ValueName is closed by (square) brackets "[" and "]".
 
 Action
 ------
@@ -403,11 +418,15 @@ Action
 
  <action>
 
-The action can be any system command found in the [[ESPEasy_Command_Reference|list of commands]]. Also plugin specific command are available as long as the plugin is in use. In the case mentioned earlier we use a action to trigger multiple logic tests (the "event" command).
+The action can be any system command found in the [ADD_LINK].
+Also plugin specific command are available as long as the plugin is in use.
+In the case mentioned earlier we use a action to trigger multiple logics
+tests (the "event" command).
 
 Comment
 -------
-If you want you can add comments to any row in your rules code. Just remember to add them after the code and always begin with "//":
+If you want you can add comments to any row in your rules code. Just
+remember to add them after the code and always begin with "//":
 
 .. code-block:: html
 
@@ -422,14 +441,19 @@ If you want you can add comments to any row in your rules code. Just remember to
 
 Best practice
 -------------
-It is possible to use CAPITAL letters and lower case as you please but best practice is to use the same types of letters that are found in the [[ESPEasy_Command_Reference|command reference list]], and plugin specific commands. For the logics (on, if, else ... ) the general idea is to use lower case.
+It is possible to use CAPITAL letters and lower case as you please but best
+practice is to use the same types of letters that are found in the
+[ADD_LINK], and plugin specific commands. For the logics (on, if, else ... )
+the general idea is to use lower case.
 
-Regarding spaces in names it is recommended to NOT use them as it makes bug testing rules a lot harder. Spaces between chunks of code is possible to make the code more readable:
+Regarding spaces in names it is recommended to NOT use them as it makes bug
+testing rules a lot harder. Spaces between chunks of code is possible to make
+the code more readable:
 
 .. code-block:: html
 
- [DeviceName#ValueName]<<value> //These work the same...
- [DeviceName#ValueName] < <value>
+ [DeviceName#ValueName]<<value> //These work...
+ [DeviceName#ValueName] < <value> //the same...
 
 Some working examples
 =====================
@@ -458,7 +482,7 @@ This example for two switches that toggle one device (LED and Relay on GPIO 13 a
   gpio,16,[dummy#var1]
   gpio,13,[dummy#var1]
  endon
- 
+
  on sw1a#state do
   if [dummy#var1]=0
     TaskValueSet 12,1,1
@@ -475,7 +499,8 @@ Event value (%eventvalue%)
 
 Rules engine specific:
 
-%eventvalue% - substitutes the event value (everything that comes after the '=' sign, up to four values are possible).
+%eventvalue% - substitutes the event value (everything that comes after
+the '=' sign, up to four values are possible).
 
 Sample rules section:
 
@@ -491,12 +516,16 @@ Now send this command to the ESP:
 
  http://<espeasyip>/control?cmd=event,remoteTimerControl=5
 
-and it will set rules timer nr 1 to 5 seconds. Using this technique you can parse a value from an event to the rule engine.
+and it will set rules timer no 1 to 5 seconds. Using this technique you can
+parse a value from an event to the rule engine.
 
 .. note::
  'timerSet' is a rule command and cannot be run directly from a remote command.
 
-If you want to check the transfered value within rules on the receiving ESP (condititon in if-statement), you will need to write the transfered value into a Dummy device using the TaskValueSet command. It is then possible to check the value of the Dummy device as condition in if-statement within rules.
+If you want to check the transferred value within rules on the receiving ESP
+(condition in if-statement), you will need to write the transferred value into
+a Dummy device using the TaskValueSet command. It is then possible to check
+the value of the Dummy device as condition in if-statement within rules.
 
 Multiple event values:
 
@@ -523,7 +552,10 @@ PIR and LDR
    endif
  endon
 
-'''In other words: If the PIR switch is set (to either 1 or 0) and if the light value < 500, then set GPIO port 16 of the ESP.'''
+.. note::
+
+  In other words: If the PIR switch is set (to either 1 or 0) and if
+the light value < 500, then set GPIO port 16 of the ESP.
 
 .. code-block:: html
 
@@ -533,7 +565,7 @@ PIR and LDR
    endif
  endon
 
-Now the event is only triggered when the pir switches on.
+Now the event is only triggered when the PIR switches on.
 
 SR04 and LDR
 ------------
@@ -561,12 +593,12 @@ There are 8 timers (1-8) you can use:
    servo,1,12,0
    timerSet,1,10      //Set Timer 1 for the next event in 10 seconds
  endon
- 
+
  On Rules#Timer=1 do  //When Timer1 expires, do
    servo,1,12,30
    timerSet,2,1       //Set Timer 2 for the next event in 1 second
  endon
- 
+
  On Rules#Timer=2 do  //When Timer2 expires, do
    servo,1,12,0
    timerSet,1,30      //Set Timer1 for the next event in 30 seconds
@@ -575,23 +607,24 @@ There are 8 timers (1-8) you can use:
 
 Starting/stopping repeating timers with events
 ----------------------------------------------
-To disable an existing timer, set it to 0. This is useful to make repeating timers for things like alarms or warnings:
+To disable an existing timer, set it to 0. This is useful to make repeating
+timers for things like alarms or warnings:
 
 .. code-block:: html
 
  //start the warning signal when we receive a start_warning event:
- On start_warning do 
+ On start_warning do
    timerSet,1,2
  endon
- 
+
  //stop the warning signal when we receive a stop_warning event:
  On stop_warning do
    timerSet,1,0
  endon
- 
+
  //create an actual warning signal, every time timer 1 expires:
- On Rules#Timer=1 do 
-   //repeat after 2 seconds 
+ On Rules#Timer=1 do
+   //repeat after 2 seconds
    timerSet,1,2
    //pulse some led on pin 4 shortly
    Pulse,4,1,100
@@ -619,26 +652,26 @@ And have this rule in the addressed ESP:
 
 .. code-block:: html
 
- On startwatering do 
+ On startwatering do
   gpio,12,1 //start watering (open valve)
   timerSet,1,600 //timer 1 set for 10 minutes
  endon
- 
- On stopwatering do 
+
+ On stopwatering do
   timerSet,1,0 //timer 1 set to halt, used to stop watering before the timer ends!
   gpio,12,0 //stop watering (close valve)
  endon
- 
- On Rules#Timer=1 do  
+
+ On Rules#Timer=1 do
    gpio,12,0 //stop watering (close valve)
  endOn
 
 
-Provided that you also have the valve etc, the plants will be happy.
+Provided that you also have the valve etc., the plants will be happy.
 
 SendTo and Publish
 ------------------
-With SendTo you can add a Rule to your ESPEasy, capable of sending an event to another unit.
+With SendTo you can add a Rule to your ESP Easy, capable of sending an event to another unit.
 This can be useful in cases where you want to take immediate action.
 There are two flavors:
 - SendTo to send remote unit control commands using the internal peer to peer UDP messaging
@@ -647,7 +680,7 @@ There are two flavors:
 SendTo:  SendTo <unit>,<command>
 
 
-Imagine you have two ESPEasy modules, ESP#1 and ESP#2
+Imagine you have two ESP Easy modules, ESP#1 and ESP#2
 In the Rules section of ESP#1 you have this:
 
 .. code-block:: html
@@ -666,7 +699,7 @@ If you then enter this with the correct IP address in the URL of your browser:
 
 Then ESP#1 shall send the event 'startwatering ' to ESP#2.
 
-It is also possible to directly order gpio changes, like:
+It is also possible to directly order GPIO changes, like:
 
 .. code-block:: html
 
@@ -701,7 +734,8 @@ Or for a specific day:
   gpio,14,0
  endon
 
-It is also possible to use the system value %systime% in rules conditions to make things happen during certain hours of the day:
+It is also possible to use the system value %systime% in rules conditions
+to make things happen during certain hours of the day:
 
 .. code-block:: html
 
@@ -714,7 +748,9 @@ It is also possible to use the system value %systime% in rules conditions to mak
    Endif
   Endon
 
-This will set gpio 16 to 1 when the pir is triggered, if the time is before 7 in the morning or after 19:00 in the evening. ( useful if you don't have a light sensor)
+This will set GPIO 16 to 1 when the PIR is triggered, if the time is
+before 7 in the morning or after 19:00 in the evening
+( useful if you don't have a light sensor).
 
 SendToHTTP
 ----------
@@ -725,12 +761,14 @@ To send a message to another device, like a command to switch on a light to Domo
  On System#Boot do    //When the ESP boots, do
    timerSet,1,10      //Set Timer 1 for the next event in 10 seconds
  endon
- 
+
  On Rules#Timer=1 do  //When Timer1 expires, do
    SendToHTTP 192.168.0.243,8080,/json.htm?type=command&param=switchlight&idx=174&switchcmd=On
  endon
 
-Many users have reported problems with commands being truncated, particularly when trying to send commands to domoticz. It seems to be a parsing error. There is the following workaround
+Many users have reported problems with commands being truncated, particularly
+when trying to send commands to Domoticz. It seems to be a parsing error.
+There is the following workaround:
 
 .. code-block:: html
 
@@ -739,7 +777,11 @@ Many users have reported problems with commands being truncated, particularly wh
 
 Dew Point for temp/humidity sensors (BME280 for example)
 --------------------------------------------------------
-If you have a sensor that is monitoring the air temperature and the relative humidity you may calculate the dew point with rules. This example use MQTT to publish the values but you may change this to whatever you want. We also make use of a 'dummy device' to dump values, this example use two BME280 with different i2c addresses.
+If you have a sensor that is monitoring the air temperature and the relative
+humidity you may calculate the dew point with rules. This example use MQTT to
+publish the values but you may change this to whatever you want. We also make
+use of a 'dummy device' to dump values, this example use two BME280 with
+different i2c addresses.
 
 For dew point on the 'outside':
 
@@ -770,7 +812,8 @@ For dew point on the 'inside':
 
 Report IP every 30 seconds using MQTT
 -------------------------------------
-This rule also work as a ping or heart beat of the unit. If it has not published a IP number for 30+ seconds the unit is experiencing problems.
+This rule also work as a ping or heart beat of the unit. If it has not
+published a IP number for 30+ seconds the unit is experiencing problems.
 
 .. code-block:: html
 
@@ -778,7 +821,7 @@ This rule also work as a ping or heart beat of the unit. If it has not published
   Publish %sysname%/IP,%ip%
   timerSet,1,30      //Set Timer 1 for the next event in 30 seconds
  endon
- 
+
  On Rules#Timer=1 do  //When Timer1 expires, do
   Publish %sysname%/IP,%ip%
   timerSet,1,30       //Resets the Timer 1 for another 30 seconds
@@ -786,7 +829,11 @@ This rule also work as a ping or heart beat of the unit. If it has not published
 
 Custom reports to Domoticz with own IDX
 ---------------------------------------
-This rule was presented as a workaround for a problem where a sensor had three different values but only one IDX value. You could publish your own Domoticz messages (MQTT or HTTP) using this method. Below we use the INA219 plugin that have 3 values which of the two second ones are Amps and Watts, just as an example we want to publish these as custom messages with a unique IDX value.
+This rule was presented as a workaround for a problem where a sensor had
+three different values but only one IDX value. You could publish your own
+Domoticz messages (MQTT or HTTP) using this method. Below we use the INA219
+plugin that have 3 values which of the two second ones are Amps and Watts,
+just as an example we want to publish these as custom messages with a unique IDX value.
 
 *MQTT*
 
@@ -795,36 +842,40 @@ This rule was presented as a workaround for a problem where a sensor had three d
  on INA219#Amps do
   Publish domoticz/in,{"idx":123456,"nvalue":0,"svalue":"[INA219#Amps]"} //Own made up IDX 123456
  endon
- 
+
  on INA219#Watts do
   Publish domoticz/in,{"idx":654321,"nvalue":0,"svalue":"[INA219#Watts]"} //Own made up IDX 654321
  endon
 
 
-''HTTP''
+*HTTP*
 
 .. code-block:: html
 
  on INA219#Amps do
   SendToHTTP 192.168.1.2,8080,/json.htm?type=command&param=udevice&idx=123456&nvalue=0&svalue=[INA219#Amps] //Own made up IDX 123456
  endon
- 
+
  on INA219#Watts do
   SendToHTTP 192.168.1.2,8080,/json.htm?type=command&param=udevice&idx=654321&nvalue=0&svalue=[INA219#Watts] //Own made up IDX 654321
  endon
 
-(Given that your Domoticz server is on "192.168.1.2:8080", you should change to your server IP and PORT number. If the HTTP publishing is not working, please refer to this [[Tutorial_Rules#SendToHTTP|topic]] for a workaround.)
+(Given that your Domoticz server is on "192.168.1.2:8080", you should change
+to your server IP and PORT number. If the HTTP publishing is not working,
+please refer to this [ADD_LINK] for a workaround.)
 
 One button, multiple actions using long press
 ---------------------------------------------
-Using a "normal switch" device which is in this example normally set to low (0) you can make one of two actions  when pressed. If you either release the button in less than a second or press it for more than a second:
+Using a "normal switch" device which is in this example normally set to low
+(0) you can make one of two actions  when pressed. If you either release the
+button in less than a second or press it for more than a second:
 
 .. code-block:: html
 
  on Button#State=1 do
   timerSet,1,1
  endon
- 
+
  on rules#timer=1 do
   if [Button#State]=0
    //Action if button is short pressed
@@ -832,4 +883,3 @@ Using a "normal switch" device which is in this example normally set to low (0) 
    //Action if button is still pressed
   endif
  endon
-
