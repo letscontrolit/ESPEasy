@@ -183,7 +183,7 @@ Some special cases are these system triggers which is triggered upon boot/reboot
    
    .. code-block:: html
    
-     on [DHT11Outside]#Temperature>20 do
+     on [DHT11Outside#Temperature]>20 do
       GPIO,2,1
      endon
 
