@@ -37,8 +37,6 @@ TaskDevicePluginConfigLong settings:
   Servo servo1;
   Servo servo2;
 #endif
-//TODO: remove
-#define GPIO_MAX 17
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH 0
 #define PLUGIN_001_TYPE_DIMMER 3 // Due to some changes in previous versions, do not use 2.
@@ -177,7 +175,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //addFormCheckBox(F("Longpress event (10 & 11)"), F("p001_lp"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
         addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
 
-        addFormCheckBox(F("Safe Button"), F("p001_sb"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]));
+        addFormCheckBox(F("Use Safe Button (slower)"), F("p001_sb"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]));
 
         //TO-DO: add Extra-Long Press event
         //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("p001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
@@ -366,7 +364,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //long difftimer2 = 0;
         //long timerstats = millis();
 
-        //Bug fixed: avoid 10xSEC in case of a non fully configured device (no GPIO defined yet)
+        //Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
         if (Settings.TaskDevicePin1[event->TaskIndex]>=0 && Settings.TaskDevicePin1[event->TaskIndex]<=PIN_D_MAX) {
 
           portStatusStruct currentStatus;
@@ -385,21 +383,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
           //TODO: giig1967g: forse più veloce:
           //if (state != ssss)
-/*          if (state != currentStatus.state) */
 
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-          if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0) {
-            addLog(LOG_LEVEL_INFO,"SafeButton Set Counter = 1")
+          if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
+          {
+            addLog(LOG_LEVEL_DEBUG,"SW  :SafeButton activated")
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
-          // reset counter if switch changed again after less than one cycle of 100ms and do nothing (false positive)
-          else if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==1) {
-            addLog(LOG_LEVEL_INFO,"SafeButton Reset Counter = 0")
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
-          }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
-          else if ((state != currentStatus.state && !round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]))
-                || (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==1))
+          else if (state != currentStatus.state)
           {
             // Reset SafeButton counter
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
@@ -516,6 +508,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             on Button#Switch=10 do //will fire if longpress when state = 0
             on Button#Switch=11 do //will fire if longpress when state = 1
             \**************************************************************************/
+            // Reset SafeButton counter
+            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+
             const unsigned long deltaLP = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
             if (deltaLP >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]))
             {
@@ -565,6 +560,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               //TODO: remove
               logPortStatus(F("PLUGIN_10xSEC LONGPRESS"));
             }
+          } else {
+            // Reset SafeButton counter
+            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
           }
         }
         success = true;

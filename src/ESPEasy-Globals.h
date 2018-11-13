@@ -1939,17 +1939,6 @@ String getMiscStatsName(int stat) {
     }
     return F("Unknown");
 }
-/*
-struct portStatusStruct
-{
-  portStatusStruct() : state(-1), output(-1), mode(0), monitor(0), task(0),command(0) {}
-  int16_t state; //-1
-  int16_t output; //-1
-  byte mode; //0=UNDEFINED
-  byte monitor;
-  byte task;
-  byte command;
-};*/
 
 struct portStatusStruct {
   portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
@@ -1967,7 +1956,6 @@ struct portStatusStruct {
 };
 
 std::map<uint32_t, portStatusStruct > globalMapPortStatus;
-
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
