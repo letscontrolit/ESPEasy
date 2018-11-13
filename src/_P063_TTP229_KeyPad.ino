@@ -103,8 +103,8 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; SCL");
-        event->String2 = F("GPIO &#8644; SDO");
+        event->String1 = formatGpioName_output("SCL");
+        event->String2 = formatGpioName_bidirectional("SDO");
         break;
       }
 

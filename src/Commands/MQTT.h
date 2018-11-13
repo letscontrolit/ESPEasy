@@ -36,7 +36,7 @@ String Command_MQTT_messageDelay(struct EventStruct *event, const char* Line)
 
 String Command_MQTT_Publish(struct EventStruct *event, const char* Line)
 {
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (WiFiConnected()) {
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
     int enabledMqttController = firstEnabledMQTTController();
     if (enabledMqttController >= 0) {

@@ -92,9 +92,9 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO RX");
-        event->String2 = F("GPIO TX");
-        event->String3 = F("GPIO DE (optional)");
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(false);
+        event->String3 = formatGpioName_output_optional("DE");
         break;
       }
 
@@ -142,7 +142,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p078"));
+          P078_DEV_ID = getFormItemInt(F("p078_dev_id"));
           P078_MODEL = getFormItemInt(F("p078_model"));
           P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
           P078_QUERY1 = getFormItemInt(F("p078_query1"));
@@ -194,10 +194,12 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_078_init)
         {
-          UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, P078_DEV_ID);
-          UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, P078_DEV_ID);
-          UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, P078_DEV_ID);
-          UserVar[event->BaseVarIndex + 3] = p078_readVal(P078_QUERY4, P078_DEV_ID);
+          int model = P078_MODEL;
+          byte dev_id = P078_DEV_ID;
+          UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
+          UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
+          UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, dev_id, model);
+          UserVar[event->BaseVarIndex + 3] = p078_readVal(P078_QUERY4, dev_id, model);
           success = true;
           break;
         }
@@ -207,12 +209,14 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-float p078_readVal(byte query, byte node) {
+float p078_readVal(byte query, byte node, unsigned int model) {
   if (Plugin_078_SDM == NULL) return 0.0;
-  const float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, node), node);
+  const float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EASTRON: (");
     log += node;
+    log += ',';
+    log += model;
     log += ") ";
     log += p078_getQueryString(query);
     log += ": ";
@@ -222,8 +226,8 @@ float p078_readVal(byte query, byte node) {
   return _tempvar;
 }
 
-unsigned int p078_getRegister(byte query, byte node) {
-  if (node == 0) { // SDM120C
+unsigned int p078_getRegister(byte query, byte model) {
+  if (model == 0) { // SDM120C
     switch (query) {
       case 0: return SDM120C_VOLTAGE;
       case 1: return SDM120C_CURRENT;
@@ -236,7 +240,7 @@ unsigned int p078_getRegister(byte query, byte node) {
       case 8: return SDM120C_EXPORT_ACTIVE_ENERGY;
       case 9: return SDM120C_TOTAL_ACTIVE_ENERGY;
     }
-  } else if (node == 1) { // SDM220T
+  } else if (model == 1) { // SDM220T
     switch (query) {
       case 0: return SDM220T_VOLTAGE;
       case 1: return SDM220T_CURRENT;
@@ -249,7 +253,7 @@ unsigned int p078_getRegister(byte query, byte node) {
       case 8: return SDM220T_EXPORT_ACTIVE_ENERGY;
       case 9: return SDM220T_TOTAL_ACTIVE_ENERGY;
     }
-  } else if (node == 2) { // SDM230
+  } else if (model == 2) { // SDM230
     switch (query) {
       case 0: return SDM230_VOLTAGE;
       case 1: return SDM230_CURRENT;
@@ -262,7 +266,7 @@ unsigned int p078_getRegister(byte query, byte node) {
       case 8: return SDM230_EXPORT_ACTIVE_ENERGY;
       case 9: return SDM230_CURRENT_RESETTABLE_TOTAL_ACTIVE_ENERGY;
     }
-  } else if (node == 3) { // SDM630
+  } else if (model == 3) { // SDM630
     switch (query) {
       case 0: return SDM630_VOLTAGE_AVERAGE;
       case 1: return SDM630_CURRENTSUM;

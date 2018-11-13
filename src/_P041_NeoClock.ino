@@ -49,6 +49,12 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Data"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
       	addFormNumericBox(F("Red"), F("p041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);

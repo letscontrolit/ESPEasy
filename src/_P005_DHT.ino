@@ -59,6 +59,12 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_bidirectional(F("Data"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
