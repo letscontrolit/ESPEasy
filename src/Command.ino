@@ -87,7 +87,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
-    COMMAND_CASE("logportstatus"          , Command_LogPortStatus);              // Diagnostic.h
+    COMMAND_CASE("logportstatus"          , Command_logPortStatus);              // Diagnostic.h
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
       break;
     }

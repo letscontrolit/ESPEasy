@@ -3550,19 +3550,11 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
                      (112.0 + 0.9 * temperature), 8);
 }
 
-/***************************************************
-*                                                  *
-* Functions for managing the status data structure *
-*                                                  *
-****************************************************/
-
-void saveOrCreatePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
-  if (!existPortStatus(key)) { // KEY doesn't exist; creating it
-    globalMapPortStatus.insert (std::pair<unsigned char,portStatusStruct>(key,tempStatus));
-  } else {
-    globalMapPortStatus[key] = tempStatus;
-  }
-}
+/**********************************************************
+*                                                         *
+* Helper Functions for managing the status data structure *
+*                                                         *
+**********************************************************/
 
 void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
   if (tempStatus.task<=0 && tempStatus.monitor<=0 && tempStatus.command<=0)
@@ -3570,19 +3562,6 @@ void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
   else
     globalMapPortStatus[key] = tempStatus;
 }
-
-/* USO: globalMapPortStatus[]
-bool loadPortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
-  bool retValue = false;
-  //check if KEY exists:
-  std::map<uint32_t,portStatusStruct>::iterator it;
-  it = globalMapPortStatus.find(key);
-  if (it != globalMapPortStatus.end()) {  //if KEY exists...
-    tempStatus = it->second;
-    retValue = true;
-  }
-  return retValue;
-}*/
 
 bool existPortStatus(uint32_t key) {
   bool retValue = false;
@@ -3597,7 +3576,7 @@ bool existPortStatus(uint32_t key) {
 
 void removeTaskFromPort(uint32_t key) {
   if (existPortStatus(key)) {
-    globalMapPortStatus[key].task--;
+    (globalMapPortStatus[key].task > 0) ? globalMapPortStatus[key].task-- : globalMapPortStatus[key].task = 0;
     if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
       globalMapPortStatus.erase(key);
   }
@@ -3626,18 +3605,3 @@ uint16_t getPluginFromKey(uint32_t key) {
 uint16_t getPortFromKey(uint32_t key) {
   return (uint16_t)(key);
 }
-
-/*****
-setStateForMonitor(key)
-	per ogni key in lista con monitor = 1 do
-	state=read pinState(key)
-  create GPIO#
-
-addMonitorToPort(key)
-	controlla se esiste già la KEY
-	se NON esiste -> crea la KEY con valori state=0,mode=0,monitor=0,task=0
-	monitor=1
-
-
-
-******/

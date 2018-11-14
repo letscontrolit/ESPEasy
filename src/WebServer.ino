@@ -3637,7 +3637,10 @@ void handle_pinstates() {
         TXBuffer += F("PWM");
         break;
       case PIN_MODE_SERVO:
-        TXBuffer += F("servo");
+        TXBuffer += F("Servo");
+        break;
+      case PIN_MODE_OFFLINE:
+        TXBuffer += F("Offline");
         break;
     }
     html_TD();
@@ -3953,7 +3956,7 @@ void handle_control() {
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||
-           command.equalsIgnoreCase(F("logportstatus")) ||
+           command.equalsIgnoreCase(F("logPortStatus")) ||
            command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());

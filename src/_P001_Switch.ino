@@ -26,7 +26,6 @@ TaskDevicePluginConfigLong settings:
 1: clickTime doubleclick ms
 2: clickTime longpress ms
 3: safebutton counter (=0,1)
-
 \**************************************************/
 
 #define PLUGIN_001
@@ -107,7 +106,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        //@giig1967g: set current task value for taking actions after changes
+        //@giig1967g: set current task value for taking actions after changes in the task gpio
         const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
         if (existPortStatus(key)) {
           globalMapPortStatus[key].previousTask = event->TaskIndex;
@@ -156,7 +155,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
 
-        //addFormCheckBox(F("Doubleclick event (3)"), F("p001_dc"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
         addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p001_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
 
         //set minimum value for longpress MIN max speed
@@ -172,7 +170,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         int buttonLPValues[4] = {PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH,PLUGIN_001_LONGPRESS_BOTH};
         addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
 
-        //addFormCheckBox(F("Longpress event (10 & 11)"), F("p001_lp"), Settings.TaskDevicePluginConfig[event->TaskIndex][5]);
         addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
 
         addFormCheckBox(F("Use Safe Button (slower)"), F("p001_sb"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]));
@@ -211,13 +208,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("p001_elp"));
         //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("p001_elpmininterval"));
 
+        //check if a task has been edited and remove 'task' bit from the previous pin
         for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-          if (it->second.previousTask == event->TaskIndex) {
-            removeTaskFromPort(createKey(PLUGIN_ID_001,getPortFromKey(it->first)));
+          if (it->second.previousTask == event->TaskIndex && getPluginFromKey(it->first)==PLUGIN_ID_001) {
+            globalMapPortStatus[it->first].previousTask = -1;
+            removeTaskFromPort(it->first);
             break;
           }
         }
-
         success = true;
         break;
       }
@@ -307,35 +305,23 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_UNCONDITIONAL_POLL:
       {
-        // port monitoring, on request by rule command 'monitor'
+        // port monitoring, generates an event by rule command 'monitor,gpio,port#'
         for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-          if (it->second.monitor>0) {
+          if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
             const uint16_t port = getPortFromKey(it->first);
             byte state = Plugin_001_read_switch_state(port);
             if (it->second.state != state) {
-              it->second.state = state;
-              String eventString = F("GPIO#");
-              eventString += port;
-              eventString += '=';
-              eventString += state;
-              rulesProcessing(eventString);
+              if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
+              if (it->second.monitor) {
+                String eventString = F("GPIO#");
+                eventString += port;
+                eventString += '=';
+                eventString += state;
+                rulesProcessing(eventString);
+              }
             }
           }
         }
-/*
-        for (byte x=0; x < GPIO_MAX; x++)
-           if (PinMonitor[x] != 0){
-             byte state = digitalRead(x);
-             if (PinMonitorState[x] != state){
-               String eventString = F("GPIO#");
-               eventString += x;
-               eventString += '=';
-               eventString += state;
-               rulesProcessing(eventString);
-               PinMonitorState[x] = state;
-             }
-           }
-*/
         break;
       }
 
@@ -358,8 +344,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         on Button#Switch=3 do //will fire if doubleclick
         \**************************************************************************/
 
-        //TODO: il 10xsec fa lo scan solo delle porte nei device o di tutte?
-
         //long difftimer1 = 0;
         //long difftimer2 = 0;
         //long timerstats = millis();
@@ -369,22 +353,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
           portStatusStruct currentStatus;
           const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
-          //TODO: ATTENZIONE: l'operatore [], se non esiste crea nuova entry in map:
+          //TODO: WARINING operator [],creates an entry in map if key doesn't exist:
           currentStatus = globalMapPortStatus[key];
 
-          //difftimer1 = millis()-timerstats;
-
-          //timerstats = millis();
-          //int ssss = globalMapPortStatus[Settings.TaskDevicePin1[event->TaskIndex]].state;
-          //difftimer2 = millis()-timerstats;
-          //int ssss = globalMapPortStatus.[Settings.TaskDevicePin1[event->TaskIndex]].state;
-          //addlog(LOG_LEVEL_INFO,difftimer1);
-          //addlog(LOG_LEVEL_INFO,difftimer2);
-
-          //TODO: giig1967g: forse più veloce:
-          //if (state != ssss)
-
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
+          //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
             addLog(LOG_LEVEL_DEBUG,"SW  :SafeButton activated")
@@ -557,8 +530,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
               }
               savePortStatus(key,currentStatus);
-              //TODO: remove
-              logPortStatus(F("PLUGIN_10xSEC LONGPRESS"));
             }
           } else {
             // Reset SafeButton counter
@@ -571,15 +542,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      addLog(LOG_LEVEL_INFO,"001-EXIT");
       removeTaskFromPort(createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]));
       break;
     }
 
     case PLUGIN_READ:
       {
-        addLog(LOG_LEVEL_INFO,"001-READ");
-
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -597,14 +565,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         String log = "";
         String command = parseString(string, 1);
 
-        //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-        //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
-        //portStatusStruct tempStatus;
-        //int portNumber;
-        //portNumber = ((command == F("servo") || command == F("monitor")) ? event->Par2 : event->Par1); //for back compatibility reason
-        //tempStatus = globalMapPortStatus[portNumber];
-        // TODO: OPPURE:ma in questo caso non crea le entry e la entry va creata nel SAVE
-        //loadPortStatus(portNumber,tempStatus);
+        //WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
         if (command == F("gpio"))
         {
@@ -613,8 +574,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             if (event->Par2 == 2)  //if gpio = 2 then it's an input PIN
@@ -634,8 +595,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
             savePortStatus(key,tempStatus);
-            //TODO: remove
-            logPortStatus(F("COMMAND GPIO"));
+
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
@@ -643,15 +603,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         } else if (command == F("gpiotoggle")) {
           success = true;
-          //byte mode;
-          //uint16_t currentState;
-
           if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED) { //toggle only output pins
@@ -664,8 +621,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               digitalWrite(event->Par1, tempStatus.state);
               //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, !currentState);
               savePortStatus(key,tempStatus);
-              //TODO: remove
-              logPortStatus(F("COMMAND TOGGLEGPIO"));
               log = String(F("SW   : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
               addLog(LOG_LEVEL_INFO, log);
               SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
@@ -678,8 +633,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             #if defined(ESP8266)
@@ -735,8 +690,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             pinMode(event->Par1, OUTPUT);
@@ -762,8 +717,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             const bool pinStateHigh = event->Par2 != 0;
@@ -793,8 +748,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 2) {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'servo' uses Par2 instead of Par1
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             switch (event->Par1)
@@ -851,8 +806,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-            //TODO: remove
-            logPortStatus(F("COMMAND MONITOR"));
           }
         }  else if (command == F("unmonitor")) {
           if (parseString(string, 2) == F("gpio"))
@@ -864,15 +817,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-            //TODO: remove
-            logPortStatus(F("COMMAND UNMONITOR"));
           }
         } else if (command == F("inputswitchstate")) {
           success = true;
           portStatusStruct tempStatus;
           const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->Par1]);
-          //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-          //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          // So the next command should be part of each command:
           tempStatus = globalMapPortStatus[key];
 
           UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
@@ -915,8 +866,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             pinMode(event->Par1, OUTPUT);
@@ -933,7 +884,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
-
         break;
       }
 
@@ -942,7 +892,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         digitalWrite(event->Par1, event->Par2);
         //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         portStatusStruct tempStatus;
-        //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
+        // WARNING: operator [] creates an entry in the map if key does not exist
         const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
         tempStatus = globalMapPortStatus[key];
 

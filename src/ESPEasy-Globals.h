@@ -354,6 +354,7 @@
 #define PIN_MODE_PWM                        3
 #define PIN_MODE_SERVO                      4
 #define PIN_MODE_INPUT_PULLUP               5
+#define PIN_MODE_OFFLINE                    6
 
 #define SEARCH_PIN_STATE                 true
 #define NO_SEARCH_PIN_STATE             false
@@ -1955,7 +1956,7 @@ struct portStatusStruct {
   int8_t previousTask : 8;
 };
 
-std::map<uint32_t, portStatusStruct > globalMapPortStatus;
+std::map<uint32_t, portStatusStruct> globalMapPortStatus;
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.
