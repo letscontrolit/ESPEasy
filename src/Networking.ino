@@ -672,10 +672,33 @@ bool hostReachable(const IPAddress& ip) {
 */
 }
 
+bool connectClient(WiFiClient& client, const char* hostname, uint16_t port) {
+  IPAddress ip;
+  if (resolveHostByName(hostname, ip)) {
+    return connectClient(client, ip, port);
+  }
+  return false;
+}
+
+bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
+{
+  START_TIMER;
+  bool connected = (client.connect(ip, port) == 1);
+  STOP_TIMER(CONNECT_CLIENT_STATS);
+  return connected;
+}
+
+bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
+  START_TIMER;
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100);
+  STOP_TIMER(HOST_BY_NAME_STATS);
+  return resolvedIP;
+}
+
 bool hostReachable(const String& hostname) {
   if (!WiFiConnected()) return false;
   IPAddress remote_addr;
-  if (WiFi.hostByName(hostname.c_str(), remote_addr)) {
+  if (resolveHostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
   }
   String log = F("Hostname cannot be resolved: ");
