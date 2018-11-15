@@ -212,9 +212,9 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
 
       case PLUGIN_GET_DEVICEGPIONAMES:
         {
-          event->String1 = F("GPIO &larr; TX");
-          event->String2 = F("GPIO &rarr; RX");
-          event->String3 = F("GPIO &rarr; Reset");
+          event->String1 = formatGpioName_RX(false);
+          event->String2 = formatGpioName_TX(false);
+          event->String3 = formatGpioName_output(F("Reset"));
           break;
         }
 

@@ -1,6 +1,11 @@
 
 #define WIFI_AP_OFF_TIMER_DURATION  60000   // in milliSeconds
 
+bool unprocessedWifiEvents() {
+  if (processedConnect && processedGetIP && processedDisconnect) return false;
+  return true;
+}
+
 //********************************************************************************
 // Functions to process the data gathered from the events.
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
@@ -241,11 +246,23 @@ void processScanDone() {
 
 void resetWiFi() {
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
-  setWifiMode(WIFI_OFF);
-  setWifiMode(WIFI_STA);
+//  setWifiMode(WIFI_OFF);
+//  setWifiMode(WIFI_STA);
   lastDisconnectMoment = millis();
   processedDisconnect = false;
   wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+}
+
+void connectionCheckHandler()
+{
+  if (reconnectChecker == false && !WiFiConnected()){
+    reconnectChecker = true;
+    resetWiFi();
+    WiFi.reconnect();
+  }
+  else if (WiFiConnected() && reconnectChecker == true){
+    reconnectChecker = false;
+  }
 }
 
 void WifiScanAsync() {
@@ -443,7 +460,13 @@ bool useStaticIP() {
 
 bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  return wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
+  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+    if (WiFi.isConnected()) return true;
+    // else wifiStatus is no longer in sync.
+    resetWiFi();
+  }
+  delay(1);
+  return false;
 }
 
 void WiFiConnectRelaxed() {
@@ -470,7 +493,7 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
     wifi_station_set_hostname(hostname);
   #endif
@@ -645,6 +668,8 @@ void WifiDisconnect()
     wifi_station_disconnect();
     ETS_UART_INTR_ENABLE();
   #endif
+  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  processedDisconnect = false;
 }
 
 

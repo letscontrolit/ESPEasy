@@ -80,6 +80,12 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("CS"));
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         // Get CS Pin

@@ -84,6 +84,12 @@ boolean Plugin_077(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        // No pins selectable, all hard coded
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormNumericBox(F("U Ref"), F("p077_URef"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);

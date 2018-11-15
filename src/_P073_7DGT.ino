@@ -92,6 +92,12 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        // Do not name the pins, since they are swapped between types.
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));

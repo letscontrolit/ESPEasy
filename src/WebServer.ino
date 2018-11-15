@@ -204,15 +204,20 @@ void sendContentBlocking(String& data) {
 void sendHeaderBlocking(bool json) {
   checkRAM(F("sendHeaderBlocking"));
   WebServer.client().flush();
+  String contenttype;
+  if (json)
+    contenttype = F("application/json");
+  else
+    contenttype = F("text/html");
+
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
   WebServer.sendHeader(F("Accept-Ranges"), F("none"));
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   WebServer.sendHeader(F("Transfer-Encoding"), F("chunked"));
   if (json)
     WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
-  WebServer.send(200);
+  WebServer.send(200, contenttype, "");
 #else
   unsigned int timeout = 0;
   uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -220,11 +225,10 @@ void sendHeaderBlocking(bool json) {
   if (freeBeforeSend < 4000) timeout = 1000;
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  WebServer.sendHeader(F("Content-Type"), json ? F("application/json") : F("text/html"), true);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
   if (json)
     WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
-  WebServer.send(200);
+  WebServer.send(200, contenttype, "");
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
@@ -898,7 +902,7 @@ void handle_root() {
     TXBuffer += formatIP(ip);
 
     addRowLabel(F("Wifi RSSI"));
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+    if (WiFiConnected())
     {
       TXBuffer += String(WiFi.RSSI());
       TXBuffer += F(" dB (");
@@ -1724,17 +1728,17 @@ void handle_hardware() {
   addHelpButton(F("ESPEasy#Hardware_page"));
 
   addFormSubHeader(F("Wifi Status LED"));
-  addFormPinSelect(F("GPIO &rarr; LED"), "pled", Settings.Pin_status_led);
+  addFormPinSelect(formatGpioName_output("LED"), "pled", Settings.Pin_status_led);
   addFormCheckBox(F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(F("Reset Pin"));
-  addFormPinSelect(F("GPIO &larr; Switch"), "pres", Settings.Pin_Reset);
+  addFormPinSelect(formatGpioName_input(F("Switch")), "pres", Settings.Pin_Reset);
   addFormNote(F("Press about 10s for factory reset"));
 
   addFormSubHeader(F("I2C Interface"));
-  addFormPinSelectI2C(F("GPIO &#8703; SDA"), F("psda"), Settings.Pin_i2c_sda);
-  addFormPinSelectI2C(F("GPIO &#8702; SCL"), F("pscl"), Settings.Pin_i2c_scl);
+  addFormPinSelectI2C(formatGpioName_bidirectional("SDA"), F("psda"), Settings.Pin_i2c_sda);
+  addFormPinSelectI2C(formatGpioName_output("SCL"), F("pscl"), Settings.Pin_i2c_scl);
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
@@ -1742,7 +1746,7 @@ void handle_hardware() {
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
 #ifdef FEATURE_SD
-  addFormPinSelect(F("GPIO &rarr; SD Card CS"), "sd", Settings.Pin_sd_cs);
+  addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
 #endif
 
   addFormSubHeader(F("GPIO boot states"));
@@ -2276,7 +2280,7 @@ void handle_devices() {
           if (Device[DeviceIndex].Type >= DEVICE_TYPE_SINGLE)
             addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
           if (Device[DeviceIndex].Type >= DEVICE_TYPE_DUAL)
-            addFormPinSelect( TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
+            addFormPinSelect(TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
           if (Device[DeviceIndex].Type == DEVICE_TYPE_TRIPLE)
             addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
         }
@@ -3184,6 +3188,10 @@ void html_copyText_marker() {
   TXBuffer += F("&#x022C4;"); //   &diam; &diamond; &Diamond; &#x022C4; &#8900;
 }
 
+void html_add_estimate_symbol() {
+  TXBuffer += F(" &#8793; "); //   &#8793;  &#x2259;  &wedgeq;
+}
+
 void html_table_class_normal() {
   html_table(F("normal"));
 }
@@ -3946,11 +3954,11 @@ void handle_control() {
   webrequest=parseTemplate(webrequest,webrequest.length());
   addLog(LOG_LEVEL_DEBUG,String(F("HTTP after parseTemplate: ")) + webrequest);
 
+  bool handledCmd = false;
   if (command == F("event"))
   {
     eventBuffer = webrequest.substring(6);
-    WebServer.send(200, "text/html", "OK");
-    return;
+    handledCmd = true;
   }
   else if (command.equalsIgnoreCase(F("taskrun")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
@@ -3960,8 +3968,12 @@ void handle_control() {
            command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
-    WebServer.send(200, "text/html", "OK");
-    return;
+    handledCmd = true;
+  }
+
+  if (handledCmd) {
+	WebServer.send(200, F("text/html"), "OK");
+	return;
   }
 
   struct EventStruct TempEvent;
@@ -3971,17 +3983,21 @@ void handle_control() {
   printToWeb = true;
   printWebString = "";
 
-  if (printToWebJSON)
+  bool unknownCmd = false;
+  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
+  else if (remoteConfig(&TempEvent, webrequest));
+  else unknownCmd = true;
+
+  if (printToWebJSON) // it is setted in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();
   else
     TXBuffer.startStream();
 
-  if (PluginCall(PLUGIN_WRITE, &TempEvent, webrequest));
-  else if (remoteConfig(&TempEvent, webrequest));
+  if (unknownCmd)
+	TXBuffer += F("Unknown or restricted command!");
   else
-    TXBuffer += F("Unknown or restricted command!");
+	TXBuffer += printWebString;
 
-  TXBuffer += printWebString;
   TXBuffer.endStream();
 
   printWebString = "";
@@ -5371,7 +5387,7 @@ void handle_setup() {
 
   addHeader(false,TXBuffer.buf);
 
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+  if (WiFiConnected())
   {
     addHtmlError(SaveSettings());
     const IPAddress ip = WiFi.localIP();
@@ -5747,7 +5763,7 @@ void handle_sysinfo() {
 
    addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+  if (WiFiConnected())
   {
      addRowLabel(F("Wifi"));
     #if defined(ESP8266)
@@ -5926,11 +5942,24 @@ void handle_sysinfo() {
     uint32_t flashChipId = ESP.getFlashChipId();
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
-     TXBuffer += F("Vendor: ");
-     TXBuffer += formatToHex(flashChipId & 0xFF);
-     TXBuffer += F(" Device: ");
-     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-     TXBuffer += formatToHex(flashDevice);
+    TXBuffer += F("Vendor: ");
+    TXBuffer += formatToHex(flashChipId & 0xFF);
+
+    #ifdef PUYASUPPORT
+    if (ESP.flashIsPuya()) {
+      TXBuffer += F(" (PUYA, supported)");
+    }
+    #else
+    if ((flashChipId & 0x000000ff) == 0x85)  // 0x146085 PUYA
+    {
+      TXBuffer += F(" (PUYA");
+      TXBuffer += F(HTML_SYMBOL_WARNING);
+      TXBuffer += ')';
+    }
+    #endif
+    TXBuffer += F(" Device: ");
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    TXBuffer += formatToHex(flashDevice);
   #endif
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize = ESP.getFlashChipSize();

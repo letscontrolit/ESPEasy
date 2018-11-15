@@ -145,6 +145,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p036_template")) + (varNr + 1), P036_deviceTemplate[varNr], P36_Nchars);
         }
 
+        // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
         addFormPinSelect(F("Display button"), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
         addFormNumericBox(F("Display Timeout"), F("p036_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
@@ -472,7 +473,7 @@ String P36_parseTemplate(String &tmpString, byte lineSize) {
 
 void display_header() {
   static boolean showWiFiName = true;
-  if (showWiFiName && (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) ) {
+  if (showWiFiName && (WiFiConnected()) ) {
     String newString = WiFi.SSID();
     newString.trim();
     display_title(newString);
@@ -635,7 +636,7 @@ void display_scroll(String outString[], String inString[], int nlines, int scrol
 
 //Draw Signal Strength Bars, return true when there was an update.
 bool display_wifibars() {
-  const bool connected = wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED;
+  const bool connected = WiFiConnected();
   const int nbars_filled = (WiFi.RSSI() + 100) / 8;
   const int newState = connected ? nbars_filled : P36_WIFI_STATE_UNSET;
   if (newState == lastWiFiState)
@@ -657,7 +658,7 @@ bool display_wifibars() {
   display->setColor(BLACK);
   display->fillRect(x , y, size_x, size_y);
   display->setColor(WHITE);
-  if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (WiFiConnected()) {
     for (byte ibar = 0; ibar < nbars; ibar++) {
       int16_t height = size_y * (ibar + 1) / nbars;
       int16_t xpos = x + ibar * width;

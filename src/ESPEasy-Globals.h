@@ -1491,6 +1491,12 @@ struct systemTimerStruct
 };
 std::map<unsigned long, systemTimerStruct> systemTimers;
 
+enum gpio_direction {
+  gpio_input,
+  gpio_output,
+  gpio_bidirectional
+};
+
 /*********************************************************************************************\
  * pinStatesStruct
 \*********************************************************************************************/
@@ -1637,16 +1643,7 @@ Ticker connectionCheck;
 #endif
 
 bool reconnectChecker = false;
-void connectionCheckHandler()
-{
-  if (reconnectChecker == false && !WiFiConnected()){
-    reconnectChecker = true;
-    WiFi.reconnect();
-  }
-  else if (WiFiConnected() && reconnectChecker == true){
-    reconnectChecker = false;
-  }
-}
+void connectionCheckHandler();
 
 bool useStaticIP();
 

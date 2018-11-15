@@ -596,9 +596,14 @@ String SaveToFile(char* fname, int index, byte* memAddress, int datasize)
     {
       SPIFFS_CHECK(f.write(*pointerToByteToSave), fname);
       pointerToByteToSave++;
-      if (timeOutReached(timer)) {
+      if (x % 256 == 0) {
+        // one page written, do some background tasks
+        timer = millis() + 50;
+        delay(0);
+      }
+      if (timeOutReached(timer) ) {
         timer += 50;
-        delay(1);
+        delay(0);
       }
     }
     f.close();

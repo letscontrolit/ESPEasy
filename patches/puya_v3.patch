@@ -1,0 +1,61 @@
+diff -urN 2.3.0.orig/cores/esp8266/Esp.cpp 2.3.0/cores/esp8266/Esp.cpp
+--- 2.3.0.orig/cores/esp8266/Esp.cpp	2016-06-21 08:06:45.000000000 +0000
++++ 2.3.0/cores/esp8266/Esp.cpp	2018-11-07 11:28:34.852866182 +0000
+@@ -507,11 +507,33 @@
+     return rc == 0;
+ }
+
++static uint32_t flash_chip_id = 0;
++
++bool EspClass::flashIsPuya(){
++    return ((flash_chip_id & 0x000000ff) == 0x85); // 0x146085 PUYA
++}
++
+ bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size) {
+-    ets_isr_mask(FLASH_INT_MASK);
+-    int rc = spi_flash_write(offset, (uint32_t*) data, size);
+-    ets_isr_unmask(FLASH_INT_MASK);
+-    return rc == 0;
++	if (flash_chip_id == 0)
++		flash_chip_id = getFlashChipId();
++	ets_isr_mask(FLASH_INT_MASK);
++	int rc;
++	uint32_t* ptr = data;
++	if (flashIsPuya()) {
++		static uint32_t read_buf[SPI_FLASH_SEC_SIZE / 4];
++		rc = spi_flash_read(offset, read_buf, size);
++		if (rc != 0) {
++			ets_isr_unmask(FLASH_INT_MASK);
++			return false;
++		}
++		for (size_t i = 0; i < size / 4; ++i) {
++			read_buf[i] &= data[i];
++		}
++		ptr = read_buf;
++	}
++	rc = spi_flash_write(offset, ptr, size);
++	ets_isr_unmask(FLASH_INT_MASK);
++	return rc == 0;
+ }
+
+ bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size) {
+diff -urN 2.3.0.orig/cores/esp8266/Esp.h 2.3.0/cores/esp8266/Esp.h
+--- 2.3.0.orig/cores/esp8266/Esp.h	2016-06-21 08:06:45.000000000 +0000
++++ 2.3.0/cores/esp8266/Esp.h	2018-11-06 22:49:47.711992085 +0000
+@@ -23,6 +23,8 @@
+
+ #include <Arduino.h>
+
++#define PUYASUPPORT
++
+ /**
+  * AVR macros for WDT managment
+  */
+@@ -132,6 +134,7 @@
+         bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
+         bool flashRead(uint32_t offset, uint32_t *data, size_t size);
+
++        bool flashIsPuya();
+         uint32_t getSketchSize();
+         String getSketchMD5();
+         uint32_t getFreeSketchSpace();

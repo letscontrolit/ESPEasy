@@ -144,6 +144,11 @@ void deepSleep(int delay)
   if (lastBootCause!=BOOT_CAUSE_DEEP_SLEEP)
   {
     addLog(LOG_LEVEL_INFO, F("SLEEP: Entering deep sleep in 30 seconds."));
+    if (Settings.UseRules && isDeepSleepEnabled())
+      {
+        String event = F("System#NoSleep=30");
+        rulesProcessing(event);
+      }
     delayBackground(30000);
     //disabled?
     if (!isDeepSleepEnabled())
@@ -221,7 +226,69 @@ int8_t getTaskIndexByName(String TaskNameSearch)
   return -1;
 }
 
+/*********************************************************************************************\
+   Device GPIO name functions to share flash strings
+  \*********************************************************************************************/
+String formatGpioName(const String& label, gpio_direction direction, bool optional) {
+  int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
+  if (optional) {
+    reserveLength += 11;
+  }
+  String result;
+  result.reserve(reserveLength);
+  result += F("GPIO ");
+  switch (direction) {
+    case gpio_input:         result += F("&larr; "); break;
+    case gpio_output:        result += F("&rarr; "); break;
+    case gpio_bidirectional: result += F("&#8644; "); break;
+  }
+  result += label;
+  if (optional)
+    result += F("(optional)");
+  return result;
+}
 
+String formatGpioName(const String& label, gpio_direction direction) {
+  return formatGpioName(label, direction, false);
+}
+
+String formatGpioName_input(const String& label) {
+  return formatGpioName(label, gpio_input, false);
+}
+
+String formatGpioName_output(const String& label) {
+  return formatGpioName(label, gpio_output, false);
+}
+
+String formatGpioName_bidirectional(const String& label) {
+  return formatGpioName(label, gpio_bidirectional, false);
+}
+
+String formatGpioName_input_optional(const String& label) {
+  return formatGpioName(label, gpio_input, true);
+}
+
+String formatGpioName_output_optional(const String& label) {
+  return formatGpioName(label, gpio_output, true);
+}
+
+// RX/TX are the only signals which are crossed, so they must be labelled like this:
+// "GPIO <-- TX" and "GPIO --> RX"
+String formatGpioName_TX(bool optional) {
+  return formatGpioName("RX", gpio_output, optional);
+}
+
+String formatGpioName_RX(bool optional) {
+  return formatGpioName("TX", gpio_input, optional);
+}
+
+String formatGpioName_TX_HW(bool optional) {
+  return formatGpioName("RX (HW)", gpio_output, optional);
+}
+
+String formatGpioName_RX_HW(bool optional) {
+  return formatGpioName("TX (HW)", gpio_input, optional);
+}
 
 /*********************************************************************************************\
    set pin mode & state (info table)
@@ -399,7 +466,7 @@ void statusLED(boolean traffic)
   else
   {
 
-    if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
+    if (WiFiConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
       if (delta>0 || delta<0 )
@@ -1136,6 +1203,10 @@ String getSystemLibraryString() {
     result += F(", LWIP: ");
     result += getLWIPversion();
   #endif
+  #ifdef PUYASUPPORT
+    result += F(" PUYA support");
+  #endif
+
   return result;
 }
 

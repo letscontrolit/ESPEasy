@@ -104,6 +104,19 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        // FIXME TD-er: This plugin is handling too much.
+        // - switch/dimmer input
+        // - PWM output
+        // - switch output (relays)
+        // - servo output
+        // - sending pulses
+        // - playing tunes
+        event->String1 = formatGpioName_bidirectional("");
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         //@giig1967g: set current task value for taking actions after changes in the task gpio
