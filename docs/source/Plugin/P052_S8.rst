@@ -1,0 +1,22 @@
+.. _P052_S8_page:
+
+S8
+**
+
+Introduction
+------------
+The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
+
+Wiring
+------
+
+Setup
+-----
+
+Rules examples
+--------------
+
+Indicators (recommended settings)
+---------------------------------
+
+Where to buy
