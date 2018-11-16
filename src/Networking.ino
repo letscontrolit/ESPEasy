@@ -685,12 +685,20 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   START_TIMER;
   bool connected = (client.connect(ip, port) == 1);
   STOP_TIMER(CONNECT_CLIENT_STATS);
+#ifndef ESP32
+  if (connected)
+    client.keepAlive(); // Use default keep alive values
+#endif
   return connected;
 }
 
 bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
   START_TIMER;
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100);
+#ifdef ESP32
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
+#else
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100) == 1;
+#endif
   STOP_TIMER(HOST_BY_NAME_STATS);
   return resolvedIP;
 }
