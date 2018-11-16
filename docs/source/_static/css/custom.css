@@ -1,21 +1,42 @@
 .blue {
-  color: #3492E2;
+  background-color: #3492E2;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
 .red {
-  color: #EF483D;
+  background-color: #EF483D;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
 .green {
-  color: #00AE41;
+  background-color: #00AE41;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
 .yellow {
-  color: #FFD100;
+  background-color: #FFD100;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
 .orange {
-  color: #FF8F12;
+  background-color: #FF8F12;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
 .cyan {
-  color: #72DCDC;
+  background-color: #72DCDC;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
 .purple {
-  color: #FF00FF;
+  background-color: #FF00FF;
+  color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
 }
