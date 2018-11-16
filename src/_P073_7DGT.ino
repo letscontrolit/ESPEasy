@@ -574,7 +574,7 @@ void p073_FillBufferWithNumber(String number)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   byte p073_numlenght = number.length();
-  byte p073_dispdigit;
+  byte p073_dispdigit = 10;
   byte p073_index = 7;
   p073_dotpos = -1;     // -1 means no dot to display
   for (int i=p073_numlenght;i>0;i--) {
@@ -600,8 +600,9 @@ void p073_FillBufferWithTemp(long temperature)
   char p073_digit[8];
   sprintf(p073_digit, "%7d", static_cast<int>(temperature));
   int p073_numlenght = strlen(p073_digit);
-  byte p073_dispdigit;
+  byte p073_dispdigit = 10;
   for (int i=0;i<p073_numlenght;i++) {
+    p073_dispdigit = 10;           // default is space
     if (p073_digit[i] > 47 && p073_digit[i] < 58)
       p073_dispdigit = p073_digit[i]-48;
     else if (p073_digit[i] == 32)  // space
@@ -617,7 +618,7 @@ void p073_FillBufferWithString(String textToShow)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   String tmpText;
-  byte p073_dispdigit;
+  byte p073_dispdigit = 10;
   int p073_txtlength = textToShow.length();
   if (p073_txtlength > 8) p073_txtlength = 8;
   tmpText = textToShow.substring(0, p073_txtlength);
