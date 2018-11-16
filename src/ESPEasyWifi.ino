@@ -493,7 +493,8 @@ bool prepareWiFi() {
   }
   setSTA(true);
   char hostname[40];
-  safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  //safe_strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
+  strncpy(hostname, WifiGetHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
     wifi_station_set_hostname(hostname);
   #endif
