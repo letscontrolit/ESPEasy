@@ -144,13 +144,13 @@ Trigger
 
 .. code-block:: html
 
- <trigger>
+  <trigger>
 
 The trigger can be an device value being changed:
 
 .. code-block:: html
 
- DeviceName#ValueName
+  DeviceName#ValueName
 
 Operator (inequality function)
 ------------------------------
@@ -164,20 +164,20 @@ Where the "inequality function" is a simple check:
 
 .. code-block:: html
 
- equal (=) to
- less (<) than
- greater (>) than
- less or equal (<=) to
- greater or equal (>=) to
- not equal (!= or <>) to
+  equal (=) to
+  less (<) than
+  greater (>) than
+  less or equal (<=) to
+  greater or equal (>=) to
+  not equal (!= or <>) to
 
- DeviceName#ValueName<<value>
- DeviceName#ValueName=<value>
- DeviceName#ValueName><value>
- DeviceName#ValueName>=<value>
- DeviceName#ValueName<=<value>
- DeviceName#ValueName!=<value>
- DeviceName#ValueName<><value>
+   DeviceName#ValueName<<value>
+   DeviceName#ValueName=<value>
+   DeviceName#ValueName><value>
+   DeviceName#ValueName>=<value>
+   DeviceName#ValueName<=<value>
+   DeviceName#ValueName!=<value>
+   DeviceName#ValueName<><value>
 
 (System) events
 ---------------
@@ -196,9 +196,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on [DHT11Outside#Temperature]>20 do
-      GPIO,2,1
-     endon
+      on [DHT11Outside#Temperature]>20 do
+       GPIO,2,1
+      endon
 
    "
    "
@@ -209,9 +209,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on System#Wake do
-	  GPIO,15,1
-	 endon
+	   on System#Wake do
+       GPIO,15,1
+	   endon
 
    "
    "
@@ -222,10 +222,10 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on System#Boot do
-	  GPIO,2,1
-	  timerSet,1,30
-	 endon
+	   on System#Boot do
+      GPIO,2,1
+      timerSet,1,30
+	   endon
 
    "
    "
@@ -236,9 +236,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on System#Sleep do
-	  GPIO,2,0
-	 endon
+	   on System#Sleep do
+	    GPIO,2,0
+	   endon
 
    "
    "
@@ -249,9 +249,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on MQTT#Connected do
-	  Publish %sysname%/status,First message!
-	 endon
+	   on MQTT#Connected do
+	    Publish %sysname%/status,First message!
+	   endon
 
    "
    "
@@ -262,9 +262,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on MQTT#Disconnected do
-	  Reboot
-	 endon
+	   on MQTT#Disconnected do
+	    Reboot
+	   endon
 
    "
    "
@@ -275,9 +275,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on MQTTimport#Connected do
-	  Publish,%sysname%/status,MQTT Import is now operational
-	 endon
+	   on MQTTimport#Connected do
+	    Publish,%sysname%/status,MQTT Import is now operational
+	   endon
 
    "
    "
@@ -288,9 +288,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on MQTTimport#Disconnected do
-	  Reboot
-	 endon
+	   on MQTTimport#Disconnected do
+	    Reboot
+	   endon
 
    "
    "
@@ -301,9 +301,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on WiFi#Connected do
-	  SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
-	 endon
+	   on WiFi#Connected do
+	    SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
+	   endon
 
    "
    "
@@ -314,9 +314,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on MQTTimport#Connected do
-	  Publish %sysname%/status,AP changed
-	 endon
+	   on MQTTimport#Connected do
+	    Publish %sysname%/status,AP changed
+	   endon
 
    "
    "
@@ -327,9 +327,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on Login#Failed do
-	  Publish %sysname%/warning,Intruder alert!
-	 endon
+	   on Login#Failed do
+	    Publish %sysname%/warning,Intruder alert!
+	   endon
 
    "
    "
@@ -340,9 +340,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on Time#Initialized do
-	  Publish %sysname%/Time,%systime%
-	 endon
+	   on Time#Initialized do
+	    Publish %sysname%/Time,%systime%
+	   endon
 
    "
    "
@@ -353,10 +353,10 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on Time#Set do
-	  Publish %sysname%/Time,%systime%
-	  Publish %sysname%/NTP,Updated time at: %systime%
-	 endon
+	   on Time#Set do
+	    Publish %sysname%/Time,%systime%
+	    Publish %sysname%/NTP,Updated time at: %systime%
+	   endon
 
    "
    "
@@ -367,9 +367,9 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on Rules#Timer=1 do
-	  GPIO,2,1
-	 endon
+	   on Rules#Timer=1 do
+	    GPIO,2,1
+	   endon
 
    "
    "
@@ -380,17 +380,17 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-     on Clock#Time=All,12:00 do //will run once a day at noon
-	  GPIO,2,1
-	 endon
+	   on Clock#Time=All,12:00 do //will run once a day at noon
+	    GPIO,2,1
+	   endon
 
-	 on Clock#Time=All,**:30 do //will run half past every hour
-	  GPIO,2,1
-	 endon
+	   on Clock#Time=All,**:30 do //will run half past every hour
+	    GPIO,2,1
+	   endon
 
-	 on Clock#Time=All,%sunrise% do //will run at sunrise  (%sunset% is also available)
-	  GPIO,2,1
-	 endon
+	   on Clock#Time=All,%sunrise% do //will run at sunrise  (%sunset% is also available)
+	    GPIO,2,1
+	   endon
 
    "
 
@@ -399,14 +399,14 @@ Test
 
 .. code-block:: html
 
- <test>
+  <test>
 
 As described in the trigger section the test is a check done by checking
 if the DeviceName#ValueName is meeting a criteria:
 
 .. code-block:: html
 
- [DeviceName#ValueName]<inequality function><value>
+  [DeviceName#ValueName]<inequality function><value>
 
 Where the value must be a float value with a dot as decimal sign. The
 DeviceName#ValueName is closed by (square) brackets "[" and "]".
@@ -555,7 +555,7 @@ PIR and LDR
 .. note::
 
   In other words: If the PIR switch is set (to either 1 or 0) and if
-the light value < 500, then set GPIO port 16 of the ESP.
+  the light value < 500, then set GPIO port 16 of the ESP.
 
 .. code-block:: html
 
