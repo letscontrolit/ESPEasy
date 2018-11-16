@@ -22,8 +22,6 @@ There's three different released versions of ESP Easy:
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
 
-:blue:`blue` :purple:`purple` :orange:`orange` :cyan:`cyan`
-
 .. csv-table::
    :header: "Plugin number", "Plugin status", "Plugin type", "GitHub link", "Comment"
    :widths: 5, 8, 15, 20, 40
