@@ -44,7 +44,24 @@
 
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
-
+// Clock Display:
+// This plugin also allows a "clock" mode. In clock mode the display will show
+// the current system time. The "7-Seg. Clock" needs to be configured for this
+// mode to work. Each segment number (0..5) needs to be set based on your
+// display. 
+//
+// For my _Adafruit 0.56" 4-Digit 7-Segment FeatherWing Display_ these
+// settings are as follows:
+//    Xx:xx = 0, xX:xx = 1, 
+//    xx:Xx = 3, xx:xX = 4
+//    Seg. for Colon is 2 with a value of 2
+//
+// Any other data written to the display will show and be replaced at the next 
+// clock cycle, e.g. when the plugin received 'PLUGIN_CLOCK_IN'.
+//
+// NOTE: The system time is set via NTP as part of the Core ESPEasy firmware.
+// There is no configuration here to set or manipulate the time, only to
+// display it.
 
 #define PLUGIN_057
 #define PLUGIN_ID_057         57
@@ -99,8 +116,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         addFormSubHeader(F("7-Seg. Clock"));
 
         int16_t choice = CONFIG(1);
-        String options[2] = { F("none"), F("7-Seg. HH:MM") };
-        addFormSelector(F("Clock Type"), F("clocktype"), 2, options, NULL, choice);
+        String options[3] = {F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)")};
+        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
 
         addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
         addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);
@@ -290,14 +307,35 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         byte hours = hour();
         byte minutes = minute();
 
-        //Plugin_057_M->ClearRowBuffer();
-        if (hours >= 10)
-          Plugin_057_M->SetDigit(CONFIG(2), hours/10);
-        else
-          Plugin_057_M->SetRow(CONFIG(2), 0);   //empty seg
-        Plugin_057_M->SetDigit(CONFIG(3), hours%10);
-        Plugin_057_M->SetDigit(CONFIG(4), minutes/10);
-        Plugin_057_M->SetDigit(CONFIG(5), minutes%10);
+        // Plugin_057_M->ClearRowBuffer();
+        Plugin_057_M->SetDigit(CONFIG(5), minutes % 10);
+        Plugin_057_M->SetDigit(CONFIG(4), minutes / 10);
+
+        if (CONFIG(1) == 1) {         // 24-hour clock
+          // 24-hour clock shows leading zero
+          Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
+          Plugin_057_M->SetDigit(CONFIG(3), hours % 10);
+        } else if (CONFIG(1) == 2) {  // 12-hour clock
+          if (hours < 12) {
+            // to set AM marker, get buffer and add decimal to it.
+            Plugin_057_M->SetRow(CONFIG(5), (Plugin_057_M->GetRow(CONFIG(5)) | 0x80));
+          }
+
+          hours = hours % 12;
+          if (hours == 0) {
+            hours = 12;
+          }
+
+          Plugin_057_M->SetDigit(CONFIG(3), hours % 10);
+
+          if (hours < 10) {
+            // 12-hour clock will show empty segment when hours < 10
+            Plugin_057_M->SetRow(CONFIG(2), 0);
+          } else {
+            Plugin_057_M->SetDigit(CONFIG(2), hours / 10);
+          }
+        }
+
         //if (CONFIG(6) >= 0)
         //  Plugin_057_M->SetRow(CONFIG(6), CONFIG(7));
         Plugin_057_M->TransmitRowBuffer();
