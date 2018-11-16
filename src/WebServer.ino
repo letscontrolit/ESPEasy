@@ -1261,7 +1261,7 @@ void handle_controllers() {
         {
           strncpy_webserver_arg(ControllerSettings.HostName, F("controllerhostname"));
           IPAddress IP;
-          WiFi.hostByName(ControllerSettings.HostName, IP);
+          resolveHostByName(ControllerSettings.HostName, IP);
           for (byte x = 0; x < 4; x++)
             ControllerSettings.IP[x] = IP[x];
         }

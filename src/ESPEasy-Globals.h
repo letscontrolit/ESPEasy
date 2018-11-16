@@ -617,6 +617,10 @@ bool P037_MQTTImport_connected = false;
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 WiFiUDP portUDP;
 
+bool resolveHostByName(const char* aHostname, IPAddress& aResult);
+bool connectClient(WiFiClient& client, const char* hostname, uint16_t port);
+bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port);
+
 class TimingStats;
 
 /*********************************************************************************************\
@@ -651,6 +655,9 @@ uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg);
 int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg);
 I2Cdev i2cdev;
+
+bool safe_strncpy(char* dest, const String& source, size_t max_size);
+bool safe_strncpy(char* dest, const char* source, size_t max_size);
 
 /*********************************************************************************************\
  * SecurityStruct
@@ -994,7 +1001,7 @@ struct ControllerSettingsStruct
   }
 
   void setHostname(const String& controllerhostname) {
-    strncpy(HostName, controllerhostname.c_str(), sizeof(HostName));
+    safe_strncpy(HostName, controllerhostname.c_str(), sizeof(HostName));
     updateIPcache();
   }
 
@@ -1023,7 +1030,7 @@ struct ControllerSettingsStruct
       // In case of domain name resolution error result can be negative.
       // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
       // Thus must match the result with 1.
-      connected = (client.connect(getIP(), Port) == 1);
+      connected = connectClient(client, getIP(), Port);
       if (connected) return true;
       if (!checkHostReachable(false))
         return false;
@@ -1070,7 +1077,7 @@ private:
     }
     if (!WiFiConnected()) return false;
     IPAddress tmpIP;
-    if (WiFi.hostByName(HostName, tmpIP)) {
+    if (resolveHostByName(HostName, tmpIP)) {
       for (byte x = 0; x < 4; x++) {
         IP[x] = tmpIP[x];
       }
@@ -1887,8 +1894,10 @@ unsigned long timingstats_last_reset = 0;
 #define C011_DELAY_QUEUE     24
 #define C012_DELAY_QUEUE     25
 #define C013_DELAY_QUEUE     26
-
-
+#define TRY_CONNECT_HOST_TCP 27
+#define TRY_CONNECT_HOST_UDP 28
+#define HOST_BY_NAME_STATS   29
+#define CONNECT_CLIENT_STATS 30
 
 
 
@@ -1901,9 +1910,9 @@ unsigned long timingstats_last_reset = 0;
 
 String getMiscStatsName(int stat) {
     switch (stat) {
-        case LOADFILE_STATS: return F("Load File");
-        case SAVEFILE_STATS: return F("Save File");
-        case LOOP_STATS:     return F("Loop");
+        case LOADFILE_STATS:        return F("Load File");
+        case SAVEFILE_STATS:        return F("Save File");
+        case LOOP_STATS:            return F("Loop");
         case PLUGIN_CALL_50PS:      return F("Plugin call 50 p/s");
         case PLUGIN_CALL_10PS:      return F("Plugin call 10 p/s");
         case PLUGIN_CALL_10PSU:     return F("Plugin call 10 p/s U");
@@ -1915,6 +1924,10 @@ String getMiscStatsName(int stat) {
         case SET_NEW_TIMER:         return F("setNewTimerAt()");
         case TIME_DIFF_COMPUTE:     return F("timeDiff()");
         case MQTT_DELAY_QUEUE:      return F("Delay queue MQTT");
+        case TRY_CONNECT_HOST_TCP:  return F("try_connect_host() (TCP)");
+        case TRY_CONNECT_HOST_UDP:  return F("try_connect_host() (UDP)");
+        case HOST_BY_NAME_STATS:    return F("hostByName()");
+        case CONNECT_CLIENT_STATS:  return F("connectClient()");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:
@@ -1929,7 +1942,9 @@ String getMiscStatsName(int stat) {
         case C012_DELAY_QUEUE:
         case C013_DELAY_QUEUE:
         {
-          String result = F("Delay queue ");
+          String result;
+          result.reserve(16);
+          result = F("Delay queue ");
           result += get_formatted_Controller_number(static_cast<int>(stat - C001_DELAY_QUEUE + 1));
           return result;
         }
