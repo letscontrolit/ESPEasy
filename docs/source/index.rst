@@ -12,8 +12,8 @@
    If the project doesn't compile, check this tools
    http://rst.ninjs.org/
 
-Welcome to ESPEasy's documentation!
-===================================
+Welcome to ESP Easy's documentation!
+====================================
 
 .. toctree::
    :maxdepth: 2
