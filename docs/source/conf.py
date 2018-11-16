@@ -23,7 +23,7 @@ import sphinx_bootstrap_theme
 
 project = u'ESP Easy'
 copyright = u'2018, ESP Easy'
-author = u'Many'
+author = u'Grovkillen, TD-er & Friends'
 
 # The short X.Y version
 version = u''
