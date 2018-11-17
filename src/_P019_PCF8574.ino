@@ -677,14 +677,25 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
   //generate bitmask
   int i = 0;
   byte portmask = 0;
-  byte mode = 0;
+  //byte mode = 0;
   uint16_t value = 0;
   unit *= 8; // calculate first pin
   unit += 1;
+  
+//TODO: giig1967g: change logic: WRITE function cannot depend from a global structure !
+  const uint32_t key=createKey(PLUGIN_ID_019,unit);
+  const bool existPS = existPortStatus(key);
+
   for(i =0;i<8;i++){
-	  mode =0;
-	  if(!getPinState(PLUGIN_ID_019, unit, &mode, &value) || mode == PIN_MODE_INPUT || (mode == PIN_MODE_OUTPUT && value == 1))
-		  portmask |= (1 << i);
+	  //mode =0;
+
+    if (!existPS)
+      portmask |= (1 << i);
+    else if (globalMapPortStatus[key].mode == PIN_MODE_INPUT || (globalMapPortStatus[key].mode== PIN_MODE_OUTPUT && value == 1))
+      portmask |= (1 << i);
+
+	  //if(!getPinState(PLUGIN_ID_019, unit, &mode, &value) || mode == PIN_MODE_INPUT || (mode == PIN_MODE_OUTPUT && value == 1))
+		  //portmask |= (1 << i);
 	  unit++;
   }
 
