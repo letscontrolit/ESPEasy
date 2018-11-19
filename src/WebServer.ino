@@ -3650,6 +3650,8 @@ void handle_pinstates() {
       case PIN_MODE_OFFLINE:
         TXBuffer += F("Offline");
         break;
+      default:
+        TXBuffer += F("ERROR: Not Defined");
     }
     html_TD();
     TXBuffer += it->second.state;

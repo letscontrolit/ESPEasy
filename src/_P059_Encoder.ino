@@ -108,6 +108,8 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        portStatusStruct newStatus;
+
         // create sensor instance and add to std::map
         P_059_sensordefs.erase(event->TaskIndex);
         P_059_sensordefs[event->TaskIndex] = std::shared_ptr<QEIx4>(new QEIx4);
@@ -125,7 +127,14 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
           if (pin >= 0)
           {
             //pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
-            setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
+            const uint32_t key = createKey(PLUGIN_ID_059,pin);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            newStatus = globalMapPortStatus[key];
+            newStatus.task++; // add this GPIO/port as a task
+            newStatus.mode = PIN_MODE_INPUT;
+            newStatus.state = 0;
+            savePortStatus(key,newStatus);
+            //setPinState(PLUGIN_ID_059, pin, PIN_MODE_INPUT, 0);
           }
           log += pin;
           log += ' ';

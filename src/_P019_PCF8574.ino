@@ -433,7 +433,9 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         // We do not actually read the pin state as this is already done 10x/second
         // Instead we just send the last known state stored in Uservar
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("PCF  : State ");
+          String log = F("PCF  : Port= ");
+          log += Settings.TaskDevicePort[event->TaskIndex];
+          log += F(" State=");
           log += UserVar[event->BaseVarIndex];
           addLog(LOG_LEVEL_INFO, log);
         }
@@ -467,7 +469,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         if (command == F("pcfgpio"))
         {
           success = true;
-          if (event->Par1 >= 0) {
+          if (event->Par1 > 0 && event->Par1 <= 128)
+          {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par1);
             // WARNING: operator [] creates an entry in the map if key does not exist
@@ -502,7 +505,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           }
         } else if (command == F("pcfgpiotoggle")) {
           success = true;
-          if (event->Par1 >= 0)
+          if (event->Par1 > 0 && event->Par1 <= 128)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par1);
@@ -517,7 +520,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               tempStatus.state=-1;
               log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
               needToSave = true;
-            } else if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED || tempStatus.mode == PIN_MODE_OFFLINE) { //toggle only output pins
+            } else if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED) { //toggle only output pins
               tempStatus.state = !currentState; //toggle current state value
               tempStatus.mode = PIN_MODE_OUTPUT;
               Plugin_019_Write(event->Par1, tempStatus.state);
@@ -535,7 +538,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           }
         } else if (command == F("pcfpulse")) {
           success = true;
-          if (event->Par1 >= 0)
+          if (event->Par1 > 0 && event->Par1 <= 128)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par1);
@@ -561,7 +564,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           }
         } else if (command == F("pcflongpulse")) {
           success = true;
-          if (event->Par1 >= 0)
+          if (event->Par1 > 0 && event->Par1 <= 128)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par1);
@@ -587,15 +590,16 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           if (parseString(string, 2) == F("pcf"))
           {
             success = true;
-            portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par2); //WARNING: 'status' uses Par2 instead of Par1
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
 
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, tempStatus.state);
+            if (existPortStatus(key))  // has been set as output
+              SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+            else
+            {
+              int state = Plugin_019_Read(event->Par2); // report as input
+              if (state != -1)
+                SendStatusOnlyIfNeeded(event->Source, NO_SEARCH_PIN_STATE, key, dummyString, state);
+            }
           }
         }  else if (command == F("monitor")) {
           if (parseString(string, 2) == F("pcf"))
@@ -663,11 +667,42 @@ int8_t Plugin_019_Read(byte Par1)
   return state;
 }
 
+uint8_t Plugin_019_ReadAllPins(uint8_t address)
+{
+  uint8_t rawState = 0;
+
+  Wire.requestFrom(address, (uint8_t)0x1);
+  if (Wire.available())
+  {
+    rawState =Wire.read();
+  }
+  return rawState;
+}
 
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
 boolean Plugin_019_Write(byte Par1, byte Par2)
+{
+  byte unit = (Par1 - 1) / 8;
+  byte port = Par1 - (unit * 8);
+  uint8_t address = 0x20 + unit;
+  if (unit > 7) address += 0x10;
+
+  uint8_t rawState = Plugin_019_ReadAllPins(address);
+  if (Par2 == 0)
+    rawState &=  ~(1<<(port-1));
+  else
+    rawState |= (1<<(port-1));
+
+  Wire.beginTransmission(address);
+  Wire.write(rawState);
+  Wire.endTransmission();
+
+  return true;
+}
+
+boolean Plugin_019_Write2(byte Par1, byte Par2)
 {
   byte unit = (Par1 - 1) / 8;
   byte port = Par1 - (unit * 8);
@@ -681,7 +716,7 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
   uint16_t value = 0;
   unit *= 8; // calculate first pin
   unit += 1;
-  
+
 //TODO: giig1967g: change logic: WRITE function cannot depend from a global structure !
   const uint32_t key=createKey(PLUGIN_ID_019,unit);
   const bool existPS = existPortStatus(key);

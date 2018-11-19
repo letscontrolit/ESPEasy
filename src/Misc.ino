@@ -293,6 +293,7 @@ String formatGpioName_RX_HW(bool optional) {
 /*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
+/*
 void setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
@@ -320,11 +321,13 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
       }
   }
 }
-
+*/
 
 /*********************************************************************************************\
    get pin mode & state (info table)
   \*********************************************************************************************/
+
+/*
 boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -337,10 +340,11 @@ boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
   return false;
 }
 
-
+*/
 /*********************************************************************************************\
    check if pin mode & state is known (info table)
   \*********************************************************************************************/
+/*
 boolean hasPinState(byte plugin, byte index)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -351,6 +355,7 @@ boolean hasPinState(byte plugin, byte index)
   return false;
 }
 
+*/
 
 /*********************************************************************************************\
    Bitwise operators
@@ -368,12 +373,15 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
+/*
 String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
 {
   //TODO: giig1967g: rimuovere funzione
   addLog(LOG_LEVEL_INFO,F("ERROR called OLD getPinStateJSON"));
   return "ERROR called OLD getPinStateJSON";
 }
+*/
+
 String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
@@ -417,6 +425,12 @@ String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSea
       case PIN_MODE_INPUT:
         reply += F("input");
         break;
+      case PIN_MODE_INPUT_PULLUP:
+        reply += F("input pullup");
+        break;
+      case PIN_MODE_OFFLINE:
+        reply += F("offline");
+        break;
       case PIN_MODE_OUTPUT:
         reply += F("output");
         break;
@@ -426,6 +440,8 @@ String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSea
       case PIN_MODE_SERVO:
         reply += F("servo");
         break;
+      default:
+        reply += F("ERROR: Not Defined");
     }
     reply += F("\",\n\"state\": ");
     reply += value;

@@ -126,6 +126,8 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        portStatusStruct newStatus;
+
         int16_t pinSCL = PIN(0);
         int16_t pinSDO = PIN(1);
 
@@ -139,10 +141,25 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
         {
           pinMode(pinSCL, OUTPUT);
           digitalWrite(pinSCL, LOW);
-          setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
+          uint32_t key = createKey(PLUGIN_ID_063,pinSCL);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          newStatus = globalMapPortStatus[key];
+          newStatus.task++; // add this GPIO/port as a task
+          newStatus.mode = PIN_MODE_OUTPUT;
+          newStatus.state = 0;
+          savePortStatus(key,newStatus);
+          //setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
+
           pinMode(pinSDO, OUTPUT);
           digitalWrite(pinSDO, LOW);
-          setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
+          key = createKey(PLUGIN_ID_063,pinSDO);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          newStatus = globalMapPortStatus[key];
+          newStatus.task++; // add this GPIO/port as a task
+          newStatus.mode = PIN_MODE_INPUT;
+          newStatus.state = 0;
+          savePortStatus(key,newStatus);
+          //setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
         }
 
         success = true;

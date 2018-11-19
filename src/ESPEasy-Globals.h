@@ -337,7 +337,7 @@
 #define NPLUGIN_MAX                         4
 #define UNIT_MAX                          254 // unit 255 = broadcast
 #define RULES_TIMER_MAX                     8
-#define PINSTATE_TABLE_MAX                 32
+//#define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
 #define RULESETS_MAX                        4
@@ -1500,6 +1500,7 @@ enum gpio_direction {
 /*********************************************************************************************\
  * pinStatesStruct
 \*********************************************************************************************/
+/*
 struct pinStatesStruct
 {
   pinStatesStruct() : value(0), plugin(0), index(0), mode(0) {}
@@ -1508,7 +1509,7 @@ struct pinStatesStruct
   byte index;
   byte mode;
 } pinStates[PINSTATE_TABLE_MAX];
-
+*/
 
 // this offsets are in blocks, bytes = blocks * 4
 #define RTC_BASE_STRUCT 64

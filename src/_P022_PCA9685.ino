@@ -87,7 +87,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           optionValues[i] = PCA9685_ADDRESS + i;
         }
         addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
-        
+
         String m2Options[PCA9685_MODE2_VALUES];
         int m2Values[PCA9685_MODE2_VALUES];
         for (int i=0;i < PCA9685_MODE2_VALUES; i++)
@@ -175,9 +175,20 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
                 Plugin_022_Frequency(address, freq);
               }
               Plugin_022_Write(address, event->Par1, map(event->Par2, 0, range, 0, PCA9685_MAX_PWM));
-              setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
+
+              //setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
+              portStatusStruct newStatus;
+              const uint32_t key = createKey(PLUGIN_ID_022,event->Par1);
+              // WARNING: operator [] creates an entry in the map if key does not exist
+              newStatus = globalMapPortStatus[key];
+              newStatus.command=1;
+              newStatus.mode = PIN_MODE_PWM;
+              newStatus.state = event->Par2;
+              savePortStatus(key,newStatus);
+
               addLog(LOG_LEVEL_INFO, log);
-              SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+              //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+              SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
             }
             else{
               addLog(LOG_LEVEL_ERROR, log + String(F(" the pwm value ")) + String(event->Par2) + String(F(" is invalid value.")));
@@ -199,10 +210,21 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
             }
             Plugin_022_Frequency(address, event->Par1);
-            setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
+
+            //setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
+            portStatusStruct newStatus;
+            const uint32_t key = createKey(PLUGIN_ID_022,99);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            newStatus = globalMapPortStatus[key];
+            newStatus.command=1;
+            newStatus.mode = PIN_MODE_UNDEFINED;
+            newStatus.state = event->Par1;
+            savePortStatus(key,newStatus);
+
             log = String(F("PCA 0x")) + String(address, HEX) + String(F(": FREQ ")) + String(event->Par1);
             addLog(LOG_LEVEL_INFO, log);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
           }
           else{
             addLog(LOG_LEVEL_ERROR,String(F("PCA 0x")) + String(address, HEX) + String(F(" The frequency ")) + String(event->Par1) + String(F(" is out of range.")));
@@ -239,7 +261,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               Plugin_022_Frequency(address, freq);
             }
             success = true;
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE,createKey(PLUGIN_ID_022,event->Par2), dummyString, 0);
           }
         }
 
@@ -276,8 +299,18 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               Plugin_022_On(address, pin);
             }
             addLog(LOG_LEVEL_INFO, log);
-            setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
+            //setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);
+            portStatusStruct newStatus;
+            const uint32_t key = createKey(PLUGIN_ID_022,pin);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            newStatus = globalMapPortStatus[key];
+            newStatus.command=1;
+            newStatus.mode = PIN_MODE_OUTPUT;
+            newStatus.state = event->Par2;
+            savePortStatus(key,newStatus);
+
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
           }
           else{
             addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
@@ -334,9 +367,19 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               , !event->Par2
               , event->Par3
               , autoreset);
-            setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            //setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            portStatusStruct newStatus;
+            const uint32_t key = createKey(PLUGIN_ID_022,event->Par1);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            newStatus = globalMapPortStatus[key];
+            newStatus.command=1;
+            newStatus.mode = PIN_MODE_OUTPUT;
+            newStatus.state = event->Par2;
+            savePortStatus(key,newStatus);
+
             addLog(LOG_LEVEL_INFO, log);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
           }
           else{
             addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
@@ -374,8 +417,18 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             , event->Par3
             , autoreset);
         }
-        setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-        SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+        //setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+        portStatusStruct newStatus;
+        const uint32_t key = createKey(PLUGIN_ID_022,event->Par1);
+        // WARNING: operator [] creates an entry in the map if key does not exist
+        newStatus = globalMapPortStatus[key];
+        newStatus.command=1;
+        newStatus.mode = PIN_MODE_OUTPUT;
+        newStatus.state = event->Par2;
+        savePortStatus(key,newStatus);
+
+        //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
         break;
       }
   }
