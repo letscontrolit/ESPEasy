@@ -38,7 +38,7 @@ static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 
 // Instantiate display here - does not work to do this within the INIT call
 
-OLEDDisplay *display=NULL;
+OLEDDisplay *display=nullptr;
 
 String P036_displayLines[P36_Nlines];
 
@@ -268,7 +268,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           {
             display->end();
             delete display;
-            display=NULL;
+            display=nullptr;
           }
           for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
             P036_displayLines[varNr] = "";

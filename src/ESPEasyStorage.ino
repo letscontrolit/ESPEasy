@@ -832,7 +832,7 @@ String getPartitionTable(byte pType, const String& itemSep, const String& lineEn
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   String result;
   const esp_partition_t * _mypart;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   if (_mypartiterator) {
     do {
       _mypart = esp_partition_get(_mypartiterator);
@@ -846,7 +846,7 @@ String getPartitionTable(byte pType, const String& itemSep, const String& lineEn
       result += itemSep;
       result += (_mypart->encrypted ? F("Yes") : F("-"));
       result += lineEnd;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return result;

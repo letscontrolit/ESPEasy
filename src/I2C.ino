@@ -74,7 +74,7 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok) {
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
   byte count = Wire.requestFrom(i2caddr, (byte)1);
-  if (is_ok != NULL) {
+  if (is_ok != nullptr) {
     *is_ok = (count == 1);
   }
   value = Wire.read();

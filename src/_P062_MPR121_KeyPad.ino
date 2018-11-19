@@ -23,7 +23,7 @@
 
 #include <Adafruit_MPR121.h>
 
-Adafruit_MPR121* Plugin_062_K = NULL;
+Adafruit_MPR121* Plugin_062_K = nullptr;
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])

@@ -108,14 +108,14 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string)
           byte choiceSensor = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
           String optionsSensor[7] = { F("Error Status"), F("Carbon Dioxide"), F("Temperature"), F("Humidity"), F("Relay Status"), F("Temperature Adjustment"), F("ABC period") };
-          addFormSelector(F("Sensor"), F("p052_sensor"), 7, optionsSensor, NULL, choiceSensor);
+          addFormSelector(F("Sensor"), F("p052_sensor"), 7, optionsSensor, nullptr, choiceSensor);
 
           /*
           // ABC functionality disabled for now, due to a bug in the firmware.
           // See https://github.com/letscontrolit/ESPEasy/issues/759
           byte choiceABCperiod = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
           String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1 day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
-          addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod, NULL, choiceABCperiod);
+          addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod, nullptr, choiceABCperiod);
           */
 
           success = true;

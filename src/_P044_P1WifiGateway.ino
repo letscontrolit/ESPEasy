@@ -170,7 +170,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         if (P1GatewayServer) {
           P1GatewayServer->close();
           delete P1GatewayServer;
-          P1GatewayServer = NULL;
+          P1GatewayServer = nullptr;
         }
         success = true;
         break;
@@ -434,7 +434,7 @@ bool checkDatagram(int len) {
         Serial.print(Plugin_044_serial_buf[cnt]);
     }
 
-    validCRCFound = (strtoul(messageCRC, NULL, 16) == currCRC);
+    validCRCFound = (strtoul(messageCRC, nullptr, 16) == currCRC);
     if (!validCRCFound) {
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid CRC found"));
     }

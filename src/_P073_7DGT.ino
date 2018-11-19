@@ -41,7 +41,7 @@ class p073_7dgt
     byte brightness;
     boolean timesep;
 };
-p073_7dgt *Plugin_073_7dgt = NULL;
+p073_7dgt *Plugin_073_7dgt = nullptr;
 //---------------------------------------------------
 
 uint8_t p073_showbuffer[8];
@@ -103,9 +103,9 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string)
         addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
         addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
         String displtype[5] = { F("TM1637 - 4 digit (colon)"), F("TM1637 - 4 digit (dots)"), F("TM1637 - 6 digit"), F("MAX7219 - 8 digit")};
-        addFormSelector(F("Display Type"), F("p073_displtype"), 4, displtype, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addFormSelector(F("Display Type"), F("p073_displtype"), 4, displtype, nullptr, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
         String displout[4] = { F("Manual"), F("Clock - Blink"), F("Clock - No Blink"), F("Date")  };
-        addFormSelector(F("Display Output"), F("p073_displout"), 4, displout, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormSelector(F("Display Output"), F("p073_displout"), 4, displout, nullptr, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
         addFormNumericBox(F("Brightness"), F("p073_brightness"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 15);
         success = true;
         break;

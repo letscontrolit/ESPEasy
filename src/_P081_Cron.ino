@@ -99,7 +99,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       if(/*strcmp(expression, state.Expression)*/1 != 0)
       {
         cron_expr expr;
-        const char* err = NULL;
+        const char* err = nullptr;
         memset(&expr, 0, sizeof(expr));
         cron_parse_expr(expression, &expr, &err);
         if (!err)

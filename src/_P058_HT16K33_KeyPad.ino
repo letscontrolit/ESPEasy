@@ -35,7 +35,7 @@
 
 #include <HT16K33.h>
 
-CHT16K33* Plugin_058_K = NULL;
+CHT16K33* Plugin_058_K = nullptr;
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])

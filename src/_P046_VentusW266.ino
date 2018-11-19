@@ -154,7 +154,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         options[7] = F("Unknown 2, byte 16");
         options[8] = F("Unknown 3, byte 19");
 
-        addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+        addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice);
 
         if (choice==0) {
           addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));

@@ -249,12 +249,12 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
           //  unsigned long IrSecondCode=0UL;
             char ircodestr[200];
             if (GetArgv(command, TmpStr1,200, 2)) IrType = TmpStr1;
-                       if (GetArgv(command, TmpStr1, 200, 3)){ IrCode = strtoull(TmpStr1, NULL, 16);
+                       if (GetArgv(command, TmpStr1, 200, 3)){ IrCode = strtoull(TmpStr1, nullptr, 16);
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*200);
                                                         }
             //if (GetArgv(command, TmpStr1, 200, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
             //if (GetArgv(command, TmpStr1, 200, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
-            //if (GetArgv(command, TmpStr1, 200, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
+            //if (GetArgv(command, TmpStr1, 200, 6)) IrSecondCode = strtoul(TmpStr1, nullptr, 16);
 
             //Comented out need char[] for input Needs fixing
             if (IrType.equalsIgnoreCase(F("NEC"))) Plugin_035_irSender->sendNEC(IrCode);
@@ -621,7 +621,7 @@ void parseStringAndSendPronto(const String str, uint16_t repeats) {
     index = str.indexOf(',', start_from);
     // Convert the hexadecimal value string to an unsigned integer.
     code_array[count] = strtoul(str.substring(start_from, index).c_str(),
-                                NULL, 16);
+                                nullptr, 16);
     start_from = index + 1;
     count++;
   } while (index != -1);
@@ -738,7 +738,7 @@ uint16_t countValuesInStr(const String str, char sep) {
 //
 //  result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
 //  // Check we malloc'ed successfully.
-//  if (result == NULL) {  // malloc failed, so give up.
+//  if (result == nullptr) {  // malloc failed, so give up.
 //    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
 //                  size * sizeof(uint16_t), ESP.getFreeHeap());
 //    Serial.println("Giving up & forcing a reboot.");

@@ -11,7 +11,7 @@
 //  Pump:[Pump#on#O] -> ON/OFF
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C *lcd=NULL;
+LiquidCrystal_I2C *lcd=nullptr;
 int Plugin_012_cols = 16;
 int Plugin_012_rows = 2;
 int Plugin_012_mode = 1;

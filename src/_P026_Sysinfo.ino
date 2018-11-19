@@ -59,13 +59,13 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         options[11] = F("None");
 
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        addFormSelector(F("Indicator"), F("p026a"), 12, options, NULL, choice);
+        addFormSelector(F("Indicator"), F("p026a"), 12, options, nullptr, choice);
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        addFormSelector(F("Indicator"), F("p026b"), 12, options, NULL, choice);
+        addFormSelector(F("Indicator"), F("p026b"), 12, options, nullptr, choice);
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        addFormSelector(F("Indicator"), F("p026c"), 12, options, NULL, choice);
+        addFormSelector(F("Indicator"), F("p026c"), 12, options, nullptr, choice);
         choice = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        addFormSelector(F("Indicator"), F("p026d"), 12, options, NULL, choice);
+        addFormSelector(F("Indicator"), F("p026d"), 12, options, nullptr, choice);
 
         success = true;
         break;

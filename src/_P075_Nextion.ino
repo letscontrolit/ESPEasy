@@ -57,7 +57,7 @@
 
 
 // Global vars
-ESPeasySoftwareSerial *SoftSerial = NULL;
+ESPeasySoftwareSerial *SoftSerial = nullptr;
 int rxPin = -1;
 int txPin = -1;
 
@@ -170,7 +170,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       options[2] = F("57600");
       options[3] = F("115200");
 
-      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, NULL, choice);
+      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, choice);
       addFormNote(F("Un-check box for Soft Serial communication (low performance mode, 9600 Baud)."));
       addFormNote(F("Hardware Serial is available when the GPIO pins are RX=D7 and TX=D8."));
       addFormNote(F("D8 (GPIO-15) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
@@ -252,9 +252,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         txPin = Settings.TaskDevicePin2[event->TaskIndex];
       }
 
-      if (SoftSerial != NULL) {
+      if (SoftSerial != nullptr) {
         delete SoftSerial;
-        SoftSerial = NULL;
+        SoftSerial = nullptr;
       }
 
       String log;
@@ -299,7 +299,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             log = F("NEXTION075 : Using software serial");
             addLog(LOG_LEVEL_INFO, log);
             HwSerial = SOFTSERIAL;
-            if (SoftSerial == NULL) {
+            if (SoftSerial == nullptr) {
                 SoftSerial = new ESPeasySoftwareSerial(rxPin, txPin, false, RXBUFFSZ);
             }
             SoftSerial->begin(9600);
@@ -443,7 +443,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT: {
         if (SoftSerial) {
             delete SoftSerial;
-            SoftSerial=NULL;
+            SoftSerial=nullptr;
         }
 
         if(HwSerial == UARTSERIAL) {
@@ -494,7 +494,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         }
       }
       else {
-        if(SoftSerial == NULL) break;                   // SoftSerial missing, exit.
+        if(SoftSerial == nullptr) break;                   // SoftSerial missing, exit.
         charCount = SoftSerial->available();            // Prime the Soft Serial engine.
         if(charCount >= RXBUFFWARN) {
             String log;
@@ -653,7 +653,7 @@ void sendCommand(const char *cmd, boolean SerialMode)
         Serial.write(0xff);
     }
     else {                                              // Send command using bit-bang soft serial.
-        if(SoftSerial != NULL){
+        if(SoftSerial != nullptr){
             SoftSerial->print(cmd);
             SoftSerial->write(0xff);
             SoftSerial->write(0xff);

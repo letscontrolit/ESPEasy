@@ -7,7 +7,7 @@ void logStatistics(byte loglevel, bool clearStats) {
         if (!x.second.isEmpty()) {
             const int pluginId = x.first/32;
             String P_name = "";
-            Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+            Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, nullptr, P_name);
             log = F("PluginStats P_");
             log += pluginId + 1;
             log += '_';

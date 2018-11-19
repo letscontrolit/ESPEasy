@@ -20,7 +20,7 @@
 #include <jkSDS011.h>
 
 
-CjkSDS011 *Plugin_056_SDS = NULL;
+CjkSDS011 *Plugin_056_SDS = nullptr;
 
 
 boolean Plugin_056(byte function, struct EventStruct *event, String& string)

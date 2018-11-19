@@ -264,11 +264,11 @@ struct ControllerDelayHandlerStruct {
   // Get the next element.
   // Remove front element when max_retries is reached.
   T* getNext() {
-    if (sendQueue.empty()) return NULL;
+    if (sendQueue.empty()) return nullptr;
     if (attempt > max_retries) {
       sendQueue.pop_front();
       attempt = 0;
-      if (sendQueue.empty()) return NULL;
+      if (sendQueue.empty()) return nullptr;
     }
     return &sendQueue.front();
   }
@@ -334,7 +334,7 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
                 bool do_process_c##NNN##_delay_queue(int controller_number, const C##NNN##_queue_element& element, ControllerSettingsStruct& ControllerSettings); \
                 void process_c##NNN##_delay_queue() { \
                   C##NNN##_queue_element* element(C##NNN##_DelayHandler.getNext()); \
-                  if (element == NULL) return; \
+                  if (element == nullptr) return; \
                   MakeControllerSettings(ControllerSettings); \
                   LoadControllerSettings(element->controller_idx, ControllerSettings); \
                   C##NNN##_DelayHandler.configureControllerSettings(ControllerSettings); \

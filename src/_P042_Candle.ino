@@ -163,7 +163,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         }
 
         // Candle Type Selection
-        addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+        addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, nullptr, choice);
 
         // Advanced Color options
         Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];
@@ -419,7 +419,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           }
 
           if (val_Color != "") {
-            long number = strtol( &val_Color[0], NULL, 16);
+            long number = strtol( &val_Color[0], nullptr, 16);
             // Split RGB to r, g, b values
             byte r = number >> 16;
             byte g = number >> 8 & 0xFF;

@@ -135,7 +135,7 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
       For strings, always use the F() macro, which stores the string in flash, not in memory.
 
       //String dropdown[5] = { F("option1"), F("option2"), F("option3"), F("option4")};
-      //addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, NULL, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      //addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, nullptr, Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
       //number selection (min-value - max-value)
       addFormNumericBox(string, F("description"), F("plugin_xxx_description"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], min-value, max-value);

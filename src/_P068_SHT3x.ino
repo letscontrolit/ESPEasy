@@ -87,7 +87,7 @@ void SHT3X::get()
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-SHT3X*  Plugin_068_SHT3x[TASKS_MAX] = { NULL, };
+SHT3X*  Plugin_068_SHT3x[TASKS_MAX] = { nullptr, };
 
 
 //==============================================

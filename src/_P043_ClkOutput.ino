@@ -67,7 +67,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
           addHtml(" ");
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-          addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice, false);
+          addSelector(String(F("p043_state")) + (x), 3, options, nullptr, nullptr, choice, false);
         }
         success = true;
         break;

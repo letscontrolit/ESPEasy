@@ -42,7 +42,7 @@
 #define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
-ESPeasySoftwareSerial* Plugin_065_SoftSerial = NULL;
+ESPeasySoftwareSerial* Plugin_065_SoftSerial = nullptr;
 
 
 boolean Plugin_065(byte function, struct EventStruct *event, String& string)

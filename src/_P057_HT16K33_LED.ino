@@ -69,7 +69,7 @@
 
 #include <HT16K33.h>
 
-CHT16K33* Plugin_057_M = NULL;
+CHT16K33* Plugin_057_M = nullptr;
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -117,7 +117,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         int16_t choice = CONFIG(1);
         String options[3] = {F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)")};
-        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
+        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, nullptr, choice);
 
         addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), CONFIG(2), 0, 7);
         addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"), CONFIG(3), 0, 7);

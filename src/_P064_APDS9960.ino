@@ -34,7 +34,7 @@
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-SparkFun_APDS9960* PLUGIN_064_pds = NULL;
+SparkFun_APDS9960* PLUGIN_064_pds = nullptr;
 
 
 boolean Plugin_064(byte function, struct EventStruct *event, String& string)

@@ -137,7 +137,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         options[7] = F("G-force X");
         options[8] = F("G-force Y");
         options[9] = F("G-force Z");
-        addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
+        addFormSelector(F("Function"), F("p045_function"), 10, options, nullptr, choice);
 
         if (choice == 0) {
           // If this is instance function 0, setup webform for additional vars

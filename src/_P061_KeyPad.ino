@@ -110,7 +110,7 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
           addFormNote(F("PCF8574 uses address 0x20+; PCF8574<b>A</b> uses address 0x38+"));
 
         String options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
-        addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, NULL, CONFIG(1));
+        addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, nullptr, CONFIG(1));
 
         success = true;
         break;

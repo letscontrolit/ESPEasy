@@ -22,7 +22,7 @@
 #define PMSx003_SIG2 0X4d
 #define PMSx003_SIZE 32
 
-ESPeasySoftwareSerial *swSerial = NULL;
+ESPeasySoftwareSerial *swSerial = nullptr;
 boolean Plugin_053_init = false;
 boolean values_received = false;
 
@@ -34,7 +34,7 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
   uint8_t data_high, data_low;
 
   // If swSerial is initialized, we are using soft serial
-  if (swSerial != NULL)
+  if (swSerial != nullptr)
   {
     data_high = swSerial->read();
     data_low = swSerial->read();
@@ -48,7 +48,7 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
   *value = data_low;
   *value |= (data_high << 8);
 
-  if (checksum != NULL)
+  if (checksum != nullptr)
   {
     *checksum += data_high;
     *checksum += data_low;
@@ -67,7 +67,7 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 }
 
 void SerialFlush() {
-  if (swSerial != NULL) {
+  if (swSerial != nullptr) {
     swSerial->flush();
   } else {
     Serial.flush();
@@ -76,7 +76,7 @@ void SerialFlush() {
 
 boolean PacketAvailable(void)
 {
-  if (swSerial != NULL) // Software serial
+  if (swSerial != nullptr) // Software serial
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
@@ -157,7 +157,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   }
 
   // Compare checksums
-  SerialRead16(&checksum2, NULL);
+  SerialRead16(&checksum2, nullptr);
   SerialFlush(); // Make sure no data is lost due to full buffer.
   if (checksum == checksum2)
   {
@@ -230,10 +230,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         log += resetPin;
         addLog(LOG_LEVEL_DEBUG, log);
 
-        if (swSerial != NULL) {
+        if (swSerial != nullptr) {
           // Regardless the set pins, the software serial must be deleted.
           delete swSerial;
-          swSerial = NULL;
+          swSerial = nullptr;
         }
 
         // Hardware serial is RX on 3 and TX on 1
@@ -275,7 +275,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           if (swSerial)
           {
             delete swSerial;
-            swSerial=NULL;
+            swSerial=nullptr;
           }
           break;
       }

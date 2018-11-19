@@ -297,7 +297,7 @@ void scheduleNextMQTTdelayQueue() {
 void processMQTTdelayQueue() {
   START_TIMER;
   MQTT_queue_element* element(MQTTDelayHandler.getNext());
-  if (element == NULL) return;
+  if (element == nullptr) return;
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     MQTTDelayHandler.markProcessed(true);

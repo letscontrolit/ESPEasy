@@ -1388,7 +1388,7 @@ void handle_controllers() {
       if (!Protocol[ProtocolIndex].Custom)
       {
 
-        addFormSelector(F("Locate Controller"), F("usedns"), 2, options, NULL, NULL, choice, true);
+        addFormSelector(F("Locate Controller"), F("usedns"), 2, options, nullptr, nullptr, choice, true);
         if (ControllerSettings.UseDNS)
         {
           addFormTextBox( F("Controller Hostname"), F("controllerhostname"), ControllerSettings.HostName, sizeof(ControllerSettings.HostName)-1);
@@ -1403,9 +1403,9 @@ void handle_controllers() {
         addUnit(F("ms"));
         addFormNumericBox( F("Max Queue Depth"), F("maxqueuedepth"), ControllerSettings.MaxQueueDepth, 1, CONTROLLER_DELAY_QUEUE_DEPTH_MAX);
         addFormNumericBox( F("Max Retries"), F("maxretry"), ControllerSettings.MaxRetry, 1, CONTROLLER_DELAY_QUEUE_RETRY_MAX);
-        addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, NULL, NULL, choice_delete_oldest, true);
+        addFormSelector(F("Full Queue Action"), F("deleteoldest"), 2, options_delete_oldest, nullptr, nullptr, choice_delete_oldest, true);
 
-        addFormSelector(F("Check Reply"), F("mustcheckreply"), 2, options_mustcheckreply, NULL, NULL, choice_mustcheckreply, true);
+        addFormSelector(F("Check Reply"), F("mustcheckreply"), 2, options_mustcheckreply, nullptr, nullptr, choice_mustcheckreply, true);
         addFormNumericBox( F("Client Timeout"), F("clienttimeout"), ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
         addUnit(F("ms"));
 
@@ -1796,7 +1796,7 @@ void addFormPinStateSelect(const String& label, const String& id, int choice, bo
 void addPinStateSelect(String name, int choice, bool enabled)
 {
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
-  addSelector(name, 4, options, NULL, NULL, choice, false, enabled);
+  addSelector(name, 4, options, nullptr, nullptr, choice, false, enabled);
 }
 
 //********************************************************************************
@@ -1811,7 +1811,7 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 void addIPaccessControlSelect(String name, int choice)
 {
   String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
-  addSelector(name, 3, options, NULL, NULL, choice, false);
+  addSelector(name, 3, options, nullptr, nullptr, choice, false);
 }
 
 
@@ -2714,12 +2714,12 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     if (x == 0)
       options[x] += F(" - (default)");
   }
-  addFormSelector(F("I2C Address"), id, addressCount, options, addresses, NULL, selectedIndex, false);
+  addFormSelector(F("I2C Address"), id, addressCount, options, addresses, nullptr, selectedIndex, false);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, false);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex, boolean reloadonchange)
@@ -4203,7 +4203,7 @@ void stream_plugin_function_timing_stats_json(
 
 void stream_plugin_timing_stats_json(int pluginId) {
   String P_name = "";
-  Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+  Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, nullptr, P_name);
   TXBuffer += '{';
   stream_next_json_object_value(F("name"), P_name);
   stream_next_json_object_value(F("id"), String(pluginId));
@@ -4278,7 +4278,7 @@ void stream_timing_statistics(bool clearStats) {
       if (!x.second.isEmpty()) {
           const int pluginId = x.first/32;
           String P_name = "";
-          Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
+          Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, nullptr, P_name);
           if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
             html_TR_TD_highlight();
           } else {
@@ -4504,11 +4504,11 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   addRowLabel(weeklabel);
-  addSelector(weekid, 5, week, weekValues, NULL, rule.week, false);
+  addSelector(weekid, 5, week, weekValues, nullptr, rule.week, false);
   TXBuffer += F("<BR>");
-  addSelector(dowid, 7, dow, dowValues, NULL, rule.dow, false);
+  addSelector(dowid, 7, dow, dowValues, nullptr, rule.dow, false);
   TXBuffer += F("<BR>");
-  addSelector(monthid, 12, month, monthValues, NULL, rule.month, false);
+  addSelector(monthid, 12, month, monthValues, nullptr, rule.month, false);
 
   addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
   addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
@@ -4529,7 +4529,7 @@ void addLogLevelSelect(String name, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice, false);
+  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, nullptr, choice, false);
 }
 
 void addFormLogFacilitySelect(const String& label, const String& id, int choice)
@@ -4542,7 +4542,7 @@ void addLogFacilitySelect(String name, int choice)
 {
   String options[12] = { F("Kernel"), F("User"), F("Daemon"), F("Message"), F("Local0"), F("Local1"), F("Local2"), F("Local3"), F("Local4"), F("Local5"), F("Local6"), F("Local7")};
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
-  addSelector(name, 12, options, optionValues, NULL, choice, false);
+  addSelector(name, 12, options, optionValues, nullptr, choice, false);
 }
 
 
@@ -5576,7 +5576,7 @@ void handle_rules() {
   }
 
    html_TR_TD();
-  addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
+  addSelector(F("set"), RULESETS_MAX, options, optionValues, nullptr, choice, true);
   addHelpButton(F("Tutorial_Rules"));
 
   // load form data from flash
@@ -6378,12 +6378,12 @@ void getStorageTableSVG(SettingsType settingsType) {
 
 int getPartionCount(byte pType) {
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   int nrPartitions = 0;
   if (_mypartiterator) {
     do {
       ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return nrPartitions;
@@ -6397,7 +6397,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
   uint32_t realSize = getFlashRealSizeInBytes();
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t * _mypart;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
   if (_mypartiterator) {
@@ -6413,7 +6413,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
       textXoffset = SVG_BAR_WIDTH + 130;
       createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
       yOffset += SVG_BAR_HEIGHT;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   TXBuffer += F("</svg>\n");
   esp_partition_iterator_release(_mypartiterator);

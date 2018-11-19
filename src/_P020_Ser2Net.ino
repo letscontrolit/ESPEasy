@@ -79,7 +79,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         options2[0] = F("None");
         options2[1] = F("Generic");
         options2[2] = F("RFLink");
-        addFormSelector(F("Event processing"), F("p020_events"), 3, options2, NULL, choice2);
+        addFormSelector(F("Event processing"), F("p020_events"), 3, options2, nullptr, choice2);
 
         success = true;
         break;

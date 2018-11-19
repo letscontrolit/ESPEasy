@@ -64,7 +64,7 @@ boolean CPlugin_012(byte function, struct EventStruct *event, String& string)
 }
 
 //********************************************************************************
-// Process Queued Blynk request, with data set to NULL
+// Process Queued Blynk request, with data set to nullptr
 //********************************************************************************
 bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {

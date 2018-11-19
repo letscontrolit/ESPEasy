@@ -648,7 +648,7 @@ String to_json_object_value(const String& object, const String& value);
 
 bool I2C_read_bytes(uint8_t i2caddr, I2Cdata_bytes& data);
 bool I2C_write8_reg(uint8_t i2caddr, byte reg, byte value);
-uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok = NULL);
+uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok = nullptr);
 uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg);
 int32_t I2C_read24_reg(uint8_t i2caddr, byte reg);
 uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg);
@@ -1212,7 +1212,7 @@ struct ExtraTaskSettingsStruct
 struct EventStruct
 {
   EventStruct() :
-    Data(NULL), idx(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
+    Data(nullptr), idx(0), Par1(0), Par2(0), Par3(0), Par4(0), Par5(0),
     Source(0), TaskIndex(TASKS_MAX), ControllerIndex(0), ProtocolIndex(0), NotificationIndex(0),
     BaseVarIndex(0), sensorType(0), OriginTaskIndex(0) {}
   EventStruct(const struct EventStruct& event):

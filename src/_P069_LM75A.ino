@@ -110,7 +110,7 @@ private:
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
 #endif
 
-LM75A* PLUGIN_069_LM75A = NULL;
+LM75A* PLUGIN_069_LM75A = nullptr;
 
 
 boolean Plugin_069(byte function, struct EventStruct *event, String& string)

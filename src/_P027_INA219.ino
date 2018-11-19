@@ -144,7 +144,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
 
         byte choiceMeasureType = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType );
+        addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, nullptr, choiceMeasureType );
 
         success = true;
         break;

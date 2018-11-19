@@ -87,7 +87,7 @@ public:
   }
 };
 
-static CPlugin_055_Data* Plugin_055_Data = NULL;
+static CPlugin_055_Data* Plugin_055_Data = nullptr;
 
 
 boolean Plugin_055(byte function, struct EventStruct *event, String& string)

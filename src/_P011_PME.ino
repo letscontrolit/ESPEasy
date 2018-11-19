@@ -48,7 +48,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Digital"), F("Analog") };
-        addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
+        addFormSelector(F("Port Type"), F("p011"), 2, options, nullptr, choice);
 
         success = true;
         break;

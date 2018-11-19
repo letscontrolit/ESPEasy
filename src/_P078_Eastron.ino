@@ -38,8 +38,8 @@
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
-ESPeasySoftwareSerial* Plugin_078_SoftSerial = NULL;
-SDM* Plugin_078_SDM = NULL;
+ESPeasySoftwareSerial* Plugin_078_SoftSerial = nullptr;
+SDM* Plugin_078_SDM = nullptr;
 boolean Plugin_078_init = false;
 
 boolean Plugin_078(byte function, struct EventStruct *event, String& string)
@@ -113,13 +113,13 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Modbus Address"), F("p078_dev_id"), P078_DEV_ID, 1, 247);
 
         String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
-        addFormSelector(F("Model Type"), F("p078_model"), 4, options_model, NULL, P078_MODEL );
+        addFormSelector(F("Model Type"), F("p078_model"), 4, options_model, nullptr, P078_MODEL );
 
         String options_baudrate[6];
         for (int i = 0; i < 6; ++i) {
           options_baudrate[i] = String(p078_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), F("p078_baudrate"), 6, options_baudrate, NULL, P078_BAUDRATE );
+        addFormSelector(F("Baud Rate"), F("p078_baudrate"), 6, options_baudrate, nullptr, P078_BAUDRATE );
 
         if (P078_MODEL == 0 && P078_BAUDRATE > 3)
           addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
@@ -131,10 +131,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         for (int i = 0; i < 10; ++i) {
           options_query[i] = p078_getQueryString(i);
         }
-        addFormSelector(F("Variable 1"), F("p078_query1"), 10, options_query, NULL, P078_QUERY1);
-        addFormSelector(F("Variable 2"), F("p078_query2"), 10, options_query, NULL, P078_QUERY2);
-        addFormSelector(F("Variable 3"), F("p078_query3"), 10, options_query, NULL, P078_QUERY3);
-        addFormSelector(F("Variable 4"), F("p078_query4"), 10, options_query, NULL, P078_QUERY4);
+        addFormSelector(F("Variable 1"), F("p078_query1"), 10, options_query, nullptr, P078_QUERY1);
+        addFormSelector(F("Variable 2"), F("p078_query2"), 10, options_query, nullptr, P078_QUERY2);
+        addFormSelector(F("Variable 3"), F("p078_query3"), 10, options_query, nullptr, P078_QUERY3);
+        addFormSelector(F("Variable 4"), F("p078_query4"), 10, options_query, nullptr, P078_QUERY4);
 
         success = true;
         break;
@@ -158,17 +158,17 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         Plugin_078_init = true;
-        if (Plugin_078_SoftSerial != NULL) {
+        if (Plugin_078_SoftSerial != nullptr) {
           delete Plugin_078_SoftSerial;
-          Plugin_078_SoftSerial=NULL;
+          Plugin_078_SoftSerial=nullptr;
         }
         Plugin_078_SoftSerial = new ESPeasySoftwareSerial(Settings.TaskDevicePin1[event->TaskIndex], Settings.TaskDevicePin2[event->TaskIndex]);
         unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
         Plugin_078_SoftSerial->begin(baudrate);
 
-        if (Plugin_078_SDM != NULL) {
+        if (Plugin_078_SDM != nullptr) {
           delete Plugin_078_SDM;
-          Plugin_078_SDM=NULL;
+          Plugin_078_SDM=nullptr;
         }
         Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
         Plugin_078_SDM->begin();
@@ -179,13 +179,13 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       Plugin_078_init = false;
-      if (Plugin_078_SoftSerial != NULL) {
+      if (Plugin_078_SoftSerial != nullptr) {
         delete Plugin_078_SoftSerial;
-        Plugin_078_SoftSerial=NULL;
+        Plugin_078_SoftSerial=nullptr;
       }
-      if (Plugin_078_SDM != NULL) {
+      if (Plugin_078_SDM != nullptr) {
         delete Plugin_078_SDM;
-        Plugin_078_SDM=NULL;
+        Plugin_078_SDM=nullptr;
       }
       break;
     }
@@ -210,7 +210,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 }
 
 float p078_readVal(byte query, byte node, unsigned int model) {
-  if (Plugin_078_SDM == NULL) return 0.0;
+  if (Plugin_078_SDM == nullptr) return 0.0;
   const float _tempvar = Plugin_078_SDM->readVal(p078_getRegister(query, model), node);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EASTRON: (");

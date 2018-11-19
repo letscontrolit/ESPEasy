@@ -38,7 +38,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
   int mode2 = 0x10;
   uint16_t freq = PCA9685_MAX_FREQUENCY;
   uint16_t range = PCA9685_MAX_PWM;
-  if(event != NULL && event->TaskIndex >- 1)
+  if(event != nullptr && event->TaskIndex >- 1)
   {
     address = Settings.TaskDevicePort[event->TaskIndex];
     mode2 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];

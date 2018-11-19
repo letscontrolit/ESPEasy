@@ -81,7 +81,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           F("8x gain (FS=0.512V)"),
           F("16x gain (FS=0.256V)")
         };
-        addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, NULL, pga);
+        addFormSelector(F("Gain"), F("p025_gain"), ADS1115_PGA_OPTION, pgaOptions, nullptr, pga);
 
         #define ADS1115_MUX_OPTION 8
         byte mux = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
@@ -95,7 +95,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           F("AIN2 - GND (Single-Ended)"),
           F("AIN3 - GND (Single-Ended)"),
         };
-        addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, NULL, mux);
+        addFormSelector(F("Input Multiplexer"), F("p025_mode"), ADS1115_MUX_OPTION, muxOptions, nullptr, mux);
 
         addFormSubHeader(F("Two Point Calibration"));
 

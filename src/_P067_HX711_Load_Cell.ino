@@ -126,7 +126,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Oversampling"), F("oversampling"), CONFIG(0));
 
         String optionsMode[3] = { F("Channel A, Gain 128"), F("Channel B, Gain 32"), F("Channel A, Gain 64") };
-        addFormSelector(F("Mode"), F("mode"), 3, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Mode"), F("mode"), 3, optionsMode, nullptr, CONFIG(1));
 
         addFormTextBox(F("Offset"), F("p067_offset"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3], 3), 25);
         addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));

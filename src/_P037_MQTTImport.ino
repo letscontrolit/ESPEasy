@@ -22,7 +22,7 @@
 
 // TODO TD-er: These must be kept in some vector to allow multiple instances of MQTT import.
 WiFiClient espclient_037;
-PubSubClient *MQTTclient_037 = NULL;
+PubSubClient *MQTTclient_037 = nullptr;
 bool MQTTclient_037_connected = false;
 int reconnectCount = 0;
 
@@ -43,7 +43,7 @@ void Plugin_037_try_connect() {
   espclient_037 = WiFiClient();
   espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
-  if (MQTTclient_037 == NULL) {
+  if (MQTTclient_037 == nullptr) {
     MQTTclient_037 = new PubSubClient(espclient_037);
   }
   if (MQTTConnect_037())
@@ -58,7 +58,7 @@ void Plugin_037_try_connect() {
 
 void Plugin_037_update_connect_status() {
   bool connected = false;
-  if (MQTTclient_037 != NULL) {
+  if (MQTTclient_037 != nullptr) {
     connected = MQTTclient_037->connected();
   }
   if (MQTTclient_037_connected != connected) {
@@ -158,7 +158,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         success = false;
         //    When we edit the subscription data from the webserver, the plugin is called again with init.
         //    In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
-        if (MQTTclient_037 != NULL) {
+        if (MQTTclient_037 != nullptr) {
           MQTTclient_037->disconnect();
           if (MQTTConnect_037())
           {
@@ -171,7 +171,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (MQTTclient_037 != NULL && !MQTTclient_037->loop()) {		// Listen out for callbacks
+        if (MQTTclient_037 != nullptr && !MQTTclient_037->loop()) {		// Listen out for callbacks
           Plugin_037_update_connect_status();
         }
         success = true;
@@ -182,7 +182,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
       {
         //  Here we check that the MQTT client is alive.
         Plugin_037_try_connect();
-        if (MQTTclient_037 != NULL) {
+        if (MQTTclient_037 != nullptr) {
           if (!MQTTclient_037->connected() || MQTTclient_should_reconnect) {
             if (MQTTclient_should_reconnect) {
               addLog(LOG_LEVEL_ERROR, F("IMPT : MQTT 037 Intentional reconnect"));
@@ -312,7 +312,7 @@ boolean MQTTSubscribe_037()
         if (subscribeTo.length() > 0)
         {
           parseSystemVariables(subscribeTo, false);
-          if (MQTTclient_037 != NULL && MQTTclient_037->subscribe(subscribeTo.c_str()))
+          if (MQTTclient_037 != nullptr && MQTTclient_037->subscribe(subscribeTo.c_str()))
           {
             String log = F("IMPT : [");
             LoadTaskSettings(y);
@@ -382,7 +382,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
 boolean MQTTConnect_037()
 {
   boolean result = false;
-  if (MQTTclient_037 == NULL) return false;
+  if (MQTTclient_037 == nullptr) return false;
   String clientid = getClientName();
   // @ToDo TD-er: Plugin allows for more than one MQTT controller, but we're now using only the first enabled one.
   int enabledMqttController = firstEnabledMQTTController();

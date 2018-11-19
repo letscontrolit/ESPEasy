@@ -77,7 +77,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         byte choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
         String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
-        addFormSelector(F("Counter Type"), F("p003_countertype"), 4, options, NULL, choice );
+        addFormSelector(F("Counter Type"), F("p003_countertype"), 4, options, nullptr, choice );
 
         if (choice !=0)
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));

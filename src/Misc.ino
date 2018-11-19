@@ -15,7 +15,7 @@ extern "C" void tcp_abort (struct tcp_pcb* pcb);
 void tcpCleanup()
 {
 
-     while(tcp_tw_pcbs!=NULL)
+     while(tcp_tw_pcbs!=nullptr)
     {
       tcp_abort(tcp_tw_pcbs);
     }
@@ -29,14 +29,14 @@ void tcpCleanup()
 //      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
 #ifdef ESP32
-// FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
+// FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
   register uint8_t *sp asm("a1");
-  return (sp - pxTaskGetStackStart(NULL));
+  return (sp - pxTaskGetStackStart(nullptr));
 }
 
 uint32_t getFreeStackWatermark() {
-  return uxTaskGetStackHighWaterMark(NULL);
+  return uxTaskGetStackHighWaterMark(nullptr);
 }
 
 // FIXME TD-er: Must check if these functions are also needed for ESP32.

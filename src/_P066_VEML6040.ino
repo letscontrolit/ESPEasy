@@ -73,7 +73,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR);   //Only for display I2C address
 
         String optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F("1280ms (515)") };
-        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, nullptr, CONFIG(1));
 
         String optionsVarMap[6] = {
           F("R, G, B, W"),
@@ -82,7 +82,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
           F("R, G, B, Color Temperature [K]"),
           F("R, G, B, Ambient Light [Lux]"),
           F("Color Temperature [K], Ambient Light [Lux], Y, W") };
-        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, CONFIG(2));
+        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, nullptr, CONFIG(2));
 
         success = true;
         break;
