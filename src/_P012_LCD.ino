@@ -88,24 +88,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
-          addHtml(F("<TR><TD>Line "));
-          addHtml(String(varNr + 1));
-          addHtml(F(":<TD><input type='text' size='80' maxlength='80' name='Plugin_012_template"));
-          addHtml(String(varNr + 1));
-          addHtml(F("' value='"));
-          addHtml(deviceTemplate[varNr]);
-          addHtml("'>");
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p012_template")) + (varNr + 1), deviceTemplate[varNr], P12_Nchars);
         }
-
 
         addRowLabel(F("Display button"));
         addPinSelect(false, F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
 
-
-        char tmpString[128];
-        sprintf_P(tmpString, PSTR("<TR><TD>Display Timeout:<TD><input type='text' name='plugin_12_timer' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        addHtml(tmpString);
-
+        addFormNumericBox(F("Display Timeout"), F("p012_timer"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
         String options3[3];
         options3[0] = F("Continue to next line (as in v1.4)");
@@ -122,7 +111,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p012_adr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p012_size"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_12_timer"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p012_timer"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p012_mode"));
 
         char deviceTemplate[P12_Nlines][P12_Nchars];
