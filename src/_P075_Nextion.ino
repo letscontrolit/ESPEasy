@@ -58,10 +58,18 @@
 
 // Global vars
 ESPeasySoftwareSerial *SoftSerial = NULL;
-char deviceTemplate[P75_Nlines][P75_Nchars];
 int rxPin = -1;
 int txPin = -1;
 
+String P075_displayLines[P75_Nlines];
+
+void Plugin_075_loadDisplayLines(byte taskIndex) {
+  char P075_deviceTemplate[P75_Nlines][P75_Nchars];
+  LoadCustomTaskSettings(taskIndex, (byte*)&P075_deviceTemplate, sizeof(P075_deviceTemplate));
+  for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+    P075_displayLines[varNr] = P075_deviceTemplate[varNr];
+  }
+}
 
 // *****************************************************************************************************
 // PlugIn starts here
@@ -177,11 +185,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       addFormSubHeader("");                          // Blank line, vertical space.
       addFormHeader(F("Nextion Command Statements (Optional)"));
 
-      char deviceTemplate[P75_Nlines][P75_Nchars];
-      LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+      Plugin_075_loadDisplayLines(event->TaskIndex);
       for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
-        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), deviceTemplate[varNr], P75_Nchars-1);
-
+        addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p075_template")) + (varNr + 1), P075_displayLines[varNr], P75_Nchars-1);
       }
       if( Settings.TaskDeviceTimer[event->TaskIndex]==0) { // Is interval timer disabled?
         if(IncludeValues) {
@@ -223,6 +229,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("IncludeValues"));
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
+        Plugin_075_loadDisplayLines(event->TaskIndex);
         success = true;
         break;
     }
@@ -298,6 +305,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             SoftSerial->begin(9600);
             SoftSerial->flush();
         }
+        Plugin_075_loadDisplayLines(event->TaskIndex);
     }
     else {
     }
@@ -307,25 +315,21 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_READ: {
-        char deviceTemplate[P75_Nlines][P75_Nchars];
         int RssiIndex;
         String newString;
-        String tmpString;
         String UcTmpString;
 
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
-
-// Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
+        // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
         for (byte x = 0; x < P75_Nlines; x++) {
-          tmpString = deviceTemplate[x];
-          if (tmpString.length()) {
-            UcTmpString = deviceTemplate[x];
+          if (P075_displayLines[x].length()) {
+            String tmpString = P075_displayLines[x];
+            UcTmpString = P075_displayLines[x];
             UcTmpString.toUpperCase();
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
               int barVal;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
-              newString = tmpString.substring(0, RssiIndex);
+              newString = P075_displayLines[x].substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
               if (nbars < -100 || nbars >= 0)
                  barVal=0;
@@ -448,6 +452,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
             Serial.flush();
             Serial.begin(DEFAULT_SERIAL_BAUD);          // Restart System Serial Port (Serial Log) with default baud.
+        }
+        for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+          P075_displayLines[varNr] = "";
         }
         break;
     }
