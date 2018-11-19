@@ -1898,6 +1898,7 @@ unsigned long timingstats_last_reset = 0;
 #define TRY_CONNECT_HOST_UDP 28
 #define HOST_BY_NAME_STATS   29
 #define CONNECT_CLIENT_STATS 30
+#define LOAD_CUSTOM_TASK_STATS 31
 
 
 
@@ -1928,6 +1929,7 @@ String getMiscStatsName(int stat) {
         case TRY_CONNECT_HOST_UDP:  return F("try_connect_host() (UDP)");
         case HOST_BY_NAME_STATS:    return F("hostByName()");
         case CONNECT_CLIENT_STATS:  return F("connectClient()");
+        case LOAD_CUSTOM_TASK_STATS: return F("LoadCustomTaskSettings()");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:
