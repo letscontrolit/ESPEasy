@@ -189,7 +189,7 @@ boot/reboot/time/sleep etc. of the unit:
    :widths: 10, 30, 15
 
    "
-   <taskname>#<valuename>
+   ``<taskname>#<valuename>``
    ","
    As described already, each task can produced one or more events, one for each measured value. You should not name your devices and value names so that the combination equals to any of the below listed system events!
    ","
@@ -202,7 +202,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   System#Wake
+   ``System#Wake``
    ","
    Triggered after power on.
    ","
@@ -215,7 +215,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   System#Boot
+   ``System#Boot``
    ","
    Triggered at boot time.
    ","
@@ -229,7 +229,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   System#Sleep
+   ``System#Sleep``
    ","
    Triggered just before the ESP goes to deep sleep.
    ","
@@ -242,7 +242,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   MQTT#Connected
+   ``MQTT#Connected``
    ","
    Triggered when the ESP has connected to broker.
    ","
@@ -255,7 +255,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   MQTT#Disconnected
+   ``MQTT#Disconnected``
    ","
    Triggered when the ESP has disconnected from the broker.
    ","
@@ -268,7 +268,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   MQTTimport#Connected
+   ``MQTTimport#Connected``
    ","
    Triggered when the ESP has connected to broker (the MQTT Import plugin uses a separate connection than the generic one).
    ","
@@ -281,7 +281,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   MQTTimport#Disconnected
+   ``MQTTimport#Disconnected``
    ","
    Triggered when the ESP has disconnected from the broker (the MQTT Import plugin uses a separate connection than the generic one).
    ","
@@ -294,7 +294,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   WiFi#Connected
+   ``WiFi#Connected``
    ","
    Triggered when the ESP has connected to Wi-Fi.
    ","
@@ -307,7 +307,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   WiFi#ChangedAccesspoint
+   ``WiFi#ChangedAccesspoint``
    ","
    Triggered when the ESP has changed to access point, will also trigger first time the unit connects to the Wi-Fi.
    ","
@@ -320,7 +320,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   Login#Failed
+   ``Login#Failed``
    ","
    Triggered when (someone) has tried to login to a ESP unit with admin password enabled, but have failed to enter correct password.
    ","
@@ -333,7 +333,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   Time#Initialized
+   ``Time#Initialized``
    ","
    Triggered the first time (after boot) NTP is updating the unit.
    ","
@@ -346,7 +346,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   Time#Set
+   ``Time#Set``
    ","
    Triggered when the time is set by an update from NTP.
    ","
@@ -360,7 +360,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   Rules#Timer=
+   ``Rules#Timer=``
    ","
    As described already, triggered when a rules timer ends (setting a timer to 0 will disable the timer).
    ","
@@ -373,7 +373,7 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
-   Clock#Time=
+   ``Clock#Time=``
    ","
    Triggered every minute with day and time like: Mon,12:30 or Tue,14:45. You can define triggers on specific days or all days using 'All' for days indicator. You can also use wildcards in the time setting like All,**:00 to run every hour.
    ","

@@ -1,22 +1,97 @@
+.. ESP Easy colors (set in cutom.css)
+.. role:: blue
+.. role:: red
+.. role:: green
+.. role:: yellow
+.. role:: orange
+.. role:: cyan
+.. role:: purple
+
 .. _P052_S8_page:
 
 S8
-**
+==
+
+:cyan:`Gases - CO2 Senseair`
+
+.. image:: images\\P052_S8_1.jpg
 
 Introduction
 ------------
-The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
+
+The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor
+is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
 
 Wiring
 ------
 
+Circuit wiring (S8 seen from PCB side, with the 5 vias down and the 4 vias up):
+
+.. code-block:: html
+
+    ESP               S8
+    GPIO (7)   <-->   TX (3rd via [middle] of the 5 vias)
+    GPIO (8)   <-->   RX (4th via [right of TX])
+
+    Power
+    5.0V       <-->   VCC (4th via of the 4 vias, 300 mA peak/30 mA average)
+    GND        <-->   GND (3rd via [left of VCC])
+
+Set up the S8 according to this simple schematics. If you want to take extra precautions you should add 47R
+resistor or similar to the TX and RX signals (this is not used in the pictures below). In this example we
+use the Wemos D1 mini as the host of the 5V input to the S8 and connect the Wemos to USB for power.
+
+.. danger::
+  PLEASE OBSERVE THAT FEEDING THE S8 WITH 5.2+V WILL DAMAGE THE INTERNAL LAMP AND BREAK THE UNIT - GIVING FALSE VALUES!
+
 Setup
 -----
+
+Set up the device according to:
+
+1st GPIO: :blue:`GPIO-13 (D7)`
+
+2st GPIO: :blue:`GPIO-15 (D8)`
+
+Sensor: :blue:`Carbon Dioxide`
 
 Rules examples
 --------------
 
+.. code-block:: html
+
+ on CO2#Level do
+  if [CO2#Level]>2000
+    Publish,%sysname%/Alarm,CO2 level is too high!
+  endif
+ endon
+
 Indicators (recommended settings)
 ---------------------------------
 
+.. csv-table::
+   :header: "Indicator", "Value Name", "Interval", "Decimals", "Extra information"
+   :widths: 8, 5, 5, 5, 40
+
+   "Status", "N/A", "", "", ""
+   "Carbon Dioxide", "ppm", "15", "0", ""
+   "Temperature", "N/A", "", "", "Used for tSense (K70), K30, K33"
+   "Humidity", "N/A", "", "", "Used for tSense (K70), K30, K33"
+
 Where to buy
+------------
+
+.. csv-table::
+   :header: "Store", "Link"
+   :widths: 5, 40
+
+   "AliExpress","`Link 1 <http://s.click.aliexpress.com/e/cg1fhDDI>`_ `Link 2 <https://test.com>`_"
+   "Ebay","`Link 3 <http://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&pub=5575404073&toolid=10001&campid=5338336929&customid=&mpre=https%3A%2F%2Fwww.ebay.com%2Fitm%2FS8-0053-carbon-dioxide-infrared-CO2-sensors-FOR-SenseAir%2F112303432827%3Fhash%3Ditem1a25ce647b%3Ag%3A%7EHcAAOSw1WJZJ%7E8Y>`_"
+   "First Byte","`Link 4 <https://firstbyte.shop/products/s8>`_"
+
+More pictures
+-------------
+
+.. image:: images\\P052_S8_2.jpg
+
+.. image:: images\\P052_S8_3.jpg
