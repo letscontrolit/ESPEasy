@@ -553,7 +553,13 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             Plugin_009_Write(event->Par1, event->Par2);
             delay(event->Par3);
             Plugin_009_Write(event->Par1, !event->Par2);
-            setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
+
+            tempStatus.mode = PIN_MODE_OUTPUT;
+            tempStatus.state = event->Par2;
+            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            savePortStatus(key,tempStatus);
+
             log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
             addLog(LOG_LEVEL_INFO, log);
             //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
