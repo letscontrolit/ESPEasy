@@ -42,6 +42,7 @@ make html
 
 # Update (and clean) all targets
 # N.B. clean does also install missing packages which must be installed before applying patches.
+cd ${SRC}
 platformio update
 platformio run --target clean
 # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
