@@ -134,6 +134,10 @@ select:hover {
 	position: absolute
 }
 
+.checkmark.disabled {
+    background-color: grey;
+}
+
 .checkmark {
 	background-color: #eee;
 	border-color: gray;
@@ -536,4 +540,3 @@ section {
 		max-width: 48px
 	}
 }
-

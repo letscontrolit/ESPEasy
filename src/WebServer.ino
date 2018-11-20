@@ -477,6 +477,10 @@ void addHtml(const String html) {
   TXBuffer += html;
 }
 
+void addDisabled() {
+  TXBuffer += F(" disabled");
+}
+
 void WebServerInit()
 {
   // Prepare webserver pages
@@ -2740,7 +2744,7 @@ void addSelector(const String& id, int optionCount, const String options[], cons
   TXBuffer += id;
   TXBuffer += '\'';
   if (!enabled) {
-    TXBuffer += F(" disabled");
+    addDisabled();
   }
   if (reloadonchange)
     TXBuffer += F(" onchange='return dept_onchange(frmselect)'>");
@@ -2785,7 +2789,7 @@ void addSelector_Item(const String& option, int index, boolean selected, boolean
   if (selected)
     TXBuffer += F(" selected");
   if (disabled)
-    TXBuffer += F(" disabled");
+    addDisabled();
   if (attr && attr.length() > 0)
   {
     TXBuffer += ' ';
@@ -2851,7 +2855,7 @@ void addWideButton(const String &url, const String &label, const String &color)
 
 void addSubmitButton()
 {
-  TXBuffer += F("<input class='button link' type='submit' value='Submit'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
+  addSubmitButton(F("Submit"), "");
 }
 
 //add submit button with different label and name
@@ -2859,8 +2863,10 @@ void addSubmitButton(const String &value, const String &name)
 {
   TXBuffer += F("<input class='button link' type='submit' value='");
   TXBuffer += value;
-  TXBuffer += F("' name='");
-  TXBuffer += name;
+  if (name.length() > 0) {
+    TXBuffer += F("' name='");
+    TXBuffer += name;
+  }
   TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
 }
 
@@ -2950,10 +2956,15 @@ void addFormSeparator(int clspan)
  TXBuffer += F("'><hr>");
 }
 
+
 //********************************************************************************
 // Add a checkbox
 //********************************************************************************
-void addCheckBox(const String& id, boolean checked)
+void addCheckBox(const String& id, boolean checked) {
+  addCheckBox(id, checked, false);
+}
+
+void addCheckBox(const String& id, boolean checked, bool disabled)
 {
   TXBuffer += F("<label class='container'>&nbsp;");
   TXBuffer += F("<input type='checkbox' id='");
@@ -2963,13 +2974,24 @@ void addCheckBox(const String& id, boolean checked)
   TXBuffer += '\'';
   if (checked)
     TXBuffer += F(" checked");
-  TXBuffer += F("><span class='checkmark'></span></label>");
+  if (disabled) addDisabled();
+  TXBuffer += F("><span class='checkmark");
+  if (disabled) addDisabled();
+  TXBuffer += F("'></span></label>");
 }
 
-void addFormCheckBox(const String& label, const String& id, boolean checked)
+void addFormCheckBox(const String& label, const String& id, boolean checked) {
+  addFormCheckBox(label, id, checked, false);
+}
+
+void addFormCheckBox_disabled(const String& label, const String& id, boolean checked) {
+  addFormCheckBox(label, id, checked, true);
+}
+
+void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled)
 {
   addRowLabel(label);
-  addCheckBox(id, checked);
+  addCheckBox(id, checked, disabled);
 }
 
 
@@ -3285,7 +3307,7 @@ void addTaskSelect(String name,  int choice)
     if (choice == x)
       TXBuffer += F(" selected");
     if (Settings.TaskDeviceNumber[x] == 0)
-      TXBuffer += F(" disabled");
+      addDisabled();
     TXBuffer += '>';
     TXBuffer += x + 1;
     TXBuffer += F(" - ");
@@ -4459,7 +4481,7 @@ void handle_advanced() {
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   TXBuffer += F(" (decimal)");
 
-  addFormCheckBox(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
+  addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
 
   addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 
