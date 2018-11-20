@@ -600,22 +600,28 @@ bool count_connection_results(bool success, const String& prefix, int controller
 }
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
+  START_TIMER;
   client.setTimeout(ControllerSettings.ClientTimeout);
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
   bool success = ControllerSettings.beginPacket(client) != 0;
-  return count_connection_results(
+  const bool result = count_connection_results(
       success,
       F("UDP  : "), controller_number, ControllerSettings);
+  STOP_TIMER(TRY_CONNECT_HOST_UDP);
+  return result;
 }
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+  START_TIMER;
   // Use WiFiClient class to create TCP connections
   client.setTimeout(ControllerSettings.ClientTimeout);
   log_connecting_to(F("HTTP : "), controller_number, ControllerSettings);
   bool success = ControllerSettings.connectToHost(client);
-  return count_connection_results(
+  const bool result = count_connection_results(
       success,
       F("HTTP : "), controller_number, ControllerSettings);
+  STOP_TIMER(TRY_CONNECT_HOST_TCP);
+  return result;
 }
 
 // Use "client.available() || client.connected()" to read all lines from slow servers.
@@ -634,7 +640,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   // see discussion here https://github.com/letscontrolit/ESPEasy/pull/1979
   // and implementation here https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/src/include/ClientContext.h#L437-L467
   // this needs to be adjusted if the WiFiClient.print method changes.
-  if (written != (postStr.length()%256)) { 
+  if (written != (postStr.length()%256)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("HTTP : ");
       log += logIdentifier;
@@ -656,7 +662,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += postStr.length();
       log += ")";
       addLog(LOG_LEVEL_DEBUG, log);
-    }    
+    }
   }
 
   if (must_check_reply) {

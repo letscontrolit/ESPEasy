@@ -486,7 +486,7 @@ void loop()
     WiFiConnectRelaxed();
     wifiSetupConnect = false;
   }
-  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED) {
+  if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED || unprocessedWifiEvents()) {
     // WiFi connection is not yet available, so introduce some extra delays to
     // help the background tasks managing wifi connections
     delay(1);

@@ -21,9 +21,9 @@ import sphinx_bootstrap_theme
 
 # -- Project information -----------------------------------------------------
 
-project = u'ESPEasy'
-copyright = u'2018, ESPEasy'
-author = u'Many'
+project = u'ESP Easy'
+copyright = u'2018, ESP Easy'
+author = u'Grovkillen, TD-er & Friends'
 
 # The short X.Y version
 version = u''
@@ -113,7 +113,7 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
-    'navbar_title': "ESPEasy",
+    'navbar_title': "ESP Easy",
 
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "Site",
@@ -228,7 +228,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ESPEasy.tex', u'ESPEasy Documentation',
+    (master_doc, 'ESPEasy.tex', u'ESP Easy Documentation',
      u'Many', 'manual'),
 ]
 
@@ -238,7 +238,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'espeasy', u'ESPEasy Documentation',
+    (master_doc, 'espeasy', u'ESP Easy Documentation',
      [author], 1)
 ]
 
@@ -249,8 +249,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ESPEasy', u'ESPEasy Documentation',
-     author, 'ESPEasy', 'ESP82xx/ESP32 firmware to connect people with any level of experience to system automation.',
+    (master_doc, 'ESP Easy', u'ESP Easy Documentation',
+     author, 'ESP Easy', 'ESP82xx/ESP32 firmware to connect people with any level of experience to system automation.',
      'Miscellaneous'),
 ]
 
@@ -278,9 +278,13 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'https://docs.python.org/3/': None}
 
 # -- Options for todo extension ----------------------------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# This def is used to add ESP Easy related formatation (color etc).
+def setup(app):
+    app.add_stylesheet('css/custom.css')
