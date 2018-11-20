@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181120 (since mega-20181117)
+-------------------------------------------------
+
+Release date: Tue Nov 20 04:00:07 CET 2018
+
+Gijs Noorlander (1):
+      Update build_ESPeasy.sh
+
+Unknown (6):
+      [issue 2063] Incorrect saving settings on LCD2004
+      [OLED framed] Do not keep display lines allocated on stack
+      [P075 Nextion] Do not keep display lines allocated on stack
+      [Timing stats] Add LoadCustomTaskSettings() to the timing stats
+      [Build scripts] Add build script for Linux and include docs
+      [Build] Add test_ESP8266_1024_VCC to deploy script
+
+
+-------------------------------------------------
 Changes in release mega-20181117 (since mega-20181112)
 -------------------------------------------------
 
