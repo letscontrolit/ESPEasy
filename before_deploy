@@ -1,9 +1,25 @@
 #!/bin/bash
 
 VERSION=$(git describe)
+TMP_DIST=`mktemp -d`
+CURPATH=`pwd`
+
+if [ ! -d ${TMP_DIST} ]; then
+  # Could not create temp dir, so exit
+  exit 1
+fi
 
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
+
+mkdir -p ${TMP_DIST}
+cp -r dist/* ${TMP_DIST}/
+
+if [ -d "docs/build" ]; then
+  # Docs have been created
+  mkdir -p ${TMP_DIST}/docs
+  cp -r docs/build/* ${TMP_DIST}/docs/
+fi
 
 
 for ENV in \
@@ -32,23 +48,24 @@ do
   BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
   cp .pioenvs/${ENV}/firmware.bin $BIN
   python2 crc2.py $BIN
-  mv $BIN "dist/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+  mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
 done
 
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
-rm -rf dist/Docs 2>/dev/null
 
-mkdir -p dist/source
-#mkdir -p dist/docs
-cp -r lib dist/source/
-cp -r src dist/source/
-#cp -r docs/build/ dist/docs/
-cp platformio.ini dist/source/
+mkdir -p ${TMP_DIST}/source
+cp -r lib ${TMP_DIST}/source/
+cp -r src ${TMP_DIST}/source/
+cp platformio.ini ${TMP_DIST}/source/
 
-cd dist
+cd ${TMP_DIST}
 
 echo
 echo "### Creating zip archive"
-zip ../ESPEasy_$VERSION.zip -r .
+zip ${CURPATH}/ESPEasy_$VERSION.zip -r .
+
+rm -Rf ${TMP_DIST}/* 2>/dev/null
+rmdir ${TMP_DIST}
+
