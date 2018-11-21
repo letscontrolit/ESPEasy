@@ -533,8 +533,13 @@ void loop()
   //normal mode, run each task when its time
   else
   {
-    if (!UseRTOSMultitasking) {
-      // On ESP32 the schedule is executed on the 2nd core.
+    if (!firstLoopConnectionsEstablished && !WiFiConnected()
+        && wifi_connect_attempt >= 4 && (wifi_connect_attempt / 2) % 2 == 0) {
+      // Some emergency work-around to make the node connect to wifi by stop executing
+      // scheduled tasks for 2 attempts and run the loop faster plus give time to run background tasks.
+      WifiCheck();
+    } else if (!UseRTOSMultitasking) {
+      // On ESP32 the schedule is executed in a separate task.
       handle_schedule();
     }
   }
