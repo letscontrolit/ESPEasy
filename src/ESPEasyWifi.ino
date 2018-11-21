@@ -459,9 +459,13 @@ bool useStaticIP() {
 }
 
 bool WiFiConnected() {
+  START_TIMER;
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
-    if (WiFi.isConnected()) return true;
+    if (WiFi.isConnected()) {
+      STOP_TIMER(WIFI_ISCONNECTED_STATS);
+      return true;
+    }
     // else wifiStatus is no longer in sync.
     resetWiFi();
   }
