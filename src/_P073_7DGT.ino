@@ -31,7 +31,7 @@
 
 #define PLUGIN_073
 #define PLUGIN_ID_073        73
-#define PLUGIN_NAME_073      "Display - 7-segment display [TESTING]"
+#define PLUGIN_NAME_073      "Display - 7-segment display"
 #define PLUGIN_073_DEBUG     false    //activate extra log info in the debug
 
 #define P073_TM1637_4DGTCOLON   0
