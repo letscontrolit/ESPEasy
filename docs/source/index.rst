@@ -23,6 +23,7 @@ Welcome to ESP Easy's documentation!
    ESPEasy/FunctionBlocks.rst
    Controller/Controller.rst
    Plugin/Plugin.rst
+   Plugin/P052_S8.rst
    Rules/Rules.rst
    WiFi/WiFi.rst
 
