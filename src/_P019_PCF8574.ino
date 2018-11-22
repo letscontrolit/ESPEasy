@@ -482,23 +482,27 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             if (currentState == -1) {
               tempStatus.mode=PIN_MODE_OFFLINE;
               tempStatus.state=-1;
+              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              savePortStatus(key,tempStatus);
               log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
             } else if (event->Par2 == 2) { //INPUT
           	  // PCF8574 specific: only can read 0/low state, so we must send 1
           	  //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_INPUT, 1);
               tempStatus.mode=PIN_MODE_INPUT;
               tempStatus.state = currentState;
+              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              savePortStatus(key,tempStatus);
           	  Plugin_019_Write(event->Par1,1);
           	  log = String(F("PCF  : GPIO INPUT ")) + String(event->Par1) + String(F(" Set to 1"));
             } else { // OUTPUT
           	  //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          	  Plugin_019_Write(event->Par1, event->Par2);
               tempStatus.mode=PIN_MODE_OUTPUT;
               tempStatus.state=event->Par2;
+              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              savePortStatus(key,tempStatus);
+              Plugin_019_Write(event->Par1, event->Par2);
           	  log = String(F("PCF  : GPIO OUTPUT ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
             }
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
             //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
@@ -518,19 +522,21 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             if (currentState == -1) {
               tempStatus.mode=PIN_MODE_OFFLINE;
               tempStatus.state=-1;
+              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              savePortStatus(key,tempStatus);
               log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
               needToSave = true;
             } else if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED) { //toggle only output pins
               tempStatus.state = !currentState; //toggle current state value
               tempStatus.mode = PIN_MODE_OUTPUT;
+              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              savePortStatus(key,tempStatus);
               Plugin_019_Write(event->Par1, tempStatus.state);
               log = String(F("PCF  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
               needToSave = true;
             }
             if (needToSave) {
-              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
               //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !currentState);
-              savePortStatus(key,tempStatus);
               addLog(LOG_LEVEL_INFO, log);
               //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
               SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
@@ -547,15 +553,18 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             tempStatus = globalMapPortStatus[key];
 
             //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            Plugin_019_Write(event->Par1, event->Par2);
-            delay(event->Par3);
-            Plugin_019_Write(event->Par1, !event->Par2);
-            //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
-
             tempStatus.mode = PIN_MODE_OUTPUT;
             tempStatus.state = event->Par2;
+            savePortStatus(key,tempStatus);
+            Plugin_019_Write(event->Par1, event->Par2);
+            delay(event->Par3);
+
+            tempStatus.mode = PIN_MODE_OUTPUT;
+            tempStatus.state = !event->Par2;
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
             savePortStatus(key,tempStatus);
+            Plugin_019_Write(event->Par1, !event->Par2);
+            //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
 
             log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
             addLog(LOG_LEVEL_INFO, log);
@@ -573,14 +582,12 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             tempStatus = globalMapPortStatus[key];
 
             //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            Plugin_019_Write(event->Par1, event->Par2);
-
             tempStatus.mode = PIN_MODE_OUTPUT;
             tempStatus.state = event->Par2;
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
             savePortStatus(key,tempStatus);
-
-            setPluginTaskTimer(event->Par3 * 1000, PLUGIN_ID_019, event->TaskIndex, event->Par1, !event->Par2);
+            Plugin_019_Write(event->Par1, event->Par2);
+            setPluginTaskTimer(event->Par3 * 1000, PLUGIN_ID_019, event->TaskIndex, event->Par1, !event->Par2); //Calls PLUGIN_TIMER_IN
             log = String(F("PCF  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
             addLog(LOG_LEVEL_INFO, log);
             //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
@@ -629,7 +636,6 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TIMER_IN:
       {
-        Plugin_019_Write(event->Par1, event->Par2);
         //setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         portStatusStruct tempStatus;
         // WARNING: operator [] creates an entry in the map if key does not exist
@@ -639,6 +645,8 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         tempStatus.state = event->Par2;
         tempStatus.mode = PIN_MODE_OUTPUT;
         savePortStatus(key,tempStatus);
+        Plugin_019_Write(event->Par1, event->Par2);
+
         break;
       }
   }
@@ -682,7 +690,7 @@ uint8_t Plugin_019_ReadAllPins(uint8_t address)
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
-boolean Plugin_019_Write(byte Par1, byte Par2)
+boolean Plugin_019_Write2(byte Par1, byte Par2)
 {
   byte unit = (Par1 - 1) / 8;
   byte port = Par1 - (unit * 8);
@@ -691,9 +699,9 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
 
   uint8_t rawState = Plugin_019_ReadAllPins(address);
   if (Par2 == 0)
-    rawState &=  ~(1<<(port-1));
+    rawState &=  ~(1<<(port-1)); //set port = 0
   else
-    rawState |= (1<<(port-1));
+    rawState |= (1<<(port-1)); //set port = 1
 
   Wire.beginTransmission(address);
   Wire.write(rawState);
@@ -702,42 +710,42 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
   return true;
 }
 
-boolean Plugin_019_Write2(byte Par1, byte Par2)
+boolean Plugin_019_Write(byte Par1, byte Par2)
 {
-  byte unit = (Par1 - 1) / 8;
-  byte port = Par1 - (unit * 8);
+  uint8_t unit = (Par1 - 1) / 8;
+  uint8_t port = Par1 - (unit * 8);
   uint8_t address = 0x20 + unit;
   if (unit > 7) address += 0x10;
 
   //generate bitmask
   int i = 0;
-  byte portmask = 0;
-  //byte mode = 0;
-  uint16_t value = 0;
-  unit *= 8; // calculate first pin
-  unit += 1;
+  uint8_t portmask = 255;
+  unit = unit * 8 + 1; // calculate first pin
 
-//TODO: giig1967g: change logic: WRITE function cannot depend from a global structure !
-  const uint32_t key=createKey(PLUGIN_ID_019,unit);
-  const bool existPS = existPortStatus(key);
+  uint32_t key;
 
-  for(i =0;i<8;i++){
-	  //mode =0;
+  for(i=0; i<8; i++){
+    key = createKey(PLUGIN_ID_019,unit+i);
 
-    if (!existPS)
-      portmask |= (1 << i);
-    else if (globalMapPortStatus[key].mode == PIN_MODE_INPUT || (globalMapPortStatus[key].mode== PIN_MODE_OUTPUT && value == 1))
-      portmask |= (1 << i);
-
+    if (existPortStatus(key) && globalMapPortStatus[key].mode == PIN_MODE_OUTPUT && globalMapPortStatus[key].state == 0)
+      portmask &= ~(1 << (port-1)); //set port i = 0
+/*
+    if (!existPortStatus(key))
+      portmask |= (1 << i); //set port i= 1
+    else if (globalMapPortStatus[key].mode == PIN_MODE_INPUT || globalMapPortStatus[key].mode == PIN_MODE_UNDEFINED || (globalMapPortStatus[key].mode == PIN_MODE_OUTPUT && globalMapPortStatus[key].state == 1))
+      portmask |= (1 << i); //set port i = 1
+*/
 	  //if(!getPinState(PLUGIN_ID_019, unit, &mode, &value) || mode == PIN_MODE_INPUT || (mode == PIN_MODE_OUTPUT && value == 1))
 		  //portmask |= (1 << i);
-	  unit++;
+	  //unit++;
   }
 
+  key = createKey(PLUGIN_ID_019,Par1);
+
   if (Par2 == 1)
-    portmask |= (1 << (port - 1));
+    portmask |= (1 << (port-1));
   else
-    portmask &= ~(1 << (port - 1));
+    portmask &= ~(1 << (port-1));
 
   Wire.beginTransmission(address);
   Wire.write(portmask);
