@@ -1,0 +1,20 @@
+.. _P057_page:
+
+P057
+====
+
+|P057_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P057_type|
+Name: |P057_name|
+Status: |P057_status|
+GitHub: |P057_github|_
+
+Supported hardware
+------------------
+
+|P057_usedby|
+

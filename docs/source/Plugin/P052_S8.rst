@@ -1,21 +1,12 @@
-.. ESP Easy colors (set in cutom.css)
-.. role:: blue
-.. role:: red
-.. role:: green
-.. role:: yellow
-.. role:: orange
-.. role:: cyan
-.. role:: purple
-
 .. _P052_S8_page:
 
 S8
 ==
 
-:cyan:`Gases - CO2 Senseair`
-:green:`NORMAL`
+|P052_typename|
+|P052_status|
 
-.. image:: images\P052_S8_1.jpg
+.. image:: P052_S8_1.jpg
 
 Introduction
 ------------
@@ -90,11 +81,12 @@ Where to buy
    "Ebay","`Link 2 ($) <http://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&pub=5575404073&toolid=10001&campid=5338336929&customid=&mpre=https%3A%2F%2Fwww.ebay.com%2Fitm%2FS8-0053-carbon-dioxide-infrared-CO2-sensors-FOR-SenseAir%2F112303432827%3Fhash%3Ditem1a25ce647b%3Ag%3A%7EHcAAOSw1WJZJ%7E8Y>`_"
    "First Byte","`Link 3 <https://firstbyte.shop/products/s8>`_"
 
-:yellow:`$` = affiliate links which will give us some money to keep this project running, thank you for using those.
+|affiliate|
+
 
 More pictures
 -------------
 
-.. image:: images\P052_S8_2.jpg
+.. image:: P052_S8_2.jpg
 
-.. image:: images\P052_S8_3.jpg
+.. image:: P052_S8_3.jpg

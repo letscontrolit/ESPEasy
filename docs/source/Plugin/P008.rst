@@ -1,0 +1,20 @@
+.. _P008_page:
+
+P008
+====
+
+|P008_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P008_type|
+Name: |P008_name|
+Status: |P008_status|
+GitHub: |P008_github|_
+
+Supported hardware
+------------------
+
+|P008_usedby|
+

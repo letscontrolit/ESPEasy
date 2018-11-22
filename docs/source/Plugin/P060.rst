@@ -1,0 +1,20 @@
+.. _P060_page:
+
+P060
+====
+
+|P060_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P060_type|
+Name: |P060_name|
+Status: |P060_status|
+GitHub: |P060_github|_
+
+Supported hardware
+------------------
+
+|P060_usedby|
+

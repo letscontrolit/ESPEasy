@@ -1,0 +1,20 @@
+.. _P005_page:
+
+P005
+====
+
+|P005_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P005_type|
+Name: |P005_name|
+Status: |P005_status|
+GitHub: |P005_github|_
+
+Supported hardware
+------------------
+
+|P005_usedby|
+

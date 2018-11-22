@@ -1,0 +1,20 @@
+.. _P009_page:
+
+P009
+====
+
+|P009_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P009_type|
+Name: |P009_name|
+Status: |P009_status|
+GitHub: |P009_github|_
+
+Supported hardware
+------------------
+
+|P009_usedby|
+

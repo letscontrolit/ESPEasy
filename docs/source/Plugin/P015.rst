@@ -1,0 +1,20 @@
+.. _P015_page:
+
+P015
+====
+
+|P015_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P015_type|
+Name: |P015_name|
+Status: |P015_status|
+GitHub: |P015_github|_
+
+Supported hardware
+------------------
+
+|P015_usedby|
+

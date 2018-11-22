@@ -288,3 +288,110 @@ todo_include_todos = True
 # This def is used to add ESP Easy related formatation (color etc).
 def setup(app):
     app.add_stylesheet('css/custom.css')
+
+# To replace chunks of text globally +
+# ESP Easy colors (set in cutom.css)
+rst_prolog = """
+.. role:: blue
+.. role:: red
+.. role:: green
+.. role:: yellow
+.. role:: orange
+.. role:: cyan
+.. role:: purple
+
+.. |affiliate| replace:: :yellow:`$` = affiliate links which will give us some money to keep this project running, thank you for using those.
+
+.. |P001_status| replace:: :green:`NORMAL`
+.. |P002_status| replace:: :green:`NORMAL`
+.. |P003_status| replace:: :green:`NORMAL`
+.. |P004_status| replace:: :green:`NORMAL`
+.. |P005_status| replace:: :green:`NORMAL`
+.. |P006_status| replace:: :green:`NORMAL`
+.. |P007_status| replace:: :green:`NORMAL`
+.. |P008_status| replace:: :green:`NORMAL`
+.. |P009_status| replace:: :green:`NORMAL`
+.. |P010_status| replace:: :green:`NORMAL`
+.. |P011_status| replace:: :green:`NORMAL`
+.. |P012_status| replace:: :green:`NORMAL`
+.. |P013_status| replace:: :green:`NORMAL`
+.. |P014_status| replace:: :green:`NORMAL`
+.. |P015_status| replace:: :green:`NORMAL`
+.. |P016_status| replace:: :green:`NORMAL`
+.. |P017_status| replace:: :green:`NORMAL`
+.. |P018_status| replace:: :green:`NORMAL`
+.. |P019_status| replace:: :green:`NORMAL`
+.. |P020_status| replace:: :green:`NORMAL`
+.. |P021_status| replace:: :green:`NORMAL`
+.. |P022_status| replace:: :green:`NORMAL`
+.. |P023_status| replace:: :green:`NORMAL`
+.. |P024_status| replace:: :green:`NORMAL`
+.. |P025_status| replace:: :green:`NORMAL`
+.. |P026_status| replace:: :green:`NORMAL`
+.. |P027_status| replace:: :green:`NORMAL`
+.. |P028_status| replace:: :green:`NORMAL`
+.. |P029_status| replace:: :green:`NORMAL`
+.. |P030_status| replace:: :green:`NORMAL`
+.. |P031_status| replace:: :green:`NORMAL`
+.. |P032_status| replace:: :green:`NORMAL`
+.. |P033_status| replace:: :green:`NORMAL`
+.. |P034_status| replace:: :green:`NORMAL`
+.. |P035_status| replace:: :green:`NORMAL`
+.. |P036_status| replace:: :green:`NORMAL`
+.. |P037_status| replace:: :green:`NORMAL`
+.. |P038_status| replace:: :green:`NORMAL`
+.. |P039_status| replace:: :green:`NORMAL`
+.. |P040_status| replace:: :green:`NORMAL`
+.. |P041_status| replace:: :green:`NORMAL`
+.. |P042_status| replace:: :green:`NORMAL`
+.. |P043_status| replace:: :green:`NORMAL`
+.. |P044_status| replace:: :green:`NORMAL`
+.. |P045_status| replace:: :yellow:`TESTING`
+.. |P046_status| replace:: :yellow:`TESTING`
+.. |P047_status| replace:: :yellow:`TESTING`
+.. |P048_status| replace:: :yellow:`TESTING`
+.. |P049_status| replace:: :green:`NORMAL`
+.. |P050_status| replace:: :red:`DEVELOPMENT`
+.. |P051_status| replace:: :green:`NORMAL`
+
+.. |P052_name| replace:: :cyan:`Senseair`
+.. |P052_type| replace:: :cyan:`Gases CO2`
+.. |P052_typename| replace:: :cyan:`Gases CO2 - Senseair`
+.. |P052_status| replace:: :green:`NORMAL`
+.. |P052_github| replace:: P052_SenseAir.ino
+.. _P052_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P052_SenseAir.ino
+.. |P052_usedby| replace:: :ref:`P052_S8_page`
+.. |P052_shortinfo| replace:: Support for gas sensors from Senseair.
+.. |P052_maintainer| replace:: `.`
+.. |P052_compileinfo| replace:: `.`
+
+.. |P053_status| replace:: :yellow:`TESTING`
+.. |P054_status| replace:: :yellow:`TESTING`
+.. |P055_status| replace:: :yellow:`TESTING`
+.. |P056_status| replace:: :red:`DEVELOPMENT`
+.. |P057_status| replace:: :yellow:`TESTING`
+.. |P058_status| replace:: :yellow:`TESTING`
+.. |P059_status| replace:: :green:`NORMAL`
+.. |P060_status| replace:: :yellow:`TESTING`
+.. |P061_status| replace:: :yellow:`TESTING`
+.. |P062_status| replace:: :yellow:`TESTING`
+.. |P063_status| replace:: :green:`NORMAL`
+.. |P064_status| replace:: :red:`DEVELOPMENT`
+.. |P065_status| replace:: :yellow:`TESTING`
+.. |P066_status| replace:: :yellow:`TESTING`
+.. |P067_status| replace:: :yellow:`TESTING`
+.. |P068_status| replace:: :yellow:`TESTING`
+.. |P069_status| replace:: :yellow:`TESTING`
+.. |P070_status| replace:: :yellow:`TESTING`
+.. |P071_status| replace:: :yellow:`TESTING`
+.. |P072_status| replace:: :yellow:`TESTING`
+.. |P073_status| replace:: :yellow:`TESTING`
+.. |P074_status| replace:: :yellow:`TESTING`
+.. |P075_status| replace:: :yellow:`TESTING`
+.. |P076_status| replace:: :yellow:`TESTING`
+.. |P077_status| replace:: :yellow:`TESTING`
+.. |P078_status| replace:: :yellow:`TESTING`
+.. |P079_status| replace:: :yellow:`TESTING`
+.. |P080_status| replace:: :yellow:`TESTING`
+.. |P081_status| replace:: :yellow:`TESTING`
+"""

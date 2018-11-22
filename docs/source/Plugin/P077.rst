@@ -1,0 +1,20 @@
+.. _P077_page:
+
+P077
+====
+
+|P077_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P077_type|
+Name: |P077_name|
+Status: |P077_status|
+GitHub: |P077_github|_
+
+Supported hardware
+------------------
+
+|P077_usedby|
+

@@ -1,0 +1,20 @@
+.. _P011_page:
+
+P011
+====
+
+|P011_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P011_type|
+Name: |P011_name|
+Status: |P011_status|
+GitHub: |P011_github|_
+
+Supported hardware
+------------------
+
+|P011_usedby|
+

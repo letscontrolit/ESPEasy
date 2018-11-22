@@ -1,0 +1,20 @@
+.. _P044_page:
+
+P044
+====
+
+|P044_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P044_type|
+Name: |P044_name|
+Status: |P044_status|
+GitHub: |P044_github|_
+
+Supported hardware
+------------------
+
+|P044_usedby|
+

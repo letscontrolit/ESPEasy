@@ -1,0 +1,20 @@
+.. _P042_page:
+
+P042
+====
+
+|P042_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P042_type|
+Name: |P042_name|
+Status: |P042_status|
+GitHub: |P042_github|_
+
+Supported hardware
+------------------
+
+|P042_usedby|
+

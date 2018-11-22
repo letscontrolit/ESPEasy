@@ -1,0 +1,20 @@
+.. _P048_page:
+
+P048
+====
+
+|P048_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P048_type|
+Name: |P048_name|
+Status: |P048_status|
+GitHub: |P048_github|_
+
+Supported hardware
+------------------
+
+|P048_usedby|
+

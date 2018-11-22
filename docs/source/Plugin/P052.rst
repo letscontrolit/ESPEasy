@@ -1,0 +1,19 @@
+.. _P052_page:
+
+P052
+====
+
+|P052_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P052_type|
+Name: |P052_name|
+Status: |P052_status|
+GitHub: |P052_github|_
+
+Supported hardware
+------------------
+
+|P052_usedby|

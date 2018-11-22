@@ -1,0 +1,20 @@
+.. _P069_page:
+
+P069
+====
+
+|P069_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P069_type|
+Name: |P069_name|
+Status: |P069_status|
+GitHub: |P069_github|_
+
+Supported hardware
+------------------
+
+|P069_usedby|
+

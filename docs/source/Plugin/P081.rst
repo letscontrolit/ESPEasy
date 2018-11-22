@@ -1,0 +1,20 @@
+.. _P081_page:
+
+P081
+====
+
+|P081_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P081_type|
+Name: |P081_name|
+Status: |P081_status|
+GitHub: |P081_github|_
+
+Supported hardware
+------------------
+
+|P081_usedby|
+

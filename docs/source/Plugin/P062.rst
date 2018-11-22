@@ -1,0 +1,20 @@
+.. _P062_page:
+
+P062
+====
+
+|P062_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P062_type|
+Name: |P062_name|
+Status: |P062_status|
+GitHub: |P062_github|_
+
+Supported hardware
+------------------
+
+|P062_usedby|
+

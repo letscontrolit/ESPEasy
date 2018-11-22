@@ -1,0 +1,20 @@
+.. _P065_page:
+
+P065
+====
+
+|P065_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P065_type|
+Name: |P065_name|
+Status: |P065_status|
+GitHub: |P065_github|_
+
+Supported hardware
+------------------
+
+|P065_usedby|
+

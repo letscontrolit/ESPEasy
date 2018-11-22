@@ -1,0 +1,20 @@
+.. _P040_page:
+
+P040
+====
+
+|P040_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P040_type|
+Name: |P040_name|
+Status: |P040_status|
+GitHub: |P040_github|_
+
+Supported hardware
+------------------
+
+|P040_usedby|
+
