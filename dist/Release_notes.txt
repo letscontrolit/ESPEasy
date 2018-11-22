@@ -1,4 +1,23 @@
 -------------------------------------------------
+Changes in release mega-20181122 (since mega-20181121)
+-------------------------------------------------
+
+Release date: Thu Nov 22 04:00:12 CET 2018
+
+Grovkillen (2):
+      [docs] Plugins (added real name)
+      [docs] added a first device page
+
+TD-er (2):
+      [P073_7DGT] Removed old (duplicate) content
+      [P073_7DGT] Fix uninitialized p073_dispdigit
+
+papperone (2):
+      Update _P073_7DGT.ino
+      Update _P073_7DGT.ino
+
+
+-------------------------------------------------
 Changes in release mega-20181121 (since mega-20181120)
 -------------------------------------------------
 
