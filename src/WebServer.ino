@@ -634,7 +634,7 @@ void getWebPageTemplateDefaultContentSection(String& tmpl) {
 void getWebPageTemplateDefaultFooter(String& tmpl) {
   tmpl += F("<footer>"
               "<br>"
-              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
+              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>LetsControlIt</a> community</h6>"
             "</footer>"
             "</body></html>"
           );
