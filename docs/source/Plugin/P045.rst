@@ -1,0 +1,20 @@
+.. _P045_page:
+
+P045
+====
+
+|P045_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P045_type|
+Name: |P045_name|
+Status: |P045_status|
+GitHub: |P045_github|_
+
+Supported hardware
+------------------
+
+|P045_usedby|
+

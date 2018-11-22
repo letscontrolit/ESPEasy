@@ -1,0 +1,20 @@
+.. _P080_page:
+
+P080
+====
+
+|P080_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P080_type|
+Name: |P080_name|
+Status: |P080_status|
+GitHub: |P080_github|_
+
+Supported hardware
+------------------
+
+|P080_usedby|
+

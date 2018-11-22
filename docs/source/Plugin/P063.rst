@@ -1,0 +1,20 @@
+.. _P063_page:
+
+P063
+====
+
+|P063_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P063_type|
+Name: |P063_name|
+Status: |P063_status|
+GitHub: |P063_github|_
+
+Supported hardware
+------------------
+
+|P063_usedby|
+

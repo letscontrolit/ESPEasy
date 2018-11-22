@@ -1,0 +1,20 @@
+.. _P056_page:
+
+P056
+====
+
+|P056_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P056_type|
+Name: |P056_name|
+Status: |P056_status|
+GitHub: |P056_github|_
+
+Supported hardware
+------------------
+
+|P056_usedby|
+

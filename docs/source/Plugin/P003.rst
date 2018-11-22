@@ -1,0 +1,20 @@
+.. _P003_page:
+
+P003
+====
+
+|P003_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P003_type|
+Name: |P003_name|
+Status: |P003_status|
+GitHub: |P003_github|_
+
+Supported hardware
+------------------
+
+|P003_usedby|
+

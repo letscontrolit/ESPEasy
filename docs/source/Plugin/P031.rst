@@ -1,0 +1,20 @@
+.. _P031_page:
+
+P031
+====
+
+|P031_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P031_type|
+Name: |P031_name|
+Status: |P031_status|
+GitHub: |P031_github|_
+
+Supported hardware
+------------------
+
+|P031_usedby|
+

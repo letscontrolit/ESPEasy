@@ -1,0 +1,20 @@
+.. _P053_page:
+
+P053
+====
+
+|P053_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P053_type|
+Name: |P053_name|
+Status: |P053_status|
+GitHub: |P053_github|_
+
+Supported hardware
+------------------
+
+|P053_usedby|
+

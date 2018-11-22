@@ -1,0 +1,20 @@
+.. _P055_page:
+
+P055
+====
+
+|P055_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P055_type|
+Name: |P055_name|
+Status: |P055_status|
+GitHub: |P055_github|_
+
+Supported hardware
+------------------
+
+|P055_usedby|
+

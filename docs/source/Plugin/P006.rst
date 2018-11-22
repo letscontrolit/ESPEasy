@@ -1,0 +1,20 @@
+.. _P006_page:
+
+P006
+====
+
+|P006_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P006_type|
+Name: |P006_name|
+Status: |P006_status|
+GitHub: |P006_github|_
+
+Supported hardware
+------------------
+
+|P006_usedby|
+

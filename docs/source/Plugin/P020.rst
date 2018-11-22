@@ -1,0 +1,20 @@
+.. _P020_page:
+
+P020
+====
+
+|P020_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P020_type|
+Name: |P020_name|
+Status: |P020_status|
+GitHub: |P020_github|_
+
+Supported hardware
+------------------
+
+|P020_usedby|
+

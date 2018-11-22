@@ -1,0 +1,20 @@
+.. _P004_page:
+
+P004
+====
+
+|P004_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P004_type|
+Name: |P004_name|
+Status: |P004_status|
+GitHub: |P004_github|_
+
+Supported hardware
+------------------
+
+|P004_usedby|
+
