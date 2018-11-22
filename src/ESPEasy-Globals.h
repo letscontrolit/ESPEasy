@@ -177,7 +177,7 @@
   #define VERSION                             3 // Change in config.dat mapping needs a full reset
 #endif
 
-#define BUILD                           20102 // git version 2.1.02
+#define BUILD                           20103 // git version 2.1.03
 #if defined(ESP8266)
   #define BUILD_NOTES                 " - Mega"
 #endif
@@ -708,8 +708,9 @@ float         customFloatVar[CUSTOM_VARS_MAX];
 \*********************************************************************************************/
 struct SettingsStruct
 {
-  SettingsStruct() {
+  SettingsStruct() : ResetFactoryDefaultPreference(0) {
     clearAll();
+    clearNetworkSettings();
   }
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
@@ -788,6 +789,7 @@ struct SettingsStruct
     Longitude = 0.0;
     VariousBits1 = 0;
 
+
     for (byte i = 0; i < CONTROLLER_MAX; ++i) {
       Protocol[i] = 0;
       ControllerEnabled[i] = false;
@@ -799,7 +801,6 @@ struct SettingsStruct
     for (byte task = 0; task < TASKS_MAX; ++task) {
       clearTask(task);
     }
-    clearNetworkSettings();
   }
 
   void clearTask(byte task) {
@@ -915,6 +916,7 @@ struct SettingsStruct
   float         Latitude;
   float         Longitude;
   uint32_t      VariousBits1;
+  uint32_t      ResetFactoryDefaultPreference; // Do not clear this one in the clearAll()
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
@@ -1955,6 +1957,130 @@ String getMiscStatsName(int stat) {
     }
     return F("Unknown");
 }
+
+
+/********************************************************************************************\
+  Pre defined settings for off-the-shelf hardware
+  \*********************************************************************************************/
+enum DeviceModel {
+  DeviceModel_default = 0,
+  DeviceModel_Sonoff_Basic,
+  DeviceModel_Sonoff_TH1x,
+  DeviceModel_Sonoff_S2x,
+  DeviceModel_Sonoff_TouchT1,
+  DeviceModel_Sonoff_TouchT2,
+  DeviceModel_Sonoff_TouchT3,
+  DeviceModel_Sonoff_4ch,
+  DeviceModel_Sonoff_POW,
+  DeviceModel_Sonoff_POWr2,
+  DeviceModel_Shelly1
+};
+
+struct ResetFactoryDefaultPreference_struct {
+  ResetFactoryDefaultPreference_struct(uint32_t preference = 0) : _preference(preference) {}
+
+  ResetFactoryDefaultPreference_struct(DeviceModel model, bool keepWiFi) {
+    _preference = model;
+    if (keepWiFi) {
+      _preference |= (1 << 9);
+    }
+  }
+
+  DeviceModel getDeviceModel() const {
+    return static_cast<DeviceModel>(_preference & 0xFF);
+  }
+
+  bool keepWiFi() const {
+    return (_preference & (1 << 9));
+  }
+
+  uint32_t getPreference() { return _preference; }
+
+  // TODO TD-er: Add extra flags for settings to keep/set when reset to default.
+
+private:
+  uint32_t _preference;
+} ResetFactoryDefaultPreference;
+
+struct GpioFactorySettingsStruct {
+  GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default) {
+    for (int i = 0; i < 4; ++i) {
+      button[i] = -1;
+      relais[i] = -1;
+    }
+    switch (model) {
+      case DeviceModel_Sonoff_Basic:
+      case DeviceModel_Sonoff_TH1x:
+      case DeviceModel_Sonoff_S2x:
+      case DeviceModel_Sonoff_TouchT1:
+      case DeviceModel_Sonoff_POWr2:
+        button[0] = 0;   // Single Button
+        relais[0] = 12;  // Red Led and Relay (0 = Off, 1 = On)
+        status_led = 13; // Green/Blue Led (0 = On, 1 = Off)
+        break;
+      case DeviceModel_Sonoff_POW:
+        button[0] = 0;   // Single Button
+        relais[0] = 12;  // Red Led and Relay (0 = Off, 1 = On)
+        status_led = 15; // Blue Led (0 = On, 1 = Off)
+        i2c_scl = 2;     // GPIO5 conflicts with HLW8012 Sel output
+        break;
+      case DeviceModel_Sonoff_TouchT2:
+        button[0] = 0;   // Button 1
+        button[1] = 9;   // Button 2
+        relais[0] = 12;  // Led and Relay1 (0 = Off, 1 = On)
+        relais[1] = 4;   // Led and Relay2 (0 = Off, 1 = On)
+        status_led = 13; // Blue Led (0 = On, 1 = Off)
+        i2c_sda = 3;     // GPIO4 conflicts with GPIO_REL3
+        i2c_scl = 2;     // GPIO5 conflicts with GPIO_REL2
+        break;
+      case DeviceModel_Sonoff_TouchT3:
+        button[0] = 0;   // Button 1
+        button[1] = 10;  // Button 2
+        button[2] = 9;   // Button 3
+        relais[0] = 12;  // Led and Relay1 (0 = Off, 1 = On)
+        relais[1] = 5;   // Led and Relay2 (0 = Off, 1 = On)
+        relais[2] = 4;   // Led and Relay3 (0 = Off, 1 = On)
+        status_led = 13; // Blue Led (0 = On, 1 = Off)
+        i2c_sda = 3;     // GPIO4 conflicts with GPIO_REL3
+        i2c_scl = 2;     // GPIO5 conflicts with GPIO_REL2
+        break;
+
+      case DeviceModel_Sonoff_4ch:
+        button[0] = 0;   // Button 1
+        button[1] = 9;   // Button 2
+        button[2] = 10;  // Button 3
+        button[3] = 14;  // Button 4
+        relais[0] = 12;  // Red Led and Relay1 (0 = Off, 1 = On)
+        relais[1] = 5;   // Red Led and Relay2 (0 = Off, 1 = On)
+        relais[2] = 4;   // Red Led and Relay3 (0 = Off, 1 = On)
+        relais[3] = 15;  // Red Led and Relay4 (0 = Off, 1 = On)
+        status_led = 13; // Blue Led (0 = On, 1 = Off)
+        i2c_sda = 3;     // GPIO4 conflicts with GPIO_REL3
+        i2c_scl = 2;     // GPIO5 conflicts with GPIO_REL2
+        break;
+      case DeviceModel_Shelly1:
+        button[0] = 5;   // Single Button
+        relais[0] = 4;  // Red Led and Relay (0 = Off, 1 = On)
+        status_led = 15; // Blue Led (0 = On, 1 = Off)
+        i2c_sda = 6;  // GPIO4 conflicts with relay control.
+        i2c_scl = 7;  // GPIO5 conflicts with SW input
+        break;
+
+      // case DeviceModel_default: break;
+      default: break;
+    }
+  }
+
+  int8_t button[4];
+  int8_t relais[4];
+  int8_t status_led = DEFAULT_PIN_STATUS_LED;
+  int8_t i2c_sda = DEFAULT_PIN_I2C_SDA;
+  int8_t i2c_scl = DEFAULT_PIN_I2C_SCL;
+};
+
+bool modelMatchingFlashSize(DeviceModel model, int size_MB);
+void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
+void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.

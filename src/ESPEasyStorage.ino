@@ -93,6 +93,9 @@ String BuildFixes()
     Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
     Settings.StructSize = sizeof(Settings);
   }
+  if (Settings.Build < 20103) {
+    Settings.ResetFactoryDefaultPreference = 0;
+  }
 
   Settings.Build = BUILD;
   return(SaveSettings());
