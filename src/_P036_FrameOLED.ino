@@ -40,7 +40,17 @@ static int8_t lastWiFiState = P36_WIFI_STATE_UNSET;
 
 OLEDDisplay *display=NULL;
 
-char P036_deviceTemplate[P36_Nlines][P36_Nchars];
+String P036_displayLines[P36_Nlines];
+
+void Plugin_036_loadDisplayLines(byte taskIndex) {
+  char P036_deviceTemplate[P36_Nlines][P36_Nchars];
+  LoadCustomTaskSettings(taskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
+  for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
+    P036_displayLines[varNr] = P036_deviceTemplate[varNr];
+  }
+
+
+}
 
 boolean Plugin_036(byte function, struct EventStruct *event, String& string)
 {
@@ -137,12 +147,10 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         optionValues3[3] = 8;
         optionValues3[4] = 32;
         addFormSelector(F("Scroll"), F("p036_scroll"), 5, options3, optionValues3, choice3);
-
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
-
+        Plugin_036_loadDisplayLines(event->TaskIndex);
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p036_template")) + (varNr + 1), P036_deviceTemplate[varNr], P36_Nchars);
+          addFormTextBox(String(F("Line ")) + (varNr + 1), String(F("p036_template")) + (varNr + 1), P036_displayLines[varNr], P36_Nchars);
         }
 
         // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -182,6 +190,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p036_contrast"));
 
         String error;
+        char P036_deviceTemplate[P36_Nlines][P36_Nchars];
         for (byte varNr = 0; varNr < P36_Nlines; varNr++)
         {
           String argName = F("p036_template");
@@ -194,7 +203,8 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           addHtmlError(error);
         }
         SaveCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
-
+        // After saving, make sure the active lines are updated.
+        Plugin_036_loadDisplayLines(event->TaskIndex);
         success = true;
         break;
       }
@@ -203,7 +213,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
       {
         lastWiFiState = P36_WIFI_STATE_UNSET;
         // Load the custom settings from flash
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P036_deviceTemplate, sizeof(P036_deviceTemplate));
+        Plugin_036_loadDisplayLines(event->TaskIndex);
 
         //      Init the display and turn it on
         if (display)
@@ -259,6 +269,9 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
             display->end();
             delete display;
             display=NULL;
+          }
+          for (byte varNr = 0; varNr < P36_Nlines; varNr++) {
+            P036_displayLines[varNr] = "";
           }
           break;
       }
@@ -325,7 +338,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
         //      Construct the outgoing string
         for (byte i = 0; i < linesPerFrame; i++)
         {
-          tmpString = P036_deviceTemplate[(linesPerFrame * frameCounter) + i];
+          tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
           oldString[i] = P36_parseTemplate(tmpString, 20);
           oldString[i].trim();
         }
@@ -351,7 +364,7 @@ boolean Plugin_036(byte function, struct EventStruct *event, String& string)
           //        Contruct incoming strings
           for (byte i = 0; i < linesPerFrame; i++)
           {
-            tmpString = P036_deviceTemplate[(linesPerFrame * frameCounter) + i];
+            tmpString = P036_displayLines[(linesPerFrame * frameCounter) + i];
             newString[i] = P36_parseTemplate(tmpString, 20);
             newString[i].trim();
             if (newString[i].length() > 0) foundText = true;

@@ -452,8 +452,11 @@ String ClearCustomTaskSettings(int TaskIndex)
   \*********************************************************************************************/
 String LoadCustomTaskSettings(int TaskIndex, byte* memAddress, int datasize)
 {
+  START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));
-  return(LoadFromFile(CustomTaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, memAddress, datasize));
+  String result = LoadFromFile(CustomTaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, memAddress, datasize);
+  STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
+  return result;
 }
 
 /********************************************************************************************\
