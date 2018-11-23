@@ -28,7 +28,7 @@ author = u'Grovkillen, TD-er & Friends'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'2.1b1'
+release = u'2.1-beta1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -150,7 +150,7 @@ html_theme_options = {
     # will break.
     #
     # Values: "true" (default) or "false"
-    'globaltoc_includehidden': "true",
+    'globaltoc_includehidden': "false",
 
     # HTML navbar class (Default: "navbar") to attach to <div> element.
     # For black navbar, do "navbar navbar-inverse"
