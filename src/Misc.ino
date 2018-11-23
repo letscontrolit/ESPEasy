@@ -841,25 +841,41 @@ void ResetFactory(void)
     Settings.DST   			= DEFAULT_USE_DST;
   }
 
-  Settings.clearNetworkSettings();
+  if (!ResetFactoryDefaultPreference.keepNetwork()) {
+    Settings.clearNetworkSettings();
+    // TD-er Reset access control
+    str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
+    str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
+    SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
+
+    #if DEFAULT_USE_STATIC_IP
+      str2ip((char*)DEFAULT_IP, Settings.IP);
+      str2ip((char*)DEFAULT_DNS, Settings.DNS);
+      str2ip((char*)DEFAULT_GW, Settings.Gateway);
+      str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
+    #endif
+  }
+
   Settings.clearNotifications();
   Settings.clearControllers();
   Settings.clearTasks();
-  Settings.clearLogSettings();
-  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+  if (!ResetFactoryDefaultPreference.keepLogSettings()) {
+    Settings.clearLogSettings();
+    str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 
-  // now we set all parameters that need to be non-zero as default value
-
-#if DEFAULT_USE_STATIC_IP
-  str2ip((char*)DEFAULT_IP, Settings.IP);
-  str2ip((char*)DEFAULT_DNS, Settings.DNS);
-  str2ip((char*)DEFAULT_GW, Settings.Gateway);
-  str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
-#endif
-
-  Settings.PID             = ESP_PROJECT_PID;
-  Settings.Version         = VERSION;
-  Settings.Unit            = UNIT;
+    setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
+    setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
+    Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
+    Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
+  }
+  if (!ResetFactoryDefaultPreference.keepUnitName()) {
+    Settings.clearUnitNameSettings();
+    Settings.Unit           = UNIT;
+    strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
+    Settings.UDPPort				= 0; //DEFAULT_SYNC_UDP_PORT;
+  }
   if (!ResetFactoryDefaultPreference.keepWiFi()) {
     strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
     strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
@@ -868,23 +884,27 @@ void ResetFactory(void)
     SecuritySettings.WifiKey2[0] = 0;
   }
   SecuritySettings.Password[0] = 0;
-  // TD-er Reset access control
-  str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
-  str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
-  SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
+  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+
+  // now we set all parameters that need to be non-zero as default value
+
+
+  Settings.PID             = ESP_PROJECT_PID;
+  Settings.Version         = VERSION;
+  Settings.Build           = BUILD;
+//  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
   Settings.Delay           = DEFAULT_DELAY;
   Settings.Pin_i2c_sda     = gpio_settings.i2c_sda;
   Settings.Pin_i2c_scl     = gpio_settings.i2c_scl;
   Settings.Pin_status_led  = gpio_settings.status_led;
   Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset = -1;
-  Settings.Protocol[0]        = DEFAULT_PROTOCOL;
-  strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-  Settings.deepSleep = false;
-  Settings.CustomCSS = false;
-  Settings.InitSPI = false;
+  Settings.Pin_Reset       = -1;
+  Settings.Protocol[0]     = DEFAULT_PROTOCOL;
+  Settings.deepSleep       = false;
+  Settings.CustomCSS       = false;
+  Settings.InitSPI         = false;
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -896,7 +916,6 @@ void ResetFactory(void)
       Settings.TaskDeviceSendData[y][x] = true;
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
-  Settings.Build = BUILD;
 
   // advanced Settings
   Settings.UseRules 		= DEFAULT_USE_RULES;
@@ -905,21 +924,12 @@ void ResetFactory(void)
   Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
-  str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
-
-  setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
-  setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
-  setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
-  setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
-  Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
-  Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
 
   Settings.UseSerial		= DEFAULT_USE_SERIAL;
   Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
-	Settings.UDPPort						= DEFAULT_SYNC_UDP_PORT;
 
 	Settings.IP_Octet						= DEFAULT_IP_OCTET;
 	Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;

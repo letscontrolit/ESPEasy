@@ -5635,12 +5635,22 @@ void handle_factoryreset() {
       setFactoryDefault(model);
     }
   }
+  if (WebServer.hasArg("kun")) {
+    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
+  }
   if (WebServer.hasArg("kw")) {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
+  }
+  if (WebServer.hasArg("knet")) {
+    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
   }
   if (WebServer.hasArg("kntp")) {
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
   }
+  if (WebServer.hasArg("klog")) {
+    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
+  }
+
   if (WebServer.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     applyFactoryDefaultPref();
@@ -5648,16 +5658,26 @@ void handle_factoryreset() {
   } else if (WebServer.hasArg(F("performfactoryreset"))) {
       // User confirmed to really perform the reset.
       applyFactoryDefaultPref();
-      //SaveSettings();
+      // No need to call SaveSettings(); ResetFactory() will save the new settings.
       ResetFactory();
   } else {
     // Nothing chosen yet, show options.
-    addTableSeparator(F("Setings to keep"), 2, 3);
+    addTableSeparator(F("Settings to keep"), 2, 3);
+
+    addRowLabel(F("Keep Unit/Name"));
+    addCheckBox("kun", ResetFactoryDefaultPreference.keepUnitName());
+
     addRowLabel(F("Keep WiFi config"));
     addCheckBox("kw", ResetFactoryDefaultPreference.keepWiFi());
 
-    addRowLabel(F("Keep NTP config"));
+    addRowLabel(F("Keep Network config"));
+    addCheckBox("knet", ResetFactoryDefaultPreference.keepNetwork());
+
+    addRowLabel(F("Keep NTP/DST config"));
     addCheckBox("kntp", ResetFactoryDefaultPreference.keepNTP());
+
+    addRowLabel(F("Keep log config"));
+    addCheckBox("klog", ResetFactoryDefaultPreference.keepLogSettings());
 
     addTableSeparator(F("Pre-defined configurations"), 2, 3);
     addRowLabel(F("Pre-defined config"));

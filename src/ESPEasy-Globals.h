@@ -775,6 +775,13 @@ struct SettingsStruct
     WebLogLevel = 0;
     SDLogLevel = 0;
     SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    for (byte i = 0; i < 4; ++i) {  Syslog_IP[i] = 0; }
+  }
+
+  void clearUnitNameSettings() {
+    Unit = 0;
+    Name[0] = 0;
+    UDPPort = 0;
   }
 
   void clearMisc() {
@@ -782,16 +789,12 @@ struct SettingsStruct
     Version = 0;
     Build = 0;
     IP_Octet = 0;
-    Unit = 0;
-    Name[0] = 0;
     Delay = 0;
     Pin_i2c_sda = -1;
     Pin_i2c_scl = -1;
     Pin_status_led = -1;
     Pin_sd_cs = -1;
     for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
-    for (byte i = 0; i < 4; ++i) {  Syslog_IP[i] = 0; }
-    UDPPort = 0;
     BaudRate = 0;
     MessageDelay = 0;
     deepSleep = 0;
@@ -824,6 +827,7 @@ struct SettingsStruct
     clearControllers();
     clearTasks();
     clearLogSettings();
+    clearUnitNameSettings();
   }
 
   void clearTask(byte task) {
@@ -2018,6 +2022,15 @@ struct ResetFactoryDefaultPreference_struct {
 
   bool keepNTP() const { return getBitFromUL(_preference, 10); }
   void keepNTP(bool keep) {       setBitToUL(_preference, 10, keep); }
+
+  bool keepNetwork() const { return getBitFromUL(_preference, 11); }
+  void keepNetwork(bool keep) {       setBitToUL(_preference, 11, keep); }
+
+  bool keepLogSettings() const { return getBitFromUL(_preference, 12); }
+  void keepLogSettings(bool keep) {       setBitToUL(_preference, 12, keep); }
+
+  bool keepUnitName() const { return getBitFromUL(_preference, 13); }
+  void keepUnitName(bool keep) {       setBitToUL(_preference, 13, keep); }
 
   uint32_t getPreference() { return _preference; }
 
