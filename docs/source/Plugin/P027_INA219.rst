@@ -12,8 +12,8 @@ Introduction
 
 
 Specifications:
- * Current (max ±3.2A)
- * Voltage (max. 26V) 
+ * Current (max +/-3.2A)
+ * Voltage (max. 26V)
 
 
 Wiring
