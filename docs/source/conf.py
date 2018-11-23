@@ -126,7 +126,7 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     'navbar_links': [
-        ("Rules", "rules"),
+        ("Rules", "Rules/Rules"),
         ("Forum", "https://www.letscontrolit.com/forum/viewforum.php?f=1", True),
     ],
 
@@ -288,17 +288,6 @@ todo_include_todos = True
 # This def is used to add ESP Easy related formatation (color etc).
 def setup(app):
     app.add_stylesheet('css/custom.css')
-
-# On every page add donation footer
-rst_epilog = """
-
-.. note::
-        Support us by using one of these alternatives:
-
-        `Patreon <https://www.patreon.com/GrovkillenTDer>`_
-        `Ko-Fi <https://ko-fi.com/grovkillentder>`_
-        `PayPal <https://www.paypal.me/espeasy>`_
-"""
 
 # To replace chunks of text globally +
 # ESP Easy colors (set in cutom.css)
