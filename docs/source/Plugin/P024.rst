@@ -9,12 +9,32 @@ Plugin details
 --------------
 
 Type: |P024_type|
+
 Name: |P024_name|
+
 Status: |P024_status|
+
 GitHub: |P024_github|_
+
+Maintainer: |P024_maintainer|
+
 
 Supported hardware
 ------------------
 
 |P024_usedby|
 
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
