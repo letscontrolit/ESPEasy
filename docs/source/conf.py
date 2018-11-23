@@ -289,6 +289,17 @@ todo_include_todos = True
 def setup(app):
     app.add_stylesheet('css/custom.css')
 
+# On every page add donation footer
+rst_epilog = """
+
+.. note::
+        Support us by using one of these alternatives:
+
+        `Patreon <https://www.patreon.com/GrovkillenTDer>`_
+        `Ko-Fi <https://ko-fi.com/grovkillentder>`_
+        `PayPal <https://www.paypal.me/espeasy>`_
+"""
+
 # To replace chunks of text globally +
 # ESP Easy colors (set in cutom.css)
 rst_prolog = """
@@ -301,6 +312,10 @@ rst_prolog = """
 .. role:: purple
 
 .. |affiliate| replace:: :yellow:`$` = affiliate links which will give us some money to keep this project running, thank you for using those.
+
+.. |added| replace:: :green:`added`
+.. |removed| replace:: :red:`removed`
+.. |fixed| replace:: :purple:`fixed`
 
 .. |P001_name| replace:: :cyan:`Switch`
 .. |P001_type| replace:: :cyan:`Switch Input`
@@ -870,7 +885,7 @@ rst_prolog = """
 .. |P052_github| replace:: P052_SenseAir.ino
 .. _P052_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P052_SenseAir.ino
 .. |P052_usedby| replace:: :ref:`P052_S8_page`
-.. |P052_shortinfo| replace:: Support for gas sensors from Senseair.
+.. |P052_shortinfo| replace:: The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
 .. |P052_maintainer| replace:: `.`
 .. |P052_compileinfo| replace:: `.`
 

@@ -1,9 +1,10 @@
+#######
 Plugins
-=======
+#######
 
 
 List of official plugins
-------------------------
+========================
 
 There's three different released versions of ESP Easy:
 
