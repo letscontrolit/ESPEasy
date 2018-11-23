@@ -728,7 +728,7 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
     key = createKey(PLUGIN_ID_019,unit+i);
 
     if (existPortStatus(key) && globalMapPortStatus[key].mode == PIN_MODE_OUTPUT && globalMapPortStatus[key].state == 0)
-      portmask &= ~(1 << (port-1)); //set port i = 0
+      portmask &= ~(1 << i); //set port i = 0
 /*
     if (!existPortStatus(key))
       portmask |= (1 << i); //set port i= 1
