@@ -42,7 +42,7 @@ resistor or similar to the TX and RX signals (this is not used in the pictures b
 use the Wemos D1 mini as the host of the 5V input to the S8 and connect the Wemos to USB for power.
 
 .. danger::
-  PLEASE OBSERVE THAT FEEDING THE S8 WITH 5.2+V WILL DAMAGE THE INTERNAL LAMP AND BREAK THE UNIT - GIVING FALSE VALUES!
+  Power needed: 4.5-5.25V. PLEASE OBSERVE THAT FEEDING THE S8 WITH 5.2+V WILL DAMAGE THE INTERNAL LAMP AND BREAK THE UNIT - GIVING FALSE VALUES!
 
 Setup
 -----
