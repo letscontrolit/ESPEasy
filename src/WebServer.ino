@@ -5655,7 +5655,8 @@ void handle_factoryreset() {
     // User choose a pre-defined config and wants to save it as the new default.
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
-  } else if (WebServer.hasArg(F("performfactoryreset"))) {
+  }
+  if (WebServer.hasArg(F("performfactoryreset"))) {
       // User confirmed to really perform the reset.
       applyFactoryDefaultPref();
       // No need to call SaveSettings(); ResetFactory() will save the new settings.

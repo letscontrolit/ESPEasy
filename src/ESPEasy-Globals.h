@@ -1989,6 +1989,8 @@ String getMiscStatsName(int stat) {
 /********************************************************************************************\
   Pre defined settings for off-the-shelf hardware
   \*********************************************************************************************/
+
+// This enum will be stored, so do not change order or at least the values.
 enum DeviceModel {
   DeviceModel_default = 0,
   DeviceModel_Sonoff_Basic,
