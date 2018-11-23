@@ -297,6 +297,40 @@ String P012_parseTemplate(String &tmpString, byte lineSize) {
   const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
   const char degree_lcd[2] = {0xdf, 0};  // P012_LCD degree symbol
   result.replace(degree, degree_lcd);
+  
+  const char degree[3] = {0xc2, 0xb0, 0}; // Unicode degree symbol
+  const char degree_lcd[2] = {0xdf, 0}; // P012_LCD degree symbol
+  result.replace(degree, degree_lcd);
+  
+  char unicodePrefix = 0xc3;
+  if (result.indexOf(unicodePrefix) != -1) {
+    // See: https://github.com/letscontrolit/ESPEasy/issues/2081
+
+    const char umlautAE_uni[3] = {0xc3, 0x84, 0}; // Unicode Umlaute AE
+    const char umlautAE_lcd[2] = {0xe1, 0}; // P012_LCD Umlaute
+    result.replace(umlautAE_uni, umlautAE_lcd);
+
+    const char umlaut_ae_uni[3] = {0xc3, 0xa4, 0}; // Unicode Umlaute ae
+    result.replace(umlaut_ae_uni, umlautAE_lcd);
+
+    const char umlautOE_uni[3] = {0xc3, 0x96, 0}; // Unicode Umlaute OE
+    const char umlautOE_lcd[2] = {0xef, 0}; // P012_LCD Umlaute
+    result.replace(umlautOE_uni, umlautOE_lcd);
+
+    const char umlaut_oe_uni[3] = {0xc3, 0xb6, 0}; // Unicode Umlaute oe
+    result.replace(umlaut_oe_uni, umlautOE_lcd);
+
+    const char umlautUE_uni[3] = {0xc3, 0x9c, 0}; // Unicode Umlaute UE
+    const char umlautUE_lcd[2] = {0xf5, 0}; // P012_LCD Umlaute
+    result.replace(umlautUE_uni, umlautUE_lcd);
+
+    const char umlaut_ue_uni[3] = {0xc3, 0xbc, 0}; // Unicode Umlaute ue
+    result.replace(umlaut_ue_uni, umlautUE_lcd);
+
+    const char umlaut_sz_uni[3] = {0xc3, 0x9f, 0}; // Unicode Umlaute sz
+    const char umlaut_sz_lcd[2] = {0xe2, 0}; // P012_LCD Umlaute
+    result.replace(umlaut_sz_uni, umlaut_sz_lcd);
+  }
   return result;
 }
 #endif // USES_P012
