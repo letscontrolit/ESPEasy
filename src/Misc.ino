@@ -776,14 +776,13 @@ String getTaskDeviceName(byte TaskIndex) {
   \*********************************************************************************************/
 void ResetFactory(void)
 {
-  determineFactoryDefaultPref();
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
 
   checkRAM(F("ResetFactory"));
   // Direct Serial is allowed here, since this is only an emergency task.
   Serial.print(F("RESET: Resetting factory defaults... using "));
   Serial.print(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
-  Serial.println(F(" setings"));
+  Serial.println(F(" settings"));
   delay(1000);
   if (readFromRTC())
   {
@@ -833,8 +832,22 @@ void ResetFactory(void)
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
-  Settings.clearAll();
+  Settings.clearMisc();
+  if (!ResetFactoryDefaultPreference.keepNTP()) {
+    Settings.clearTimeSettings();
+    Settings.UseNTP			= DEFAULT_USE_NTP;
+    strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
+    Settings.TimeZone		= DEFAULT_TIME_ZONE;
+    Settings.DST   			= DEFAULT_USE_DST;
+  }
+
   Settings.clearNetworkSettings();
+  Settings.clearNotifications();
+  Settings.clearControllers();
+  Settings.clearTasks();
+  Settings.clearLogSettings();
+  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+
   // now we set all parameters that need to be non-zero as default value
 
 #if DEFAULT_USE_STATIC_IP
@@ -891,11 +904,6 @@ void ResetFactory(void)
   Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
   Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
-
-  Settings.UseNTP			= DEFAULT_USE_NTP;
-  strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
-  Settings.TimeZone		= DEFAULT_TIME_ZONE;
-  Settings.DST 			= DEFAULT_USE_DST;
 
   str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 

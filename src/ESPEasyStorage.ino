@@ -187,7 +187,20 @@ String SaveSettings(void)
       wifiSetupConnect = true;
     }
   }
+  afterloadSettings();
   return (err);
+}
+
+void afterloadSettings() {
+  ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  ResetFactoryDefaultPreference_struct pref(Settings.ResetFactoryDefaultPreference);
+  DeviceModel model = pref.getDeviceModel();
+  // TODO TD-er: Try to get the information from more locations to make it more persistent
+  // Maybe EEPROM location?
+
+  if (modelMatchingFlashSize(model)) {
+    ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
+  }
 }
 
 /********************************************************************************************\
@@ -237,7 +250,7 @@ String LoadSettings()
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
   setUseStaticIP(useStaticIP());
-  ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  afterloadSettings();
   return(err);
 }
 

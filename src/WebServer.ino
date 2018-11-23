@@ -635,7 +635,7 @@ void getWebPageTemplateDefaultContentSection(String& tmpl) {
 void getWebPageTemplateDefaultFooter(String& tmpl) {
   tmpl += F("<footer>"
               "<br>"
-              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>LetsControlIt</a> community</h6>"
+              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6>"
             "</footer>"
             "</body></html>"
           );
@@ -1187,7 +1187,8 @@ void handle_config() {
 
   addFormSeparator(2);
 
-  TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
+  html_TR_TD();
+  html_TD();
   addSubmitButton();
   html_end_table();
   html_end_form();
@@ -2859,20 +2860,22 @@ void addRowLabel_copy(const String& label) {
   html_copyText_TD();
 }
 
-void addButton(const String &url, const String &label)
+void addButton(const String &url, const String &label) {
+  addButton(url, label, "");
+}
+
+void addButton(const String &url, const String &label, const String& classes)
 {
-  html_add_button_prefix();
+  html_add_button_prefix(classes);
   TXBuffer += url;
   TXBuffer += "'>";
   TXBuffer += label;
   TXBuffer += F("</a>");
 }
 
-void addWideButton(const String &url, const String &label, const String &color)
+void addWideButton(const String &url, const String &label, const String &classes)
 {
-  TXBuffer += F("<a class='button link wide");
-  TXBuffer += color;
-  TXBuffer += F("' href='");
+  html_add_wide_button_prefix(classes);
   TXBuffer += url;
   TXBuffer += "'>";
   TXBuffer += label;
@@ -2885,9 +2888,18 @@ void addSubmitButton()
 }
 
 //add submit button with different label and name
-void addSubmitButton(const String &value, const String &name)
+void addSubmitButton(const String &value, const String &name) {
+  addSubmitButton(value, name, "");
+}
+
+void addSubmitButton(const String &value, const String &name, const String &classes)
 {
-  TXBuffer += F("<input class='button link' type='submit' value='");
+  TXBuffer += F("<input class='button link");
+  if (classes.length() > 0) {
+    TXBuffer += ' ';
+    TXBuffer += classes;
+  }
+  TXBuffer += F("' type='submit' value='");
   TXBuffer += value;
   if (name.length() > 0) {
     TXBuffer += F("' name='");
@@ -3295,11 +3307,28 @@ void html_end_form() {
 }
 
 void html_add_button_prefix() {
-  TXBuffer += F(" <a class='button link' href='");
+  html_add_button_prefix("");
+}
+
+void html_add_button_prefix(const String& classes) {
+  TXBuffer += F(" <a class='button link");
+  if (classes.length() > 0) {
+    TXBuffer += ' ';
+    TXBuffer += classes;
+  }
+  TXBuffer += F("' href='");
 }
 
 void html_add_wide_button_prefix() {
-  TXBuffer += F(" <a class='button link wide' href='");
+  html_add_wide_button_prefix("");
+}
+
+void html_add_wide_button_prefix(const String& classes) {
+  String wide_classes;
+  wide_classes.reserve(classes.length() + 5);
+  wide_classes = F("wide ");
+  wide_classes += classes;
+  html_add_button_prefix(wide_classes);
 }
 
 void html_add_form() {
@@ -3638,7 +3667,7 @@ void handle_tools() {
   html_TR_TD_height(30);
   addWideButton(F("/factoryreset"), F("Factory Reset"), "");
   html_TD();
-  TXBuffer += F("Erase all settings files");
+  TXBuffer += F("Select pre-defined configuration or full erase of settings");
 
 #ifdef FEATURE_SD
   html_TR_TD_height(30);
@@ -4563,7 +4592,8 @@ void handle_advanced() {
 
   addFormSeparator(2);
 
-  TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
+  html_TR_TD();
+  html_TD();
   addSubmitButton();
   TXBuffer += F("<input type='hidden' name='edit' value='1'>");
   html_end_table();
@@ -5567,24 +5597,84 @@ void handle_setup() {
 }
 
 //********************************************************************************
+// Create pre-defined config selector
+//********************************************************************************
+void addPreDefinedConfigSelector() {
+  DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
+  addSelector_Head("fdm", true);
+  for (byte x = 0; x < DeviceModel_MAX; ++x) {
+    DeviceModel model = static_cast<DeviceModel>(x);
+    addSelector_Item(
+      getDeviceModelString(model),
+      x,
+      model == active_model,
+      !modelMatchingFlashSize(model),
+      ""
+    );
+  }
+  addSelector_Foot();
+}
+
+//********************************************************************************
 // Web Interface Factory Reset
 //********************************************************************************
-
 void handle_factoryreset() {
   checkRAM(F("handle_factoryreset"));
-  if (!isLoggedIn() || !Settings.UseRules) return;
+  if (!isLoggedIn()) return;
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
+  html_add_form();
+  html_table_class_normal();
+  html_TR();
+  addFormHeader(F("Factory Reset"));
 
-  html_table_class_multirow();
+  if (WebServer.hasArg("fdm")) {
+    DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+    if (modelMatchingFlashSize(model)) {
+      setFactoryDefault(model);
+    }
+  }
+  if (WebServer.hasArg("kw")) {
+    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
+  }
+  if (WebServer.hasArg("kntp")) {
+    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
+  }
+  if (WebServer.hasArg(F("savepref"))) {
+    // User choose a pre-defined config and wants to save it as the new default.
+    applyFactoryDefaultPref();
+    addHtmlError(SaveSettings());
+  } else if (WebServer.hasArg(F("performfactoryreset"))) {
+      // User confirmed to really perform the reset.
+      applyFactoryDefaultPref();
+      //SaveSettings();
+      ResetFactory();
+  } else {
+    // Nothing chosen yet, show options.
+    addTableSeparator(F("Setings to keep"), 2, 3);
+    addRowLabel(F("Keep WiFi config"));
+    addCheckBox("kw", ResetFactoryDefaultPreference.keepWiFi());
+
+    addRowLabel(F("Keep NTP config"));
+    addCheckBox("kntp", ResetFactoryDefaultPreference.keepNTP());
+
+    addTableSeparator(F("Pre-defined configurations"), 2, 3);
+    addRowLabel(F("Pre-defined config"));
+    addPreDefinedConfigSelector();
 
 
+    html_TR_TD();
+    html_TD();
+    addSubmitButton(F("Save Preferences"), F("savepref"));
 
-  html_TR_TD_height(30);
-  addWideButton(F("/?cmd=reset"), F("Factory Reset"), F(" red"));
-  html_TD();
-  TXBuffer += F("Erase all settings files");
+
+    html_TR_TD_height(30);
+
+    addTableSeparator(F("Immediate full reset"), 2, 3);
+    addRowLabel(F("Erase settings files"));
+    addSubmitButton(F("Factory Reset"), F("performfactoryreset"), F("red"));
+  }
 
   html_end_table();
   html_end_form();

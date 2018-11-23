@@ -151,7 +151,6 @@ bool modelMatchingFlashSize(DeviceModel model) {
   uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
   // TODO TD-er: Add checks for ESP8266/ESP8285/ESP32
   switch (model) {
-    case DeviceModel_default:        return true;
     case DeviceModel_Sonoff_Basic:
     case DeviceModel_Sonoff_TH1x:
     case DeviceModel_Sonoff_S2x:
@@ -162,23 +161,16 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel_Sonoff_POW:
     case DeviceModel_Sonoff_POWr2:   return size_MB == 4;
     case DeviceModel_Shelly1:        return size_MB == 2;
+
+    // case DeviceModel_default:
+    default:  return true;
   }
   return true;
 }
 
-void determineFactoryDefaultPref() {
-  ResetFactoryDefaultPreference_struct pref(Settings.ResetFactoryDefaultPreference);
-  DeviceModel model = pref.getDeviceModel();
-  // TODO TD-er: Try to get the information from more locations to make it more persistent
-  // Maybe EEPROM location?
-
-  if (modelMatchingFlashSize(model)) {
-    ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
-  }
+void setFactoryDefault(DeviceModel model) {
+  ResetFactoryDefaultPreference.setDeviceModel(model);
 }
-
-
-
 
 /********************************************************************************************\
   Add pre defined plugins and rules.
