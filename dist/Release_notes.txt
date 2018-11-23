@@ -1,4 +1,16 @@
 -------------------------------------------------
+Changes in release mega-20181123 (since mega-20181122)
+-------------------------------------------------
+
+Release date: Fri Nov 23 04:00:08 CET 2018
+
+Grovkillen (3):
+      [docs] Fixed error in image path
+      [docs] Global variables for plugins + added raw plugin files
+      [docs] added all plugins to global + generated generic pages for them
+
+
+-------------------------------------------------
 Changes in release mega-20181122 (since mega-20181121)
 -------------------------------------------------
 
