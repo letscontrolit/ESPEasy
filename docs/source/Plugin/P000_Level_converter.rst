@@ -3,9 +3,6 @@
 Level converter
 ===============
 
-|P000_typename|
-|P000_status|
-
 
 Introduction
 ------------
