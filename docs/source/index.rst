@@ -15,6 +15,7 @@ Welcome to ESP Easy's documentation!
    Controller/_Controller.rst
    Plugin/_Plugin.rst
    Rules/Rules.rst
+   Tools/Tools.rst
    WiFi/WiFi.rst
 
 .. toctree::
