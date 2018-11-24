@@ -25,6 +25,7 @@ Welcome to ESP Easy's documentation!
    Plugin/Plugin.rst
    Plugin/P052_S8.rst
    Rules/Rules.rst
+   Tools/Tools.rst
    WiFi/WiFi.rst
 
 .. raw:: latex
