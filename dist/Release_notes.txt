@@ -1,4 +1,18 @@
 -------------------------------------------------
+Changes in release mega-20181124 (since mega-20181123)
+-------------------------------------------------
+
+Release date: Sat Nov 24 04:00:07 CET 2018
+
+Grovkillen (5):
+      [docs] fixed the TOC + added changelogs to all plugins + core
+      [docs] Added plugin names to plugin pages + fixed "site map"
+      [docs] Added donation links in footer
+      [docs] Added hardware pages
+      [docs] Fixed some syntax error
+
+
+-------------------------------------------------
 Changes in release mega-20181123 (since mega-20181122)
 -------------------------------------------------
 
