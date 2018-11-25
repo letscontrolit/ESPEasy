@@ -1,26 +1,26 @@
-.. ESP Easy colors (set in cutom.css)
-.. role:: blue
-.. role:: red
-.. role:: green
-.. role:: yellow
-.. role:: orange
-.. role:: cyan
-.. role:: purple
-
 .. _P052_S8_page:
 
 S8
 ==
 
-:cyan:`Gases - CO2 Senseair`
+|P052_typename|
+|P052_status|
 
-.. image:: images\\P052_S8_1.jpg
+.. image:: P052_S8_1.jpg
 
 Introduction
 ------------
 
-The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor
-is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
+This is the flagship CO2 sensor from Swedish company Senseair.
+
+Specifications:
+ * 400 to 2000 ppm
+ * 5V (4.5-5.25VDC)
+ * Peak 300mA, avarage 30mA
+ * 8.5 x 33.5 x 20 mm
+ * UART communication
+ * 15 years life span
+ * No burn-in needed, will stabilize after 8 days at worst depending on placement environment
 
 Wiring
 ------
@@ -42,7 +42,7 @@ resistor or similar to the TX and RX signals (this is not used in the pictures b
 use the Wemos D1 mini as the host of the 5V input to the S8 and connect the Wemos to USB for power.
 
 .. danger::
-  PLEASE OBSERVE THAT FEEDING THE S8 WITH 5.2+V WILL DAMAGE THE INTERNAL LAMP AND BREAK THE UNIT - GIVING FALSE VALUES!
+  Power needed: 4.5-5.25V. PLEASE OBSERVE THAT FEEDING THE S8 WITH 5.2+V WILL DAMAGE THE INTERNAL LAMP AND BREAK THE UNIT - GIVING FALSE VALUES!
 
 Setup
 -----
@@ -85,13 +85,16 @@ Where to buy
    :header: "Store", "Link"
    :widths: 5, 40
 
-   "AliExpress","`Link 1 <http://s.click.aliexpress.com/e/cg1fhDDI>`_ `Link 2 <https://test.com>`_"
-   "Ebay","`Link 3 <http://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&pub=5575404073&toolid=10001&campid=5338336929&customid=&mpre=https%3A%2F%2Fwww.ebay.com%2Fitm%2FS8-0053-carbon-dioxide-infrared-CO2-sensors-FOR-SenseAir%2F112303432827%3Fhash%3Ditem1a25ce647b%3Ag%3A%7EHcAAOSw1WJZJ%7E8Y>`_"
-   "First Byte","`Link 4 <https://firstbyte.shop/products/s8>`_"
+   "AliExpress","`Link 1 ($) <http://s.click.aliexpress.com/e/cg1fhDDI>`_"
+   "Ebay","`Link 2 ($) <http://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&pub=5575404073&toolid=10001&campid=5338336929&customid=&mpre=https%3A%2F%2Fwww.ebay.com%2Fitm%2FS8-0053-carbon-dioxide-infrared-CO2-sensors-FOR-SenseAir%2F112303432827%3Fhash%3Ditem1a25ce647b%3Ag%3A%7EHcAAOSw1WJZJ%7E8Y>`_"
+   "First Byte","`Link 3 <https://firstbyte.shop/products/s8>`_"
+
+|affiliate|
+
 
 More pictures
 -------------
 
-.. image:: images\\P052_S8_2.jpg
+.. image:: P052_S8_2.jpg
 
-.. image:: images\\P052_S8_3.jpg
+.. image:: P052_S8_3.jpg

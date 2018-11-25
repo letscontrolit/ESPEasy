@@ -514,6 +514,7 @@ void WebServerInit()
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
   WebServer.on(F("/sysvars"), handle_sysvars);
+  WebServer.on(F("/factoryreset"), handle_factoryreset);
   WebServer.on(F("/favicon.ico"), handle_favicon);
 
   #if defined(ESP8266)
@@ -634,7 +635,7 @@ void getWebPageTemplateDefaultContentSection(String& tmpl) {
 void getWebPageTemplateDefaultFooter(String& tmpl) {
   tmpl += F("<footer>"
               "<br>"
-              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
+              "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6>"
             "</footer>"
             "</body></html>"
           );
@@ -659,7 +660,16 @@ void getErrorNotifications() {
 }
 
 
-static byte navMenuIndex = 0;
+#define MENU_INDEX_MAIN          0
+#define MENU_INDEX_CONFIG        1
+#define MENU_INDEX_CONTROLLERS   2
+#define MENU_INDEX_HARDWARE      3
+#define MENU_INDEX_DEVICES       4
+#define MENU_INDEX_RULES         5
+#define MENU_INDEX_NOTIFICATIONS 6
+#define MENU_INDEX_TOOLS         7
+static byte navMenuIndex = MENU_INDEX_MAIN;
+
 
 void getWebPageTemplateVar(const String& varName )
 {
@@ -695,7 +705,7 @@ void getWebPageTemplateVar(const String& varName )
 
     for (byte i = 0; i < 8; i++)
     {
-      if (i == 5 && !Settings.UseRules)   //hide rules menu item
+      if (i == MENU_INDEX_RULES && !Settings.UseRules)   //hide rules menu item
         continue;
 
       TXBuffer += F("<a class='menu");
@@ -987,7 +997,8 @@ void handle_root() {
       }
     }
 
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
 
     printWebString = "";
     printToWeb = false;
@@ -1037,7 +1048,7 @@ void handle_config() {
    checkRAM(F("handle_config"));
    if (!isLoggedIn()) return;
 
-   navMenuIndex = 1;
+   navMenuIndex = MENU_INDEX_CONFIG;
    TXBuffer.startStream();
    sendHeadandTail_stdtemplate(_HEAD);
 
@@ -1176,9 +1187,11 @@ void handle_config() {
 
   addFormSeparator(2);
 
-  TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
+  html_TR_TD();
+  html_TD();
   addSubmitButton();
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
 
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
@@ -1191,7 +1204,7 @@ void handle_config() {
 void handle_controllers() {
   checkRAM(F("handle_controllers"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 2;
+  navMenuIndex = MENU_INDEX_CONTROLLERS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -1348,7 +1361,8 @@ void handle_controllers() {
         html_TD(3);
       }
     }
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
   }
   else
   {
@@ -1497,7 +1511,8 @@ void handle_controllers() {
     html_TD();
     addButton(F("controllers"), F("Close"));
     addSubmitButton();
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
   }
 
   sendHeadandTail_stdtemplate(_TAIL);
@@ -1510,7 +1525,7 @@ void handle_controllers() {
 void handle_notifications() {
   checkRAM(F("handle_notifications"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 6;
+  navMenuIndex = MENU_INDEX_NOTIFICATIONS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -1614,7 +1629,8 @@ void handle_notifications() {
         html_TD(3);
       }
     }
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
   }
   else
   {
@@ -1690,7 +1706,8 @@ void handle_notifications() {
     addButton(F("notifications"), F("Close"));
     addSubmitButton();
     addSubmitButton(F("Test"), F("test"));
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
   }
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
@@ -1703,7 +1720,7 @@ void handle_notifications() {
 void handle_hardware() {
   checkRAM(F("handle_hardware"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 3;
+  navMenuIndex = MENU_INDEX_HARDWARE;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
   if (isFormItem(F("psda")))
@@ -1788,7 +1805,8 @@ void handle_hardware() {
   html_TD();
   addSubmitButton();
   html_TR_TD();
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
 
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
@@ -1880,7 +1898,7 @@ void setBasicTaskValues(byte taskIndex, unsigned long taskdevicetimer,
 void handle_devices() {
   checkRAM(F("handle_devices"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 4;
+  navMenuIndex = MENU_INDEX_DEVICES;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -2212,7 +2230,8 @@ void handle_devices() {
       }
 
     } // next
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
 
   }
   // Show edit form if a specific entry is chosen with the edit button
@@ -2248,6 +2267,8 @@ void handle_devices() {
       TXBuffer += getPluginNameFromDeviceIndex(DeviceIndex);
 
       addHelpButton(String(F("Plugin")) + Settings.TaskDeviceNumber[taskIndex]);
+      addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
+
 
       if (Device[DeviceIndex].Number == 3 && taskIndex >= 4) // Number == 3 = PulseCounter Plugin
         {
@@ -2417,7 +2438,8 @@ void handle_devices() {
     if (Settings.TaskDeviceNumber[taskIndex] != 0 )
       addSubmitButton(F("Delete"), F("del"));
 
-    TXBuffer += F("</table></form>");
+    html_end_table();
+    html_end_form();
   }
 
 
@@ -2840,20 +2862,22 @@ void addRowLabel_copy(const String& label) {
   html_copyText_TD();
 }
 
-void addButton(const String &url, const String &label)
+void addButton(const String &url, const String &label) {
+  addButton(url, label, "");
+}
+
+void addButton(const String &url, const String &label, const String& classes)
 {
-  html_add_button_prefix();
+  html_add_button_prefix(classes);
   TXBuffer += url;
   TXBuffer += "'>";
   TXBuffer += label;
   TXBuffer += F("</a>");
 }
 
-void addWideButton(const String &url, const String &label, const String &color)
+void addWideButton(const String &url, const String &label, const String &classes)
 {
-  TXBuffer += F("<a class='button link wide");
-  TXBuffer += color;
-  TXBuffer += F("' href='");
+  html_add_wide_button_prefix(classes);
   TXBuffer += url;
   TXBuffer += "'>";
   TXBuffer += label;
@@ -2866,9 +2890,18 @@ void addSubmitButton()
 }
 
 //add submit button with different label and name
-void addSubmitButton(const String &value, const String &name)
+void addSubmitButton(const String &value, const String &name) {
+  addSubmitButton(value, name, "");
+}
+
+void addSubmitButton(const String &value, const String &name, const String &classes)
 {
-  TXBuffer += F("<input class='button link' type='submit' value='");
+  TXBuffer += F("<input class='button link");
+  if (classes.length() > 0) {
+    TXBuffer += ' ';
+    TXBuffer += classes;
+  }
+  TXBuffer += F("' type='submit' value='");
   TXBuffer += value;
   if (name.length() > 0) {
     TXBuffer += F("' name='");
@@ -3129,6 +3162,15 @@ void addHelpButton(const String& url)
   TXBuffer += F("' target='_blank'>&#10068;</a>");
 }
 
+void addRTDPluginButton(int taskDeviceNumber) {
+  TXBuffer += F(" <a class='button help' href='");
+  TXBuffer += F("https://espeasy.readthedocs.io/en/latest/Plugin/P");
+  if (taskDeviceNumber < 100) TXBuffer += '0';
+  if (taskDeviceNumber < 10) TXBuffer += '0';
+  TXBuffer += String(taskDeviceNumber);
+  TXBuffer += F(".html' target='_blank'>&#8505;</a>");
+}
+
 void addEnabled(boolean enabled)
 {
   TXBuffer += F("<span class='enabled ");
@@ -3271,12 +3313,33 @@ void html_end_table() {
   TXBuffer += F("</table>");
 }
 
+void html_end_form() {
+  TXBuffer += F("</form>");
+}
+
 void html_add_button_prefix() {
-  TXBuffer += F(" <a class='button link' href='");
+  html_add_button_prefix("");
+}
+
+void html_add_button_prefix(const String& classes) {
+  TXBuffer += F(" <a class='button link");
+  if (classes.length() > 0) {
+    TXBuffer += ' ';
+    TXBuffer += classes;
+  }
+  TXBuffer += F("' href='");
 }
 
 void html_add_wide_button_prefix() {
-  TXBuffer += F(" <a class='button link wide' href='");
+  html_add_wide_button_prefix("");
+}
+
+void html_add_wide_button_prefix(const String& classes) {
+  String wide_classes;
+  wide_classes.reserve(classes.length() + 5);
+  wide_classes = F("wide ");
+  wide_classes += classes;
+  html_add_button_prefix(wide_classes);
 }
 
 void html_add_form() {
@@ -3374,7 +3437,7 @@ void addTaskValueSelect(String name, int choice, byte TaskIndex)
 //********************************************************************************
 void handle_log() {
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -3460,7 +3523,7 @@ void handle_log_JSON() {
 //********************************************************************************
 void handle_tools() {
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -3613,9 +3676,9 @@ void handle_tools() {
   TXBuffer += F("Show files on internal flash");
 
   html_TR_TD_height(30);
-  addWideButton(F("/?cmd=reset"), F("Factory Reset"), F(" red"));
+  addWideButton(F("/factoryreset"), F("Factory Reset"), "");
   html_TD();
-  TXBuffer += F("Erase all settings files");
+  TXBuffer += F("Select pre-defined configuration or full erase of settings");
 
 #ifdef FEATURE_SD
   html_TR_TD_height(30);
@@ -3624,7 +3687,8 @@ void handle_tools() {
   TXBuffer += F("Show files on SD-Card");
 #endif
 
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
   printWebString = "";
@@ -3638,7 +3702,7 @@ void handle_tools() {
 void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -3768,7 +3832,7 @@ void handle_pinstates() {
 void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -3911,7 +3975,7 @@ void handle_i2cscanner() {
 void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
@@ -3963,7 +4027,8 @@ void handle_login() {
   html_TD();
   addSubmitButton();
   html_TR_TD();
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
 
   if (webrequest.length() != 0)
   {
@@ -4430,7 +4495,7 @@ long stream_timing_statistics(bool clearStats) {
 
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
@@ -4465,7 +4530,7 @@ void handle_timingstats() {
 void handle_advanced() {
   checkRAM(F("handle_advanced"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
@@ -4603,10 +4668,12 @@ void handle_advanced() {
 
   addFormSeparator(2);
 
-  TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
+  html_TR_TD();
+  html_TD();
   addSubmitButton();
   TXBuffer += F("<input type='hidden' name='edit' value='1'>");
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
@@ -4705,7 +4772,7 @@ void handle_download()
 {
   checkRAM(F("handle_download"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
 //  TXBuffer.startStream();
 //  sendHeadandTail_stdtemplate();
 
@@ -4739,7 +4806,7 @@ void handle_download()
 byte uploadResult = 0;
 void handle_upload() {
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
@@ -4758,7 +4825,7 @@ void handle_upload_post() {
   checkRAM(F("handle_upload_post"));
   if (!isLoggedIn()) return;
 
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
@@ -5092,7 +5159,7 @@ boolean handle_custom(String path) {
 void handle_filelist() {
   checkRAM(F("handle_filelist"));
   if (!clientIPallowed()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
@@ -5163,7 +5230,8 @@ void handle_filelist() {
       break;
     }
   }
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   html_BR();
   addButton(F("/upload"), F("Upload"));
   if (startIdx > 0)
@@ -5243,7 +5311,8 @@ void handle_filelist() {
     }
     file = root.openNextFile();
   }
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   html_BR();
   addButton(F("/upload"), F("Upload"));
   if (startIdx > 0)
@@ -5274,7 +5343,7 @@ void handle_filelist() {
 void handle_SDfilelist() {
   checkRAM(F("handle_SDfilelist"));
   if (!clientIPallowed()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
@@ -5409,10 +5478,11 @@ void handle_SDfilelist() {
     entry = root.openNextFile();
   }
   root.close();
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   //TXBuffer += F("<BR><a class='button link' href=\"/upload\">Upload</a>");
-     sendHeadandTail_stdtemplate(true);
-    TXBuffer.endStream();
+  sendHeadandTail_stdtemplate(true);
+  TXBuffer.endStream();
 }
 #endif
 
@@ -5596,12 +5666,119 @@ void handle_setup() {
     refreshCount++;
   }
 
-  TXBuffer += F("</form>");
-   sendHeadandTail(F("TmplAP"),true);
+  html_end_form();
+  sendHeadandTail(F("TmplAP"),true);
   TXBuffer.endStream();
   delay(10);
 }
 
+//********************************************************************************
+// Create pre-defined config selector
+//********************************************************************************
+void addPreDefinedConfigSelector() {
+  DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
+  addSelector_Head("fdm", true);
+  for (byte x = 0; x < DeviceModel_MAX; ++x) {
+    DeviceModel model = static_cast<DeviceModel>(x);
+    addSelector_Item(
+      getDeviceModelString(model),
+      x,
+      model == active_model,
+      !modelMatchingFlashSize(model),
+      ""
+    );
+  }
+  addSelector_Foot();
+}
+
+//********************************************************************************
+// Web Interface Factory Reset
+//********************************************************************************
+void handle_factoryreset() {
+  checkRAM(F("handle_factoryreset"));
+  if (!isLoggedIn()) return;
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startStream();
+  sendHeadandTail_stdtemplate(_HEAD);
+  html_add_form();
+  html_table_class_normal();
+  html_TR();
+  addFormHeader(F("Factory Reset"));
+
+  if (WebServer.hasArg("fdm")) {
+    DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+    if (modelMatchingFlashSize(model)) {
+      setFactoryDefault(model);
+    }
+  }
+  if (WebServer.hasArg("kun")) {
+    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
+  }
+  if (WebServer.hasArg("kw")) {
+    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
+  }
+  if (WebServer.hasArg("knet")) {
+    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
+  }
+  if (WebServer.hasArg("kntp")) {
+    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
+  }
+  if (WebServer.hasArg("klog")) {
+    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
+  }
+
+  if (WebServer.hasArg(F("savepref"))) {
+    // User choose a pre-defined config and wants to save it as the new default.
+    applyFactoryDefaultPref();
+    addHtmlError(SaveSettings());
+  }
+  if (WebServer.hasArg(F("performfactoryreset"))) {
+      // User confirmed to really perform the reset.
+      applyFactoryDefaultPref();
+      // No need to call SaveSettings(); ResetFactory() will save the new settings.
+      ResetFactory();
+  } else {
+    // Nothing chosen yet, show options.
+    addTableSeparator(F("Settings to keep"), 2, 3);
+
+    addRowLabel(F("Keep Unit/Name"));
+    addCheckBox("kun", ResetFactoryDefaultPreference.keepUnitName());
+
+    addRowLabel(F("Keep WiFi config"));
+    addCheckBox("kw", ResetFactoryDefaultPreference.keepWiFi());
+
+    addRowLabel(F("Keep Network config"));
+    addCheckBox("knet", ResetFactoryDefaultPreference.keepNetwork());
+
+    addRowLabel(F("Keep NTP/DST config"));
+    addCheckBox("kntp", ResetFactoryDefaultPreference.keepNTP());
+
+    addRowLabel(F("Keep log config"));
+    addCheckBox("klog", ResetFactoryDefaultPreference.keepLogSettings());
+
+    addTableSeparator(F("Pre-defined configurations"), 2, 3);
+    addRowLabel(F("Pre-defined config"));
+    addPreDefinedConfigSelector();
+
+
+    html_TR_TD();
+    html_TD();
+    addSubmitButton(F("Save Preferences"), F("savepref"));
+
+
+    html_TR_TD_height(30);
+
+    addTableSeparator(F("Immediate full reset"), 2, 3);
+    addRowLabel(F("Erase settings files"));
+    addSubmitButton(F("Factory Reset"), F("performfactoryreset"), F("red"));
+  }
+
+  html_end_table();
+  html_end_form();
+  sendHeadandTail_stdtemplate(_TAIL);
+  TXBuffer.endStream();
+
+}
 
 //********************************************************************************
 // Web Interface rules page
@@ -5609,7 +5786,7 @@ void handle_setup() {
 void handle_rules() {
   checkRAM(F("handle_rules"));
   if (!isLoggedIn() || !Settings.UseRules) return;
-  navMenuIndex = 5;
+  navMenuIndex = MENU_INDEX_RULES;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
   static byte currentSet = 1;
@@ -5736,18 +5913,19 @@ void handle_rules() {
     f.close();
   }
 
-   html_TR_TD(); TXBuffer += F("Current size: ");
-   TXBuffer += size;
-   TXBuffer += F(" characters (Max ");
-   TXBuffer += RULES_MAX_SIZE;
-   TXBuffer += ')';
+  html_TR_TD(); TXBuffer += F("Current size: ");
+  TXBuffer += size;
+  TXBuffer += F(" characters (Max ");
+  TXBuffer += RULES_MAX_SIZE;
+  TXBuffer += ')';
 
   addFormSeparator(2);
 
-   html_TR_TD();
+  html_TR_TD();
   addSubmitButton();
   addButton(fileName, F("Download to file"));
-   TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 
@@ -5761,7 +5939,7 @@ void handle_rules() {
 void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
   if (!isLoggedIn()) return;
-  navMenuIndex = 7;
+  navMenuIndex = MENU_INDEX_TOOLS;
   html_reset_copyTextCounter();
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
@@ -6125,8 +6303,9 @@ void handle_sysinfo() {
    getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
   #endif
 
-   TXBuffer += F("</table></form>");
-   sendHeadandTail_stdtemplate(true);
+  html_end_table();
+  html_end_form();
+  sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
 
@@ -6313,7 +6492,8 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
 
-  TXBuffer += F("</table></form>");
+  html_end_table();
+  html_end_form();
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 }
@@ -6422,11 +6602,29 @@ unsigned int getSettingsTypeColor(SettingsType settingsType) {
 #define SVG_BAR_WIDTH 400
 
 void write_SVG_image_header(int width, int height) {
+  write_SVG_image_header(width, height, false);
+}
+
+void write_SVG_image_header(int width, int height, bool useViewbox) {
   TXBuffer += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
   TXBuffer += width;
   TXBuffer += F("\" height=\"");
   TXBuffer += height;
-  TXBuffer += "\">";
+  TXBuffer += F("\" version=\"1.1\"");
+  if (useViewbox) {
+    TXBuffer += F(" viewBox=\"0 0 100 100\"");
+  }
+  TXBuffer += '>';
+}
+
+void getESPeasyLogo(int width_pixels) {
+  write_SVG_image_header(width_pixels, width_pixels, true);
+  TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
+  TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
+  TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
+  TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\" fill=\"none\" stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
+  TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
+  TXBuffer += F("</g></g></svg>");
 }
 
 void getConfig_dat_file_layout() {

@@ -803,10 +803,13 @@ String getTaskDeviceName(byte TaskIndex) {
   \*********************************************************************************************/
 void ResetFactory(void)
 {
+  const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
 
   checkRAM(F("ResetFactory"));
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.println(F("RESET: Resetting factory defaults..."));
+  Serial.print(F("RESET: Resetting factory defaults... using "));
+  Serial.print(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
+  Serial.println(F(" settings"));
   delay(1000);
   if (readFromRTC())
   {
@@ -822,6 +825,7 @@ void ResetFactory(void)
   {
     Serial.println(F("RESET: Cold boot"));
     initRTC();
+    // TODO TD-er: Store set device model in RTC.
   }
 
   RTC.flashCounter=0; //reset flashcounter, since we're already counting the number of factory-resets. we dont want to hit a flash-count limit during reset.
@@ -855,40 +859,79 @@ void ResetFactory(void)
   fname=FILE_RULES;
   InitFile(fname.c_str(), 0);
 
-  Settings.clearAll();
+  Settings.clearMisc();
+  if (!ResetFactoryDefaultPreference.keepNTP()) {
+    Settings.clearTimeSettings();
+    Settings.UseNTP			= DEFAULT_USE_NTP;
+    strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
+    Settings.TimeZone		= DEFAULT_TIME_ZONE;
+    Settings.DST   			= DEFAULT_USE_DST;
+  }
+
+  if (!ResetFactoryDefaultPreference.keepNetwork()) {
+    Settings.clearNetworkSettings();
+    // TD-er Reset access control
+    str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
+    str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
+    SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
+
+    #if DEFAULT_USE_STATIC_IP
+      str2ip((char*)DEFAULT_IP, Settings.IP);
+      str2ip((char*)DEFAULT_DNS, Settings.DNS);
+      str2ip((char*)DEFAULT_GW, Settings.Gateway);
+      str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
+    #endif
+  }
+
+  Settings.clearNotifications();
+  Settings.clearControllers();
+  Settings.clearTasks();
+  if (!ResetFactoryDefaultPreference.keepLogSettings()) {
+    Settings.clearLogSettings();
+    str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
+
+    setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
+    setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
+    Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
+    Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
+  }
+  if (!ResetFactoryDefaultPreference.keepUnitName()) {
+    Settings.clearUnitNameSettings();
+    Settings.Unit           = UNIT;
+    strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
+    Settings.UDPPort				= 0; //DEFAULT_SYNC_UDP_PORT;
+  }
+  if (!ResetFactoryDefaultPreference.keepWiFi()) {
+    strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
+    strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
+    strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
+    SecuritySettings.WifiSSID2[0] = 0;
+    SecuritySettings.WifiKey2[0] = 0;
+  }
+  SecuritySettings.Password[0] = 0;
+
+  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+
   // now we set all parameters that need to be non-zero as default value
 
-#if DEFAULT_USE_STATIC_IP
-  str2ip((char*)DEFAULT_IP, Settings.IP);
-  str2ip((char*)DEFAULT_DNS, Settings.DNS);
-  str2ip((char*)DEFAULT_GW, Settings.Gateway);
-  str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
-#endif
 
   Settings.PID             = ESP_PROJECT_PID;
   Settings.Version         = VERSION;
-  Settings.Unit            = UNIT;
-  strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
-  strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
-  strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
-  SecuritySettings.Password[0] = 0;
-  // TD-er Reset access control
-  str2ip((char*)DEFAULT_IPRANGE_LOW, SecuritySettings.AllowedIPrangeLow);
-  str2ip((char*)DEFAULT_IPRANGE_HIGH, SecuritySettings.AllowedIPrangeHigh);
-  SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
-
+  Settings.Build           = BUILD;
+//  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
   Settings.Delay           = DEFAULT_DELAY;
-  Settings.Pin_i2c_sda     = DEFAULT_PIN_I2C_SDA;
-  Settings.Pin_i2c_scl     = DEFAULT_PIN_I2C_SCL;
-  Settings.Pin_status_led  = DEFAULT_PIN_STATUS_LED;
+  Settings.Pin_i2c_sda     = gpio_settings.i2c_sda;
+  Settings.Pin_i2c_scl     = gpio_settings.i2c_scl;
+  Settings.Pin_status_led  = gpio_settings.status_led;
   Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset = -1;
-  Settings.Protocol[0]        = DEFAULT_PROTOCOL;
-  strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-  Settings.deepSleep = false;
-  Settings.CustomCSS = false;
-  Settings.InitSPI = false;
+  Settings.Pin_Reset       = -1;
+  Settings.Protocol[0]     = DEFAULT_PROTOCOL;
+  Settings.deepSleep       = false;
+  Settings.CustomCSS       = false;
+  Settings.InitSPI         = false;
   for (byte x = 0; x < TASKS_MAX; x++)
   {
     Settings.TaskDevicePin1[x] = -1;
@@ -900,35 +943,20 @@ void ResetFactory(void)
       Settings.TaskDeviceSendData[y][x] = true;
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
-  Settings.Build = BUILD;
 
-	// advanced Settings
-	Settings.UseRules 		= DEFAULT_USE_RULES;
+  // advanced Settings
+  Settings.UseRules 		= DEFAULT_USE_RULES;
 
-	Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
-	Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
-	Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
+  Settings.MQTTRetainFlag	= DEFAULT_MQTT_RETAIN;
+  Settings.MessageDelay	= DEFAULT_MQTT_DELAY;
+  Settings.MQTTUseUnitNameAsClientId = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
-    Settings.UseNTP			= DEFAULT_USE_NTP;
-	strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
-	Settings.TimeZone		= DEFAULT_TIME_ZONE;
-    Settings.DST 			= DEFAULT_USE_DST;
 
-	str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
-
-  setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
-  setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
-	setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
-  setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
-  Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
-	Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
-
-	Settings.UseSerial		= DEFAULT_USE_SERIAL;
-	Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+  Settings.UseSerial		= DEFAULT_USE_SERIAL;
+  Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
-	Settings.UDPPort						= DEFAULT_SYNC_UDP_PORT;
 
 	Settings.IP_Octet						= DEFAULT_IP_OCTET;
 	Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
@@ -941,11 +969,8 @@ void ResetFactory(void)
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
 #endif
 
-  addPredefinedPlugins();
-  addPredefinedRules();
-
-
-
+  addPredefinedPlugins(gpio_settings);
+  addPredefinedRules(gpio_settings);
 
   SaveSettings();
 
@@ -970,108 +995,6 @@ void ResetFactory(void)
   WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot();
-}
-
-void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeLow) {
-  setTaskDevice_to_TaskIndex(1, taskIndex);
-  setBasicTaskValues(
-    taskIndex,
-    0,            // taskdevicetimer
-    true,         // enabled
-    name,         // name
-    gpio,         // pin1
-    -1,            // pin2
-    -1);           // pin3
-  Settings.TaskDevicePin1PullUp[taskIndex] = true;
-  if (activeLow)
-    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
-}
-
-bool addPredefinedPlugins() {
-  byte taskIndex = 0;
-  #ifdef GPIO_KEY1
-  // Create button switch P001
-  addSwitchPlugin(taskIndex, GPIO_KEY1, F("Button1"), true);
-  ++taskIndex;
-  #endif // GPIO_KEY1
-  #ifdef GPIO_KEY2
-  // Create button switch P001
-  addSwitchPlugin(taskIndex, GPIO_KEY2, F("Button2"), true);
-  ++taskIndex;
-  #endif // GPIO_KEY2
-  #ifdef GPIO_KEY3
-  // Create button switch P001
-  addSwitchPlugin(taskIndex, GPIO_KEY3, F("Button3"), true);
-  ++taskIndex;
-  #endif // GPIO_KEY3
-  #ifdef GPIO_KEY4
-  // Create button switch P001
-  addSwitchPlugin(taskIndex, GPIO_KEY4, F("Button4"), true);
-  ++taskIndex;
-  #endif // GPIO_KEY4
-
-  #ifdef GPIO_REL1
-    // Create relay switch P001
-    addSwitchPlugin(taskIndex, GPIO_REL1, F("Relay1"), false);
-    ++taskIndex;
-  #endif // GPIO_REL1
-  #ifdef GPIO_REL2
-    // Create relay switch P001
-    addSwitchPlugin(taskIndex, GPIO_REL2, F("Relay2"), false);
-    ++taskIndex;
-  #endif // GPIO_REL2
-  #ifdef GPIO_REL3
-    // Create relay switch P001
-    addSwitchPlugin(taskIndex, GPIO_REL3, F("Relay3"), false);
-    ++taskIndex;
-  #endif // GPIO_REL3
-  #ifdef GPIO_REL4
-    // Create relay switch P001
-    addSwitchPlugin(taskIndex, GPIO_REL4, F("Relay4"), false);
-    ++taskIndex;
-  #endif // GPIO_REL4
-  return taskIndex != 0; // Indicate something was added
-  // Also needed to make sure the variable is being used.
-}
-
-void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
-  Settings.UseRules = true;
-  String fileName;
-  #if defined(ESP32)
-    fileName += '/';
-  #endif
-  fileName += F("rules1.txt");
-  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
-  rule.replace(F("BNR"), String(buttonNumber));
-  rule.replace(F("GNR"), String(relay_gpio));
-  String result = appendLineToFile(fileName, rule);
-  if (result.length() > 0) {
-    addLog(LOG_LEVEL_ERROR, result);
-  }
-}
-
-void addPredefinedRules() {
-  #ifdef GPIO_KEY1
-    #ifdef GPIO_REL1
-      addButtonRelayRule(1, GPIO_REL1);
-    #endif // GPIO_REL1
-  #endif // GPIO_KEY1
-  #ifdef GPIO_KEY2
-    #ifdef GPIO_REL2
-      addButtonRelayRule(2, GPIO_REL2);
-    #endif // GPIO_REL2
-  #endif // GPIO_KEY2
-  #ifdef GPIO_KEY3
-    #ifdef GPIO_REL3
-      addButtonRelayRule(3, GPIO_REL3);
-    #endif // GPIO_REL3
-  #endif // GPIO_KEY3
-  #ifdef GPIO_KEY4
-    #ifdef GPIO_REL4
-      addButtonRelayRule(4, GPIO_REL4);
-    #endif // GPIO_REL4
-  #endif // GPIO_KEY4
-
 }
 
 
