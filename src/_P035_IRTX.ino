@@ -253,7 +253,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
                                                           memcpy(ircodestr, TmpStr1, sizeof(TmpStr1[0])*200);
                                                         }
             //if (GetArgv(command, TmpStr1, 200, 4)) IrBits = str2int(TmpStr1); //not needed any more... leave it for reverce compatibility or remove it and break existing instalations?
-            //if (GetArgv(command, TmpStr1, 200, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well. 
+            //if (GetArgv(command, TmpStr1, 200, 5)) IrRepeat = str2int(TmpStr1); // Ir repeat is usfull in some circonstances, have to see how to add it and have it be revese compatible as well.
             //if (GetArgv(command, TmpStr1, 200, 6)) IrSecondCode = strtoul(TmpStr1, NULL, 16);
 
             //Comented out need char[] for input Needs fixing
@@ -261,9 +261,9 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("SONY"))) Plugin_035_irSender->sendSony(IrCode);
             if (IrType.equalsIgnoreCase(F("Sherwood"))) Plugin_035_irSender->sendSherwood(IrCode);
             if (IrType.equalsIgnoreCase(F("SAMSUNG"))) Plugin_035_irSender->sendSAMSUNG(IrCode);
-            if (IrType.equalsIgnoreCase(F("LG"))) Plugin_035_irSender->sendLG(IrCode); 
-            if (IrType.equalsIgnoreCase(F("LG2"))) Plugin_035_irSender->sendLG2(IrCode); 
-            if (IrType.equalsIgnoreCase(F("SharpRaw"))) Plugin_035_irSender->sendSharpRaw(IrBits);                         
+            if (IrType.equalsIgnoreCase(F("LG"))) Plugin_035_irSender->sendLG(IrCode);
+            if (IrType.equalsIgnoreCase(F("LG2"))) Plugin_035_irSender->sendLG2(IrCode);
+            if (IrType.equalsIgnoreCase(F("SharpRaw"))) Plugin_035_irSender->sendSharpRaw(IrBits);
             if (IrType.equalsIgnoreCase(F("JVC"))) Plugin_035_irSender->sendJVC(IrCode);
             if (IrType.equalsIgnoreCase(F("Denon"))) Plugin_035_irSender->sendDenon(IrCode);
             if (IrType.equalsIgnoreCase(F("SanyoLC7461"))) Plugin_035_irSender->sendSanyoLC7461(IrCode);
@@ -289,7 +289,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("GICable"))) Plugin_035_irSender->sendGICable(IrCode);
 			      if (IrType.equalsIgnoreCase(F("Pioneer"))) Plugin_035_irSender->sendPioneer(IrCode);
             if (IrType.equalsIgnoreCase(F("LUTRON"))) Plugin_035_irSender->sendLutron(IrCode);
-            
+
             if (IrType.equalsIgnoreCase(F("MITSUBISHI_AC"))) parseStringAndSendAirCon(MITSUBISHI_AC, ircodestr);
             if (IrType.equalsIgnoreCase(F("FUJITSU_AC"))) parseStringAndSendAirCon(FUJITSU_AC, ircodestr);
             if (IrType.equalsIgnoreCase(F("Kelvinator"))) parseStringAndSendAirCon(KELVINATOR, ircodestr);
@@ -307,7 +307,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             if (IrType.equalsIgnoreCase(F("HAIER_AC_YRW02"))) parseStringAndSendAirCon(HAIER_AC_YRW02, ircodestr);
             if (IrType.equalsIgnoreCase(F("SAMSUNG_AC"))) parseStringAndSendAirCon(SAMSUNG_AC, ircodestr);
             if (IrType.equalsIgnoreCase(F("WHIRLPOOL_AC"))) parseStringAndSendAirCon(WHIRLPOOL_AC, ircodestr);
-            if (IrType.equalsIgnoreCase(F("MWM"))) parseStringAndSendAirCon(MWM, ircodestr);    
+            if (IrType.equalsIgnoreCase(F("MWM"))) parseStringAndSendAirCon(MWM, ircodestr);
            // NEC (non-strict)?
           }
 
@@ -739,7 +739,7 @@ uint16_t countValuesInStr(const String str, char sep) {
 //  result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
 //  // Check we malloc'ed successfully.
 //  if (result == NULL) {  // malloc failed, so give up.
-//    serialPrintf("\nCan't allocate %d bytes. (%d bytes free)\n",
+//    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
 //                  size * sizeof(uint16_t), ESP.getFreeHeap());
 //    serialPrintln("Giving up & forcing a reboot.");
 //    ESP.restart();  // Reboot.

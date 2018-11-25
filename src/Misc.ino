@@ -3412,8 +3412,7 @@ void ArduinoOTAInit()
       reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-
-      serialPrintf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+      Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
   });
 
   ArduinoOTA.onError([](ota_error_t error) {
