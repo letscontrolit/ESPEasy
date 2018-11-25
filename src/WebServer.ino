@@ -2267,6 +2267,8 @@ void handle_devices() {
       TXBuffer += getPluginNameFromDeviceIndex(DeviceIndex);
 
       addHelpButton(String(F("Plugin")) + Settings.TaskDeviceNumber[taskIndex]);
+      addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
+
 
       if (Device[DeviceIndex].Number == 3 && taskIndex >= 4) // Number == 3 = PulseCounter Plugin
         {
@@ -3158,6 +3160,15 @@ void addHelpButton(const String& url)
   }
   TXBuffer += url;
   TXBuffer += F("' target='_blank'>&#10068;</a>");
+}
+
+void addRTDPluginButton(int taskDeviceNumber) {
+  TXBuffer += F(" <a class='button help' href='");
+  TXBuffer += F("https://espeasy.readthedocs.io/en/latest/Plugin/P");
+  if (taskDeviceNumber < 100) TXBuffer += '0';
+  if (taskDeviceNumber < 10) TXBuffer += '0';
+  TXBuffer += String(taskDeviceNumber);
+  TXBuffer += F(".html' target='_blank'>&#8505;</a>");
 }
 
 void addEnabled(boolean enabled)
@@ -6526,11 +6537,29 @@ unsigned int getSettingsTypeColor(SettingsType settingsType) {
 #define SVG_BAR_WIDTH 400
 
 void write_SVG_image_header(int width, int height) {
+  write_SVG_image_header(width, height, false);
+}
+
+void write_SVG_image_header(int width, int height, bool useViewbox) {
   TXBuffer += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
   TXBuffer += width;
   TXBuffer += F("\" height=\"");
   TXBuffer += height;
-  TXBuffer += "\">";
+  TXBuffer += F("\" version=\"1.1\"");
+  if (useViewbox) {
+    TXBuffer += F(" viewBox=\"0 0 100 100\"");
+  }
+  TXBuffer += '>';
+}
+
+void getESPeasyLogo(int width_pixels) {
+  write_SVG_image_header(width_pixels, width_pixels, true);
+  TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
+  TXBuffer += F("<rect x=\"49\" y=\"23.1\" width=\"69.3\" height=\"69.3\" fill=\"#2c72da\" stroke=\"#2c72da\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30.7\"/>");
+  TXBuffer += F("<g transform=\"matrix(3.3092 0 0 3.3092 -77.788 -248.96)\">");
+  TXBuffer += F("<path d=\"m37.4 89 7.5-7.5M37.4 96.5l15-15M37.4 96.5l15-15M37.4 104l22.5-22.5M44.9 104l15-15\" fill=\"none\" stroke=\"#fff\" stroke-linecap=\"round\" stroke-width=\"2.6\"/>");
+  TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
+  TXBuffer += F("</g></g></svg>");
 }
 
 void getConfig_dat_file_layout() {
