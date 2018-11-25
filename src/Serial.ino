@@ -74,7 +74,11 @@ void process_serialWriteBuffer() {
     size_t bytes_to_write = serialWriteBuffer.size();
     if (snip < bytes_to_write) bytes_to_write = snip;
     for (size_t i = 0; i < bytes_to_write; ++i) {
-      Serial.write(serialWriteBuffer.front());
+      const char c = serialWriteBuffer.front();
+      if (c != static_cast<char>(1))  // special marker
+      {
+        Serial.write(c);
+      }
       serialWriteBuffer.pop_front();
     }
   }
@@ -101,7 +105,7 @@ bool serialWriteBufferActiveRead() {
     // Just add some marker to get it going again when the serial buffer is
     // read again and the serial log level was temporary set to 0 since nothing was read.
     if (Settings.SerialLogLevel > 0) {
-      serialWriteBuffer.push_back('\n');
+      serialWriteBuffer.push_back(static_cast<char>(1));
     }
     tempDisableSerialLog(true);
     return false;
