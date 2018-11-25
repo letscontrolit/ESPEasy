@@ -3650,6 +3650,7 @@ void handle_pinstates() {
   html_table_header("GPIO");
   html_table_header("Mode");
   html_table_header(F("Value/State"));
+  html_table_header(F("Task"));
   html_table_header(F("Monitor"));
   html_table_header(F("Command"));
   html_table_header("Init");

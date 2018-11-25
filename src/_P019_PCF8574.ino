@@ -221,7 +221,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
           for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-            if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_019) {
+            if (getPluginFromKey(it->first)==PLUGIN_ID_019 && (it->second.monitor || it->second.command || it->second.init)) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_019_Read(port);
               if (it->second.state != state) {
@@ -615,7 +615,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
 
             addMonitorToPort(key);
-            log = String(F("PCF  : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
+            log = String(F("PCF  : PORT ")) + String(event->Par2) + String(F(" added to monitor list."));
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
           }
@@ -626,7 +626,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             const uint32_t key = createKey(PLUGIN_ID_019,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
 
             removeMonitorFromPort(key);
-            log = String(F("PCF  : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
+            log = String(F("PCF  : PORT ")) + String(event->Par2) + String(F(" removed from monitor list."));
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
           }
