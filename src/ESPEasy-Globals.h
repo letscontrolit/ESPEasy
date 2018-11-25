@@ -1410,8 +1410,8 @@ struct LogStruct {
 
 } Logging;
 
-std::deque<char> serialLogBuffer;
-unsigned long last_serial_log_read = 0;
+std::deque<char> serialWriteBuffer;
+unsigned long last_serial_writebuffer_read = 0;
 
 byte highest_active_log_level = 0;
 bool log_to_serial_disabled = false;

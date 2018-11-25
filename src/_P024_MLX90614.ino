@@ -98,8 +98,8 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 //        if (!msgTemp024) // Mysensors
 //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
 //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-//        Serial.print("Present MLX90614: "); //Mysensors
-//        Serial.println(event->BaseVarIndex); //Mysensors
+//        serialPrint("Present MLX90614: "); //Mysensors
+//        serialPrintln(event->BaseVarIndex); //Mysensors
         success = true;
         break;
       }

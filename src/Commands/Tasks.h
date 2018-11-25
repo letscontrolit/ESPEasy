@@ -25,7 +25,7 @@ String Command_Task_ValueSet(struct EventStruct *event, const char* Line)
 		UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = result;
 	}else  {
 		//TODO: Get Task description and var name
-		Serial.println(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]);
+		serialPrintln(String(UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1]));
 	}
 	return return_command_success();
 }

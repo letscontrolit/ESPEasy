@@ -673,7 +673,7 @@ static byte navMenuIndex = MENU_INDEX_MAIN;
 
 void getWebPageTemplateVar(const String& varName )
 {
- // Serial.print(varName); Serial.print(" : free: "); Serial.print(ESP.getFreeHeap());   Serial.print("var len before:  "); Serial.print (varValue.length()) ;Serial.print("after:  ");
+ // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint (varValue.length()) ;serialPrint("after:  ");
  //varValue = "";
 
   if (varName == F("name"))

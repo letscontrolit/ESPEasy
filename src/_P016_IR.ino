@@ -138,7 +138,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String& string)
         int irPin = Settings.TaskDevicePin1[event->TaskIndex];
         if (irReceiver == 0 && irPin != -1)
         {
-          Serial.println(F("IR Init"));
+          serialPrintln(F("IR Init"));
           irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
           irReceiver->enableIRIn(); // Start the receiver
@@ -326,7 +326,7 @@ void displayRawToReadableB32Hex() {
         uint16_t bstDiv = -1, bstAvg = 0xFFFFU;
         float bstMul = 5000;
         cd += get_tolerance(cd) + 1;
-        //Serial.println(String("p="+ uint64ToString(p, 10) + " start cd=" + uint64ToString(cd, 10)).c_str());
+        //serialPrintln(String("p="+ uint64ToString(p, 10) + " start cd=" + uint64ToString(cd, 10)).c_str());
         // find the best divisor based on lowest avg err, within allowed tolerance.
         while (--cd >= MIN_VIABLE_DIV) {
             uint32_t avg = 0;
@@ -346,7 +346,7 @@ void displayRawToReadableB32Hex() {
                 bstMul = avgTms;
                 bstAvg = avg;
                 bstDiv = cd;
-                //Serial.println(String("p="+ uint64ToString(p, 10) + " cd=" + uint64ToString(cd, 10) +"  avgErr=" + uint64ToString(avg, 10) + " totTms="+ uint64ToString(totTms, 10) + " avgTms="+ uint64ToString((uint16_t)(avgTms*10), 10) ).c_str());
+                //serialPrintln(String("p="+ uint64ToString(p, 10) + " cd=" + uint64ToString(cd, 10) +"  avgErr=" + uint64ToString(avg, 10) + " totTms="+ uint64ToString(totTms, 10) + " avgTms="+ uint64ToString((uint16_t)(avgTms*10), 10) ).c_str());
             }
         }
         if (bstDiv == 0xFFFFU) {
@@ -372,7 +372,7 @@ void displayRawToReadableB32Hex() {
         tmOut[i] = tm;
         //line += uint64ToString(tm, 10) + ",";
     }
-    //Serial.println(line);
+    //serialPrintln(line);
 
     char out[total];
     unsigned int iOut = 0, s = 2, d = 0;

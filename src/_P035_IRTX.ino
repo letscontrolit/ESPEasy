@@ -238,7 +238,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String& string)
             //String line = "";
             //for (int i = 0; i < idx; i++)
             //    line += uint64ToString(buf[i], 10) + ",";
-            //Serial.println(line);
+            //serialPrintln(line);
 
             //sprintf_P(log, PSTR("IR Params1: Hz:%u - PLen: %u - BLen: %u"), IrHz, IrPLen, IrBLen);
             //addLog(LOG_LEVEL_INFO, log);
@@ -739,9 +739,9 @@ uint16_t countValuesInStr(const String str, char sep) {
 //  result = reinterpret_cast<uint16_t*>(malloc(size * sizeof(uint16_t)));
 //  // Check we malloc'ed successfully.
 //  if (result == NULL) {  // malloc failed, so give up.
-//    Serial.printf("\nCan't allocate %d bytes. (%d bytes free)\n",
+//    serialPrintf("\nCan't allocate %d bytes. (%d bytes free)\n",
 //                  size * sizeof(uint16_t), ESP.getFreeHeap());
-//    Serial.println("Giving up & forcing a reboot.");
+//    serialPrintln("Giving up & forcing a reboot.");
 //    ESP.restart();  // Reboot.
 //    delay(500);  // Wait for the restart to happen.
 //    return result;  // Should never get here, but just in case.

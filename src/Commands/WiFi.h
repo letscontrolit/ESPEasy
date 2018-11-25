@@ -87,11 +87,11 @@ String Command_Wifi_Mode(struct EventStruct *event, const char* Line)
 			setWifiMode(mode);
 			setAPinternal(WifiIsAP(mode));
 		}else  {
-			Serial.println();
+			serialPrintln();
 			return return_result(event, F("Wifi Mode: invalid arguments"));
 		}
 	}else  {
-		Serial.println();
+		serialPrintln();
 		String result = F("WiFi Mode:");
 		result += toString(WiFi.getMode());
 		return return_result(event, result);

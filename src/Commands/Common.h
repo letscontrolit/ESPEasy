@@ -34,7 +34,7 @@ String Command_GetORSetIP(struct EventStruct *event,
 			return return_result(event, result);
 		}
 	} else {
-		Serial.println();
+		serialPrintln();
 		String result = targetDescription;
 		if (useStaticIP()) {
 			result += formatIP(IP);
@@ -61,13 +61,13 @@ String Command_GetORSetString(struct EventStruct *event,
 			String result = targetDescription;
 			result += F(" is too large. max size is ");
 			result += len;
-			Serial.println();
+			serialPrintln();
 			return return_result(event, result);
 		}else  {
 			strcpy(target, TmpStr1);
 		}
 	}else  {
-		Serial.println();
+		serialPrintln();
 		String result = targetDescription;
 		result += target;
 		return return_result(event, result);

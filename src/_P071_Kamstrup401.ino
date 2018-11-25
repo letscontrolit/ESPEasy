@@ -122,7 +122,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
           {
             // receive byte
             r = kamSer.read();
-            //Serial.println(r);
+            //serialPrintln(r);
             if (parity_check(r))
             {
                parityerrors += 1;
@@ -141,8 +141,8 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
           {
             if ( parityerrors == 0 )
             {
-//              Serial.print("OK: " );
-//              Serial.println(message);
+//              serialPrint("OK: " );
+//              serialPrintln(message);
               message[i] = 0;
 
               tmpstr = strtok(message, " ");
@@ -229,7 +229,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
             {
               message[i] = 0;
               String log = F("ERR(PARITY):" );
-              Serial.print("par");
+              serialPrint("par");
               log += message;
               addLog(LOG_LEVEL_INFO, log);
               //UserVar[event->BaseVarIndex] = NAN;

@@ -27,8 +27,8 @@ String Command_MQTT_messageDelay(struct EventStruct *event, const char* Line)
   else{
     String result = F("MQTT message delay:");
     result += Settings.MessageDelay;
-    Serial.println();
-    Serial.println(result);
+    serialPrintln();
+    serialPrintln(result);
     return result;
   }
   return return_command_success();

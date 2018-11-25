@@ -48,7 +48,7 @@ void ReportStatus()
   payload += F("\r\n\r\n");
   payload += body;
 
-  Serial.println(payload);
+  serialPrintln(payload);
   client.print(payload);
 
 

@@ -195,7 +195,7 @@ String return_not_connected()
 
 String return_result(struct EventStruct *event, const String& result)
 {
-	Serial.println(result);
+	serialPrintln(result);
 	if (event->Source == VALUE_SOURCE_SERIAL) {
 		return return_command_success();
 	}
@@ -250,16 +250,16 @@ void printDirectory(File dir, int numTabs)
 			break;
 		}
 		for (uint8_t i = 0; i < numTabs; i++) {
-			Serial.print('\t');
+			serialPrint('\t');
 		}
-		Serial.print(entry.name());
+		serialPrint(entry.name());
 		if (entry.isDirectory()) {
-			Serial.println("/");
+			serialPrintln("/");
 			printDirectory(entry, numTabs + 1);
 		} else {
 			// files have sizes, directories do not
-			Serial.print("\t\t");
-			Serial.println(entry.size(), DEC);
+			serialPrint("\t\t");
+			serialPrintln(entry.size(), DEC);
 		}
 		entry.close();
 	}
