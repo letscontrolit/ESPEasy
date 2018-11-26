@@ -1,4 +1,145 @@
 -------------------------------------------------
+Changes in release mega-20181125 (since mega-20181124)
+-------------------------------------------------
+
+Release date: Sun Nov 25 04:00:07 CET 2018
+
+Gijs Noorlander (3):
+      LCD P012_LCD Plugin German Umlaute #2081
+      P012_LCD Remove duplicate lines
+      Add -mtarget-align to common build_flags
+
+Unknown (8):
+      [HTML Footer] Change to "Powered by LetsControlIt community"
+      [Factory Reset] Add initial structure to set defaults for a device model
+      [Factory Reset] Add Factory reset page and allow to keep some settings
+      [Factory Reset] Add more categories not to clear
+      [Factory Reset] Show page again after saving.
+      [Sysinfo] Add init to P026_sysinfo to set initial config only 1 active.
+      [Factory Reset] Add some documentation
+      [Documentation] Add link to RTD for plugins
+
+
+-------------------------------------------------
+Changes in release mega-20181124 (since mega-20181123)
+-------------------------------------------------
+
+Release date: Sat Nov 24 04:00:07 CET 2018
+
+Grovkillen (5):
+      [docs] fixed the TOC + added changelogs to all plugins + core
+      [docs] Added plugin names to plugin pages + fixed "site map"
+      [docs] Added donation links in footer
+      [docs] Added hardware pages
+      [docs] Fixed some syntax error
+
+
+-------------------------------------------------
+Changes in release mega-20181123 (since mega-20181122)
+-------------------------------------------------
+
+Release date: Fri Nov 23 04:00:08 CET 2018
+
+Grovkillen (3):
+      [docs] Fixed error in image path
+      [docs] Global variables for plugins + added raw plugin files
+      [docs] added all plugins to global + generated generic pages for them
+
+
+-------------------------------------------------
+Changes in release mega-20181122 (since mega-20181121)
+-------------------------------------------------
+
+Release date: Thu Nov 22 04:00:12 CET 2018
+
+Grovkillen (2):
+      [docs] Plugins (added real name)
+      [docs] added a first device page
+
+TD-er (2):
+      [P073_7DGT] Removed old (duplicate) content
+      [P073_7DGT] Fix uninitialized p073_dispdigit
+
+papperone (2):
+      Update _P073_7DGT.ino
+      Update _P073_7DGT.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181121 (since mega-20181120)
+-------------------------------------------------
+
+Release date: Wed Nov 21 04:00:13 CET 2018
+
+Unknown (2):
+      [SSDP] Disable SSDP checkbox
+      [HTML] Made HTML layout more uniform and optimize CSS
+
+
+-------------------------------------------------
+Changes in release mega-20181120 (since mega-20181117)
+-------------------------------------------------
+
+Release date: Tue Nov 20 04:00:07 CET 2018
+
+Gijs Noorlander (1):
+      Update build_ESPeasy.sh
+
+Unknown (6):
+      [issue 2063] Incorrect saving settings on LCD2004
+      [OLED framed] Do not keep display lines allocated on stack
+      [P075 Nextion] Do not keep display lines allocated on stack
+      [Timing stats] Add LoadCustomTaskSettings() to the timing stats
+      [Build scripts] Add build script for Linux and include docs
+      [Build] Add test_ESP8266_1024_VCC to deploy script
+
+
+-------------------------------------------------
+Changes in release mega-20181117 (since mega-20181112)
+-------------------------------------------------
+
+Release date: Sat Nov 17 04:00:10 CET 2018
+
+Gijs Noorlander (2):
+      Update Sphinx to 1.8.1
+      [PlatformIO] Use 2.4.2 platform for Sonoff builds
+
+Grovkillen (11):
+      [docs] Rules converted from wiki
+      [docs] History converted to rst
+      [docs] Spelling + syntax fix
+      [docs] More spelling
+      [docs] Rules, fixed compile error
+      [docs] About us, month as XX
+      [docs] Plugins list
+      [docs] Plugin list + update to config.py + some CSS
+      [docs] Removed some test code
+      [fix] reverted test code
+      [docs] Inverted icon for easy to navigate browser tabs
+
+Stephen Houser (4):
+      initial 12/24 hour config
+      Add 12/24 hour time to clock
+      Remove update every second
+      add comments for new clock functions
+
+TD-er (4):
+      [1024 VCC] Add test_ESP8266_1024_VCC
+      [Input check] Add check when copying input texts
+      [Statistics] Add timing statistics on connect and DNS lookup
+      [Travis] ESP32 does not support timeout on DNS lookups
+
+jimmys01 (7):
+      Ir Remote lib enchantments
+      Make max IR command to be 200 chars long
+      extra dot fix
+      Put a PLUGIN_EXIT in place
+      syntax fix
+      Add appropriate check to irReceiver before disabling it
+      further improvments
+
+
+-------------------------------------------------
 Changes in release mega-20181112 (since mega-20181111)
 -------------------------------------------------
 

@@ -6,12 +6,30 @@
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
 #define PLUGIN_NAME_026       "Generic - System Info"
-#define PLUGIN_VALUENAME1_026 ""
+
+String Plugin_026_valuename(byte value_nr, bool displayString) {
+  switch (value_nr) {
+    case 0:  return displayString ? F("Uptime") : F("uptime");
+    case 1:  return displayString ? F("Free RAM") : F("freeheap");
+    case 2:  return displayString ? F("Wifi RSSI") : F("rssi");
+    case 3:  return displayString ? F("Input VCC") : F("vcc");
+    case 4:  return displayString ? F("System load") : F("load");
+    case 5:  return displayString ? F("IP 1.Octet") : F("ip1");
+    case 6:  return displayString ? F("IP 2.Octet") : F("ip2");
+    case 7:  return displayString ? F("IP 3.Octet") : F("ip3");
+    case 8:  return displayString ? F("IP 4.Octet") : F("ip4");
+    case 9:  return displayString ? F("Web activity") : F("web");
+    case 10: return displayString ? F("Free Stack") : F("freestack");
+    case 11: return displayString ? F("None") : F("");
+    default:
+    break;
+  }
+  return "";
+}
 
 boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-
   switch (function)
   {
 
@@ -34,38 +52,32 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_026));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME1_026));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME1_026));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME1_026));
+        for (byte i = 0; i < 4; ++i) {
+          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][i];
+          safe_strncpy(
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            Plugin_026_valuename(choice, false),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+        }
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice;
         String options[12];
-        options[0] = F("Uptime");
-        options[1] = F("Free RAM");
-        options[2] = F("Wifi RSSI");
-        options[3] = F("Input VCC");
-        options[4] = F("System load");
-        options[5] = F("IP 1.Octet");
-        options[6] = F("IP 2.Octet");
-        options[7] = F("IP 3.Octet");
-        options[8] = F("IP 4.Octet");
-        options[9] = F("Web activity");
-        options[10] = F("Free Stack");
-        options[11] = F("None");
-
-        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        addFormSelector(F("Indicator"), F("p026a"), 12, options, NULL, choice);
-        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        addFormSelector(F("Indicator"), F("p026b"), 12, options, NULL, choice);
-        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        addFormSelector(F("Indicator"), F("p026c"), 12, options, NULL, choice);
-        choice = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        addFormSelector(F("Indicator"), F("p026d"), 12, options, NULL, choice);
+        for (byte i = 0; i < 12; ++i) {
+          options[i] = Plugin_026_valuename(i, true);
+        }
+        String label;
+        String id;
+        for (byte i = 0; i < 4; ++i) {
+          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][i];
+          label = F("Indicator ");
+          label += (i+1);
+          id = "p026_";
+          id += (i+1);
+          addFormSelector(label, id, 12, options, NULL, choice);
+        }
 
         success = true;
         break;
@@ -73,10 +85,30 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p026a"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p026b"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p026c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("p026d"));
+        String id;
+        for (byte i = 0; i < 4; ++i) {
+          id = "p026_";
+          id += (i+1);
+          Settings.TaskDevicePluginConfig[event->TaskIndex][i] = getFormItemInt(id);
+        }
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
+        bool allDefault = true;
+        for (byte i = 0; i < 4; ++i) {
+          if (Settings.TaskDevicePluginConfig[event->TaskIndex][i] != 0) {
+            allDefault = false;
+          }
+        }
+        if (allDefault) {
+          // Reset nr 2 .. 4 to "None"
+          for (byte i = 1; i < 4; ++i) {
+            Settings.TaskDevicePluginConfig[event->TaskIndex][i] = 11; // "None"
+          }
+        }
         success = true;
         break;
       }
