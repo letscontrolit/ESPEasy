@@ -22,7 +22,7 @@ Maintainer: |P000_maintainer|
 Supported hardware
 ------------------
 
-|P000_usedby|
+|P000_usedby_GPIO|, |P000_usedby_RTTTL|
 
 Change log
 ----------
