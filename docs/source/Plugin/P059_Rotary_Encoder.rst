@@ -1,10 +1,10 @@
-.. _P001_Relay_page:
+.. _P059_Rotary_Encoder_page:
 
-Relay
-=====
+Rotary Encoder
+==============
 
-|P001_typename|
-|P001_status|
+|P059_typename|
+|P059_status|
 
 
 Introduction
@@ -12,8 +12,7 @@ Introduction
 
 
 Specifications:
- * Optocopler
- * Solid state
+ * Input
 
 
 Wiring

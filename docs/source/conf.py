@@ -306,6 +306,17 @@ rst_prolog = """
 .. |removed| replace:: :red:`removed`
 .. |fixed| replace:: :purple:`fixed`
 
+.. |P000_name| replace:: :cyan:`Internal`
+.. |P000_type| replace:: :cyan:`GPIO handling`
+.. |P000_typename| replace:: :cyan:`Internal GPIO handling`
+.. |P000_status| replace:: :green:`NORMAL`
+.. |P000_github| replace:: P001_Switch.ino (will be removed from plugin and added to core)
+.. _P000_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
+.. |P000_usedby| replace:: :ref:`P000_Buzzer_page`, :ref:`P000_Piezo_element_page`, :ref:`P000_Speaker_page`
+.. |P000_shortinfo| replace:: The ESP module can control things with it's build-in GPIO output pins. We can turn these on or off or we can set these pins to a special pulse modulated value (PWM output). And it's also possible to send short pulses (single pulse) to one of these pins to control specific devices that are switched with a single short high or low signal.
+.. |P000_maintainer| replace:: Core
+.. |P000_compileinfo| replace:: Currently the GPIO commands are placed in the ``Switch Input - Switch plugin``, this will change!
+
 .. |P001_name| replace:: :cyan:`Switch`
 .. |P001_type| replace:: :cyan:`Switch Input`
 .. |P001_typename| replace:: :cyan:`Switch Input - Switch`

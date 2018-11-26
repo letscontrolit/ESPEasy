@@ -18,6 +18,7 @@ There's three different released versions of ESP Easy:
    :header: "Plugin name", "Plugin status", "Plugin number"
    :widths: 10, 8, 5
 
+   ":ref:`P000_page`","|P000_status|","P000 (core)"
    ":ref:`P001_page`","|P001_status|","P001"
    ":ref:`P002_page`","|P002_status|","P002"
    ":ref:`P003_page`","|P003_status|","P003"
