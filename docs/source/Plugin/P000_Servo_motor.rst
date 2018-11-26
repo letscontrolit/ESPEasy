@@ -1,10 +1,10 @@
-.. _P001_ESP_internal_output_page:
+.. _P000_Servo_motor_page:
 
-ESP internal output
-===================
+Servo motor
+===========
 
-|P001_typename|
-|P001_status|
+|P000_typename|
+|P000_status|
 
 
 Introduction
@@ -12,11 +12,7 @@ Introduction
 
 
 Specifications:
- * LED
- * Tunes
- * Servos
- * PWM
- * etc.
+ * Controlling servo motors using pwm
 
 
 Wiring
