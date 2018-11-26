@@ -57,17 +57,17 @@ Commands are divided into several classes:
 Commands listed (core commands and plugin commands)
 ---------------------------------------------------
 
-.. include:: ..\Plugin\P000_commands.rst
+.. include:: ../Plugin/P000_commands.rst
 
 
 Internal GPIO handling and ringtones
 ------------------------------------
 
-.. include:: ..\Plugin\P001_commands_GPIO.rst
+.. include:: ../Plugin/P001_commands_GPIO.rst
 
-.. include:: ..\Plugin\P001_commands_RTTTL.rst
+.. include:: ../Plugin/P001_commands_RTTTL.rst
 
 Plugin based commands
 ---------------------
 
-.. .. include:: ..\Plugin\P002_commands.rst
+.. .. include:: ../Plugin/P002_commands.rst
