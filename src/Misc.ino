@@ -1336,12 +1336,13 @@ void setLogLevelFor(byte destination, byte logLevel) {
 
 void updateLogLevelCache() {
   byte max_lvl = 0;
-  if (!log_to_serial_disabled && serialWriteBufferActiveRead()) {
-    max_lvl = _max(max_lvl, Settings.SerialLogLevel);
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-      Serial.setDebugOutput(true);
-  } else {
+  if (log_to_serial_disabled) {
     Serial.setDebugOutput(false);
+  } else {
+    max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+      Serial.setDebugOutput(true);
+    }
   }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
   if (Logging.logActiveRead()) {
@@ -1358,22 +1359,13 @@ bool loglevelActiveFor(byte logLevel) {
 }
 
 byte getSerialLogLevel() {
-  byte logLevelSettings = 0;
-  if (!Settings.UseSerial) return 0;
-  if (log_to_serial_disabled || log_to_serial_disabled_temporary) return 0;
-  logLevelSettings = Settings.SerialLogLevel;
+  if (log_to_serial_disabled || !Settings.UseSerial) return 0;
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
-    logLevelSettings = 2;
-  }
-/*
-  if (!serialWriteBufferActiveRead()) {
-    if (logLevelSettings != 0) {
-      updateLogLevelCache();
+    if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
+      return LOG_LEVEL_INFO;
     }
-    logLevelSettings = 0;
   }
-*/
-  return logLevelSettings;
+  return Settings.SerialLogLevel;
 }
 
 byte getWebLogLevel() {
@@ -1443,15 +1435,6 @@ void addToLog(byte logLevel, const char *line)
     logFile.close();
   }
 #endif
-}
-
-
-void tempDisableSerialLog(bool setToDisabled) {
-  if (log_to_serial_disabled_temporary == setToDisabled) return;
-
-  // FIXME TD-er: For some reason disabling serial log will not enable it again.
-  //  log_to_serial_disabled_temporary = setToDisabled;
-  //  updateLogLevelCache();
 }
 
 

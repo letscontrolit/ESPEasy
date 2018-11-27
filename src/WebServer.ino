@@ -4447,12 +4447,16 @@ void handle_timingstats() {
   html_end_table();
 
   html_table_class_normal();
+  const float timespan = timeSinceLastReset / 1000.0;
   addFormHeader(F("Statistics"));
-  addRowLabel(F("Time span"));
-  TXBuffer += String(timeSinceLastReset / 1000.0);
-  TXBuffer += " sec";
+  addRowLabel(F("Start Period"));
+  struct tm startPeriod = addSeconds(tm, -1.0 * timespan, false);
+  TXBuffer += getDateTimeString(startPeriod, '-', ':', ' ', false);
   addRowLabel(F("Local Time"));
   TXBuffer += getDateTimeString('-', ':', ' ');
+  addRowLabel(F("Time span"));
+  TXBuffer += String(timespan);
+  TXBuffer += " sec";
   html_end_table();
 
   sendHeadandTail_stdtemplate(_TAIL);
