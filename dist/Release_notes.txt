@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20181127 (since mega-20181125)
+-------------------------------------------------
+
+Release date: Tue Nov 27 04:00:10 CET 2018
+
+Gijs Noorlander (3):
+      [PlatformIO] Change to LWIP2_LOW_MEMORY
+      [PlatformIO] Lower upload_speed to 115200
+      [Travis] make clean + build only once
+
+Grovkillen (3):
+      [docs] Added GPIO handling pages (tones, relay etc.)
+      [docs] command list updated with internal commands
+      [docs] Fix relative path for command list
+
+
+-------------------------------------------------
 Changes in release mega-20181125 (since mega-20181124)
 -------------------------------------------------
 
