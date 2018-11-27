@@ -112,16 +112,14 @@ void checkResetFactoryPin(){
   }
   else
   { // reset pin released
-    if (factoryResetCounter > 9) // factory reset and reboot
+    if (factoryResetCounter > 9) {
+      // factory reset and reboot
       ResetFactory();
-    if (factoryResetCounter > 3) // normal reboot
-    #if defined(ESP8266)
-      ESP.reset();
-    #endif
-    #if defined(ESP32)
-      ESP.restart();
-    #endif
-
+    }
+    if (factoryResetCounter > 3) {
+      // normal reboot
+      reboot();
+    }
     factoryResetCounter = 0; // count was < 3, reset counter
   }
 }

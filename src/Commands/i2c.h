@@ -9,11 +9,11 @@ String Command_i2c_Scanner(struct EventStruct *event, const char* Line)
 		Wire.beginTransmission(address);
 		error = Wire.endTransmission();
 		if (error == 0) {
-			Serial.print(F("I2C  : Found 0x"));
-			Serial.println(String(address, HEX));
+			serialPrint(F("I2C  : Found 0x"));
+			serialPrintln(String(address, HEX));
 		}else if (error == 4) {
-			Serial.print(F("I2C  : Error at 0x"));
-			Serial.println(String(address, HEX));
+			serialPrint(F("I2C  : Error at 0x"));
+			serialPrintln(String(address, HEX));
 		}
 	}
 	return return_see_serial(event);

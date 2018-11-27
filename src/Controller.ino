@@ -278,7 +278,7 @@ void SendStatus(byte source, String status)
       MQTTStatus(status);
       break;
     case VALUE_SOURCE_SERIAL:
-      Serial.println(status);
+      serialPrintln(status);
       break;
   }
 }

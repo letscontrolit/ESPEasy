@@ -683,26 +683,26 @@ void WifiDisconnect()
 void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
-  Serial.println(F("WIFI : SSID Scan start"));
+  serialPrintln(F("WIFI : SSID Scan start"));
   int n = WiFi.scanNetworks(false, true);
   if (n == 0)
-    Serial.println(F("WIFI : No networks found"));
+    serialPrintln(F("WIFI : No networks found"));
   else
   {
-    Serial.print(F("WIFI : "));
-    Serial.print(n);
-    Serial.println(F(" networks found"));
+    serialPrint(F("WIFI : "));
+    serialPrint(String(n));
+    serialPrintln(F(" networks found"));
     for (int i = 0; i < n; ++i)
     {
       // Print SSID and RSSI for each network found
-      Serial.print(F("WIFI : "));
-      Serial.print(i + 1);
-      Serial.print(": ");
-      Serial.println(formatScanResult(i, " "));
+      serialPrint(F("WIFI : "));
+      serialPrint(String(i + 1));
+      serialPrint(": ");
+      serialPrintln(formatScanResult(i, " "));
       delay(10);
     }
   }
-  Serial.println("");
+  serialPrintln("");
 }
 
 String formatScanResult(int i, const String& separator) {

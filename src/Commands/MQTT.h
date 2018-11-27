@@ -20,15 +20,14 @@ String Command_MQTT_UseUnitNameAsClientId(struct EventStruct *event, const char*
 
 String Command_MQTT_messageDelay(struct EventStruct *event, const char* Line)
 {
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  if (GetArgv(Line, TmpStr1, 2)) {
+  if (HasArgv(Line, 2)) {
     Settings.MessageDelay = event->Par1;
   }
   else{
     String result = F("MQTT message delay:");
     result += Settings.MessageDelay;
-    Serial.println();
-    Serial.println(result);
+    serialPrintln();
+    serialPrintln(result);
     return result;
   }
   return return_command_success();

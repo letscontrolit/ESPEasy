@@ -13,11 +13,10 @@ String Command_NTPHost(struct EventStruct *event, const char* Line)
 
 String Command_useNTP(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.UseNTP = event->Par1;
-	}else  {
-		Serial.println();
+	} else {
+		serialPrintln();
 		String result = F("UseNTP:");
 		result += toString(Settings.UseNTP);
 		return return_result(event, result);
@@ -27,11 +26,10 @@ String Command_useNTP(struct EventStruct *event, const char* Line)
 
 String Command_TimeZone(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.TimeZone = event->Par1;
-	}else  {
-		Serial.println();
+	} else {
+		serialPrintln();
 		String result = F("TimeZone:");
 		result += Settings.TimeZone;
 		return return_result(event, result);
@@ -41,11 +39,10 @@ String Command_TimeZone(struct EventStruct *event, const char* Line)
 
 String Command_DST(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.DST = event->Par1;
 	}else  {
-		Serial.println();
+		serialPrintln();
 		String result = F("DST:");
 		result += toString(Settings.DST);
 		return return_result(event, result);

@@ -296,7 +296,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         {
           success = true;
           String tmpString = string.substring(11);
-          Serial.println(tmpString);
+          Serial.println(tmpString); // FIXME TD-er: Should this also use the serial write buffer?
         }
         break;
       }

@@ -72,26 +72,27 @@ String Command_Wifi_STAMode(struct EventStruct *event, const char* Line)
 
 String Command_Wifi_Mode(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
+	String TmpStr1;
 	if (GetArgv(Line, TmpStr1, 2)) {
 		WiFiMode_t mode = WIFI_MODE_MAX;
 		if (event->Par1 > 0) {
 			mode = (WiFiMode_t)(event->Par1 - 1);
-		}else  {
-			if (strcmp_P(TmpStr1, PSTR("off")) == 0) mode = WIFI_OFF;
-			else if (strcmp_P(TmpStr1, PSTR("sta")) == 0) mode = WIFI_STA;
-			else if (strcmp_P(TmpStr1, PSTR("ap")) == 0) mode = WIFI_AP;
-			else if (strcmp_P(TmpStr1, PSTR("ap+sta")) == 0) mode = WIFI_AP_STA;
+		} else {
+			TmpStr1.toLowerCase();
+			if (strcmp_P(TmpStr1.c_str(), PSTR("off")) == 0) mode = WIFI_OFF;
+			else if (strcmp_P(TmpStr1.c_str(), PSTR("sta")) == 0) mode = WIFI_STA;
+			else if (strcmp_P(TmpStr1.c_str(), PSTR("ap")) == 0) mode = WIFI_AP;
+			else if (strcmp_P(TmpStr1.c_str(), PSTR("ap+sta")) == 0) mode = WIFI_AP_STA;
 		}
 		if (mode >= WIFI_OFF && mode < WIFI_MODE_MAX) {
 			setWifiMode(mode);
 			setAPinternal(WifiIsAP(mode));
-		}else  {
-			Serial.println();
+		} else {
+			serialPrintln();
 			return return_result(event, F("Wifi Mode: invalid arguments"));
 		}
-	}else  {
-		Serial.println();
+	} else {
+		serialPrintln();
 		String result = F("WiFi Mode:");
 		result += toString(WiFi.getMode());
 		return return_result(event, result);

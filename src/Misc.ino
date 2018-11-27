@@ -629,6 +629,21 @@ byte getNotificationProtocolIndex(byte Number)
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
+
+bool HasArgv(const char *string, unsigned int argc) {
+  char TmpStr1[INPUT_COMMAND_SIZE];
+  return GetArgv(string, TmpStr1, INPUT_COMMAND_SIZE, argc);
+}
+
+bool GetArgv(const char *string, String& argvString, unsigned int argc) {
+  char TmpStr1[INPUT_COMMAND_SIZE];
+  bool hasArgument = GetArgv(string, TmpStr1, INPUT_COMMAND_SIZE, argc);
+  if (hasArgument) {
+    argvString = TmpStr1;
+  }
+  return hasArgument;
+}
+
 boolean GetArgv(const char *string, char *argv, unsigned int argc) {
   return GetArgv(string, argv, INPUT_COMMAND_SIZE, argc);
 }
@@ -717,14 +732,14 @@ boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned
   \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 void dump (uint32_t addr) { //Seems already included in core 2.4 ...
-  Serial.print (addr, HEX);
-  Serial.print(": ");
+  serialPrint (addr, HEX);
+  serialPrint(": ");
   for (uint32_t a = addr; a < addr + 16; a++)
   {
-    Serial.print ( pgm_read_byte(a), HEX);
-    Serial.print (" ");
+    serialPrint ( pgm_read_byte(a), HEX);
+    serialPrint (" ");
   }
-  Serial.println("");
+  serialPrintln("");
 }
 #endif
 
@@ -774,29 +789,29 @@ String getTaskDeviceName(byte TaskIndex) {
 /********************************************************************************************\
   Reset all settings to factory defaults
   \*********************************************************************************************/
-void ResetFactory(void)
+void ResetFactory()
 {
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
 
   checkRAM(F("ResetFactory"));
   // Direct Serial is allowed here, since this is only an emergency task.
-  Serial.print(F("RESET: Resetting factory defaults... using "));
-  Serial.print(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
-  Serial.println(F(" settings"));
+  serialPrint(F("RESET: Resetting factory defaults... using "));
+  serialPrint(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
+  serialPrintln(F(" settings"));
   delay(1000);
   if (readFromRTC())
   {
-    Serial.print(F("RESET: Warm boot, reset count: "));
-    Serial.println(RTC.factoryResetCounter);
+    serialPrint(F("RESET: Warm boot, reset count: "));
+    serialPrintln(String(RTC.factoryResetCounter));
     if (RTC.factoryResetCounter >= 3)
     {
-      Serial.println(F("RESET: Too many resets, protecting your flash memory (powercycle to solve this)"));
+      serialPrintln(F("RESET: Too many resets, protecting your flash memory (powercycle to solve this)"));
       return;
     }
   }
   else
   {
-    Serial.println(F("RESET: Cold boot"));
+    serialPrintln(F("RESET: Cold boot"));
     initRTC();
     // TODO TD-er: Store set device model in RTC.
   }
@@ -807,12 +822,12 @@ void ResetFactory(void)
 
   //always format on factory reset, in case of corrupt SPIFFS
   SPIFFS.end();
-  Serial.println(F("RESET: formatting..."));
+  serialPrintln(F("RESET: formatting..."));
   SPIFFS.format();
-  Serial.println(F("RESET: formatting done..."));
+  serialPrintln(F("RESET: formatting done..."));
   if (!SPIFFS.begin())
   {
-    Serial.println(F("RESET: FORMAT SPIFFS FAILED!"));
+    serialPrintln(F("RESET: FORMAT SPIFFS FAILED!"));
     return;
   }
 
@@ -960,7 +975,7 @@ void ResetFactory(void)
   SaveControllerSettings(0, ControllerSettings);
 #endif
   checkRAM(F("ResetFactory2"));
-  Serial.println(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
+  serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
   //NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
@@ -985,7 +1000,7 @@ void emergencyReset()
   if (Serial.available() == 2)
     if (Serial.read() == 0xAA && Serial.read() == 0x55)
     {
-      Serial.println(F("\n\n\rSystem will reset to factory defaults in 10 seconds..."));
+      serialPrintln(F("\n\n\rSystem will reset to factory defaults in 10 seconds..."));
       delay(10000);
       ResetFactory();
     }
@@ -1321,12 +1336,13 @@ void setLogLevelFor(byte destination, byte logLevel) {
 
 void updateLogLevelCache() {
   byte max_lvl = 0;
-  if (!log_to_serial_disabled && serialLogActiveRead()) {
-    max_lvl = _max(max_lvl, Settings.SerialLogLevel);
-    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-      Serial.setDebugOutput(true);
-  } else {
+  if (log_to_serial_disabled) {
     Serial.setDebugOutput(false);
+  } else {
+    max_lvl = _max(max_lvl, Settings.SerialLogLevel);
+    if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+      Serial.setDebugOutput(true);
+    }
   }
   max_lvl = _max(max_lvl, Settings.SyslogLevel);
   if (Logging.logActiveRead()) {
@@ -1343,22 +1359,13 @@ bool loglevelActiveFor(byte logLevel) {
 }
 
 byte getSerialLogLevel() {
-  byte logLevelSettings = 0;
-  if (!Settings.UseSerial) return 0;
-  if (log_to_serial_disabled || log_to_serial_disabled_temporary) return 0;
-  logLevelSettings = Settings.SerialLogLevel;
+  if (log_to_serial_disabled || !Settings.UseSerial) return 0;
   if (wifiStatus != ESPEASY_WIFI_SERVICES_INITIALIZED){
-    logLevelSettings = 2;
-  }
-/*
-  if (!serialLogActiveRead()) {
-    if (logLevelSettings != 0) {
-      updateLogLevelCache();
+    if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
+      return LOG_LEVEL_INFO;
     }
-    logLevelSettings = 0;
   }
-*/
-  return logLevelSettings;
+  return Settings.SerialLogLevel;
 }
 
 byte getWebLogLevel() {
@@ -1407,23 +1414,11 @@ boolean loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addToLog(byte logLevel, const char *line)
 {
-  const size_t line_length = strlen(line);
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    int roomLeft = ESP.getFreeHeap() - 5000;
-    if (roomLeft > 0) {
-      String timestamp_log(millis());
-      timestamp_log += F(" : ");
-      for (size_t i = 0; i < timestamp_log.length(); ++i) {
-        serialLogBuffer.push_back(timestamp_log[i]);
-      }
-      size_t pos = 0;
-      while (pos < line_length && pos < static_cast<size_t>(roomLeft)) {
-        serialLogBuffer.push_back(line[pos]);
-        ++pos;
-      }
-      serialLogBuffer.push_back('\r');
-      serialLogBuffer.push_back('\n');
-    }
+    addToSerialBuffer(String(millis()).c_str());
+    addToSerialBuffer(" : ");
+    addToSerialBuffer(line);
+    addNewlineToSerialBuffer();
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     syslog(logLevel, line);
@@ -1442,59 +1437,6 @@ void addToLog(byte logLevel, const char *line)
 #endif
 }
 
-void process_serialLogBuffer() {
-  if (serialLogBuffer.size() == 0) return;
-  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
-#if defined(ESP8266)
-  snip = Serial.availableForWrite();
-#endif
-  if (snip > 0) {
-    last_serial_log_read = millis();
-    size_t bytes_to_write = serialLogBuffer.size();
-    if (snip < bytes_to_write) bytes_to_write = snip;
-    for (size_t i = 0; i < bytes_to_write; ++i) {
-      Serial.write(serialLogBuffer.front());
-      serialLogBuffer.pop_front();
-    }
-  }
-}
-
-void tempDisableSerialLog(bool setToDisabled) {
-  if (log_to_serial_disabled_temporary == setToDisabled) return;
-
-  // FIXME TD-er: For some reason disabling serial log will not enable it again.
-  //  log_to_serial_disabled_temporary = setToDisabled;
-  //  updateLogLevelCache();
-}
-
-bool serialLogActiveRead() {
-  if (!Settings.UseSerial) return false;
-  // Some default, ESP32 doesn't have the availableForWrite function yet.
-  // Not sure how to detect read activity on an ESP32.
-  size_t tx_free = 128;
-#if defined(ESP8266)
-  tx_free = Serial.availableForWrite();
-#endif
-  static size_t prev_tx_free = 0;
-  if (tx_free < prev_tx_free) {
-    prev_tx_free = tx_free;
-    tempDisableSerialLog(false);
-    return true;
-  }
-  // Must always set it or else it will never recover from prev_tx_free == 0
-  prev_tx_free = tx_free;
-  if (timePassedSince(last_serial_log_read) > LOG_BUFFER_EXPIRE) {
-    serialLogBuffer.clear();
-    // Just add some marker to get it going again when the serial buffer is
-    // read again and the serial log level was temporary set to 0 since nothing was read.
-    if (Settings.SerialLogLevel > 0) {
-      serialLogBuffer.push_back('\n');
-    }
-    tempDisableSerialLog(true);
-    return false;
-  }
-  return true;
-}
 
 /********************************************************************************************\
   Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -1504,8 +1446,8 @@ void delayedReboot(int rebootDelay)
   // Direct Serial is allowed here, since this is only an emergency task.
   while (rebootDelay != 0 )
   {
-    Serial.print(F("Delayed Reset "));
-    Serial.println(rebootDelay);
+    serialPrint(F("Delayed Reset "));
+    serialPrintln(String(rebootDelay));
     rebootDelay--;
     delay(1000);
   }
@@ -1513,6 +1455,8 @@ void delayedReboot(int rebootDelay)
 }
 
 void reboot() {
+  // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
+  flushAndDisconnectAllClients();
   #if defined(ESP32)
     ESP.restart();
   #else
@@ -2357,9 +2301,9 @@ for (byte x=0; x < RULESETS_MAX; x++){
     activeRuleSets[x] = false;
 
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
-    Serial.print(fileName);
-    Serial.print(" ");
-    Serial.println(activeRuleSets[x]);
+    serialPrint(fileName);
+    serialPrint(" ");
+    serialPrintln(String(activeRuleSets[x]));
     }
   }
 }
@@ -2413,9 +2357,9 @@ String rulesProcessingFile(const String& fileName, String& event)
   if (!Settings.UseRules) return "";
   checkRAM(F("rulesProcessingFile"));
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
-    Serial.print(F("RuleDebug Processing:"));
-    Serial.println(fileName);
-    Serial.println(F("     flags CMI  parse output:"));
+    serialPrint(F("RuleDebug Processing:"));
+    serialPrintln(fileName);
+    serialPrintln(F("     flags CMI  parse output:"));
   }
 
   static byte nestingLevel = 0;
@@ -2587,13 +2531,14 @@ void parseCompleteNonCommentLine(
     fakeIfBlock = 0;
   }
 
-  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV){
-    Serial.print(F("RuleDebug: "));
-    Serial.print(codeBlock);
-    Serial.print(match);
-    Serial.print(isCommand);
-    Serial.print(F(": "));
-    Serial.println(line);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String log = F("RuleDebug: ");
+    log += codeBlock;
+    log += match;
+    log += isCommand;
+    log += ": ";
+    log += line;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
 
   if (match) // rule matched for one action or a block of actions
@@ -3142,7 +3087,7 @@ class RamTracker{
             lowestMemoryInTraceIndex=i;
             }
           }
-      //Serial.println(lowestMemoryInTraceIndex);
+      //serialPrintln(lowestMemoryInTraceIndex);
       return lowestMemoryInTraceIndex;
       }
 
@@ -3454,30 +3399,29 @@ void ArduinoOTAInit()
     ArduinoOTA.setPassword(SecuritySettings.Password);
 
   ArduinoOTA.onStart([]() {
-      Serial.println(F("OTA  : Start upload"));
+      serialPrintln(F("OTA  : Start upload"));
       SPIFFS.end(); //important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {
-      Serial.println(F("\nOTA  : End"));
+      serialPrintln(F("\nOTA  : End"));
       //"dangerous": if you reset during flash you have to reflash via serial
       //so dont touch device until restart is complete
-      Serial.println(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
+      serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
       delay(100);
       reboot();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-
       Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
   });
 
   ArduinoOTA.onError([](ota_error_t error) {
-      Serial.print(F("\nOTA  : Error (will reboot): "));
-      if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
-      else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
-      else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
-      else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
-      else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
+      serialPrint(F("\nOTA  : Error (will reboot): "));
+      if (error == OTA_AUTH_ERROR) serialPrintln(F("Auth Failed"));
+      else if (error == OTA_BEGIN_ERROR) serialPrintln(F("Begin Failed"));
+      else if (error == OTA_CONNECT_ERROR) serialPrintln(F("Connect Failed"));
+      else if (error == OTA_RECEIVE_ERROR) serialPrintln(F("Receive Failed"));
+      else if (error == OTA_END_ERROR) serialPrintln(F("End Failed"));
 
       delay(100);
       reboot();
