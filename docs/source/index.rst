@@ -18,25 +18,26 @@ Welcome to ESP Easy's documentation!
    Tools/Tools.rst
    WiFi/WiFi.rst
 
-.. toctree::
-   :glob:
-   :hidden:
-
-   Controller/C*
-   Plugin/P*
-
 .. raw:: latex
 
    \appendix
 
 
 .. toctree::
+   :maxdepth: 2
    :caption: Appendix
 
    Participate/Documentation.rst
    Reference/Command.rst
    Reference/SystemVariable.rst
    Reference/ChangeLog.rst
+
+.. toctree::
+   :glob:
+   :hidden:
+
+   Controller/C*
+   Plugin/P*
 
 
 Indices and tables

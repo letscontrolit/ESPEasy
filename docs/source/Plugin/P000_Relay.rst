@@ -205,8 +205,15 @@ Rules examples
 
 .. code-block:: html
 
-  //Code below...
+    On Switch#State Do
+     if [Switch#State]=1
+      GPIO,12,1
+     else
+      GPIO,12,0
+     endif
+    EndOn
 
+This rule will turn the relay ON when the button is pressed, and OFF when released.
 
 Indicators (recommended settings)
 ---------------------------------
@@ -273,8 +280,8 @@ transistor or FET to get it to work. This has one advantage: It inverts the swit
 
 .. image:: P000_Relay_9.jpg
 
-Boards with 12V
-~~~~~~~~~~~~~~~
+Special designed boards
+~~~~~~~~~~~~~~~~~~~~~~~
 
 There are some boards in the wild which can be configured if "low" or "high" should switch the relay on.
 With this boards you will have to experiment a bit with your ESP and the board, there should be a combination that works.
