@@ -7,7 +7,11 @@
 
 #define PLUGIN_077
 #define PLUGIN_ID_077         77
-#define PLUGIN_NAME_077       "Energy (AC) - CSE7766 [TESTING]"
+#ifdef PLUGIN_SET_SONOFF_POW
+  #define PLUGIN_NAME_077       "Energy (AC) - CSE7766 (POW r2) [TESTING]"
+#else
+  #define PLUGIN_NAME_077       "Energy (AC) - CSE7766 [TESTING]"
+#endif
 #define PLUGIN_VALUENAME1_077 "Voltage"
 #define PLUGIN_VALUENAME2_077 "Power"
 #define PLUGIN_VALUENAME3_077 "Current"
