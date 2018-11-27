@@ -306,13 +306,38 @@ rst_prolog = """
 .. |removed| replace:: :red:`removed`
 .. |fixed| replace:: :purple:`fixed`
 
+.. |Plugin_Analog_input| replace:: :ref:`P002_page`, :ref:`P025_page`, :ref:`P060_page`
+.. |Plugin_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
+.. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`
+.. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`
+.. |Plugin_Distance| replace:: :ref:`P013_page`
+.. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`
+.. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`
+.. |Plugin_Energy_DC| replace:: :ref:`P027_page`
+.. |Plugin_Environment| replace:: :ref:`P004_page`, :ref:`P005_page`, :ref:`P006_page`, :ref:`P014_page`, :ref:`P024_page`, :ref:`P028_page`, :ref:`P030_page`, :ref:`P031_page`, :ref:`P032_page`, :ref:`P034_page`, :ref:`P039_page`, :ref:`P047_page`, :ref:`P051_page`, :ref:`P068_page`, :ref:`P069_page`, :ref:`P072_page`
+.. |Plugin_Extra_IO| replace:: :ref:`P007_page`, :ref:`P009_page`, :ref:`P011_page`, :ref:`P022_page`
+.. |Plugin_Gases| replace:: :ref:`P049_page`, :ref:`P052_page`
+.. |Plugin_Generic| replace:: :ref:`P003_page`, :ref:`P026_page`, :ref:`P033_page`, :ref:`P037_page`, :ref:`P081_page`
+.. |Plugin_Gesture| replace:: :ref:`P064_page`
+.. |Plugin_Gyro| replace:: :ref:`P045_page`
+.. |Plugin_Hardware| replace:: :ref:`P046_page`
+.. |Plugin_Keypad| replace:: :ref:`P058_page`, :ref:`P061_page`, :ref:`P062_page`, :ref:`P063_page`
+.. |Plugin_Light_Lux| replace:: :ref:`P010_page`, :ref:`P015_page`, :ref:`P074_page`
+.. |Plugin_Motor| replace:: :ref:`P048_page`, :ref:`P079_page`
+.. |Plugin_Notify| replace:: :ref:`P055_page`, :ref:`P065_page`
+.. |Plugin_Output| replace:: :ref:`P029_page`, :ref:`P038_page`, :ref:`P041_page`, :ref:`P042_page`, :ref:`P043_page`, :ref:`P070_page`
+.. |Plugin_Regulator| replace:: :ref:`P021_page`
+.. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`
+.. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`
+.. |Plugin_Weight| replace:: :ref:`P067_page`
+
 .. |P000_name| replace:: :cyan:`Internal`
 .. |P000_type| replace:: :cyan:`GPIO handling`
 .. |P000_typename| replace:: :cyan:`Internal GPIO handling`
 .. |P000_status| replace:: :green:`NORMAL`
-.. |P000_github| replace:: P001_Switch.ino (will be removed from plugin and added to core)
+.. |P000_github| replace:: P001_Switch.ino
 .. _P000_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
-.. |P000_usedby_GPIO| replace:: :ref:`P000_Relay_page`
+.. |P000_usedby_GPIO| replace:: :ref:`P000_Relay_page`, :ref:`P000_Servo_motor_page`
 .. |P000_usedby_RTTTL| replace:: :ref:`P000_Buzzer_page`, :ref:`P000_Piezo_element_page`, :ref:`P000_Speaker_page`
 .. |P000_shortinfo| replace:: The ESP module can control things with it's build-in GPIO output pins. We can turn these on or off or we can set these pins to a special pulse modulated value (PWM output). And it's also possible to send short pulses (single pulse) to one of these pins to control specific devices that are switched with a single short high or low signal.
 .. |P000_maintainer| replace:: Core

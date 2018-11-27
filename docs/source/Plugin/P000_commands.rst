@@ -167,19 +167,18 @@
 
 
 Event command
--------------
+~~~~~~~~~~~~~
 
 The event command is a special command used to trigger an event. This event can then be acted upon from the rules.
 You can send 0..4 event values along with the event.
 
 
 .. csv-table::
-    :header: "Command", "Rules example"
-    :widths: 10, 15
+    :header: "Event"
+    :widths: 100
 
     "
     ``Event,SingleEvent``
-    ","
 
     .. code-block:: html
 
@@ -192,7 +191,6 @@ You can send 0..4 event values along with the event.
     "
     "
     ``Event,SingleEventValue=123``
-    ","
 
     .. code-block:: html
 
@@ -205,7 +203,6 @@ You can send 0..4 event values along with the event.
     "
     "
     ``Event,MultipleEventValues=123,456,789,999999``
-    ","
 
     .. code-block:: html
 
@@ -218,6 +215,6 @@ You can send 0..4 event values along with the event.
       endon
 
 
-    The event value `9999`` (4) is intercepted and the rule ``Publish, ... %eventvalue1%+%eventvalue2%=[%eventvalue1%+%eventvalue2%]`` is
+    The event value ``9999`` (4) is intercepted and the rule ``Publish, ... %eventvalue1%+%eventvalue2%=[%eventvalue1%+%eventvalue2%]`` is
     triggered, output payload to MQTT would then be ``Lets compute 123+456=579``
     "
