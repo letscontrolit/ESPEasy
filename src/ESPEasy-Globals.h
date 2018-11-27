@@ -717,6 +717,10 @@ struct SettingsStruct
   bool appendUnitToHostname() {  return !getBitFromUL(VariousBits1, 1); }
   void appendUnitToHostname(bool value) { setBitToUL(VariousBits1, 1, !value); }
 
+  bool uniqueMQTTclientIdReconnect() {  return getBitFromUL(VariousBits1, 2); }
+  void uniqueMQTTclientIdReconnect(bool value) { setBitToUL(VariousBits1, 2, value); }
+
+
   void validate() {
     if (UDPPort > 65535) UDPPort = 0;
 

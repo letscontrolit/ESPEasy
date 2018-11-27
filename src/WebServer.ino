@@ -4513,6 +4513,7 @@ void handle_advanced() {
     Settings.ArduinoOTAEnable = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking = isFormItemChecked(F("usertosmultitasking"));
     Settings.MQTTUseUnitNameAsClientId = isFormItemChecked(F("mqttuseunitnameasclientid"));
+    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
 
@@ -4535,7 +4536,8 @@ void handle_advanced() {
   addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag);
   addFormNumericBox( F("Message Interval"), F("messagedelay"), Settings.MessageDelay, 0, INT_MAX);
   addUnit(F("ms"));
-  addFormCheckBox(F("MQTT usage unit name as ClientId"), F("mqttuseunitnameasclientid"), Settings.MQTTUseUnitNameAsClientId);
+  addFormCheckBox(F("MQTT use unit name as ClientId"), F("mqttuseunitnameasclientid"), Settings.MQTTUseUnitNameAsClientId);
+  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect());
 
   addFormSubHeader(F("NTP Settings"));
 
