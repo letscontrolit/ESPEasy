@@ -20,8 +20,7 @@ String Command_MQTT_UseUnitNameAsClientId(struct EventStruct *event, const char*
 
 String Command_MQTT_messageDelay(struct EventStruct *event, const char* Line)
 {
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  if (GetArgv(Line, TmpStr1, 2)) {
+  if (HasArgv(Line, 2)) {
     Settings.MessageDelay = event->Par1;
   }
   else{

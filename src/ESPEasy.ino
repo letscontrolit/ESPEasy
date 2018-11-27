@@ -706,12 +706,7 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          #if defined(ESP8266)
-            ESP.reset();
-          #endif
-          #if defined(ESP32)
-            ESP.restart();
-          #endif
+          reboot();
           break;
         }
     }

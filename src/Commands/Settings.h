@@ -4,10 +4,9 @@
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.Build = event->Par1;
-	}else  {
+	} else {
 		serialPrintln();
 		String result = F("Build:");
 		result += Settings.Build;
@@ -18,8 +17,7 @@ String Command_Settings_Build(struct EventStruct *event, const char* Line)
 
 String Command_Settings_Unit(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		Settings.Unit = event->Par1;
 	}else  {
 		serialPrintln();
@@ -84,12 +82,7 @@ String Command_Settings_Print(struct EventStruct *event, const char* Line)
 String Command_Settings_Reset(struct EventStruct *event, const char* Line)
 {
 	ResetFactory();
-  #if defined(ESP8266)
-	ESP.reset();
-  #endif
-  #if defined(ESP32)
-	ESP.restart();
-  #endif
+	reboot();
 	return return_command_success();
 }
 

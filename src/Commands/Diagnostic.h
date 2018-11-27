@@ -91,8 +91,7 @@ String Command_Background(struct EventStruct *event, const char* Line)
 
 String Command_Debug(struct EventStruct *event, const char* Line)
 {
-	char TmpStr1[INPUT_COMMAND_SIZE];
-	if (GetArgv(Line, TmpStr1, 2)) {
+	if (HasArgv(Line, 2)) {
 		setLogLevelFor(LOG_TO_SERIAL, event->Par1);
 	}else  {
 		serialPrintln();

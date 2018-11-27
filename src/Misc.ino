@@ -629,6 +629,21 @@ byte getNotificationProtocolIndex(byte Number)
 /********************************************************************************************\
   Find positional parameter in a char string
   \*********************************************************************************************/
+
+bool HasArgv(const char *string, unsigned int argc) {
+  char TmpStr1[INPUT_COMMAND_SIZE];
+  return GetArgv(string, TmpStr1, INPUT_COMMAND_SIZE, argc);
+}
+
+bool GetArgv(const char *string, String& argvString, unsigned int argc) {
+  char TmpStr1[INPUT_COMMAND_SIZE];
+  bool hasArgument = GetArgv(string, TmpStr1, INPUT_COMMAND_SIZE, argc);
+  if (hasArgument) {
+    argvString = TmpStr1;
+  }
+  return hasArgument;
+}
+
 boolean GetArgv(const char *string, char *argv, unsigned int argc) {
   return GetArgv(string, argv, INPUT_COMMAND_SIZE, argc);
 }
@@ -1457,6 +1472,8 @@ void delayedReboot(int rebootDelay)
 }
 
 void reboot() {
+  // FIXME TD-er: Should network connections be actively closed or does this introduce new issues?
+  flushAndDisconnectAllClients();
   #if defined(ESP32)
     ESP.restart();
   #else
