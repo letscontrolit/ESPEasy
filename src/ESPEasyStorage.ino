@@ -60,7 +60,7 @@ String appendLineToFile(const String& fname, const String& line) {
 String BuildFixes()
 {
   checkRAM(F("BuildFixes"));
-  Serial.println(F("\nBuild changed!"));
+  serialPrintln(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
   {
@@ -80,13 +80,13 @@ String BuildFixes()
 
   if (Settings.Build < 20101)
   {
-    Serial.println(F("Fix reset Pin"));
+    serialPrintln(F("Fix reset Pin"));
     Settings.Pin_Reset = -1;
   }
   if (Settings.Build < 20102) {
     // Settings were 'mangled' by using older version
     // Have to patch settings to make sure no bogus data is being used.
-    Serial.println(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    serialPrintln(F("Fix settings with uninitalized data or corrupted by switching between versions"));
     Settings.UseRTOSMultitasking = false;
     Settings.Pin_Reset = -1;
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
@@ -134,7 +134,7 @@ void fileSystemCheck()
   else
   {
     String log = F("FS   : Mount failed");
-    Serial.println(log);
+    serialPrintln(log);
     addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }

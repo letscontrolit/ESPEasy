@@ -113,14 +113,14 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
           NEXTEXECUTION = converter.value;
 
 #if PLUGIN_081_DEBUG
-          Serial.println(last);
+          serialPrintln(last);
           converter.value = LASTEXECUTION;
-          Serial.println(converter.time);
-          Serial.println(getDateTimeString(*gmtime(&last)));
-          Serial.println(next);
+          serialPrintln(converter.time);
+          serialPrintln(getDateTimeString(*gmtime(&last)));
+          serialPrintln(next);
           converter.value = NEXTEXECUTION;
-          Serial.println(converter.time);
-          Serial.println(getDateTimeString(*gmtime(&next)));
+          serialPrintln(converter.time);
+          serialPrintln(getDateTimeString(*gmtime(&next)));
           PrintCronExp(expr);
 #endif
         }
@@ -202,13 +202,13 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       struct tm current = tm;
       time_t  current_t = mktime((struct tm *)&current);
       #if PLUGIN_081_DEBUG
-        Serial.println(F("CRON Debug info:"));
-        Serial.print(F("Next execution:"));
-        Serial.println(getDateTimeString(*gmtime(&next)));
-        Serial.print(F("Current Time:"));
-        Serial.println(getDateTimeString(current));
-        Serial.print(F("Triggered:"));
-        Serial.println(next <=  current_t);
+        serialPrintln(F("CRON Debug info:"));
+        serialPrint(F("Next execution:"));
+        serialPrintln(getDateTimeString(*gmtime(&next)));
+        serialPrint(F("Current Time:"));
+        serialPrintln(getDateTimeString(current));
+        serialPrint(F("Triggered:"));
+        serialPrintln(next <=  current_t);
       #endif
       if(function == PLUGIN_TIME_CHANGE || next <=  current_t)
       {
@@ -220,15 +220,15 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
 #if PLUGIN_081_DEBUG
         PrintCronExp(expr);
-        Serial.print(F("Expression:"));
-        Serial.println(expression);
+        serialPrint(F("Expression:"));
+        serialPrintln(expression);
 #endif
         if(error)
         {
           //TODO: Notify at ui de error
 #if PLUGIN_081_DEBUG
-          Serial.print(F("Errors:"));
-          Serial.println(String(error));
+          serialPrint(F("Errors:"));
+          serialPrintln(String(error));
 #endif
           addLog(LOG_LEVEL_ERROR, String(F("CRON Expression:")) + String(error));
         }
@@ -239,10 +239,10 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
           if(next != CRON_INVALID_INSTANT)
           {
 #if PLUGIN_081_DEBUG
-            Serial.print(F("LastExecution:"));
-            Serial.println(getDateTimeString(*gmtime(&last)));
-            Serial.print(F("NextExecution:"));
-            Serial.println(getDateTimeString(*gmtime(&next)));
+            serialPrint(F("LastExecution:"));
+            serialPrintln(getDateTimeString(*gmtime(&last)));
+            serialPrint(F("NextExecution:"));
+            serialPrintln(getDateTimeString(*gmtime(&next)));
 #endif
 
             converter.time = last;
@@ -250,13 +250,13 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
             converter.time = next;
             NEXTEXECUTION = converter.value;
 #if PLUGIN_081_DEBUG
-            Serial.println(F("Check Conversion"));
-            Serial.println(last);
+            serialPrintln(F("Check Conversion"));
+            serialPrintln(last);
             converter.value = LASTEXECUTION;
-            Serial.println(converter.time);
-            Serial.println(next);
+            serialPrintln(converter.time);
+            serialPrintln(next);
             converter.value = NEXTEXECUTION;
-            Serial.println(converter.time);
+            serialPrintln(converter.time);
 #endif
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + getDateTimeString(*gmtime(&next)));
             LoadTaskSettings(event->TaskIndex);
@@ -290,50 +290,50 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
 #if PLUGIN_081_DEBUG
 void PrintCronExp(struct cron_expr_t e) {
-  Serial.println(F("===DUMP Cron Expression==="));
-  Serial.print(F("Seconds:"));
+  serialPrintln(F("===DUMP Cron Expression==="));
+  serialPrint(F("Seconds:"));
   for (int i = 0; i < 8; i++)
   {
-    Serial.print(e.seconds[i]);
-    Serial.print(",");
+    serialPrint(e.seconds[i]);
+    serialPrint(",");
   }
-  Serial.println();
-  Serial.print(F("Minutes:"));
+  serialPrintln();
+  serialPrint(F("Minutes:"));
   for (int i = 0; i < 8; i++)
   {
-    Serial.print(e.minutes[i]);
-    Serial.print(",");
+    serialPrint(e.minutes[i]);
+    serialPrint(",");
   }
-  Serial.println();
-  Serial.print(F("hours:"));
+  serialPrintln();
+  serialPrint(F("hours:"));
   for (int i = 0; i < 3; i++)
   {
-    Serial.print(e.hours[i]);
-    Serial.print(",");
+    serialPrint(e.hours[i]);
+    serialPrint(",");
   }
-  Serial.println();
-  Serial.print(F("months:"));
+  serialPrintln();
+  serialPrint(F("months:"));
   for (int i = 0; i < 2; i++)
   {
-    Serial.print(e.months[i]);
-    Serial.print(",");
+    serialPrint(e.months[i]);
+    serialPrint(",");
   }
-  Serial.println();
-  Serial.print(F("days_of_week:"));
+  serialPrintln();
+  serialPrint(F("days_of_week:"));
   for (int i = 0; i < 1; i++)
   {
-    Serial.print(e.days_of_week[i]);
-    Serial.print(",");
+    serialPrint(e.days_of_week[i]);
+    serialPrint(",");
   }
-  Serial.println();
-  Serial.print(F("days_of_month:"));
+  serialPrintln();
+  serialPrint(F("days_of_month:"));
   for (int i = 0; i < 4; i++)
   {
-    Serial.print(e.days_of_month[i]);
-    Serial.print(",");
+    serialPrint(e.days_of_month[i]);
+    serialPrint(",");
   }
-  Serial.println();
-  Serial.println(F("END=DUMP Cron Expression==="));
+  serialPrintln();
+  serialPrintln(F("END=DUMP Cron Expression==="));
 
 }
 #endif

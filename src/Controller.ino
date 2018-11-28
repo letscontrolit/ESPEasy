@@ -163,12 +163,12 @@ bool MQTTConnect(int controller_idx)
     clientid = F("ESPClient_");
     clientid += WiFi.macAddress();
   }
-  // Work-around for 'lost connections' to the MQTT broker.
-  // If the broker thinks the connection is still alive, a reconnect from the
-  // client will be refused.
-  // To overcome this issue, append the number of reconnects to the client ID to
-  // make it different from the previous one.
-  if (wifi_reconnects >= 1) {
+  if (wifi_reconnects >= 1 && Settings.uniqueMQTTclientIdReconnect()) {
+    // Work-around for 'lost connections' to the MQTT broker.
+    // If the broker thinks the connection is still alive, a reconnect from the
+    // client will be refused.
+    // To overcome this issue, append the number of reconnects to the client ID to
+    // make it different from the previous one.
     clientid += '_';
     clientid += wifi_reconnects;
   }
@@ -278,7 +278,7 @@ void SendStatus(byte source, String status)
       MQTTStatus(status);
       break;
     case VALUE_SOURCE_SERIAL:
-      Serial.println(status);
+      serialPrintln(status);
       break;
   }
 }

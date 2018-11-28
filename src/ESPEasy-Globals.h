@@ -717,6 +717,10 @@ struct SettingsStruct
   bool appendUnitToHostname() {  return !getBitFromUL(VariousBits1, 1); }
   void appendUnitToHostname(bool value) { setBitToUL(VariousBits1, 1, !value); }
 
+  bool uniqueMQTTclientIdReconnect() {  return getBitFromUL(VariousBits1, 2); }
+  void uniqueMQTTclientIdReconnect(bool value) { setBitToUL(VariousBits1, 2, value); }
+
+
   void validate() {
     if (UDPPort > 65535) UDPPort = 0;
 
@@ -1410,12 +1414,10 @@ struct LogStruct {
 
 } Logging;
 
-std::deque<char> serialLogBuffer;
-unsigned long last_serial_log_read = 0;
+std::deque<char> serialWriteBuffer;
 
 byte highest_active_log_level = 0;
 bool log_to_serial_disabled = false;
-bool log_to_serial_disabled_temporary = false;
 // Do this in a template to prevent casting to String when not needed.
 #define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 

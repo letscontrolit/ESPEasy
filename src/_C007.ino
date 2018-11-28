@@ -75,7 +75,7 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   url += SecuritySettings.ControllerPassword[element.controller_idx]; // "0UDNN17RW6XAS2E5" // api key
 
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-    Serial.println(url);
+    serialPrintln(url);
 
   return send_via_http(controller_number, client,
     create_http_get_request(controller_number, ControllerSettings, url),

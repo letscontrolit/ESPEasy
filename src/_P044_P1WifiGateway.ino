@@ -359,9 +359,9 @@ bool validP1char(char ch) {
   } else {
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid char read from P1"));
     if (serialdebug) {
-      Serial.print(F("faulty char>"));
-      Serial.print(ch);
-      Serial.println("<");
+      serialPrint(F("faulty char>"));
+      serialPrint(String(ch));
+      serialPrintln("<");
     }
     return false;
   }
@@ -414,12 +414,12 @@ bool checkDatagram(int len) {
   if (!CRCcheck) return true;
 
   if (serialdebug) {
-    Serial.print(F("input length: "));
-    Serial.println(len);
-    Serial.print("Start char \\ : ");
-    Serial.println(startChar);
-    Serial.print(F("End char ! : "));
-    Serial.println(endChar);
+    serialPrint(F("input length: "));
+    serialPrintln(String(len));
+    serialPrint("Start char \\ : ");
+    serialPrintln(String(startChar));
+    serialPrint(F("End char ! : "));
+    serialPrintln(String(endChar));
   }
 
   if (endChar >= 0)
@@ -431,7 +431,7 @@ bool checkDatagram(int len) {
     messageCRC[4] = 0;
     if (serialdebug) {
       for (int cnt = 0; cnt < len; cnt++)
-        Serial.print(Plugin_044_serial_buf[cnt]);
+        serialPrint(String(Plugin_044_serial_buf[cnt]));
     }
 
     validCRCFound = (strtoul(messageCRC, NULL, 16) == currCRC);

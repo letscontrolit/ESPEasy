@@ -100,8 +100,8 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
       {
         //int ldrVal = map(analogRead(A0), 0, 1023, 15, 245);
-        //Serial.print("LDR value: ");
-        //Serial.println(ldrVal);
+        //serialPrint("LDR value: ");
+        //serialPrintln(ldrVal);
         //Plugin_041_pixels->setBrightness(255-ldrVal);
         //Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.
         success = true;
