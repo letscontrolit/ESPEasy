@@ -49,7 +49,7 @@ function ascii2hexCstyle {
 	file_name=$(constFileName $1)
 	result=$(cat /tmp/converter.temp | hexdump -ve '1/1 "0x%.2x,"')
 	result=$(echo $result | sed 's/,$//')
-	echo "const char DATA_${file_name}[] PROGMEM = {$result};"
+	echo "const char DATA_${file_name}[] PROGMEM = {$result,0};"
 }
 
 function constFileName {
