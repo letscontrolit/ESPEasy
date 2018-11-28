@@ -9,18 +9,35 @@
 #
 # See: https://github.com/letscontrolit/ESPEasy/issues/1671#issuecomment-415144898
 
+cd static
 outputfile="$(pwd)/data_h_temp"
-
 rm $outputfile
 
 function minify_html_css {
 	file=$1
-	curl -X POST -s --data-urlencode "input@$file" http://html-minifier.com/raw > /tmp/converter.temp
+	post_To https://html-minifier.com/raw $file
 }
 
 function minify_js {
 	file=$1
-	curl -X POST -s --data-urlencode "input@$file" https://javascript-minifier.com/raw > /tmp/converter.temp
+	post_To https://javascript-minifier.com/raw $file
+}
+
+function post_To {
+	url=$1
+	file=$2
+	RESPONSE=/tmp/response.txt
+	HEADERS=/tmp/headers.txt
+	curl -X POST -s --data-urlencode "input@$file" $url -D $HEADERS -o $RESPONSE
+	status=$(cat $HEADERS | grep '^HTTP/1' | tail -1 | awk '{print $2}')
+	if [[ "$status" == "200" ]]; then
+		cat $RESPONSE > /tmp/converter.temp
+		rm $RESPONSE
+		rm $HEADERS
+	else
+		echo "can not minify $file error $status"
+		exit 1
+	fi
 }
 
 function minify_svg {
@@ -32,7 +49,7 @@ function ascii2hexCstyle {
 	file_name=$(constFileName $1)
 	result=$(cat /tmp/converter.temp | hexdump -ve '1/1 "0x%.2x,"')
 	result=$(echo $result | sed 's/,$//')
-	echo "const char DATA_${file_name}[] PROGMEM = {$result};"
+	echo "const char DATA_${file_name}[] PROGMEM = {$result,0};"
 }
 
 function constFileName {
@@ -43,7 +60,7 @@ function constFileName {
 }
 
 
-cd static
+
 file_list=$(find . -type f)
 
 for file in $file_list; do
@@ -79,4 +96,4 @@ for file in $file_list; do
 	echo ""
 	sleep 1
 done
-
+cd ..
