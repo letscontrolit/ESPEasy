@@ -252,7 +252,7 @@ boot/reboot/time/sleep etc. of the unit:
    .. code-block:: html
 
 	   on MQTT#Connected do
-	    Publish %sysname%/status,First message!
+	    Publish,%sysname%/status,First message!
 	   endon
 
    "
@@ -311,8 +311,8 @@ boot/reboot/time/sleep etc. of the unit:
 
    .. code-block:: html
 
-	   on MQTTimport#Connected do
-	    Publish %sysname%/status,AP changed
+	   on WiFi#ChangedAccesspoint do
+	    Publish,%sysname%/status,AP changed
 	   endon
 
    "
@@ -324,7 +324,7 @@ boot/reboot/time/sleep etc. of the unit:
    .. code-block:: html
 
 	   on Login#Failed do
-	    Publish %sysname%/warning,Intruder alert!
+	    Publish,%sysname%/warning,Intruder alert!
 	   endon
 
    "
@@ -336,7 +336,7 @@ boot/reboot/time/sleep etc. of the unit:
    .. code-block:: html
 
 	   on Time#Initialized do
-	    Publish %sysname%/Time,%systime%
+	    Publish,%sysname%/Time,%systime%
 	   endon
 
    "
@@ -348,8 +348,8 @@ boot/reboot/time/sleep etc. of the unit:
    .. code-block:: html
 
 	   on Time#Set do
-	    Publish %sysname%/Time,%systime%
-	    Publish %sysname%/NTP,Updated time at: %systime%
+	    Publish,%sysname%/Time,%systime%
+	    Publish,%sysname%/NTP,Updated time at: %systime%
 	   endon
 
    "
@@ -791,9 +791,9 @@ For dew point on the 'outside':
  on TempHumidityPressure_OUTSIDE#%RH do
   TaskValueSet,7,1,[TempHumidityPressure_OUTSIDE#°C]-(100-[TempHumidityPressure_OUTSIDE#%RH])/5  // "7" is the number of the task that the dummy device is on, "1" is its first value where we dump our result
   if [TempHumidityPressure_OUTSIDE#%RH]>49
-   Publish %sysname%/DewPoint_OUTSIDE/°C,[Dew_point#°C1]
+   Publish,%sysname%/DewPoint_OUTSIDE/°C,[Dew_point#°C1]
   else
-   Publish %sysname%/DewPoint_OUTSIDE/°C,[Dew_point#°C1]*  //This asterix shows that the calculation is not correct due to the humidity being below 50%!
+   Publish,%sysname%/DewPoint_OUTSIDE/°C,[Dew_point#°C1]*  //This asterix shows that the calculation is not correct due to the humidity being below 50%!
   endif
  endon
 
@@ -804,9 +804,9 @@ For dew point on the 'inside':
  on TempHumidityPressure_INSIDE#%RH do
   TaskValueSet,7,2,[TempHumidityPressure_INSIDE#°C]-(100-[TempHumidityPressure_INSIDE#%RH])/5  // "7" is the number of the task that the dummy device is on, "2" is its second value where we dump our result
   if [TempHumidityPressure_INSIDE#%RH]>49
-   Publish %sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]
+   Publish,%sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]
   else
-   Publish %sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]*  //This asterix shows that the calculation is not correct due to the humidity being below 50%!
+   Publish,%sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]*  //This asterix shows that the calculation is not correct due to the humidity being below 50%!
   endif
  endon
 
@@ -820,12 +820,12 @@ published a IP number for 30+ seconds the unit is experiencing problems.
 .. code-block:: html
 
  On System#Boot do    //When the ESP boots, do
-  Publish %sysname%/IP,%ip%
+  Publish,%sysname%/IP,%ip%
   timerSet,1,30      //Set Timer 1 for the next event in 30 seconds
  endon
 
  On Rules#Timer=1 do  //When Timer1 expires, do
-  Publish %sysname%/IP,%ip%
+  Publish,%sysname%/IP,%ip%
   timerSet,1,30       //Resets the Timer 1 for another 30 seconds
  endon
 
