@@ -15,7 +15,7 @@ rm $outputfile
 
 function minify_html_css {
 	file=$1
-	post_To http://html-minifier.com/raw $file
+	post_To https://html-minifier.com/raw $file
 }
 
 function minify_js {
