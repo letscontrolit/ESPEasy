@@ -1,4 +1,24 @@
 -------------------------------------------------
+Changes in release mega-20181128 (since mega-20181127)
+-------------------------------------------------
+
+Release date: Wed Nov 28 04:00:07 CET 2018
+
+Gijs Noorlander (7):
+      [Serial] Redirect all Serial.print/println to a buffer
+      [Serial] Replace serial port activity marker with unprintable marker
+      [Serial] Forgot the Serial.printf
+      [Commands] No longer run commands from scheduler
+      [Serial] Remove code to detect if serial port is read
+      [Sonoff POW] Merge POW r1/r2 in the same build
+      [MQTT] change client-id at reconnect - #1918
+
+Grovkillen (2):
+      [flasher] Warning if baud rate too high + info post-flash
+      [docs] Added servo motor and plugin sections
+
+
+-------------------------------------------------
 Changes in release mega-20181127 (since mega-20181125)
 -------------------------------------------------
 
