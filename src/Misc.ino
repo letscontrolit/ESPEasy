@@ -565,13 +565,13 @@ String checkTaskSettings(byte taskIndex) {
         if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {
           err = F("Task Device Name is not unique, conflicts with task ID #");
           err += (i+1);
-          return err;
+//          return err;
         }
       }
     }
   }
 
-  err = LoadTaskSettings(taskIndex);
+  err += LoadTaskSettings(taskIndex);
   return err;
 }
 
