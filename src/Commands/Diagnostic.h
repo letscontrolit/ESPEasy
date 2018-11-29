@@ -144,14 +144,6 @@ void debugPortStatus(std::map<uint32_t,portStatusStruct>::iterator it)
 	createLogPortStatus(it);
 }
 
-//TODO: giig1967g: to be removed
-void debugPortStatus(uint32_t key)
-{
-	for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
-		if (it->first == key)
-			createLogPortStatus(it);
-}
-
 void logPortStatus(String from) {
   String log;
   log=F("PortStatus structure: Called from=");

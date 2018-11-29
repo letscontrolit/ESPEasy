@@ -263,14 +263,13 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         \**************************************************************************/
         portStatusStruct currentStatus;
         const uint32_t key = createKey(PLUGIN_ID_009,Settings.TaskDevicePort[event->TaskIndex]);
-        //TODO: WARINING operator [],creates an entry in map if key doesn't exist:
+        //WARNING operator [],creates an entry in map if key doesn't exist:
         currentStatus = globalMapPortStatus[key];
 
         //Bug fixed: avoid 10xSEC in case of a non-fully configured device (no port defined yet)
         if (state != -1 && Settings.TaskDevicePort[event->TaskIndex]>=0) {
 
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-          //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
             addLog(LOG_LEVEL_DEBUG,"MCP :SafeButton activated")

@@ -260,7 +260,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         \**************************************************************************/
         portStatusStruct currentStatus;
         const uint32_t key = createKey(PLUGIN_ID_019,Settings.TaskDevicePort[event->TaskIndex]);
-        //TODO: WARINING operator [],creates an entry in map if key doesn't exist:
+        //WARNING operator [],creates an entry in map if key doesn't exist:
         currentStatus = globalMapPortStatus[key];
 
         //Bug fixed: avoid 10xSEC in case of a non-fully configured device (no port defined yet)
@@ -690,26 +690,6 @@ uint8_t Plugin_019_ReadAllPins(uint8_t address)
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
-boolean Plugin_019_Write2(byte Par1, byte Par2)
-{
-  byte unit = (Par1 - 1) / 8;
-  byte port = Par1 - (unit * 8);
-  uint8_t address = 0x20 + unit;
-  if (unit > 7) address += 0x10;
-
-  uint8_t rawState = Plugin_019_ReadAllPins(address);
-  if (Par2 == 0)
-    rawState &=  ~(1<<(port-1)); //set port = 0
-  else
-    rawState |= (1<<(port-1)); //set port = 1
-
-  Wire.beginTransmission(address);
-  Wire.write(rawState);
-  Wire.endTransmission();
-
-  return true;
-}
-
 boolean Plugin_019_Write(byte Par1, byte Par2)
 {
   uint8_t unit = (Par1 - 1) / 8;
@@ -729,15 +709,6 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
 
     if (existPortStatus(key) && globalMapPortStatus[key].mode == PIN_MODE_OUTPUT && globalMapPortStatus[key].state == 0)
       portmask &= ~(1 << i); //set port i = 0
-/*
-    if (!existPortStatus(key))
-      portmask |= (1 << i); //set port i= 1
-    else if (globalMapPortStatus[key].mode == PIN_MODE_INPUT || globalMapPortStatus[key].mode == PIN_MODE_UNDEFINED || (globalMapPortStatus[key].mode == PIN_MODE_OUTPUT && globalMapPortStatus[key].state == 1))
-      portmask |= (1 << i); //set port i = 1
-*/
-	  //if(!getPinState(PLUGIN_ID_019, unit, &mode, &value) || mode == PIN_MODE_INPUT || (mode == PIN_MODE_OUTPUT && value == 1))
-		  //portmask |= (1 << i);
-	  //unit++;
   }
 
   key = createKey(PLUGIN_ID_019,Par1);

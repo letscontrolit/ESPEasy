@@ -373,15 +373,6 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-/*
-String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
-{
-  //TODO: giig1967g: rimuovere funzione
-  addLog(LOG_LEVEL_INFO,F("ERROR called OLD getPinStateJSON"));
-  return "ERROR called OLD getPinStateJSON";
-}
-*/
-
 String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
@@ -397,17 +388,7 @@ String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSea
     value = globalMapPortStatus[key].state;
     found = true;
   }
-/*  {
-    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-      if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
-      {
-        mode = pinStates[x].mode;
-        value = pinStates[x].value;
-        found = true;
-        break;
-      }
-  }
-*/
+
   if (!search || (search && found))
   {
     reply += F("{\n\"log\": \"");

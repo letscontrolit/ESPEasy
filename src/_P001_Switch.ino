@@ -75,8 +75,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        addLog(LOG_LEVEL_INFO,"001-DEVICE_ADD");
-
         Device[++deviceCount].Number = PLUGIN_ID_001;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
@@ -366,7 +364,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
           portStatusStruct currentStatus;
           const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
-          //TODO: WARINING operator [],creates an entry in map if key doesn't exist:
+          //WARNING operator [],creates an entry in map if key doesn't exist:
           currentStatus = globalMapPortStatus[key];
 
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
@@ -574,7 +572,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        addLog(LOG_LEVEL_INFO,"001-WRITE");
         String log = "";
         String command = parseString(string, 1);
 
@@ -851,8 +848,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             portStatusStruct tempStatus;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            //TODO: ATTENZIONE: se non esiste crea nuova entry in map:
-            //QUINDI VA MESSO IN OGNI command ALTRIMENTI CREA UN'ENTRY OGNI VOLTA CHE VIENE CHIAMATO ANCHE SE IL COMANDO NON ESISTE
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
             tempStatus = globalMapPortStatus[key];
 
             pinMode(event->Par1, OUTPUT);
