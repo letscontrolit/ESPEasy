@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181129 (since mega-20181128)
+-------------------------------------------------
+
+Release date: Thu Nov 29 04:00:15 CET 2018
+
+Grovkillen (1):
+      [docs] Small update, fixed some typos
+
+Saverio Cisternino (3):
+      [Embed Files] Add exit code 1 when minify failed
+      [Embed Files] Append zero termination
+      [Embed Files] Avoid redirect http to https of minify_html_css
+
+clumsy-stefan (1):
+      Allow for duplicate task names again
+
+
+-------------------------------------------------
 Changes in release mega-20181128 (since mega-20181127)
 -------------------------------------------------
 
