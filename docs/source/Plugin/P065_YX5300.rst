@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p06x.repl
 .. _P065_YX5300_page:
 
 YX5300

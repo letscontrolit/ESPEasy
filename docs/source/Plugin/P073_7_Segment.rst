@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p07x.repl
 .. _P073_7_Segment_page:
 
 7 Segment

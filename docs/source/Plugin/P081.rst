@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
 .. _P081_page:
 
 |P081_typename|

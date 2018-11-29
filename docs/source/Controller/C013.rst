@@ -1,0 +1,263 @@
+.. include:: _controller_substitutions.repl
+
+.. _C013_page:
+
+|C013_typename|
+==================================================
+
+|C013_shortinfo|
+
+Controller details
+------------------
+
+Type: |C013_type|
+
+Name: |C013_name|
+
+Status: |C013_status|
+
+GitHub: |C013_github|_
+
+Maintainer: |C013_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |improved|
+  Implementation of secure communication and check for valid data.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------
+
+ESPEasy is able to communicate between nodes itself.
+It is an IANA registered service: `espeasy-p2p <https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8266#ESPeasy>`_
+
+* Service Name:  espeasy-p2p
+* Port Number: 8266
+* Transport Protocol:  UDP
+* Description: ESPeasy peer-2-peer communication
+* Registration date: 2018-11-28
+
+This protocol is targeted specific for use by ESPeasy to let ESPeasy nodes
+communicate with each other to create a big swarm of nodes working together
+without the need for a hosted service like MQTT, which needs a central broker.
+
+It is currently used for:
+
+* Discovery of nodes
+* Sharing sensor data among nodes
+
+Later updates may add:
+
+* Distribution of settings
+* Sending commands
+
+Sending & Known Nodes
+---------------------
+
+ESPEasy keeps track of all nodes advertising themselves via Sysinfo messages.
+
+This knowledge is kept in a ``NodeStruct`` for at least 10 minutes.
+If a node is not sending a Sysinfo message in this period, it will be removed from the list.
+
+Data Format Versions
+--------------------
+
+During the IANA port assignment assessment, a number of issues were pointed out by their experts.
+
+* Versioning
+* Security
+* Data validation
+* Traffic limiting and congestion handling
+
+There are now 2 versions available:
+
+* Version "0" - No security, no data validation.
+* Version "1" - Introduced in ESPeasy build <???>
+
+Data Format Version 0
+---------------------
+
+Sending and receiving is causing issues when the swarm of nodes increases.
+
+* All nodes with this service enabled will advertise their presence every 30 seconds via broadcast
+* Nodes can not subscribe to receiving sensor data updates
+* Non broadcast messages are sent to each individual known node, regardless if the receiving node will use the data
+* Sensor Data messages are sent to each individual known node
+* Sensor Info updates are sent to each individual known node when a plugin coupled to this plugin is saved.
+
+Of each known node the following data is kept:
+
+.. code-block:: C++
+
+  struct NodeStruct
+  {
+    String nodeName;
+    byte ip[4];
+    uint16_t build;
+    byte age;
+    byte nodeType;
+  };
+
+The key to index this ``NodeStruct`` is the nodes unit number.
+
+ASCII Data
+~~~~~~~~~~
+
+Command Message
+***************
+
+First byte is not 0xFF.
+
+The entire message processed as a command like this:
+
+.. code-block:: C++
+
+  packetBuffer[len] = 0;
+  String request = &packetBuffer[0];
+  struct EventStruct TempEvent;
+  parseCommandString(&TempEvent, request);
+  TempEvent.Source = VALUE_SOURCE_SYSTEM;
+  if (!PluginCall(PLUGIN_WRITE, &TempEvent, request)) {
+    ExecuteCommand(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+  }
+
+As can be seen, no checks for size, and it is just expected to be a valid ESPeasy command.
+Also no check to see if the command is supported by the receiving end and no feedback to the sender.
+
+Binary Data
+~~~~~~~~~~~
+
+Binary data is marked with the first byte 0xFF.
+
+On the receiving end, it is packed in an event in the ``Data`` field and processed like this:
+
+.. code-block:: C++
+
+  struct EventStruct TempEvent;
+  TempEvent.Data = reinterpret_cast<byte*>(&packetBuffer[0]);
+  TempEvent.Par1 = remoteIP[3];
+  TempEvent.Par2 = len;
+  PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
+  CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
+
+N.B. only the controller C013 implements code for handling UDP data.
+
+Message types supported, determined by the 2nd byte:
+
+* 1: Sysinfo message
+* 2: Sensor info pull request (not implemented)
+* 3: Sensor info
+* 4: Sensor data pull request (not implemented)
+* 5: Sensor data
+
+Sysinfo Message
+***************
+
+There are 2 types of Sysinfo messages, a standard and an extended message.
+The extended message starts with the same information as the standard one.
+
+Standard Sysinfo message (13 bytes):
+
+* 2 bytes marker (255 , 1)
+* 6 byte MAC address
+* 4 byte IP address
+* 1 byte unit number
+
+Extended Sysinfo message (13 + 28 = 41 bytes):
+
+* 2 bytes ESPeasy data version number (LSB, MSB)
+* 25 bytes node name
+* 1 byte node type
+
+The node type is defined as:
+
+*  1 = "ESP Easy"
+* 17 = "ESP Easy Mega"
+* 33 = "ESP Easy 32"
+* 65 = "Arduino Easy"
+* 81 = "Nano Easy"
+
+Sensor Info message
+*******************
+
+Sensor Info messages are just a description of a shared sensor.
+It contains some information to setup a new sensor on the receiving end.
+
+These messages are just a serialized byte stream of ``struct C013_SensorInfoStruct`` .
+
+.. code-block:: C++
+
+  struct C013_SensorInfoStruct
+  {
+    byte header = 255;
+    byte ID = 3;
+    byte sourcelUnit;
+    byte destUnit;
+    byte sourceTaskIndex;
+    byte destTaskIndex;
+    byte deviceNumber;
+    char taskName[26];
+    char ValueNames[VARS_PER_TASK][26];
+  };
+
+
+Sensor Data message
+*******************
+
+
+These messages are just a serialized byte stream of ``struct C013_SensorDataStruct`` .
+
+.. code-block:: C++
+
+  struct C013_SensorDataStruct
+  {
+    byte header = 255;
+    byte ID = 5;
+    byte sourcelUnit;
+    byte destUnit;
+    byte sourceTaskIndex;
+    byte destTaskIndex;
+    float Values[VARS_PER_TASK];
+  };
+
+
+Data Format Version 1
+---------------------
+
+This version remains compatible with version 0 for backwards compatibility.
+It is using the "next" unused marker.
+
+All messages will have a standard packet data format:
+
+* 2 bytes Marker (255 , 6)
+* 2 bytes Version   => also determines data offset (header length)
+* 2 bytes Message type
+* 2 bytes Size of data block in "N" blocks of 16 bytes
+* 2 bytes Key/group selector
+* 2 bytes Sequence number
+* (16 x N) bytes Data block AES encrypted data (including 2 bytes checksum)
+* 2 bytes Packet checksum
+
+This allows to:
+
+* Distinguish data format versions
+* Filter on message type before allocating large buffers
+* Use multiple (pre-shared) encryption keys to have several levels of security or just several groups.
+* Validate correct transmission of packet (last 2 checksum bytes) before decrypting data.
+* Allow for larger messages to be sent in sequences. (e.g. firmware upgrades?)
+* Validate sender and content of data block, since it contains a checksum too, which is part of the encrypted data block.
+
+Since AES has a block size of 16 bytes (128 bit), the size of the data block is defined as a block of 16 bytes.
+This allows up-to 1 MB of messages. (2^16 * 2^4 = 2^20)
+An UDP datagram sent over IPv4 cannot exceed 65,507 bytes (65,535 − 8 byte UDP header − 20 byte IP header).
+In IPv6 jumbograms it is possible to have UDP packets of size greater than 65,535 bytes.

@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
 .. _P034_DHT12_page:
 
 DHT12

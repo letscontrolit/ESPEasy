@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p02x.repl
 .. _P028_page:
 
 |P028_typename|

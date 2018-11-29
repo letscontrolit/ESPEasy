@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P003_Pulse_logic_input_page:
 
 Pulse logic input

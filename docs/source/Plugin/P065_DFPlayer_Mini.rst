@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p06x.repl
 .. _P065_DFPlayer_Mini_page:
 
 DFPlayer Mini

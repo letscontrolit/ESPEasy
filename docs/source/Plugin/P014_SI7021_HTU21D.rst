@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p01x.repl
 .. _P014_SI7021_HTU21D_page:
 
 SI7021/HTU21D

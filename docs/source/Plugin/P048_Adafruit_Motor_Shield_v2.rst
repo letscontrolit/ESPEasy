@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
 .. _P048_Adafruit_Motor_Shield_v2_page:
 
 Adafruit Motor Shield v2

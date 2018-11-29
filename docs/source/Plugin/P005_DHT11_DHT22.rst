@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P005_DHT11_DHT22_page:
 
 DHT11/DHT22

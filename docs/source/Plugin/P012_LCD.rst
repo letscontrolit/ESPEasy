@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p01x.repl
 .. _P012_LCD_page:
 
 LCD

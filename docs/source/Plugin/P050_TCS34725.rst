@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
 .. _P050_TCS34725_page:
 
 TCS34725

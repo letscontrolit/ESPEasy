@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P001_PIR_sensor_page:
 
 PIR sensor

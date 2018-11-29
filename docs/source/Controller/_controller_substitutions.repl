@@ -1,0 +1,145 @@
+
+
+
+.. |C001_name| replace:: :cyan:`Domoticz HTTP`
+.. |C001_type| replace:: :cyan:`Controller`
+.. |C001_typename| replace:: :cyan:`Controller - Domoticz HTTP`
+.. |C001_status| replace:: :green:`NORMAL`
+.. |C001_github| replace:: C001.ino
+.. _C001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C001.ino
+.. |C001_usedby| replace:: `.`
+.. |C001_shortinfo| replace:: `.`
+.. |C001_maintainer| replace:: `.`
+.. |C001_compileinfo| replace:: `.`
+
+.. |C002_name| replace:: :cyan:`Domoticz MQTT`
+.. |C002_type| replace:: :cyan:`Controller`
+.. |C002_typename| replace:: :cyan:`Controller - Domoticz MQTT`
+.. |C002_status| replace:: :green:`NORMAL`
+.. |C002_github| replace:: C002.ino
+.. _C002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C002.ino
+.. |C002_usedby| replace:: `.`
+.. |C002_shortinfo| replace:: `.`
+.. |C002_maintainer| replace:: `.`
+.. |C002_compileinfo| replace:: `.`
+
+.. |C003_name| replace:: :cyan:`Nodo Telnet`
+.. |C003_type| replace:: :cyan:`Controller`
+.. |C003_typename| replace:: :cyan:`Controller - Nodo Telnet`
+.. |C003_status| replace:: :green:`NORMAL`
+.. |C003_github| replace:: C003.ino
+.. _C003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C003.ino
+.. |C003_usedby| replace:: `.`
+.. |C003_shortinfo| replace:: `.`
+.. |C003_maintainer| replace:: `.`
+.. |C003_compileinfo| replace:: `.`
+
+.. |C004_name| replace:: :cyan:`ThingSpeak`
+.. |C004_type| replace:: :cyan:`Controller`
+.. |C004_typename| replace:: :cyan:`Controller - ThingSpeak`
+.. |C004_status| replace:: :green:`NORMAL`
+.. |C004_github| replace:: C004.ino
+.. _C004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C004.ino
+.. |C004_usedby| replace:: `.`
+.. |C004_shortinfo| replace:: `.`
+.. |C004_maintainer| replace:: `.`
+.. |C004_compileinfo| replace:: `.`
+
+.. |C005_name| replace:: :cyan:`OpenHAB MQTT`
+.. |C005_type| replace:: :cyan:`Controller`
+.. |C005_typename| replace:: :cyan:`Controller - OpenHAB MQTT`
+.. |C005_status| replace:: :green:`NORMAL`
+.. |C005_github| replace:: C005.ino
+.. _C005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C005.ino
+.. |C005_usedby| replace:: `.`
+.. |C005_shortinfo| replace:: `.`
+.. |C005_maintainer| replace:: `.`
+.. |C005_compileinfo| replace:: `.`
+
+.. |C006_name| replace:: :cyan:`PiDome MQTT`
+.. |C006_type| replace:: :cyan:`Controller`
+.. |C006_typename| replace:: :cyan:`Controller - PiDome MQTT`
+.. |C006_status| replace:: :green:`NORMAL`
+.. |C006_github| replace:: C006.ino
+.. _C006_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C006.ino
+.. |C006_usedby| replace:: `.`
+.. |C006_shortinfo| replace:: `.`
+.. |C006_maintainer| replace:: `.`
+.. |C006_compileinfo| replace:: `.`
+
+.. |C007_name| replace:: :cyan:`Emoncms`
+.. |C007_type| replace:: :cyan:`Controller`
+.. |C007_typename| replace:: :cyan:`Controller - Emoncms`
+.. |C007_status| replace:: :green:`NORMAL`
+.. |C007_github| replace:: C007.ino
+.. _C007_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C007.ino
+.. |C007_usedby| replace:: `.`
+.. |C007_shortinfo| replace:: `.`
+.. |C007_maintainer| replace:: `.`
+.. |C007_compileinfo| replace:: `.`
+
+.. |C008_name| replace:: :cyan:`Generic HTTP`
+.. |C008_type| replace:: :cyan:`Controller`
+.. |C008_typename| replace:: :cyan:`Controller - Generic HTTP`
+.. |C008_status| replace:: :green:`NORMAL`
+.. |C008_github| replace:: C008.ino
+.. _C008_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C008.ino
+.. |C008_usedby| replace:: `.`
+.. |C008_shortinfo| replace:: `.`
+.. |C008_maintainer| replace:: `.`
+.. |C008_compileinfo| replace:: `.`
+
+.. |C009_name| replace:: :cyan:`FHEM HTTP`
+.. |C009_type| replace:: :cyan:`Controller`
+.. |C009_typename| replace:: :cyan:`Controller - FHEM HTTP`
+.. |C009_status| replace:: :green:`NORMAL`
+.. |C009_github| replace:: C009.ino
+.. _C009_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C009.ino
+.. |C009_usedby| replace:: `.`
+.. |C009_shortinfo| replace:: `.`
+.. |C009_maintainer| replace:: `.`
+.. |C009_compileinfo| replace:: `.`
+
+.. |C010_name| replace:: :cyan:`Generic UDP`
+.. |C010_type| replace:: :cyan:`Controller`
+.. |C010_typename| replace:: :cyan:`Controller - Generic UDP`
+.. |C010_status| replace:: :green:`NORMAL`
+.. |C010_github| replace:: C010.ino
+.. _C010_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C010.ino
+.. |C010_usedby| replace:: `.`
+.. |C010_shortinfo| replace:: `.`
+.. |C010_maintainer| replace:: `.`
+.. |C010_compileinfo| replace:: `.`
+
+.. |C011_name| replace:: :cyan:`Generic HTTP`
+.. |C011_type| replace:: :cyan:`Controller`
+.. |C011_typename| replace:: :cyan:`Controller - Generic HTTP`
+.. |C011_status| replace:: :yellow:`TESTING`
+.. |C011_github| replace:: C011.ino
+.. _C011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C011.ino
+.. |C011_usedby| replace:: `.`
+.. |C011_shortinfo| replace:: `.`
+.. |C011_maintainer| replace:: `.`
+.. |C011_compileinfo| replace:: `.`
+
+.. |C012_name| replace:: :cyan:`Blynk`
+.. |C012_type| replace:: :cyan:`Controller`
+.. |C012_typename| replace:: :cyan:`Controller - Blynk`
+.. |C012_status| replace:: :yellow:`TESTING`
+.. |C012_github| replace:: C012.ino
+.. _C012_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C012.ino
+.. |C012_usedby| replace:: `.`
+.. |C012_shortinfo| replace:: `.`
+.. |C012_maintainer| replace:: `.`
+.. |C012_compileinfo| replace:: `.`
+
+.. |C013_name| replace:: :cyan:`ESPEasy P2P Networking`
+.. |C013_type| replace:: :cyan:`Controller`
+.. |C013_typename| replace:: :cyan:`Controller - ESPEasy P2P Networking`
+.. |C013_status| replace:: :green:`NORMAL`
+.. |C013_github| replace:: C013.ino
+.. _C013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C013.ino
+.. |C013_usedby| replace:: `.`
+.. |C013_shortinfo| replace:: `.`
+.. |C013_maintainer| replace:: `.`
+.. |C013_compileinfo| replace:: `.`

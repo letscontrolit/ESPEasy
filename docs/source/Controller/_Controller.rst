@@ -1,3 +1,5 @@
+.. include:: _controller_substitutions.repl
+
 Controller
 **********
 
@@ -9,6 +11,28 @@ A controller is a component to enable a plugin to send data elsewhere.
 
 For example, Domoticz needs an 'IDX' value to identify the configured entry in
 Domoticz for which new data is sent.
+
+Controller Plugins
+==================
+
+.. csv-table::
+   :header: "Plugin name", "Plugin status", "Plugin number"
+   :widths: 10, 8, 5
+
+   ":ref:`C001_page`","|C001_status|","C001"
+   ":ref:`C002_page`","|C002_status|","C002"
+   ":ref:`C003_page`","|C003_status|","C003"
+   ":ref:`C004_page`","|C004_status|","C004"
+   ":ref:`C005_page`","|C005_status|","C005"
+   ":ref:`C006_page`","|C006_status|","C006"
+   ":ref:`C007_page`","|C007_status|","C007"
+   ":ref:`C008_page`","|C008_status|","C008"
+   ":ref:`C009_page`","|C009_status|","C009"
+   ":ref:`C010_page`","|C010_status|","C010"
+   ":ref:`C011_page`","|C011_status|","C011"
+   ":ref:`C012_page`","|C012_status|","C012"
+   ":ref:`C013_page`","|C013_status|","C013"
+
 
 Controller Parameters
 =====================
