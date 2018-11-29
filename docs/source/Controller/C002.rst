@@ -1,24 +1,24 @@
 .. include:: _controller_substitutions.repl
 
-.. _C001_page:
+.. _C002_page:
 
-|C001_typename|
+|C002_typename|
 ==================================================
 
-|C001_shortinfo|
+|C002_shortinfo|
 
 Controller details
 ------------------
 
-Type: |C001_type|
+Type: |C002_type|
 
-Name: |C001_name|
+Name: |C002_name|
 
-Status: |C001_status|
+Status: |C002_status|
 
-GitHub: |C001_github|_
+GitHub: |C002_github|_
 
-Maintainer: |C001_maintainer|
+Maintainer: |C002_maintainer|
 
 Change log
 ----------

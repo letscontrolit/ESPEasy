@@ -1,3 +1,5 @@
+.. include:: _controller_substitutions.repl
+
 .. _C013_page:
 
 |C013_typename|

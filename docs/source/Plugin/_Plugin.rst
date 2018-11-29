@@ -1,3 +1,5 @@
+.. include:: _plugin_categories.repl
+
 #######
 Plugins
 #######

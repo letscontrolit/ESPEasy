@@ -1,3 +1,5 @@
+.. include:: _controller_substitutions.repl
+
 Controller
 **********
 
