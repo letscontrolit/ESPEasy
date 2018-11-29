@@ -78,10 +78,14 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("ip"                     , Command_IP);                         // Network Command
       break;
     }
+    case 'j': {
+    COMMAND_CASE("jsonportstatus"         , Command_JSONPortStatus);             // Diagnostic.h
+    }
     case 'l': {
     COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
+    COMMAND_CASE("logportstatus"          , Command_logPortStatus);              // Diagnostic.h
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
       break;
     }
@@ -102,7 +106,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 'p': {
 	  COMMAND_CASE("password"               , Command_Settings_Password);          // Settings.h
-	  COMMAND_CASE("publish"                , Command_MQTT_Publish);               // MQTT.h
+    COMMAND_CASE("publish"                , Command_MQTT_Publish);               // MQTT.h
       break;
     }
     case 'r': {

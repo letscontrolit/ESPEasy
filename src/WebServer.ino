@@ -3706,14 +3706,77 @@ void handle_pinstates() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-
-
-
-
   //addFormSubHeader(F("Pin state table<TR>"));
 
   html_table_class_multirow();
   html_TR();
+  html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
+  html_table_header("GPIO");
+  html_table_header("Mode");
+  html_table_header(F("Value/State"));
+  html_table_header(F("Task"));
+  html_table_header(F("Monitor"));
+  html_table_header(F("Command"));
+  html_table_header("Init");
+  for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
+  {
+    html_TR_TD(); TXBuffer += "P";
+    const uint16_t plugin = getPluginFromKey(it->first);
+    const uint16_t port = getPortFromKey(it->first);
+
+    if (plugin < 100)
+    {
+      TXBuffer += '0';
+    }
+    if (plugin < 10)
+    {
+      TXBuffer += '0';
+    }
+    TXBuffer += plugin;
+    html_TD();
+    TXBuffer += port;
+    html_TD();
+    byte mode = it->second.mode;
+    switch (mode)
+    {
+      case PIN_MODE_UNDEFINED:
+        TXBuffer += F("Undefined");
+        break;
+      case PIN_MODE_INPUT:
+        TXBuffer += F("Input");
+        break;
+      case PIN_MODE_INPUT_PULLUP:
+        TXBuffer += F("Input PullUp");
+        break;
+      case PIN_MODE_OUTPUT:
+        TXBuffer += F("Output");
+        break;
+      case PIN_MODE_PWM:
+        TXBuffer += F("PWM");
+        break;
+      case PIN_MODE_SERVO:
+        TXBuffer += F("Servo");
+        break;
+      case PIN_MODE_OFFLINE:
+        TXBuffer += F("Offline");
+        break;
+      default:
+        TXBuffer += F("ERROR: Not Defined");
+    }
+    html_TD();
+    TXBuffer += it->second.state;
+    html_TD();
+    TXBuffer += it->second.task;
+    html_TD();
+    TXBuffer += it->second.monitor;
+    html_TD();
+    TXBuffer += it->second.command;
+    html_TD();
+    TXBuffer += it->second.init;
+  }
+
+
+/*
   html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
   html_table_header("GPIO");
   html_table_header("Mode");
@@ -3756,7 +3819,7 @@ void handle_pinstates() {
       html_TD();
       TXBuffer += pinStates[x].value;
     }
-
+*/
     html_end_table();
     sendHeadandTail_stdtemplate(_TAIL);
     TXBuffer.endStream();
@@ -4020,6 +4083,8 @@ void handle_control() {
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||
+           command.equalsIgnoreCase(F("logPortStatus")) ||
+           command.equalsIgnoreCase(F("jsonportstatus")) ||
            command.equalsIgnoreCase(F("rules"))) {
     ExecuteCommand(VALUE_SOURCE_HTTP,webrequest.c_str());
     handledCmd = true;

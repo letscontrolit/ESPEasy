@@ -293,6 +293,7 @@ String formatGpioName_RX_HW(bool optional) {
 /*********************************************************************************************\
    set pin mode & state (info table)
   \*********************************************************************************************/
+/*
 void setPinState(byte plugin, byte index, byte mode, uint16_t value)
 {
   // plugin number and index form a unique key
@@ -320,11 +321,13 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
       }
   }
 }
-
+*/
 
 /*********************************************************************************************\
    get pin mode & state (info table)
   \*********************************************************************************************/
+
+/*
 boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -337,10 +340,11 @@ boolean getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
   return false;
 }
 
-
+*/
 /*********************************************************************************************\
    check if pin mode & state is known (info table)
   \*********************************************************************************************/
+/*
 boolean hasPinState(byte plugin, byte index)
 {
   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
@@ -351,6 +355,7 @@ boolean hasPinState(byte plugin, byte index)
   return false;
 }
 
+*/
 
 /*********************************************************************************************\
    Bitwise operators
@@ -368,7 +373,7 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uint16_t noSearchValue)
+String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
@@ -377,16 +382,11 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
   String reply = "";
   boolean found = false;
 
-  if (search)
+  if (search && existPortStatus(key))
   {
-    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-      if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
-      {
-        mode = pinStates[x].mode;
-        value = pinStates[x].value;
-        found = true;
-        break;
-      }
+    mode = globalMapPortStatus[key].mode;
+    value = globalMapPortStatus[key].state;
+    found = true;
   }
 
   if (!search || (search && found))
@@ -394,9 +394,9 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
     reply += F("{\n\"log\": \"");
     reply += log.substring(7, 32); // truncate to 25 chars, max MQTT message size = 128 including header...
     reply += F("\",\n\"plugin\": ");
-    reply += plugin;
+    reply += getPluginFromKey(key);
     reply += F(",\n\"pin\": ");
-    reply += index;
+    reply += getPortFromKey(key);
     reply += F(",\n\"mode\": \"");
     switch (mode)
     {
@@ -405,6 +405,12 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
         break;
       case PIN_MODE_INPUT:
         reply += F("input");
+        break;
+      case PIN_MODE_INPUT_PULLUP:
+        reply += F("input pullup");
+        break;
+      case PIN_MODE_OFFLINE:
+        reply += F("offline");
         break;
       case PIN_MODE_OUTPUT:
         reply += F("output");
@@ -415,6 +421,8 @@ String getPinStateJSON(boolean search, byte plugin, byte index, String& log, uin
       case PIN_MODE_SERVO:
         reply += F("servo");
         break;
+      default:
+        reply += F("ERROR: Not Defined");
     }
     reply += F("\",\n\"state\": ");
     reply += value;
@@ -3475,4 +3483,60 @@ float compute_dew_point_temp(float temperature, float humidity_percentage) {
 float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
   return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
                      (112.0 + 0.9 * temperature), 8);
+}
+
+/**********************************************************
+*                                                         *
+* Helper Functions for managing the status data structure *
+*                                                         *
+**********************************************************/
+
+void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+  if (tempStatus.task<=0 && tempStatus.monitor<=0 && tempStatus.command<=0)
+    globalMapPortStatus.erase(key);
+  else
+    globalMapPortStatus[key] = tempStatus;
+}
+
+bool existPortStatus(uint32_t key) {
+  bool retValue = false;
+  //check if KEY exists:
+  std::map<uint32_t,portStatusStruct>::iterator it;
+  it = globalMapPortStatus.find(key);
+  if (it != globalMapPortStatus.end()) {  //if KEY exists...
+    retValue = true;
+  }
+  return retValue;
+}
+
+void removeTaskFromPort(uint32_t key) {
+  if (existPortStatus(key)) {
+    (globalMapPortStatus[key].task > 0) ? globalMapPortStatus[key].task-- : globalMapPortStatus[key].task = 0;
+    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
+      globalMapPortStatus.erase(key);
+  }
+}
+
+void removeMonitorFromPort(uint32_t key) {
+  if (existPortStatus(key)) {
+    globalMapPortStatus[key].monitor=0;
+    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
+      globalMapPortStatus.erase(key);
+  }
+}
+
+void addMonitorToPort(uint32_t key) {
+  globalMapPortStatus[key].monitor=1;
+}
+
+uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber) {
+  return (uint32_t) pluginNumber << 16 | portNumber;
+}
+
+uint16_t getPluginFromKey(uint32_t key) {
+  return (uint16_t)(key >> 16);
+}
+
+uint16_t getPortFromKey(uint32_t key) {
+  return (uint16_t)(key);
 }

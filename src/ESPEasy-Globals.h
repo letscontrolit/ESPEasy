@@ -337,7 +337,7 @@
 #define NPLUGIN_MAX                         4
 #define UNIT_MAX                          254 // unit 255 = broadcast
 #define RULES_TIMER_MAX                     8
-#define PINSTATE_TABLE_MAX                 32
+//#define PINSTATE_TABLE_MAX                 32
 #define RULES_MAX_SIZE                   2048
 #define RULES_MAX_NESTING_LEVEL             3
 #define RULESETS_MAX                        4
@@ -353,6 +353,8 @@
 #define PIN_MODE_OUTPUT                     2
 #define PIN_MODE_PWM                        3
 #define PIN_MODE_SERVO                      4
+#define PIN_MODE_INPUT_PULLUP               5
+#define PIN_MODE_OFFLINE                    6
 
 #define SEARCH_PIN_STATE                 true
 #define NO_SEARCH_PIN_STATE             false
@@ -840,7 +842,7 @@ struct SettingsStruct
       TaskDeviceSendData[i][task] = false;
     }
     TaskDeviceNumber[task] = 0;
-    OLD_TaskDeviceID[task] = 0;
+    OLD_TaskDeviceID[task] = 0; //UNUSED: this can be removed
     TaskDevicePin1[task] = -1;
     TaskDevicePin2[task] = -1;
     TaskDevicePin3[task] = -1;
@@ -905,7 +907,7 @@ struct SettingsStruct
   byte          Protocol[CONTROLLER_MAX];
   byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
   byte          TaskDeviceNumber[TASKS_MAX];
-  unsigned int  OLD_TaskDeviceID[TASKS_MAX];
+  unsigned int  OLD_TaskDeviceID[TASKS_MAX];  //UNUSED: this can be removed
   union {
     struct {
       int8_t        TaskDevicePin1[TASKS_MAX];
@@ -959,7 +961,6 @@ struct SettingsStruct
 SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
-
 
 /*********************************************************************************************\
  *  Analyze SettingsStruct and report inconsistencies
@@ -1537,6 +1538,7 @@ enum gpio_direction {
 /*********************************************************************************************\
  * pinStatesStruct
 \*********************************************************************************************/
+/*
 struct pinStatesStruct
 {
   pinStatesStruct() : value(0), plugin(0), index(0), mode(0) {}
@@ -1545,7 +1547,7 @@ struct pinStatesStruct
   byte index;
   byte mode;
 } pinStates[PINSTATE_TABLE_MAX];
-
+*/
 
 // this offsets are in blocks, bytes = blocks * 4
 #define RTC_BASE_STRUCT 64
@@ -1988,6 +1990,24 @@ String getMiscStatsName(int stat) {
 }
 
 
+struct portStatusStruct {
+  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
+
+  int8_t state : 2; //-1,0,1
+  int8_t output : 2; //-1,0,1
+  int8_t command : 2; //0,1
+  int8_t init : 2; //0,1
+
+  uint8_t mode : 3; //6 current values (max. 8)
+  uint8_t task : 4; //0-15 (max. 16)
+  uint8_t monitor : 1; //0,1
+
+  int8_t previousTask : 8;
+};
+
+std::map<uint32_t, portStatusStruct> globalMapPortStatus;
+
+
 /********************************************************************************************\
   Pre defined settings for off-the-shelf hardware
   \*********************************************************************************************/
@@ -2131,6 +2151,7 @@ struct GpioFactorySettingsStruct {
 bool modelMatchingFlashSize(DeviceModel model, int size_MB);
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
 void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
+
 
 // These wifi event functions must be in a .h-file because otherwise the preprocessor
 // may not filter the ifdef checks properly.

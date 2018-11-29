@@ -5,24 +5,34 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
-  for (byte gpio = 0; gpio < 17; ++gpio) {
+  for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
     bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
     if (!serialPinConflict && Settings.PinBootStates[gpio] != 0) {
+      const uint32_t key = createKey(1,gpio);
       switch(Settings.PinBootStates[gpio])
       {
         case 1:
           pinMode(gpio,OUTPUT);
           digitalWrite(gpio,LOW);
-          setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+          globalMapPortStatus[key].state = LOW;
+          globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
+          globalMapPortStatus[key].init = 1;
+          //setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
           break;
         case 2:
           pinMode(gpio,OUTPUT);
           digitalWrite(gpio,HIGH);
-          setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+          globalMapPortStatus[key].state = HIGH;
+          globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
+          globalMapPortStatus[key].init = 1;
+          //setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
           break;
         case 3:
           pinMode(gpio,INPUT_PULLUP);
-          setPinState(1, gpio, PIN_MODE_INPUT, 0);
+          globalMapPortStatus[key].state = 0;
+          globalMapPortStatus[key].mode = PIN_MODE_INPUT_PULLUP;
+          globalMapPortStatus[key].init = 1;
+          //setPinState(1, gpio, PIN_MODE_INPUT, 0);
           break;
       }
     }
