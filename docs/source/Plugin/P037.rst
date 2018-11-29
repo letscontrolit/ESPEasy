@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
 .. _P037_page:
 
 |P037_typename|

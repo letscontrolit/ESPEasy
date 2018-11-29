@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P002_Photosensitive_resistor_page:
 
 Photosensitive resistor

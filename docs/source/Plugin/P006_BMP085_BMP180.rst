@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P006_BMP085_BMP180_page:
 
 BMP085/BMP180

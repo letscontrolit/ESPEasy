@@ -97,7 +97,7 @@ Sending and receiving is causing issues when the swarm of nodes increases.
 
 Of each known node the following data is kept:
 
-.. code-block:: language
+.. code-block:: C++
 
   struct NodeStruct
   {

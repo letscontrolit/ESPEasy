@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions.repl
 .. include:: _plugin_categories.repl
 
 #######

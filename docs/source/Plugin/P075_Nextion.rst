@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p07x.repl
 .. _P075_Nextion_page:
 
 Nextion

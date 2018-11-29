@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P008_Wiegand-26_page:
 
 Wiegand-26

@@ -1,3 +1,5 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+
 .. _P002_ESP82XX_internal_page:
 
 ESP82XX internal

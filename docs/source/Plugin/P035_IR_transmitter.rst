@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
 .. _P035_IR_transmitter_page:
 
 IR transmitter

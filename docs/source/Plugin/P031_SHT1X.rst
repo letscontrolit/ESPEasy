@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
 .. _P031_SHT1X_page:
 
 SHT1X

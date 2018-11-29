@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P000_Level_converter_page:
 
 Level converter
@@ -29,7 +30,7 @@ Specifications:
  * Level shifter, aka logic converter. Used to turn logics of higher voltage (5V) down to ESP friendly voltage (3.3V).
 
 .. note::
-   **Troubleshooting**:   
+   **Troubleshooting**:
    If your level converter does not work, please check cabling first. As said cabling mistakes and slack joints with the usual cheap breadboard cables are the most likely reason.
    If you use breakout board type level converters have a second one at hand. We've seen some "dead on arrival", other died by electrostatic discharge.
    And again, breadboards are somewhat unreliable. Use a digital multi-meter to check contacts and wires.

@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
 .. _P047_Soil_moisture_sensor_page:
 
 Soil moisture sensor

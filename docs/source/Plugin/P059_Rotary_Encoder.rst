@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
 .. _P059_Rotary_Encoder_page:
 
 Rotary Encoder

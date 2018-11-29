@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
 .. _P049_MH-Z19_page:
 
 MH-Z19
