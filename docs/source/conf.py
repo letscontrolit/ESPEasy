@@ -303,8 +303,22 @@ rst_prolog = """
 .. |affiliate| replace:: :yellow:`$` = affiliate links which will give us some money to keep this project running, thank you for using those.
 
 .. |added| replace:: :green:`added`
+.. |improved| replace:: :orange:`improved`
 .. |removed| replace:: :red:`removed`
 .. |fixed| replace:: :purple:`fixed`
+
+
+.. |C013_name| replace:: :cyan:`ESPEasy P2P Networking`
+.. |C013_type| replace:: :cyan:`Controller`
+.. |C013_typename| replace:: :cyan:`Controller - ESPEasy P2P Networking`
+.. |C013_status| replace:: :green:`NORMAL`
+.. |C013_github| replace:: C013.ino
+.. _C013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C013.ino
+.. |C013_usedby| replace:: `.`
+.. |C013_shortinfo| replace:: `.`
+.. |C013_maintainer| replace:: `.`
+.. |C013_compileinfo| replace:: `.`
+
 
 .. |Plugin_Analog_input| replace:: :ref:`P002_page`, :ref:`P007_page`, :ref:`P025_page`, :ref:`P060_page`
 .. |Plugin_Color| replace:: :ref:`P050_page`, :ref:`P066_page`

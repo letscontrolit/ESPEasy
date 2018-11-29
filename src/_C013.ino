@@ -9,7 +9,7 @@
 
 WiFiUDP C013_portUDP;
 
-struct infoStruct
+struct C013_SensorInfoStruct
 {
   byte header = 255;
   byte ID = 3;
@@ -22,7 +22,7 @@ struct infoStruct
   char ValueNames[VARS_PER_TASK][26];
 };
 
-struct dataStruct
+struct C013_SensorDataStruct
 {
   byte header = 255;
   byte ID = 5;
@@ -103,7 +103,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   if (!WiFiConnected(100)) {
     return;
   }
-  struct infoStruct infoReply;
+  struct C013_SensorInfoStruct infoReply;
   infoReply.sourcelUnit = Settings.Unit;
   infoReply.sourceTaskIndex = sourceTaskIndex;
   infoReply.destTaskIndex = destTaskIndex;
@@ -116,13 +116,13 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   if (destUnit != 0)
   {
     infoReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (byte*)&infoReply, sizeof(infoStruct));
+    C013_sendUDP(destUnit, (byte*)&infoReply, sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
-        C013_sendUDP(it->first, (byte*)&infoReply, sizeof(infoStruct));
+        C013_sendUDP(it->first, (byte*)&infoReply, sizeof(C013_SensorInfoStruct));
         delay(10);
       }
     }
@@ -135,7 +135,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   if (!WiFiConnected(100)) {
     return;
   }
-  struct dataStruct dataReply;
+  struct C013_SensorDataStruct dataReply;
   dataReply.sourcelUnit = Settings.Unit;
   dataReply.sourceTaskIndex = sourceTaskIndex;
   dataReply.destTaskIndex = destTaskIndex;
@@ -145,13 +145,13 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   if (destUnit != 0)
   {
     dataReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (byte*) &dataReply, sizeof(dataStruct));
+    C013_sendUDP(destUnit, (byte*) &dataReply, sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
-        C013_sendUDP(it->first, (byte*) &dataReply, sizeof(dataStruct));
+        C013_sendUDP(it->first, (byte*) &dataReply, sizeof(C013_SensorDataStruct));
         delay(10);
       }
     }
@@ -219,11 +219,11 @@ void C013_Receive(struct EventStruct *event) {
 
     case 3: // sensor info
       {
-        struct infoStruct infoReply;
-        if (static_cast<size_t>(event->Par2) < sizeof(infoStruct)) {
-          addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than infoStruct, discarded"));
+        struct C013_SensorInfoStruct infoReply;
+        if (static_cast<size_t>(event->Par2) < sizeof(C013_SensorInfoStruct)) {
+          addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than C013_SensorInfoStruct, discarded"));
         } else {
-          memcpy((byte*)&infoReply, (byte*)event->Data, sizeof(infoStruct));
+          memcpy((byte*)&infoReply, (byte*)event->Data, sizeof(C013_SensorInfoStruct));
 
           // to prevent flash wear out (bugs in communication?) we can only write to an empty task
           // so it will write only once and has to be cleared manually through webgui
@@ -253,11 +253,11 @@ void C013_Receive(struct EventStruct *event) {
 
     case 5: // sensor data
       {
-        struct dataStruct dataReply;
-        if (static_cast<size_t>(event->Par2) < sizeof(dataStruct)) {
-          addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than dataStruct, discarded"));
+        struct C013_SensorDataStruct dataReply;
+        if (static_cast<size_t>(event->Par2) < sizeof(C013_SensorDataStruct)) {
+          addLog(LOG_LEVEL_DEBUG, F("C013_Receive: Received data smaller than C013_SensorDataStruct, discarded"));
         } else {
-          memcpy((byte*)&dataReply, (byte*)event->Data, sizeof(dataStruct));
+          memcpy((byte*)&dataReply, (byte*)event->Data, sizeof(C013_SensorDataStruct));
 
           // only if this task has a remote feed, update values
           if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
