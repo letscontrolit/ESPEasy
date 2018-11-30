@@ -165,20 +165,27 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     controller_number, event->ControllerIndex, ControllerSettings,
     String(customConfig.HttpMethod), customConfig.HttpUri);
 
-  if (strlen(customConfig.HttpHeader) > 0)
+
+  if (strlen(customConfig.HttpHeader) > 0) {
+    if (payload.endsWith("\r\n\r\n")) {
+      // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
+      payload.remove(payload.length()-2);
+    }
     payload += customConfig.HttpHeader;
+  }
   ReplaceTokenByValue(payload, event);
 
   if (strlen(customConfig.HttpBody) > 0)
   {
     String body = String(customConfig.HttpBody);
     ReplaceTokenByValue(body, event);
-    payload += F("\r\nContent-Length: ");
+    payload += "\r\n";
+    payload += F("Content-Length: ");
     payload += String(body.length());
-    payload += F("\r\n\r\n");
+    payload += "\r\n\r\n";
     payload += body;
   }
-  payload += F("\r\n");
+  payload += "\r\n";
 
   bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
   scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
