@@ -723,6 +723,9 @@ struct SettingsStruct
   bool uniqueMQTTclientIdReconnect() {  return getBitFromUL(VariousBits1, 2); }
   void uniqueMQTTclientIdReconnect(bool value) { setBitToUL(VariousBits1, 2, value); }
 
+  bool OldRulesEngine() {  return !getBitFromUL(VariousBits1, 3); }
+  void OldRulesEngine(bool value) {  setBitToUL(VariousBits1, 3, !value); }
+
 
   void validate() {
     if (UDPPort > 65535) UDPPort = 0;
@@ -824,7 +827,7 @@ struct SettingsStruct
     StructSize = sizeof(SettingsStruct);
     MQTTUseUnitNameAsClientId = 0;
     VariousBits1 = 0;
-    OldRulesEngine = DEFAULT_RULES_OLDENGINE;
+    OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
 
   void clearAll() {
@@ -944,7 +947,6 @@ struct SettingsStruct
   byte          SyslogFacility;
   uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
   boolean       MQTTUseUnitNameAsClientId;
-  boolean       OldRulesEngine;
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.

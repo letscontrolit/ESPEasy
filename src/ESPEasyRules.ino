@@ -71,7 +71,7 @@ void rulesProcessing(String& event)
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.OldRulesEngine) {
+  if (Settings.OldRulesEngine()) {
     for (byte x = 0; x < RULESETS_MAX; x++)
     {
       #if defined(ESP8266)

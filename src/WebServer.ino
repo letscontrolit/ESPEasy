@@ -4683,7 +4683,7 @@ void handle_advanced() {
     Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
-    Settings.OldRulesEngine = isFormItemChecked(F("oldrulesengine"));
+    Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
@@ -4700,7 +4700,7 @@ void handle_advanced() {
   addFormSubHeader(F("Rules Settings"));
 
   addFormCheckBox(F("Rules"), F("userules"), Settings.UseRules);
-  addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine);
+  addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
 
   addFormSubHeader(F("Controller Settings"));
 

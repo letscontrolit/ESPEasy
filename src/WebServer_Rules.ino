@@ -6,7 +6,7 @@
 void handle_rules_new() {
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
-  if (Settings.OldRulesEngine)
+  if (Settings.OldRulesEngine())
   {
     handle_rules();
     return;
@@ -140,7 +140,7 @@ void handle_rules_new() {
 }
 
 void handle_rules_backup(/* arguments */) {
-  if(Settings.OldRulesEngine)
+  if(Settings.OldRulesEngine())
   {
     Goto_Rules_Root();
     return;
@@ -194,7 +194,7 @@ void handle_rules_backup(/* arguments */) {
 void handle_rules_delete(/* arguments */) {
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
-  if(Settings.OldRulesEngine)
+  if(Settings.OldRulesEngine())
   {
     Goto_Rules_Root();
     return;
@@ -250,7 +250,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
   if(isAddNew || (originalUri.startsWith(F("/rules/"))
     && originalUri.endsWith(F(".txt")))){
 
-      if(Settings.OldRulesEngine)
+      if(Settings.OldRulesEngine())
       {
         Goto_Rules_Root();
         return true;
