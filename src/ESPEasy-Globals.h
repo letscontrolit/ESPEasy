@@ -645,7 +645,6 @@ bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
-void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
 
 
@@ -1507,7 +1506,7 @@ struct NodeStruct
       for (byte i = 0; i < 4; ++i) ip[i] = 0;
     }
   String nodeName;
-  byte ip[4];
+  IPAddress ip;
   uint16_t build;
   byte age;
   byte nodeType;

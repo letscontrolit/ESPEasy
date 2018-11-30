@@ -997,11 +997,11 @@ void handle_root() {
           }
         html_TD();
         html_add_wide_button_prefix();
-        {
-          char url[80];
-          sprintf_P(url, PSTR("http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-          TXBuffer += url;
-        }
+        TXBuffer += F("http://");
+        TXBuffer += it->second.ip.toString();
+        TXBuffer += "'>";
+        TXBuffer += it->second.ip.toString();
+        TXBuffer += "</a>";
         html_TD();
         TXBuffer += String( it->second.age);
       }
@@ -1396,8 +1396,6 @@ void handle_controllers() {
     addSelector_Foot();
 
     addHelpButton(F("EasyProtocols"));
-      // char str[20];
-
     if (Settings.Protocol[controllerindex])
     {
       MakeControllerSettings(ControllerSettings);
@@ -1663,9 +1661,6 @@ void handle_notifications() {
     addSelector_Foot();
 
     addHelpButton(F("EasyNotifications"));
-
-
-    // char str[20];
 
     if (Settings.Notification[notificationindex])
     {
@@ -3237,18 +3232,15 @@ void copyFormPassword(const String& id, char* pPassword, int maxlength)
 
 void addFormIPBox(const String& label, const String& id, const byte ip[4])
 {
-  char strip[20];
-  if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
-    strip[0] = 0;
-  else {
-    formatIP(ip, strip);
-  }
+  bool empty_IP =(ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
   addRowLabel(label);
   TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' value='");
-  TXBuffer += strip;
+  if (!empty_IP){
+    TXBuffer += formatIP(ip);
+  }
   TXBuffer += "'>";
 }
 
@@ -4337,11 +4329,6 @@ void handle_json()
       {
         if (it->second.ip[0] != 0)
         {
-
-          char ip[20];
-
-          sprintf_P(ip, PSTR("%u.%u.%u.%u"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-
           if( comma_between ) {
             TXBuffer += ',';
           } else {
@@ -4371,7 +4358,7 @@ void handle_json()
             if (platform.length() > 0)
               stream_next_json_object_value(F("platform"), platform);
           }
-          stream_next_json_object_value(F("ip"), ip);
+          stream_next_json_object_value(F("ip"), it->second.ip.toString());
           stream_last_json_object_value(F("age"),  String( it->second.age ));
         } // if node info exists
       } // for loop
@@ -4691,8 +4678,6 @@ void handle_advanced() {
     if (Settings.UseNTP)
       initTime();
   }
-
-  // char str[20];
 
   TXBuffer += F("<form  method='post'>");
   html_table_class_normal();
@@ -5136,13 +5121,9 @@ boolean handle_custom(String path) {
       if (it != Nodes.end()) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"),_HEAD);
-        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
-        {
-          char url[40];
-          sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-          TXBuffer += url;
-        }
-        TXBuffer += "\">";
+        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=http://");
+        TXBuffer += it->second.ip.toString();
+        TXBuffer += F("/dashboard.esp\">");
         sendHeadandTail(F("TmplDsh"),_TAIL);
         TXBuffer.endStream();
         return true;
@@ -5645,9 +5626,7 @@ void handle_setup() {
   if (WiFiConnected())
   {
     addHtmlError(SaveSettings());
-    const IPAddress ip = WiFi.localIP();
-    char host[20];
-    formatIP(ip, host);
+    String host = formatIP(WiFi.localIP());
     TXBuffer += F("<BR>ESP is connected and using IP Address: <BR><h1>");
     TXBuffer += host;
     TXBuffer += F("</h1><BR><BR>Connect your laptop / tablet / phone<BR>back to your main Wifi network and<BR><BR>");

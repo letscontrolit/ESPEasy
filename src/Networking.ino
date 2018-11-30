@@ -125,13 +125,11 @@ void checkUDP()
                   }
                 }
 
-                char macaddress[20];
-                formatMAC(mac, macaddress);
-                char ipaddress[20];
-                formatIP(ip, ipaddress);
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                  char macaddress[20];
+                  formatMAC(mac, macaddress);
                   char log[80];
-                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
+                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
                   addLog(LOG_LEVEL_DEBUG_MORE, log);
                 }
                 break;
