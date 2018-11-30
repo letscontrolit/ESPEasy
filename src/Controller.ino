@@ -80,24 +80,26 @@ boolean validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 // handle MQTT messages
 void callback(char* c_topic, byte* b_payload, unsigned int length) {
-  // char log[256];
-  char c_payload[384];
-
   statusLED(true);
   int enabledMqttController = firstEnabledMQTTController();
   if (enabledMqttController < 0) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : No enabled MQTT controller"));
     return;
   }
-  if ((length + 1) > sizeof(c_payload))
+  if (length > 384)
   {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Ignored too big message"));
     return;
   }
 
-  //convert payload to string, and 0 terminate
-  strncpy(c_payload,(char*)b_payload,length);
-  c_payload[length] = 0;
+  struct EventStruct TempEvent;
+  // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
+  TempEvent.String1 = c_topic;
+  TempEvent.String2.reserve(length);
+  for (unsigned int i = 0; i < length; ++i) {
+    char c = static_cast<char>(*(b_payload + i));
+    TempEvent.String2 += c;
+  }
 
 /*
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
@@ -107,20 +109,11 @@ void callback(char* c_topic, byte* b_payload, unsigned int length) {
     addLog(LOG_LEVEL_DEBUG_MORE, log);
 
     log=F("MQTT : Payload: ");
-    log+=c_payload;
+    log+=TempEvent.String2;
     addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
   */
 
-  // sprintf_P(log, PSTR("%s%s"), "MQTT : Topic: ", c_topic);
-  // addLog(LOG_LEVEL_DEBUG, log);
-  // sprintf_P(log, PSTR("%s%s"), "MQTT : Payload: ", c_payload);
-  // addLog(LOG_LEVEL_DEBUG, log);
-
-  struct EventStruct TempEvent;
-  // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
-  TempEvent.String1 = c_topic;
-  TempEvent.String2 = c_payload;
   byte ProtocolIndex = getProtocolIndex(Settings.Protocol[enabledMqttController]);
   schedule_controller_event_timer(ProtocolIndex, CPLUGIN_PROTOCOL_RECV, &TempEvent);
 }

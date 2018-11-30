@@ -132,9 +132,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
-          char tmpString[128];
-          sprintf_P(tmpString, PSTR("<TR><TD>Dim value:<TD><input type='text' name='plugin_001_dimvalue' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-          addHtml(tmpString);
+          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
         }
 
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];

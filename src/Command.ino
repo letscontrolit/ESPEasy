@@ -225,13 +225,12 @@ void ExecuteCommand(byte source, const char *Line)
 	TempEvent.Source = source;
   {
     // Use extra scope to delete the TmpStr1 before executing command.
-    char TmpStr1[INPUT_COMMAND_SIZE];
-  	TmpStr1[0] = 0;
-    if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = CalculateParam(TmpStr1);
-  	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = CalculateParam(TmpStr1);
-  	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = CalculateParam(TmpStr1);
-  	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1);
-  	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1);
+    String TmpStr1;
+    if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1.c_str());
   }
 
   String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);

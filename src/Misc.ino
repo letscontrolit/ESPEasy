@@ -639,16 +639,19 @@ byte getNotificationProtocolIndex(byte Number)
   \*********************************************************************************************/
 
 bool HasArgv(const char *string, unsigned int argc) {
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  return GetArgv(string, TmpStr1, INPUT_COMMAND_SIZE, argc);
+  String tmp;
+  return GetArgv(string, tmp, argc);
 }
 
 bool GetArgv(const char *string, String& argvString, unsigned int argc) {
-  char TmpStr1[INPUT_COMMAND_SIZE];
-  bool hasArgument = GetArgv(string, TmpStr1, INPUT_COMMAND_SIZE, argc);
+  size_t string_len = strlen(string);
+  if (string_len > INPUT_COMMAND_SIZE) string_len = INPUT_COMMAND_SIZE;
+  char *TmpStr1 = new char[string_len]();
+  bool hasArgument = GetArgv(string, TmpStr1, string_len, argc);
   if (hasArgument) {
     argvString = TmpStr1;
   }
+  delete[] TmpStr1;
   return hasArgument;
 }
 
@@ -2240,7 +2243,7 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 
-int CalculateParam(char *TmpStr) {
+int CalculateParam(const char *TmpStr) {
   int returnValue;
 
   // Minimize calls to the Calulate function.
@@ -2249,8 +2252,8 @@ int CalculateParam(char *TmpStr) {
     returnValue=str2int(TmpStr);
   } else {
     float param=0;
-    TmpStr[0] = ' '; //replace '=' with space
-    int returnCode=Calculate(TmpStr, &param);
+    // Starts with an '=', so Calculate starting at next position
+    int returnCode=Calculate(&TmpStr[1], &param);
     if (returnCode!=CALCULATE_OK) {
       String errorDesc;
       switch (returnCode) {

@@ -148,7 +148,8 @@ String rulesProcessingFile(const String& fileName, String& event)
   byte ifBlock = 0;
   byte fakeIfBlock = 0;
 
-  byte buf[RULES_BUFFER_SIZE];
+
+  byte *buf = new byte[RULES_BUFFER_SIZE]();
   int len = 0;
   while (f.available())
   {
@@ -178,6 +179,7 @@ String rulesProcessingFile(const String& fileName, String& event)
       }
     }
   }
+  delete[] buf;
   if (f) f.close();
 
   nestingLevel--;

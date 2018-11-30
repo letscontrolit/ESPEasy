@@ -2,7 +2,7 @@
   Convert a char string to integer
   \*********************************************************************************************/
 //FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(char *string)
+unsigned long str2int(const char *string)
 {
   unsigned long temp = atof(string);
   return temp;

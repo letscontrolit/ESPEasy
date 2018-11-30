@@ -885,15 +885,16 @@ void handle_root() {
       TXBuffer += F("<font color='red'>NTP disabled</font>");
 
     addRowLabel(F("Uptime"));
-    char strUpTime[40];
-    int minutes = wdcounter / 2;
-    int days = minutes / 1440;
-    minutes = minutes % 1440;
-    int hrs = minutes / 60;
-    minutes = minutes % 60;
-    sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-    TXBuffer += strUpTime;
-
+    {
+        int minutes = wdcounter / 2;
+        int days = minutes / 1440;
+        minutes = minutes % 1440;
+        int hrs = minutes / 60;
+        minutes = minutes % 60;
+        char strUpTime[40];
+        sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
+        TXBuffer += strUpTime;
+    }
     addRowLabel(F("Load"));
     if (wdcounter > 0)
     {
@@ -996,9 +997,11 @@ void handle_root() {
           }
         html_TD();
         html_add_wide_button_prefix();
-        char url[80];
-        sprintf_P(url, PSTR("http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-        TXBuffer += url;
+        {
+          char url[80];
+          sprintf_P(url, PSTR("http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
+          TXBuffer += url;
+        }
         html_TD();
         TXBuffer += String( it->second.age);
       }
@@ -4110,11 +4113,6 @@ void handle_login() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   String webrequest = WebServer.arg(F("password"));
-  char command[80];
-  command[0] = 0;
-  webrequest.toCharArray(command, 80);
-
-
   TXBuffer += F("<form method='post'>");
   html_table_class_normal();
   TXBuffer += F("<TR><TD>Password<TD>");
@@ -4130,6 +4128,10 @@ void handle_login() {
 
   if (webrequest.length() != 0)
   {
+    char command[80];
+    command[0] = 0;
+    webrequest.toCharArray(command, 80);
+
     // compare with stored password and set timer if there's a match
     if ((strcasecmp(command, SecuritySettings.Password) == 0) || (SecuritySettings.Password[0] == 0))
     {
@@ -5134,10 +5136,12 @@ boolean handle_custom(String path) {
       if (it != Nodes.end()) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"),_HEAD);
-        char url[40];
-        sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
         TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
-        TXBuffer += url;
+        {
+          char url[40];
+          sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
+          TXBuffer += url;
+        }
         TXBuffer += "\">";
         sendHeadandTail(F("TmplDsh"),_TAIL);
         TXBuffer.endStream();
@@ -5461,7 +5465,6 @@ void handle_SDfilelist() {
   String change_to_dir = "";
   String current_dir = "";
   String parent_dir = "";
-  char SDcardDir[80];
 
   for (uint8_t i = 0; i < WebServer.args(); i++) {
     if (WebServer.argName(i) == F("delete"))
@@ -5495,8 +5498,7 @@ void handle_SDfilelist() {
     current_dir = "/";
   }
 
-  current_dir.toCharArray(SDcardDir, current_dir.length()+1);
-  File root = SD.open(SDcardDir);
+  File root = SD.open(current_dir.c_str());
   root.rewindDirectory();
   File entry = root.openNextFile();
   parent_dir = current_dir;
@@ -6083,14 +6085,16 @@ void handle_sysinfo() {
   }
 
   addRowLabel(F("Uptime"));
-  char strUpTime[40];
-  int minutes = wdcounter / 2;
-  int days = minutes / 1440;
-  minutes = minutes % 1440;
-  int hrs = minutes / 60;
-  minutes = minutes % 60;
-  sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-  TXBuffer += strUpTime;
+  {
+    char strUpTime[40];
+    int minutes = wdcounter / 2;
+    int days = minutes / 1440;
+    minutes = minutes % 1440;
+    int hrs = minutes / 60;
+    minutes = minutes % 60;
+    sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
+    TXBuffer += strUpTime;
+  }
 
   addRowLabel(F("Load"));
   if (wdcounter > 0)
@@ -6178,16 +6182,18 @@ void handle_sysinfo() {
 
   addRowLabel(F("STA MAC"));
 
-  uint8_t mac[] = {0, 0, 0, 0, 0, 0};
-  uint8_t* macread = WiFi.macAddress(mac);
-  char macaddress[20];
-  formatMAC(macread, macaddress);
-  TXBuffer += macaddress;
+  {
+    uint8_t mac[] = {0, 0, 0, 0, 0, 0};
+    uint8_t* macread = WiFi.macAddress(mac);
+    char macaddress[20];
+    formatMAC(macread, macaddress);
+    TXBuffer += macaddress;
 
-  addRowLabel(F("AP MAC"));
-  macread = WiFi.softAPmacAddress(mac);
-  formatMAC(macread, macaddress);
-  TXBuffer += macaddress;
+    addRowLabel(F("AP MAC"));
+    macread = WiFi.softAPmacAddress(mac);
+    formatMAC(macread, macaddress);
+    TXBuffer += macaddress;
+  }
 
   addRowLabel(F("SSID"));
   TXBuffer += WiFi.SSID();
