@@ -480,7 +480,7 @@ String get_user_agent_request_header_field() {
   request += String(CRCValues.compileDate);
   request += ' ';
   request += String(CRCValues.compileTime);
-  request += F("\r\n");
+  request += "\r\n";
   agent_size = request.length();
   return request;
 }
@@ -501,20 +501,21 @@ String do_create_http_request(
   request += ' ';
   if (!uri.startsWith("/")) request += '/';
   request += uri;
-  request += F(" HTTP/1.1\r\n");
+  request += F(" HTTP/1.1");
+  request += "\r\n";
   if (content_length >= 0) {
     request += F("Content-Length: ");
     request += content_length;
-    request += F("\r\n");
+    request += "\r\n";
   }
   request += F("Host: ");
   request += hostportString;
-  request += F("\r\n");
+  request += "\r\n";
   request += auth_header;
   request += additional_options;
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
-  request += F("\r\n");
+  request += "\r\n";
   addLog(LOG_LEVEL_DEBUG, request);
   return request;
 }
