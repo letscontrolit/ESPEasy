@@ -1,4 +1,31 @@
 -------------------------------------------------
+Changes in release mega-20181130 (since mega-20181129)
+-------------------------------------------------
+
+Release date: Fri Nov 30 04:00:11 CET 2018
+
+Gijs Noorlander (4):
+      [Readme] Add badge for ReadTheDocs build status
+      [Docs] Document ESPeasy p2p controller
+      [Docs] Move Sphinx substitutions to separate file to speed-up build
+      [Docs] Split Sphinx plugin substitutions to speed-up build
+
+Plebs (12):
+      new data structures
+      added monitor support
+      Added SafeButton feature
+      fixing Safebutton
+      added P019 PCF support
+      Fixed write function in PCF8574
+      Added support for P011, P022, P059, P063
+      Update _P009_MCP.ino
+      fixed pcf8574 to avoid #702
+      bugfixing
+      more bugfixing
+      final cleanup
+
+
+-------------------------------------------------
 Changes in release mega-20181129 (since mega-20181128)
 -------------------------------------------------
 
