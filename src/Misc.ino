@@ -520,19 +520,18 @@ void delayBackground(unsigned long delay)
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
-  char *TmpStr1 = new char[INPUT_COMMAND_SIZE]();
+  String TmpStr1;
   event->Par1 = 0;
   event->Par2 = 0;
   event->Par3 = 0;
   event->Par4 = 0;
   event->Par5 = 0;
 
-  if (GetArgv(string.c_str(), TmpStr1, 2)) { event->Par1 = CalculateParam(TmpStr1); }
-  if (GetArgv(string.c_str(), TmpStr1, 3)) { event->Par2 = CalculateParam(TmpStr1); }
-  if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1); }
-  if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1); }
-  if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1); }
-  delete[] TmpStr1;
+  if (GetArgv(string.c_str(), TmpStr1, 2)) { event->Par1 = CalculateParam(TmpStr1.c_str()); }
+  if (GetArgv(string.c_str(), TmpStr1, 3)) { event->Par2 = CalculateParam(TmpStr1.c_str()); }
+  if (GetArgv(string.c_str(), TmpStr1, 4)) { event->Par3 = CalculateParam(TmpStr1.c_str()); }
+  if (GetArgv(string.c_str(), TmpStr1, 5)) { event->Par4 = CalculateParam(TmpStr1.c_str()); }
+  if (GetArgv(string.c_str(), TmpStr1, 6)) { event->Par5 = CalculateParam(TmpStr1.c_str()); }
 }
 
 /********************************************************************************************\
@@ -639,32 +638,28 @@ byte getNotificationProtocolIndex(byte Number)
   \*********************************************************************************************/
 
 bool HasArgv(const char *string, unsigned int argc) {
-  String tmp;
-  return GetArgv(string, tmp, argc);
+  int pos_begin, pos_end;
+  return GetArgvBeginEnd(string, argc, pos_begin, pos_end);
 }
 
 bool GetArgv(const char *string, String& argvString, unsigned int argc) {
-  size_t string_len = strlen(string);
-  if (string_len > INPUT_COMMAND_SIZE) string_len = INPUT_COMMAND_SIZE;
-  char *TmpStr1 = new char[string_len]();
-  bool hasArgument = GetArgv(string, TmpStr1, string_len, argc);
-  if (hasArgument) {
-    argvString = TmpStr1;
+  int pos_begin, pos_end;
+  bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end);
+  if (pos_begin >= 0 && pos_end >= 0) {
+    argvString.reserve(pos_end - pos_begin);
+    for (int i = pos_begin; i < pos_end && i >= 0; ++i) {
+      argvString += string[i];
+    }
   }
-  delete[] TmpStr1;
   return hasArgument;
 }
 
-boolean GetArgv(const char *string, char *argv, unsigned int argc) {
-  return GetArgv(string, argv, INPUT_COMMAND_SIZE, argc);
-}
-
-boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned int argc)
-{
-  memset(argv, 0, argv_size);
+bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end) {
+  pos_begin = -1;
+  pos_end = -1;
   size_t string_len = strlen(string);
-  unsigned int string_pos = 0, argv_pos = 0, argc_pos = 0;
-  char c, d;
+  unsigned int string_pos = 0, argc_pos = 0;
+  char c, d; // c = current char, d = next char (if available)
   boolean parenthesis = false;
   char matching_parenthesis = '"';
 
@@ -672,8 +667,9 @@ boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned
   {
     c = string[string_pos];
     d = 0;
-    if ((string_pos + 1) < string_len)
+    if ((string_pos + 1) < string_len) {
       d = string[string_pos + 1];
+    }
 
     if       (!parenthesis && c == ' ' && d == ' ') {}
     else if  (!parenthesis && c == ' ' && d == ',') {}
@@ -683,40 +679,31 @@ boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned
     else if  (c == '"' || c == '\'' || c == '[') {
       parenthesis = true;
       matching_parenthesis = c;
-      if (c == '[')
+      if (c == '[') {
         matching_parenthesis = ']';
+      }
     }
     else
     {
-      if ((argv_pos +2 ) >= argv_size) {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("GetArgv Error; argv_size exceeded. argc=");
-          log += argc;
-          log += F(" argv_size=");
-          log += argv_size;
-          log += F(" argv=");
-          log += argv;
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-        return false;
+      if (pos_begin == -1) {
+        pos_begin = string_pos;
+        pos_end = string_pos;
       }
-      argv[argv_pos++] = c;
-      argv[argv_pos] = 0;
+      ++pos_end;
 
       if ((!parenthesis && (d == ' ' || d == ',' || d == 0)) || (parenthesis && (d == matching_parenthesis))) // end of word
       {
-        if (d == matching_parenthesis)
+        if (d == matching_parenthesis) {
           parenthesis = false;
-        argv[argv_pos] = 0;
+        }
         argc_pos++;
 
         if (argc_pos == argc)
         {
           return true;
         }
-
-        argv[0] = 0;
-        argv_pos = 0;
+        pos_begin = -1;
+        pos_end = -1;
         string_pos++;
       }
     }
@@ -724,6 +711,7 @@ boolean GetArgv(const char *string, char *argv, unsigned int argv_size, unsigned
   }
   return false;
 }
+
 
 
 

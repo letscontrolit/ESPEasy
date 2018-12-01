@@ -29,10 +29,10 @@ String Command_GetORSetIP(struct EventStruct *event,
 	bool hasArgument = false;
 	{
 		// Check if command is valid. Leave in separate scope to delete the TmpStr1
-		char TmpStr1[INPUT_COMMAND_SIZE];
+		String TmpStr1;
 		if (GetArgv(Line, TmpStr1, arg + 1)) {
 			hasArgument = true;
-			if (!str2ip(TmpStr1, IP)) {
+			if (!str2ip(TmpStr1.c_str(), IP)) {
 				String result = F("Invalid parameter: ");
 				result += TmpStr1;
 				return return_result(event, result);
@@ -64,17 +64,17 @@ String Command_GetORSetString(struct EventStruct *event,
 	bool hasArgument = false;
 	{
 		// Check if command is valid. Leave in separate scope to delete the TmpStr1
-		char TmpStr1[INPUT_COMMAND_SIZE];
+		String TmpStr1;
 		if (GetArgv(Line, TmpStr1, arg + 1)) {
 			hasArgument = true;
-			if (strlen(TmpStr1) > len) {
+			if (TmpStr1.length() > len) {
 				String result = targetDescription;
 				result += F(" is too large. max size is ");
 				result += len;
 				serialPrintln();
 				return return_result(event, result);
 			} else {
-				strcpy(target, TmpStr1);
+				strcpy(target, TmpStr1.c_str());
 			}
 		}
 	}

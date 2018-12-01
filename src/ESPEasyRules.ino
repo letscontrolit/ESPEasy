@@ -224,9 +224,7 @@ void parseCompleteNonCommentLine(
         {
           String tmpString = event.substring(equalsPos + 1);
           //line.replace(F("%eventvalue%"), tmpString); // substitute %eventvalue% with the actual value from the event
-          char* tmpParam = new char[INPUT_COMMAND_SIZE];
-          tmpParam[0] = 0;
-
+          String tmpParam;
           if (GetArgv(tmpString.c_str(),tmpParam,1)) {
              line.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
              line.replace(F("%eventvalue1%"), tmpParam); // substitute %eventvalue1% in actions with the actual value from the event
@@ -234,7 +232,6 @@ void parseCompleteNonCommentLine(
           if (GetArgv(tmpString.c_str(),tmpParam,2)) line.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
           if (GetArgv(tmpString.c_str(),tmpParam,3)) line.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
           if (GetArgv(tmpString.c_str(),tmpParam,4)) line.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
-          delete[] tmpParam;
         }
       }
     }
@@ -433,8 +430,7 @@ void processMatchedRule(
       {
         String tmpString = event.substring(equalsPos + 1);
 
-        char* tmpParam = new char[INPUT_COMMAND_SIZE];
-        tmpParam[0] = 0;
+        String tmpParam;
 
         if (GetArgv(tmpString.c_str(),tmpParam,1)) {
            action.replace(F("%eventvalue%"), tmpParam); // for compatibility issues
@@ -443,7 +439,6 @@ void processMatchedRule(
         if (GetArgv(tmpString.c_str(),tmpParam,2)) action.replace(F("%eventvalue2%"), tmpParam); // substitute %eventvalue2% in actions with the actual value from the event
         if (GetArgv(tmpString.c_str(),tmpParam,3)) action.replace(F("%eventvalue3%"), tmpParam); // substitute %eventvalue3% in actions with the actual value from the event
         if (GetArgv(tmpString.c_str(),tmpParam,4)) action.replace(F("%eventvalue4%"), tmpParam); // substitute %eventvalue4% in actions with the actual value from the event
-        delete[] tmpParam;
       }
     }
 
