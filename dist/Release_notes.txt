@@ -1,4 +1,15 @@
 -------------------------------------------------
+Changes in release mega-20181201 (since mega-20181130)
+-------------------------------------------------
+
+Release date: Sat Dec  1 04:00:09 CET 2018
+
+Gijs Noorlander (2):
+      [Docs] Update to Sphinx 1.8.2
+      [#1970] Fix: HTTP Header broken in 'Generic HTTP Advanced' controller
+
+
+-------------------------------------------------
 Changes in release mega-20181130 (since mega-20181129)
 -------------------------------------------------
 
