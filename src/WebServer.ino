@@ -9,7 +9,7 @@
 #define CHUNKED_BUFFER_SIZE          400
 
 void sendContentBlocking(String& data);
-void sendHeaderBlocking(bool json);
+void sendHeaderBlocking(bool json, const String& origin = "");
 
 class StreamingBuffer {
 private:
@@ -103,15 +103,19 @@ public:
   }
 
   void startStream() {
-    startStream(false);
+    startStream(false, "");
+  }
+
+  void startStream(const String& origin) {
+    startStream(false, origin);
   }
 
   void startJsonStream() {
-    startStream(true);
+    startStream(true, "*");
   }
 
 private:
-  void startStream(bool json) {
+  void startStream(bool json, const String& origin) {
     maxCoreUsage = maxServerUsage = 0;
     initialRam = ESP.getFreeHeap();
     beforeTXRam = initialRam;
@@ -125,7 +129,7 @@ private:
        #endif
       return;
     } else
-      sendHeaderBlocking(json);
+      sendHeaderBlocking(json, origin);
   }
 
   void trackTotalMem() {
@@ -201,7 +205,7 @@ void sendContentBlocking(String& data) {
   delay(0);
 }
 
-void sendHeaderBlocking(bool json) {
+void sendHeaderBlocking(bool json, const String& origin) {
   checkRAM(F("sendHeaderBlocking"));
   WebServer.client().flush();
   String contenttype;
@@ -226,8 +230,9 @@ void sendHeaderBlocking(bool json) {
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
-  if (json)
-    WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
+  if (origin.length() > 0) {
+    WebServer.sendHeader(F("Access-Control-Allow-Origin"), origin);
+  }
   WebServer.send(200, contenttype, "");
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
@@ -451,7 +456,7 @@ bool isFormItem(const String& id)
 
 
 //if there is an error-string, add it to the html code with correct formatting
-void addHtmlError(String error){
+void addHtmlError(const String& error){
   if (error.length()>0)
   {
     TXBuffer += F("<div class=\"");
@@ -473,7 +478,7 @@ void addHtmlError(String error){
   }
 }
 
-void addHtml(const String html) {
+void addHtml(const String& html) {
   TXBuffer += html;
 }
 
@@ -510,7 +515,14 @@ void WebServerInit()
   WebServer.on(F("/json"), handle_json);
   WebServer.on(F("/timingstats_json"), handle_timingstats_json);
   WebServer.on(F("/timingstats"), handle_timingstats);
-  WebServer.on(F("/rules"), handle_rules);
+  WebServer.on(F("/rules"), handle_rules_new);
+  WebServer.on(F("/rules/"), Goto_Rules_Root);
+  WebServer.on(F("/rules/add"), []()
+  {
+    handle_rules_edit(WebServer.uri(),true);
+  });
+  WebServer.on(F("/rules/backup"), handle_rules_backup);
+  WebServer.on(F("/rules/delete"), handle_rules_delete);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
   WebServer.on(F("/sysvars"), handle_sysvars);
@@ -691,14 +703,14 @@ void getWebPageTemplateVar(const String& varName )
     static const __FlashStringHelper* gpMenu[8][3] = {
       // See https://github.com/letscontrolit/ESPEasy/issues/1650
       // Icon,        Full width label,   URL
-      F("&#8962;"),   F("Main"),          F("."),             //0
-      F("&#9881;"),   F("Config"),        F("config"),        //1
-      F("&#128172;"), F("Controllers"),   F("controllers"),   //2
-      F("&#128204;"), F("Hardware"),      F("hardware"),      //3
-      F("&#128268;"), F("Devices"),       F("devices"),       //4
-      F("&#10740;"),  F("Rules"),         F("rules"),         //5
-      F("&#9993;"),   F("Notifications"), F("notifications"), //6
-      F("&#128295;"), F("Tools"),         F("tools"),         //7
+      F("&#8962;"),   F("Main"),          F("/"),              //0
+      F("&#9881;"),   F("Config"),        F("/config"),        //1
+      F("&#128172;"), F("Controllers"),   F("/controllers"),   //2
+      F("&#128204;"), F("Hardware"),      F("/hardware"),      //3
+      F("&#128268;"), F("Devices"),       F("/devices"),       //4
+      F("&#10740;"),  F("Rules"),         F("/rules"),         //5
+      F("&#9993;"),   F("Notifications"), F("/notifications"), //6
+      F("&#128295;"), F("Tools"),         F("/tools"),         //7
     };
 
     TXBuffer += F("<div class='menubar'>");
@@ -815,7 +827,7 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 // Add footer to web page
 //********************************************************************************
-void addFooter(String& str)
+void addFooter(const String& str)
 {
   //not longer used - now part of template
 }
@@ -878,15 +890,16 @@ void handle_root() {
       TXBuffer += F("<font color='red'>NTP disabled</font>");
 
     addRowLabel(F("Uptime"));
-    char strUpTime[40];
-    int minutes = wdcounter / 2;
-    int days = minutes / 1440;
-    minutes = minutes % 1440;
-    int hrs = minutes / 60;
-    minutes = minutes % 60;
-    sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-    TXBuffer += strUpTime;
-
+    {
+        int minutes = wdcounter / 2;
+        int days = minutes / 1440;
+        minutes = minutes % 1440;
+        int hrs = minutes / 60;
+        minutes = minutes % 60;
+        char strUpTime[40];
+        sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
+        TXBuffer += strUpTime;
+    }
     addRowLabel(F("Load"));
     if (wdcounter > 0)
     {
@@ -989,9 +1002,11 @@ void handle_root() {
           }
         html_TD();
         html_add_wide_button_prefix();
-        char url[80];
-        sprintf_P(url, PSTR("http://%u.%u.%u.%u'>%u.%u.%u.%u</a>"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3], it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-        TXBuffer += url;
+        TXBuffer += F("http://");
+        TXBuffer += it->second.ip.toString();
+        TXBuffer += "'>";
+        TXBuffer += it->second.ip.toString();
+        TXBuffer += "</a>";
         html_TD();
         TXBuffer += String( it->second.age);
       }
@@ -1386,8 +1401,6 @@ void handle_controllers() {
     addSelector_Foot();
 
     addHelpButton(F("EasyProtocols"));
-      // char str[20];
-
     if (Settings.Protocol[controllerindex])
     {
       MakeControllerSettings(ControllerSettings);
@@ -1654,9 +1667,6 @@ void handle_notifications() {
 
     addHelpButton(F("EasyNotifications"));
 
-
-    // char str[20];
-
     if (Settings.Notification[notificationindex])
     {
       MakeNotificationSettings(NotificationSettings);
@@ -1822,7 +1832,7 @@ void addFormPinStateSelect(const String& label, const String& id, int choice, bo
   addPinStateSelect(id, choice, enabled);
 }
 
-void addPinStateSelect(String name, int choice, bool enabled)
+void addPinStateSelect(const String& name, int choice, bool enabled)
 {
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
   addSelector(name, 4, options, NULL, NULL, choice, false, enabled);
@@ -1837,7 +1847,7 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
   addIPaccessControlSelect(id, choice);
 }
 
-void addIPaccessControlSelect(String name, int choice)
+void addIPaccessControlSelect(const String& name, int choice)
 {
   String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
   addSelector(name, 3, options, NULL, NULL, choice, false);
@@ -2458,7 +2468,7 @@ byte sortedIndex[DEVICES_MAX + 1];
 //********************************************************************************
 // Add a device select dropdown list
 //********************************************************************************
-void addDeviceSelect(String name,  int choice)
+void addDeviceSelect(const String& name,  int choice)
 {
   // first get the list in alphabetic order
   for (byte x = 0; x <= deviceCount; x++)
@@ -2716,7 +2726,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 //********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
 //********************************************************************************
-void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, String name,  int choice, int count) {
+void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& name,  int choice, int count) {
   addSelector_Head(name, false);
   for (byte x = 0; x < count; x++)
   {
@@ -2873,6 +2883,52 @@ void addButton(const String &url, const String &label, const String& classes)
   TXBuffer += "'>";
   TXBuffer += label;
   TXBuffer += F("</a>");
+}
+
+void addButton(class StreamingBuffer &buffer, const String &url, const String &label)
+{
+  buffer += F("<a class='button link' href='");
+  buffer += url;
+  buffer += F("'>");
+  buffer += label;
+  buffer += F("</a>");
+}
+
+void addSaveButton(const String &url, const String &label)
+{
+  addSaveButton(TXBuffer, url, label);
+}
+
+void addSaveButton(class StreamingBuffer &buffer, const String &url, const String &label)
+{
+  buffer += F("<a class='button link' href='");
+  buffer += url;
+  buffer += F("' alt='");
+  buffer += label;
+  buffer += F("'>");
+  buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
+  buffer += F("<path d='M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z'  stroke='white' fill='white' ></path>");
+  buffer += F("</svg>");
+  buffer += F("</a>");
+}
+
+void addDeleteButton(const String &url, const String &label)
+{
+  addSaveButton(TXBuffer, url, label);
+}
+
+void addDeleteButton(class StreamingBuffer &buffer, const String &url, const String &label)
+{
+  buffer += F("<a class='button link' href='");
+  buffer += url;
+  buffer += F("' alt='");
+  buffer += label;
+  buffer += F("' onclick='return confirm(\"Are you sure?\")'>");
+  buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
+  buffer += F("<path fill='none' d='M0 0h24v24H0V0z'></path>");
+  buffer += F("<path d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z' stroke='white' fill='white' ></path>");
+  buffer += F("</svg>");
+  buffer += F("</a>");
 }
 
 void addWideButton(const String &url, const String &label, const String &classes)
@@ -3096,19 +3152,64 @@ void addFormFloatNumberBox(const String& label, const String& id, float value, f
 
 void addTextBox(const String& id, const String&  value, int maxlength)
 {
+  addTextBox(id, value, maxlength, false);
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly)
+{
+  addTextBox(id, value, maxlength, false, false, "");
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required)
+{
+  addTextBox(id, value, maxlength, false, false, "");
+}
+
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
+{
   TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' maxlength=");
   TXBuffer += maxlength;
   TXBuffer += F(" value='");
   TXBuffer += value;
-  TXBuffer += "'>";
+  TXBuffer += '\'';
+  if(readonly){
+    TXBuffer += F(" readonly ");
+  }
+  if(required){
+    TXBuffer += F(" required ");
+  }
+  if(pattern.length()>0){
+    TXBuffer += F("pattern = '");
+    TXBuffer += pattern;
+    TXBuffer += '\'';
+  }
+  TXBuffer += '>';
 }
 
 void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength)
 {
   addRowLabel(label);
   addTextBox(id, value, maxlength);
+}
+
+void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly)
+{
+  addRowLabel(label);
+  addTextBox(id, value, maxlength, readonly);
+}
+
+void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly, bool required)
+{
+  addRowLabel(label);
+  addTextBox(id, value, maxlength, readonly, required);
+}
+
+void addFormTextBox(const String& label, const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
+{
+  addRowLabel(label);
+  addTextBox(id, value, maxlength, readonly, required, pattern);
 }
 
 
@@ -3136,18 +3237,15 @@ void copyFormPassword(const String& id, char* pPassword, int maxlength)
 
 void addFormIPBox(const String& label, const String& id, const byte ip[4])
 {
-  char strip[20];
-  if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
-    strip[0] = 0;
-  else {
-    formatIP(ip, strip);
-  }
+  bool empty_IP =(ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
   addRowLabel(label);
   TXBuffer += F("<input class='wide' type='text' name='");
   TXBuffer += id;
   TXBuffer += F("' value='");
-  TXBuffer += strip;
+  if (!empty_IP){
+    TXBuffer += formatIP(ip);
+  }
   TXBuffer += "'>";
 }
 
@@ -3368,7 +3466,7 @@ void html_add_script_end() {
 //********************************************************************************
 // Add a task select dropdown list
 //********************************************************************************
-void addTaskSelect(String name,  int choice)
+void addTaskSelect(const String& name,  int choice)
 {
   String deviceName;
 
@@ -3409,7 +3507,7 @@ void addTaskSelect(String name,  int choice)
 //********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
 //********************************************************************************
-void addTaskValueSelect(String name, int choice, byte TaskIndex)
+void addTaskValueSelect(const String& name, int choice, byte TaskIndex)
 {
   TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += name;
@@ -4012,11 +4110,6 @@ void handle_login() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   String webrequest = WebServer.arg(F("password"));
-  char command[80];
-  command[0] = 0;
-  webrequest.toCharArray(command, 80);
-
-
   TXBuffer += F("<form method='post'>");
   html_table_class_normal();
   TXBuffer += F("<TR><TD>Password<TD>");
@@ -4032,6 +4125,10 @@ void handle_login() {
 
   if (webrequest.length() != 0)
   {
+    char command[80];
+    command[0] = 0;
+    webrequest.toCharArray(command, 80);
+
     // compare with stored password and set timer if there's a match
     if ((strcasecmp(command, SecuritySettings.Password) == 0) || (SecuritySettings.Password[0] == 0))
     {
@@ -4091,8 +4188,10 @@ void handle_control() {
   }
 
   if (handledCmd) {
-	WebServer.send(200, F("text/html"), "OK");
-	return;
+    TXBuffer.startStream("*");
+    TXBuffer += "OK";
+    TXBuffer.endStream();
+	  return;
   }
 
   struct EventStruct TempEvent;
@@ -4237,11 +4336,6 @@ void handle_json()
       {
         if (it->second.ip[0] != 0)
         {
-
-          char ip[20];
-
-          sprintf_P(ip, PSTR("%u.%u.%u.%u"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-
           if( comma_between ) {
             TXBuffer += ',';
           } else {
@@ -4271,7 +4365,7 @@ void handle_json()
             if (platform.length() > 0)
               stream_next_json_object_value(F("platform"), platform);
           }
-          stream_next_json_object_value(F("ip"), ip);
+          stream_next_json_object_value(F("ip"), it->second.ip.toString());
           stream_last_json_object_value(F("age"),  String( it->second.age ));
         } // if node info exists
       } // for loop
@@ -4585,20 +4679,22 @@ void handle_advanced() {
     Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
+    Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
 
     addHtmlError(SaveSettings());
     if (Settings.UseNTP)
       initTime();
   }
 
-  // char str[20];
-
   TXBuffer += F("<form  method='post'>");
   html_table_class_normal();
 
   addFormHeader(F("Advanced Settings"));
 
+  addFormSubHeader(F("Rules Settings"));
+
   addFormCheckBox(F("Rules"), F("userules"), Settings.UseRules);
+  addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
 
   addFormSubHeader(F("Controller Settings"));
 
@@ -4669,7 +4765,7 @@ void handle_advanced() {
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif
   #if defined(ESP32)
-    addFormCheckBox(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
+    addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif
 
   addFormSeparator(2);
@@ -4723,7 +4819,7 @@ void addFormLogLevelSelect(const String& label, const String& id, int choice)
   addLogLevelSelect(id, choice);
 }
 
-void addLogLevelSelect(String name, int choice)
+void addLogLevelSelect(const String& name, int choice)
 {
   String options[LOG_LEVEL_NRELEMENTS + 1];
   int optionValues[LOG_LEVEL_NRELEMENTS + 1] = {0};
@@ -4741,7 +4837,7 @@ void addFormLogFacilitySelect(const String& label, const String& id, int choice)
   addLogFacilitySelect(id, choice);
 }
 
-void addLogFacilitySelect(String name, int choice)
+void addLogFacilitySelect(const String& name, int choice)
 {
   String options[12] = { F("Kernel"), F("User"), F("Daemon"), F("Message"), F("Local0"), F("Local1"), F("Local2"), F("Local3"), F("Local4"), F("Local5"), F("Local6"), F("Local7")};
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
@@ -4947,6 +5043,7 @@ void handleFileUpload() {
 // Web Interface server web file from SPIFFS
 //********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
+  // path is a deepcopy, since it will be changed here.
   checkRAM(F("loadFromFS"));
   if (!isLoggedIn()) return false;
 
@@ -5009,6 +5106,7 @@ bool loadFromFS(boolean spiffs, String path) {
 // Web Interface custom page handler
 //********************************************************************************
 boolean handle_custom(String path) {
+  // path is a deepcopy, since it will be changed.
   checkRAM(F("handle_custom"));
   if (!clientIPallowed()) return false;
   path = path.substring(1);
@@ -5032,11 +5130,9 @@ boolean handle_custom(String path) {
       if (it != Nodes.end()) {
         TXBuffer.startStream();
         sendHeadandTail(F("TmplDsh"),_HEAD);
-        char url[40];
-        sprintf_P(url, PSTR("http://%u.%u.%u.%u/dashboard.esp"), it->second.ip[0], it->second.ip[1], it->second.ip[2], it->second.ip[3]);
-        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=");
-        TXBuffer += url;
-        TXBuffer += "\">";
+        TXBuffer += F("<meta http-equiv=\"refresh\" content=\"0; URL=http://");
+        TXBuffer += it->second.ip.toString();
+        TXBuffer += F("/dashboard.esp\">");
         sendHeadandTail(F("TmplDsh"),_TAIL);
         TXBuffer.endStream();
         return true;
@@ -5359,7 +5455,6 @@ void handle_SDfilelist() {
   String change_to_dir = "";
   String current_dir = "";
   String parent_dir = "";
-  char SDcardDir[80];
 
   for (uint8_t i = 0; i < WebServer.args(); i++) {
     if (WebServer.argName(i) == F("delete"))
@@ -5393,8 +5488,7 @@ void handle_SDfilelist() {
     current_dir = "/";
   }
 
-  current_dir.toCharArray(SDcardDir, current_dir.length()+1);
-  File root = SD.open(SDcardDir);
+  File root = SD.open(current_dir.c_str());
   root.rewindDirectory();
   File entry = root.openNextFile();
   parent_dir = current_dir;
@@ -5506,6 +5600,7 @@ void handleNotFound() {
   }
 
   if (!isLoggedIn()) return;
+  if (handle_rules_edit(WebServer.uri())) return;
   if (loadFromFS(true, WebServer.uri())) return;
   if (loadFromFS(false, WebServer.uri())) return;
   String message = F("URI: ");
@@ -5540,9 +5635,7 @@ void handle_setup() {
   if (WiFiConnected())
   {
     addHtmlError(SaveSettings());
-    const IPAddress ip = WiFi.localIP();
-    char host[20];
-    formatIP(ip, host);
+    String host = formatIP(WiFi.localIP());
     TXBuffer += F("<BR>ESP is connected and using IP Address: <BR><h1>");
     TXBuffer += host;
     TXBuffer += F("</h1><BR><BR>Connect your laptop / tablet / phone<BR>back to your main Wifi network and<BR><BR>");
@@ -5980,14 +6073,16 @@ void handle_sysinfo() {
   }
 
   addRowLabel(F("Uptime"));
-  char strUpTime[40];
-  int minutes = wdcounter / 2;
-  int days = minutes / 1440;
-  minutes = minutes % 1440;
-  int hrs = minutes / 60;
-  minutes = minutes % 60;
-  sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
-  TXBuffer += strUpTime;
+  {
+    char strUpTime[40];
+    int minutes = wdcounter / 2;
+    int days = minutes / 1440;
+    minutes = minutes % 1440;
+    int hrs = minutes / 60;
+    minutes = minutes % 60;
+    sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
+    TXBuffer += strUpTime;
+  }
 
   addRowLabel(F("Load"));
   if (wdcounter > 0)
@@ -6075,16 +6170,18 @@ void handle_sysinfo() {
 
   addRowLabel(F("STA MAC"));
 
-  uint8_t mac[] = {0, 0, 0, 0, 0, 0};
-  uint8_t* macread = WiFi.macAddress(mac);
-  char macaddress[20];
-  formatMAC(macread, macaddress);
-  TXBuffer += macaddress;
+  {
+    uint8_t mac[] = {0, 0, 0, 0, 0, 0};
+    uint8_t* macread = WiFi.macAddress(mac);
+    char macaddress[20];
+    formatMAC(macread, macaddress);
+    TXBuffer += macaddress;
 
-  addRowLabel(F("AP MAC"));
-  macread = WiFi.softAPmacAddress(mac);
-  formatMAC(macread, macaddress);
-  TXBuffer += macaddress;
+    addRowLabel(F("AP MAC"));
+    macread = WiFi.softAPmacAddress(mac);
+    formatMAC(macread, macaddress);
+    TXBuffer += macaddress;
+  }
 
   addRowLabel(F("SSID"));
   TXBuffer += WiFi.SSID();

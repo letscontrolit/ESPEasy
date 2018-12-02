@@ -3,6 +3,4 @@
 *.pch
 
 # PlatformIO folders
-.pioenvs
-.piolibdeps
-pio
+.pio*

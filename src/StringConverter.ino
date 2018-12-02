@@ -2,7 +2,7 @@
   Convert a char string to integer
   \*********************************************************************************************/
 //FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(char *string)
+unsigned long str2int(const char *string)
 {
   unsigned long temp = atof(string);
   return temp;
@@ -37,17 +37,9 @@ boolean str2ip(const char *string, byte* IP)
   return false;
 }
 
-// Call this by first declaring a char array of size 20, like:
-//  char strIP[20];
-//  formatIP(ip, strIP);
-void formatIP(const IPAddress& ip, char (&strIP)[20]) {
-  sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-}
 
 String formatIP(const IPAddress& ip) {
-  char strIP[20];
-  formatIP(ip, strIP);
-  return String(strIP);
+  return ip.toString();
 }
 
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]) {

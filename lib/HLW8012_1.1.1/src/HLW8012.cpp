@@ -1,8 +1,8 @@
 /*
 
-HLW8012 1.0.0
+HLW8012
 
-Copyright (C) 2016 by Xose Pérez <xose dot perez at gmail dot com>
+Copyright (C) 2016-2018 by Xose Pérez <xose dot perez at gmail dot com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -131,6 +131,25 @@ double HLW8012::getPowerFactor() {
     return (double) active / apparent;
 }
 
+unsigned long HLW8012::getEnergy() {
+
+    // Counting pulses only works in IRQ mode
+    if (!_use_interrupts) return 0;
+
+    /*
+    Pulse count is directly proportional to energy:
+    P = m*f (m=power multiplier, f = Frequency)
+    f = N/t (N=pulse count, t = time)
+    E = P*t = m*N  (E=energy)
+    */
+    return _pulse_count * _power_multiplier / 1000000. / 2;
+
+}
+
+void HLW8012::resetEnergy() {
+    _pulse_count = 0;
+}
+
 void HLW8012::expectedCurrent(double value) {
     if (_current == 0) getCurrent();
     if (_current > 0) _current_multiplier *= (value / _current);
@@ -158,19 +177,21 @@ void HLW8012::setResistors(double current, double voltage_upstream, double volta
     }
 }
 
-void HLW8012::cf_interrupt() {
+void ICACHE_RAM_ATTR HLW8012::cf_interrupt() {
     unsigned long now = micros();
     _power_pulse_width = now - _last_cf_interrupt;
     _last_cf_interrupt = now;
+    _pulse_count++;
 }
 
-void HLW8012::cf1_interrupt() {
+void ICACHE_RAM_ATTR HLW8012::cf1_interrupt() {
 
     unsigned long now = micros();
-    unsigned long pulse_width;
 
     if ((now - _first_cf1_interrupt) > _pulse_timeout) {
 
+        unsigned long pulse_width;
+        
         if (_last_cf1_interrupt == _first_cf1_interrupt) {
             pulse_width = 0;
         } else {

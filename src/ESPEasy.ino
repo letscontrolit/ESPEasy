@@ -198,6 +198,7 @@ void setup()
   fileSystemCheck();
   progMemMD5check();
   LoadSettings();
+  Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
     toDisable = disablePlugin(toDisable);
