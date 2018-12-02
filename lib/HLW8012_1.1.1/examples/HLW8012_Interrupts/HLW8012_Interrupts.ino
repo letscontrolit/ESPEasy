@@ -10,7 +10,7 @@
 #define CF_PIN                          14
 
 // Check values every 10 seconds
-#define UPDATE_TIME                     10000
+#define UPDATE_TIME                     5000
 
 // Set SEL_PIN to HIGH to sample current
 // This is the case for Itead's Sonoff POW, where a
@@ -27,10 +27,10 @@ HLW8012 hlw8012;
 
 // When using interrupts we have to call the library entry point
 // whenever an interrupt is triggered
-void hlw8012_cf1_interrupt() {
+void ICACHE_RAM_ATTR hlw8012_cf1_interrupt() {
     hlw8012.cf1_interrupt();
 }
-void hlw8012_cf_interrupt() {
+void ICACHE_RAM_ATTR hlw8012_cf_interrupt() {
     hlw8012.cf_interrupt();
 }
 
@@ -57,7 +57,6 @@ void calibrate() {
     Serial.print("[HLW] New current multiplier : "); Serial.println(hlw8012.getCurrentMultiplier());
     Serial.print("[HLW] New voltage multiplier : "); Serial.println(hlw8012.getVoltageMultiplier());
     Serial.print("[HLW] New power multiplier   : "); Serial.println(hlw8012.getPowerMultiplier());
-    Serial.println();
 
 }
 
@@ -94,9 +93,11 @@ void setup() {
     Serial.println();
 
     setInterrupts();
-    calibrate();
+    //calibrate();
 
 }
+
+char buffer[50];
 
 void loop() {
 
@@ -111,6 +112,7 @@ void loop() {
         Serial.print("[HLW] Current (A)         : "); Serial.println(hlw8012.getCurrent());
         Serial.print("[HLW] Apparent Power (VA) : "); Serial.println(hlw8012.getApparentPower());
         Serial.print("[HLW] Power Factor (%)    : "); Serial.println((int) (100 * hlw8012.getPowerFactor()));
+        Serial.print("[HLW] Agg. energy (Ws)    : "); Serial.println(hlw8012.getEnergy());
         Serial.println();
 
     }

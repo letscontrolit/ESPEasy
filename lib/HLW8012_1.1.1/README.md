@@ -2,6 +2,14 @@
 
 HLW8012 library for Arduino and ESP8266 using the [Arduino Core for ESP8266][1].
 
+[![version](https://img.shields.io/badge/version-1.1.1-brightgreen.svg)](CHANGELOG.md)
+[![travis](https://travis-ci.org/xoseperez/hlw8012.svg?branch=master)](https://travis-ci.org/xoseperez/hlw8012)
+[![codacy](https://img.shields.io/codacy/grade/8490fe74f2f745f299df057fdba1351a/master.svg)](https://www.codacy.com/app/xoseperez/hlw8012/dashboard)
+[![license](https://img.shields.io/github/license/xoseperez/hlw8012.svg)](LICENSE)
+<br />
+[![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=xose%2eperez%40gmail%2ecom&lc=US&no_note=0&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHostedGuest)
+[![twitter](https://img.shields.io/twitter/follow/xoseperez.svg?style=social)](https://twitter.com/intent/follow?screen_name=xoseperez)
+
 ![HLW8012 Pinoout](/docs/HLW8012_pinout.png)
 
 
@@ -60,3 +68,20 @@ hlw8012.expectedCurrent(60.0 / 230.0);
 
 [1]:https://github.com/esp8266/Arduino
 [2]:https://www.itead.cc/sonoff-pow.html?acc=70efdf2ec9b086079795c442636b55fb
+
+## License
+
+Copyright (C) 2016-2018 by Xose Pérez <xose dot perez at gmail dot com>
+
+The HLW8012 library is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+The HLW8012 library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with the HLW8012 library.  If not, see <http://www.gnu.org/licenses/>.
