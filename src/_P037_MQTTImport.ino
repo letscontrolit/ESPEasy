@@ -443,7 +443,7 @@ boolean MQTTConnect_037()
 //
 // Check to see if Topic matches the MQTT subscription
 //
-boolean MQTTCheckSubscription_037(String Topic, String Subscription) {
+boolean MQTTCheckSubscription_037(const String& Topic, const String& Subscription) {
 
   String tmpTopic = Topic;
   String tmpSub = Subscription;

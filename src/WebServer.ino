@@ -451,7 +451,7 @@ bool isFormItem(const String& id)
 
 
 //if there is an error-string, add it to the html code with correct formatting
-void addHtmlError(String error){
+void addHtmlError(const String& error){
   if (error.length()>0)
   {
     TXBuffer += F("<div class=\"");
@@ -473,7 +473,7 @@ void addHtmlError(String error){
   }
 }
 
-void addHtml(const String html) {
+void addHtml(const String& html) {
   TXBuffer += html;
 }
 
@@ -822,7 +822,7 @@ void addHeader(boolean showMenu, String& str)
 //********************************************************************************
 // Add footer to web page
 //********************************************************************************
-void addFooter(String& str)
+void addFooter(const String& str)
 {
   //not longer used - now part of template
 }
@@ -1827,7 +1827,7 @@ void addFormPinStateSelect(const String& label, const String& id, int choice, bo
   addPinStateSelect(id, choice, enabled);
 }
 
-void addPinStateSelect(String name, int choice, bool enabled)
+void addPinStateSelect(const String& name, int choice, bool enabled)
 {
   String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
   addSelector(name, 4, options, NULL, NULL, choice, false, enabled);
@@ -1842,7 +1842,7 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
   addIPaccessControlSelect(id, choice);
 }
 
-void addIPaccessControlSelect(String name, int choice)
+void addIPaccessControlSelect(const String& name, int choice)
 {
   String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
   addSelector(name, 3, options, NULL, NULL, choice, false);
@@ -2463,7 +2463,7 @@ byte sortedIndex[DEVICES_MAX + 1];
 //********************************************************************************
 // Add a device select dropdown list
 //********************************************************************************
-void addDeviceSelect(String name,  int choice)
+void addDeviceSelect(const String& name,  int choice)
 {
   // first get the list in alphabetic order
   for (byte x = 0; x <= deviceCount; x++)
@@ -2721,7 +2721,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 //********************************************************************************
 // Helper function actually rendering dropdown list for addPinSelect()
 //********************************************************************************
-void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, String name,  int choice, int count) {
+void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& name,  int choice, int count) {
   addSelector_Head(name, false);
   for (byte x = 0; x < count; x++)
   {
@@ -3461,7 +3461,7 @@ void html_add_script_end() {
 //********************************************************************************
 // Add a task select dropdown list
 //********************************************************************************
-void addTaskSelect(String name,  int choice)
+void addTaskSelect(const String& name,  int choice)
 {
   String deviceName;
 
@@ -3502,7 +3502,7 @@ void addTaskSelect(String name,  int choice)
 //********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
 //********************************************************************************
-void addTaskValueSelect(String name, int choice, byte TaskIndex)
+void addTaskValueSelect(const String& name, int choice, byte TaskIndex)
 {
   TXBuffer += F("<select id='selectwidth' name='");
   TXBuffer += name;
@@ -4812,7 +4812,7 @@ void addFormLogLevelSelect(const String& label, const String& id, int choice)
   addLogLevelSelect(id, choice);
 }
 
-void addLogLevelSelect(String name, int choice)
+void addLogLevelSelect(const String& name, int choice)
 {
   String options[LOG_LEVEL_NRELEMENTS + 1];
   int optionValues[LOG_LEVEL_NRELEMENTS + 1] = {0};
@@ -4830,7 +4830,7 @@ void addFormLogFacilitySelect(const String& label, const String& id, int choice)
   addLogFacilitySelect(id, choice);
 }
 
-void addLogFacilitySelect(String name, int choice)
+void addLogFacilitySelect(const String& name, int choice)
 {
   String options[12] = { F("Kernel"), F("User"), F("Daemon"), F("Message"), F("Local0"), F("Local1"), F("Local2"), F("Local3"), F("Local4"), F("Local5"), F("Local6"), F("Local7")};
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
@@ -5036,6 +5036,7 @@ void handleFileUpload() {
 // Web Interface server web file from SPIFFS
 //********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
+  // path is a deepcopy, since it will be changed here.
   checkRAM(F("loadFromFS"));
   if (!isLoggedIn()) return false;
 
@@ -5098,6 +5099,7 @@ bool loadFromFS(boolean spiffs, String path) {
 // Web Interface custom page handler
 //********************************************************************************
 boolean handle_custom(String path) {
+  // path is a deepcopy, since it will be changed.
   checkRAM(F("handle_custom"));
   if (!clientIPallowed()) return false;
   path = path.substring(1);

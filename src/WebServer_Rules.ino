@@ -231,12 +231,13 @@ void handle_rules_delete(/* arguments */) {
   checkRAM(F("handle_rules_delete"));
 }
 
-bool handle_rules_edit(String originalUri)
+bool handle_rules_edit(const String& originalUri)
 {
   return handle_rules_edit(originalUri, false);
 }
 
 bool handle_rules_edit(String originalUri, bool isAddNew) {
+  // originalUri is passed via deepcopy, since it will be converted to lower case.
   if (!isLoggedIn() || !Settings.UseRules) return false;
   originalUri.toLowerCase();
   checkRAM(F("handle_rules"));
@@ -411,7 +412,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
   return handle;
 }
 
-bool Rule_Download(String path)
+bool Rule_Download(const String& path)
 {
   #ifdef WEBSERVER_RULES_DEBUG
   Serial.print("Rule_Download path: ");

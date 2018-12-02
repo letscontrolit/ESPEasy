@@ -257,7 +257,7 @@ bool MQTTCheck(int controller_idx)
 /*********************************************************************************************\
  * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, String param2, uint16_t param3) {
+void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, const String& param2, uint16_t param3) {
   switch (eventSource) {
     case VALUE_SOURCE_HTTP:
     case VALUE_SOURCE_SERIAL:
@@ -268,7 +268,7 @@ void SendStatusOnlyIfNeeded(int eventSource, bool param1, uint32_t key, String p
   }
 }
 
-void SendStatus(byte source, String status)
+void SendStatus(byte source, const String& status)
 {
   switch(source)
   {
@@ -320,7 +320,7 @@ void processMQTTdelayQueue() {
 /*********************************************************************************************\
  * Send status info back to channel where request came from
 \*********************************************************************************************/
-void MQTTStatus(String& status)
+void MQTTStatus(const String& status)
 {
   MakeControllerSettings(ControllerSettings);
   int enabledMqttController = firstEnabledMQTTController();

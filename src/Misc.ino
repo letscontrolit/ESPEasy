@@ -211,7 +211,7 @@ boolean remoteConfig(struct EventStruct *event, const String& string)
   return success;
 }
 
-int8_t getTaskIndexByName(String TaskNameSearch)
+int8_t getTaskIndexByName(const String& TaskNameSearch)
 {
 
   for (byte x = 0; x < TASKS_MAX; x++)
@@ -373,7 +373,7 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, uint32_t key, String& log, uint16_t noSearchValue)
+String getPinStateJSON(boolean search, uint32_t key, const String& log, uint16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
