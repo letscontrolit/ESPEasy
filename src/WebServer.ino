@@ -9,7 +9,7 @@
 #define CHUNKED_BUFFER_SIZE          400
 
 void sendContentBlocking(String& data);
-void sendHeaderBlocking(bool json);
+void sendHeaderBlocking(bool json, const String& origin = "");
 
 class StreamingBuffer {
 private:
@@ -103,15 +103,19 @@ public:
   }
 
   void startStream() {
-    startStream(false);
+    startStream(false, "");
+  }
+
+  void startStream(const String& origin) {
+    startStream(false, origin);
   }
 
   void startJsonStream() {
-    startStream(true);
+    startStream(true, "*");
   }
 
 private:
-  void startStream(bool json) {
+  void startStream(bool json, const String& origin) {
     maxCoreUsage = maxServerUsage = 0;
     initialRam = ESP.getFreeHeap();
     beforeTXRam = initialRam;
@@ -125,7 +129,7 @@ private:
        #endif
       return;
     } else
-      sendHeaderBlocking(json);
+      sendHeaderBlocking(json, origin);
   }
 
   void trackTotalMem() {
@@ -201,7 +205,7 @@ void sendContentBlocking(String& data) {
   delay(0);
 }
 
-void sendHeaderBlocking(bool json) {
+void sendHeaderBlocking(bool json, const String& origin) {
   checkRAM(F("sendHeaderBlocking"));
   WebServer.client().flush();
   String contenttype;
@@ -226,8 +230,9 @@ void sendHeaderBlocking(bool json) {
   const uint32_t beginWait = millis();
   WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
   WebServer.sendHeader(F("Cache-Control"), F("no-cache"));
-  if (json)
-    WebServer.sendHeader(F("Access-Control-Allow-Origin"),"*");
+  if (origin.length() > 0) {
+    WebServer.sendHeader(F("Access-Control-Allow-Origin"), origin);
+  }
   WebServer.send(200, contenttype, "");
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
@@ -4183,8 +4188,10 @@ void handle_control() {
   }
 
   if (handledCmd) {
-	WebServer.send(200, F("text/html"), "OK");
-	return;
+    TXBuffer.startStream("*");
+    TXBuffer += "OK";
+    TXBuffer.endStream();
+	  return;
   }
 
   struct EventStruct TempEvent;

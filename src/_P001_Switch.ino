@@ -84,6 +84,8 @@ boolean Plugin_001_read_switch_state(byte pinNumber, byte pinMode) {
       break;
   }
   if (!canRead) return false;
+  // Do not read from the pin while mode is set to PWM or servo.
+  // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
   return digitalRead(pinNumber) == HIGH;
 }
 
