@@ -645,6 +645,7 @@ bool HasArgv(const char *string, unsigned int argc) {
 bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   int pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end);
+  argvString = "";
   if (pos_begin >= 0 && pos_end >= 0) {
     argvString.reserve(pos_end - pos_begin);
     for (int i = pos_begin; i < pos_end && i >= 0; ++i) {
