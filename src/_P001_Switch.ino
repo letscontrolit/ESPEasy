@@ -56,10 +56,34 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001_LONGPRESS_BOTH 3
 
 boolean Plugin_001_read_switch_state(struct EventStruct *event) {
-  return digitalRead(Settings.TaskDevicePin1[event->TaskIndex]) == HIGH;
+  byte pinNumber = Settings.TaskDevicePin1[event->TaskIndex];
+  const uint32_t key = createKey(PLUGIN_ID_001, pinNumber);
+  if (existPortStatus(key)) {
+    return Plugin_001_read_switch_state(pinNumber, globalMapPortStatus[key].mode);
+  }
+  return false;
 }
 
-boolean Plugin_001_read_switch_state(byte pinNumber) {
+boolean Plugin_001_read_switch_state(byte pinNumber, byte pinMode) {
+  bool canRead = false;
+  switch (pinMode)
+  {
+    case PIN_MODE_UNDEFINED:
+    case PIN_MODE_INPUT:
+    case PIN_MODE_INPUT_PULLUP:
+    case PIN_MODE_OUTPUT:
+      canRead = true;
+      break;
+    case PIN_MODE_PWM:
+      break;
+    case PIN_MODE_SERVO:
+      break;
+    case PIN_MODE_OFFLINE:
+      break;
+    default:
+      break;
+  }
+  if (!canRead) return false;
   return digitalRead(pinNumber) == HIGH;
 }
 
@@ -318,7 +342,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
           if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
             const uint16_t port = getPortFromKey(it->first);
-            byte state = Plugin_001_read_switch_state(port);
+            byte state = Plugin_001_read_switch_state(port, it->second.mode);
             if (it->second.state != state) {
               if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (it->second.monitor) {
@@ -591,7 +615,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_INPUT, 0);
               pinMode(event->Par1, INPUT_PULLUP);
               tempStatus.mode=PIN_MODE_INPUT_PULLUP;
-              tempStatus.state = Plugin_001_read_switch_state(event->Par1);
+              tempStatus.state = Plugin_001_read_switch_state(event->Par1, tempStatus.mode);
               tempStatus.output=tempStatus.state;
             } else {
               //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
@@ -620,7 +644,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             tempStatus = globalMapPortStatus[key];
 
             if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED) { //toggle only output pins
-              tempStatus.state = !(Plugin_001_read_switch_state(event->Par1)); //toggle current state value
+              tempStatus.state = !(Plugin_001_read_switch_state(event->Par1, tempStatus.mode)); //toggle current state value
               tempStatus.output = tempStatus.state;
               tempStatus.mode = PIN_MODE_OUTPUT;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
@@ -687,7 +711,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
 
             savePortStatus(key,tempStatus);
-            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+            log = F("SW   : GPIO ");
+            log += event->Par1;
+            log += F(" Set PWM to ");
+            log += event->Par2;
+            if (event->Par3 != 0) {
+              log += F(" duration ");
+              log += event->Par3;
+            }
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
             //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
