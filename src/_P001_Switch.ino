@@ -32,10 +32,6 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input - Switch"
 #define PLUGIN_VALUENAME1_001 "Switch"
-#if defined(ESP8266)
-  Servo servo1;
-  Servo servo2;
-#endif
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH 0
 #define PLUGIN_001_TYPE_DIMMER 3 // Due to some changes in previous versions, do not use 2.
@@ -55,39 +51,11 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001_LONGPRESS_HIGH 2
 #define PLUGIN_001_LONGPRESS_BOTH 3
 
-boolean Plugin_001_read_switch_state(struct EventStruct *event) {
-  byte pinNumber = Settings.TaskDevicePin1[event->TaskIndex];
-  const uint32_t key = createKey(PLUGIN_ID_001, pinNumber);
-  if (existPortStatus(key)) {
-    return Plugin_001_read_switch_state(pinNumber, globalMapPortStatus[key].mode);
-  }
-  return false;
-}
 
-boolean Plugin_001_read_switch_state(byte pinNumber, byte pinMode) {
-  bool canRead = false;
-  switch (pinMode)
-  {
-    case PIN_MODE_UNDEFINED:
-    case PIN_MODE_INPUT:
-    case PIN_MODE_INPUT_PULLUP:
-    case PIN_MODE_OUTPUT:
-      canRead = true;
-      break;
-    case PIN_MODE_PWM:
-      break;
-    case PIN_MODE_SERVO:
-      break;
-    case PIN_MODE_OFFLINE:
-      break;
-    default:
-      break;
-  }
-  if (!canRead) return false;
-  // Do not read from the pin while mode is set to PWM or servo.
-  // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
-  return digitalRead(pinNumber) == HIGH;
-}
+// Needed for the GPIO handling.
+#include "Commands/Gpio.h"
+// As soon as we allow switch plugin to be used on port expander, we may need to move those functions.
+// For now, the Switch plugin only supports the internal GPIO pins.
 
 boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 {
@@ -144,7 +112,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         //@giig1967g: set current task value for taking actions after changes in the task gpio
-        const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
+        const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);
         if (existPortStatus(key)) {
           globalMapPortStatus[key].previousTask = event->TaskIndex;
         }
@@ -261,12 +229,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePin1[event->TaskIndex] >= 0 && Settings.TaskDevicePin1[event->TaskIndex] <= PIN_D_MAX)
         {
           portStatusStruct newStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
+          const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);
           //Read current status or create empty if it does not exist
           newStatus = globalMapPortStatus[key];
 
           // read and store current state to prevent switching at boot time
-          newStatus.state = Plugin_001_read_switch_state(event);
+          newStatus.state = read_GPIO_state(event);
           newStatus.output = newStatus.state;
           newStatus.task++; // add this GPIO/port as a task
 
@@ -344,7 +312,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
           if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
             const uint16_t port = getPortFromKey(it->first);
-            byte state = Plugin_001_read_switch_state(port, it->second.mode);
+            byte state = read_GPIO_state(port, it->second.mode);
             if (it->second.state != state) {
               if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (it->second.monitor) {
@@ -362,7 +330,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        const boolean state = Plugin_001_read_switch_state(event);
+        const boolean state = read_GPIO_state(event);
 
         /**************************************************************************\
         20181009 - @giig1967g: new doubleclick logic is:
@@ -387,7 +355,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePin1[event->TaskIndex]>=0 && Settings.TaskDevicePin1[event->TaskIndex]<=PIN_D_MAX) {
 
           portStatusStruct currentStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]);
+          const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);
           //WARNING operator [],creates an entry in map if key doesn't exist:
           currentStatus = globalMapPortStatus[key];
 
@@ -577,7 +545,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      removeTaskFromPort(createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->TaskIndex]));
+      removeTaskFromPort(createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]));
       break;
     }
 
@@ -596,335 +564,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String log = "";
-        String command = parseString(string, 1);
-
-        //WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
-
-        if (command == F("gpio"))
-        {
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            if (event->Par2 == 2)  //if gpio = 2 then it's an input PIN
-            {
-              //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_INPUT, 0);
-              pinMode(event->Par1, INPUT_PULLUP);
-              tempStatus.mode=PIN_MODE_INPUT_PULLUP;
-              tempStatus.state = Plugin_001_read_switch_state(event->Par1, tempStatus.mode);
-              tempStatus.output=tempStatus.state;
-            } else {
-              //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-              pinMode(event->Par1, OUTPUT);
-              digitalWrite(event->Par1, event->Par2);
-              tempStatus.mode=PIN_MODE_OUTPUT;
-              tempStatus.state=event->Par2;
-              tempStatus.output=event->Par2;
-            }
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
-
-            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-          }
-        } else if (command == F("gpiotoggle")) {
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            if (tempStatus.mode == PIN_MODE_OUTPUT || tempStatus.mode == PIN_MODE_UNDEFINED) { //toggle only output pins
-              tempStatus.state = !(Plugin_001_read_switch_state(event->Par1, tempStatus.mode)); //toggle current state value
-              tempStatus.output = tempStatus.state;
-              tempStatus.mode = PIN_MODE_OUTPUT;
-              tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-
-              pinMode(event->Par1, OUTPUT);
-              digitalWrite(event->Par1, tempStatus.state);
-              //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, !currentState);
-              savePortStatus(key,tempStatus);
-              log = String(F("SW   : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
-              addLog(LOG_LEVEL_INFO, log);
-              SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-              //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-            }
-          }
-        } else if (command == F("pwm")) {
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            #if defined(ESP8266)
-              pinMode(event->Par1, OUTPUT);
-            #endif
-            if(event->Par3 != 0)
-            {
-              const byte prev_mode = tempStatus.mode;
-              uint16_t prev_value = tempStatus.state;
-              //getPinState(PLUGIN_ID_001, event->Par1, &prev_mode, &prev_value);
-              if(prev_mode != PIN_MODE_PWM)
-                prev_value = 0;
-
-              int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
-              int32_t curr_value = prev_value << 12;
-
-              int i = event->Par3;
-              while(i--){
-                curr_value += step_value;
-                int16_t new_value;
-                new_value = (uint16_t)(curr_value >> 12);
-                #if defined(ESP8266)
-                  analogWrite(event->Par1, new_value);
-                #endif
-                #if defined(ESP32)
-                  analogWriteESP32(event->Par1, new_value);
-                #endif
-                delay(1);
-              }
-            }
-
-            #if defined(ESP8266)
-              analogWrite(event->Par1, event->Par2);
-            #endif
-            #if defined(ESP32)
-              analogWriteESP32(event->Par1, event->Par2);
-            #endif
-            //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_PWM, event->Par2);
-            tempStatus.mode = PIN_MODE_PWM;
-            tempStatus.state = event->Par2;
-            tempStatus.output = event->Par2;
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-
-            savePortStatus(key,tempStatus);
-            log = F("SW   : GPIO ");
-            log += event->Par1;
-            log += F(" Set PWM to ");
-            log += event->Par2;
-            if (event->Par3 != 0) {
-              log += F(" duration ");
-              log += event->Par3;
-            }
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-          }
-        } else if (command == F("pulse")) {
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            pinMode(event->Par1, OUTPUT);
-            digitalWrite(event->Par1, event->Par2);
-            delay(event->Par3);
-            digitalWrite(event->Par1, !event->Par2);
-            //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            tempStatus.mode = PIN_MODE_OUTPUT;
-            tempStatus.state = event->Par2;
-            tempStatus.output = event->Par2;
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
-
-            log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-          }
-        } else if ((command == F("longpulse")) || (command == F("longpulse_ms"))) {
-          boolean time_in_msec = command == F("longpulse_ms");
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            const bool pinStateHigh = event->Par2 != 0;
-            const uint16_t pinStateValue = pinStateHigh ? 1 : 0;
-            const uint16_t inversePinStateValue = pinStateHigh ? 0 : 1;
-            pinMode(event->Par1, OUTPUT);
-            digitalWrite(event->Par1, pinStateValue);
-            //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, pinStateValue);
-            tempStatus.mode = PIN_MODE_OUTPUT;
-            tempStatus.state = event->Par2;
-            tempStatus.output = event->Par2;
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
-            unsigned long timer = time_in_msec ? event->Par3 : event->Par3 * 1000;
-            // Create a future system timer call to set the GPIO pin back to its normal value.
-            setPluginTaskTimer(timer, PLUGIN_ID_001, event->TaskIndex, event->Par1, inversePinStateValue);
-            log = String(F("SW   : GPIO ")) + String(event->Par1) +
-                  String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-          }
-        } else if (command == F("servo")) {
-          //GPIO number is stored inside event->Par2 instead of event->Par1 as in all the other commands
-          //So needs to reload the tempPortStruct.
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= 2) {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'servo' uses Par2 instead of Par1
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            switch (event->Par1)
-            {
-              case 1:
-                //IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
-                #if defined(ESP8266)
-                  //SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
-                  if (event->Par3 >= 9000) {
-                    servo1.detach();
-                  }else{
-                    servo1.attach(event->Par2);
-                    servo1.write(event->Par3);
-                  }
-                #endif
-                break;
-              case 2:
-                #if defined(ESP8266)
-                if (event->Par3 >= 9000) {
-                  servo2.detach();
-                }else{
-                  servo2.attach(event->Par2);
-                  servo2.write(event->Par3);
-                }
-                #endif
-                break;
-            }
-            //setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);
-            tempStatus.mode = PIN_MODE_SERVO;
-            tempStatus.state = event->Par3;
-            tempStatus.output = event->Par3;
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
-            log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
-          }
-        } else if (command == F("status")) {
-          if (parseString(string, 2) == F("gpio"))
-          {
-            success = true;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'status' uses Par2 instead of Par1
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, dummyString, 0));
-          }
-        }  else if (command == F("monitor")) {
-          if (parseString(string, 2) == F("gpio"))
-          {
-            success = true;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
-
-            addMonitorToPort(key);
-            log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-          }
-        }  else if (command == F("unmonitor")) {
-          if (parseString(string, 2) == F("gpio"))
-          {
-            success = true;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
-
-            removeMonitorFromPort(key);
-            log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-          }
-        } else if (command == F("inputswitchstate")) {
-          success = true;
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001,Settings.TaskDevicePin1[event->Par1]);
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
-          tempStatus.output=event->Par2;
-          tempStatus.command=1;
-          savePortStatus(key,tempStatus);
-        } else if (command == F("rtttl")) {
-          // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
-          //play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more info.
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            pinMode(event->Par1, OUTPUT);
-            // char sng[1024] ="";
-            String tmpString=string;
-            tmpString.replace('-', '#');
-            // tmpString.toCharArray(sng, 1024);
-            play_rtttl(event->Par1, tmpString.c_str());
-            //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            tempStatus.mode = PIN_MODE_OUTPUT;
-            tempStatus.state = event->Par2;
-            tempStatus.output = event->Par2;
-            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
-            log = String(F("SW   : ")) + string;
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-          }
-        } else if (command == F("tone")) {
-          //play a tone on pin par1, with frequency par2 and duration par3.
-          success = true;
-          if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
-          {
-            portStatusStruct tempStatus;
-            const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
-            // WARNING: operator [] creates an entry in the map if key does not exist
-            // So the next command should be part of each command:
-            tempStatus = globalMapPortStatus[key];
-
-            pinMode(event->Par1, OUTPUT);
-            tone_espEasy(event->Par1, event->Par2, event->Par3);
-            //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            tempStatus.mode = PIN_MODE_OUTPUT;
-            tempStatus.state = event->Par2;
-            tempStatus.output = event->Par2;
-            tempStatus.command = 1; //set to 1 in order to display the status in the PinStatus page
-            savePortStatus(key,tempStatus);
-            log = String(F("SW   : ")) + string;
-            addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-          }
-        }
+//        String log = "";
+//        String command = parseString(string, 1);
         break;
       }
 
@@ -934,7 +575,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         portStatusStruct tempStatus;
         // WARNING: operator [] creates an entry in the map if key does not exist
-        const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
+        const uint32_t key = createInternalGpioKey(event->Par1);
         tempStatus = globalMapPortStatus[key];
 
         tempStatus.state = event->Par2;
@@ -946,32 +587,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-
-#if defined(ESP32)
-void analogWriteESP32(int pin, int value)
-{
-  // find existing channel if this pin has been used before
-  int8_t ledChannel = -1;
-  for(byte x = 0; x < 16; x++)
-    if (ledChannelPin[x] == pin)
-      ledChannel = x;
-
-  if(ledChannel == -1) // no channel set for this pin
-    {
-      for(byte x = 0; x < 16; x++) // find free channel
-        if (ledChannelPin[x] == -1)
-          {
-            int freq = 5000;
-            ledChannelPin[x] = pin;  // store pin nr
-            ledcSetup(x, freq, 10);  // setup channel
-            ledcAttachPin(pin, x);   // attach to this pin
-            ledChannel = x;
-            break;
-          }
-    }
-  ledcWrite(ledChannel, value);
-}
-#endif
 
 // TD-er: Needed to fix a mistake in earlier fixes.
 byte P001_getSwitchType(struct EventStruct *event) {
