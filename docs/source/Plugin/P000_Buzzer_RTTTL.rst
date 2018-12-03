@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P000_Buzzer_page:
 
 Buzzer (RTTTL)

@@ -7,33 +7,37 @@ Door switch
 |P001_typename|
 |P001_status|
 
+.. image:: P001_Door_switch_1.jpg
 
 Introduction
 ------------
 
+Any door switch module can be used as an digital input. Most none contact door switches use a technology called
+reed switch. By using a magnet (the part with no wires) the reed inside the other part (with wires) will connect
+the two parts of the reed and making a signal go low or high depending on how you have connected the switch.
+You may use it by simply connect it to either a GPIO that is normally high (pull-up) or normally low (pull-down).
 
 Specifications:
-
+ * Give a high or low signal to a GPIO
 
 Wiring
 ------
 
-
 .. code-block:: html
 
-  ESP               S8
-  GPIO (X)   <-->   TX
-  GPIO (X)   <-->   RX
-
+  ESP               Door switch
+  GPIO (X)   <-->   Signal
 
   Power
-  5.0V       <-->   VCC
-  GND        <-->   GND
+  3.3V       <-->   Signal
+              or
+  GND        <-->   Signal
 
 
 Setup
 -----
 
+Selecting the plugin "Switch input - Switch" gives you the options to setup a switch.
 
 
 Rules examples
@@ -41,7 +45,17 @@ Rules examples
 
 .. code-block:: html
 
-  //Code below...
+    on Door#State=1 do
+      timerSet,1,1
+    endon
+
+    on rules#timer=1 do
+     if [Door#State]=0
+      //Action if door is closed
+     else
+      //Action if door is opened
+     endif
+    endon
 
 
 Indicators (recommended settings)
@@ -57,10 +71,11 @@ Where to buy
 ------------
 
 .. csv-table::
-  :header: "Store", "Link"
+  :header: "Type", "Link"
   :widths: 5, 40
 
-  "AliExpress","`Link 1 ($) <http://s.click.aliexpress.com/e/cg1fhDDI>`_"
+  "Door switch","`AliExpress 1 ($) <http://s.click.aliexpress.com/e/ccCdXCVi>`_"
+  "Reed switch","`AliExpress 2 ($) <http://s.click.aliexpress.com/e/0gMmOoY>`_"
 
 |affiliate|
 

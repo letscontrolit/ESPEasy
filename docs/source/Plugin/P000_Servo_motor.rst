@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P000_Servo_motor_page:
 
 Servo motor
@@ -69,7 +70,7 @@ No device is needed.
 Commands
 --------
 
-.. include:: P001_commands_GPIO.rst
+.. include:: P001_commands_GPIO.repl
 
 Where to buy
 ------------

@@ -59,17 +59,17 @@ Commands listed
 
 (core commands and plugin commands)
 
-.. include:: ../Plugin/P000_commands.rst
+.. include:: ../Plugin/P000_commands.repl
 
 
 Internal GPIO handling and ringtones
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. include:: ../Plugin/P001_commands_GPIO.rst
+.. include:: ../Plugin/P001_commands_GPIO.repl
 
-.. include:: ../Plugin/P001_commands_RTTTL.rst
+.. include:: ../Plugin/P001_commands_RTTTL.repl
 
 Plugin based commands
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. .. include:: ../Plugin/P002_commands.rst
+.. .. include:: ../Plugin/P002_commands.repl
