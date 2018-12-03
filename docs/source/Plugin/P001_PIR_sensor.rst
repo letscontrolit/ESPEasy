@@ -22,14 +22,13 @@ Wiring
 
 .. code-block:: html
 
-  ESP               S8
-  GPIO (X)   <-->   TX
-  GPIO (X)   <-->   RX
-
+  ESP               PIR
+  GPIO (X)   <-->   Signal
 
   Power
-  5.0V       <-->   VCC
-  GND        <-->   GND
+  3.3V       <-->   Signal
+              or
+  GND        <-->   Signal
 
 
 Setup

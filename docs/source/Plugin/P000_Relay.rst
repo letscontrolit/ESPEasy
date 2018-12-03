@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P000_Relay_page:
 
 Relay
@@ -223,7 +224,7 @@ No device is needed.
 Commands
 --------
 
-.. include:: P001_commands_GPIO.rst
+.. include:: P001_commands_GPIO.repl
 
 How to connect your relay
 -------------------------
