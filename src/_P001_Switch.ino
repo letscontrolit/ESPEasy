@@ -564,8 +564,23 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-//        String log = "";
-//        String command = parseString(string, 1);
+        String command = parseString(string, 1);
+        if (command == F("inputswitchstate")) {
+          if (checkValidGpioPin(event)) {
+            portStatusStruct tempStatus;
+            const uint32_t   key = createInternalGpioKey(Settings.TaskDevicePin1[event->Par1]);
+
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
+            tempStatus = globalMapPortStatus[key];
+
+            UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
+            tempStatus.output                    = event->Par2;
+            tempStatus.command                   = 1;
+            savePortStatus(key, tempStatus);
+            success = true;
+          }
+        }
         break;
       }
 

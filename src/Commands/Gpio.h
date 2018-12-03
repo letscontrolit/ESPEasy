@@ -13,16 +13,21 @@ uint32_t createInternalGpioKey(uint16_t portNumber);
 bool     read_GPIO_state(struct EventStruct *event);
 bool     read_GPIO_state(byte pinNumber,
                          byte pinMode);
+bool     checkValidGpioPin(struct EventStruct *event);
 void     analogWriteESP(int pin,
                         int value);
 String   Command_longPulse(struct EventStruct *event,
                            const char         *Line,
                            bool                time_in_msec);
 
-
+// **************************************************************************/
+// Command "gpio"
+// GPIO,<gpio>,<state>
+// State == 2 is input mode with pull up.
+// **************************************************************************/
 String Command_GPIO(struct EventStruct *event, const char *Line)
 {
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     portStatusStruct tempStatus;
     const uint32_t   key = createInternalGpioKey(event->Par1);
@@ -49,18 +54,24 @@ String Command_GPIO(struct EventStruct *event, const char *Line)
     tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
     savePortStatus(key, tempStatus);
 
-    String log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+    String log = String(F("GPIO : ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "gpiotoggle"
+// gpiotoggle,<gpio>
+// Toggles only the output when it is set to output mode.
+// **************************************************************************/
 String Command_GPIOtoggle(struct EventStruct *event, const char *Line)
 {
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     portStatusStruct tempStatus;
     const uint32_t   key = createInternalGpioKey(event->Par1);
@@ -87,13 +98,20 @@ String Command_GPIOtoggle(struct EventStruct *event, const char *Line)
 
       // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
     }
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "pwm"
+// PWM,<GPIO>,<state>
+// PWM,<GPIO>,<state>,<duration>
+// Sets pin to output and mode to PWM (disable reading for example)
+// **************************************************************************/
 String Command_PWM(struct EventStruct *event, const char *Line)
 {
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     portStatusStruct tempStatus;
     const uint32_t   key = createInternalGpioKey(event->Par1);
@@ -138,7 +156,7 @@ String Command_PWM(struct EventStruct *event, const char *Line)
     tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
 
     savePortStatus(key, tempStatus);
-    String log = F("SW   : GPIO ");
+    String log = F("GPIO : ");
     log += event->Par1;
     log += F(" Set PWM to ");
     log += event->Par2;
@@ -151,13 +169,20 @@ String Command_PWM(struct EventStruct *event, const char *Line)
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "pulse"
+// Pulse,<GPIO>,<state>,<duration>
+// Sens a "short" (< 1000 msec) pulse.
+// Command is blocking for the duration of the pulse
+// **************************************************************************/
 String Command_Pulse(struct EventStruct *event, const char *Line)
 {
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     portStatusStruct tempStatus;
     const uint32_t   key = createInternalGpioKey(event->Par1);
@@ -178,20 +203,34 @@ String Command_Pulse(struct EventStruct *event, const char *Line)
     tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
     savePortStatus(key, tempStatus);
 
-    String log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
+    String log = String(F("GPIO : ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
+
+// **************************************************************************/
+// Command "LongPulse"
+// LongPulse,<GPIO>,<state>,<duration>
+// Sens a "long" (typ. > 50 msec) pulse.
+// Command is NOT blocking for the duration of the pulse (duration in seconds)
+// **************************************************************************/
 String Command_longPulse_seconds(struct EventStruct *event, const char *Line)
 {
   return Command_longPulse(event, Line, false);
 }
 
+// **************************************************************************/
+// Command "LongPulse_mS"
+// LongPulse_mS,<GPIO>,<state>,<duration>
+// Sens a "long" (typ. > 50 msec) pulse.
+// Command is NOT blocking for the duration of the pulse (duration in msec)
+// **************************************************************************/
 String Command_longPulse_msec(struct EventStruct *event, const char *Line)
 {
   return Command_longPulse(event, Line, true);
@@ -199,7 +238,7 @@ String Command_longPulse_msec(struct EventStruct *event, const char *Line)
 
 String Command_longPulse(struct EventStruct *event, const char *Line, bool time_in_msec)
 {
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     portStatusStruct tempStatus;
     const uint32_t   key = createInternalGpioKey(event->Par1);
@@ -226,16 +265,21 @@ String Command_longPulse(struct EventStruct *event, const char *Line, bool time_
 
     // Create a future system timer call to set the GPIO pin back to its normal value.
     setPluginTaskTimer(timer, PLUGIN_ID_000, event->TaskIndex, event->Par1, inversePinStateValue);
-    String log = String(F("SW   : GPIO ")) + String(event->Par1) +
+    String log = String(F("GPIO : ")) + String(event->Par1) +
                  String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "servo"
+// Servo,<servo>,<GPIO>,<position>
+// **************************************************************************/
 String Command_servo(struct EventStruct *event, const char *Line)
 {
   // GPIO number is stored inside event->Par2 instead of event->Par1 as in all the other commands
@@ -282,83 +326,97 @@ String Command_servo(struct EventStruct *event, const char *Line)
     tempStatus.output  = event->Par3;
     tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
     savePortStatus(key, tempStatus);
-    String log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
+    String log = String(F("GPIO : ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par2, log, 0));
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "status_gpio"
+// status_gpio,<GPIO>
+// Get the status of the given GPIO pin.
+// **************************************************************************/
 String Command_status_gpio(struct EventStruct *event, const char *Line)
 {
-  const uint32_t key = createInternalGpioKey(event->Par1);
+  if (checkValidGpioPin(event)) {
+    const uint32_t key = createInternalGpioKey(event->Par1);
 
-  SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
 
-  // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par2, dummyString, 0));
-  return return_command_success();
+    // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par2, dummyString, 0));
+    return return_command_success();
+  }
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "monitor_gpio"
+// monitor_gpio,<GPIO>
+// Make sure the given GPIO pin is tracked in the pin status structure.
+// **************************************************************************/
 String Command_monitor_gpio(struct EventStruct *event, const char *Line)
 {
-  const uint32_t key = createInternalGpioKey(event->Par1);
+  if (checkValidGpioPin(event)) {
+    const uint32_t key = createInternalGpioKey(event->Par1);
 
-  addMonitorToPort(key);
+    addMonitorToPort(key);
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(32);
-    log  = String(F("GPIO "));
-    log += event->Par1;
-    log += F(" added to monitor list.");
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log.reserve(32);
+      log  = String(F("GPIO "));
+      log += event->Par1;
+      log += F(" added to monitor list.");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+    return return_command_success();
   }
-  SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-  return return_command_success();
+  return return_command_failed();
 }
 
+// **************************************************************************/
+// Command "unmonitor_gpio"
+// unmonitor_gpio,<GPIO>
+// Remove the given GPIO pin from the pin status structure.
+// **************************************************************************/
 String Command_unmonitor_gpio(struct EventStruct *event, const char *Line)
 {
-  const uint32_t key = createInternalGpioKey(event->Par1);
+  if (checkValidGpioPin(event)) {
+    const uint32_t key = createInternalGpioKey(event->Par1);
 
-  removeMonitorFromPort(key);
+    removeMonitorFromPort(key);
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(36);
-    log  = String(F("GPIO "));
-    log += event->Par1;
-    log += F(" removed from monitor list.");
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log.reserve(36);
+      log  = String(F("GPIO "));
+      log += event->Par1;
+      log += F(" removed from monitor list.");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+    return return_command_success();
   }
-  SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-  return return_command_success();
+  return return_command_failed();
 }
 
-String Command_inputswitchstate(struct EventStruct *event, const char *Line)
-{
-  portStatusStruct tempStatus;
-  const uint32_t   key = createInternalGpioKey(Settings.TaskDevicePin1[event->Par1]);
 
-  // WARNING: operator [] creates an entry in the map if key does not exist
-  // So the next command should be part of each command:
-  tempStatus = globalMapPortStatus[key];
-
-  UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
-  tempStatus.output                    = event->Par2;
-  tempStatus.command                   = 1;
-  savePortStatus(key, tempStatus);
-  return return_command_success();
-}
-
+// **************************************************************************/
+// Command "rtttl"
+// play a melody on pin par1
+// **************************************************************************/
 String Command_rtttl(struct EventStruct *event, const char *Line)
 {
   // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more
   // info.
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     // FIXME TD-er  For now disabled, so we can see where the notes parameters are.
 
@@ -391,8 +449,9 @@ String Command_rtttl(struct EventStruct *event, const char *Line)
 
        // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
      */
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
 // **************************************************************************/
@@ -401,7 +460,7 @@ String Command_rtttl(struct EventStruct *event, const char *Line)
 // **************************************************************************/
 String Command_tone(struct EventStruct *event, const char *Line)
 {
-  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
+  if (checkValidGpioPin(event))
   {
     portStatusStruct tempStatus;
     const uint32_t   key = createInternalGpioKey(event->Par1);
@@ -424,9 +483,9 @@ String Command_tone(struct EventStruct *event, const char *Line)
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
     // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_000, event->Par1, log, 0));
+    return return_command_success();
   }
-
-  return return_command_success();
+  return return_command_failed();
 }
 
 // **************************************************************************/
@@ -472,6 +531,17 @@ bool read_GPIO_state(byte pinNumber, byte pinMode) {
   // Do not read from the pin while mode is set to PWM or servo.
   // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
   return digitalRead(pinNumber) == HIGH;
+}
+
+bool checkValidGpioPin(struct EventStruct *event) {
+  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX)) { return true; }
+
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log;
+    log  = F("GPIO : Invalid GPIO pin given: ");
+    log += event->Par1;
+    addLog(LOG_LEVEL_ERROR, log);
+  }
 }
 
 void analogWriteESP(int pin, int value)

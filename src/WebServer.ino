@@ -3835,32 +3835,7 @@ void handle_pinstates() {
     TXBuffer += port;
     html_TD();
     byte mode = it->second.mode;
-    switch (mode)
-    {
-      case PIN_MODE_UNDEFINED:
-        TXBuffer += F("Undefined");
-        break;
-      case PIN_MODE_INPUT:
-        TXBuffer += F("Input");
-        break;
-      case PIN_MODE_INPUT_PULLUP:
-        TXBuffer += F("Input PullUp");
-        break;
-      case PIN_MODE_OUTPUT:
-        TXBuffer += F("Output");
-        break;
-      case PIN_MODE_PWM:
-        TXBuffer += F("PWM");
-        break;
-      case PIN_MODE_SERVO:
-        TXBuffer += F("Servo");
-        break;
-      case PIN_MODE_OFFLINE:
-        TXBuffer += F("Offline");
-        break;
-      default:
-        TXBuffer += F("ERROR: Not Defined");
-    }
+    TXBuffer += getPinModeString(mode);
     html_TD();
     TXBuffer += it->second.state;
     html_TD();
@@ -3896,24 +3871,7 @@ void handle_pinstates() {
       TXBuffer += pinStates[x].index;
       html_TD();
       byte mode = pinStates[x].mode;
-      switch (mode)
-      {
-        case PIN_MODE_UNDEFINED:
-          TXBuffer += F("undefined");
-          break;
-        case PIN_MODE_INPUT:
-          TXBuffer += F("input");
-          break;
-        case PIN_MODE_OUTPUT:
-          TXBuffer += F("output");
-          break;
-        case PIN_MODE_PWM:
-          TXBuffer += F("PWM");
-          break;
-        case PIN_MODE_SERVO:
-          TXBuffer += F("servo");
-          break;
-      }
+      TXBuffer += getPinModeString(mode);
       html_TD();
       TXBuffer += pinStates[x].value;
     }
