@@ -9,7 +9,7 @@ Supported hardware: |P000_usedby_GPIO|
   :widths: 20, 30
 
   "
-  ``GPIO,<gpio>,<state>``
+  ``GPIO,<GPIO>,<state>``
 
   GPIO: 0 ... 16
 
@@ -24,6 +24,16 @@ Supported hardware: |P000_usedby_GPIO|
   **Basic on/off.**.
   We can control a pin with simple http URL commands. To change the pin to high or low steady output. Setting GPIO to **2** means
   that it will be able to detect low level relays (with high impedance, Z).
+  "
+  "
+  ``GPIOtoggle,<GPIO>``
+
+  GPIO: 0 ... 16
+
+  ","
+  **Toggle on/off.**.
+  Toggle the current (output) state of the given GPIO pin.
+  This will only be executed on pins set to be in output mode.
   "
   "
   ``LongPulse,<GPIO>,<state>,<duration>``
