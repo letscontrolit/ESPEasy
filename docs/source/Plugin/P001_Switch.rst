@@ -67,7 +67,8 @@ Sensor
 
 
 * **Switch button type**: Set the type of switch, "Normal switch", "Push button active low", or "Push button active high".
-  * Normal switch: If you use a normal switch ()
+  * Normal switch: If you use a normal switch you should use this (you can always start with this setting).
+
   * Push button active low: If you use a momentary switch you may want the state to be activated when you have it published
     and not wait for it to be released. Depending on your setup you can then experiment with the active low / active high
     to make it behave as you want.
