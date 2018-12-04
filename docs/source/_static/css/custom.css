@@ -72,17 +72,20 @@ h2 {
   padding: 4px 7px;
 }
 h3 {
-  background-color: #3492E2;
-  color: #FFFFFF;
+  background-color: none;
+  color: #3492E2;
   font-size: 15px;
   padding: 4px 7px;
+  border-bottom-style: solid;
+  border-bottom-color: #3492E2;
 }
 h4 {
-  background-color: #A8A8A8;
+  background-color: none;
   color: #000000;
   font-size: 15px;
   padding: 4px 7px;
-  margin-left: 10px;
+  border-bottom-style: solid;
+  border-bottom-color: #000000;
 }
 .headerlink {
   color: #FFFFFF;
