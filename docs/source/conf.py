@@ -18,7 +18,6 @@
 from recommonmark.parser import CommonMarkParser
 import sphinx_bootstrap_theme
 
-
 # -- Project information -----------------------------------------------------
 
 project = u'ESP Easy'

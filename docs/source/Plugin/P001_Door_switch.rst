@@ -62,12 +62,13 @@ Sensor
 * **Switch type**: Set the switch type to either "Switch" or "Dimmer". Door (reed) switch is a "Switch".
 
   * Switch: The default way of handling a switch is by a on/off button. It's either on (:code:`1`) or off (:code:`0`).
+
   * Dimmer: Not used by door (reed) switches, if you still want to use it you can have a look at the
     :ref:`P001_Switch_page` page.
 
-
 * **Switch button type**: Set the type of switch, "Normal switch", "Push button active low", or "Push button active high".
   * Normal switch: This is the general setting to use for a PIR switch.
+
   * Push button active low: Not used by door (reed) switches (in general), if you still want to use it you can have a look at the
     :ref:`P001_Switch_page` page.
 

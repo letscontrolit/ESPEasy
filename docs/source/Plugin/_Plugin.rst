@@ -104,122 +104,129 @@ There's three different released versions of ESP Easy:
    ":ref:`P080_page`","|P080_status|","P080"
    ":ref:`P081_page`","|P081_status|","P081"
 
+
+
+Internal GPIO handling
+----------------------
+
+Plugins: :ref:`P000_page`
+
 Analog input
-============
+------------
 
 Plugins: |Plugin_Analog_input|
 
 Color
-=====
+-----
 
 Plugins: |Plugin_Color|
 
 Communication
-=============
+-------------
 
 Plugins: |Plugin_Communication|
 
 Display
-=======
+-------
 
 Plugins: |Plugin_Display|
 
 Distance
-========
+--------
 
 Plugins: |Plugin_Distance|
 
 Dust
-====
+----
 
 Plugins: |Plugin_Dust|
 
 Energy (AC)
-===========
+-----------
 
 Plugins: |Plugin_Energy_AC|
 
 Energy (DC)
-===========
+-----------
 
 Plugins: |Plugin_Energy_DC|
 
 Environment
-===========
+-----------
 
 Plugins: |Plugin_Environment|
 
 Extra IO
-========
+--------
 
 Plugins: |Plugin_Extra_IO|
 
 Gases
-=====
+-----
 
 Plugins: |Plugin_Gases|
 
 Generic
-=======
+-------
 
 Plugins: |Plugin_Generic|
 
 Gesture
-=======
+-------
 
 Plugins: |Plugin_Gesture|
 
 Gyro
-====
+----
 
 Plugins: |Plugin_Gyro|
 
 Hardware
-========
+--------
 
 Plugins: |Plugin_Hardware|
 
 Keypad
-======
+------
 
 Plugins: |Plugin_Keypad|
 
 Light/Lux
-=========
+---------
 
 Plugins: |Plugin_Light_Lux|
 
 Motor
-=====
+-----
 
 Plugins: |Plugin_Motor|
 
 Notify
-======
+------
 
 Plugins: |Plugin_Notify|
 
 Output
-======
+------
 
 Plugins: |Plugin_Output|
 
 Regulator
-=========
+---------
 
 Plugins: |Plugin_Regulator|
 
 RFID
-====
+----
 
 Plugins: |Plugin_RFID|
 
 Switch input
-============
+------------
 
 Plugins: |Plugin_Switch_input|
 
 Weight
-======
+------
 
 Plugins: |Plugin_Weight|

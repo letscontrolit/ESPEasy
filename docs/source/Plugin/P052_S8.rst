@@ -48,13 +48,49 @@ use the Wemos D1 mini as the host of the 5V input to the S8 and connect the Wemo
 Setup
 -----
 
-Set up the device according to:
+.. image:: P052_Setup_S8_1.png
 
-1st GPIO: :blue:`GPIO-13 (D7)`
+Task settings
+~~~~~~~~~~~~~
 
-2st GPIO: :blue:`GPIO-15 (D8)`
+* **Device**: Name of plugin
+* **Name**: Name of the task (example name **CO2**)
+* **Enable**: Should the task be enabled or not
 
-Sensor: :blue:`Carbon Dioxide`
+Sensor
+^^^^^^
+
+* **GPIO <-- TX**: TX is generally set to **GPIO 13 (D7)**.
+* **GPIO --> RX**: RX is generally set to **GPIO 15 (D8)**.
+* **Sensor**: Only **Carbond Dioxide** is supported by the S8.
+
+.. note:: TX GPIO 1 (D10) and RX GPIO 3 (D9) is hardware serial and have been reported to work better for some users over time compared to the
+   bit-banging (soft) serial used over GPIO 13 and 15.
+
+Data acquisition
+^^^^^^^^^^^^^^^^
+
+* **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
+* **Interval**: How often should the task publish its value (5..15 seconds is normal).
+
+Indicators (recommended settings)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. csv-table::
+   :header: "Indicator", "Value Name", "Interval", "Decimals", "Extra information"
+   :widths: 8, 5, 5, 5, 40
+
+   "Error status", "N/A", "", "", "Used for tSense (K70), K30, K33"
+   "Carbon dioxide", "ppm", "15", "0", ""
+   "Temperature", "N/A", "", "", "Used for tSense (K70), K30, K33"
+   "Humidity", "N/A", "", "", "Used for tSense (K70), K30, K33"
+   "Relay status", "N/A", "", "", "Used for tSense (K70), K30, K33"
+   "Temperature adjustment", "N/A", "", "", "Used for tSense (K70), K30, K33"
+   "ABC period", "N/A", "", "", "Used for tSense (K70), K30, K33"
+
+.. note:: If you want to use the relative carbon dioxide percentage (2000ppm = 100% and 350ppm = 0%) you should use this
+          :code:`100-(2000-%value%)/(2000-350)*100` as a formula. And instead of :code:`ppm` as value name you should use
+          :code:`RCO2` (relative CO2) and 1 decimal.
 
 Rules examples
 --------------
@@ -67,17 +103,6 @@ Rules examples
   endif
  endon
 
-Indicators (recommended settings)
----------------------------------
-
-.. csv-table::
-   :header: "Indicator", "Value Name", "Interval", "Decimals", "Extra information"
-   :widths: 8, 5, 5, 5, 40
-
-   "Status", "N/A", "", "", ""
-   "Carbon Dioxide", "ppm", "15", "0", ""
-   "Temperature", "N/A", "", "", "Used for tSense (K70), K30, K33"
-   "Humidity", "N/A", "", "", "Used for tSense (K70), K30, K33"
 
 Where to buy
 ------------
