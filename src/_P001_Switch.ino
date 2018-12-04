@@ -566,7 +566,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       {
         String command = parseString(string, 1);
         if (command == F("inputswitchstate")) {
-          if (checkValidGpioPin(event)) {
+          if (checkValidGpioPin(event->Par1)) {
             portStatusStruct tempStatus;
             const uint32_t   key = createInternalGpioKey(Settings.TaskDevicePin1[event->Par1]);
 
