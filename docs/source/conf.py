@@ -306,4 +306,6 @@ rst_prolog = """
 .. |removed| replace:: :red:`removed`
 .. |fixed| replace:: :purple:`fixed`
 
+.. |unit_url| replace:: http://<esp easy ip/host name>/
+
 """
