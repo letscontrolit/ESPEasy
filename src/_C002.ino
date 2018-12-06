@@ -102,6 +102,7 @@ boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
                       {
                         case 0:
                           pwmValue = 0;
+                          UserVar[baseVar] = pwmValue;
                           break;
                         case 1:
                           pwmValue = UserVar[baseVar];
