@@ -18,7 +18,6 @@
 from recommonmark.parser import CommonMarkParser
 import sphinx_bootstrap_theme
 
-
 # -- Project information -----------------------------------------------------
 
 project = u'ESP Easy'
@@ -306,5 +305,7 @@ rst_prolog = """
 .. |improved| replace:: :orange:`improved`
 .. |removed| replace:: :red:`removed`
 .. |fixed| replace:: :purple:`fixed`
+
+.. |unit_url| replace:: http://<esp easy ip/host name>/
 
 """

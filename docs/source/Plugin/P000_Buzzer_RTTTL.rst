@@ -89,7 +89,7 @@ No device is needed.
 Commands
 --------
 
-.. include:: P001_commands_RTTTL.rst
+.. include:: P001_commands_RTTTL.repl
 
 Where to buy
 ------------
