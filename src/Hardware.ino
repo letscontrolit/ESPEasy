@@ -1,40 +1,64 @@
 /********************************************************************************************\
 * Initialize specific hardware settings (only global ones, others are set through devices)
 \*********************************************************************************************/
+bool applyGpioPinBootState(byte gpio_pin, byte PinBootState) {
+  if (!checkValidGpioBootStatePin(gpio_pin)) return false;
+
+  bool serialPinConflict = (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3));
+  if (serialPinConflict) return false;
+
+  int pinnr = -1;
+  bool input, output, warning;
+  getGpioInfo(gpio_pin, pinnr, input, output, warning);
+  const uint32_t key = createInternalGpioKey(gpio_pin);
+  switch(PinBootState)
+  {
+    case 0:
+      if (!input) return false;
+      pinMode(gpio_pin,INPUT);
+      globalMapPortStatus[key].mode = PIN_MODE_INPUT;
+      globalMapPortStatus[key].init = 1;
+      read_GPIO_state(gpio_pin, PIN_MODE_INPUT);
+      //setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
+      break;
+    case 1:
+      if (!output) return false;
+      pinMode(gpio_pin,OUTPUT);
+      digitalWrite(gpio_pin,LOW);
+      globalMapPortStatus[key].state = LOW;
+      globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
+      globalMapPortStatus[key].init = 1;
+      //setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
+      break;
+    case 2:
+      if (!output) return false;
+      pinMode(gpio_pin,OUTPUT);
+      digitalWrite(gpio_pin,HIGH);
+      globalMapPortStatus[key].state = HIGH;
+      globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
+      globalMapPortStatus[key].init = 1;
+      //setPinState(1, gpio_pin, PIN_MODE_OUTPUT, HIGH);
+      break;
+    case 3:
+      if (!input) return false;
+      pinMode(gpio_pin,INPUT_PULLUP);
+      globalMapPortStatus[key].mode = PIN_MODE_INPUT_PULLUP;
+      globalMapPortStatus[key].init = 1;
+      read_GPIO_state(gpio_pin, PIN_MODE_INPUT_PULLUP);
+      //setPinState(1, gpio_pin, PIN_MODE_INPUT, 0);
+      break;
+  }
+  return true;
+}
+
 
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
-  for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
-    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-    if (!serialPinConflict && Settings.PinBootStates[gpio] != 0) {
-      const uint32_t key = createKey(1,gpio);
-      switch(Settings.PinBootStates[gpio])
-      {
-        case 1:
-          pinMode(gpio,OUTPUT);
-          digitalWrite(gpio,LOW);
-          globalMapPortStatus[key].state = LOW;
-          globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init = 1;
-          //setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-          break;
-        case 2:
-          pinMode(gpio,OUTPUT);
-          digitalWrite(gpio,HIGH);
-          globalMapPortStatus[key].state = HIGH;
-          globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init = 1;
-          //setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-          break;
-        case 3:
-          pinMode(gpio,INPUT_PULLUP);
-          globalMapPortStatus[key].state = 0;
-          globalMapPortStatus[key].mode = PIN_MODE_INPUT_PULLUP;
-          globalMapPortStatus[key].init = 1;
-          //setPinState(1, gpio, PIN_MODE_INPUT, 0);
-          break;
-      }
+  for (byte gpio_pin = 0; gpio_pin < PIN_D_MAX; ++gpio_pin) {
+    if (Settings.PinBootStates[gpio_pin] != 0) {
+      // Do not change at boot when set to default.
+      applyGpioPinBootState(gpio_pin, Settings.PinBootStates[gpio_pin]);
     }
   }
 
@@ -183,14 +207,14 @@ void setFactoryDefault(DeviceModel model) {
 /********************************************************************************************\
   Add pre defined plugins and rules.
   \*********************************************************************************************/
-void addSwitchPlugin(byte taskIndex, byte gpio, const String& name, bool activeLow) {
+void addSwitchPlugin(byte taskIndex, byte gpio_pin, const String& name, bool activeLow) {
   setTaskDevice_to_TaskIndex(1, taskIndex);
   setBasicTaskValues(
     taskIndex,
     0,            // taskdevicetimer
     true,         // enabled
     name,         // name
-    gpio,         // pin1
+    gpio_pin,         // pin1
     -1,            // pin2
     -1);           // pin3
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
@@ -224,7 +248,7 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
     fileName += '/';
   #endif
   fileName += F("rules1.txt");
-  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio,GNR,1\n  else\n    gpio,GNR,0\n  endif\nendon\n");
+  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio_pin,GNR,1\n  else\n    gpio_pin,GNR,0\n  endif\nendon\n");
   rule.replace(F("BNR"), String(buttonNumber));
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);
@@ -241,20 +265,35 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
+// return true when pin can be used.
+bool checkValidGpioPin(byte gpio_pin) {
+  int pinnr = -1;
+  bool input, output, warning;
+  return getGpioInfo(gpio_pin, pinnr, input, output, warning);
+}
 
-#ifdef ESP32
+bool checkValidGpioBootStatePin(byte gpio_pin) {
+  #ifdef ESP8266
+  // GPIO 16 is a strange pin, pulled to GND and when used to wake from deep sleep,
+  // it will trigger a reset when changed.
+  if (gpio_pin == 16) return false;
+  #endif
+  return checkValidGpioPin(gpio_pin);
+}
 
 //********************************************************************************
 // Get info of a specific GPIO pin.
 //********************************************************************************
-bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
+#ifdef ESP32
+// return true when pin can be used.
+bool getGpioInfo(int gpio_pin, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
 
   // Input GPIOs:  0-19, 21-23, 25-27, 32-39
   // Output GPIOs: 0-19, 21-23, 25-27, 32-33
-  input = gpio <= 39;
-  output = gpio <= 33;
-  if (gpio < 0 || gpio == 20 || gpio == 24 || (gpio > 27 && gpio < 32)) {
+  input = gpio_pin <= 39;
+  output = gpio_pin <= 33;
+  if (gpio_pin < 0 || gpio_pin == 20 || gpio_pin == 24 || (gpio_pin > 27 && gpio_pin < 32)) {
     input = false;
     output = false;
   }
@@ -263,8 +302,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   // GPIO 0 & 2 can't be used as an input. State during boot is dependent on boot mode.
-  warning = (gpio == 0 || gpio == 2);
-  if (gpio == 12) {
+  warning = (gpio_pin == 0 || gpio_pin == 2);
+  if (gpio_pin == 12) {
     // If driven High, flash voltage (VDD_SDIO) is 1.8V not default 3.3V.
     // Has internal pull-down, so unconnected = Low = 3.3V.
     // May prevent flashing and/or booting if 3.3V flash is used and this pin is
@@ -272,24 +311,24 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     // See the ESP32 datasheet for more details.
     warning = true;
   }
-  if (gpio == 15) {
+  if (gpio_pin == 15) {
     // If driven Low, silences boot messages printed by the ROM bootloader.
     // Has an internal pull-up, so unconnected = High = normal output.
     warning = true;
   }
   return true;
 };
-
 #else
-
 // return true when pin can be used.
-bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
+bool getGpioInfo(int gpio_pin, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1;
   input = true;
   output = true;
   // GPIO 0, 2 & 15 can't be used as an input. State during boot is dependent on boot mode.
-  warning = (gpio == 0 || gpio == 2 || gpio == 15);
-  switch (gpio) {
+  // GPIO 16 is a strange pin, pulled to GND and when used to wake from deep sleep,
+  // it will trigger a reset when changed.
+  warning = (gpio_pin == 0 || gpio_pin == 2 || gpio_pin == 15 || gpio_pin == 16);
+  switch (gpio_pin) {
     case  0: pinnr =  3; break;
     case  1: pinnr = 10; break;
     case  2: pinnr =  4; break;
@@ -310,7 +349,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
   #ifndef ESP8285
-  if (gpio == 9 || gpio == 10) {
+  if (gpio_pin == 9 || gpio_pin == 10) {
     // On ESP8266 used for flash
     warning = true;
   }

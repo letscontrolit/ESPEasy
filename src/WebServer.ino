@@ -1742,21 +1742,28 @@ void handle_hardware() {
     Settings.Pin_i2c_scl     = getFormItemInt(F("pscl"));
     Settings.InitSPI = isFormItemChecked(F("initspi"));      // SPI Init
     Settings.Pin_sd_cs  = getFormItemInt(F("sd"));
-    int gpio = 0;
+    int gpio_pin = 0;
     // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
-    while (gpio < MAX_GPIO  && gpio < 17) {
-      if (Settings.UseSerial && (gpio == 1 || gpio == 3)) {
+    while (gpio_pin <= MAX_GPIO  && gpio_pin < 17) {
+      if (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3)) {
         // do not add the pin state select for these pins.
       } else {
         int pinnr = -1;
         bool input, output, warning;
-        if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+        if (getGpioInfo(gpio_pin, pinnr, input, output, warning)) {
           String int_pinlabel = "p";
-          int_pinlabel += gpio;
-          Settings.PinBootStates[gpio] = getFormItemInt(int_pinlabel);
+          int_pinlabel += gpio_pin;
+          byte NewPinBootState = getFormItemInt(int_pinlabel);
+          if (Settings.PinBootStates[gpio_pin] != NewPinBootState) {
+            // Setting has changed, apply setting now.
+            if (applyGpioPinBootState(gpio_pin, NewPinBootState)) {
+              // Only store the settings when they are applicable.
+              Settings.PinBootStates[gpio_pin] = NewPinBootState;
+            }
+          }
         }
       }
-      ++gpio;
+      ++gpio_pin;
     }
     addHtmlError(SaveSettings());
   }
@@ -1768,7 +1775,7 @@ void handle_hardware() {
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(formatGpioName_output("LED"), "pled", Settings.Pin_status_led);
   addFormCheckBox(F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
-  addFormNote(F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
+  addFormNote(F("On most boards, use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(F("Reset Pin"));
   addFormPinSelect(formatGpioName_input(F("Switch")), "pres", Settings.Pin_Reset);
@@ -1788,26 +1795,30 @@ void handle_hardware() {
 #endif
 
   addFormSubHeader(F("GPIO boot states"));
-  int gpio = 0;
+  int gpio_pin = 0;
   // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
-  while (gpio < MAX_GPIO  && gpio < 17) {
+  while (gpio_pin <= MAX_GPIO  && gpio_pin < 17) {
     bool enabled = true;
-    if (Settings.UseSerial && (gpio == 1 || gpio == 3)) {
+    if (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3)) {
       // do not add the pin state select for these pins.
       enabled = false;
     }
     int pinnr = -1;
     bool input, output, warning;
-    if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+    if (getGpioInfo(gpio_pin, pinnr, input, output, warning)) {
+      enabled = checkValidGpioBootStatePin(gpio_pin);
       String label;
       label.reserve(32);
       label = F("Pin mode ");
-      label += createGPIO_label(gpio, pinnr, input, output, warning);
+      label += createGPIO_label(gpio_pin, pinnr, input, output, warning);
       String int_pinlabel = "p";
-      int_pinlabel += gpio;
-      addFormPinStateSelect(label, int_pinlabel, Settings.PinBootStates[gpio], enabled);
+      int_pinlabel += gpio_pin;
+      // Add a GPIO pin select dropdown list
+      addRowLabel(label);
+      String options[4] = { F("Default (Input)"), F("Output Low"), F("Output High"), F("Input Pull-up") };
+      addSelector(int_pinlabel, 4, options, NULL, NULL, Settings.PinBootStates[gpio_pin], false, enabled);
     }
-    ++gpio;
+    ++gpio_pin;
   }
   addFormSeparator(2);
 
@@ -1823,20 +1834,6 @@ void handle_hardware() {
 
 }
 
-//********************************************************************************
-// Add a GPIO pin select dropdown list
-//********************************************************************************
-void addFormPinStateSelect(const String& label, const String& id, int choice, bool enabled)
-{
-  addRowLabel(label);
-  addPinStateSelect(id, choice, enabled);
-}
-
-void addPinStateSelect(const String& name, int choice, bool enabled)
-{
-  String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
-  addSelector(name, 4, options, NULL, NULL, choice, false, enabled);
-}
 
 //********************************************************************************
 // Add a IP Access Control select dropdown list
@@ -2584,12 +2581,12 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 //********************************************************************************
 // Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
 //********************************************************************************
-String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warning) {
-  if (gpio < 0) return F("- None -");
+String createGPIO_label(int gpio_pin, int pinnr, bool input, bool output, bool warning) {
+  if (gpio_pin < 0) return F("- None -");
   String result;
   result.reserve(24);
   result = F("GPIO-");
-  result += gpio;
+  result += gpio_pin;
   if (pinnr >= 0) {
     result += F(" (D");
     result += pinnr;
@@ -2603,10 +2600,10 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
     result += ' ';
     result += F(HTML_SYMBOL_WARNING);
   }
-  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+  bool serialPinConflict = (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3));
   if (serialPinConflict) {
-    if (gpio == 1) { result += F(" TX0"); }
-    if (gpio == 3) { result += F(" RX0"); }
+    if (gpio_pin == 1) { result += F(" TX0"); }
+    if (gpio_pin == 3) { result += F(" RX0"); }
   }
   return result;
 }
@@ -2622,18 +2619,18 @@ void addPinSelect(boolean forI2C, String name,  int choice)
   String * gpio_labels = new String[NR_ITEMS_PIN_DROPDOWN];
   int * gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
 
-  // At i == 0 && gpio == -1, add the "- None -" option first
+  // At i == 0 && gpio_pin == -1, add the "- None -" option first
   int i = 0;
-  int gpio = -1;
-  while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
+  int gpio_pin = -1;
+  while (i < NR_ITEMS_PIN_DROPDOWN && gpio_pin <= MAX_GPIO) {
     int pinnr = -1;
     bool input, output, warning;
-    if (getGpioInfo(gpio, pinnr, input, output, warning) || i == 0) {
-      gpio_labels[i] = createGPIO_label(gpio, pinnr, input, output, warning);
-      gpio_numbers[i] = gpio;
+    if (getGpioInfo(gpio_pin, pinnr, input, output, warning) || i == 0) {
+      gpio_labels[i] = createGPIO_label(gpio_pin, pinnr, input, output, warning);
+      gpio_numbers[i] = gpio_pin;
       ++i;
     }
-    ++gpio;
+    ++gpio_pin;
   }
   renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, name, choice, NR_ITEMS_PIN_DROPDOWN);
   delete[] gpio_numbers;

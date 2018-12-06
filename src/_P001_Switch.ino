@@ -226,7 +226,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         //apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
-        if (Settings.TaskDevicePin1[event->TaskIndex] >= 0 && Settings.TaskDevicePin1[event->TaskIndex] <= PIN_D_MAX)
+        if (checkValidGpioPin(Settings.TaskDevicePin1[event->TaskIndex]))
         {
           portStatusStruct newStatus;
           const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);
@@ -352,7 +352,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //long timerstats = millis();
 
         //Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
-        if (Settings.TaskDevicePin1[event->TaskIndex]>=0 && Settings.TaskDevicePin1[event->TaskIndex]<=PIN_D_MAX) {
+        if (checkValidGpioPin(Settings.TaskDevicePin1[event->TaskIndex])) {
 
           portStatusStruct currentStatus;
           const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);

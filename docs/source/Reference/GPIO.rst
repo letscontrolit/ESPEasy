@@ -2,6 +2,31 @@ GPIO
 ****
 
 
+GPIO boot states
+----------------
+
+Via the web interface (tab "Hardware"), GPIO pins can be set to some initial state at boot.
+
+* Default (INPUT)
+* Output Low
+* Output High
+* Input Pull-up
+
+A GPIO pin used as input may need a pull-up or pull-down resistor to make the observed signal less susceptible to noise.
+For example cables may act as an antenna and thus pick up noise.
+If such a cable is not 'terminated' or pulled to a certain level, it may give incorrect readings.
+
+It is good practice to enable internal (or external) pull-up or pull-down resistors
+to unused pins to make sure they do not cause undefined or unexpected behavior.
+
+Some boards already have pull-up or pull-down resistors mounted on the board itself, or present in connected sensors.
+When already present, there is no need to enable pull-up or pull-down resistors on those input pins.
+It may even harm stability of the observed signal.
+
+The value of an internal pull-up resistor is between 30 kOhm and 100 kOhm.
+
+For ESP8266 see also `ESP8266 Arduino Core - Digital IO <https://arduino-esp8266.readthedocs.io/en/latest/reference.html#digital-io>`_
+and the notes below.
 
 Best pins to use on ESP8266
 ---------------------------
@@ -107,6 +132,10 @@ Other limitations are:
 
 * GPIO16 has a built-in pull-down resistor (all others have built-in pull-up)
 * To enable the pull-down resistor for GPIO16, you have to use ``INPUT_PULLDOWN_16``
+
+This pin is disabled to be set as boot state pin, since it can be connected to the RST pin to allow deep sleep.
+If connected to RST, any toggle to "high" will cause a reset, which makes it
+impossible to recover from an incorrect configuration.
 
 
 Best pins to use on ESP32
