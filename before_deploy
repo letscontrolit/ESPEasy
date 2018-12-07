@@ -43,14 +43,28 @@ for ENV in \
   esp32dev\
   esp32test_1M8_partition;\
 do
-  echo
-  echo "### Deploying environment $ENV for version $VERSION"
-  BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
-  cp .pioenvs/${ENV}/firmware.bin $BIN
-  python2 crc2.py $BIN
-  mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
-done
+  MAX_FILESIZE=1044464
+  if [[ ${ENV} == *"1024_OTA"* ]]; then
+    # max 600 kiB
+    MAX_FILESIZE=614400
+  fi
+  if [[ ${ENV} == *"esp32"* ]]; then
+    # What to do with the esp32dev build???
+    MAX_FILESIZE=1900544
+  fi
 
+  FILESIZE=$(stat -c%s .pioenvs/${ENV}/firmware.bin )
+  if (( FILESIZE < MAX_FILESIZE )); then
+    echo
+    echo "### Deploying environment $ENV for version $VERSION"
+    BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+    cp .pioenvs/${ENV}/firmware.bin $BIN
+    python2 crc2.py $BIN
+    mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+  else
+    echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+  fi
+done
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
