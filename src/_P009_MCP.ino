@@ -32,18 +32,6 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_ID_009         9
 #define PLUGIN_NAME_009       "Switch input - MCP23017"
 #define PLUGIN_VALUENAME1_009 "Switch"
-#define PLUGIN_009_DOUBLECLICK_MIN_INTERVAL 1000
-#define PLUGIN_009_DOUBLECLICK_MAX_INTERVAL 3000
-#define PLUGIN_009_LONGPRESS_MIN_INTERVAL 1000
-#define PLUGIN_009_LONGPRESS_MAX_INTERVAL 5000
-#define PLUGIN_009_DC_DISABLED 0
-#define PLUGIN_009_DC_LOW 1
-#define PLUGIN_009_DC_HIGH 2
-#define PLUGIN_009_DC_BOTH 3
-#define PLUGIN_009_LONGPRESS_DISABLED 0
-#define PLUGIN_009_LONGPRESS_LOW 1
-#define PLUGIN_009_LONGPRESS_HIGH 2
-#define PLUGIN_009_LONGPRESS_BOTH 3
 
 boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 {
@@ -90,45 +78,13 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           globalMapPortStatus[key].previousTask = event->TaskIndex;
         }
 
-        addFormCheckBox(F("Send Boot state") ,F("p009_boot"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addSendBootStateForm(event->TaskIndex, 0);
 
-        //@giig1967-20181022
-        addFormSubHeader(F("Advanced event management"));
+        addAdvancedEventManagementSubHeader();
 
-        addFormNumericBox(F("De-bounce (ms)"), F("p009_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
-
-        //set minimum value for doubleclick MIN max speed
-        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL)
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
-
-        byte choiceDC = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        String buttonDC[4];
-        buttonDC[0] = F("Disabled");
-        buttonDC[1] = F("Active only on LOW (EVENT=3)");
-        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-        int buttonDCValues[4] = {PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH,PLUGIN_009_DC_BOTH};
-        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
-
-        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p009_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_009_DOUBLECLICK_MIN_INTERVAL, PLUGIN_009_DOUBLECLICK_MAX_INTERVAL);
-
-        //set minimum value for longpress MIN max speed
-        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_009_LONGPRESS_MIN_INTERVAL)
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
-
-        byte choiceLP = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
-        String buttonLP[4];
-        buttonLP[0] = F("Disabled");
-        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-
-        int buttonLPValues[4] = {PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH,PLUGIN_009_LONGPRESS_BOTH};
-        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
-
-        addFormNumericBox(F("Longpress min. interval (ms)"), F("p009_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_009_LONGPRESS_MIN_INTERVAL, PLUGIN_009_LONGPRESS_MAX_INTERVAL);
-
-        addFormCheckBox(F("Use Safe Button (slower)"), F("p009_sb"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]));
+        addDebounceForm(event->TaskIndex, 0);
+        addDoubleClickEventForm(event->TaskIndex);
+        addLongPressEventForm(event->TaskIndex);
 
         success = true;
         break;
@@ -136,18 +92,10 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = isFormItemChecked(F("p009_boot"));
-
-        //@giig1967-20181022
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p009_debounce"));
-
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p009_dc"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p009_dcmaxinterval"));
-
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p009_lp"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p009_lpmininterval"));
-
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = isFormItemChecked(F("p009_sb"));
+        saveSendBootStateForm(event->TaskIndex, 0);
+        saveDebounceForm(event->TaskIndex, 0);
+        saveDoubleClickEventForm(event->TaskIndex);
+        saveLongPressEventForm(event->TaskIndex);
 
         //check if a task has been edited and remove task flag from the previous pin
         for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
@@ -205,13 +153,8 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis(); //doubleclick timer
           Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis(); //longpress timer
 
-          // @giig1967g-20181022: set minimum value for doubleclick MIN max speed
-          if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_009_DOUBLECLICK_MIN_INTERVAL)
-            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
-
-          // @giig1967g-20181022: set minimum value for longpress MIN max speed
-          if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_009_LONGPRESS_MIN_INTERVAL)
-            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
+          setDoubleClickMinInterval(event->TaskIndex);
+          setLongPressMinInterval(event->TaskIndex);
 
           //setPinState(PLUGIN_ID_009, Settings.TaskDevicePort[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
           savePortStatus(key,newStatus);
