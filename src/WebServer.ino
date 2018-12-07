@@ -1748,9 +1748,9 @@ void handle_hardware() {
       if (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3)) {
         // do not add the pin state select for these pins.
       } else {
-        int pinnr = -1;
+        int nodemcu_pinnr = -1;
         bool input, output, warning;
-        if (getGpioInfo(gpio_pin, pinnr, input, output, warning)) {
+        if (getGpioInfo(gpio_pin, nodemcu_pinnr, input, output, warning)) {
           String int_pinlabel = "p";
           int_pinlabel += gpio_pin;
           byte NewPinBootState = getFormItemInt(int_pinlabel);
@@ -1803,14 +1803,14 @@ void handle_hardware() {
       // do not add the pin state select for these pins.
       enabled = false;
     }
-    int pinnr = -1;
+    int nodemcu_pinnr = -1;
     bool input, output, warning;
-    if (getGpioInfo(gpio_pin, pinnr, input, output, warning)) {
+    if (getGpioInfo(gpio_pin, nodemcu_pinnr, input, output, warning)) {
       enabled = checkValidGpioBootStatePin(gpio_pin);
       String label;
       label.reserve(32);
       label = F("Pin mode ");
-      label += createGPIO_label(gpio_pin, pinnr, input, output, warning);
+      label += createGPIO_label(gpio_pin, nodemcu_pinnr, input, output, warning);
       String int_pinlabel = "p";
       int_pinlabel += gpio_pin;
       // Add a GPIO pin select dropdown list
@@ -2581,15 +2581,15 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 //********************************************************************************
 // Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
 //********************************************************************************
-String createGPIO_label(int gpio_pin, int pinnr, bool input, bool output, bool warning) {
+String createGPIO_label(int gpio_pin, int nodemcu_pinnr, bool input, bool output, bool warning) {
   if (gpio_pin < 0) return F("- None -");
   String result;
   result.reserve(24);
   result = F("GPIO-");
   result += gpio_pin;
-  if (pinnr >= 0) {
+  if (nodemcu_pinnr >= 0) {
     result += F(" (D");
-    result += pinnr;
+    result += nodemcu_pinnr;
     result += ')';
   }
   if (input != output) {
@@ -2623,10 +2623,10 @@ void addPinSelect(boolean forI2C, String name,  int choice)
   int i = 0;
   int gpio_pin = -1;
   while (i < NR_ITEMS_PIN_DROPDOWN && gpio_pin <= MAX_GPIO) {
-    int pinnr = -1;
+    int nodemcu_pinnr = -1;
     bool input, output, warning;
-    if (getGpioInfo(gpio_pin, pinnr, input, output, warning) || i == 0) {
-      gpio_labels[i] = createGPIO_label(gpio_pin, pinnr, input, output, warning);
+    if (getGpioInfo(gpio_pin, nodemcu_pinnr, input, output, warning) || i == 0) {
+      gpio_labels[i] = createGPIO_label(gpio_pin, nodemcu_pinnr, input, output, warning);
       gpio_numbers[i] = gpio_pin;
       ++i;
     }

@@ -212,7 +212,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("p001_elpmininterval"));
 
         //check if a task has been edited and remove 'task' bit from the previous pin
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
           if (it->second.previousTask == event->TaskIndex && getPluginFromKey(it->first)==PLUGIN_ID_001) {
             globalMapPortStatus[it->first].previousTask = -1;
             removeTaskFromPort(it->first);
@@ -270,9 +270,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           Settings.TaskDevicePluginConfig[event->TaskIndex][6]=false;
 
           //store millis for debounce, doubleclick and long press
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=millis(); //debounce timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis(); //doubleclick timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis(); //longpress timer
+          unsigned long currentTime = millis();
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=currentTime; //debounce timer
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=currentTime; //doubleclick timer
+          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=currentTime; //longpress timer
 
           //set minimum value for doubleclick MIN interval speed
           if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)

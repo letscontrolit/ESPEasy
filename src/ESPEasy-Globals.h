@@ -1994,24 +1994,6 @@ String getMiscStatsName(int stat) {
 }
 
 
-struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
-
-  int8_t state : 2; //-1,0,1
-  int8_t output : 2; //-1,0,1
-  int8_t command : 2; //0,1
-  int8_t init : 2; //0,1
-
-  uint8_t mode : 3; //6 current values (max. 8)
-  uint8_t task : 4; //0-15 (max. 16)
-  uint8_t monitor : 1; //0,1
-
-  int8_t previousTask : 8;
-};
-
-std::map<uint32_t, portStatusStruct> globalMapPortStatus;
-
-
 /********************************************************************************************\
   Pre defined settings for off-the-shelf hardware
   \*********************************************************************************************/
@@ -2163,5 +2145,6 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 #include "ESPEasyWiFiEvent.h"
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 #include "WebServer_Rules.h"
+#include "ESPEasy-GPIO.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

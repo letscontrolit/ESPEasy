@@ -1,59 +1,64 @@
 /********************************************************************************************\
-* Initialize specific hardware settings (only global ones, others are set through devices)
+* Initialize specific hardware settings (only global ones, others are set
+through devices)
 \*********************************************************************************************/
 bool applyGpioPinBootState(byte gpio_pin, byte PinBootState) {
-  if (!checkValidGpioBootStatePin(gpio_pin)) return false;
+  if (!checkValidGpioBootStatePin(gpio_pin))
+    return false;
 
-  bool serialPinConflict = (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3));
-  if (serialPinConflict) return false;
+  bool serialPinConflict =
+      (Settings.UseSerial && (gpio_pin == 1 || gpio_pin == 3));
+  if (serialPinConflict)
+    return false;
 
-  int pinnr = -1;
+  int nodemcu_pinnr = -1;
   bool input, output, warning;
-  getGpioInfo(gpio_pin, pinnr, input, output, warning);
+  getGpioInfo(gpio_pin, nodemcu_pinnr, input, output, warning);
   const uint32_t key = createInternalGpioKey(gpio_pin);
-  switch(PinBootState)
-  {
-    case 0:
-      if (!input) return false;
-      pinMode(gpio_pin,INPUT);
-      globalMapPortStatus[key].mode = PIN_MODE_INPUT;
-      globalMapPortStatus[key].init = 1;
-      read_GPIO_state(gpio_pin, PIN_MODE_INPUT);
-      //setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
-      break;
-    case 1:
-      if (!output) return false;
-      pinMode(gpio_pin,OUTPUT);
-      digitalWrite(gpio_pin,LOW);
-      globalMapPortStatus[key].state = LOW;
-      globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
-      globalMapPortStatus[key].init = 1;
-      //setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
-      break;
-    case 2:
-      if (!output) return false;
-      pinMode(gpio_pin,OUTPUT);
-      digitalWrite(gpio_pin,HIGH);
-      globalMapPortStatus[key].state = HIGH;
-      globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
-      globalMapPortStatus[key].init = 1;
-      //setPinState(1, gpio_pin, PIN_MODE_OUTPUT, HIGH);
-      break;
-    case 3:
-      if (!input) return false;
-      pinMode(gpio_pin,INPUT_PULLUP);
-      globalMapPortStatus[key].mode = PIN_MODE_INPUT_PULLUP;
-      globalMapPortStatus[key].init = 1;
-      read_GPIO_state(gpio_pin, PIN_MODE_INPUT_PULLUP);
-      //setPinState(1, gpio_pin, PIN_MODE_INPUT, 0);
-      break;
+  switch (PinBootState) {
+  case 0:
+    if (!input)
+      return false;
+    pinMode(gpio_pin, INPUT);
+    globalMapPortStatus[key].mode = PIN_MODE_INPUT;
+    globalMapPortStatus[key].init = 1;
+    read_GPIO_state(gpio_pin, PIN_MODE_INPUT);
+    // setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
+    break;
+  case 1:
+    if (!output)
+      return false;
+    pinMode(gpio_pin, OUTPUT);
+    digitalWrite(gpio_pin, LOW);
+    globalMapPortStatus[key].state = LOW;
+    globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
+    globalMapPortStatus[key].init = 1;
+    // setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
+    break;
+  case 2:
+    if (!output)
+      return false;
+    pinMode(gpio_pin, OUTPUT);
+    digitalWrite(gpio_pin, HIGH);
+    globalMapPortStatus[key].state = HIGH;
+    globalMapPortStatus[key].mode = PIN_MODE_OUTPUT;
+    globalMapPortStatus[key].init = 1;
+    // setPinState(1, gpio_pin, PIN_MODE_OUTPUT, HIGH);
+    break;
+  case 3:
+    if (!input)
+      return false;
+    pinMode(gpio_pin, INPUT_PULLUP);
+    globalMapPortStatus[key].mode = PIN_MODE_INPUT_PULLUP;
+    globalMapPortStatus[key].init = 1;
+    read_GPIO_state(gpio_pin, PIN_MODE_INPUT_PULLUP);
+    // setPinState(1, gpio_pin, PIN_MODE_INPUT, 0);
+    break;
   }
   return true;
 }
 
-
-void hardwareInit()
-{
+void hardwareInit() {
   // set GPIO pins state if not set to default
   for (byte gpio_pin = 0; gpio_pin < PIN_D_MAX; ++gpio_pin) {
     if (Settings.PinBootStates[gpio_pin] != 0) {
@@ -63,40 +68,35 @@ void hardwareInit()
   }
 
   if (Settings.Pin_Reset != -1)
-    pinMode(Settings.Pin_Reset,INPUT_PULLUP);
+    pinMode(Settings.Pin_Reset, INPUT_PULLUP);
 
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1)
-  {
+  if (Settings.Pin_i2c_sda != -1) {
     String log = F("INIT : I2C");
     addLog(LOG_LEVEL_INFO, log);
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
-      if(Settings.WireClockStretchLimit)
-      {
-        String log = F("INIT : I2C custom clockstretchlimit:");
-        log += Settings.WireClockStretchLimit;
-        addLog(LOG_LEVEL_INFO, log);
-        #if defined(ESP8266)
-          Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
-        #endif
-      }
+    if (Settings.WireClockStretchLimit) {
+      String log = F("INIT : I2C custom clockstretchlimit:");
+      log += Settings.WireClockStretchLimit;
+      addLog(LOG_LEVEL_INFO, log);
+#if defined(ESP8266)
+      Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+#endif
+    }
   }
 
   // I2C Watchdog boot status check
-  if (Settings.WDI2CAddress != 0)
-  {
+  if (Settings.WDI2CAddress != 0) {
     delay(500);
     Wire.beginTransmission(Settings.WDI2CAddress);
-    Wire.write(0x83);             // command to set pointer
-    Wire.write(17);               // pointer value to status byte
+    Wire.write(0x83); // command to set pointer
+    Wire.write(17);   // pointer value to status byte
     Wire.endTransmission();
 
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
-    if (Wire.available())
-    {
+    if (Wire.available()) {
       byte status = Wire.read();
-      if (status & 0x1)
-      {
+      if (status & 0x1) {
         String log = F("INIT : Reset by WD!");
         addLog(LOG_LEVEL_ERROR, log);
         lastBootCause = BOOT_CAUSE_EXT_WD;
@@ -105,47 +105,37 @@ void hardwareInit()
   }
 
   // SPI Init
-  if (Settings.InitSPI)
-  {
+  if (Settings.InitSPI) {
     SPI.setHwCs(false);
     SPI.begin();
     String log = F("INIT : SPI Init (without CS)");
     addLog(LOG_LEVEL_INFO, log);
-  }
-  else
-  {
+  } else {
     String log = F("INIT : SPI not enabled");
     addLog(LOG_LEVEL_INFO, log);
   }
 
 #ifdef FEATURE_SD
-  if (Settings.Pin_sd_cs >= 0)
-  {
-    if (SD.begin(Settings.Pin_sd_cs))
-    {
+  if (Settings.Pin_sd_cs >= 0) {
+    if (SD.begin(Settings.Pin_sd_cs)) {
       String log = F("SD   : Init OK");
       addLog(LOG_LEVEL_INFO, log);
-    }
-    else
-    {
+    } else {
       String log = F("SD   : Init failed");
       addLog(LOG_LEVEL_ERROR, log);
     }
   }
 #endif
-
 }
 
-void checkResetFactoryPin(){
-  static byte factoryResetCounter=0;
+void checkResetFactoryPin() {
+  static byte factoryResetCounter = 0;
   if (Settings.Pin_Reset == -1)
     return;
 
-  if (digitalRead(Settings.Pin_Reset) == 0){ // active low reset pin
-    factoryResetCounter++; // just count every second
-  }
-  else
-  { // reset pin released
+  if (digitalRead(Settings.Pin_Reset) == 0) { // active low reset pin
+    factoryResetCounter++;                    // just count every second
+  } else {                                    // reset pin released
     if (factoryResetCounter > 9) {
       // factory reset and reboot
       ResetFactory();
@@ -183,19 +173,23 @@ bool modelMatchingFlashSize(DeviceModel model) {
   uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
   // TODO TD-er: Add checks for ESP8266/ESP8285/ESP32
   switch (model) {
-    case DeviceModel_Sonoff_Basic:
-    case DeviceModel_Sonoff_TH1x:
-    case DeviceModel_Sonoff_S2x:
-    case DeviceModel_Sonoff_TouchT1:
-    case DeviceModel_Sonoff_TouchT2:
-    case DeviceModel_Sonoff_TouchT3:
-    case DeviceModel_Sonoff_4ch:     return size_MB == 1;
-    case DeviceModel_Sonoff_POW:
-    case DeviceModel_Sonoff_POWr2:   return size_MB == 4;
-    case DeviceModel_Shelly1:        return size_MB == 2;
+  case DeviceModel_Sonoff_Basic:
+  case DeviceModel_Sonoff_TH1x:
+  case DeviceModel_Sonoff_S2x:
+  case DeviceModel_Sonoff_TouchT1:
+  case DeviceModel_Sonoff_TouchT2:
+  case DeviceModel_Sonoff_TouchT3:
+  case DeviceModel_Sonoff_4ch:
+    return size_MB == 1;
+  case DeviceModel_Sonoff_POW:
+  case DeviceModel_Sonoff_POWr2:
+    return size_MB == 4;
+  case DeviceModel_Shelly1:
+    return size_MB == 2;
 
-    // case DeviceModel_default:
-    default:  return true;
+  // case DeviceModel_default:
+  default:
+    return true;
   }
   return true;
 }
@@ -207,48 +201,50 @@ void setFactoryDefault(DeviceModel model) {
 /********************************************************************************************\
   Add pre defined plugins and rules.
   \*********************************************************************************************/
-void addSwitchPlugin(byte taskIndex, byte gpio_pin, const String& name, bool activeLow) {
+void addSwitchPlugin(byte taskIndex, byte gpio_pin, const String &name,
+                     bool activeLow) {
   setTaskDevice_to_TaskIndex(1, taskIndex);
-  setBasicTaskValues(
-    taskIndex,
-    0,            // taskdevicetimer
-    true,         // enabled
-    name,         // name
-    gpio_pin,         // pin1
-    -1,            // pin2
-    -1);           // pin3
+  setBasicTaskValues(taskIndex,
+                     0,        // taskdevicetimer
+                     true,     // enabled
+                     name,     // name
+                     gpio_pin, // pin1
+                     -1,       // pin2
+                     -1);      // pin3
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
   if (activeLow)
-    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+    Settings.TaskDevicePluginConfig[taskIndex][2] =
+        1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
 }
 
-void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings) {
+void addPredefinedPlugins(const GpioFactorySettingsStruct &gpio_settings) {
   byte taskIndex = 0;
   for (int i = 0; i < 4; ++i) {
     if (gpio_settings.button[i] >= 0) {
       String label = F("Button");
-      label += (i+1);
+      label += (i + 1);
       addSwitchPlugin(taskIndex, gpio_settings.button[i], label, true);
       ++taskIndex;
     }
     if (gpio_settings.relais[i] >= 0) {
       String label = F("Relay");
-      label += (i+1);
+      label += (i + 1);
       addSwitchPlugin(taskIndex, gpio_settings.relais[i], label, false);
       ++taskIndex;
     }
   }
 }
 
-
 void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
   Settings.UseRules = true;
   String fileName;
-  #if defined(ESP32)
-    fileName += '/';
-  #endif
+#if defined(ESP32)
+  fileName += '/';
+#endif
   fileName += F("rules1.txt");
-  String rule = F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    gpio_pin,GNR,1\n  else\n    gpio_pin,GNR,0\n  endif\nendon\n");
+  String rule =
+      F("on ButtonBNR#switch do\n  if [ButtonBNR#switch]=1\n    "
+        "gpio_pin,GNR,1\n  else\n    gpio_pin,GNR,0\n  endif\nendon\n");
   rule.replace(F("BNR"), String(buttonNumber));
   rule.replace(F("GNR"), String(relay_gpio));
   String result = appendLineToFile(fileName, rule);
@@ -257,27 +253,22 @@ void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
   }
 }
 
-void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
+void addPredefinedRules(const GpioFactorySettingsStruct &gpio_settings) {
   for (int i = 0; i < 4; ++i) {
     if (gpio_settings.button[i] >= 0 && gpio_settings.relais[i] >= 0) {
-      addButtonRelayRule((i+1), gpio_settings.relais[i]);
+      addButtonRelayRule((i + 1), gpio_settings.relais[i]);
     }
   }
 }
 
-// return true when pin can be used.
-bool checkValidGpioPin(byte gpio_pin) {
-  int pinnr = -1;
-  bool input, output, warning;
-  return getGpioInfo(gpio_pin, pinnr, input, output, warning);
-}
-
 bool checkValidGpioBootStatePin(byte gpio_pin) {
-  #ifdef ESP8266
-  // GPIO 16 is a strange pin, pulled to GND and when used to wake from deep sleep,
+#ifdef ESP8266
+  // GPIO 16 is a strange pin, pulled to GND and when used to wake from deep
+  // sleep,
   // it will trigger a reset when changed.
-  if (gpio_pin == 16) return false;
-  #endif
+  if (gpio_pin == 16)
+    return false;
+#endif
   return checkValidGpioPin(gpio_pin);
 }
 
@@ -286,8 +277,8 @@ bool checkValidGpioBootStatePin(byte gpio_pin) {
 //********************************************************************************
 #ifdef ESP32
 // return true when pin can be used.
-bool getGpioInfo(int gpio_pin, int& pinnr, bool& input, bool& output, bool& warning) {
-  pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+bool getGpioInfo(int gpio_pin, int& nodemcu_pinnr, bool& input, bool& output, bool& warning) {
+  nodemcu_pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
 
   // Input GPIOs:  0-19, 21-23, 25-27, 32-39
   // Output GPIOs: 0-19, 21-23, 25-27, 32-33
@@ -320,8 +311,8 @@ bool getGpioInfo(int gpio_pin, int& pinnr, bool& input, bool& output, bool& warn
 };
 #else
 // return true when pin can be used.
-bool getGpioInfo(int gpio_pin, int& pinnr, bool& input, bool& output, bool& warning) {
-  pinnr = -1;
+bool getGpioInfo(int gpio_pin, int& nodemcu_pinnr, bool& input, bool& output, bool& warning) {
+  nodemcu_pinnr = -1;
   input = true;
   output = true;
   // GPIO 0, 2 & 15 can't be used as an input. State during boot is dependent on boot mode.
@@ -329,32 +320,32 @@ bool getGpioInfo(int gpio_pin, int& pinnr, bool& input, bool& output, bool& warn
   // it will trigger a reset when changed.
   warning = (gpio_pin == 0 || gpio_pin == 2 || gpio_pin == 15 || gpio_pin == 16);
   switch (gpio_pin) {
-    case  0: pinnr =  3; break;
-    case  1: pinnr = 10; break;
-    case  2: pinnr =  4; break;
-    case  3: pinnr =  9; break;
-    case  4: pinnr =  2; break;
-    case  5: pinnr =  1; break;
+    case  0: nodemcu_pinnr =  3; break;
+    case  1: nodemcu_pinnr = 10; break;
+    case  2: nodemcu_pinnr =  4; break;
+    case  3: nodemcu_pinnr =  9; break;
+    case  4: nodemcu_pinnr =  2; break;
+    case  5: nodemcu_pinnr =  1; break;
     case  6: // GPIO 6 .. 8  is used for flash
     case  7:
-    case  8: pinnr = -1; break;
-    case  9: pinnr = 11; break; // On ESP8266 used for flash
-    case 10: pinnr = 12; break; // On ESP8266 used for flash
-    case 11: pinnr = -1; break;
-    case 12: pinnr =  6; break;
-    case 13: pinnr =  7; break;
-    case 14: pinnr =  5; break;
+    case  8: nodemcu_pinnr = -1; break;
+    case  9: nodemcu_pinnr = 11; break; // On ESP8266 used for flash
+    case 10: nodemcu_pinnr = 12; break; // On ESP8266 used for flash
+    case 11: nodemcu_pinnr = -1; break;
+    case 12: nodemcu_pinnr =  6; break;
+    case 13: nodemcu_pinnr =  7; break;
+    case 14: nodemcu_pinnr =  5; break;
     // GPIO-15 Can't be used as an input. There is an external pull-down on this pin.
-    case 15: pinnr =  8; input = false; break;
-    case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
+    case 15: nodemcu_pinnr =  8; input = false; break;
+    case 16: nodemcu_pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
   #ifndef ESP8285
   if (gpio_pin == 9 || gpio_pin == 10) {
     // On ESP8266 used for flash
     warning = true;
   }
-  #endif
-  if (pinnr < 0) {
+#endif
+  if (nodemcu_pinnr < 0) {
     input = false;
     output = false;
     return false;

@@ -1,19 +1,16 @@
 #ifndef COMMAND_GPIO_H
 #define COMMAND_GPIO_H
 
+
+#include "ESPEasy-GPIO.h"
+
 #if defined(ESP8266)
 Servo servo1;
 Servo servo2;
 #endif /* if defined(ESP8266) */
 
-#define PLUGIN_ID_000    0
 
 // Forward declarations
-uint32_t createInternalGpioKey(uint16_t portNumber);
-bool     read_GPIO_state(struct EventStruct *event);
-bool     read_GPIO_state(byte pinNumber,
-                         byte pinMode);
-bool     checkValidGpioPin(byte gpio_pin);
 void     analogWriteESP(int pin,
                         int value,
                         unsigned int frequency);
@@ -479,51 +476,6 @@ String Command_tone(struct EventStruct *event, const char *Line)
 // **************************************************************************/
 // Helper functions
 // **************************************************************************/
-uint32_t createInternalGpioKey(uint16_t portNumber) {
-  return createKey(PLUGIN_ID_000, portNumber);
-}
-
-bool read_GPIO_state(struct EventStruct *event) {
-  byte pinNumber     = Settings.TaskDevicePin1[event->TaskIndex];
-  const uint32_t key = createInternalGpioKey(pinNumber);
-
-  if (existPortStatus(key)) {
-    return read_GPIO_state(pinNumber, globalMapPortStatus[key].mode);
-  }
-  return false;
-}
-
-bool read_GPIO_state(byte pinNumber, byte pinMode) {
-  bool canRead = false;
-
-  switch (pinMode)
-  {
-  case PIN_MODE_UNDEFINED:
-  case PIN_MODE_INPUT:
-  case PIN_MODE_INPUT_PULLUP:
-  case PIN_MODE_OUTPUT:
-    canRead = true;
-    break;
-  case PIN_MODE_PWM:
-    break;
-  case PIN_MODE_SERVO:
-    break;
-  case PIN_MODE_OFFLINE:
-    break;
-  default:
-    break;
-  }
-
-  if (!canRead) { return false; }
-
-  // Do not read from the pin while mode is set to PWM or servo.
-  // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
-  const auto pinstate = digitalRead(pinNumber);
-  const uint32_t key = createInternalGpioKey(pinNumber);
-  globalMapPortStatus[key].state = pinstate;
-  return pinstate == HIGH;
-}
-
 
 String return_command_failed_invalid_GPIO(byte pinNumber) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
