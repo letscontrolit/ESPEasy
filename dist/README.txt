@@ -60,6 +60,7 @@ too small you can experiment with the "Pixels Per Inch" variable in the
 application will try to find the most optimal value by default. Sometimes it fails to
 do that. More information about the tool is found here:
 https://github.com/Grovkillen/ESP_Easy_Flasher
+You can also have custom serial commands entered in a txt file. One command per line.
 
 Further reading:
 For more information, see: https://github.com/letscontrolit/ESPEasy
