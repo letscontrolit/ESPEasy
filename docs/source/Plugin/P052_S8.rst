@@ -60,8 +60,8 @@ Task settings
 Sensor
 ^^^^^^
 
-* **GPIO ← TX**: TX is generally set to **GPIO 13 (D7)**.
-* **GPIO → RX**: RX is generally set to **GPIO 15 (D8)**.
+* **GPIO <-- TX**: TX is generally set to **GPIO 13 (D7)**.
+* **GPIO --> RX**: RX is generally set to **GPIO 15 (D8)**.
 * **Sensor**: Only **Carbond Dioxide** is supported by the S8.
 
 .. note:: TX GPIO 1 (D10) and RX GPIO 3 (D9) is hardware serial and have been reported to work better for some users over time compared to the
@@ -103,6 +103,10 @@ Rules examples
   endif
  endon
 
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+ .. include:: P052_commands.repl
 
 Where to buy
 ------------
@@ -124,3 +128,11 @@ More pictures
 .. image:: P052_S8_2.jpg
 
 .. image:: P052_S8_3.jpg
+
+* **GPIO <-- TX**: TX is generally set to **GPIO 13 (D7)**.
+* **GPIO --> RX**: RX is generally set to **GPIO 15 (D8)**.
+* **Sensor**: Only **Carbon Dioxide** is supported by the S8.
+Commands available
+~~~~~~~~~~~~~~~~~~
+.. include:: P052_commands.repl
+

@@ -25,6 +25,12 @@ Supported hardware
 
 |P000_usedby_GPIO|, |P000_usedby_RTTTL|
 
+Commands available
+------------------
+
+.. include:: P001_commands_GPIO.repl
+.. include:: P001_commands_RTTTL.repl
+
 Change log
 ----------
 
