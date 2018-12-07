@@ -49,7 +49,9 @@ do
     MAX_FILESIZE=614400
   fi
   if [[ ${ENV} == *"esp32"* ]]; then
-    # What to do with the esp32dev build???
+    MAX_FILESIZE=1310720
+  fi
+  if [[ ${ENV} == *"1M8_partition"* ]]; then
     MAX_FILESIZE=1900544
   fi
 
