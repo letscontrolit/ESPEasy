@@ -58,11 +58,7 @@ boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
             parseControllerVariables(element.txt[x], event, false);
             element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
             element.txt[x].replace(F("%value%"), formattedValue);
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-              char log[80];
-              element.txt[x].toCharArray(log, 80);
-              addLog(LOG_LEVEL_DEBUG_MORE, log);
-            }
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
         success = C010_DelayHandler.addToQueue(element);

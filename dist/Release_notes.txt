@@ -1,4 +1,84 @@
 -------------------------------------------------
+Changes in release mega-20181207 (since mega-20181204)
+-------------------------------------------------
+
+Release date: Fri Dec  7 04:00:13 CET 2018
+
+Gijs Noorlander (5):
+      [GPIO] Move all GPIO commands out of Switch plugin
+      [GPIO] Move "inputswitchstate" back to Switch plugin
+      [GPIO] Add GPIO pin description page
+      [GPIO] Add some checks to what GPIO pin can be used.
+      [GPIO] GPIO commands with long duration will be stopped async.
+
+Grovkillen (6):
+      [docs] added phantomJS script to streamline the screenshots
+      [docs] updated headlines (css) + added P001 hardware
+      [docs] syntax error fixed.
+      [docs] P052 sensair S8 hardware page updated
+      [docs] Test if arrows (unicode) work with RTD
+      [docs] fixed "ESP Easy" logo margin bug
+
+chunter1 (1):
+      HX711 load cell plugin now supports dual channel support
+
+wdonker (1):
+      Update _C002.ino
+
+
+-------------------------------------------------
+Changes in release mega-20181204 (since mega-20181203)
+-------------------------------------------------
+
+Release date: Tue Dec  4 04:00:08 CET 2018
+
+Grovkillen (1):
+      [docs] Added P001 (hardware)
+
+
+-------------------------------------------------
+Changes in release mega-20181203 (since mega-20181201)
+-------------------------------------------------
+
+Release date: Mon Dec  3 04:00:11 CET 2018
+
+Gijs Noorlander (13):
+      [Rules engine] Set UseOldRulesEngine as default
+      [Stack] Reduce allocations on stack
+      [Stack] Make IP-address formatting simpler
+      [Stack] Optimize GetArgv to only allocate what is needed.
+      [Stack] P035_IRTX reduction of memory usage & speed improvement
+      [Uncrustify] Make rules source code files better readable
+      [Memory] Pass String as reference or const reference, not deepcopy
+      [Rules] GetArgv should clear the return string before filling it
+      [ESP32] Disable RTOS Multitasking option (multi_heap_poisoning)
+      [PWM] #2117  PWM stops after about 80 msec in core 2.4.1
+      [webserver CORS] #2119 Allow commands to be scripted
+      [HLW8012] Update library to 1.1.1
+      [HLW8012] Make reading Sonoff POW non blocking ( #2097 )
+
+Saverio Cisternino (7):
+      Moved the rules related functions from Misc.ino to ESPEasyRules.ino
+      implement matching of rule file
+      Added addButton, addFormTextBox overload and  addSaveButton, AddDeleteButton functions
+      Redefine Rules WebUi
+      Change menu url from relative to absolute
+      Fixed ESP32 build
+      Adding flag to settings for switch from old to new rules engine (Default engine old).
+
+
+-------------------------------------------------
+Changes in release mega-20181201 (since mega-20181130)
+-------------------------------------------------
+
+Release date: Sat Dec  1 04:00:09 CET 2018
+
+Gijs Noorlander (2):
+      [Docs] Update to Sphinx 1.8.2
+      [#1970] Fix: HTTP Header broken in 'Generic HTTP Advanced' controller
+
+
+-------------------------------------------------
 Changes in release mega-20181130 (since mega-20181129)
 -------------------------------------------------
 

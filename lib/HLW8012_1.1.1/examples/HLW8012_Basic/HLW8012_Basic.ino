@@ -90,7 +90,7 @@ void setup() {
     Serial.print("[HLW] Default power multiplier   : "); Serial.println(hlw8012.getPowerMultiplier());
     Serial.println();
 
-    calibrate();
+    //calibrate();
 
 }
 

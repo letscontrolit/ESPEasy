@@ -1,8 +1,8 @@
 /*
 
-HLW8012 1.0.0
+HLW8012
 
-Copyright (C) 2016 by Xose Pérez <xose dot perez at gmail dot com>
+Copyright (C) 2016-2018 by Xose Pérez <xose dot perez at gmail dot com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,6 +52,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // will have no time to stabilise
 #define PULSE_TIMEOUT       2000000
 
+// Define ICACHE_RAM_ATTR for AVR platforms
+#if defined(ARDUINO_ARCH_AVR)
+#define ICACHE_RAM_ATTR     
+#endif
+
 // CF1 mode
 typedef enum {
     MODE_CURRENT,
@@ -83,6 +88,8 @@ class HLW8012 {
         unsigned int getApparentPower();
         double getPowerFactor();
         unsigned int getReactivePower();
+        unsigned long getEnergy(); //in Ws
+        void resetEnergy();
 
         void setResistors(double current, double voltage_upstream, double voltage_downstream);
 
@@ -108,14 +115,15 @@ class HLW8012 {
         double _current_resistor = R_CURRENT;
         double _voltage_resistor = R_VOLTAGE;
 
-        double _current_multiplier;
-        double _voltage_multiplier;
-        double _power_multiplier;
+        double _current_multiplier; // Unit: us/A
+        double _voltage_multiplier; // Unit: us/V
+        double _power_multiplier;   // Unit: us/W
 
-        unsigned long _pulse_timeout = PULSE_TIMEOUT;
-        volatile unsigned long _voltage_pulse_width = 0;
-        volatile unsigned long _current_pulse_width = 0;
-        volatile unsigned long _power_pulse_width = 0;
+        unsigned long _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
+        volatile unsigned long _voltage_pulse_width = 0; //Unit: us
+        volatile unsigned long _current_pulse_width = 0; //Unit: us
+        volatile unsigned long _power_pulse_width = 0;   //Unit: us
+        volatile unsigned long _pulse_count = 0;
 
         double _current = 0;
         unsigned int _voltage = 0;

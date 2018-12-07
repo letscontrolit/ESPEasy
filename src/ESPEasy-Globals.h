@@ -73,6 +73,7 @@
 #endif
 
 #define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_RULES_OLDENGINE                true
 
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      100    // Time in milliseconds to retain MQTT messages
@@ -644,7 +645,6 @@ bool WiFiConnected();
 bool hostReachable(const IPAddress& ip);
 bool hostReachable(const String& hostname);
 void formatMAC(const uint8_t* mac, char (&strMAC)[20]);
-void formatIP(const IPAddress& ip, char (&strIP)[20]);
 String to_json_object_value(const String& object, const String& value);
 
 
@@ -721,6 +721,9 @@ struct SettingsStruct
 
   bool uniqueMQTTclientIdReconnect() {  return getBitFromUL(VariousBits1, 2); }
   void uniqueMQTTclientIdReconnect(bool value) { setBitToUL(VariousBits1, 2, value); }
+
+  bool OldRulesEngine() {  return !getBitFromUL(VariousBits1, 3); }
+  void OldRulesEngine(bool value) {  setBitToUL(VariousBits1, 3, !value); }
 
 
   void validate() {
@@ -823,6 +826,7 @@ struct SettingsStruct
     StructSize = sizeof(SettingsStruct);
     MQTTUseUnitNameAsClientId = 0;
     VariousBits1 = 0;
+    OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
 
   void clearAll() {
@@ -1502,7 +1506,7 @@ struct NodeStruct
       for (byte i = 0; i < 4; ++i) ip[i] = 0;
     }
   String nodeName;
-  byte ip[4];
+  IPAddress ip;
   uint16_t build;
   byte age;
   byte nodeType;
@@ -2157,6 +2161,7 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 // may not filter the ifdef checks properly.
 // Also the functions use a lot of global defined variables, so include at the end of this file.
 #include "ESPEasyWiFiEvent.h"
-
+#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
+#include "WebServer_Rules.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

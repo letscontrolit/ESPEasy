@@ -570,7 +570,7 @@ void p073_FillBufferWithDate(boolean sevendgt_now, byte sevendgt_day, byte seven
   p073_showbuffer[6] = p073_digit1; p073_showbuffer[7] = p073_digit2;
 }
 
-void p073_FillBufferWithNumber(String number)
+void p073_FillBufferWithNumber(const String& number)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   byte p073_numlenght = number.length();
@@ -614,7 +614,7 @@ void p073_FillBufferWithTemp(long temperature)
   p073_showbuffer[7] = 12;  // degree "°"
 }
 
-void p073_FillBufferWithString(String textToShow)
+void p073_FillBufferWithString(const String& textToShow)
 {
   memset(p073_showbuffer,10,sizeof(p073_showbuffer));
   String tmpText;

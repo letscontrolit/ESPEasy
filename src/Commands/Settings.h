@@ -61,13 +61,10 @@ String Command_Settings_Load(struct EventStruct *event, const char* Line)
 
 String Command_Settings_Print(struct EventStruct *event, const char* Line)
 {
-	char str[20];
 	serialPrintln();
 
 	serialPrintln(F("System Info"));
-	IPAddress ip = WiFi.localIP();
-	sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-	serialPrint(F("  IP Address    : ")); serialPrintln(str);
+	serialPrint(F("  IP Address    : ")); serialPrintln(WiFi.localIP().toString());
 	serialPrint(F("  Build         : ")); serialPrintln(String((int)BUILD));
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
 	serialPrint(F("  Unit          : ")); serialPrintln(String((int)Settings.Unit));
