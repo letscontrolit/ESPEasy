@@ -29,7 +29,7 @@ Commands available
 ------------------
 
 .. include:: P001_commands_GPIO.repl
-.. include:: P001_commands_RTTL.repl
+.. include:: P001_commands_RTTTL.repl
 
 Change log
 ----------
