@@ -25,11 +25,6 @@ Supported hardware
 
 |P009_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
-
-.. .. include:: P009_commands.repl
-
 Change log
 ----------
 
@@ -44,6 +39,3 @@ Change log
 
   |added|
   Initial release version.
-
-
-

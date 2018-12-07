@@ -25,11 +25,6 @@ Supported hardware
 
 |P052_usedby|
 
-Commands available
-^^^^^^^^^^^^^^^^^^
-
-.. include:: P052_commands.repl
-
 Change log
 ----------
 
