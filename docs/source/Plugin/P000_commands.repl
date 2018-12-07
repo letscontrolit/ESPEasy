@@ -1,5 +1,6 @@
 .. include:: ../Plugin/_plugin_substitutions_p00x.repl
 
+
 .. csv-table::
     :header: "Command", "Class", "Purpose", "Syntax"
     :widths: 8, 6, 15, 15

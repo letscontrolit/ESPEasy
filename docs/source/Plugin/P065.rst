@@ -25,11 +25,6 @@ Supported hardware
 
 |P065_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
-
-.. .. include:: P065_commands.repl
-
 Change log
 ----------
 
@@ -44,6 +39,3 @@ Change log
 
   |added|
   Initial release version.
-
-
-

@@ -25,11 +25,6 @@ Supported hardware
 
 |P049_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
-
-.. .. include:: P049_commands.repl
-
 Change log
 ----------
 
@@ -44,6 +39,3 @@ Change log
 
   |added|
   Initial release version.
-
-
-
