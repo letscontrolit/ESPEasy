@@ -1,4 +1,32 @@
 -------------------------------------------------
+Changes in release mega-20181207 (since mega-20181204)
+-------------------------------------------------
+
+Release date: Fri Dec  7 04:00:13 CET 2018
+
+Gijs Noorlander (5):
+      [GPIO] Move all GPIO commands out of Switch plugin
+      [GPIO] Move "inputswitchstate" back to Switch plugin
+      [GPIO] Add GPIO pin description page
+      [GPIO] Add some checks to what GPIO pin can be used.
+      [GPIO] GPIO commands with long duration will be stopped async.
+
+Grovkillen (6):
+      [docs] added phantomJS script to streamline the screenshots
+      [docs] updated headlines (css) + added P001 hardware
+      [docs] syntax error fixed.
+      [docs] P052 sensair S8 hardware page updated
+      [docs] Test if arrows (unicode) work with RTD
+      [docs] fixed "ESP Easy" logo margin bug
+
+chunter1 (1):
+      HX711 load cell plugin now supports dual channel support
+
+wdonker (1):
+      Update _C002.ino
+
+
+-------------------------------------------------
 Changes in release mega-20181204 (since mega-20181203)
 -------------------------------------------------
 
