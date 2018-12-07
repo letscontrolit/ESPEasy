@@ -3732,7 +3732,7 @@ void handle_pinstates() {
   html_table_header(F("Monitor"));
   html_table_header(F("Command"));
   html_table_header("Init");
-  for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
+  for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it)
   {
     html_TR_TD(); TXBuffer += "P";
     const uint16_t plugin = getPluginFromKey(it->first);
@@ -3761,7 +3761,7 @@ void handle_pinstates() {
     html_TD();
     TXBuffer += it->second.command;
     html_TD();
-    TXBuffer += it->second.init;
+    TXBuffer += it->second.portstatus_init;
   }
 
 

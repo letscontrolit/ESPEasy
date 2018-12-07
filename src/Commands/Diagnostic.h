@@ -144,7 +144,7 @@ void logPortStatus(const String& from) {
 		log += F(" Command=");
 		log += it->second.command;
 		log += F(" Init=");
-		log += it->second.init;
+		log += it->second.portstatus_init;
 		log += F(" PreviousTask=");
 		log += it->second.previousTask;
 		addLog(LOG_LEVEL_INFO,log);

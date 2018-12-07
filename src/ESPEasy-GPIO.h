@@ -3,19 +3,49 @@
 
 #define PLUGIN_ID_000    0
 
+// portStatusStruct.mode (max. 8)
+#define PIN_MODE_UNDEFINED                  0
+#define PIN_MODE_INPUT                      1
+#define PIN_MODE_OUTPUT                     2
+#define PIN_MODE_PWM                        3
+#define PIN_MODE_SERVO                      4
+#define PIN_MODE_INPUT_PULLUP               5
+#define PIN_MODE_OFFLINE                    6
+
+
+#define SEARCH_PIN_STATE                 true
+#define NO_SEARCH_PIN_STATE             false
+
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
+  portStatusStruct() : state(-1), output(-1), command(0), portstatus_init(0), mode(0), task(0), monitor(0), previousTask(-1)
+    {}
 
   int8_t state   : 2;  // -1,0,1
   int8_t output  : 2;  // -1,0,1
-  int8_t command : 2;  // 0,1
-  int8_t init    : 2;  // 0,1
+  int8_t command : 2;  // 0,1  1 if port has been called from a command in order to display in the pinstate page
+  int8_t portstatus_init    : 2;  // 0,1
 
-  uint8_t mode    : 3; // 6 current values (max. 8)
+  uint8_t mode    : 3; // 7 current values (max. 8)
   uint8_t task    : 4; // 0-15 (max. 16)
   uint8_t monitor : 1; // 0,1
 
-  int8_t previousTask : 8;
+  int8_t previousTask;
+
+  bool readyToDelete() const {
+    return ((task <= 0) && (monitor <= 0) && (command <= 0));
+  }
+
+  bool mustMonitor() const {
+    return (monitor != 0) || (command != 0) || (portstatus_init != 0);
+  }
+
+  bool portStateError() const {
+    return state != 0 && state != 1;
+  }
+
+  bool getPinState() const {
+    return state == 1;
+  }
 };
 
 std::map < uint32_t, portStatusStruct > globalMapPortStatus;
@@ -39,7 +69,7 @@ bool     getGpioInfo(int   gpio_pin,
 *                                                         *
 **********************************************************/
 void savePortStatus(uint32_t key, struct portStatusStruct& tempStatus) {
-  if ((tempStatus.task <= 0) && (tempStatus.monitor <= 0) && (tempStatus.command <= 0)) {
+  if (tempStatus.readyToDelete()) {
     globalMapPortStatus.erase(key);
   }
   else {
@@ -59,8 +89,7 @@ void removeTaskFromPort(uint32_t key) {
       --portstatus.task;
     }
 
-    if ((portstatus.task <= 0) && (portstatus.monitor <= 0) && (portstatus.command <= 0) &&
-        (portstatus.init <= 0)) {
+    if (portstatus.readyToDelete() && (portstatus.portstatus_init <= 0)) {
       globalMapPortStatus.erase(key);
     }
   }
@@ -71,8 +100,7 @@ void removeMonitorFromPort(uint32_t key) {
     portStatusStruct& portstatus = globalMapPortStatus[key];
     portstatus.monitor = 0;
 
-    if ((portstatus.task <= 0) && (portstatus.monitor <= 0) && (portstatus.command <= 0) &&
-        (portstatus.init <= 0)) {
+    if (portstatus.readyToDelete() && (portstatus.portstatus_init <= 0)) {
       globalMapPortStatus.erase(key);
     }
   }

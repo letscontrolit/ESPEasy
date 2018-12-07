@@ -150,7 +150,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = isFormItemChecked(F("p009_sb"));
 
         //check if a task has been edited and remove task flag from the previous pin
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
           if (it->second.previousTask == event->TaskIndex && getPluginFromKey(it->first)==PLUGIN_ID_009) {
             globalMapPortStatus[it->first].previousTask = -1;
             removeTaskFromPort(it->first);
@@ -178,7 +178,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           // "state" could be -1, 0 or 1
           newStatus.state = Plugin_009_Read(Settings.TaskDevicePort[event->TaskIndex]);
           newStatus.output = newStatus.state;
-          (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the device list we assume it's an input pin
+          (newStatus.portStateError()) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the device list we assume it's an input pin
           newStatus.task++; // add this GPIO/port as a task
 
           // @giig1967g-20181022: set initial UserVar of the switch
@@ -223,8 +223,8 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       case PLUGIN_UNCONDITIONAL_POLL:
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
-          for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-            if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_009) {
+          for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+            if (it->second.mustMonitor() && getPluginFromKey(it->first)==PLUGIN_ID_009) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_009_Read(port);
               if (it->second.state != state) {
@@ -302,7 +302,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 #define DC Settings.TaskDevicePluginConfig[event->TaskIndex][4]
 
               //check settings for doubleclick according to the settings
-              if ( COUNTER!=0 || ( COUNTER==0 && (DC==3 || (DC==1 && state==0) || (DC==2 && state==1))) )
+              if ( COUNTER!=0 || ( COUNTER==0 && (DC==3 || (DC==1 && state == 0) || (DC==2 && state == 1))) )
                 Settings.TaskDevicePluginConfig[event->TaskIndex][7]++;
 #undef DC
 #undef COUNTER
@@ -352,7 +352,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 #define FIRED Settings.TaskDevicePluginConfig[event->TaskIndex][6]
 
           //check if LP is enabled and if LP has not fired yet
-          else if (!FIRED && (LP==3 ||(LP==1 && state==0)||(LP==2 && state==1) ) ) {
+          else if (!FIRED && (LP==3 ||(LP==1 && state == 0)||(LP==2 && state == 1) ) ) {
 
 #undef LP
 #undef FIRED

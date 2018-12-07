@@ -24,7 +24,7 @@
 #define PCA9685_ALLLED_REG          (byte)0xFA
 
 /*
-is bit flag any bit rapresent the initialization state of PCA9685
+is bit flag any bit represent the initialization state of PCA9685
 es:  bit 3 is set 1 PCA9685 with address 0X40 + 0x03 is intin
 */
 #define IS_INIT(state, bit) ((state & 1 << bit) == 1 << bit)

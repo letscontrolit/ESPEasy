@@ -108,7 +108,8 @@ Advanced event management
 
 * **Long press min interval (ms)**: This is the interval that you need to press the button before the long press event is triggered.
 
-* **Use safe button (slower)**:
+* **Use safe button (slower)**: If checked, the EVENT of a switch change is created only if the switch remains in the new position for at least 2 cycles of the 10x per second function.
+  This should resolve the cases where there are false positive switch events due to interferences.
 
 Data acquisition
 ^^^^^^^^^^^^^^^^

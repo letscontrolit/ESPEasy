@@ -349,16 +349,7 @@
 
 #define UDP_PACKETSIZE_MAX               2048
 
-#define PIN_MODE_UNDEFINED                  0
-#define PIN_MODE_INPUT                      1
-#define PIN_MODE_OUTPUT                     2
-#define PIN_MODE_PWM                        3
-#define PIN_MODE_SERVO                      4
-#define PIN_MODE_INPUT_PULLUP               5
-#define PIN_MODE_OFFLINE                    6
 
-#define SEARCH_PIN_STATE                 true
-#define NO_SEARCH_PIN_STATE             false
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_DUAL                    2  // connected through 2 datapins
