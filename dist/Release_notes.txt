@@ -1,4 +1,22 @@
 -------------------------------------------------
+Changes in release mega-20181208 (since mega-20181207)
+-------------------------------------------------
+
+Release date: Sat Dec  8 04:00:13 CET 2018
+
+Gijs Noorlander (3):
+      [#2144] Only include OTA images that fit (<600 k)
+      [#2144] Extend check for file size of ESP32 images
+      Max OTA filesize on 1MB = 616448 bytes.
+
+Grovkillen (4):
+      [docs] added commented references to commands list
+      [flasher] 0.03.000 added custom serial commands.
+      Revert "[docs] added commented references to commands list"
+      [docs] added hardware tSense
+
+
+-------------------------------------------------
 Changes in release mega-20181207 (since mega-20181204)
 -------------------------------------------------
 
