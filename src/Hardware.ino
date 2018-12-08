@@ -22,7 +22,7 @@ bool applyGpioPinBootState(byte gpio_pin, byte PinBootState) {
     pinMode(gpio_pin, INPUT);
     globalMapPortStatus[key].mode = PIN_MODE_INPUT;
     globalMapPortStatus[key].portstatus_init = 1;
-    read_GPIO_state(gpio_pin, PIN_MODE_INPUT);
+    globalMapPortStatus[key].state = read_GPIO_state(gpio_pin, PIN_MODE_INPUT);
     // setPinState(1, gpio_pin, PIN_MODE_OUTPUT, LOW);
     break;
   case 1:
@@ -51,7 +51,7 @@ bool applyGpioPinBootState(byte gpio_pin, byte PinBootState) {
     pinMode(gpio_pin, INPUT_PULLUP);
     globalMapPortStatus[key].mode = PIN_MODE_INPUT_PULLUP;
     globalMapPortStatus[key].portstatus_init = 1;
-    read_GPIO_state(gpio_pin, PIN_MODE_INPUT_PULLUP);
+    globalMapPortStatus[key].state = read_GPIO_state(gpio_pin, PIN_MODE_INPUT_PULLUP);
     // setPinState(1, gpio_pin, PIN_MODE_INPUT, 0);
     break;
   }

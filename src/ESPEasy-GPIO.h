@@ -16,18 +16,21 @@
 #define SEARCH_PIN_STATE                 true
 #define NO_SEARCH_PIN_STATE             false
 
+
+// See description/discussion:
+// https://github.com/letscontrolit/ESPEasy/pull/2057#issuecomment-445310454
 struct portStatusStruct {
   portStatusStruct() : state(-1), output(-1), command(0), portstatus_init(0), mode(0), task(0), monitor(0), previousTask(-1)
     {}
 
   int8_t state   : 2;  // -1,0,1
   int8_t output  : 2;  // -1,0,1
-  int8_t command : 2;  // 0,1  1 if port has been called from a command in order to display in the pinstate page
-  int8_t portstatus_init    : 2;  // 0,1
+  int8_t command : 2;  // 0,1  true when a command (GPIO,PCFGPIO,MCPGPIO,TOGGLEGPIO, etc.) has referenced that gpio/port.
+  int8_t portstatus_init    : 2;  // true when the gpio/port has been set during boot in the hardware page
 
   uint8_t mode    : 3; // 7 current values (max. 8)
-  uint8_t task    : 4; // 0-15 (max. 16)
-  uint8_t monitor : 1; // 0,1
+  uint8_t task    : 4; // 0-15 (max. 16)  If task = 0 it means that no task are referencing that pin.
+  uint8_t monitor : 1; // 0,1  true means the gpio/port should send an event when it changes
 
   int8_t previousTask;
 
@@ -35,7 +38,7 @@ struct portStatusStruct {
     return ((task <= 0) && (monitor <= 0) && (command <= 0));
   }
 
-  bool mustMonitor() const {
+  bool mustPollGpioState() const {
     return (monitor != 0) || (command != 0) || (portstatus_init != 0);
   }
 
@@ -170,8 +173,8 @@ bool read_GPIO_state(byte gpio_pin, byte pinMode) {
   // Do not read from the pin while mode is set to PWM or servo.
   // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
   const auto pinstate = digitalRead(gpio_pin);
-  const uint32_t key  = createInternalGpioKey(gpio_pin);
-  globalMapPortStatus[key].state = pinstate;
+//  const uint32_t key  = createInternalGpioKey(gpio_pin);
+//  globalMapPortStatus[key].state = pinstate;
   return pinstate == HIGH;
 }
 

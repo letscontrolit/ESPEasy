@@ -247,16 +247,16 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       {
         // port monitoring, generates an event by rule command 'monitor_gpio,port#'
         for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-          if (it->second.mustMonitor() && getPluginFromKey(it->first)==PLUGIN_ID_000 ) {
+          if (it->second.mustPollGpioState() && getPluginFromKey(it->first)==PLUGIN_ID_000 ) {
             const uint16_t port = getPortFromKey(it->first);
-            byte gpio_state = read_GPIO_state(port, it->second.mode);
-            if (it->second.state != gpio_state) {
+            bool gpio_state = read_GPIO_state(port, it->second.mode);
+            if (it->second.getPinState() != gpio_state) {
               if (!it->second.task) it->second.state = gpio_state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (it->second.monitor) {
                 String eventString = F("GPIO#");
                 eventString += port;
                 eventString += '=';
-                eventString += gpio_state;
+                eventString += static_cast<int>(gpio_state);
                 rulesProcessing(eventString);
               }
             }
@@ -301,7 +301,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           const bool gpio_state_changed = gpio_state != currentStatus.getPinState();
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && gpio_state_changed && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
-            addLog(LOG_LEVEL_DEBUG,"SW  :SafeButton activated")
+            addLog(LOG_LEVEL_DEBUG, F("SW  :SafeButton activated"));
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
@@ -337,8 +337,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
   #undef COUNTER
 
               currentStatus.state = gpio_state;
-              const boolean currentOutputState = currentStatus.output;
-              boolean new_outputState = currentOutputState;
+              const bool currentOutputState = currentStatus.output == 1;
+              bool new_outputState = currentOutputState;
               switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
               {
                 case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
@@ -359,7 +359,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               {
                 byte output_value;
                 currentStatus.output = new_outputState;
-                boolean sendState = new_outputState;
+                bool sendState = new_outputState;
 
                 if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
                   sendState = !sendState;

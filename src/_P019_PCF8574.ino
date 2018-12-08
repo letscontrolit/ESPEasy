@@ -165,7 +165,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
           for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-            if (getPluginFromKey(it->first)==PLUGIN_ID_019 && it->second.mustMonitor()) {
+            if (getPluginFromKey(it->first)==PLUGIN_ID_019 && it->second.mustPollGpioState()) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_019_Read(port);
               if (it->second.state != state) {
@@ -214,7 +214,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
-            addLog(LOG_LEVEL_DEBUG,"PCF :SafeButton activated")
+            addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton activated"));
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.

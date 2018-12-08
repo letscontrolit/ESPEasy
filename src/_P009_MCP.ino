@@ -167,7 +167,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         {
           // port monitoring, generates an event by rule command 'monitor,pcf,port#'
           for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-            if (it->second.mustMonitor() && getPluginFromKey(it->first)==PLUGIN_ID_009) {
+            if (it->second.mustPollGpioState() && getPluginFromKey(it->first)==PLUGIN_ID_009) {
               const uint16_t port = getPortFromKey(it->first);
               int8_t state = Plugin_009_Read(port);
               if (it->second.state != state) {
@@ -215,7 +215,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
-            addLog(LOG_LEVEL_DEBUG,"MCP :SafeButton activated")
+            addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton activated"));
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
