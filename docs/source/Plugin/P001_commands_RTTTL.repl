@@ -40,7 +40,7 @@ Supported hardware: |P000_usedby_RTTTL| (Ringtones etc.)
   Value can be defined like <name_of_melody:duration,octave,beat,notes....>
 
   For example:
-  ``rtttl,14,test:d=8,o=5,b=180,c6,b,c6,p,g,g-,p,f,b,c6,p,d6,p,g,p,c6,b,c6,p,d6,p,f,g,g-,4p,g,f,4d-``
+  ``rtttl,14,test:d=8,o=5,b=180,c6,b,c6,p,g,g-``
 
   `More RTTTL Ringtone Downloads <http://www.picaxe.com/RTTTL-Ringtones-for-Tune-Command/>`_
   "
