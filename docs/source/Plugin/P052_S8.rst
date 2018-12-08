@@ -128,11 +128,3 @@ More pictures
 .. image:: P052_S8_2.jpg
 
 .. image:: P052_S8_3.jpg
-
-* **GPIO <-- TX**: TX is generally set to **GPIO 13 (D7)**.
-* **GPIO --> RX**: RX is generally set to **GPIO 15 (D8)**.
-* **Sensor**: Only **Carbon Dioxide** is supported by the S8.
-Commands available
-~~~~~~~~~~~~~~~~~~
-.. include:: P052_commands.repl
-

@@ -237,4 +237,4 @@ Before re-positioning the unit onto the back panel you need to remove a plastic 
 .. image:: P052_tSense_K70_16.jpg
 
 DONE! Power up using the tSense's 24VDC/24VAC (the unit is possible to function with input power
-9VDC - 24VDC with no problem) power adaptor and setup the ESP Easy according to the next section.
+9VDC - 24VDC with no problem) power adaptor.
