@@ -49,6 +49,10 @@ struct portStatusStruct {
   bool getPinState() const {
     return state == 1;
   }
+
+  void updatePinState(int8_t newState) {
+    state = newState;
+  }
 };
 
 std::map < uint32_t, portStatusStruct > globalMapPortStatus;

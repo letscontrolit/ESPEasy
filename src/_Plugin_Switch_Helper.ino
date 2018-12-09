@@ -46,19 +46,20 @@ void saveSendBootStateForm(byte taskIndex, byte settingsOffset) {
 }
 
 void addDebounceForm(byte taskIndex) {
-  addFormNumericBox(
-      F("De-bounce (ms)"), F(PLUGIN_HELPER_DEBOUNCE_ID),
-      round(hlp_getDebounceInterval(taskIndex)), 0,
-      250);
+  addFormNumericBox(F("De-bounce (ms)"), F(PLUGIN_HELPER_DEBOUNCE_ID),
+                    round(hlp_getDebounceInterval(taskIndex)), 0, 250);
 }
 
 void saveDebounceForm(byte taskIndex) {
-  hlp_setDebounceInterval(taskIndex, getFormItemInt(F(PLUGIN_HELPER_DEBOUNCE_ID)));
+  hlp_setDebounceInterval(taskIndex,
+                          getFormItemInt(F(PLUGIN_HELPER_DEBOUNCE_ID)));
 }
 
 void setDoubleClickMinInterval(byte taskIndex) {
-  if (hlp_getDoubleClickInterval(taskIndex) < PLUGIN_HELPER_DOUBLECLICK_MIN_INTERVAL)
-    hlp_setDoubleClickInterval(taskIndex, PLUGIN_HELPER_DOUBLECLICK_MIN_INTERVAL);
+  if (hlp_getDoubleClickInterval(taskIndex) <
+      PLUGIN_HELPER_DOUBLECLICK_MIN_INTERVAL)
+    hlp_setDoubleClickInterval(taskIndex,
+                               PLUGIN_HELPER_DOUBLECLICK_MIN_INTERVAL);
 }
 
 void addDoubleClickEventForm(byte taskIndex) {
@@ -128,15 +129,136 @@ void addLongPressEventForm(byte taskIndex) {
 
 void saveLongPressEventForm(byte taskIndex) {
   hlp_setUseLongPress(taskIndex, getFormItemInt(F(PLUGIN_HELPER_LP_EVENT_ID)));
-  hlp_setLongPressInterval(taskIndex, getFormItemInt(F(PLUGIN_HELPER_LP_MIN_INT_ID)));
+  hlp_setLongPressInterval(taskIndex,
+                           getFormItemInt(F(PLUGIN_HELPER_LP_MIN_INT_ID)));
 
-  hlp_setUseSafeButton(taskIndex, isFormItemChecked(F(PLUGIN_HELPER_LP_SAFE_ID)));
+  hlp_setUseSafeButton(taskIndex,
+                       isFormItemChecked(F(PLUGIN_HELPER_LP_SAFE_ID)));
 
   // TO-DO: add Extra-Long Press event
   // hlp_setClicktimeDoubleClick(taskIndex, isFormItemChecked(F("p001_elp")));
-  // hlp_setClicktimeLongpress(taskIndex, getFormItemInt(F("p001_elpmininterval")));
+  // hlp_setClicktimeLongpress(taskIndex,
+  // getFormItemInt(F("p001_elpmininterval")));
 }
 
+// check if a task has been edited and remove 'task' bit from the previous pin
+void update_globalMapPortStatus_onSave(byte taskIndex, byte pluginID) {
+  for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end();
+       ++it) {
+    if (it->second.previousTask == taskIndex &&
+        getPluginFromKey(it->first) == pluginID) {
+      globalMapPortStatus[it->first].previousTask = -1;
+      removeTaskFromPort(it->first);
+      break;
+    }
+  }
+}
+
+//#######################################################################################################
+// PLUGIN_TEN_PER_SECOND actions
+//#######################################################################################################
+
+// Reset timer for long press
+void hlp_resetLongPressTimer(byte taskIndex) {
+  hlp_setClicktimeLongpress(taskIndex, millis());
+  hlp_setLongPressFired(taskIndex,  false);
+}
+
+
+bool hlp_debounceTimoutPassed(byte taskIndex) {
+  const unsigned long debounceTime = timePassedSince(hlp_getClicktimeDebounce(taskIndex));
+  return (debounceTime >= (unsigned long)lround(hlp_getDebounceInterval(taskIndex)));
+}
+
+void hlp_processDoubleClick(byte taskIndex, bool gpio_state) {
+  const unsigned long deltaDC = timePassedSince(hlp_getClicktimeDoubleClick(taskIndex));
+  if ((deltaDC >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[taskIndex][1])) ||
+       hlp_getDoubleClickCounter(taskIndex) == 3)
+  {
+    //reset timer for doubleclick
+    // FIXME TD-er: Temporary counters and states should not be in settings.
+    hlp_setDoubleClickCounter(taskIndex, 0);
+    hlp_setClicktimeDoubleClick(taskIndex, millis());
+  }
+
+  //just to simplify the reading of the code
+  const int16_t COUNTER = Settings.TaskDevicePluginConfig[taskIndex][7];
+  const int16_t DC = hlp_getUseDoubleClick(taskIndex);
+
+  //check settings for doubleclick according to the settings
+  if ( COUNTER != 0 ||
+       ( COUNTER == 0 &&
+        (DC == 3 ||
+        (DC == 1 && !gpio_state) ||
+        (DC == 2 && gpio_state))) )
+  {
+    Settings.TaskDevicePluginConfig[taskIndex][7]++;
+  }
+}
+
+bool hlp_LongPressIntervalReached(byte taskIndex) {
+  const unsigned long deltaLP = timePassedSince(hlp_getClicktimeLongpress(taskIndex));
+  return deltaLP >= (unsigned long)lround(hlp_getLongPressInterval(taskIndex));
+}
+
+byte hlp_getOutputValue_updateSendState(byte taskIndex, bool& sendState) {
+  byte output_value;
+  if (Settings.TaskDevicePin1Inversed[taskIndex])
+    sendState = !sendState;
+
+  if (hlp_getLongPressFired(taskIndex)) {
+    output_value = sendState ? 11 : 10;
+  }
+  else if (hlp_getDoubleClickCounter(taskIndex) == 3 && hlp_getUseDoubleClick(taskIndex) > 0)
+  {
+    output_value = 3; //double click
+  } else {
+    output_value = sendState ? 1 : 0; //single click
+  }
+  return output_value;
+}
+
+void hlp_logState_and_Output(byte taskIndex, bool gpio_state, bool sendState, byte output_value, byte pluginId) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log.reserve(64);
+    switch (pluginId) {
+      case  0: log += F("SW "); break;
+      case  9: log += F("MCP"); break;
+      case 19: log += F("PCF"); break;
+      default: log += F("???"); break;
+    }
+    log += F("  : Port=");
+    log += Settings.TaskDevicePin1[taskIndex];
+    log += F(" pinState=");
+    log += gpio_state ? '1' : '0';
+    log += F(" sendState=");
+    log += sendState ? '1' : '0';
+    switch (output_value) {
+      case 3: log += F(" Doubleclick="); break;
+      case 10:
+      case 11: log += F(" LongPress="); break;
+
+      default:
+       log += F(" Output value=");
+      break;
+    }
+    log += output_value;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+}
+
+bool hlp_LongPressEnabled_and_notFired(byte taskIndex, bool gpio_state) {
+  //just to simplify the reading of the code
+  const int16_t LP = hlp_getUseLongPress(taskIndex);
+  const int16_t FIRED = hlp_getLongPressFired(taskIndex);
+  //Check if LP is enabled and if LP has not fired yet
+  if (FIRED) return false;
+  return (
+    LP == 3 ||
+    (LP == 1 && !gpio_state) ||
+    (LP == 2 && gpio_state) );
+}
 
 //#######################################################################################################
 // Settings for switch plugins
@@ -144,7 +266,7 @@ void saveLongPressEventForm(byte taskIndex) {
 
 /**************************************************\
 TaskDevicePluginConfig settings:
-0: send boot state (true,false)
+0 or 3: send boot state (true,false)
 1:
 2:
 3:
@@ -153,12 +275,21 @@ TaskDevicePluginConfig settings:
 6: LP fired (true,false)
 7: doubleclick counter (=0,1,2,3)
 \**************************************************/
+int16_t hlp_getMustSendBootState(byte taskIndex, byte settingsOffset) {
+  return Settings.TaskDevicePluginConfig[taskIndex][settingsOffset];
+}
+
+void hlp_setMustSendBootState(byte taskIndex, byte settingsOffset, int16_t value) {
+   Settings.TaskDevicePluginConfig[taskIndex][settingsOffset] = value;
+}
+
+
 int16_t hlp_getUseDoubleClick(byte taskIndex) {
   return Settings.TaskDevicePluginConfig[taskIndex][4];
 }
 
 void hlp_setUseDoubleClick(byte taskIndex, int16_t value) {
-   Settings.TaskDevicePluginConfig[taskIndex][4] = value;
+  Settings.TaskDevicePluginConfig[taskIndex][4] = value;
 }
 
 int16_t hlp_getUseLongPress(byte taskIndex) {
@@ -166,7 +297,7 @@ int16_t hlp_getUseLongPress(byte taskIndex) {
 }
 
 void hlp_setUseLongPress(byte taskIndex, int16_t value) {
-   Settings.TaskDevicePluginConfig[taskIndex][5] = value;
+  Settings.TaskDevicePluginConfig[taskIndex][5] = value;
 }
 
 int16_t hlp_getLongPressFired(byte taskIndex) {
@@ -175,7 +306,7 @@ int16_t hlp_getLongPressFired(byte taskIndex) {
 
 // FIXME TD-er: Mainly used to store temporary values.
 void hlp_setLongPressFired(byte taskIndex, int16_t value) {
-   Settings.TaskDevicePluginConfig[taskIndex][6] = value;
+  Settings.TaskDevicePluginConfig[taskIndex][6] = value;
 }
 
 int16_t hlp_getDoubleClickCounter(byte taskIndex) {
@@ -200,7 +331,7 @@ float hlp_getDebounceInterval(byte taskIndex) {
 }
 
 void hlp_setDebounceInterval(byte taskIndex, float value) {
-   Settings.TaskDevicePluginConfigFloat[taskIndex][0] = value;
+  Settings.TaskDevicePluginConfigFloat[taskIndex][0] = value;
 }
 
 float hlp_getDoubleClickInterval(byte taskIndex) {
@@ -208,7 +339,7 @@ float hlp_getDoubleClickInterval(byte taskIndex) {
 }
 
 void hlp_setDoubleClickInterval(byte taskIndex, float value) {
-   Settings.TaskDevicePluginConfigFloat[taskIndex][1] = value;
+  Settings.TaskDevicePluginConfigFloat[taskIndex][1] = value;
 }
 
 float hlp_getLongPressInterval(byte taskIndex) {
@@ -216,7 +347,7 @@ float hlp_getLongPressInterval(byte taskIndex) {
 }
 
 void hlp_setLongPressInterval(byte taskIndex, float value) {
-   Settings.TaskDevicePluginConfigFloat[taskIndex][2] = value;
+  Settings.TaskDevicePluginConfigFloat[taskIndex][2] = value;
 }
 
 float hlp_getUseSafeButton(byte taskIndex) {
@@ -224,7 +355,7 @@ float hlp_getUseSafeButton(byte taskIndex) {
 }
 
 void hlp_setUseSafeButton(byte taskIndex, float value) {
-   Settings.TaskDevicePluginConfigFloat[taskIndex][3] = value;
+  Settings.TaskDevicePluginConfigFloat[taskIndex][3] = value;
 }
 
 /**************************************************\
@@ -238,8 +369,9 @@ long hlp_getClicktimeDebounce(byte taskIndex) {
   return Settings.TaskDevicePluginConfigLong[taskIndex][0];
 }
 
+// FIXME TD-er: Mainly used to store temporary values.
 void hlp_setClicktimeDebounce(byte taskIndex, long value) {
-   Settings.TaskDevicePluginConfigLong[taskIndex][0] = value;
+  Settings.TaskDevicePluginConfigLong[taskIndex][0] = value;
 }
 
 long hlp_getClicktimeDoubleClick(byte taskIndex) {
@@ -248,7 +380,7 @@ long hlp_getClicktimeDoubleClick(byte taskIndex) {
 
 // FIXME TD-er: Mainly used to store temporary values.
 void hlp_setClicktimeDoubleClick(byte taskIndex, long value) {
-   Settings.TaskDevicePluginConfigLong[taskIndex][1] = value;
+  Settings.TaskDevicePluginConfigLong[taskIndex][1] = value;
 }
 
 long hlp_getClicktimeLongpress(byte taskIndex) {
@@ -257,7 +389,7 @@ long hlp_getClicktimeLongpress(byte taskIndex) {
 
 // FIXME TD-er: Mainly used to store temporary values.
 void hlp_setClicktimeLongpress(byte taskIndex, long value) {
-   Settings.TaskDevicePluginConfigLong[taskIndex][2] = value;
+  Settings.TaskDevicePluginConfigLong[taskIndex][2] = value;
 }
 
 long hlp_getSafebuttonCounter(byte taskIndex) {
@@ -266,5 +398,5 @@ long hlp_getSafebuttonCounter(byte taskIndex) {
 
 // FIXME TD-er: Mainly used to store temporary values.
 void hlp_setSafebuttonCounter(byte taskIndex, long value) {
-   Settings.TaskDevicePluginConfigLong[taskIndex][3] = value;
+  Settings.TaskDevicePluginConfigLong[taskIndex][3] = value;
 }
