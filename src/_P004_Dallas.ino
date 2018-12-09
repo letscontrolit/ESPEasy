@@ -116,8 +116,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
               for (byte x = 0; x < 8; x++)
                   ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
 
-              Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")));
-              Plugin_004_DS_startConversion(addr);
+              Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")));              
             }
             success = true;
             break;
@@ -137,13 +136,6 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_INIT:
         {
-            Plugin_004_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
-            if (Plugin_004_DallasPin != -1){
-              uint8_t addr[8];
-              Plugin_004_get_addr(addr, event->TaskIndex);
-              Plugin_004_DS_startConversion(addr);
-              delay(800); //give it time to do intial conversion
-            }
             success = true;
             break;
         }
@@ -158,6 +150,9 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                 float value = 0;
                 String log  = F("DS   : Temperature: ");
 
+                Plugin_004_DS_startConversion(addr);
+
+
                 if (Plugin_004_DS_readTemp(addr, &value))
                 {
                     UserVar[event->BaseVarIndex] = value;
@@ -169,7 +164,7 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
                     UserVar[event->BaseVarIndex] = NAN;
                     log += F("Error!");
                 }
-                Plugin_004_DS_startConversion(addr);
+
 
                 log += (" (");
                 for (byte x = 0; x < 8; x++)
@@ -231,6 +226,7 @@ void Plugin_004_DS_startConversion(uint8_t ROM[8])
     for (byte i = 0; i < 8; i++)
         Plugin_004_DS_write(ROM[i]);
     Plugin_004_DS_write(0x44); // Take temperature mesurement
+    delay(800); //give it time to do intial conversion
 }
 
 /*********************************************************************************************\
