@@ -129,7 +129,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         addAdvancedEventManagementSubHeader();
 
-        addDebounceForm(event->TaskIndex, 0);
+        addDebounceForm(event->TaskIndex);
         addDoubleClickEventForm(event->TaskIndex);
         addLongPressEventForm(event->TaskIndex);
 
@@ -148,7 +148,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p001_button"));
 
         saveSendBootStateForm(event->TaskIndex, 3);
-        saveDebounceForm(event->TaskIndex, 0);
+        saveDebounceForm(event->TaskIndex);
         saveDoubleClickEventForm(event->TaskIndex);
         saveLongPressEventForm(event->TaskIndex);
 
@@ -204,17 +204,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
 
           // counters = 0
-          Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;     //doubleclick counter
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]=0; //safebutton counter
+          hlp_setDoubleClickCounter(event->TaskIndex, 0);     //doubleclick counter
+          hlp_setSafebuttonCounter(event->TaskIndex, 0); //safebutton counter
 
           //used to track if LP has fired
-          Settings.TaskDevicePluginConfig[event->TaskIndex][6]=false;
+          hlp_setLongPressFired(event->TaskIndex, false);
 
           //store millis for debounce, doubleclick and long press
           unsigned long currentTime = millis();
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=currentTime; //debounce timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=currentTime; //doubleclick timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=currentTime; //longpress timer
+          hlp_setClicktimeDebounce(event->TaskIndex, currentTime); //debounce timer
+          hlp_setClicktimeDoubleClick(event->TaskIndex, currentTime); //doubleclick timer
+          hlp_setClicktimeLongpress(event->TaskIndex, currentTime); //longpress timer
 
           setDoubleClickMinInterval(event->TaskIndex);
           setLongPressMinInterval(event->TaskIndex);
@@ -299,36 +299,38 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           const bool gpio_state_changed = gpio_state != currentStatus.getPinState();
-          if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && gpio_state_changed && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
+          if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && gpio_state_changed && hlp_getSafebuttonCounter(event->TaskIndex) == 0)
           {
             addLog(LOG_LEVEL_DEBUG, F("SW  :SafeButton activated"));
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
+            hlp_setSafebuttonCounter(event->TaskIndex, 1);
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
           else if (gpio_state_changed)
           {
+            // FIXME TD-er: Temporary counters and states should not be in settings.
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            hlp_setSafebuttonCounter(event->TaskIndex, 0);
 
             //reset timer for long press
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis();
-            Settings.TaskDevicePluginConfig[event->TaskIndex][6] = false;
+            hlp_setClicktimeLongpress(event->TaskIndex, millis());
+            hlp_setLongPressFired(event->TaskIndex,  false);
 
-            const unsigned long debounceTime = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
-            if (debounceTime >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) //de-bounce check
+            const unsigned long debounceTime = timePassedSince(hlp_getClicktimeDebounce(event->TaskIndex));
+            if (debounceTime >= (unsigned long)lround(hlp_getDebounceInterval(event->TaskIndex))) //de-bounce check
             {
-              const unsigned long deltaDC = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
+              const unsigned long deltaDC = timePassedSince(hlp_getClicktimeDoubleClick(event->TaskIndex));
               if ((deltaDC >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1])) ||
-                   Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3)
+                   hlp_getDoubleClickCounter(event->TaskIndex) == 3)
               {
                 //reset timer for doubleclick
-                Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
-                Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis();
+                // FIXME TD-er: Temporary counters and states should not be in settings.
+                hlp_setDoubleClickCounter(event->TaskIndex, 0);
+                hlp_setClicktimeDoubleClick(event->TaskIndex, millis());
               }
 
   //just to simplify the reading of the code
   #define COUNTER Settings.TaskDevicePluginConfig[event->TaskIndex][7]
-  #define DC Settings.TaskDevicePluginConfig[event->TaskIndex][4]
+  #define DC hlp_getUseDoubleClick(event->TaskIndex)
 
                 //check settings for doubleclick according to the settings
                 if ( COUNTER!=0 || ( COUNTER==0 && (DC==3 || (DC==1 && !gpio_state) || (DC==2 && gpio_state))) )
@@ -364,7 +366,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
                   sendState = !sendState;
 
-                if (Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3 && Settings.TaskDevicePluginConfig[event->TaskIndex][4]>0)
+                if (hlp_getDoubleClickCounter(event->TaskIndex) == 3 && hlp_getUseDoubleClick(event->TaskIndex)>0)
                 {
                   output_value = 3; //double click
                 } else {
@@ -393,14 +395,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 //reset Userdata so it displays the correct gpio_state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
               }
-              Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = millis();
+              hlp_setClicktimeDebounce(event->TaskIndex, millis());
             }
             savePortStatus(key,currentStatus);
           }
 
   //just to simplify the reading of the code
-  #define LP Settings.TaskDevicePluginConfig[event->TaskIndex][5]
-  #define FIRED Settings.TaskDevicePluginConfig[event->TaskIndex][6]
+  #define LP hlp_getUseLongPress(event->TaskIndex)
+  #define FIRED hlp_getLongPressFired(event->TaskIndex)
 
           //CASE 3: status unchanged. Checking longpress:
           //Check if LP is enabled and if LP has not fired yet
@@ -423,15 +425,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             on Button#Switch=11 do //will fire if longpress when gpio_state = 1
             \**************************************************************************/
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            hlp_setSafebuttonCounter(event->TaskIndex, 0);
 
-            const unsigned long deltaLP = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
-            if (deltaLP >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]))
+            const unsigned long deltaLP = timePassedSince(hlp_getClicktimeLongpress(event->TaskIndex));
+            if (deltaLP >= (unsigned long)lround(hlp_getLongPressInterval(event->TaskIndex)))
             {
               byte output_value;
               byte needToSendEvent = false;
 
-              Settings.TaskDevicePluginConfig[event->TaskIndex][6] = true;
+              hlp_setLongPressFired(event->TaskIndex,  true);
 
               switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
               {
@@ -474,7 +476,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
           } else {
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            hlp_setSafebuttonCounter(event->TaskIndex, 0);
           }
         }
         success = true;
