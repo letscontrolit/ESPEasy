@@ -184,7 +184,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           {
             success = true;
             const uint32_t key = createKey(PLUGIN_ID_011,event->Par2); //WARNING: 'status' uses Par2 instead of Par1
-            
+
             if (!existPortStatus(key)) //tempStatus.mode == PIN_MODE_OUTPUT) // has been set as output
               SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
             else

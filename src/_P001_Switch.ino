@@ -38,18 +38,6 @@ TaskDevicePluginConfigLong settings:
 #define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH 0
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW 1
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH 2
-#define PLUGIN_001_DOUBLECLICK_MIN_INTERVAL 1000
-#define PLUGIN_001_DOUBLECLICK_MAX_INTERVAL 3000
-#define PLUGIN_001_LONGPRESS_MIN_INTERVAL 1000
-#define PLUGIN_001_LONGPRESS_MAX_INTERVAL 5000
-#define PLUGIN_001_DC_DISABLED 0
-#define PLUGIN_001_DC_LOW 1
-#define PLUGIN_001_DC_HIGH 2
-#define PLUGIN_001_DC_BOTH 3
-#define PLUGIN_001_LONGPRESS_DISABLED 0
-#define PLUGIN_001_LONGPRESS_LOW 1
-#define PLUGIN_001_LONGPRESS_HIGH 2
-#define PLUGIN_001_LONGPRESS_BOTH 3
 
 
 // Needed for the GPIO handling.
@@ -137,49 +125,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         int buttonOptionValues[3] = {PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH};
         addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
 
-        addFormCheckBox(F("Send Boot state"),F("p001_boot"),
-        		Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
+        addSendBootStateForm(event->TaskIndex, 3);
 
-        addFormSubHeader(F("Advanced event management"));
+        addAdvancedEventManagementSubHeader();
 
-        addFormNumericBox(F("De-bounce (ms)"), F("p001_debounce"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 0, 250);
-
-        //set minimum value for doubleclick MIN max speed
-        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
-
-        byte choiceDC = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        String buttonDC[4];
-        buttonDC[0] = F("Disabled");
-        buttonDC[1] = F("Active only on LOW (EVENT=3)");
-        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-        int buttonDCValues[4] = {PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH,PLUGIN_001_DC_BOTH};
-
-        addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
-
-        addFormNumericBox(F("Doubleclick max. interval (ms)"), F("p001_dcmaxinterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), PLUGIN_001_DOUBLECLICK_MIN_INTERVAL, PLUGIN_001_DOUBLECLICK_MAX_INTERVAL);
-
-        //set minimum value for longpress MIN max speed
-        if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
-          Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
-
-        byte choiceLP = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
-        String buttonLP[4];
-        buttonLP[0] = F("Disabled");
-        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-        int buttonLPValues[4] = {PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH,PLUGIN_001_LONGPRESS_BOTH};
-        addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
-
-        addFormNumericBox(F("Longpress min. interval (ms)"), F("p001_lpmininterval"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]), PLUGIN_001_LONGPRESS_MIN_INTERVAL, PLUGIN_001_LONGPRESS_MAX_INTERVAL);
-
-        addFormCheckBox(F("Use Safe Button (slower)"), F("p001_sb"), round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]));
-
-        //TO-DO: add Extra-Long Press event
-        //addFormCheckBox(F("Extra-Longpress event (20 & 21)"), F("p001_elp"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-        //addFormNumericBox(F("Extra-Longpress min. interval (ms)"), F("p001_elpmininterval"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2], 500, 2000);
+        addDebounceForm(event->TaskIndex);
+        addDoubleClickEventForm(event->TaskIndex);
+        addLongPressEventForm(event->TaskIndex);
 
         success = true;
         break;
@@ -195,30 +147,12 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
         Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p001_button"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("p001_boot"));
+        saveSendBootStateForm(event->TaskIndex, 3);
+        saveDebounceForm(event->TaskIndex);
+        saveDoubleClickEventForm(event->TaskIndex);
+        saveLongPressEventForm(event->TaskIndex);
 
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemInt(F("p001_debounce"));
-
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p001_dc"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemInt(F("p001_dcmaxinterval"));
-
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p001_lp"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemInt(F("p001_lpmininterval"));
-
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = isFormItemChecked(F("p001_sb"));
-
-        //TO-DO: add Extra-Long Press event
-        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][1] = isFormItemChecked(F("p001_elp"));
-        //Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = getFormItemInt(F("p001_elpmininterval"));
-
-        //check if a task has been edited and remove 'task' bit from the previous pin
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-          if (it->second.previousTask == event->TaskIndex && getPluginFromKey(it->first)==PLUGIN_ID_001) {
-            globalMapPortStatus[it->first].previousTask = -1;
-            removeTaskFromPort(it->first);
-            break;
-          }
-        }
+        update_globalMapPortStatus_onSave(event->TaskIndex, PLUGIN_ID_000);
         success = true;
         break;
       }
@@ -226,15 +160,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         //apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
-        if (Settings.TaskDevicePin1[event->TaskIndex] >= 0 && Settings.TaskDevicePin1[event->TaskIndex] <= PIN_D_MAX)
+        if (checkValidGpioPin(Settings.TaskDevicePin1[event->TaskIndex]))
         {
-          portStatusStruct newStatus;
           const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);
           //Read current status or create empty if it does not exist
-          newStatus = globalMapPortStatus[key];
+          portStatusStruct newStatus = globalMapPortStatus[key];
 
           // read and store current state to prevent switching at boot time
-          newStatus.state = read_GPIO_state(event);
+          newStatus.updatePinState(read_GPIO_state(event));
           newStatus.output = newStatus.state;
           newStatus.task++; // add this GPIO/port as a task
 
@@ -249,9 +182,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
           // if boot state must be send, inverse default state
           // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][3])
+          if (hlp_getMustSendBootState(event->TaskIndex, 3))
           {
-            newStatus.state = !newStatus.state;
+            newStatus.updatePinState(!newStatus.state);
             newStatus.output = !newStatus.output;
           }
 
@@ -263,24 +196,20 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
 
           // counters = 0
-          Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;     //doubleclick counter
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]=0; //safebutton counter
+          hlp_setDoubleClickCounter(event->TaskIndex, 0);     //doubleclick counter
+          hlp_setSafebuttonCounter(event->TaskIndex, 0); //safebutton counter
 
           //used to track if LP has fired
-          Settings.TaskDevicePluginConfig[event->TaskIndex][6]=false;
+          hlp_setLongPressFired(event->TaskIndex, false);
 
           //store millis for debounce, doubleclick and long press
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]=millis(); //debounce timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis(); //doubleclick timer
-          Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis(); //longpress timer
+          unsigned long currentTime = millis();
+          hlp_setClicktimeDebounce(event->TaskIndex, currentTime); //debounce timer
+          hlp_setClicktimeDoubleClick(event->TaskIndex, currentTime); //doubleclick timer
+          hlp_setClicktimeLongpress(event->TaskIndex, currentTime); //longpress timer
 
-          //set minimum value for doubleclick MIN interval speed
-          if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] < PLUGIN_001_DOUBLECLICK_MIN_INTERVAL)
-            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
-
-          //set minimum value for longpress MIN interval speed
-          if (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] < PLUGIN_001_LONGPRESS_MIN_INTERVAL)
-            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
+          setDoubleClickMinInterval(event->TaskIndex);
+          setLongPressMinInterval(event->TaskIndex);
 
           savePortStatus(key,newStatus);
         }
@@ -308,18 +237,18 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_UNCONDITIONAL_POLL:
       {
-        // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-          if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
+        // port monitoring, generates an event by rule command 'monitor_gpio,port#'
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+          if (it->second.mustPollGpioState() && getPluginFromKey(it->first)==PLUGIN_ID_000 ) {
             const uint16_t port = getPortFromKey(it->first);
-            byte state = read_GPIO_state(port, it->second.mode);
-            if (it->second.state != state) {
-              if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
+            bool gpio_state = read_GPIO_state(port, it->second.mode);
+            if (it->second.getPinState() != gpio_state) {
+              if (!it->second.task) it->second.updatePinState(gpio_state); //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (it->second.monitor) {
                 String eventString = F("GPIO#");
                 eventString += port;
                 eventString += '=';
-                eventString += state;
+                eventString += static_cast<int>(gpio_state);
                 rulesProcessing(eventString);
               }
             }
@@ -330,11 +259,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        const boolean state = read_GPIO_state(event);
+        const bool gpio_state = read_GPIO_state(event);
+        bool needToSendEvent = false;
+        bool sendState = gpio_state;
+        byte output_value = gpio_state;
+
 
         /**************************************************************************\
         20181009 - @giig1967g: new doubleclick logic is:
-        if there is a 'state' change, check debounce period.
+        if there is a 'gpio_state' change, check debounce period.
         Then if doubleclick interval exceeded, reset Settings.TaskDevicePluginConfig[event->TaskIndex][7] to 0
         Settings.TaskDevicePluginConfig[event->TaskIndex][7] contains the current status for doubleclick:
         0: start counting
@@ -352,66 +285,44 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         //long timerstats = millis();
 
         //Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
-        if (Settings.TaskDevicePin1[event->TaskIndex]>=0 && Settings.TaskDevicePin1[event->TaskIndex]<=PIN_D_MAX) {
-
-          portStatusStruct currentStatus;
+        if (checkValidGpioPin(Settings.TaskDevicePin1[event->TaskIndex])) {
           const uint32_t key = createInternalGpioKey(Settings.TaskDevicePin1[event->TaskIndex]);
           //WARNING operator [],creates an entry in map if key doesn't exist:
-          currentStatus = globalMapPortStatus[key];
+          portStatusStruct currentStatus = globalMapPortStatus[key];
 
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-          if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
+          const bool gpio_state_changed = gpio_state != currentStatus.getPinState();
+          if (round(hlp_getUseSafeButton(event->TaskIndex)) && gpio_state_changed && hlp_getSafebuttonCounter(event->TaskIndex) == 0)
           {
-            addLog(LOG_LEVEL_DEBUG,"SW  :SafeButton activated")
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
+            addLog(LOG_LEVEL_DEBUG, F("SW  :SafeButton activated"));
+            hlp_setSafebuttonCounter(event->TaskIndex, 1);
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
-          else if (state != currentStatus.state)
+          else if (gpio_state_changed)
           {
+            // FIXME TD-er: Temporary counters and states should not be in settings.
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
-
-            //reset timer for long press
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]=millis();
-            Settings.TaskDevicePluginConfig[event->TaskIndex][6] = false;
-
-            const unsigned long debounceTime = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]);
-            if (debounceTime >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) //de-bounce check
+            hlp_setSafebuttonCounter(event->TaskIndex, 0);
+            hlp_resetLongPressTimer(event->TaskIndex);
+            if (hlp_debounceTimoutPassed(event->TaskIndex)) //de-bounce check
             {
-              const unsigned long deltaDC = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]);
-              if ((deltaDC >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1])) ||
-                   Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3)
-              {
-                //reset timer for doubleclick
-                Settings.TaskDevicePluginConfig[event->TaskIndex][7]=0;
-                Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]=millis();
-              }
+              hlp_processDoubleClick(event->TaskIndex, gpio_state);
 
-  //just to simplify the reading of the code
-  #define COUNTER Settings.TaskDevicePluginConfig[event->TaskIndex][7]
-  #define DC Settings.TaskDevicePluginConfig[event->TaskIndex][4]
-
-                //check settings for doubleclick according to the settings
-                if ( COUNTER!=0 || ( COUNTER==0 && (DC==3 || (DC==1 && state==0) || (DC==2 && state==1))) )
-                  Settings.TaskDevicePluginConfig[event->TaskIndex][7]++;
-  #undef DC
-  #undef COUNTER
-
-              currentStatus.state = state;
-              const boolean currentOutputState = currentStatus.output;
-              boolean new_outputState = currentOutputState;
+              currentStatus.updatePinState(gpio_state);
+              const bool currentOutputState = currentStatus.output == 1;
+              bool new_outputState = currentOutputState;
               switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
               {
                 case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
-                    new_outputState = state;
+                    new_outputState = gpio_state;
                   break;
                 case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
-                  if (!state)
+                  if (!gpio_state)
                     new_outputState = !currentOutputState;
                   break;
                 case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
-                  if (state)
+                  if (gpio_state)
                     new_outputState = !currentOutputState;
                   break;
               }
@@ -419,19 +330,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               // send if output needs to be changed
               if (currentOutputState != new_outputState)
               {
-                byte output_value;
+                needToSendEvent = true;
                 currentStatus.output = new_outputState;
-                boolean sendState = new_outputState;
-
-                if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-                  sendState = !sendState;
-
-                if (Settings.TaskDevicePluginConfig[event->TaskIndex][7]==3 && Settings.TaskDevicePluginConfig[event->TaskIndex][4]>0)
-                {
-                  output_value = 3; //double click
-                } else {
-                  output_value = sendState ? 1 : 0; //single click
-                }
+                sendState = new_outputState;
+                output_value = hlp_getOutputValue_updateSendState(event->TaskIndex, sendState);
                 event->sensorType = SENSOR_TYPE_SWITCH;
                 if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
                   if (sendState) {
@@ -440,104 +342,69 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                     event->sensorType = SENSOR_TYPE_DIMMER;
                   }
                 }
-                UserVar[event->BaseVarIndex] = output_value;
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("SW  : GPIO=");
-                  log += Settings.TaskDevicePin1[event->TaskIndex];
-                  log += F(" State=");
-                  log += state ? '1' : '0';
-                  log += output_value==3 ? F(" Doubleclick=") : F(" Output value=");
-                  log += output_value;
-                  addLog(LOG_LEVEL_INFO, log);
-                }
-                sendData(event);
-
-                //reset Userdata so it displays the correct state value in the web page
-                UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
               }
-              Settings.TaskDevicePluginConfigLong[event->TaskIndex][0] = millis();
+              hlp_setClicktimeDebounce(event->TaskIndex, millis());
             }
-            savePortStatus(key,currentStatus);
+            savePortStatus(key, currentStatus);
           }
 
-  //just to simplify the reading of the code
-  #define LP Settings.TaskDevicePluginConfig[event->TaskIndex][5]
-  #define FIRED Settings.TaskDevicePluginConfig[event->TaskIndex][6]
-
           //CASE 3: status unchanged. Checking longpress:
-          //Check if LP is enabled and if LP has not fired yet
-          else if (!FIRED && (LP==3 ||(LP==1 && state==0)||(LP==2 && state==1) ) ) {
-
-  #undef LP
-  #undef FIRED
+          else if (hlp_LongPressEnabled_and_notFired(event->TaskIndex, gpio_state)) {
 
             /**************************************************************************\
             20181009 - @giig1967g: new longpress logic is:
-            if there is no 'state' change, check if longpress interval reached
+            if there is no 'gpio_state' change, check if longpress interval reached
             When reached send longpress event.
-            Returned Event value = state + 10
-            So if state = 0 => EVENT longpress = 10
-            if state = 1 => EVENT longpress = 11
+            Returned Event value = gpio_state + 10
+            So if gpio_state = 0 => EVENT longpress = 10
+            if gpio_state = 1 => EVENT longpress = 11
             So we can trigger longpress for high or low contact
 
             In rules this can be checked:
-            on Button#Switch=10 do //will fire if longpress when state = 0
-            on Button#Switch=11 do //will fire if longpress when state = 1
+            on Button#Switch=10 do //will fire if longpress when gpio_state = 0
+            on Button#Switch=11 do //will fire if longpress when gpio_state = 1
             \**************************************************************************/
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            hlp_setSafebuttonCounter(event->TaskIndex, 0);
 
-            const unsigned long deltaLP = timePassedSince(Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
-            if (deltaLP >= (unsigned long)lround(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2]))
+            if (hlp_LongPressIntervalReached(event->TaskIndex))
             {
-              byte output_value;
-              byte needToSendEvent = false;
+              hlp_setLongPressFired(event->TaskIndex,  true);
 
-              Settings.TaskDevicePluginConfig[event->TaskIndex][6] = true;
-
+              needToSendEvent = false;
               switch(Settings.TaskDevicePluginConfig[event->TaskIndex][2])
               {
                 case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
                     needToSendEvent = true;
                   break;
                 case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
-                  if (!state)
+                  if (!gpio_state)
                     needToSendEvent = true;
                   break;
                 case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
-                  if (state)
+                  if (gpio_state)
                     needToSendEvent = true;
                   break;
               }
 
               if (needToSendEvent) {
-                boolean sendState = state;
-                if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
-                  sendState = !sendState;
-                output_value = sendState ? 11 : 10;
-                //output_value = output_value + 10;
-
-                UserVar[event->BaseVarIndex] = output_value;
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("SW  : LongPress: GPIO= ");
-                  log += Settings.TaskDevicePin1[event->TaskIndex];
-                  log += F(" State=");
-                  log += state ? '1' : '0';
-                  log += F(" Output value=");
-                  log += output_value;
-                  addLog(LOG_LEVEL_INFO, log);
-                }
-                sendData(event);
-
-                //reset Userdata so it displays the correct state value in the web page
-                UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+                sendState = gpio_state;
+                output_value = hlp_getOutputValue_updateSendState(event->TaskIndex, sendState);
               }
-              savePortStatus(key,currentStatus);
+              savePortStatus(key, currentStatus);
             }
           } else {
             // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            hlp_setSafebuttonCounter(event->TaskIndex, 0);
           }
+        }
+        if (needToSendEvent) {
+          UserVar[event->BaseVarIndex] = output_value;
+          hlp_logState_and_Output(event->TaskIndex, gpio_state, sendState, output_value, PLUGIN_ID_000);
+          sendData(event);
+
+          //reset Userdata so it displays the correct gpio_state value in the web page
+          UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
         }
         success = true;
         break;
@@ -593,7 +460,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         const uint32_t key = createInternalGpioKey(event->Par1);
         tempStatus = globalMapPortStatus[key];
 
-        tempStatus.state = event->Par2;
+        tempStatus.updatePinState(event->Par2);
         tempStatus.mode = PIN_MODE_OUTPUT;
         savePortStatus(key,tempStatus);
         break;
@@ -619,5 +486,7 @@ byte P001_getSwitchType(struct EventStruct *event) {
   }
   return choice;
 }
+
+
 
 #endif // USES_P001

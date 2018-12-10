@@ -114,45 +114,40 @@ String Command_JSONPortStatus(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
-void createLogPortStatus(std::map<uint32_t,portStatusStruct>::iterator it)
-{
-	String log = F("PortStatus detail: ");
-	log += F("Port=");
-	log += getPortFromKey(it->first);
-	log += F(" State=");
-	log += it->second.state;
-	log += F(" Output=");
-	log += it->second.output;
-	log += F(" Mode=");
-	log += it->second.mode;
-	log += F(" Task=");
-	log += it->second.task;
-	log += F(" Monitor=");
-	log += it->second.monitor;
-	log += F(" Command=");
-	log += it->second.command;
-	log += F(" Init=");
-	log += it->second.init;
-	log += F(" PreviousTask=");
-	log += it->second.previousTask;
-	addLog(LOG_LEVEL_INFO,log);
-}
-
-void debugPortStatus(std::map<uint32_t,portStatusStruct>::iterator it)
-{
-	createLogPortStatus(it);
-}
-
-void logPortStatus(String from) {
-  String log;
-  log=F("PortStatus structure: Called from=");
-  log+=from;
-  log+=F(" Count=");
-  log+=globalMapPortStatus.size();
-  addLog(LOG_LEVEL_INFO,log);
-
-  for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-		debugPortStatus(it);
+void logPortStatus(const String& from) {
+	if (!loglevelActiveFor(LOG_LEVEL_INFO)) return;
+	{
+		String log;
+		log.reserve(44 + from.length());
+	  log=F("PortStatus structure: Called from=");
+	  log+=from;
+	  log+=F(" Count=");
+	  log+=globalMapPortStatus.size();
+	  addLog(LOG_LEVEL_INFO,log);
+	}
+  for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+		String log;
+		log.reserve(80);
+		log = F("PortStatus detail: ");
+		log += F("Port=");
+		log += getPortFromKey(it->first);
+		log += F(" State=");
+		log += it->second.state;
+		log += F(" Output=");
+		log += it->second.output;
+		log += F(" Mode=");
+		log += it->second.mode;
+		log += F(" Task=");
+		log += it->second.task;
+		log += F(" Monitor=");
+		log += it->second.monitor;
+		log += F(" Command=");
+		log += it->second.command;
+		log += F(" Init=");
+		log += it->second.portstatus_init;
+		log += F(" PreviousTask=");
+		log += it->second.previousTask;
+		addLog(LOG_LEVEL_INFO,log);
   }
 }
 

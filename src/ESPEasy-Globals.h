@@ -349,16 +349,7 @@
 
 #define UDP_PACKETSIZE_MAX               2048
 
-#define PIN_MODE_UNDEFINED                  0
-#define PIN_MODE_INPUT                      1
-#define PIN_MODE_OUTPUT                     2
-#define PIN_MODE_PWM                        3
-#define PIN_MODE_SERVO                      4
-#define PIN_MODE_INPUT_PULLUP               5
-#define PIN_MODE_OFFLINE                    6
 
-#define SEARCH_PIN_STATE                 true
-#define NO_SEARCH_PIN_STATE             false
 
 #define DEVICE_TYPE_SINGLE                  1  // connected through 1 datapin
 #define DEVICE_TYPE_DUAL                    2  // connected through 2 datapins
@@ -1994,24 +1985,6 @@ String getMiscStatsName(int stat) {
 }
 
 
-struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0),  previousTask(-1) {}
-
-  int8_t state : 2; //-1,0,1
-  int8_t output : 2; //-1,0,1
-  int8_t command : 2; //0,1
-  int8_t init : 2; //0,1
-
-  uint8_t mode : 3; //6 current values (max. 8)
-  uint8_t task : 4; //0-15 (max. 16)
-  uint8_t monitor : 1; //0,1
-
-  int8_t previousTask : 8;
-};
-
-std::map<uint32_t, portStatusStruct> globalMapPortStatus;
-
-
 /********************************************************************************************\
   Pre defined settings for off-the-shelf hardware
   \*********************************************************************************************/
@@ -2163,5 +2136,6 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 #include "ESPEasyWiFiEvent.h"
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 #include "WebServer_Rules.h"
+#include "ESPEasy-GPIO.h"
 
 #endif /* ESPEASY_GLOBALS_H_ */

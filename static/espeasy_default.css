@@ -353,7 +353,7 @@ table.multirow tr:nth-child(even){
     border-radius:4px 4px 0 0;
     border-width:4px 1px 1px;
     color:#444;
-    padding:4px 16px 8px;
+    padding:4px 16px 4px;
     white-space:nowrap
 }
 .menu.active{
