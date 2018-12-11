@@ -405,14 +405,14 @@ bool SSDP_begin() {
     return false;
   }
 
-  if (!_server->listen(*IP_ADDR_ANY, SSDP_PORT)) {
+  if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
     return false;
   }
 
-  _server->setMulticastInterface(ifaddr);
+  _server->setMulticastInterface(&ifaddr);
   _server->setMulticastTTL(SSDP_MULTICAST_TTL);
   _server->onRx(&SSDP_update);
-  if (!_server->connect(multicast_addr, SSDP_PORT)) {
+  if (!_server->connect(&multicast_addr, SSDP_PORT)) {
     return false;
   }
 
