@@ -1,10 +1,10 @@
 #ifndef COMMAND_GPIO_H
 #define COMMAND_GPIO_H
 
-#if defined(ESP8266)
+#ifdef USE_SERVO
 Servo servo1;
 Servo servo2;
-#endif /* if defined(ESP8266) */
+#endif // USE_SERVO
 
 #define PLUGIN_ID_000    0
 
@@ -302,7 +302,8 @@ String Command_servo(struct EventStruct *event, const char *Line)
     case 1:
 
       // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
-#if defined(ESP8266)
+#ifdef USE_SERVO
+
 
       // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
       if (event->Par3 >= 9000) {
@@ -311,18 +312,17 @@ String Command_servo(struct EventStruct *event, const char *Line)
         servo1.attach(event->Par2);
         servo1.write(event->Par3);
       }
-#endif /* if defined(ESP8266) */
+#endif // USE_SERVO
       break;
     case 2:
-#if defined(ESP8266)
-
+#ifdef USE_SERVO
       if (event->Par3 >= 9000) {
         servo2.detach();
       } else {
         servo2.attach(event->Par2);
         servo2.write(event->Par3);
       }
-#endif /* if defined(ESP8266) */
+#endif // USE_SERVO
       break;
     }
 

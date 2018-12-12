@@ -405,6 +405,8 @@ bool SSDP_begin() {
     return false;
   }
 
+#ifdef CORE_2_5_0
+  // Core 2.5.0 changed the signature of some UdpContext function.
   if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
     return false;
   }
@@ -415,6 +417,18 @@ bool SSDP_begin() {
   if (!_server->connect(&multicast_addr, SSDP_PORT)) {
     return false;
   }
+#else
+  if (!_server->listen(*IP_ADDR_ANY, SSDP_PORT)) {
+    return false;
+  }
+
+  _server->setMulticastInterface(ifaddr);
+  _server->setMulticastTTL(SSDP_MULTICAST_TTL);
+  _server->onRx(&SSDP_update);
+  if (!_server->connect(multicast_addr, SSDP_PORT)) {
+    return false;
+  }
+#endif
 
   SSDP_update();
 
