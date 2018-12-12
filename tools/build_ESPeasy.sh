@@ -58,7 +58,7 @@ if (( $PULL_REQ != 0 )); then
   if [ -z "$DESCRIPTION" ]
   then
     GIT_DESCRIBE=`git describe|cut -d'-' -f-3`
-    DESCRIPTION=`echo "${GIT_DESCRIBE}-PR #${PULL_REQ}"`
+    DESCRIPTION=`echo "${GIT_DESCRIBE}-PR_${PULL_REQ}"`
   fi
 fi
 
