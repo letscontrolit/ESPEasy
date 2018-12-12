@@ -221,28 +221,14 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string) {
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) {
                 uint8_t pin = Settings.TaskDevicePin1[event->TaskIndex];
                 boolean pullup = Settings.TaskDevicePin1PullUp[event->TaskIndex];
-                String log = F("DS   : ");
                 uint8_t addr[ADDR_SIZE];
                 Plugin_004_get_addr(addr, event->TaskIndex);
-                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                    log += (" (");
-                    for (byte x = 0; x < ADDR_SIZE; x++) {
-                        if (x != 0)
-                            log += '-';
-                        log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
-                    }
-                    log += (") ");
-                }
+
                 if (timeOutReached(Plugin_004_timeoutGPIO[pin])) {
-                    log += F("->gpio ");
-                    log += String(pin);
-                    log += F(" ready ");
                     if (Plugin_004_newValue[event->TaskIndex]) {
-                        log += F("->new value task ");
-                        log += String(event->TaskIndex);
-                        log += F(" ->Temp: ");
                         Plugin_004_newValue[event->TaskIndex] = false;
                         float value = 0;
+                        String log = F("DS   : Temperature: ");
                         if (Plugin_004_DS_readTemp(addr, &value, pin, pullup)) {
                             UserVar[event->BaseVarIndex] = value;
                             log += UserVar[event->BaseVarIndex];
@@ -251,40 +237,32 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string) {
                             UserVar[event->BaseVarIndex] = NAN;
                             log += F("Error!");
                         }
-
-
+                        log += (" (");
+                        for (byte x = 0; x < 8; x++)
+                          {
+                              if (x != 0)
+                              log += '-';
+                              log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                          }
+                        log += ')';
+                        addLog(LOG_LEVEL_INFO, log);
                     } else {
-                        log += F("->startConversion ");
                         if (Plugin_004_DS_startConversion(addr, pin, pullup, Plugin_004_parasite[event->TaskIndex], ExtraTaskSettings.TaskDevicePluginConfig[0])) {
                             Plugin_004_newValue[event->TaskIndex] = true;
-                            log += F("->reschedule read task ");
-                            log += String(event->TaskIndex);
                             //GPIO in use -> reschedule after timeOutReached
                             schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[pin]);
                         }
                     }
                 } else {
-                    log += F("->gpio ");
-                    log += String(pin);
-                    log += (" busy ->reschedule task ");
-                    log += String(event->TaskIndex);
                     //GPIO in use -> reschedule after timeOutReached
                     schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[pin]);
                 }
-                addLog(LOG_LEVEL_INFO, log);
+
             }
             break;
         }
     }
     return success;
-}
-
-void Plugin_004_toString(const uint8_t * ROM, String & string) {
-    for (uint8_t i = 0; i < ADDR_SIZE; i++) {
-        if (i != 0)
-            string += '-';
-        string += String(ROM[i], HEX);
-    }
 }
 
 void Plugin_004_get_addr(uint8_t addr[], byte taskIndex) {
@@ -311,7 +289,6 @@ bool Plugin_004_isParasite(const uint8_t * ROM, uint8_t pin, boolean pullup) {
         Plugin_004_DS_write(READPOWERSUPPLY, pin);
     } else {
         String log = F("DS   : isParasite: reset fail ");
-        Plugin_004_toString(ROM, log);
         addLog(LOG_LEVEL_ERROR, log);
     }
     return !Plugin_004_DS_read_bit(pin, pullup);
@@ -333,7 +310,6 @@ byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t* ROM, uint8_t pin, boolean pu
         }
     } else {
         String log = F("DS   : scan: reset fail ");
-        Plugin_004_toString(ROM, log);
         addLog(LOG_LEVEL_ERROR, log);
     }
     return devCount;
@@ -370,7 +346,6 @@ boolean Plugin_004_DS_startConversion(uint8_t * ROM, uint8_t pin, boolean pullup
         return true;
     } else {
         String log = F("DS   : startConversion: reset fail ");
-        Plugin_004_toString(ROM, log);
         addLog(LOG_LEVEL_ERROR, log);
         return false;
     }
@@ -410,7 +385,6 @@ boolean Plugin_004_DS_readSP(uint8_t * ROM, byte * ScratchPad, uint8_t pin, bool
             }
         } else {
             String log = F("DS   : readSP: reset fail ");
-            Plugin_004_toString(ROM, log);
             addLog(LOG_LEVEL_ERROR, log);
         }
     } while (!crc_ok);
