@@ -34,9 +34,7 @@ for ENV in \
   test_ESP8266_4096_VCC\
   test_ESP8266_1024_VCC\
   test_ESP8285_1024\
-  dev_ESP8266_1024\
   dev_ESP8266_4096\
-  dev_ESP8285_1024\
   hard_SONOFF_POW_4M\
   minimal_ESP8266_1024_OTA\
   minimal_ESP8285_1024_OTA\
