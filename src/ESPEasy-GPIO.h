@@ -20,7 +20,7 @@
 // See description/discussion:
 // https://github.com/letscontrolit/ESPEasy/pull/2057#issuecomment-445310454
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), portstatus_init(0), mode(0), task(0), monitor(0), previousTask(-1)
+  portStatusStruct() : state(-1), output(-1), command(0), portstatus_init(0), mode(0), task(0), forceMonitorEvent(0), monitor(0), previousTask(-1)
     {}
 
   int8_t state   : 2;  // -1,0,1
@@ -29,7 +29,8 @@ struct portStatusStruct {
   int8_t portstatus_init    : 2;  // true when the gpio/port has been set during boot in the hardware page
 
   uint8_t mode    : 3; // 7 current values (max. 8)
-  uint8_t task    : 4; // 0-15 (max. 16)  If task = 0 it means that no task are referencing that pin.
+  uint8_t task    : 3; // 0-7 (max. 8)  If task = 0 it means that no task are referencing that pin.
+  uint8_t forceMonitorEvent : 1; //0,1 true to send an EVENT after a command has been sent
   uint8_t monitor : 1; // 0,1  true means the gpio/port should send an event when it changes
 
   int8_t previousTask;

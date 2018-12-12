@@ -4050,7 +4050,19 @@ void handle_control() {
     eventBuffer = webrequest.substring(6);
     handledCmd = true;
   }
-  else if (command.equalsIgnoreCase(F("taskrun")) ||
+  else if (command.equalsIgnoreCase(F("taskrun")) || //added gpio commands that were in the PLUGIN_WRITE function
+          command.equalsIgnoreCase(F("gpio")) ||
+          command.equalsIgnoreCase(F("gpiotoggle")) ||
+          command.equalsIgnoreCase(F("longpulse")) ||
+          command.equalsIgnoreCase(F("longpulse_ms")) ||
+          command.equalsIgnoreCase(F("monitor_gpio")) ||
+          command.equalsIgnoreCase(F("pulse")) ||
+          command.equalsIgnoreCase(F("pwm")) ||
+          command.equalsIgnoreCase(F("rtttl")) ||
+          command.equalsIgnoreCase(F("servo")) ||
+          command.equalsIgnoreCase(F("status_gpio")) ||
+          command.equalsIgnoreCase(F("unmonitor_gpio")) ||
+          command.equalsIgnoreCase(F("tone")) ||
            command.equalsIgnoreCase(F("taskvalueset")) ||
            command.equalsIgnoreCase(F("taskvaluetoggle")) ||
            command.equalsIgnoreCase(F("let")) ||

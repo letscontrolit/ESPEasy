@@ -229,7 +229,7 @@ void hlp_logState_and_Output(byte taskIndex, bool gpio_state, bool sendState, by
       default: log += F("???"); break;
     }
     log += F("  : Port=");
-    log += Settings.TaskDevicePin1[taskIndex];
+    (pluginId==0) ? log += Settings.TaskDevicePin1[taskIndex] : log += Settings.TaskDevicePort[taskIndex];
     log += F(" pinState=");
     log += gpio_state ? '1' : '0';
     log += F(" sendState=");

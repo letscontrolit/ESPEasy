@@ -50,6 +50,7 @@ String Command_GPIO(struct EventStruct *event, const char *Line)
     tempStatus.output = event->Par2;
   }
   tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+  if (tempStatus.monitor) tempStatus.forceMonitorEvent=1; //set to 1 in order to force an EVENT in case monitor is requested
   savePortStatus(key, tempStatus);
 
   String log = String(F("GPIO : ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
@@ -81,6 +82,7 @@ String Command_GPIOtoggle(struct EventStruct *event, const char *Line)
     tempStatus.mode    = PIN_MODE_OUTPUT;
     tempStatus.command = 1;                                                              // set to 1 in order to display the status in the
                                                                                          // PinStatus page
+    if (tempStatus.monitor) tempStatus.forceMonitorEvent=1; //set to 1 in order to force an EVENT in case monitor is requested
 
     pinMode(event->Par1, OUTPUT);
     digitalWrite(event->Par1, tempStatus.state);
@@ -352,6 +354,8 @@ String Command_monitor_gpio(struct EventStruct *event, const char *Line)
   const uint32_t key = createInternalGpioKey(event->Par1);
 
   addMonitorToPort(key);
+  //giig1967g: Comment next line to receive an EVENT just after calling the monitor command
+  globalMapPortStatus[key].state = read_GPIO_state(event->Par1, globalMapPortStatus[key].mode); //set initial value to avoid an event just after calling the command
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -375,6 +379,7 @@ String Command_unmonitor_gpio(struct EventStruct *event, const char *Line)
   if (!checkValidGpioPin(event->Par1)) return return_command_failed_invalid_GPIO(event->Par1);
   const uint32_t key = createInternalGpioKey(event->Par1);
 
+  SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
   removeMonitorFromPort(key);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -385,7 +390,6 @@ String Command_unmonitor_gpio(struct EventStruct *event, const char *Line)
     log += F(" removed from monitor list.");
     addLog(LOG_LEVEL_INFO, log);
   }
-  SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
   return return_command_success();
 }
 

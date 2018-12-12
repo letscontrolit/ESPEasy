@@ -373,12 +373,12 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value) {
 /*********************************************************************************************\
    report pin mode & state (info table) using json
   \*********************************************************************************************/
-String getPinStateJSON(boolean search, uint32_t key, const String& log, uint16_t noSearchValue)
+String getPinStateJSON(boolean search, uint32_t key, const String& log, int16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
   byte mode = PIN_MODE_INPUT;
-  uint16_t value = noSearchValue;
+  int16_t value = noSearchValue;
   boolean found = false;
 
   if (search && existPortStatus(key))
@@ -413,7 +413,7 @@ String getPinModeString(byte mode) {
   {
     case PIN_MODE_UNDEFINED:    return F("undefined");
     case PIN_MODE_INPUT:        return F("input");
-    case PIN_MODE_INPUT_PULLUP: return F("input pullup");
+    case PIN_MODE_INPUT_PULLUP: return F("input_pullup");
     case PIN_MODE_OFFLINE:      return F("offline");
     case PIN_MODE_OUTPUT:       return F("output");
     case PIN_MODE_PWM:          return F("PWM");
@@ -421,7 +421,7 @@ String getPinModeString(byte mode) {
     default:
       break;
   }
-  return F("ERROR: Not Defined");
+  return F("error_not_defined");
 }
 
 

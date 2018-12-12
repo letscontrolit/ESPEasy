@@ -242,9 +242,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if (it->second.mustPollGpioState() && getPluginFromKey(it->first)==PLUGIN_ID_000 ) {
             const uint16_t port = getPortFromKey(it->first);
             bool gpio_state = read_GPIO_state(port, it->second.mode);
-            if (it->second.getPinState() != gpio_state) {
+            if (it->second.getPinState() != gpio_state || it->second.forceMonitorEvent) {
               if (!it->second.task) it->second.updatePinState(gpio_state); //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (it->second.monitor) {
+                it->second.forceMonitorEvent=0; //reset flag
                 String eventString = F("GPIO#");
                 eventString += port;
                 eventString += '=';
@@ -295,7 +296,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           const bool gpio_state_changed = gpio_state != currentStatus.getPinState();
           if (round(hlp_getUseSafeButton(event->TaskIndex)) && gpio_state_changed && hlp_getSafebuttonCounter(event->TaskIndex) == 0)
           {
-            addLog(LOG_LEVEL_DEBUG, F("SW  :SafeButton activated"));
+            addLog(LOG_LEVEL_DEBUG, F("SW  :SafeButton 1st click"));
             hlp_setSafebuttonCounter(event->TaskIndex, 1);
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
@@ -394,8 +395,25 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               savePortStatus(key, currentStatus);
             }
           } else {
-            // Reset SafeButton counter
-            hlp_setSafebuttonCounter(event->TaskIndex, 0);
+            if (round(hlp_getUseSafeButton(event->TaskIndex)) && hlp_getSafebuttonCounter(event->TaskIndex)) { //Safe Button detected. Send EVENT value = 4
+              // Reset SafeButton counter
+              hlp_setSafebuttonCounter(event->TaskIndex, 0);
+
+              //Create EVENT with value = 4 for SafeButton false positive detection
+              const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+              UserVar[event->BaseVarIndex] = 4;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : SafeButton: false positive detected. GPIO= ");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += tempUserVar;
+                addLog(LOG_LEVEL_INFO, log);
+              }
+              sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = tempUserVar;
+            }
           }
         }
         if (needToSendEvent) {
