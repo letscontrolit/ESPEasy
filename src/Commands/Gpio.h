@@ -474,6 +474,17 @@ bool read_GPIO_state(byte pinNumber, byte pinMode) {
   return digitalRead(pinNumber) == HIGH;
 }
 
+bool checkValidGpioPin(struct EventStruct *event) {
+  if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX)) { return true; }
+
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log;
+    log  = F("GPIO : Invalid GPIO pin given: ");
+    log += event->Par1;
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+}
+
 void analogWriteESP(int pin, int value)
 {
   #if defined(ESP32)
