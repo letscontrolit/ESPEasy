@@ -15,11 +15,11 @@ Supported hardware: |P000_usedby_GPIO|
 
   State:
 
-  **2** (HIGH-Z, input)
+  **2** (HIGH-Z)
 
-  **1** (HIGH, output)
+  **1** (HIGH)
 
-  **0** (LOW, output)
+  **0** (LOW)
   ","
   **Basic on/off.**.
   We can control a pin with simple http URL commands. To change the pin to high or low steady output. Setting GPIO to **2** means
@@ -45,9 +45,8 @@ Supported hardware: |P000_usedby_GPIO|
   Duration: 1 ... 999 S
   ","
   **To send a *long* pulse to a certain pin.**.
-  A long pulse is basically the same as the plain pulse.  Duration is defined in seconds, which makes it more suitable for longer duration.
-  This command is not blocking, but will send 2 events to start and stop the pulse. This may have some variation depending on the system load of the module.
-  Variation is typically up-to 10 msec, but may be up-to a second, depending on active plugins and controllers performing blocking operations.
+  A long pulse is basically the same as the plain pulse. The only difference is the time base in seconds rather than in milliseconds.
+  So it's more suitable for longer duration.
   "
   "
   ``LongPulse_mS,<GPIO>,<state>,<duration>``
@@ -72,7 +71,6 @@ Supported hardware: |P000_usedby_GPIO|
   ","
   **To send a *short* pulse to a certain pin.**
   Example to send an active high (1) pulse on GPIO 14 for 500 mSeconds. Pulse duration is in milliseconds. State is 1 or 0.
-  N.B. this is a blocking call, meaning no other actions will be performed during the pulse.
   "
   "
   ``PWM,<GPIO>,<duty>``

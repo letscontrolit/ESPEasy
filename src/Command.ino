@@ -76,6 +76,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 'i': {
 	  COMMAND_CASE("i2cscanner"             , Command_i2c_Scanner);                // i2c.h
+    COMMAND_CASE("inputswitchstate"       , Command_inputswitchstate);           // GPIO Command
 	  COMMAND_CASE("ip"                     , Command_IP);                         // Network Command
       break;
     }
