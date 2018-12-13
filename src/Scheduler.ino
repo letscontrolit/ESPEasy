@@ -236,7 +236,7 @@ void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par
 }
 */
 
-void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
+void setPluginTaskTimer(unsigned long timer, byte plugin, short taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   const unsigned long systemTimerId = createPluginTaskTimerId(plugin, Par1);
@@ -248,7 +248,7 @@ void setPluginTaskTimer(unsigned long msecFromNow, byte plugin, short taskIndex,
   timer_data.Par4 = Par4;
   timer_data.Par5 = Par5;
   systemTimers[systemTimerId] = timer_data;
-  setTimer(PLUGIN_TASK_TIMER, systemTimerId, msecFromNow);
+  setTimer(PLUGIN_TASK_TIMER, systemTimerId, timer);
 }
 
 void process_plugin_task_timer(unsigned long id) {
@@ -277,7 +277,7 @@ void process_plugin_task_timer(unsigned long id) {
   if (y >= 0) {
     String dummy;
     Plugin_ptr[y](PLUGIN_TIMER_IN, &TempEvent, dummy);
-  }
+  }  
   STOP_TIMER(PROC_SYS_TIMER);
 }
 
