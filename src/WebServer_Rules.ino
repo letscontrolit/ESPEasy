@@ -139,7 +139,7 @@ void handle_rules_new() {
   checkRAM(F("handle_rules"));
 }
 
-void handle_rules_backup(/* arguments */) {
+void handle_rules_backup() {
   if(Settings.OldRulesEngine())
   {
     Goto_Rules_Root();
@@ -191,7 +191,7 @@ void handle_rules_backup(/* arguments */) {
   checkRAM(F("handle_rules_backup"));
 }
 
-void handle_rules_delete(/* arguments */) {
+void handle_rules_delete() {
   if (!isLoggedIn() || !Settings.UseRules) return;
   if (!clientIPallowed()) return;
   if(Settings.OldRulesEngine())
@@ -437,7 +437,7 @@ bool Rule_Download(const String& path)
   return true;
 }
 
-void Goto_Rules_Root(/* arguments */) {
+void Goto_Rules_Root() {
   WebServer.sendHeader(F("Location"), F("/rules"),true);
   WebServer.send(302, F("text/plain"),F(""));
 }

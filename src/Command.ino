@@ -32,6 +32,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
   	String log = F("Command: ");
   	log += cmd_lc;
   	addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
   }
   // Simple macro to match command to function call.
   #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { return (C(event, line)); }
@@ -75,7 +76,6 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     }
     case 'i': {
 	  COMMAND_CASE("i2cscanner"             , Command_i2c_Scanner);                // i2c.h
-    COMMAND_CASE("inputswitchstate"       , Command_inputswitchstate);           // GPIO Command
 	  COMMAND_CASE("ip"                     , Command_IP);                         // Network Command
       break;
     }
