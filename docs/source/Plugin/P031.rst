@@ -25,6 +25,11 @@ Supported hardware
 
 |P031_usedby|
 
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P031_commands.repl
+
 Change log
 ----------
 
@@ -39,3 +44,6 @@ Change log
 
   |added|
   Initial release version.
+
+
+

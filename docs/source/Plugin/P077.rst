@@ -25,6 +25,11 @@ Supported hardware
 
 |P077_usedby|
 
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P077_commands.repl
+
 Change log
 ----------
 
@@ -39,3 +44,6 @@ Change log
 
   |added|
   Initial release version.
+
+
+
