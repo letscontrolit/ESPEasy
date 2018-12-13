@@ -13,6 +13,23 @@ SRC=~/GitHub/letscontrolit/ESPEasy
 REPO=https://github.com/letscontrolit/ESPEasy.git
 BRANCH=mega
 
+PULL_REQ=0
+DESCRIPTION=""
+
+while getopts p:d: option
+do
+case "${option}"
+in
+p)
+  # get a specific pull request
+  PULL_REQ=${OPTARG}
+  ;;
+d) DESCRIPTION=${OPTARG};;
+esac
+done
+
+
+
 # If virtualenv does not exist, make it.
 if [ ! -d ${VENV} ]; then
   mkdir -p ${VENV}
@@ -35,6 +52,15 @@ cd ${SRC}
 git fetch --tags
 git rebase
 git submodule update --init --recursive
+if (( $PULL_REQ != 0 )); then
+  git fetch origin +refs/pull/${PULL_REQ}/merge:
+  git checkout -qf FETCH_HEAD
+  if [ -z "$DESCRIPTION" ]
+  then
+    GIT_DESCRIBE=`git describe|cut -d'-' -f-3`
+    DESCRIPTION=`echo "${GIT_DESCRIBE}-PR_${PULL_REQ}"`
+  fi
+fi
 
 # Build documentation
 cd ${SRC}/docs
@@ -59,4 +85,9 @@ PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run
 
 # Rename all built files, compute CRC and insert binaryFilename
 # Collect all in a zip file.
-${SRC}/before_deploy
+if [ -z "$DESCRIPTION" ]
+then
+  ${SRC}/before_deploy
+else
+  ${SRC}/before_deploy -d ${DESCRIPTION}
+fi

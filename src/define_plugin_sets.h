@@ -26,6 +26,11 @@ To create/register a plugin, you have to :
  * BUILD Configs *******************************************************************
 \******************************************************************************/
 
+#ifdef FORCE_PRE_2_5_0
+  #ifdef CORE_2_5_0
+    #undef CORE_2_5_0
+  #endif
+#endif
 
 
 // IR library is large, so make a separate build including stable plugins and IR.
@@ -289,7 +294,7 @@ To create/register a plugin, you have to :
         #define USES_P001   // switch
     #endif
     #ifndef USES_P003
-        #define USES_P003   // pulse
+//        #define USES_P003   // pulse
     #endif
     #ifndef USES_P026
       #define USES_P026   // SysInfo
@@ -421,6 +426,8 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
+    #define USE_SERVO
+    
     #define USES_P001   // Switch
     #define USES_P002   // ADC
     #define USES_P003   // Pulse
@@ -648,6 +655,24 @@ To create/register a plugin, you have to :
   #undef USES_P071   // Kamstrup401
   #undef USES_P075   // Nextion
   #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
+
+  #ifdef USE_SERVO
+    #undef USE_SERVO
+  #endif
+#endif
+
+#ifdef CORE_2_5_0
+  // These use too much iRAM.
+  // See: https://github.com/esp8266/Arduino/issues/5476
+  #ifdef USES_P003   // pulse
+    #undef USES_P003
+  #endif
+  #ifdef USES_P008   // RFID
+    #undef USES_P008
+  #endif
+  #ifdef USE_SERVO
+    #undef USE_SERVO
+  #endif
 #endif
 
 

@@ -1,8 +1,10 @@
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
 #ifndef ESPEASY_GLOBALS_H_
 #define ESPEASY_GLOBALS_H_
+
+#ifndef CORE_2_5_0
+  #define STR_HELPER(x) #x
+  #define STR(x) STR_HELPER(x)
+#endif
 
 // ********************************************************************************
 //   User specific configuration
