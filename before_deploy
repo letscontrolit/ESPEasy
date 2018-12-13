@@ -32,25 +32,27 @@ fi
 
 
 for ENV in \
-  normal_ESP8266_1024 \
-  normal_ESP8266_4096 \
-  normal_ESP8285_1024 \
-  normal_IR_ESP8266_4096 \
-  normal_core_241_ESP8266_1024 \
-  normal_core_241_ESP8266_4096 \
-  test_ESP8266_1024\
-  test_ESP8266_4096\
-  test_ESP8266_4096_VCC\
-  test_ESP8266_1024_VCC\
-  test_ESP8285_1024\
-  dev_ESP8266_1024\
-  dev_ESP8266_4096\
-  dev_ESP8285_1024\
-  hard_SONOFF_POW_4M\
+  esp-wrover-kit_test_1M8_partition\
+  esp32dev\
+  esp32test_1M8_partition\
+  normal_ESP8266_1024\
   minimal_ESP8266_1024_OTA\
   minimal_ESP8285_1024_OTA\
-  esp32dev\
-  esp32test_1M8_partition;\
+  normal_ESP8285_1024\
+  normal_ESP8266_4096\
+  normal_IR_ESP8266_4096\
+  test_ESP8266_4096\
+  test_ESP8266_4096_VCC\
+  dev_ESP8266_4096\
+  hard_SONOFF_POW_4M\
+  normal_core_241_ESP8266_4096\
+  normal_core_241_ESP8266_1024\
+  normal_core_250_beta_ESP8266_4096\
+  normal_core_250_beta_ESP8266_1024\
+  test_core_250_beta_ESP8266_4096\
+  test_core_250_beta_ESP8266_4096_VCC\
+  hard_core_250_beta_SONOFF_POW_4M\
+  hard_core_250_beta_Shelly_1;\
 do
   MAX_FILESIZE=1044464
   if [[ ${ENV} == *"1024"* ]]; then
