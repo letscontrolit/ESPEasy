@@ -15,17 +15,9 @@ Supported hardware: |P000_usedby_RTTTL| (Ringtones etc.)
 
   Tone: 20 ... 13000 Hz
 
-  Duration: 100 ... 15000 msec
+  Duration: 100 ... 15000 S
   ","
-  You should try to use GPIO 12...16 since these generally aren't used.
-  The recommended tone range is 20 Hz ... 13 kHz.
-  Up-to 40 kHz should be possible to generate, but will be inaudible for humans.
-  Frequencies above 30 kHz are not stable and will likely crash the ESP.
-
-  Duration is set in ms.
-
-  N.B. tones with a duration less than 50 msec will be blocking.
-  Longer duration will use the scheduler, which may cause some fluctuations in the duration.
+  You should try to use GPIO 12...16 since these generally aren't used. The recommended tone range is 20...13000 but you could try tones outside this range. Duration is set in ms.
   "
   "
   ``rtttl,<gpio>,<value>``

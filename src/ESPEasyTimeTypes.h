@@ -62,8 +62,6 @@ long usecPassedSince(unsigned long timestamp);
 boolean usecTimeOutReached(unsigned long timer);
 void setPluginTaskTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
   int Par2 = 0, int Par3 = 0, int Par4 = 0, int Par5 = 0);
-void setGPIOTimer(unsigned long msecFromNow, int Par1,
-  int Par2 = 0, int Par3 = 0, int Par4 = 0, int Par5 = 0);
 
 
 
