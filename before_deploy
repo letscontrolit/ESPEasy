@@ -36,6 +36,7 @@ for ENV in \
   esp32dev\
   esp32test_1M8_partition\
   normal_ESP8266_1024\
+  normal_ESP8266_1024_VCC\
   minimal_ESP8266_1024_OTA\
   minimal_ESP8285_1024_OTA\
   normal_ESP8285_1024\
@@ -49,6 +50,7 @@ for ENV in \
   normal_core_241_ESP8266_1024\
   normal_core_250_beta_ESP8266_4096\
   normal_core_250_beta_ESP8266_1024\
+  normal_core_250_beta_IR_ESP8266_4096\
   test_core_250_beta_ESP8266_4096\
   test_core_250_beta_ESP8266_4096_VCC\
   hard_core_250_beta_SONOFF_POW_4M\

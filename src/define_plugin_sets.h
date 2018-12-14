@@ -427,7 +427,7 @@ To create/register a plugin, you have to :
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
     #define USE_SERVO
-    
+
     #define USES_P001   // Switch
     #define USES_P002   // ADC
     #define USES_P003   // Pulse
@@ -661,19 +661,6 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifdef CORE_2_5_0
-  // These use too much iRAM.
-  // See: https://github.com/esp8266/Arduino/issues/5476
-  #ifdef USES_P003   // pulse
-    #undef USES_P003
-  #endif
-  #ifdef USES_P008   // RFID
-    #undef USES_P008
-  #endif
-  #ifdef USE_SERVO
-    #undef USE_SERVO
-  #endif
-#endif
 
 
 /******************************************************************************\
