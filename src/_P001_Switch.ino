@@ -268,7 +268,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           // read and store current state to prevent switching at boot time
           newStatus.state = Plugin_001_read_switch_state(event);
           newStatus.output = newStatus.state;
-          newStatus.task++; // add this GPIO/port as a task
+          (newStatus.task<3) ? newStatus.task++ : newStatus.task = 3; // add this GPIO/port as a task
 
           //setPinState(PLUGIN_ID_001, Settings.TaskDevicePin1[event->TaskIndex], PIN_MODE_INPUT, switchstate[event->TaskIndex]);
           //  if it is in the device list we assume it's an input pin
@@ -345,9 +345,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
             const uint16_t port = getPortFromKey(it->first);
             byte state = Plugin_001_read_switch_state(port, it->second.mode);
-            if (it->second.state != state) {
+            if (it->second.state != state || it->second.forceMonitor) {
               if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
               if (it->second.monitor) {
+                it->second.forceMonitor=0; //reset flag
                 String eventString = F("GPIO#");
                 eventString += port;
                 eventString += '=';
@@ -395,11 +396,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           //QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
-            addLog(LOG_LEVEL_DEBUG,"SW  :SafeButton activated")
+            addLog(LOG_LEVEL_DEBUG,"SW  :SafeButton 1st click")
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
-          else if (state != currentStatus.state)
+          else if (state != currentStatus.state || currentStatus.forceEvent)
           {
             // Reset SafeButton counter
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
@@ -567,8 +568,25 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               savePortStatus(key,currentStatus);
             }
           } else {
-            // Reset SafeButton counter
-            Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+            if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==1) { //Safe Button detected. Send EVENT value = 4
+              // Reset SafeButton counter
+              Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 0;
+
+               //Create EVENT with value = 4 for SafeButton false positive detection
+              const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+              UserVar[event->BaseVarIndex] = 4;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : SafeButton: false positive detected. GPIO= ");
+                log += Settings.TaskDevicePin1[event->TaskIndex];
+                log += F(" State=");
+                log += tempUserVar;
+                addLog(LOG_LEVEL_INFO, log);
+              }
+              sendData(event);
+
+              //reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = tempUserVar;
+            }
           }
         }
         success = true;
@@ -628,6 +646,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 //              tempStatus.output=event->Par2;
             }
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            tempStatus.forceEvent=1;
+            (tempStatus.monitor) ? tempStatus.forceMonitor=1 : tempStatus.forceMonitor=0;
             savePortStatus(key,tempStatus);
 
             log = String(F("SW   : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
@@ -650,6 +670,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               tempStatus.output = tempStatus.state;
               tempStatus.mode = PIN_MODE_OUTPUT;
               tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+              tempStatus.forceEvent=1;
+              (tempStatus.monitor) ? tempStatus.forceMonitor=1 : tempStatus.forceMonitor=0;
 
               pinMode(event->Par1, OUTPUT);
               digitalWrite(event->Par1, tempStatus.state);
@@ -844,6 +866,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
 
             addMonitorToPort(key);
+            //giig1967g: Comment next line to receive an EVENT just after calling the monitor command
+            globalMapPortStatus[key].state = Plugin_001_read_switch_state(event->Par2, globalMapPortStatus[key].mode); //set initial value to avoid an event just after calling the command
+
             log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
             addLog(LOG_LEVEL_INFO, log);
             SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
@@ -853,11 +878,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           {
             success = true;
             const uint32_t key = createKey(PLUGIN_ID_001,event->Par2); //WARNING: 'monitor' uses Par2 instead of Par1
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
 
             removeMonitorFromPort(key);
             log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
             addLog(LOG_LEVEL_INFO, log);
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
           }
         } else if (command == F("inputswitchstate")) {
           success = true;
