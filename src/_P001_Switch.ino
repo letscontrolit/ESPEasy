@@ -362,7 +362,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
       {
-        const boolean state = Plugin_001_read_switch_state(event);
+        const int8_t state = Plugin_001_read_switch_state(event);
 
         /**************************************************************************\
         20181009 - @giig1967g: new doubleclick logic is:
@@ -624,8 +624,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               pinMode(event->Par1, OUTPUT);
               digitalWrite(event->Par1, event->Par2);
               tempStatus.mode=PIN_MODE_OUTPUT;
-              tempStatus.state=event->Par2;
-              tempStatus.output=event->Par2;
+              // tempStatus.state=event->Par2;
+//              tempStatus.output=event->Par2;
             }
             tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
             savePortStatus(key,tempStatus);
