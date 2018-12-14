@@ -2,7 +2,6 @@
 #include "Commands/Common.h"
 #include "Commands/Blynk.h"
 #include "Commands/Diagnostic.h"
-#include "Commands/Gpio.h"
 #include "Commands/HTTP.h"
 #include "Commands/i2c.h"
 #include "Commands/MQTT.h"
@@ -72,9 +71,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
       break;
     }
     case 'g': {
-    COMMAND_CASE("gateway"                , Command_Gateway);                    // Network Command
-    COMMAND_CASE("gpio"                   , Command_GPIO);                       // GPIO Command
-    COMMAND_CASE("gpiotoggle"             , Command_GPIOtoggle);                 // GPIO Command
+	  COMMAND_CASE("gateway"                , Command_Gateway);                    // Network Command
       break;
     }
     case 'i': {
@@ -90,8 +87,6 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
 	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
     COMMAND_CASE("logportstatus"          , Command_logPortStatus);              // Diagnostic.h
-    COMMAND_CASE("longpulse"              , Command_longPulse_seconds);          // GPIO Command
-    COMMAND_CASE("longpulse_ms"           , Command_longPulse_msec);             // GPIO Command
 	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
       break;
     }
@@ -100,7 +95,6 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("meminfo"                , Command_MemInfo);                    // Diagnostic.h
     COMMAND_CASE("meminfodetail"          , Command_MemInfo_detail);             // Diagnostic.h
 	  COMMAND_CASE("messagedelay"           , Command_MQTT_messageDelay);          // MQTT.h
-    COMMAND_CASE("monitor_gpio"           , Command_monitor_gpio);               // GPIO Command
 	  COMMAND_CASE("mqttretainflag"         , Command_MQTT_Retain);                // MQTT.h
       break;
     }
@@ -114,8 +108,6 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
     case 'p': {
 	  COMMAND_CASE("password"               , Command_Settings_Password);          // Settings.h
     COMMAND_CASE("publish"                , Command_MQTT_Publish);               // MQTT.h
-    COMMAND_CASE("pulse"                  , Command_Pulse);                      // GPIO Command
-    COMMAND_CASE("pwm"                    , Command_PWM);                        // GPIO Command
       break;
     }
     case 'r': {
@@ -123,7 +115,6 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("reset"                  , Command_Settings_Reset);             // Settings.h
 	  COMMAND_CASE("resetflashwritecounter" , Command_RTC_resetFlashWriteCounter); // RTC.h
 	  COMMAND_CASE("restart"                , Command_System_Restart);             // System.h
-    COMMAND_CASE("rtttl"                  , Command_rtttl);                      // GPIO Command
 	  COMMAND_CASE("rules"                  , Command_Rules_UseRules);             // Rule.h
       break;
     }
@@ -137,9 +128,7 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("sendtohttp"             , Command_HTTP_SendToHTTP);            // HTTP.h
 	  COMMAND_CASE("sendtoudp"              , Command_UDP_SendToUPD);              // UDP.h
 	  COMMAND_CASE("serialfloat"            , Command_SerialFloat);                // Diagnostic.h
-    COMMAND_CASE("servo"                  , Command_servo);                      // GPIO Command
 	  COMMAND_CASE("settings"               , Command_Settings_Print);             // Settings.h
-    COMMAND_CASE("status_gpio"            , Command_status_gpio);                // GPIO Command
 	  COMMAND_CASE("subnet"                 , Command_Subnet);                     // Network Command
 	  COMMAND_CASE("sysload"                , Command_SysLoad);                    // Diagnostic.h
       break;
@@ -155,14 +144,12 @@ String doExecuteCommand(const char * cmd, struct EventStruct *event, const char*
 	  COMMAND_CASE("timerresume"            , Command_Timer_Resume);               // Timers.h
 	  COMMAND_CASE("timerset"               , Command_Timer_Set);                  // Timers.h
 	  COMMAND_CASE("timezone"               , Command_TimeZone);                   // Time.h
-    COMMAND_CASE("tone"                   , Command_tone);                       // GPIO Command
       break;
     }
     case 'u': {
 	  COMMAND_CASE("udpport"                , Command_UDP_Port);                   // UDP.h
 	  COMMAND_CASE("udptest"                , Command_UDP_Test);                   // UDP.h
 	  COMMAND_CASE("unit"                   , Command_Settings_Unit);              // Settings.h
-    COMMAND_CASE("unmonitor_gpio"         , Command_unmonitor_gpio);             // GPIO Command
 	  COMMAND_CASE("usentp"                 , Command_useNTP);                     // Time.h
       break;
     }

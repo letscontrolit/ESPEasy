@@ -3753,8 +3753,7 @@ void handle_pinstates() {
     html_TD();
     TXBuffer += port;
     html_TD();
-    byte mode = it->second.mode;
-    TXBuffer += getPinModeString(mode);
+    TXBuffer += getPinModeString(it->second.mode);
     html_TD();
     TXBuffer += it->second.state;
     html_TD();
