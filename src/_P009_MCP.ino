@@ -273,7 +273,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           //CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
           if (round(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3]) && state != currentStatus.state && Settings.TaskDevicePluginConfigLong[event->TaskIndex][3]==0)
           {
-            addLog(LOG_LEVEL_DEBUG,F("MCP :SafeButton 1st click. Port"))
+            addLog(LOG_LEVEL_DEBUG,F("MCP :SafeButton 1st click."))
             Settings.TaskDevicePluginConfigLong[event->TaskIndex][3] = 1;
           }
           //CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
