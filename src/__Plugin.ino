@@ -1093,6 +1093,18 @@ void updateTaskPluginCache() {
   }
 }
 
+byte getXFromPluginId(byte pluginID) {
+  std::vector<byte>::iterator it;
+  byte returnValue;
+
+  it = find(Plugin_id.begin(), Plugin_id.end(), pluginID);
+  if (it != Plugin_id.end())
+    returnValue = std::distance(Plugin_id.begin(),it);
+  else
+    returnValue = 0;
+  return returnValue;
+}
+
 
 /*********************************************************************************************\
 * Function call to all or specific plugins
@@ -1129,6 +1141,24 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       }
       return true;
       break;
+
+      case PLUGIN_MONITOR:
+        for (auto it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+          //only call monitor function if there the need to
+          if (it->second.monitor || it->second.command || it->second.init) {
+            TempEvent.Par1 = getPortFromKey(it->first);;
+
+            const byte x = getXFromPluginId((byte) getPluginFromKey(it->first));
+
+            if (Plugin_id[x] != 0){
+              START_TIMER;
+              Plugin_ptr[x](Function, &TempEvent, str);
+              STOP_TIMER_TASK(x,Function);
+            }
+          }
+        }
+        return true;
+        break;
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:

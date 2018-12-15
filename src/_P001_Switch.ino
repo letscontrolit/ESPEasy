@@ -338,28 +338,54 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_UNCONDITIONAL_POLL:
-      {
-        // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-        for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-          if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
-            const uint16_t port = getPortFromKey(it->first);
-            byte state = Plugin_001_read_switch_state(port, it->second.mode);
-            if (it->second.state != state || it->second.forceMonitor) {
-              if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
-              if (it->second.monitor) {
-                it->second.forceMonitor=0; //reset flag
+/*
+      case PLUGIN_UNCONDITIONAL_POLL:
+        {
+          // port monitoring, generates an event by rule command 'monitor,gpio,port#'
+          for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
+            if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
+              const uint16_t port = getPortFromKey(it->first);
+              byte state = Plugin_001_read_switch_state(port, it->second.mode);
+              if (it->second.state != state || it->second.forceMonitor) {
+                if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
+                if (it->second.monitor) {
+                  it->second.forceMonitor=0; //reset flag
+                  String eventString = F("GPIO#");
+                  eventString += port;
+                  eventString += '=';
+                  eventString += state;
+                  rulesProcessing(eventString);
+                }
+              }
+            }
+          }
+          break;
+        }
+
+*/
+      case PLUGIN_MONITOR:
+        {
+          // port monitoring, generates an event by rule command 'monitor,gpio,port#'
+          const uint32_t key = createKey(PLUGIN_ID_001,event->Par1);
+          const portStatusStruct currentStatus = globalMapPortStatus[key];
+
+          //if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
+            byte state = Plugin_001_read_switch_state(event->Par1, currentStatus.mode);
+            if (currentStatus.state != state || currentStatus.forceMonitor) {
+              if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
+              if (currentStatus.monitor) {
+                globalMapPortStatus[key].forceMonitor=0; //reset flag
                 String eventString = F("GPIO#");
-                eventString += port;
+                eventString += event->Par1;
                 eventString += '=';
                 eventString += state;
                 rulesProcessing(eventString);
               }
             }
-          }
+          //}
+
+          break;
         }
-        break;
-      }
 
     case PLUGIN_TEN_PER_SECOND:
       {
