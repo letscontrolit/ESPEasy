@@ -2,7 +2,7 @@
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
 //********************************************************************************
-
+#include <algorithm>
 static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
