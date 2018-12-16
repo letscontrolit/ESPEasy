@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20181216 (since mega-20181214)
+-------------------------------------------------
+
+Release date: Sun Dec 16 04:00:10 CET 2018
+
+TD-er (1):
+      [#2162] Restore PlatformIO config for WROOM02 + new 2M128 flash layout
+
+
+-------------------------------------------------
 Changes in release mega-20181214 (since mega-20181208)
 -------------------------------------------------
 
