@@ -494,7 +494,9 @@ void WebServerInit()
   WebServer.on(F("/controllers"), handle_controllers);
   WebServer.on(F("/hardware"), handle_hardware);
   WebServer.on(F("/devices"), handle_devices);
+#ifndef NOTIFIER_SET_NONE
   WebServer.on(F("/notifications"), handle_notifications);
+#endif
   WebServer.on(F("/log"), handle_log);
   WebServer.on(F("/logjson"), handle_log_JSON);
   WebServer.on(F("/tools"), handle_tools);
@@ -719,6 +721,10 @@ void getWebPageTemplateVar(const String& varName )
     {
       if (i == MENU_INDEX_RULES && !Settings.UseRules)   //hide rules menu item
         continue;
+#ifdef NOTIFIER_SET_NONE
+      if (i == MENU_INDEX_NOTIFICATIONS)   //hide notifications menu item
+        continue;
+#endif
 
       TXBuffer += F("<a class='menu");
       if (i == navMenuIndex)
@@ -1535,6 +1541,7 @@ void handle_controllers() {
 //********************************************************************************
 // Web Interface notifcations page
 //********************************************************************************
+#ifndef NOTIFIER_SET_NONE
 void handle_notifications() {
   checkRAM(F("handle_notifications"));
   if (!isLoggedIn()) return;
@@ -1722,7 +1729,7 @@ void handle_notifications() {
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
 }
-
+#endif // NOTIFIER_SET_NONE
 
 //********************************************************************************
 // Web Interface hardware page
@@ -2795,9 +2802,13 @@ void addButton(const String &url, const String &label) {
   addButton(url, label, "");
 }
 
-void addButton(const String &url, const String &label, const String& classes)
+void addButton(const String &url, const String &label, const String& classes) {
+  addButton(url, label, classes, true);
+}
+
+void addButton(const String &url, const String &label, const String& classes, bool enabled)
 {
-  html_add_button_prefix(classes);
+  html_add_button_prefix(classes, enabled);
   TXBuffer += url;
   TXBuffer += "'>";
   TXBuffer += label;
@@ -2806,10 +2817,28 @@ void addButton(const String &url, const String &label, const String& classes)
 
 void addButton(class StreamingBuffer &buffer, const String &url, const String &label)
 {
+  addButtonWithSvg(buffer, url, label, "", false);
+}
+
+void addButtonWithSvg(class StreamingBuffer &buffer, const String &url, const String &label, const String& svgPath, bool needConfirm) {
+  bool hasSVG = svgPath.length() > 0;
   buffer += F("<a class='button link' href='");
   buffer += url;
+  if (hasSVG) {
+    buffer += F("' alt='");
+    buffer += label;
+  }
+  if (needConfirm) {
+    buffer += F("' onclick='return confirm(\"Are you sure?\")");
+  }
   buffer += F("'>");
-  buffer += label;
+  if (hasSVG) {
+    buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
+    buffer += svgPath;
+    buffer += F("</svg>");
+  } else {
+    buffer += label;
+  }
   buffer += F("</a>");
 }
 
@@ -2820,15 +2849,15 @@ void addSaveButton(const String &url, const String &label)
 
 void addSaveButton(class StreamingBuffer &buffer, const String &url, const String &label)
 {
-  buffer += F("<a class='button link' href='");
-  buffer += url;
-  buffer += F("' alt='");
-  buffer += label;
-  buffer += F("'>");
-  buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
-  buffer += F("<path d='M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z'  stroke='white' fill='white' ></path>");
-  buffer += F("</svg>");
-  buffer += F("</a>");
+#ifdef PLUGIN_BUILD_MINIMAL_OTA
+  addButtonWithSvg(buffer, url, label
+     , ""
+     , false);
+#else
+  addButtonWithSvg(buffer, url, label
+     , F("<path d='M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z'  stroke='white' fill='white' ></path>")
+     , false);
+#endif
 }
 
 void addDeleteButton(const String &url, const String &label)
@@ -2838,21 +2867,28 @@ void addDeleteButton(const String &url, const String &label)
 
 void addDeleteButton(class StreamingBuffer &buffer, const String &url, const String &label)
 {
-  buffer += F("<a class='button link' href='");
-  buffer += url;
-  buffer += F("' alt='");
-  buffer += label;
-  buffer += F("' onclick='return confirm(\"Are you sure?\")'>");
-  buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
-  buffer += F("<path fill='none' d='M0 0h24v24H0V0z'></path>");
-  buffer += F("<path d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z' stroke='white' fill='white' ></path>");
-  buffer += F("</svg>");
-  buffer += F("</a>");
+#ifdef PLUGIN_BUILD_MINIMAL_OTA
+  addButtonWithSvg(buffer, url, label
+     , ""
+     , true);
+#else
+  addButtonWithSvg(buffer, url, label
+    , F("<path fill='none' d='M0 0h24v24H0V0z'></path><path d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z' stroke='white' fill='white' ></path>")
+    , true);
+#endif
 }
 
-void addWideButton(const String &url, const String &label, const String &classes)
+void addWideButton(const String &url, const String &label) {
+  addWideButton(url, label, "", true);
+}
+
+void addWideButton(const String &url, const String &label, const String &classes) {
+  addWideButton(url, label, classes, true);
+}
+
+void addWideButton(const String &url, const String &label, const String &classes, bool enabled)
 {
-  html_add_wide_button_prefix(classes);
+  html_add_wide_button_prefix(classes, enabled);
   TXBuffer += url;
   TXBuffer += "'>";
   TXBuffer += label;
@@ -3335,28 +3371,35 @@ void html_end_form() {
 }
 
 void html_add_button_prefix() {
-  html_add_button_prefix("");
+  html_add_button_prefix("", true);
 }
 
-void html_add_button_prefix(const String& classes) {
+void html_add_button_prefix(const String& classes, bool enabled) {
   TXBuffer += F(" <a class='button link");
   if (classes.length() > 0) {
     TXBuffer += ' ';
     TXBuffer += classes;
   }
-  TXBuffer += F("' href='");
+  if (!enabled) {
+    addDisabled();
+  }
+  TXBuffer += '\'';
+  if (!enabled) {
+    addDisabled();
+  }
+  TXBuffer += F(" href='");
 }
 
 void html_add_wide_button_prefix() {
-  html_add_wide_button_prefix("");
+  html_add_wide_button_prefix("", true);
 }
 
-void html_add_wide_button_prefix(const String& classes) {
+void html_add_wide_button_prefix(const String& classes, bool enabled) {
   String wide_classes;
   wide_classes.reserve(classes.length() + 5);
   wide_classes = F("wide ");
   wide_classes += classes;
-  html_add_button_prefix(wide_classes);
+  html_add_button_prefix(wide_classes, enabled);
 }
 
 void html_add_form() {
@@ -3538,6 +3581,14 @@ void handle_log_JSON() {
 //********************************************************************************
 // Web Interface debug page
 //********************************************************************************
+void addWideButtonPlusDescription(const String& url, const String& buttonText, const String& description)
+{
+  html_TR_TD_height(30);
+  addWideButton(url, buttonText);
+  html_TD();
+  TXBuffer += description;
+}
+
 void handle_tools() {
   if (!isLoggedIn()) return;
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -3584,124 +3635,63 @@ void handle_tools() {
 
   addFormSubHeader(F("System"));
 
-  html_TR_TD_height(30);
-  addWideButton(F("/?cmd=reboot"), F("Reboot"), "");
-  html_TD();
-  TXBuffer += F("Reboots ESP");
-
-  html_TR_TD_height(30);
-  addWideButton(F("log"), F("Log"), "");
-  html_TD();
-  TXBuffer += F("Open log output");
-
-  html_TR_TD_height(30);
-  addWideButton(F("sysinfo"), F("Info"), "");
-  html_TD();
-  TXBuffer += F("Open system info page");
-
-  html_TR_TD_height(30);
-  addWideButton(F("advanced"), F("Advanced"), "");
-  html_TD();
-  TXBuffer += F("Open advanced settings");
-
-  html_TR_TD_height(30);
-  addWideButton(F("json"), F("Show JSON"), "");
-  html_TD();
-  TXBuffer += F("Open JSON output");
-
-  html_TR_TD_height(30);
-  addWideButton(F("timingstats"), F("Timing stats"), "");
-  html_TD();
-  TXBuffer += F("Open timing statistics of system");
-
-  html_TR_TD_height(30);
-  addWideButton(F("pinstates"), F("Pin state buffer"), "");
-  html_TD();
-  TXBuffer += F("Show Pin state buffer");
-
-  html_TR_TD_height(30);
-  addWideButton(F("sysvars"), F("System Variables"), "");
-  html_TD();
-  TXBuffer += F("Show all system variables and conversions");
+  addWideButtonPlusDescription(F("/?cmd=reboot"), F("Reboot"),           F("Reboots ESP"));
+  addWideButtonPlusDescription(F("log"),          F("Log"),              F("Open log output"));
+  addWideButtonPlusDescription(F("sysinfo"),      F("Info"),             F("Open system info page"));
+  addWideButtonPlusDescription(F("advanced"),     F("Advanced"),         F("Open advanced settings"));
+  addWideButtonPlusDescription(F("json"),         F("Show JSON"),        F("Open JSON output"));
+  addWideButtonPlusDescription(F("timingstats"),  F("Timing stats"),     F("Open timing statistics of system"));
+  addWideButtonPlusDescription(F("pinstates"),    F("Pin state buffer"), F("Show Pin state buffer"));
+  addWideButtonPlusDescription(F("sysvars"),      F("System Variables"), F("Show all system variables and conversions"));
 
   addFormSubHeader(F("Wifi"));
 
-  html_TR_TD_height(30);
-  addWideButton(F("/?cmd=wificonnect"), F("Connect"), "");
-  html_TD();
-  TXBuffer += F("Connects to known Wifi network");
-
-  html_TR_TD_height(30);
-  addWideButton(F("/?cmd=wifidisconnect"), F("Disconnect"), "");
-  html_TD();
-  TXBuffer += F("Disconnect from wifi network");
-
-  html_TR_TD_height(30);
-  addWideButton(F("wifiscanner"), F("Scan"), "");
-  html_TD();
-  TXBuffer += F("Scan for wifi networks");
+  addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
+  addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
+  addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
 
   addFormSubHeader(F("Interfaces"));
 
-  html_TR_TD_height(30);
-  addWideButton(F("i2cscanner"), F("I2C Scan"), "");
-  html_TD();
-  TXBuffer += F("Scan for I2C devices");
+  addWideButtonPlusDescription(F("i2cscanner"), F("I2C Scan"), F("Scan for I2C devices"));
 
   addFormSubHeader(F("Settings"));
 
-  html_TR_TD_height(30);
-  addWideButton(F("upload"), F("Load"), "");
-  html_TD();
-  TXBuffer += F("Loads a settings file");
+  addWideButtonPlusDescription(F("upload"),   F("Load"), F("Loads a settings file"));
   addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
-
-  html_TR_TD_height(30);
-  addWideButton(F("download"), F("Save"), "");
-  html_TD();
-  TXBuffer += F("Saves a settings file");
+  addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
 
 #if defined(ESP8266)
   {
     {
       uint32_t maxSketchSize;
       bool use2step;
-      if (OTA_possible(maxSketchSize, use2step)) {
-        addFormSubHeader(F("Firmware"));
-        html_TR_TD_height(30);
-        addWideButton(F("update"), F("Load"), "");
-        addHelpButton(F("EasyOTA"));
-        html_TD();
-        TXBuffer += F("Load a new firmware");
+      bool otaEnabled = OTA_possible(maxSketchSize, use2step);
+      addFormSubHeader(F("Firmware"));
+      html_TR_TD_height(30);
+      addWideButton(F("update"), F("Load"), "", otaEnabled);
+      addHelpButton(F("EasyOTA"));
+      html_TD();
+      TXBuffer += F("Load a new firmware");
+      if (otaEnabled) {
         if (use2step) {
-          TXBuffer += F(" <b>WARNING</b> only use 2-step OTA update and sketch < ");
-        } else {
-          TXBuffer += F(" Max sketch size: ");
+          TXBuffer += F(" <b>WARNING</b> only use 2-step OTA update.");
         }
-        TXBuffer += maxSketchSize / 1024;
-        TXBuffer += F(" kB");
+      } else {
+        TXBuffer += F(" <b>WARNING</b> OTA not possible.");
       }
+      TXBuffer += F(" Max sketch size: ");
+      TXBuffer += maxSketchSize / 1024;
+      TXBuffer += F(" kB");
     }
   }
 #endif
 
   addFormSubHeader(F("Filesystem"));
 
-  html_TR_TD_height(30);
-  addWideButton(F("filelist"), F("Flash"), "");
-  html_TD();
-  TXBuffer += F("Show files on internal flash");
-
-  html_TR_TD_height(30);
-  addWideButton(F("/factoryreset"), F("Factory Reset"), "");
-  html_TD();
-  TXBuffer += F("Select pre-defined configuration or full erase of settings");
-
+  addWideButtonPlusDescription(F("filelist"),      F("Flash"),         F("Show files on internal flash"));
+  addWideButtonPlusDescription(F("/factoryreset"), F("Factory Reset"), F("Select pre-defined configuration or full erase of settings"));
 #ifdef FEATURE_SD
-  html_TR_TD_height(30);
-  addWideButton(F("SDfilelist"), F("SD Card"), "");
-  html_TD();
-  TXBuffer += F("Show files on SD-Card");
+  addWideButtonPlusDescription(F("SDfilelist"),    F("SD Card"),       F("Show files on SD-Card"));
 #endif
 
   html_end_table();
@@ -4936,8 +4926,8 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".gif"))) dataType = F("image/gif");
   else if (path.endsWith(F(".jpg"))) dataType = F("image/jpeg");
   else if (path.endsWith(F(".ico"))) dataType = F("image/x-icon");
-  else if (path.endsWith(F(".txt"))) dataType = F("application/octet-stream");
-  else if (path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
+  else if (path.endsWith(F(".txt")) ||
+           path.endsWith(F(".dat"))) dataType = F("application/octet-stream");
   else if (path.endsWith(F(".esp"))) return handle_custom(path);
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
@@ -6596,6 +6586,7 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
   TXBuffer += '>';
 }
 
+/*
 void getESPeasyLogo(int width_pixels) {
   write_SVG_image_header(width_pixels, width_pixels, true);
   TXBuffer += F("<g transform=\"translate(-33.686 -7.8142)\">");
@@ -6605,6 +6596,7 @@ void getESPeasyLogo(int width_pixels) {
   TXBuffer += F("<circle cx=\"58\" cy=\"102.1\" r=\"3\" fill=\"#fff\"/>");
   TXBuffer += F("</g></g></svg>");
 }
+*/
 
 void getConfig_dat_file_layout() {
   const int shiftY = 2;
