@@ -1,4 +1,17 @@
 -------------------------------------------------
+Changes in release mega-20181217 (since mega-20181216)
+-------------------------------------------------
+
+Release date: Mon Dec 17 04:00:07 CET 2018
+
+Gijs Noorlander (1):
+      [2M flash] Change 2M128 into 2M256 for 256k SPIFFS
+
+TD-er (1):
+      [2M flash] Update deploy script to match 2M256 flash layout
+
+
+-------------------------------------------------
 Changes in release mega-20181216 (since mega-20181214)
 -------------------------------------------------
 
