@@ -91,10 +91,10 @@ Indicators (recommended settings)
   :widths: 8, 5, 5, 5, 40
 
   "Count", "mL", "5", "2", "Using the formula ``%value%*0.65`` to convert the pulse count into milliliters per minute.
-            You might have to tweak the value to fit your application, our flow meter gives 0.65mL per pulse.
+  You might have to tweak the value to fit your application, our flow meter gives 0.65mL per pulse.
   "
   "Total", "Total", "N/A", "1", "Total value is the counted pulses since last reboot, for total in liters you could
-            use this formula ``%value%*0.65*0.001``. 1mL = 0.001L.
+  use this formula ``%value%*0.65*0.001``. 1mL = 0.001L.
   .. note:: Only updated if counter type is set to ``Delta/Total/Time``, ``Total``, or ``Delta/Total``
   "
   "Time", "Time", "N/A", "0", "Time since last pulse was intercepted, in mSec.
