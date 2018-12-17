@@ -1,4 +1,65 @@
 -------------------------------------------------
+Changes in release mega-20181217 (since mega-20181216)
+-------------------------------------------------
+
+Release date: Mon Dec 17 04:00:07 CET 2018
+
+Gijs Noorlander (1):
+      [2M flash] Change 2M128 into 2M256 for 256k SPIFFS
+
+TD-er (1):
+      [2M flash] Update deploy script to match 2M256 flash layout
+
+
+-------------------------------------------------
+Changes in release mega-20181216 (since mega-20181214)
+-------------------------------------------------
+
+Release date: Sun Dec 16 04:00:10 CET 2018
+
+TD-er (1):
+      [#2162] Restore PlatformIO config for WROOM02 + new 2M128 flash layout
+
+
+-------------------------------------------------
+Changes in release mega-20181214 (since mega-20181208)
+-------------------------------------------------
+
+Release date: Fri Dec 14 04:00:19 CET 2018
+
+Gijs Noorlander (18):
+      [core 2.5.0-beta1] Test build using platformIO
+      [core 2.5.0-beta1] Allow building against core 2.5.0
+      [Tools] Set executable bits to scripts
+      [build] Add option to give a PR number at command line.
+      [core 2.5.0-beta1] Add core number and disable some 1MB builds
+      Revert "[GPIO] Move all GPIO commands out of Switch plugin"
+      Revert "[GPIO] Move "inputswitchstate" back to Switch plugin"
+      Revert "[GPIO] Add some checks to what GPIO pin can be used."
+      Revert "[GPIO] GPIO commands with long duration will be stopped async."
+      Revert GPIO, prepare for easier merge later GPIO fixes
+      [Rules] Modulo operator '%' only works on int
+      [core 2.5.0-beta1] Clean up PlatformIO.ini & add some 2.5.0 beta builds
+      [core 2.5.0-beta1] Update build names in deploy script
+      Revert "[GPIO] Move all GPIO commands out of Switch plugin"
+      Revert "[GPIO] Move "inputswitchstate" back to Switch plugin"
+      Revert "[GPIO] Add some checks to what GPIO pin can be used."
+      Revert "[GPIO] GPIO commands with long duration will be stopped async."
+      Revert GPIO, prepare for easier merge later GPIO fixes
+
+Grovkillen (5):
+      [docs] Up to date with the info before the merge fix on 181207
+      [docs] fixed the command reference list (looks better on small screens)
+      [flasher] 0.03.001 new window layout for long file names in dropdown
+      [flasher] 0.03.002 forgot to add pixel per inch settings (defaulted 144)
+      [docs] added hardware Ventus W266 (P046)
+
+TD-er (2):
+      [GPIO] Track output value in plugin overview
+      [core 2.5.0-beta1] Add core 2.5.0 IR build and normal 1M VCC
+
+
+-------------------------------------------------
 Changes in release mega-20181208 (since mega-20181207)
 -------------------------------------------------
 

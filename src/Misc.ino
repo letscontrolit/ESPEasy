@@ -1968,7 +1968,7 @@ float apply_operator(char op, float first, float second)
     case '/':
       return first / second;
     case '%':
-      return round(first) % round(second);
+      return static_cast<int>(round(first)) % static_cast<int>(round(second));
     case '^':
       return pow(first, second);
     default:
