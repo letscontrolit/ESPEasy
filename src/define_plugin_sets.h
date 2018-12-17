@@ -89,7 +89,9 @@ To create/register a plugin, you have to :
 //    #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
 
-    #define NOTIFIER_SET_STABLE
+//    #define NOTIFIER_SET_STABLE
+    #define NOTIFIER_SET_NONE
+
     #define PLUGIN_SET_NONE
 
     #ifndef USES_P001
@@ -112,6 +114,9 @@ To create/register a plugin, you have to :
 //        #define USES_P005   // DHT
     #endif
 
+    #ifdef USE_SERVO
+      #undef USE_SERVO
+    #endif
 #endif
 
 
@@ -504,6 +509,10 @@ To create/register a plugin, you have to :
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
     #define USES_N002   // Buzzer
+
+    #ifdef NOTIFIER_SET_NONE
+      #undef NOTIFIER_SET_NONE
+    #endif
 #endif
 
 

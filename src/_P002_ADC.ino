@@ -50,7 +50,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       {
         #if defined(ESP32)
           addHtml(F("<TR><TD>Analog Pin:<TD>"));
-          addPinSelect(false, "taskdevicepin1", Settings.TaskDevicePin1[event->TaskIndex]);
+          addPinSelect(false, F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
         #endif
 
         addFormCheckBox(F("Oversampling"), F("p002_oversampling"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
