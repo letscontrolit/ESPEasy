@@ -2,55 +2,46 @@
 // Syslog
 // UDP system messaging
 // SSDP
+//  #if LWIP_VERSION_MAJOR == 2
+#define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+//  #endif
 
 /*********************************************************************************************\
    Syslog client
   \*********************************************************************************************/
-void syslog(const char *message)
+void syslog(byte logLevel, const char *message)
 {
-  if (Settings.Syslog_IP[0] != 0)
+  if (Settings.Syslog_IP[0] != 0 && WiFiConnected())
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
     portUDP.beginPacket(broadcastIP, 514);
     char str[256];
     str[0] = 0;
-    snprintf_P(str, sizeof(str), PSTR("<7>ESP Unit: %u : %s"), Settings.Unit, message);
+    byte prio = Settings.SyslogFacility * 8;
+    if ( logLevel == LOG_LEVEL_ERROR )
+      prio += 3;  // syslog error
+    else if ( logLevel == LOG_LEVEL_INFO )
+      prio += 5;  // syslog notice
+    else
+      prio += 7;
+
+	// An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
+
+	// Using Settings.Name as the Hostname (Hostname must NOT content space)
+    snprintf_P(str, sizeof(str), PSTR("<%u>%s EspEasy: %s"), prio, Settings.Name, message);
+
+	// Using Setting.Unit to build a Hostname
+    //snprintf_P(str, sizeof(str), PSTR("<7>EspEasy_%u ESP: %s"), Settings.Unit, message);
     #if defined(ESP8266)
       portUDP.write(str);
+    #endif
+    #if defined(ESP32)
+      portUDP.write((uint8_t*)str,strlen(str));
     #endif
     portUDP.endPacket();
   }
 }
 
-
-/*********************************************************************************************\
-   Structs for UDP messaging
-  \*********************************************************************************************/
-struct infoStruct
-{
-  byte header = 255;
-  byte ID = 3;
-  byte sourcelUnit;
-  byte destUnit;
-  byte sourceTaskIndex;
-  byte destTaskIndex;
-  byte deviceNumber;
-  char taskName[26];
-  char ValueNames[VARS_PER_TASK][26];
-};
-
-struct dataStruct
-{
-  byte header = 255;
-  byte ID = 5;
-  byte sourcelUnit;
-  byte destUnit;
-  byte sourceTaskIndex;
-  byte destTaskIndex;
-  float Values[VARS_PER_TASK];
-};
-
-//TODO: add sysinfoStruct
 
 /*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
@@ -65,10 +56,10 @@ void checkUDP()
     return;
 
   runningUPDCheck = true;
-    
+
   // UDP events
   int packetSize = portUDP.parsePacket();
-  if (packetSize)
+  if (packetSize > 0 /*&& portUDP.remotePort() == Settings.UDPPort*/)
   {
     statusLED(true);
 
@@ -79,140 +70,83 @@ void checkUDP()
       runningUPDCheck = false;
       return;
     }
-    char packetBuffer[128];
-    int len = portUDP.read(packetBuffer, 128);
+    if (packetSize >= 2 && packetSize < UDP_PACKETSIZE_MAX) {
+      // Allocate buffer to process packet.
+      std::vector<char> packetBuffer;
+      packetBuffer.resize(packetSize + 1);
+      memset(&packetBuffer[0], 0, packetSize + 1);
 
-    if (packetBuffer[0] != 255)
-    {
-      packetBuffer[len] = 0;
-      addLog(LOG_LEVEL_DEBUG, packetBuffer);
-      struct EventStruct TempEvent;
-      String request = packetBuffer;
-      parseCommandString(&TempEvent, request);
-      TempEvent.Source = VALUE_SOURCE_SYSTEM;
-      if (!PluginCall(PLUGIN_WRITE, &TempEvent, request))
-        ExecuteCommand(VALUE_SOURCE_SYSTEM, packetBuffer);
-    }
-    else
-    {
-      if (packetBuffer[1] > 1 && packetBuffer[1] < 6)
-      {
-        String log = (F("UDP  : Sensor msg "));
-        for (byte x = 1; x < 6; x++)
+      int len = portUDP.read(&packetBuffer[0], packetSize);
+      if (len >= 2) {
+        if (packetBuffer[0] != 255)
         {
-          log += " ";
-          log += (int)packetBuffer[x];
+          packetBuffer[len] = 0;
+          String request = &packetBuffer[0];
+          addLog(LOG_LEVEL_DEBUG, request);
+          struct EventStruct TempEvent;
+          parseCommandString(&TempEvent, request);
+          TempEvent.Source = VALUE_SOURCE_SYSTEM;
+          if (!PluginCall(PLUGIN_WRITE, &TempEvent, request))
+            ExecuteCommand(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
         }
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
-      }
-
-      // binary data!
-      switch (packetBuffer[1])
-      {
-
-        //TODO: use a nice struct for it
-        case 1: // sysinfo message
+        else
+        {
+          // binary data!
+          switch (packetBuffer[1])
           {
-            byte mac[6];
-            byte ip[4];
-            byte unit = packetBuffer[12];
-            for (byte x = 0; x < 6; x++)
-              mac[x] = packetBuffer[x + 2];
-            for (byte x = 0; x < 4; x++)
-              ip[x] = packetBuffer[x + 8];
 
-            if (unit < UNIT_MAX)
-            {
-              for (byte x = 0; x < 4; x++)
-                Nodes[unit].ip[x] = packetBuffer[x + 8];
-              Nodes[unit].age = 0; // reset 'age counter'
-              if (len >20) // extended packet size
+            case 1: // sysinfo message
               {
-                Nodes[unit].build = packetBuffer[13] + 256*packetBuffer[14];
-                if (Nodes[unit].nodeName==0)
-                    Nodes[unit].nodeName =  (char *)malloc(26);
-                memcpy(Nodes[unit].nodeName,(byte*)packetBuffer+15,25);
-                Nodes[unit].nodeName[25]=0;
-                Nodes[unit].nodeType = packetBuffer[40];
-              }
-            }
+                if (len < 13)
+                  break;
+                byte mac[6];
+                byte ip[4];
+                byte unit = packetBuffer[12];
+                for (byte x = 0; x < 6; x++)
+                  mac[x] = packetBuffer[x + 2];
+                for (byte x = 0; x < 4; x++)
+                  ip[x] = packetBuffer[x + 8];
 
-            char macaddress[20];
-            sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            char ipaddress[16];
-            sprintf_P(ipaddress, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-            char log[80];
-            sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, ipaddress, unit);
-            addLog(LOG_LEVEL_DEBUG_MORE, log);
-            break;
-          }
-
-        case 2: // sensor info pull request
-          {
-            SendUDPTaskInfo(packetBuffer[2], packetBuffer[5], packetBuffer[4]);
-            break;
-          }
-
-        case 3: // sensor info
-          {
-            if (Settings.GlobalSync)
-            {
-              struct infoStruct infoReply;
-              memcpy((byte*)&infoReply, (byte*)&packetBuffer, sizeof(infoStruct));
-
-              // to prevent flash wear out (bugs in communication?) we can only write to an empty task
-              // so it will write only once and has to be cleared manually through webgui
-              if (Settings.TaskDeviceNumber[infoReply.destTaskIndex] == 0)
-              {
-                Settings.TaskDeviceNumber[infoReply.destTaskIndex] = infoReply.deviceNumber;
-                Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = 1;  // remote feed
-                for (byte x=0; x < CONTROLLER_MAX; x++)
-                  Settings.TaskDeviceSendData[x][infoReply.destTaskIndex] = false;
-                strcpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName);
-                for (byte x = 0; x < VARS_PER_TASK; x++)
-                  strcpy( ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x]);
-                SaveTaskSettings(infoReply.destTaskIndex);
-                SaveSettings();
-              }
-            }
-            break;
-          }
-
-        case 4: // sensor data pull request
-          {
-            SendUDPTaskData(packetBuffer[2], packetBuffer[5], packetBuffer[4]);
-            break;
-          }
-
-        case 5: // sensor data
-          {
-            if (Settings.GlobalSync)
-            {
-              struct dataStruct dataReply;
-              memcpy((byte*)&dataReply, (byte*)&packetBuffer, sizeof(dataStruct));
-
-              // only if this task has a remote feed, update values
-              if (Settings.TaskDeviceDataFeed[dataReply.destTaskIndex] != 0)
-              {
-                for (byte x = 0; x < VARS_PER_TASK; x++)
-                {
-                  UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
+                Nodes[unit].age = 0; // Create a new element when not present
+                NodesMap::iterator it = Nodes.find(unit);
+                if (it != Nodes.end()) {
+                  for (byte x = 0; x < 4; x++)
+                    it->second.ip[x] = packetBuffer[x + 8];
+                  it->second.age = 0; // reset 'age counter'
+                  if (len >= 41) // extended packet size
+                  {
+                    it->second.build = packetBuffer[13] + 256*packetBuffer[14];
+                    char tmpNodeName[26] = {0};
+                    memcpy(&tmpNodeName[0], reinterpret_cast<byte*>(&packetBuffer[15]), 25);
+                    tmpNodeName[25] = 0;
+                    it->second.nodeName = tmpNodeName;
+                    it->second.nodeName.trim();
+                    it->second.nodeType = packetBuffer[40];
+                  }
                 }
-                if (Settings.UseRules)
-                  createRuleEvents(dataReply.destTaskIndex);
-              }
-            }
-            break;
-          }
 
-        default:
-          {
-            struct EventStruct TempEvent;
-            TempEvent.Data = (byte*)packetBuffer;
-            TempEvent.Par1 = remoteIP[3];
-            PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
-            break;
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                  char macaddress[20];
+                  formatMAC(mac, macaddress);
+                  char log[80];
+                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
+                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                }
+                break;
+              }
+
+            default:
+              {
+                struct EventStruct TempEvent;
+                TempEvent.Data = reinterpret_cast<byte*>(&packetBuffer[0]);
+                TempEvent.Par1 = remoteIP[3];
+                TempEvent.Par2 = len;
+                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummyString);
+                CPluginCall(CPLUGIN_UDP_IN, &TempEvent);
+                break;
+              }
           }
+        }
       }
     }
   }
@@ -224,82 +158,24 @@ void checkUDP()
 
 
 /*********************************************************************************************\
-   Send task info using UDP message
-  \*********************************************************************************************/
-void SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
-{
-  struct infoStruct infoReply;
-  infoReply.sourcelUnit = Settings.Unit;
-  infoReply.sourceTaskIndex = sourceTaskIndex;
-  infoReply.destTaskIndex = destTaskIndex;
-  LoadTaskSettings(infoReply.sourceTaskIndex);
-  infoReply.deviceNumber = Settings.TaskDeviceNumber[infoReply.sourceTaskIndex];
-  strcpy(infoReply.taskName, ExtraTaskSettings.TaskDeviceName);
-  for (byte x = 0; x < VARS_PER_TASK; x++)
-    strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
-
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
-  if (destUnit != 0)
-  {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (byte x = firstUnit; x <= lastUnit; x++)
-  {
-    infoReply.destUnit = x;
-    sendUDP(x, (byte*)&infoReply, sizeof(infoStruct));
-    delay(10);
-  }
-  delay(50);
-}
-
-
-/*********************************************************************************************\
-   Send task data using UDP message
-  \*********************************************************************************************/
-void SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
-{
-  struct dataStruct dataReply;
-  dataReply.sourcelUnit = Settings.Unit;
-  dataReply.sourceTaskIndex = sourceTaskIndex;
-  dataReply.destTaskIndex = destTaskIndex;
-  for (byte x = 0; x < VARS_PER_TASK; x++)
-    dataReply.Values[x] = UserVar[dataReply.sourceTaskIndex * VARS_PER_TASK + x];
-
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
-  if (destUnit != 0)
-  {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (byte x = firstUnit; x <= lastUnit; x++)
-  {
-    dataReply.destUnit = x;
-    sendUDP(x, (byte*) &dataReply, sizeof(dataStruct));
-    delay(10);
-  }
-  delay(50);
-}
-
-
-/*********************************************************************************************\
    Send event using UDP message
   \*********************************************************************************************/
 void SendUDPCommand(byte destUnit, char* data, byte dataLength)
 {
-  byte firstUnit = 1;
-  byte lastUnit = UNIT_MAX - 1;
+  if (!WiFiConnected(100)) {
+    return;
+  }
   if (destUnit != 0)
   {
-    firstUnit = destUnit;
-    lastUnit = destUnit;
-  }
-  for (int x = firstUnit; x <= lastUnit; x++)
-  {
-    sendUDP(x, (byte*)data, dataLength);
+    sendUDP(destUnit, (byte*)data, dataLength);
     delay(10);
+  } else {
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        sendUDP(it->first, (byte*)data, dataLength);
+        delay(10);
+      }
+    }
   }
   delay(50);
 }
@@ -310,20 +186,29 @@ void SendUDPCommand(byte destUnit, char* data, byte dataLength)
   \*********************************************************************************************/
 void sendUDP(byte unit, byte* data, byte size)
 {
-  if (unit != 255)
-    if (Nodes[unit].ip[0] == 0)
-      return;
-  String log = "UDP  : Send UDP message to ";
-  log += unit;
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
-
-  statusLED(true);
+  if (!WiFiConnected(100)) {
+    return;
+  }
 
   IPAddress remoteNodeIP;
   if (unit == 255)
     remoteNodeIP = {255,255,255,255};
-  else
-    remoteNodeIP = Nodes[unit].ip;
+  else {
+    NodesMap::iterator it = Nodes.find(unit);
+    if (it == Nodes.end())
+      return;
+    if (it->second.ip[0] == 0)
+      return;
+    remoteNodeIP = it->second.ip;
+  }
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    String log = F("UDP  : Send UDP message to ");
+    log += unit;
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
+  }
+
+  statusLED(true);
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
   portUDP.write(data, size);
   portUDP.endPacket();
@@ -335,14 +220,17 @@ void sendUDP(byte unit, byte* data, byte size)
   \*********************************************************************************************/
 void refreshNodeList()
 {
-  for (byte counter = 0; counter < UNIT_MAX; counter++)
-  {
-    if (Nodes[counter].ip[0] != 0)
-    {
-      Nodes[counter].age++;  // increment age counter
-      if (Nodes[counter].age > 10) // if entry to old, clear this node ip from the list.
-        for (byte x = 0; x < 4; x++)
-          Nodes[counter].ip[x] = 0;
+  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ) {
+    bool mustRemove = true;
+    if (it->second.ip[0] != 0) {
+      if (it->second.age < 10) {
+        it->second.age++;
+        mustRemove = false;
+        ++it;
+      }
+    }
+    if (mustRemove) {
+      it = Nodes.erase(it);
     }
   }
 }
@@ -352,8 +240,7 @@ void refreshNodeList()
   \*********************************************************************************************/
 void sendSysInfoUDP(byte repeats)
 {
-  char log[80];
-  if (Settings.UDPPort == 0)
+  if (Settings.UDPPort == 0 || !WiFiConnected(100))
     return;
 
   // TODO: make a nice struct of it and clean up
@@ -367,8 +254,7 @@ void sendSysInfoUDP(byte repeats)
   // 1 byte node type id
 
   // send my info to the world...
-  strcpy_P(log, PSTR("UDP  : Send Sysinfo message"));
-  addLog(LOG_LEVEL_DEBUG_MORE, log);
+  addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
   for (byte counter = 0; counter < repeats; counter++)
   {
     uint8_t mac[] = {0, 0, 0, 0, 0, 0};
@@ -396,15 +282,17 @@ void sendSysInfoUDP(byte repeats)
       delay(500);
   }
 
-  // store my own info also in the list...
-  if (Settings.Unit < UNIT_MAX)
+  Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  // store my own info also in the list
+  NodesMap::iterator it = Nodes.find(Settings.Unit);
+  if (it != Nodes.end())
   {
     IPAddress ip = WiFi.localIP();
     for (byte x = 0; x < 4; x++)
-      Nodes[Settings.Unit].ip[x] = ip[x];
-    Nodes[Settings.Unit].age = 0;
-    Nodes[Settings.Unit].build = Settings.Build;
-    Nodes[Settings.Unit].nodeType = NODE_TYPE_ID;
+      it->second.ip[x] = ip[x];
+    it->second.age = 0;
+    it->second.build = Settings.Build;
+    it->second.nodeType = NODE_TYPE_ID;
   }
 }
 
@@ -412,12 +300,13 @@ void sendSysInfoUDP(byte repeats)
 /********************************************************************************************\
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
-void SSDP_schema(WiFiClient client) {
+void SSDP_schema(WiFiClient &client) {
+  if (!WiFiConnected(100)) {
+    return;
+  }
 
-  IPAddress ip = WiFi.localIP();
-  char str[20];
-  sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  uint32_t chipId = ESP.getChipId();
+  const IPAddress ip = WiFi.localIP();
+  const uint32_t chipId = ESP.getChipId();
   char uuid[64];
   sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
             (uint16_t) ((chipId >> 16) & 0xff),
@@ -437,7 +326,7 @@ void SSDP_schema(WiFiClient client) {
                          "<minor>0</minor>"
                          "</specVersion>"
                          "<URLBase>http://");
-  ssdp_schema += str;
+  ssdp_schema += formatIP(ip);
   ssdp_schema += F(":80/</URLBase>"
                    "<device>"
                    "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
@@ -516,6 +405,19 @@ bool SSDP_begin() {
     return false;
   }
 
+#ifdef CORE_2_5_0
+  // Core 2.5.0 changed the signature of some UdpContext function.
+  if (!_server->listen(IP_ADDR_ANY, SSDP_PORT)) {
+    return false;
+  }
+
+  _server->setMulticastInterface(&ifaddr);
+  _server->setMulticastTTL(SSDP_MULTICAST_TTL);
+  _server->onRx(&SSDP_update);
+  if (!_server->connect(&multicast_addr, SSDP_PORT)) {
+    return false;
+  }
+#else
   if (!_server->listen(*IP_ADDR_ANY, SSDP_PORT)) {
     return false;
   }
@@ -526,6 +428,7 @@ bool SSDP_begin() {
   if (!_server->connect(multicast_addr, SSDP_PORT)) {
     return false;
   }
+#endif
 
   SSDP_update();
 
@@ -537,17 +440,9 @@ bool SSDP_begin() {
   Send SSDP messages (notify & responses)
   \*********************************************************************************************/
 void SSDP_send(byte method) {
-  char buffer[1460];
   uint32_t ip = WiFi.localIP();
 
-  uint32_t chipId = ESP.getChipId();
-
-  char uuid[64];
-  sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
-            (uint16_t) ((chipId >> 16) & 0xff),
-            (uint16_t) ((chipId >>  8) & 0xff),
-            (uint16_t)   chipId        & 0xff  );
-
+  // FIXME TD-er: Why create String objects of these flashstrings?
   String _ssdp_response_template = F(
                                      "HTTP/1.1 200 OK\r\n"
                                      "EXT:\r\n"
@@ -566,17 +461,27 @@ void SSDP_send(byte method) {
                                    "USN: uuid:%s\r\n" // _uuid
                                    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // WiFi.localIP(),
                                    "\r\n");
+  {
+    char uuid[64];
+    uint32_t chipId = ESP.getChipId();
+    sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
+              (uint16_t) ((chipId >> 16) & 0xff),
+              (uint16_t) ((chipId >>  8) & 0xff),
+              (uint16_t)   chipId        & 0xff  );
 
-  int len = snprintf(buffer, sizeof(buffer),
-                     _ssdp_packet_template.c_str(),
-                     (method == 0) ? _ssdp_response_template.c_str() : _ssdp_notify_template.c_str(),
-                     SSDP_INTERVAL,
-                     Settings.Build,
-                     uuid,
-                     IP2STR(&ip)
-                    );
+    char *buffer = new char[1460]();
+    int len = snprintf(buffer, 1460,
+                       _ssdp_packet_template.c_str(),
+                       (method == 0) ? _ssdp_response_template.c_str() : _ssdp_notify_template.c_str(),
+                       SSDP_INTERVAL,
+                       Settings.Build,
+                       uuid,
+                       IPADDR2STR(&ip)
+                      );
 
-  _server->append(buffer, len);
+    _server->append(buffer, len);
+    delete[] buffer;
+  }
 
   ip_addr_t remoteAddr;
   uint16_t remotePort;
@@ -712,10 +617,10 @@ void SSDP_update() {
     }
   }
 
-  if (_pending && (millis() - _process_time) > _delay) {
+  if (_pending && timeOutReached(_process_time + _delay)) {
     _pending = false; _delay = 0;
     SSDP_send(NONE);
-  } else if (_notify_time == 0 || (millis() - _notify_time) > (SSDP_INTERVAL * 1000L)) {
+  } else if (_notify_time == 0 || timeOutReached(_notify_time + (SSDP_INTERVAL * 1000L))) {
     _notify_time = millis();
     SSDP_send(NOTIFY);
   }
@@ -724,6 +629,115 @@ void SSDP_update() {
     while (_server->next())
       _server->flush();
   }
-
 }
 #endif
+
+// Check WiFi connection. Maximum timeout 500 msec.
+bool WiFiConnected(uint32_t timeout_ms) {
+  uint32_t timer = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
+  uint32_t min_delay = timeout_ms / 20;
+  if (min_delay < 10) {
+    delay(0); // Allow at least once time for backgroundtasks
+    min_delay = 10;
+  }
+  // Apparently something needs network, perform check to see if it is ready now.
+//  if (!tryConnectWiFi())
+//    return false;
+  while (!WiFiConnected()) {
+    if (timeOutReached(timer)) {
+      return false;
+    }
+    delay(min_delay); // Allow the backgroundtasks to continue procesing.
+  }
+  return true;
+}
+
+bool hostReachable(const IPAddress& ip) {
+  if (!WiFiConnected()) return false;
+
+  return true; // Disabled ping as requested here:
+  // https://github.com/letscontrolit/ESPEasy/issues/1494#issuecomment-397872538
+
+/*
+  // Only do 1 ping at a time to return early
+  byte retry = 3;
+  while (retry > 0) {
+#if defined(ESP8266)
+    if (Ping.ping(ip, 1)) return true;
+#endif
+#if defined(ESP32)
+  if (ping_start(ip, 4, 0, 0, 5)) return true;
+#endif
+    delay(50);
+    --retry;
+  }
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("Host unreachable: ");
+    log += formatIP(ip);
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
+    // Work-around to fix connected but not able to communicate.
+    addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reconnect wifi."));
+    WifiDisconnect();
+  }
+  logConnectionStatus();
+  return false;
+*/
+}
+
+bool connectClient(WiFiClient& client, const char* hostname, uint16_t port) {
+  IPAddress ip;
+  if (resolveHostByName(hostname, ip)) {
+    return connectClient(client, ip, port);
+  }
+  return false;
+}
+
+bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
+{
+  START_TIMER;
+  bool connected = (client.connect(ip, port) == 1);
+  STOP_TIMER(CONNECT_CLIENT_STATS);
+#ifndef ESP32
+  if (connected)
+    client.keepAlive(); // Use default keep alive values
+#endif
+  return connected;
+}
+
+bool resolveHostByName(const char* aHostname, IPAddress& aResult) {
+  START_TIMER;
+#ifdef ESP32
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
+#else
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult, 100) == 1;
+#endif
+  STOP_TIMER(HOST_BY_NAME_STATS);
+  return resolvedIP;
+}
+
+bool hostReachable(const String& hostname) {
+  if (!WiFiConnected()) return false;
+  IPAddress remote_addr;
+  if (resolveHostByName(hostname.c_str(), remote_addr)) {
+    return hostReachable(remote_addr);
+  }
+  String log = F("Hostname cannot be resolved: ");
+  log += hostname;
+  addLog(LOG_LEVEL_ERROR, log);
+  return false;
+}
+
+// Create a random port for the UDP connection.
+// Return true when successful.
+bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
+  unsigned int attempts = 3;
+  while (attempts > 0) {
+    --attempts;
+    long port = random(1025, 65535);
+    if (udp.begin(port) != 0)
+      return true;
+  }
+  return false;
+}

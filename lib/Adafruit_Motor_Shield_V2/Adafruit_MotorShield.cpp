@@ -44,7 +44,7 @@ Adafruit_MotorShield::Adafruit_MotorShield(uint8_t addr) {
 
 void Adafruit_MotorShield::begin(uint16_t freq) {
   // init PWM w/_freq
-  WIRE.begin();
+  //Wire.begin();   called in ESPEasy framework
   _pwm.begin();
   _freq = freq;
   _pwm.setPWMFreq(_freq);  // This is the maximum PWM frequency

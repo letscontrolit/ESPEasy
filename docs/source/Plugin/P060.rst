@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p06x.repl
+.. _P060_page:
+
+|P060_typename|
+==================================================
+
+|P060_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P060_type|
+
+Name: |P060_name|
+
+Status: |P060_status|
+
+GitHub: |P060_github|_
+
+Maintainer: |P060_maintainer|
+
+
+Supported hardware
+------------------
+
+|P060_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P060_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,3 +1,4 @@
+#ifdef USES_P056
 //#######################################################################################################
 //#################################### Plugin 056: Dust Sensor SDS011 / SDS018 ##########################
 //#######################################################################################################
@@ -8,12 +9,11 @@
   This plugin reads the particle concentration from SDS011 Sensor
   DevicePin1 - RX on ESP, TX on SDS
 */
-
-#ifdef PLUGIN_BUILD_TESTING
+#ifdef ESP8266  // Needed for precompile issues.
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
-#define PLUGIN_NAME_056       "Dust - SDS011/018/198 [TESTING]"
+#define PLUGIN_NAME_056       "Dust - SDS011/018/198"
 #define PLUGIN_VALUENAME1_056 "PM2.5"   // Dust <2.5µm in µg/m³   SDS198:<100µm in µg/m³
 #define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 
@@ -33,7 +33,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_056;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
+        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         Device[deviceCount].VType = SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -42,7 +42,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 2;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
-        Device[deviceCount].TimerOptional = true;
+        Device[deviceCount].TimerOptional = false;
         Device[deviceCount].GlobalSyncOption = true;
         break;
       }
@@ -62,17 +62,48 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &larr; TX");
-        //event->String2 = F("GPIO &#8674; RX (optional)");
+        event->String1 = formatGpioName_RX(false);
+        event->String2 = formatGpioName_TX(true); // optional
         break;
       }
+
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        if (Plugin_056_hasTxPin(event)) {
+          addFormNumericBox(F("Sleep time"), F("p056_sleeptime"),
+                            Settings.TaskDevicePluginConfig[event->TaskIndex][0],
+                            0, 30);
+          addUnit(F("Minutes"));
+          addFormNote(F("0 = continous, 1..30 = Work 30 seconds and sleep n*60-30 seconds"));
+        }
+        break;
+      }
+      case PLUGIN_WEBFORM_SAVE:
+        {
+          if (Plugin_056_hasTxPin(event)) {
+            // Communications to device should work.
+            const int newsleeptime = getFormItemInt(F("p056_sleeptime"));
+            if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] != newsleeptime) {
+              Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p056_sleeptime"));
+              Plugin_056_setWorkingPeriod(newsleeptime);
+            }
+          }
+          success = true;
+          break;
+        }
 
     case PLUGIN_INIT:
       {
         if (Plugin_056_SDS)
           delete Plugin_056_SDS;
-        Plugin_056_SDS = new CjkSDS011(Settings.TaskDevicePin1[event->TaskIndex], -1);
-        addLog(LOG_LEVEL_INFO, F("SDS  : Init OK "));
+        const int16_t serial_rx = Settings.TaskDevicePin1[event->TaskIndex];
+        const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
+        Plugin_056_SDS = new CjkSDS011(serial_rx, serial_tx);
+        String log = F("SDS  : Init OK  ESP GPIO-pin RX:");
+        log += serial_rx;
+        log += F(" TX:");
+        log += serial_tx;
+        addLog(LOG_LEVEL_INFO, log);
 
         success = true;
         break;
@@ -80,9 +111,12 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-        if (Plugin_056_SDS)
-          delete Plugin_056_SDS;
-        addLog(LOG_LEVEL_INFO, F("SDS  : Exit"));
+        // //FIXME: if this plugin is used more than once at the same time, things go horribly wrong :)
+        //
+        // if (Plugin_056_SDS)
+        //   delete Plugin_056_SDS;
+        // addLog(LOG_LEVEL_INFO, F("SDS  : Exit"));
+        shouldReboot=true;
         break;
       }
 
@@ -95,16 +129,18 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_056_SDS->available())
         {
+          const float pm2_5 = Plugin_056_SDS->GetPM2_5();
+          const float pm10 = Plugin_056_SDS->GetPM10_();
           String log = F("SDS  : act ");
-          log += Plugin_056_SDS->GetPM2_5();
-          log += F(" ");
-          log += Plugin_056_SDS->GetPM10_();
+          log += pm2_5;
+          log += ' ';
+          log += pm10;
           addLog(LOG_LEVEL_DEBUG, log);
 
           if (Settings.TaskDeviceTimer[event->TaskIndex] == 0)
           {
-            UserVar[event->BaseVarIndex + 0] = Plugin_056_SDS->GetPM2_5();
-            UserVar[event->BaseVarIndex + 1] = Plugin_056_SDS->GetPM10_();
+            UserVar[event->BaseVarIndex + 0] = pm2_5;
+            UserVar[event->BaseVarIndex + 1] = pm10;
             event->sensorType = SENSOR_TYPE_DUAL;
             sendData(event);
           }
@@ -120,11 +156,11 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           break;
 
         float pm25, pm10;
-        Plugin_056_SDS->ReadAverage(pm25, pm10);
-
-        UserVar[event->BaseVarIndex + 0] = pm25;
-        UserVar[event->BaseVarIndex + 1] = pm10;
-        success = true;
+        if (Plugin_056_SDS->ReadAverage(pm25, pm10)) {
+          UserVar[event->BaseVarIndex + 0] = pm25;
+          UserVar[event->BaseVarIndex + 1] = pm10;
+          success = true;
+        }
         break;
       }
   }
@@ -132,4 +168,42 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif   //PLUGIN_BUILD_TESTING
+boolean Plugin_056_hasTxPin(struct EventStruct *event) {
+  const int16_t serial_tx = Settings.TaskDevicePin2[event->TaskIndex];
+  return serial_tx >= 0;
+}
+
+String Plugin_056_ErrorToString(int error) {
+  String log;
+  if (error < 0) {
+    log =  F("comm error: ");
+    log += error;
+  }
+  return log;
+}
+
+String Plugin_056_WorkingPeriodToString(int workingPeriod) {
+  if (workingPeriod < 0) {
+    return Plugin_056_ErrorToString(workingPeriod);
+  }
+  String log;
+  if (workingPeriod > 0) {
+    log += workingPeriod;
+    log += F(" minutes");
+  } else {
+    log += F(" continuous");
+  }
+  return log;
+}
+
+void Plugin_056_setWorkingPeriod(int minutes) {
+  if (!Plugin_056_SDS)
+    return;
+  Plugin_056_SDS->SetWorkingPeriod(minutes);
+  String log = F("SDS  : Working Period set to: ");
+  log += Plugin_056_WorkingPeriodToString(minutes);
+  addLog(LOG_LEVEL_INFO, log);
+}
+
+#endif // USES_P056
+#endif

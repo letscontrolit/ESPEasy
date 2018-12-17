@@ -1,3 +1,4 @@
+#ifdef USES_P011
 //#######################################################################################################
 //#################################### Plugin 011: Pro Mini Extender ####################################
 //#######################################################################################################
@@ -47,7 +48,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
       {
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         String options[2] = { F("Digital"), F("Analog") };
-        addFormSelector(string, F("Port Type"), F("plugin_011"), 2, options, NULL, choice);
+        addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
         success = true;
         break;
@@ -55,7 +56,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_011"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p011"));
         success = true;
         break;
       }
@@ -78,11 +79,23 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         if (command == F("extgpio"))
         {
           success = true;
+          portStatusStruct tempStatus;
+          const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          // So the next command should be part of each command:
+          tempStatus = globalMapPortStatus[key];
+
+          tempStatus.mode=PIN_MODE_OUTPUT;
+          tempStatus.state=event->Par2;
+          tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+          savePortStatus(key,tempStatus);
+
           Plugin_011_Write(event->Par1, event->Par2);
-          setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+          //setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
           addLog(LOG_LEVEL_INFO, log);
-          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+          //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
         }
 
         if (command == F("extpwm"))
@@ -95,10 +108,22 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           Wire.write(event->Par2 & 0xff);
           Wire.write((event->Par2 >> 8));
           Wire.endTransmission();
-          setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_PWM, event->Par2);
+
+          portStatusStruct tempStatus;
+          const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          // So the next command should be part of each command:
+          tempStatus = globalMapPortStatus[key];
+          tempStatus.mode=PIN_MODE_PWM;
+          tempStatus.state=event->Par2;
+          tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+          savePortStatus(key,tempStatus);
+
+          //setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_PWM, event->Par2);
           log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
           addLog(LOG_LEVEL_INFO, log);
-          SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+          //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
         }
 
         if (command == F("extpulse"))
@@ -109,10 +134,22 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
             Plugin_011_Write(event->Par1, event->Par2);
             delay(event->Par3);
             Plugin_011_Write(event->Par1, !event->Par2);
-            setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+
+            portStatusStruct tempStatus;
+            const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
+            tempStatus = globalMapPortStatus[key];
+            tempStatus.mode=PIN_MODE_OUTPUT;
+            tempStatus.state=event->Par2;
+            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            savePortStatus(key,tempStatus);
+
+            //setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
             addLog(LOG_LEVEL_INFO, log);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
           }
         }
 
@@ -122,22 +159,34 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0 && event->Par1 <= 13)
           {
             Plugin_011_Write(event->Par1, event->Par2);
-            setSystemTimer(event->Par3 * 1000, PLUGIN_ID_011, event->Par1, !event->Par2, 0);
-            setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+            setPluginTaskTimer(event->Par3 * 1000, PLUGIN_ID_011, event->TaskIndex, event->Par1, !event->Par2);
+
+            portStatusStruct tempStatus;
+            const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);
+            // WARNING: operator [] creates an entry in the map if key does not exist
+            // So the next command should be part of each command:
+            tempStatus = globalMapPortStatus[key];
+            tempStatus.mode=PIN_MODE_OUTPUT;
+            tempStatus.state=event->Par2;
+            tempStatus.command=1; //set to 1 in order to display the status in the PinStatus page
+            savePortStatus(key,tempStatus);
+
+            //setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
             log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
             addLog(LOG_LEVEL_INFO, log);
-            SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+            //SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
           }
         }
 
-        if (command == F("status"))
-        {
+        if (command == F("status")) {
           if (parseString(string, 2) == F("ext"))
           {
             success = true;
-            String status = "";
-            if (hasPinState(PLUGIN_ID_011, event->Par2))  // has been set as output
-              status = getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par2, dummyString, 0);
+            const uint32_t key = createKey(PLUGIN_ID_011,event->Par2); //WARNING: 'status' uses Par2 instead of Par1
+            
+            if (!existPortStatus(key)) //tempStatus.mode == PIN_MODE_OUTPUT) // has been set as output
+              SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
             else
             {
               byte port = event->Par2; // port 0-13 is digital, ports 20-27 are mapped to A0-A7
@@ -149,19 +198,26 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
               }
               int state = Plugin_011_Read(type, port); // report as input (todo: analog reading)
               if (state != -1)
-                status = getPinStateJSON(NO_SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par2, dummyString, state);
+                SendStatusOnlyIfNeeded(event->Source, NO_SEARCH_PIN_STATE, key, dummyString, state);
+                //status = getPinStateJSON(NO_SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par2, dummyString, state);
             }
-            SendStatus(event->Source, status);
           }
         }
-
         break;
       }
 
     case PLUGIN_TIMER_IN:
       {
         Plugin_011_Write(event->Par1, event->Par2);
-        setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+        portStatusStruct tempStatus;
+        // WARNING: operator [] creates an entry in the map if key does not exist
+        const uint32_t key = createKey(PLUGIN_ID_011,event->Par1);
+        tempStatus = globalMapPortStatus[key];
+
+        tempStatus.state = event->Par2;
+        tempStatus.mode = PIN_MODE_OUTPUT;
+        savePortStatus(key,tempStatus);
+        //setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         break;
       }
   }
@@ -211,3 +267,4 @@ void Plugin_011_Write(byte Par1, byte Par2)
   Wire.write((Par2 >> 8));
   Wire.endTransmission();
 }
+#endif // USES_P011

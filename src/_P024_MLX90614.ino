@@ -1,3 +1,4 @@
+#ifdef USES_P024
 //#######################################################################################################
 //#################################### Plugin 024: MLX90614 IR temperature I2C 0x5A)  ###############################################
 //#######################################################################################################
@@ -77,7 +78,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
         options[0] = F("IR object temperature");
         optionValues[1] = (0x06);
         options[1] = F("Ambient temperature");
-        addFormSelector(string, F("Option"), F("plugin_024_option"), MLX90614_OPTION, options, optionValues, choice);
+        addFormSelector(F("Option"), F("p024_option"), MLX90614_OPTION, options, optionValues, choice);
 
         success = true;
         break;
@@ -85,7 +86,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_024_option"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p024_option"));
         Plugin_024_init = false; // Force device setup next time
         success = true;
         break;
@@ -97,8 +98,8 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 //        if (!msgTemp024) // Mysensors
 //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
 //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-//        Serial.print("Present MLX90614: "); //Mysensors
-//        Serial.println(event->BaseVarIndex); //Mysensors
+//        serialPrint("Present MLX90614: "); //Mysensors
+//        serialPrintln(event->BaseVarIndex); //Mysensors
         success = true;
         break;
       }
@@ -122,3 +123,4 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P024

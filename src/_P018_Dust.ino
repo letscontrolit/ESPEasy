@@ -1,3 +1,4 @@
+#ifdef USES_P018
 //#######################################################################################################
 //#################################### Plugin 018: GP2Y10 ###############################################
 //#######################################################################################################
@@ -44,6 +45,12 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("LED"));
+        break;
+      }
+
     case PLUGIN_INIT:
       {
         Plugin_018_init = true;
@@ -82,3 +89,4 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P018

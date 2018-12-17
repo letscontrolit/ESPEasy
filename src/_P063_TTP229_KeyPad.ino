@@ -1,3 +1,4 @@
+#ifdef USES_P063
 //#######################################################################################################
 //#################################### Plugin 063: TTP229 KeyPad ########################################
 //#######################################################################################################
@@ -102,14 +103,14 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; SCL");
-        event->String2 = F("GPIO &#8644; SDO");
+        event->String1 = formatGpioName_output("SCL");
+        event->String2 = formatGpioName_bidirectional("SDO");
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormCheckBox(string, F("ScanCode"), F("scancode"), CONFIG(1));
+        addFormCheckBox(F("ScanCode"), F("scancode"), CONFIG(1));
 
         success = true;
         break;
@@ -125,12 +126,14 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        portStatusStruct newStatus;
+
         int16_t pinSCL = PIN(0);
         int16_t pinSDO = PIN(1);
 
         String log = F("Tkey : GPIO: ");
         log += pinSCL;
-        log += F(" ");
+        log += ' ';
         log += pinSDO;
         addLog(LOG_LEVEL_INFO, log);
 
@@ -138,10 +141,25 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
         {
           pinMode(pinSCL, OUTPUT);
           digitalWrite(pinSCL, LOW);
-          setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
+          uint32_t key = createKey(PLUGIN_ID_063,pinSCL);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          newStatus = globalMapPortStatus[key];
+          newStatus.task++; // add this GPIO/port as a task
+          newStatus.mode = PIN_MODE_OUTPUT;
+          newStatus.state = 0;
+          savePortStatus(key,newStatus);
+          //setPinState(PLUGIN_ID_063, pinSCL, PIN_MODE_OUTPUT, 0);
+
           pinMode(pinSDO, OUTPUT);
           digitalWrite(pinSDO, LOW);
-          setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
+          key = createKey(PLUGIN_ID_063,pinSDO);
+          // WARNING: operator [] creates an entry in the map if key does not exist
+          newStatus = globalMapPortStatus[key];
+          newStatus.task++; // add this GPIO/port as a task
+          newStatus.mode = PIN_MODE_INPUT;
+          newStatus.state = 0;
+          savePortStatus(key,newStatus);
+          //setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
         }
 
         success = true;
@@ -204,3 +222,4 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P063

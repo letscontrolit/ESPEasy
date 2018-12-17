@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p07x.repl
+.. _P070_page:
+
+|P070_typename|
+==================================================
+
+|P070_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P070_type|
+
+Name: |P070_name|
+
+Status: |P070_status|
+
+GitHub: |P070_github|_
+
+Maintainer: |P070_maintainer|
+
+
+Supported hardware
+------------------
+
+|P070_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P070_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

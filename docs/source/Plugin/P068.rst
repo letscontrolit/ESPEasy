@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p06x.repl
+.. _P068_page:
+
+|P068_typename|
+==================================================
+
+|P068_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P068_type|
+
+Name: |P068_name|
+
+Status: |P068_status|
+
+GitHub: |P068_github|_
+
+Maintainer: |P068_maintainer|
+
+
+Supported hardware
+------------------
+
+|P068_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P068_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

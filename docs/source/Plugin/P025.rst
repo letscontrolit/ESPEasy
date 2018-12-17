@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p02x.repl
+.. _P025_page:
+
+|P025_typename|
+==================================================
+
+|P025_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P025_type|
+
+Name: |P025_name|
+
+Status: |P025_status|
+
+GitHub: |P025_github|_
+
+Maintainer: |P025_maintainer|
+
+
+Supported hardware
+------------------
+
+|P025_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P025_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

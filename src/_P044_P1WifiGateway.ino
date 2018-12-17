@@ -1,3 +1,4 @@
+#ifdef USES_P044
 //#################################### Plugin 044: P1WifiGateway ########################################
 //
 //  based on P020 Ser2Net, extended by Ronald Leenes romix/-at-/macuser.nl
@@ -13,14 +14,14 @@
 #define PLUGIN_NAME_044       "Communication - P1 Wifi Gateway"
 #define PLUGIN_VALUENAME1_044 "P1WifiGateway"
 
-#define STATUS_LED 12
+#define P044_STATUS_LED 12
 #define P044_BUFFER_SIZE 1024
-#define NETBUF_SIZE 600
-#define DISABLED 0
-#define WAITING 1
-#define READING 2
-#define CHECKSUM 3
-#define DONE 4
+#define P044_NETBUF_SIZE 128
+#define P044_DISABLED 0
+#define P044_WAITING 1
+#define P044_READING 2
+#define P044_CHECKSUM 3
+#define P044_DONE 4
 
 boolean Plugin_044_init = false;
 boolean serialdebug = false;
@@ -30,14 +31,14 @@ boolean CRCcheck = false;
 unsigned int currCRC = 0;
 int checkI = 0;
 
-WiFiServer *P1GatewayServer;
+WiFiServer *P1GatewayServer = nullptr;
 WiFiClient P1GatewayClient;
 
 boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   static byte connectionState = 0;
-  static int state = DISABLED;
+  static int state = P044_DISABLED;
 
   switch (function)
   {
@@ -65,9 +66,9 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("TCP Port"), F("plugin_044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
-      	addFormNumericBox(string, F("Baud Rate"), F("plugin_044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
-      	addFormNumericBox(string, F("Data bits"), F("plugin_044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
+      	addFormNumericBox(F("TCP Port"), F("p044_port"), ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
+      	addFormNumericBox(F("Baud Rate"), F("p044_baud"), ExtraTaskSettings.TaskDevicePluginConfigLong[1]);
+      	addFormNumericBox(F("Data bits"), F("p044_data"), ExtraTaskSettings.TaskDevicePluginConfigLong[2]);
 
         byte choice = ExtraTaskSettings.TaskDevicePluginConfigLong[3];
         String options[3];
@@ -75,13 +76,14 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         options[1] = F("Even");
         options[2] = F("Odd");
         int optionValues[3] = { 0, 2, 3 };
-        addFormSelector(string, F("Parity"), F("plugin_044_parity"), 3, options, optionValues, choice);
+        addFormSelector(F("Parity"), F("p044_parity"), 3, options, optionValues, choice);
 
-      	addFormNumericBox(string, F("Stop bits"), F("plugin_044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
+      	addFormNumericBox(F("Stop bits"), F("p044_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-      	addFormPinSelect(string, F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+        // FIXME TD-er: Why isn't this using the normal pin selection functions?
+      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      	addFormNumericBox(string, F("RX Receive Timeout (mSec)"), F("plugin_044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         success = true;
         break;
@@ -89,12 +91,12 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("plugin_044_port"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("plugin_044_baud"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("plugin_044_data"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("plugin_044_parity"));
-        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("plugin_044_stop"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_044_rxwait"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[0] = getFormItemInt(F("p044_port"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[1] = getFormItemInt(F("p044_baud"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[2] = getFormItemInt(F("p044_data"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[3] = getFormItemInt(F("p044_parity"));
+        ExtraTaskSettings.TaskDevicePluginConfigLong[4] = getFormItemInt(F("p044_stop"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p044_rxwait"));
 
         success = true;
         break;
@@ -102,19 +104,33 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        pinMode(STATUS_LED, OUTPUT);
-        digitalWrite(STATUS_LED, 0);
+        pinMode(P044_STATUS_LED, OUTPUT);
+        digitalWrite(P044_STATUS_LED, 0);
 
         LoadTaskSettings(event->TaskIndex);
         if ((ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) && (ExtraTaskSettings.TaskDevicePluginConfigLong[1] != 0))
         {
-          byte serialconfig = 0x10;
+          #if defined(ESP8266)
+            byte serialconfig = 0x10;
+          #endif
+          #if defined(ESP32)
+            uint32_t serialconfig = 0x8000010;
+          #endif
           serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];
           serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2;
           if (ExtraTaskSettings.TaskDevicePluginConfigLong[4] == 2)
             serialconfig += 0x20;
-          Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
-          if (P1GatewayServer) P1GatewayServer->close();
+          #if defined(ESP8266)
+            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], (SerialConfig)serialconfig);
+          #endif
+          #if defined(ESP32)
+            Serial.begin(ExtraTaskSettings.TaskDevicePluginConfigLong[1], serialconfig);
+          #endif
+          if (P1GatewayServer)
+          {
+            P1GatewayServer->close();
+            delete P1GatewayServer;
+          }
           P1GatewayServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
           P1GatewayServer->begin();
 
@@ -144,7 +160,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         }
 
 
-        state = WAITING;
+        state = P044_WAITING;
         success = true;
         break;
       }
@@ -153,6 +169,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (P1GatewayServer) {
           P1GatewayServer->close();
+          delete P1GatewayServer;
           P1GatewayServer = NULL;
         }
         success = true;
@@ -163,7 +180,6 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_044_init)
         {
-          size_t bytes_read;
           if (P1GatewayServer->hasClient())
           {
             if (P1GatewayClient) P1GatewayClient.stop();
@@ -174,24 +190,25 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           if (P1GatewayClient.connected())
           {
             connectionState = 1;
-            uint8_t net_buf[P044_BUFFER_SIZE];
+            uint8_t net_buf[P044_NETBUF_SIZE];
             int count = P1GatewayClient.available();
             if (count > 0)
             {
-              if (count > P044_BUFFER_SIZE)
-                count = P044_BUFFER_SIZE;
-              bytes_read = P1GatewayClient.read(net_buf, count);
-              Serial.write(net_buf, bytes_read);
+              size_t net_bytes_read;
+              if (count > P044_NETBUF_SIZE)
+                count = P044_NETBUF_SIZE;
+              net_bytes_read = P1GatewayClient.read(net_buf, count);
+              Serial.write(net_buf, net_bytes_read);
               Serial.flush(); // Waits for the transmission of outgoing serial data to complete
 
-              if (count == P044_BUFFER_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
+              if (count == P044_NETBUF_SIZE) // if we have a full buffer, drop the last position to stuff with string end marker
               {
                 count--;
                 // and log buffer full situation
                 addLog(LOG_LEVEL_ERROR, F("P1   : Error: network buffer full!"));
               }
               net_buf[count] = 0; // before logging as a char array, zero terminate the last position to be safe.
-              char log[P044_BUFFER_SIZE + 40];
+              char log[P044_NETBUF_SIZE + 40];
               sprintf_P(log, PSTR("P1   : Error: N>: %s"), (char*)net_buf);
               addLog(LOG_LEVEL_DEBUG, log);
             }
@@ -225,26 +242,26 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
             int timeOut = RXWait;
             while (timeOut > 0)
             {
-              while (Serial.available() && state != DONE) {
+              while (Serial.available() && state != P044_DONE) {
                 if (bytes_read < P044_BUFFER_SIZE - 5) {
                   char  ch = Serial.read();
-                  digitalWrite(STATUS_LED, 1);
+                  digitalWrite(P044_STATUS_LED, 1);
                   switch (state) {
-                    case DISABLED: //ignore incoming data
+                    case P044_DISABLED: //ignore incoming data
                       break;
-                    case WAITING:
+                    case P044_WAITING:
                       if (ch == '/')  {
                         Plugin_044_serial_buf[0] = ch;
                         bytes_read=1;
-                        state = READING;
+                        state = P044_READING;
                       } // else ignore data
                       break;
-                    case READING:
+                    case P044_READING:
                       if (ch == '!') {
                         if (CRCcheck) {
-                          state = CHECKSUM;
+                          state = P044_CHECKSUM;
                         } else {
-                          state = DONE;
+                          state = P044_DONE;
                         }
                       }
                       if (validP1char(ch)) {
@@ -258,19 +275,19 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
                         Serial.flush();
                         bytes_read = 0;
-                        state = WAITING;
+                        state = P044_WAITING;
                       }
                       break;
-                    case CHECKSUM:
+                    case P044_CHECKSUM:
                       checkI ++;
                       if (checkI == 4) {
                         checkI = 0;
-                        state = DONE;
+                        state = P044_DONE;
                       }
                       Plugin_044_serial_buf[bytes_read] = ch;
                       bytes_read++;
                       break;
-                    case DONE:
+                    case P044_DONE:
                       // Plugin_044_serial_buf[bytes_read]= '\n';
                       // bytes_read++;
                       // Plugin_044_serial_buf[bytes_read] = 0;
@@ -281,16 +298,16 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 {
                   Serial.read();      // when the buffer is full, just read remaining input, but do not store...
                   bytes_read = 0;
-                  state = WAITING;    // reset
+                  state = P044_WAITING;    // reset
                 }
-                digitalWrite(STATUS_LED, 0);
+                digitalWrite(P044_STATUS_LED, 0);
                 timeOut = RXWait; // if serial received, reset timeout counter
               }
               delay(1);
               timeOut--;
             }
 
-            if (state == DONE) {
+            if (state == P044_DONE) {
               if (checkDatagram(bytes_read)) {
                 Plugin_044_serial_buf[bytes_read] = '\r';
                 bytes_read++;
@@ -305,7 +322,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
                 if (Settings.UseRules)
                 {
                   LoadTaskSettings(event->TaskIndex);
-                  String eventString = ExtraTaskSettings.TaskDeviceName;
+                  String eventString = getTaskDeviceName(event->TaskIndex);
                   eventString += F("#Data");
                   rulesProcessing(eventString);
                 }
@@ -315,8 +332,8 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
               }
 
               bytes_read = 0;
-              state = WAITING;
-            }   // state == DONE
+              state = P044_WAITING;
+            }   // state == P044_DONE
           }
           success = true;
         }
@@ -327,24 +344,24 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
   return success;
 }
 void blinkLED() {
-  digitalWrite(STATUS_LED, 1);
+  digitalWrite(P044_STATUS_LED, 1);
   delay(500);
-  digitalWrite(STATUS_LED, 0);
+  digitalWrite(P044_STATUS_LED, 0);
 }
 /*
    validP1char
        checks whether the incoming character is a valid one for a P1 datagram. Returns false if not, which signals corrupt datagram
 */
 bool validP1char(char ch) {
-  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch == '.') || (ch == '!') || (ch == 92) || (ch == 13) || (ch == '\n') || (ch == '(') || (ch == ')') || (ch == '-') || (ch == '*') || (ch == ':') )
+  if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch == '.') || (ch == '!') || (ch == ' ') || (ch == 92) || (ch == 13) || (ch == '\n') || (ch == '(') || (ch == ')') || (ch == '-') || (ch == '*') || (ch == ':') )
   {
     return true;
   } else {
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: invalid char read from P1"));
     if (serialdebug) {
-      Serial.print(F("faulty char>"));
-      Serial.print(ch);
-      Serial.println(F("<"));
+      serialPrint(F("faulty char>"));
+      serialPrint(String(ch));
+      serialPrintln("<");
     }
     return false;
   }
@@ -384,7 +401,7 @@ unsigned int CRC16(unsigned int crc, unsigned char *buf, int len)
 }
 
 /*  checkDatagram
-      checks whether the checksum of the data received from P1 matches the checksum attached to the
+      checks whether the P044_CHECKSUM of the data received from P1 matches the P044_CHECKSUM attached to the
       telegram
      based on code written by Jan ten Hove
      https://github.com/jantenhove/P1-Meter-ESP8266
@@ -397,12 +414,12 @@ bool checkDatagram(int len) {
   if (!CRCcheck) return true;
 
   if (serialdebug) {
-    Serial.print(F("input length: "));
-    Serial.println(len);
-    Serial.print("Start char \\ : ");
-    Serial.println(startChar);
-    Serial.print(F("End char ! : "));
-    Serial.println(endChar);
+    serialPrint(F("input length: "));
+    serialPrintln(String(len));
+    serialPrint("Start char \\ : ");
+    serialPrintln(String(startChar));
+    serialPrint(F("End char ! : "));
+    serialPrintln(String(endChar));
   }
 
   if (endChar >= 0)
@@ -414,7 +431,7 @@ bool checkDatagram(int len) {
     messageCRC[4] = 0;
     if (serialdebug) {
       for (int cnt = 0; cnt < len; cnt++)
-        Serial.print(Plugin_044_serial_buf[cnt]);
+        serialPrint(String(Plugin_044_serial_buf[cnt]));
     }
 
     validCRCFound = (strtoul(messageCRC, NULL, 16) == currCRC);
@@ -425,3 +442,4 @@ bool checkDatagram(int len) {
   }
   return validCRCFound;
 }
+#endif // USES_P044

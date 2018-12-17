@@ -1,3 +1,4 @@
+#ifdef USES_P008
 //#######################################################################################################
 //################################# Plugin 008: Wiegand RFID Tag Reader #################################
 //#######################################################################################################
@@ -48,6 +49,13 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_008));
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_input(F("D0 (Green, 5V)"));
+        event->String2 = formatGpioName_input(F("D1 (White, 5V)"));
         break;
       }
 
@@ -129,27 +137,14 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
           int optionValues[2];
           optionValues[0] = 26;
           optionValues[1] = 34;
-          string += F("<TR><TD>Wiegand Type:<TD><select name='plugin_008_type'>");
-          for (byte x = 0; x < 2; x++)
-          {
-            string += F("<option value='");
-            string += optionValues[x];
-            string += "'";
-            if (choice == optionValues[x])
-              string += F(" selected");
-            string += ">";
-            string += options[x];
-            string += F("</option>");
-          }
-          string += F("</select>");
-
+          addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
           success = true;
           break;
         }
 
       case PLUGIN_WEBFORM_SAVE:
         {
-          String plugin1 = WebServer.arg(F("plugin_008_type"));
+          String plugin1 = WebServer.arg(F("p008_type"));
           Settings.TaskDevicePluginConfig[event->TaskIndex][0] = plugin1.toInt();
           success = true;
           break;
@@ -176,3 +171,4 @@ void Plugin_008_interrupt2()
   Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1;     // Left shift the number (effectively multiplying by 2)
   Plugin_008_bitCount++;           // Increment the bit count
 }
+#endif // USES_P008

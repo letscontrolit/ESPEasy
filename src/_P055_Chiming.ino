@@ -1,3 +1,4 @@
+#ifdef USES_P055
 //#######################################################################################################
 //#################################### Plugin 055: Chiming Mechanism ####################################
 //#######################################################################################################
@@ -45,7 +46,6 @@
 // Use a power-FET or an ULN2003 to switch on the bells coil with 12 or 24 volts
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 //#include <*.h>   - no external lib required
 
@@ -101,7 +101,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_055;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;
@@ -121,9 +121,9 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = F("GPIO &rarr; Driver#1");
-        event->String2 = F("GPIO &rarr; Driver#2");
-        event->String3 = F("GPIO &rarr; Driver#4");
+        event->String1 = formatGpioName_output(F("Driver#1"));
+        event->String2 = formatGpioName_output(F("Driver#2"));
+        event->String3 = formatGpioName_output(F("Driver#4"));
         break;
       }
 
@@ -135,29 +135,28 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] <= 0)   //Plugin_055_millisPauseTime
           Settings.TaskDevicePluginConfig[event->TaskIndex][1] = 400;
 
-        addFormPinSelect(string, F("GPIO &rarr; Driver#8"), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
+        // FIXME TD-er: Should we add support for 4 pin definitions?
+        addFormPinSelect(formatGpioName_output(F("Driver#8")), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
+
+        addFormSubHeader(F("Timing"));
+
+        addFormNumericBox(F("Chiming/Strike Time (ct)"), F("chimetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addUnit(F("ms"));
+
+        addFormNumericBox(F("Normal Pause Time (t)"), F("pausetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(F("ms"));
+
+        addFormNote(F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
 
 
-        addFormSubHeader(string, F("Timing"));
+        addFormSubHeader(F("Chiming Clock"));
 
-        addFormNumericBox(string, F("Chiming/Strike Time (ct)"), F("chimetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
-        addUnit(string, F("ms"));
-
-        addFormNumericBox(string, F("Normal Pause Time (t)"), F("pausetime"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addUnit(string, F("ms"));
-
-        addFormNote(string, F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
-
-
-        addFormSubHeader(string, F("Chiming Clock"));
-
-        addFormCheckBox(string, F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
-        //string += F("<TR><TD><TD>");
-        string += F(" ");
-        addButton(string, F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
+        addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        //addHtml(F("<TR><TD><TD>"));
+        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] && !Settings.UseNTP)
-          addFormNote(string, F("Enable and configure NTP!"));
+          addFormNote(F("Enable and configure NTP!"));
 
         success = true;
         break;
@@ -196,7 +195,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
             digitalWrite(pin, Plugin_055_Data->lowActive);
           }
           log += pin;
-          log += F(" ");
+          log += ' ';
         }
         if (Plugin_055_Data->lowActive)
           log += F("!");
@@ -215,26 +214,30 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (command == F("chime"))
         {
-          int paramPos = getParamStartPos(string, 2);
-          String param = string.substring(paramPos);
-          Plugin_055_AddStringFIFO(param);
+          String param = parseStringToEndKeepCase(string, 2);
+          if (param.length() > 0) {
+            Plugin_055_AddStringFIFO(param);
+          }
           success = true;
         }
         if (command == F("chimeplay"))
         {
           String name = parseString(string, 2);
-          String param;
-          Plugin_055_ReadChime(name, param);
-          Plugin_055_AddStringFIFO(param);
+          if (name.length() > 0) {
+            String param;
+            Plugin_055_ReadChime(name, param);
+            Plugin_055_AddStringFIFO(param);
+          }
           success = true;
         }
         if (command == F("chimesave"))
         {
           String name = parseString(string, 2);
-          int paramPos = getParamStartPos(string, 3);
-          String param = string.substring(paramPos);
-          Plugin_055_WriteChime(name, param);
-          Plugin_055_AddStringFIFO(F("1"));
+          String param = parseStringToEndKeepCase(string, 3);
+          if (name.length() > 0 && param.length() > 0) {
+            Plugin_055_WriteChime(name, param);
+            Plugin_055_AddStringFIFO("1");
+          }
           success = true;
         }
 
@@ -290,7 +293,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_055_Data->millisStateEnd > 0)   // just striking?
         {
-          if (Plugin_055_Data->millisStateEnd <= millisAct)   // end reached?
+          if (timeDiff(millisAct, Plugin_055_Data->millisStateEnd) <= 0)   // end reached?
           {
             for (byte i=0; i<4; i++)
             {
@@ -309,7 +312,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
             String log = F("Chime: Process '");
             log += c;
-            log += "'";
+            log += '\'';
             addLog(LOG_LEVEL_DEBUG, log);
 
             switch (c)
@@ -456,7 +459,7 @@ void Plugin_055_WriteChime(const String& name, const String& tokens)
 
   String log = F("Chime: write ");
   log += fileName;
-  log += F(" ");
+  log += ' ';
 
   fs::File f = SPIFFS.open(fileName, "w");
   if (f)
@@ -478,7 +481,7 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
 
   String log = F("Chime: read ");
   log += fileName;
-  log += F(" ");
+  log += ' ';
 
   tokens = "";
   fs::File f = SPIFFS.open(fileName, "r+");
@@ -500,4 +503,4 @@ byte Plugin_055_ReadChime(const String& name, String& tokens)
   return tokens.length();
 }
 
-#endif
+#endif // USES_P055

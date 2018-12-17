@@ -1,3 +1,4 @@
+#ifdef USES_P048
 //#######################################################################################################
 //#################################### Plugin 048: Adafruit Motorshield v2 ##############################
 //#######################################################################################################
@@ -8,7 +9,6 @@
 // written by https://github.com/krikk
 // Currently DC Motors and Steppers are implemented, Servos are in default firmware!!!
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #include <Adafruit_MotorShield.h>
 
@@ -34,7 +34,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		case PLUGIN_DEVICE_ADD: {
 			Device[++deviceCount].Number = PLUGIN_ID_048;
 			Device[deviceCount].Type = DEVICE_TYPE_I2C;
-			Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+			Device[deviceCount].VType = SENSOR_TYPE_NONE;
 			Device[deviceCount].Ports = 0;
 			Device[deviceCount].PullUpOption = false;
 			Device[deviceCount].InverseLogicOption = false;
@@ -58,13 +58,13 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 		case PLUGIN_WEBFORM_LOAD: {
 
-    	addFormTextBox(string, F("I2C Address (Hex)"), F("plugin_048_adr"), String(F("0x")) +
-    			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
+    	addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
+		               formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
-    	addFormNumericBox(string, F("Stepper: steps per revolution"), F("plugin_048_MotorStepsPerRevolution")
+    	addFormNumericBox(F("Stepper: steps per revolution"), F("p048_MotorStepsPerRevolution")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-    	addFormNumericBox(string, F("Stepper speed (rpm)"), F("plugin_048_StepperSpeed")
+    	addFormNumericBox(F("Stepper speed (rpm)"), F("p048_StepperSpeed")
     			, Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
 			success = true;
@@ -72,12 +72,12 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_WEBFORM_SAVE: {
-			String plugin1 = WebServer.arg(F("plugin_048_adr"));
+			String plugin1 = WebServer.arg(F("p048_adr"));
 			Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
 
-			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_048_MotorStepsPerRevolution"));
+			Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p048_MotorStepsPerRevolution"));
 
-			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_048_StepperSpeed"));
+			Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p048_StepperSpeed"));
 			success = true;
 			break;
 		}
@@ -98,22 +98,23 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 		}
 
 		case PLUGIN_WRITE: {
-
-			String tmpString = string;
-
-			String cmd = parseString(tmpString, 1);
-			String param1 = parseString(tmpString, 2);
-			String param2 = parseString(tmpString, 3);
-			String param3 = parseString(tmpString, 4);
-			String param4 = parseString(tmpString, 5);
-			String param5 = parseString(tmpString, 6);
-
+			String cmd = parseString(string, 1);
 
 			// Commands:
 			// MotorShieldCMD,<DCMotor>,<Motornumber>,<Forward/Backward/Release>,<Speed>
 
 			if (cmd.equalsIgnoreCase(F("MotorShieldCMD")))
 			{
+        String param1 = parseString(string, 2);
+        String param2 = parseString(string, 3);
+        String param3 = parseString(string, 4);
+        String param4 = parseString(string, 5);
+        String param5 = parseString(string, 6);
+
+				int p2_int;
+				int p4_int;
+				const bool param2_is_int = validIntFromString(param2, p2_int);
+				const bool param4_is_int = validIntFromString(param4, p4_int);
 
 				// Create the motor shield object with the default I2C address
 				AFMS = Adafruit_MotorShield(Plugin_048_MotorShield_address);
@@ -122,15 +123,15 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 				addLog(LOG_LEVEL_DEBUG, log);
 
 				if (param1.equalsIgnoreCase(F("DCMotor"))) {
-					if (param2.toInt() > 0 && param2.toInt() < 5)
+					if (param2_is_int && p2_int > 0 && p2_int < 5)
 					{
 						Adafruit_DCMotor *myMotor;
-						myMotor = AFMS.getMotor(param2.toInt());
+						myMotor = AFMS.getMotor(p2_int);
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{
 							byte speed = 255;
-							if (param4.toInt() >= 0 && param4.toInt() <= 255)
-								speed = param4.toInt();
+							if (param4_is_int && p4_int >= 0 && p4_int <= 255)
+								speed = p4_int;
 							AFMS.begin();
 							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Forward Speed: ")) + String(speed));
 							myMotor->setSpeed(speed);
@@ -140,8 +141,8 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 						if (param3.equalsIgnoreCase(F("Backward")))
 						{
 							byte speed = 255;
-							if (param4.toInt() >= 0 && param4.toInt() <= 255)
-								speed = param4.toInt();
+							if (param4_is_int && p4_int >= 0 && p4_int <= 255)
+								speed = p4_int;
 							AFMS.begin();
 							addLog(LOG_LEVEL_INFO, String(F("DCMotor")) + param2 + String(F("->Backward Speed: ")) + String(speed));
 							myMotor->setSpeed(speed);
@@ -163,22 +164,24 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 				{
 					// Stepper# is which port it is connected to. If you're using M1 and M2, its port 1.
 					// If you're using M3 and M4 indicate port 2
-					if (param2.toInt() > 0 && param2.toInt() < 3)
+					if (param2_is_int && p2_int > 0 && p2_int < 3)
 					{
 						Adafruit_StepperMotor *myStepper;
-						myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, param2.toInt());
+						myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, p2_int);
 						myStepper->setSpeed(Plugin_048_StepperSpeed);
-						String log = F("MotorShield: StepsPerRevolution: ");
-						log += String(Plugin_048_MotorStepsPerRevolution);
-						log += F(" Stepperspeed: ");
-						log += String(Plugin_048_StepperSpeed);
-						addLog(LOG_LEVEL_DEBUG_MORE, log);
+						if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+							String log = F("MotorShield: StepsPerRevolution: ");
+							log += String(Plugin_048_MotorStepsPerRevolution);
+							log += F(" Stepperspeed: ");
+							log += String(Plugin_048_StepperSpeed);
+							addLog(LOG_LEVEL_DEBUG_MORE, log);
+						}
 
 						if (param3.equalsIgnoreCase(F("Forward")))
 						{
-							if (param4.toInt())
+							if (param4_is_int && p4_int != 0)
 							{
-								int steps = param4.toInt();
+								int steps = p4_int;
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
@@ -216,9 +219,9 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
 						if (param3.equalsIgnoreCase(F("Backward")))
 						{
-							if (param4.toInt())
+							if (param4_is_int && p4_int != 0)
 							{
-								int steps = param4.toInt();
+								int steps = p4_int;
 								if (param5.equalsIgnoreCase(F("SINGLE")))
 								{
 									AFMS.begin();
@@ -276,4 +279,4 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 }
 
 
-#endif
+#endif // USES_P048

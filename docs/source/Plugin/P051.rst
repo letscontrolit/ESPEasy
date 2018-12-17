@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
+.. _P051_page:
+
+|P051_typename|
+==================================================
+
+|P051_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P051_type|
+
+Name: |P051_name|
+
+Status: |P051_status|
+
+GitHub: |P051_github|_
+
+Maintainer: |P051_maintainer|
+
+
+Supported hardware
+------------------
+
+|P051_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P051_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

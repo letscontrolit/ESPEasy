@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
+.. _P045_page:
+
+|P045_typename|
+==================================================
+
+|P045_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P045_type|
+
+Name: |P045_name|
+
+Status: |P045_status|
+
+GitHub: |P045_github|_
+
+Maintainer: |P045_maintainer|
+
+
+Supported hardware
+------------------
+
+|P045_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P045_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+.. _P007_page:
+
+|P007_typename|
+==================================================
+
+|P007_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P007_type|
+
+Name: |P007_name|
+
+Status: |P007_status|
+
+GitHub: |P007_github|_
+
+Maintainer: |P007_maintainer|
+
+
+Supported hardware
+------------------
+
+|P007_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P007_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

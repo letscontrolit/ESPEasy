@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
+.. _P041_page:
+
+|P041_typename|
+==================================================
+
+|P041_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P041_type|
+
+Name: |P041_name|
+
+Status: |P041_status|
+
+GitHub: |P041_github|_
+
+Maintainer: |P041_maintainer|
+
+
+Supported hardware
+------------------
+
+|P041_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P041_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

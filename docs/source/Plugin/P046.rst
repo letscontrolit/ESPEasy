@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
+.. _P046_page:
+
+|P046_typename|
+==================================================
+
+|P046_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P046_type|
+
+Name: |P046_name|
+
+Status: |P046_status|
+
+GitHub: |P046_github|_
+
+Maintainer: |P046_maintainer|
+
+
+Supported hardware
+------------------
+
+|P046_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P046_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,3 +1,4 @@
+#ifdef USES_C003
 //#######################################################################################################
 //########################### Controller Plugin 003: Nodo Telnet  #######################################
 //#######################################################################################################
@@ -29,82 +30,24 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        C003_DelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
     case CPLUGIN_PROTOCOL_SEND:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
-        char log[80];
-        boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "TELNT: connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
-        // Use WiFiClient class to create TCP connections
-        WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
-        {
-          connectionFailures++;
-          strcpy_P(log, PSTR("TELNT: connection failed"));
-          addLog(LOG_LEVEL_ERROR, log);
-          return false;
-        }
-        statusLED(true);
-        if (connectionFailures)
-          connectionFailures--;
-
         // We now create a URI for the request
         String url = F("variableset ");
         url += event->idx;
         url += ",";
-        url += formatUserVar(event, 0);
+        url += formatUserVarNoCheck(event, 0);
         url += "\n";
-
-        strcpy_P(log, PSTR("TELNT: Sending enter"));
-        addLog(LOG_LEVEL_ERROR, log);
-        client.print(" \n");
-
-        unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
-          delay(1);
-
-        timer = millis() + 1000;
-        while (client.available() && millis() < timer && !success)
-        {
-
-          //   String line = client.readStringUntil('\n');
-          String line;
-          safeReadStringUntil(client, line, '\n');
-
-          if (line.startsWith(F("Enter your password:")))
-          {
-            success = true;
-            strcpy_P(log, PSTR("TELNT: Password request ok"));
-            addLog(LOG_LEVEL_ERROR, log);
-          }
-          delay(1);
-        }
-
-        strcpy_P(log, PSTR("TELNT: Sending pw"));
-        addLog(LOG_LEVEL_ERROR, log);
-        client.println(SecuritySettings.ControllerPassword[event->ControllerIndex]);
-        delay(100);
-        while (client.available())
-          client.read();
-
-        strcpy_P(log, PSTR("TELNT: Sending cmd"));
-        addLog(LOG_LEVEL_ERROR, log);
-        client.print(url);
-        delay(10);
-        while (client.available())
-          client.read();
-
-        strcpy_P(log, PSTR("TELNT: closing connection"));
-        addLog(LOG_LEVEL_DEBUG, log);
-
-        client.stop();
+        success = C003_DelayHandler.addToQueue(C003_queue_element(event->ControllerIndex, url));
+        scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
 
         break;
       }
@@ -112,3 +55,67 @@ boolean CPlugin_003(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+bool do_process_c003_delay_queue(int controller_number, const C003_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  boolean success = false;
+  char log[80];
+  addLog(LOG_LEVEL_DEBUG, String(F("TELNT : connecting to ")) + ControllerSettings.getHostPortString());
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  if (!ControllerSettings.connectToHost(client))
+  {
+    connectionFailures++;
+    strcpy_P(log, PSTR("TELNT: connection failed"));
+    addLog(LOG_LEVEL_ERROR, log);
+    return success;
+  }
+  statusLED(true);
+  if (connectionFailures)
+    connectionFailures--;
+
+  // strcpy_P(log, PSTR("TELNT: Sending enter"));
+  // addLog(LOG_LEVEL_ERROR, log);
+  client.print(" \n");
+
+  unsigned long timer = millis() + 200;
+  while (!client_available(client) && !timeOutReached(timer))
+    delay(1);
+
+  timer = millis() + 1000;
+  while (client_available(client) && !timeOutReached(timer) && !success)
+  {
+
+    //   String line = client.readStringUntil('\n');
+    String line;
+    safeReadStringUntil(client, line, '\n');
+
+    if (line.startsWith(F("Enter your password:")))
+    {
+      success = true;
+      strcpy_P(log, PSTR("TELNT: Password request ok"));
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+    delay(1);
+  }
+
+  strcpy_P(log, PSTR("TELNT: Sending pw"));
+  addLog(LOG_LEVEL_DEBUG, log);
+  client.println(SecuritySettings.ControllerPassword[element.controller_idx]);
+  delay(100);
+  while (client_available(client))
+    client.read();
+
+  strcpy_P(log, PSTR("TELNT: Sending cmd"));
+  addLog(LOG_LEVEL_DEBUG, log);
+  client.print(element.txt);
+  delay(10);
+  while (client_available(client))
+    client.read();
+
+  strcpy_P(log, PSTR("TELNT: closing connection"));
+  addLog(LOG_LEVEL_DEBUG, log);
+
+  client.stop();
+  return success;
+}
+#endif

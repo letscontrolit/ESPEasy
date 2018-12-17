@@ -1,0 +1,39 @@
+.. include:: _controller_substitutions.repl
+
+.. _C009_page:
+
+|C009_typename|
+==================================================
+
+|C009_shortinfo|
+
+Controller details
+------------------
+
+Type: |C009_type|
+
+Name: |C009_name|
+
+Status: |C009_status|
+
+GitHub: |C009_github|_
+
+Maintainer: |C009_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

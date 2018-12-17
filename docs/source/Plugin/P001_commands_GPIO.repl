@@ -1,0 +1,118 @@
+.. These P001 commands should be moved to core (P000)...
+
+:ref:`P000_page` |P000_status|
+
+Supported hardware: |P000_usedby_GPIO|
+
+.. csv-table::
+  :header: "Command (GPIO/Value)", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``GPIO,<GPIO>,<state>``
+
+  GPIO: 0 ... 16
+
+  State:
+
+  **2** (HIGH-Z, input)
+
+  **1** (HIGH, output)
+
+  **0** (LOW, output)
+  ","
+  **Basic on/off.**.
+  We can control a pin with simple http URL commands. To change the pin to high or low steady output. Setting GPIO to **2** means
+  that it will be able to detect low level relays (with high impedance, Z).
+  "
+  "
+  ``GPIOtoggle,<GPIO>``
+
+  GPIO: 0 ... 16
+
+  ","
+  **Toggle on/off.**. 
+  Toggle the current (output) state of the given GPIO pin.
+  This will only be executed on pins set to be in output mode.
+  "
+  "
+  ``LongPulse,<GPIO>,<state>,<duration>``
+
+  GPIO: 0 ... 16
+
+  State: 1/0
+
+  Duration: 1 ... 999 S
+  ","
+  **To send a *long* pulse to a certain pin.**.
+  A long pulse is basically the same as the plain pulse.  Duration is defined in seconds, which makes it more suitable for longer duration.
+  This command is not blocking, but will send 2 events to start and stop the pulse. This may have some variation depending on the system load of the module.
+  Variation is typically up-to 10 msec, but may be up-to a second, depending on active plugins and controllers performing blocking operations.
+  "
+  "
+  ``LongPulse_mS,<GPIO>,<state>,<duration>``
+
+  GPIO: 0 ... 16
+
+  State: 1/0
+
+  Duration: 10 ... 15000 msec
+  ","
+  **To send a *long* pulse to a certain pin.**
+  A ``LongPulse_mS`` is the same as the regular ``LongPulse``. The only difference is the time base in milliseconds rather than in seconds.
+  "
+  "
+  ``Pulse,<GPIO>,<state>,<duration>``
+
+  GPIO: 0 ... 16
+
+  State: 1/0
+
+  Duration: 0 ... 1000 msec
+  ","
+  **To send a *short* pulse to a certain pin.**
+  Example to send an active high (1) pulse on GPIO 14 for 500 mSeconds. Pulse duration is in milliseconds. State is 1 or 0.
+  N.B. this is a blocking call, meaning no other actions will be performed during the pulse.
+  "
+  "
+  ``PWM,<GPIO>,<duty>``
+
+  ``PWM,<GPIO>,<duty>,<duration>``
+
+  ``PWM,<GPIO>,<duty>,<duration>,<frequency>``
+
+  GPIO: 0 ... **15**
+
+  Duty: 0 ... 1023
+
+  Duration: 100 ... 15000 msec (optional)
+
+  Frequency: 100 ... 40000 Hz (optional)
+  ","
+  **To set a certain PWM level.**
+  If you have set a certain GPIO to a PWM level and want to use it as a regular HIGH/LOW pin you need to reset by setting the PWM level to 0.
+
+  Duration (in msec) parameter will create a fading.
+  Value of 0 will not set a duration.
+
+  Frequency (in Hz) will be set to 1000 Hz when not given.
+  Frequencies above 30 kHz are not stable and will likely crash the ESP.
+  "
+  "
+  ``Servo,<servo>,<GPIO>,<position>``
+
+  GPIO: 0 ... **15**
+
+  Servo: 1/2
+
+  Position: -180 ... 180 (see warning below)
+  ","
+  **To control a servo motor.**
+  We currently support a maximum of two servo motors so you can build a pan & tilt device if you like.
+
+  .. warning::
+     Most servos are not able to turn full 360°! Normally the servos are able to go from **-90°** to **90°**, some rare servos do allow for -135° to 135°.
+
+  A position value of 9000 will stop the PWM signal.
+  This can be useful to save energy on servos which do not need power to remain at the same position.
+  "

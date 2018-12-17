@@ -1,3 +1,4 @@
+#ifdef USES_P030
 //#######################################################################################################
 //#################### Plugin 030 BMP280 I2C Temp/Barometric Pressure Sensor      #######################
 //#######################################################################################################
@@ -62,8 +63,6 @@ uint8_t bmp280_i2caddr;
 int32_t bmp280_sensorID;
 int32_t bmp280_t_fine;
 
-uint8_t Plugin_030_read8(byte reg, bool * is_ok = NULL); // Declaration
-
 boolean Plugin_030_init[2] = {false, false};
 
 boolean Plugin_030(byte function, struct EventStruct *event, String& string)
@@ -105,11 +104,11 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
         int optionValues[2] = { 0x76, 0x77 };
-        addFormSelectorI2C(string, F("plugin_030_bmp280_i2c"), 2, optionValues, choice);
-        addFormNote(string, F("SDO Low=0x76, High=0x77"));
+        addFormSelectorI2C(F("p030_bmp280_i2c"), 2, optionValues, choice);
+        addFormNote(F("SDO Low=0x76, High=0x77"));
 
-        addFormNumericBox(string, F("Altitude"), F("plugin_030_bmp280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
-        addUnit(string, F("m"));
+        addFormNumericBox(F("Altitude"), F("p030_bmp280_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addUnit(F("m"));
 
         success = true;
         break;
@@ -117,8 +116,8 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_030_bmp280_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_030_bmp280_elev"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p030_bmp280_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p030_bmp280_elev"));
         success = true;
         break;
       }
@@ -127,7 +126,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
       {
         uint8_t idx = Settings.TaskDevicePluginConfig[event->TaskIndex][0] & 0x1; //Addresses are 0x76 and 0x77 so we may use it this way
         Plugin_030_init[idx] &= Plugin_030_check(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // Check id device is present
-        Plugin_030_init[idx] &=  (Plugin_030_read8(BMP280_REGISTER_CONTROL) == BMP280_CONTROL_SETTING); // Check if the coefficients are still valid
+        Plugin_030_init[idx] &=  (I2C_read8_reg(bmp280_i2caddr, BMP280_REGISTER_CONTROL) == BMP280_CONTROL_SETTING); // Check if the coefficients are still valid
 
         if (!Plugin_030_init[idx])
         {
@@ -198,7 +197,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 bool Plugin_030_check(uint8_t a) {
   bmp280_i2caddr = a?a:0x76;
   bool wire_status = false;
-  if (Plugin_030_read8(BMP280_REGISTER_CHIPID, &wire_status) != 0x58) {
+  if (I2C_read8_reg(bmp280_i2caddr, BMP280_REGISTER_CHIPID, &wire_status) != 0x58) {
       return false;
   } else {
       return wire_status;
@@ -213,95 +212,9 @@ bool Plugin_030_begin(uint8_t a) {
     return false;
 
   Plugin_030_readCoefficients(a & 0x1);
-  Plugin_030_write8(BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING);
-  Plugin_030_write8(BMP280_REGISTER_CONFIG, BMP280_CONFIG_SETTING);
+  I2C_write8_reg(bmp280_i2caddr, BMP280_REGISTER_CONTROL, BMP280_CONTROL_SETTING);
+  I2C_write8_reg(bmp280_i2caddr, BMP280_REGISTER_CONFIG, BMP280_CONFIG_SETTING);
   return true;
-}
-
-//**************************************************************************/
-// Writes an 8 bit value over I2C/SPI
-//**************************************************************************/
-void Plugin_030_write8(byte reg, byte value)
-{
-  Wire.beginTransmission((uint8_t)bmp280_i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.write((uint8_t)value);
-  Wire.endTransmission();
-}
-
-//**************************************************************************/
-// Reads an 8 bit value over I2C
-//**************************************************************************/
-uint8_t Plugin_030_read8(byte reg, bool * is_ok)
-{
-  uint8_t value;
-
-  Wire.beginTransmission((uint8_t)bmp280_i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  byte count = Wire.requestFrom((uint8_t)bmp280_i2caddr, (byte)1);
-  if (is_ok != NULL) { *is_ok = (count == 1); }
-  value = Wire.read();
-  Wire.endTransmission();
-  return value;
-}
-
-//**************************************************************************/
-// Reads a 16 bit value over I2C
-//**************************************************************************/
-uint16_t Plugin_030_read16(byte reg)
-{
-  uint16_t value;
-
-  Wire.beginTransmission((uint8_t)bmp280_i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom((uint8_t)bmp280_i2caddr, (byte)2);
-  value = (Wire.read() << 8) | Wire.read();
-  Wire.endTransmission();
-
-  return value;
-}
-
-//**************************************************************************/
-// Reads a 24 bit value over I2C
-//**************************************************************************/
-int32_t Plugin_030_read24(byte reg)
-{
-  int32_t value;
-
-  Wire.beginTransmission((uint8_t)bmp280_i2caddr);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom((uint8_t)bmp280_i2caddr, (byte)3);
-  value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
-  Wire.endTransmission();
-
-  return value;
-}
-
-//**************************************************************************/
-// Reads a 16 bit value over I2C
-//**************************************************************************/
-uint16_t Plugin_030_read16_LE(byte reg) {
-  uint16_t temp = Plugin_030_read16(reg);
-  return (temp >> 8) | (temp << 8);
-
-}
-
-//**************************************************************************/
-// Reads a signed 16 bit value over I2C
-//**************************************************************************/
-int16_t Plugin_030_readS16(byte reg)
-{
-  return (int16_t)Plugin_030_read16(reg);
-
-}
-
-int16_t Plugin_030_readS16_LE(byte reg)
-{
-  return (int16_t)Plugin_030_read16_LE(reg);
-
 }
 
 //**************************************************************************/
@@ -309,19 +222,19 @@ int16_t Plugin_030_readS16_LE(byte reg)
 //**************************************************************************/
 void Plugin_030_readCoefficients(uint8_t idx)
 {
-  _bmp280_calib[idx].dig_T1 = Plugin_030_read16_LE(BMP280_REGISTER_DIG_T1);
-  _bmp280_calib[idx].dig_T2 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_T2);
-  _bmp280_calib[idx].dig_T3 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_T3);
+  _bmp280_calib[idx].dig_T1 = I2C_read16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_T1);
+  _bmp280_calib[idx].dig_T2 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_T2);
+  _bmp280_calib[idx].dig_T3 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_T3);
 
-  _bmp280_calib[idx].dig_P1 = Plugin_030_read16_LE(BMP280_REGISTER_DIG_P1);
-  _bmp280_calib[idx].dig_P2 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P2);
-  _bmp280_calib[idx].dig_P3 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P3);
-  _bmp280_calib[idx].dig_P4 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P4);
-  _bmp280_calib[idx].dig_P5 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P5);
-  _bmp280_calib[idx].dig_P6 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P6);
-  _bmp280_calib[idx].dig_P7 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P7);
-  _bmp280_calib[idx].dig_P8 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P8);
-  _bmp280_calib[idx].dig_P9 = Plugin_030_readS16_LE(BMP280_REGISTER_DIG_P9);
+  _bmp280_calib[idx].dig_P1 = I2C_read16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P1);
+  _bmp280_calib[idx].dig_P2 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P2);
+  _bmp280_calib[idx].dig_P3 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P3);
+  _bmp280_calib[idx].dig_P4 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P4);
+  _bmp280_calib[idx].dig_P5 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P5);
+  _bmp280_calib[idx].dig_P6 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P6);
+  _bmp280_calib[idx].dig_P7 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P7);
+  _bmp280_calib[idx].dig_P8 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P8);
+  _bmp280_calib[idx].dig_P9 = I2C_readS16_LE_reg(bmp280_i2caddr, BMP280_REGISTER_DIG_P9);
 }
 
 //**************************************************************************/
@@ -331,7 +244,7 @@ float Plugin_030_readTemperature(uint8_t idx)
 {
   int32_t var1, var2;
 
-  int32_t adc_T = Plugin_030_read24(BMP280_REGISTER_TEMPDATA);
+  int32_t adc_T = I2C_read24_reg(bmp280_i2caddr, BMP280_REGISTER_TEMPDATA);
   adc_T >>= 4;
 
   var1  = ((((adc_T >> 3) - ((int32_t)_bmp280_calib[idx].dig_T1 << 1))) *
@@ -353,7 +266,7 @@ float Plugin_030_readTemperature(uint8_t idx)
 float Plugin_030_readPressure(uint8_t idx) {
   int64_t var1, var2, p;
 
-  int32_t adc_P = Plugin_030_read24(BMP280_REGISTER_PRESSUREDATA);
+  int32_t adc_P = I2C_read24_reg(bmp280_i2caddr, BMP280_REGISTER_PRESSUREDATA);
   adc_P >>= 4;
 
   var1 = ((int64_t)bmp280_t_fine) - 128000;
@@ -394,3 +307,4 @@ float Plugin_030_readAltitude(float seaLevel)
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P030

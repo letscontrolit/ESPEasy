@@ -1,3 +1,4 @@
+#ifdef USES_P065
 //#######################################################################################################
 //############################# Plugin 065: P065_DFR0299_MP3 ############################################
 //#######################################################################################################
@@ -26,14 +27,13 @@
 // Datasheet: https://www.dfrobot.com/wiki/index.php/DFPlayer_Mini_SKU:DFR0299
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_065
 #define PLUGIN_ID_065         65
 #define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
 #define PLUGIN_VALUENAME1_065 ""
 
-#include <SoftwareSerial.h>
+#include <ESPeasySoftwareSerial.h>
 
 #ifndef CONFIG
 #define CONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][n])
@@ -42,7 +42,7 @@
 #define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
 #endif
 
-SoftwareSerial* Plugin_065_SoftSerial = NULL;
+ESPeasySoftwareSerial* Plugin_065_SoftSerial = NULL;
 
 
 boolean Plugin_065(byte function, struct EventStruct *event, String& string)
@@ -56,7 +56,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_065;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -76,13 +76,13 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
       case PLUGIN_GET_DEVICEGPIONAMES:
         {
-          event->String1 = F("GPIO &rarr; RX");
+          event->String1 = formatGpioName_TX(false);
           break;
         }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-          addFormNumericBox(string, F("Volume"), F("volume"), CONFIG(0), 1, 30);
+          addFormNumericBox(F("Volume"), F("volume"), CONFIG(0), 1, 30);
 
           success = true;
           break;
@@ -106,7 +106,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         #pragma GCC diagnostic pop
 
 
-        Plugin_065_SoftSerial = new SoftwareSerial(-1, PIN(0));   // no RX, only TX
+        Plugin_065_SoftSerial = new ESPeasySoftwareSerial(-1, PIN(0));   // no RX, only TX
 
         Plugin_065_SoftSerial->begin(9600);
 
@@ -121,20 +121,20 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         if (!Plugin_065_SoftSerial)
           break;
 
-        String lowerString=string;
-        lowerString.toLowerCase();
-        String command = parseString(lowerString, 1);
-        String param = parseString(lowerString, 2);
+        String command = parseString(string, 1);
+        String param = parseString(string, 2);
 
         if (command == F("play"))
         {
-          String log = F("MP3  : play=");
-
-          uint16_t track = param.toInt();
-          Plugin_065_Play(track);
-          log += track;
-
-          addLog(LOG_LEVEL_INFO, log);
+          int track;
+          if (validIntFromString(param, track)) {
+            Plugin_065_Play(track);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("MP3  : play=");
+              log += track;
+              addLog(LOG_LEVEL_INFO, log);
+            }
+          }
           success = true;
         }
 
@@ -221,9 +221,9 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   for (byte i=0; i<10; i++)
   {
     log += String(buffer[i], 16);
-    log += F(" ");
+    log += ' ';
   }
   addLog(LOG_LEVEL_DEBUG, log);
 }
 
-#endif
+#endif // USES_P065

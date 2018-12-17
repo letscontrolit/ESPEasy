@@ -1,16 +1,16 @@
-/*************************************************** 
+/***************************************************
   This is a library for the MPR121 I2C 12-chan Capacitive Sensor
 
   Designed specifically to work with the MPR121 sensor from Adafruit
   ----> https://www.adafruit.com/products/1982
 
-  These sensors use I2C to communicate, 2+ pins are required to  
+  These sensors use I2C to communicate, 2+ pins are required to
   interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
+  Adafruit invests time and resources providing this open source code,
+  please support Adafruit and open-source hardware by purchasing
   products from Adafruit!
 
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
+  Written by Limor Fried/Ladyada for Adafruit Industries.
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 
@@ -20,27 +20,27 @@ Adafruit_MPR121::Adafruit_MPR121() {
 }
 
 boolean Adafruit_MPR121::begin(uint8_t i2caddr) {
-  Wire.begin();
-    
+  //Wire.begin();   called in ESPEasy framework
+
   _i2caddr = i2caddr;
 
   // soft reset
   writeRegister(MPR121_SOFTRESET, 0x63);
   delay(1);
   for (uint8_t i=0; i<0x7F; i++) {
-  //  Serial.print("$"); Serial.print(i, HEX); 
+  //  Serial.print("$"); Serial.print(i, HEX);
   //  Serial.print(": 0x"); Serial.println(readRegister8(i));
   }
-  
+
 
   writeRegister(MPR121_ECR, 0x0);
 
   uint8_t c = readRegister8(MPR121_CONFIG2);
-  
+
   if (c != 0x24) return false;
 
 
-  setThreshholds(12, 6);
+  setThresholds(12, 6);
   writeRegister(MPR121_MHDR, 0x01);
   writeRegister(MPR121_NHDR, 0x01);
   writeRegister(MPR121_NCLR, 0x0E);

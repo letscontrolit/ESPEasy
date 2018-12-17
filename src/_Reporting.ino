@@ -20,7 +20,7 @@ void ReportStatus()
 
 
   WiFiClient client;
-  if (!client.connect(host.c_str(), 80))
+  if (!connectClient(client, host.c_str(), 80))
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
     return;
@@ -41,14 +41,14 @@ void ReportStatus()
   String payload = F("POST /report.php HTTP/1.1\r\n");
   payload += F("Host: ");
   payload += host;
-  payload += F("\r\n");
+  payload += "\r\n";
   payload += F("Connection: close\r\n");
   payload += F("Content-Length: ");
   payload += String(body.length());
-  payload += F("\r\n\r\n");
+  payload += "\r\n\r\n";
   payload += body;
 
-  Serial.println(payload);
+  serialPrintln(payload);
   client.print(payload);
 
 

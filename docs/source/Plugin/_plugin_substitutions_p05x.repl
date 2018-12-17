@@ -1,0 +1,109 @@
+.. |P050_name| replace:: :cyan:`TCS34725`
+.. |P050_type| replace:: :cyan:`Color`
+.. |P050_typename| replace:: :cyan:`Color - TCS34725`
+.. |P050_status| replace:: :red:`DEVELOPMENT`
+.. |P050_github| replace:: P050_TCS34725.ino
+.. _P050_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P050_TCS34725.ino
+.. |P050_usedby| replace:: `.`
+.. |P050_shortinfo| replace:: `.`
+.. |P050_maintainer| replace:: `.`
+.. |P050_compileinfo| replace:: `.`
+
+.. |P051_name| replace:: :cyan:`AM2320`
+.. |P051_type| replace:: :cyan:`Environment`
+.. |P051_typename| replace:: :cyan:`Environment - AM2320`
+.. |P051_status| replace:: :green:`NORMAL`
+.. |P051_github| replace:: P051_AM2320.ino
+.. _P051_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P051_AM2320.ino
+.. |P051_usedby| replace:: `.`
+.. |P051_shortinfo| replace:: `.`
+.. |P051_maintainer| replace:: `.`
+.. |P051_compileinfo| replace:: `.`
+
+.. |P052_name| replace:: :cyan:`CO2 Senseair`
+.. |P052_type| replace:: :cyan:`Gases`
+.. |P052_typename| replace:: :cyan:`Gases - CO2 Senseair`
+.. |P052_status| replace:: :green:`NORMAL`
+.. |P052_github| replace:: P052_SenseAir.ino
+.. _P052_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P052_SenseAir.ino
+.. |P052_usedby| replace:: :ref:`P052_S8_page`, :ref:`P052_tSense_K70_page`
+.. |P052_shortinfo| replace:: The Senseair plugin can be used for multiple gas sensors from the company Senseair. The mostly used sensor is the S8 but other sensor units that work is tSense (K70), K30, K33, S8 (and soon LP8).
+.. |P052_maintainer| replace:: `.`
+.. |P052_compileinfo| replace:: `.`
+
+.. |P053_name| replace:: :cyan:`PMSx003`
+.. |P053_type| replace:: :cyan:`Dust`
+.. |P053_typename| replace:: :cyan:`Dust - PMSx003`
+.. |P053_status| replace:: :yellow:`TESTING`
+.. |P053_github| replace:: P053_PMSx003.ino
+.. _P053_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P053_PMSx003.ino
+.. |P053_usedby| replace:: `.`
+.. |P053_shortinfo| replace:: `.`
+.. |P053_maintainer| replace:: `.`
+.. |P053_compileinfo| replace:: `.`
+
+.. |P054_name| replace:: :cyan:`DMX512 TX`
+.. |P054_type| replace:: :cyan:`Communication`
+.. |P054_typename| replace:: :cyan:`Communication - DMX512 TX`
+.. |P054_status| replace:: :yellow:`TESTING`
+.. |P054_github| replace:: P054_DMX512.ino
+.. _P054_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P054_DMX512.ino
+.. |P054_usedby| replace:: `.`
+.. |P054_shortinfo| replace:: `.`
+.. |P054_maintainer| replace:: `.`
+.. |P054_compileinfo| replace:: `.`
+
+.. |P055_name| replace:: :cyan:`Chiming`
+.. |P055_type| replace:: :cyan:`Notify`
+.. |P055_typename| replace:: :cyan:`Notify - Chiming`
+.. |P055_status| replace:: :yellow:`TESTING`
+.. |P055_github| replace:: P055_Chiming.ino
+.. _P055_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P055_Chiming.ino
+.. |P055_usedby| replace:: `.`
+.. |P055_shortinfo| replace:: `.`
+.. |P055_maintainer| replace:: `.`
+.. |P055_compileinfo| replace:: `.`
+
+.. |P056_name| replace:: :cyan:`SDS011/018/198`
+.. |P056_type| replace:: :cyan:`Dust`
+.. |P056_typename| replace:: :cyan:`Dust - SDS011/018/198`
+.. |P056_status| replace:: :red:`DEVELOPMENT`
+.. |P056_github| replace:: P056_SDS011-Dust.ino
+.. _P056_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P056_SDS011-Dust.ino
+.. |P056_usedby| replace:: `.`
+.. |P056_shortinfo| replace:: `.`
+.. |P056_maintainer| replace:: `.`
+.. |P056_compileinfo| replace:: `.`
+
+.. |P057_name| replace:: :cyan:`HT16K33`
+.. |P057_type| replace:: :cyan:`Display`
+.. |P057_typename| replace:: :cyan:`Display - HT16K33`
+.. |P057_status| replace:: :yellow:`TESTING`
+.. |P057_github| replace:: P057_HT16K33_LED.ino
+.. _P057_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P057_HT16K33_LED.ino
+.. |P057_usedby| replace:: `.`
+.. |P057_shortinfo| replace:: `.`
+.. |P057_maintainer| replace:: `.`
+.. |P057_compileinfo| replace:: `.`
+
+.. |P058_name| replace:: :cyan:`HT16K33`
+.. |P058_type| replace:: :cyan:`Keypad`
+.. |P058_typename| replace:: :cyan:`Keypad - HT16K33`
+.. |P058_status| replace:: :yellow:`TESTING`
+.. |P058_github| replace:: P058_HT16K33_KeyPad.ino
+.. _P058_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P058_HT16K33_KeyPad.ino
+.. |P058_usedby| replace:: `.`
+.. |P058_shortinfo| replace:: `.`
+.. |P058_maintainer| replace:: `.`
+.. |P058_compileinfo| replace:: `.`
+
+.. |P059_name| replace:: :cyan:`Rotary Encoder`
+.. |P059_type| replace:: :cyan:`Switch input`
+.. |P059_typename| replace:: :cyan:`Switch input - Rotary Encoder`
+.. |P059_status| replace:: :green:`NORMAL`
+.. |P059_github| replace:: P059_Encoder.ino
+.. _P059_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P059_Encoder.ino
+.. |P059_usedby| replace:: `.`
+.. |P059_shortinfo| replace:: `.`
+.. |P059_maintainer| replace:: `.`
+.. |P059_compileinfo| replace:: `.`

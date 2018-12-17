@@ -1,3 +1,4 @@
+#ifdef USES_C004
 //#######################################################################################################
 //########################### Controller Plugin 004: ThingSpeak #########################################
 //#######################################################################################################
@@ -16,7 +17,7 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_004;
         Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = false;
+        Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
@@ -29,90 +30,70 @@ boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case CPLUGIN_INIT:
+      {
+        MakeControllerSettings(ControllerSettings);
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        C004_DelayHandler.configureControllerSettings(ControllerSettings);
+        break;
+      }
+
+    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+      {
+        success = true;
+        switch (event->idx) {
+          case CONTROLLER_USER:
+            string = F("ThingHTTP Name");
+            break;
+          case CONTROLLER_PASS:
+            string = F("API Key");
+            break;
+          default:
+            success = false;
+            break;
+        }
+      }
+
     case CPLUGIN_PROTOCOL_SEND:
       {
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+        success = C004_DelayHandler.addToQueue(C004_queue_element(event));
+        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
 
-        char log[80];
-        // boolean success = false;
-        char host[20];
-        sprintf_P(host, PSTR("%u.%u.%u.%u"), ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-        sprintf_P(log, PSTR("%s%s using port %u"), "HTTP : connecting to ", host,ControllerSettings.Port);
-        addLog(LOG_LEVEL_DEBUG, log);
-
-        // Use WiFiClient class to create TCP connections
-        WiFiClient client;
-        if (!client.connect(host, ControllerSettings.Port))
-        {
-          connectionFailures++;
-          strcpy_P(log, PSTR("HTTP : connection failed"));
-          addLog(LOG_LEVEL_ERROR, log);
-          return false;
-        }
-        statusLED(true);
-        if (connectionFailures)
-          connectionFailures--;
-
-        String postDataStr = F("api_key=");
-        postDataStr += SecuritySettings.ControllerPassword[event->ControllerIndex]; // used for API key
-
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
-        for (byte x = 0; x < valueCount; x++)
-        {
-          postDataStr += F("&field");
-          postDataStr += event->idx + x;
-          postDataStr += "=";
-          postDataStr += formatUserVar(event, x);
-        }
-        String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
-        if (ControllerSettings.UseDNS)
-          hostName = ControllerSettings.HostName;
-
-        String postStr = F("POST /update HTTP/1.1\r\n");
-        postStr += F("Host: ");
-        postStr += hostName;
-        postStr += F("\r\n");
-        postStr += F("Connection: close\r\n");
-
-        postStr += F("Content-Type: application/x-www-form-urlencoded\r\n");
-        postStr += F("Content-Length: ");
-        postStr += postDataStr.length();
-        postStr += F("\r\n\r\n");
-        postStr += postDataStr;
-
-        // This will send the request to the server
-        client.print(postStr);
-
-        unsigned long timer = millis() + 200;
-        while (!client.available() && millis() < timer)
-          delay(1);
-
-        // Read all the lines of the reply from server and print them to Serial
-        while (client.available()) {
-          //   String line = client.readStringUntil('\n');
-          String line;
-          safeReadStringUntil(client, line, '\n');
-
-          line.toCharArray(log, 80);
-          addLog(LOG_LEVEL_DEBUG_MORE, log);
-          if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
-          {
-            strcpy_P(log, PSTR("HTTP : Success!"));
-            addLog(LOG_LEVEL_DEBUG, log);
-            success = true;
-          }
-          delay(1);
-        }
-        strcpy_P(log, PSTR("HTTP : closing connection"));
-        addLog(LOG_LEVEL_DEBUG, log);
-
-        client.flush();
-        client.stop();
         break;
       }
 
   }
   return success;
 }
+
+bool do_process_c004_delay_queue(int controller_number, const C004_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  WiFiClient client;
+  if (!try_connect_host(controller_number, client, ControllerSettings))
+    return false;
+
+  String postDataStr = F("api_key=");
+  postDataStr += SecuritySettings.ControllerPassword[element.controller_idx]; // used for API key
+
+  byte valueCount = getValueCountFromSensorType(element.sensorType);
+  for (byte x = 0; x < valueCount; x++)
+  {
+    postDataStr += F("&field");
+    postDataStr += element.idx + x;
+    postDataStr += "=";
+    postDataStr += formatUserVarNoCheck(element.TaskIndex, x);
+  }
+  String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
+  if (ControllerSettings.UseDNS)
+    hostName = ControllerSettings.HostName;
+
+  String postStr = do_create_http_request(
+    hostName, F("POST"),
+    F("/update"), // uri
+    "",           // auth_header
+    F("Content-Type: application/x-www-form-urlencoded\r\n"),
+    postDataStr.length());
+  postStr += postDataStr;
+
+  return send_via_http(controller_number, client, postStr, ControllerSettings.MustCheckReply);
+}
+#endif

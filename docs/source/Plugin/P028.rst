@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p02x.repl
+.. _P028_page:
+
+|P028_typename|
+==================================================
+
+|P028_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P028_type|
+
+Name: |P028_name|
+
+Status: |P028_status|
+
+GitHub: |P028_github|_
+
+Maintainer: |P028_maintainer|
+
+
+Supported hardware
+------------------
+
+|P028_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P028_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

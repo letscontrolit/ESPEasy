@@ -1,29 +1,27 @@
-// Copyright Benoit Blanchon 2014-2016
+// ArduinoJson - arduinojson.org
+// Copyright Benoit Blanchon 2014-2018
 // MIT License
 //
-// Arduino JSON library
-// https://github.com/bblanchon/ArduinoJson
-// If you like this project, please add a star!
+// This example shows how to generate a JSON document with ArduinoJson.
 
 #include <ArduinoJson.h>
 
 void setup() {
+  // Initialize Serial port
   Serial.begin(9600);
-  while (!Serial) {
-    // wait serial port initialization
-  }
+  while (!Serial) continue;
 
   // Memory pool for JSON object tree.
   //
   // Inside the brackets, 200 is the size of the pool in bytes.
-  // If the JSON object is more complex, you need to increase that value.
+  // Don't forget to change this value to match your JSON document.
+  // Use arduinojson.org/assistant to compute the capacity.
   StaticJsonBuffer<200> jsonBuffer;
 
   // StaticJsonBuffer allocates memory on the stack, it can be
   // replaced by DynamicJsonBuffer which allocates in the heap.
-  // It's simpler but less efficient.
   //
-  // DynamicJsonBuffer  jsonBuffer;
+  // DynamicJsonBuffer  jsonBuffer(200);
 
   // Create the root of the object tree.
   //
@@ -44,8 +42,8 @@ void setup() {
   // It's also possible to create the array separately and add it to the
   // JsonObject but it's less efficient.
   JsonArray& data = root.createNestedArray("data");
-  data.add(double_with_n_digits(48.756080, 6));
-  data.add(double_with_n_digits(2.302038, 6));
+  data.add(48.756080);
+  data.add(2.302038);
 
   root.printTo(Serial);
   // This prints:
@@ -68,3 +66,16 @@ void setup() {
 void loop() {
   // not used in this example
 }
+
+// See also
+// --------
+//
+// The website arduinojson.org contains the documentation for all the functions
+// used above. It also includes an FAQ that will help you solve any
+// serialization problem.
+// Please check it out at: https://arduinojson.org/
+//
+// The book "Mastering ArduinoJson" contains a tutorial on serialization.
+// It begins with a simple example, like the one above, and then adds more
+// features like serializing directly to a file or an HTTP request.
+// Please check it out at: https://arduinojson.org/book/

@@ -1,0 +1,47 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+.. _P001_page:
+
+|P001_typename|
+==================================================
+
+|P001_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P001_type|
+
+Name: |P001_name|
+
+Status: |P001_status|
+
+GitHub: |P001_github|_
+
+Maintainer: |P001_maintainer|
+
+
+Supported hardware
+------------------
+
+|P001_usedby|
+
+Commands available
+------------------
+
+.. include:: P001_commands_GPIO.repl
+.. include:: P001_commands_RTTTL.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.

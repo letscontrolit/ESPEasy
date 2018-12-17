@@ -1,31 +1,105 @@
 #!/bin/bash
 
 VERSION=$(git describe)
-echo "Creating release archives for $VERSION ..."
-#binaries
+TMP_DIST=`mktemp -d`
+CURPATH=`pwd`
 
-#ESP_Easy_v[version]-[build type]-dev[dev number]-ESP[chip type]-[size].bin
+while getopts d: option
+do
+case "${option}"
+in
+d) VERSION=${OPTARG};;
+esac
+done
 
-#cp .pioenvs/mini_512/firmware.bin dist/"ESPEasy_$VERSION""_mini_512.bin"
 
-cp .pioenvs/normal_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_normal_ESP8266_1024.bin"
-cp .pioenvs/normal_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_normal_ESP8266_4096.bin"
-cp .pioenvs/normal_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_normal_ESP8285_1024.bin"
+if [ ! -d ${TMP_DIST} ]; then
+  # Could not create temp dir, so exit
+  exit 1
+fi
 
-cp .pioenvs/test_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_test_ESP8266_1024.bin"
-cp .pioenvs/test_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_test_ESP8266_4096.bin"
-cp .pioenvs/test_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_test_ESP8285_1024.bin"
+#Naming convention:
+# ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
 
-cp .pioenvs/dev_ESP8266_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266_1024.bin"
-cp .pioenvs/dev_ESP8266_4096/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8266_4096.bin"
-cp .pioenvs/dev_ESP8285_1024/firmware.bin dist/"ESP_Easy_$VERSION""_dev_ESP8285_1024.bin"
+mkdir -p ${TMP_DIST}
+cp -r dist/* ${TMP_DIST}/
+
+if [ -d "docs/build" ]; then
+  # Docs have been created
+  mkdir -p ${TMP_DIST}/docs
+  cp -r docs/build/* ${TMP_DIST}/docs/
+fi
+
+
+for ENV in \
+  dev_ESP8266_4096\
+  esp-wrover-kit_test_1M8_partition\
+  esp32dev\
+  esp32test_1M8_partition\
+  hard_SONOFF_POW_4M\
+  hard_core_250_beta_SONOFF_POW_4M\
+  hard_core_250_beta_Shelly_1_2M256\
+  minimal_ESP8266_1024_OTA\
+  minimal_ESP8285_1024_OTA\
+  normal_ESP8266_1024\
+  normal_ESP8266_1024_VCC\
+  normal_ESP8266_4096\
+  normal_ESP8285_1024\
+  normal_IR_ESP8266_4096\
+  normal_WROOM02_2048\
+  normal_core_241_ESP8266_1024\
+  normal_core_241_ESP8266_4096\
+  normal_core_250_beta_ESP8266_1024\
+  normal_core_250_beta_ESP8266_4096\
+  normal_core_250_beta_IR_ESP8266_4096\
+  normal_core_250_beta_WROOM02_2M256\
+  test_ESP8266_4096\
+  test_ESP8266_4096_VCC\
+  test_core_250_beta_ESP8266_4096\
+  test_core_250_beta_ESP8266_4096_VCC;\
+do
+  MAX_FILESIZE=1044464
+  if [[ ${ENV} == *"1024"* ]]; then
+    # max 602 kiB
+    MAX_FILESIZE=892912
+  fi
+  if [[ ${ENV} == *"1024_OTA"* ]]; then
+    # max 602 kiB
+    MAX_FILESIZE=616448
+  fi
+  if [[ ${ENV} == *"esp32"* ]]; then
+    MAX_FILESIZE=1310720
+  fi
+  if [[ ${ENV} == *"1M8_partition"* ]]; then
+    MAX_FILESIZE=1900544
+  fi
+
+  FILESIZE=$(stat -c%s .pioenvs/${ENV}/firmware.bin )
+  if (( FILESIZE < MAX_FILESIZE )); then
+    echo
+    echo "### Deploying environment $ENV for version $VERSION"
+    BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
+    cp .pioenvs/${ENV}/firmware.bin $BIN
+    python2 crc2.py $BIN
+    mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
+  else
+    echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
+  fi
+done
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
-rm -rf dist/Source 2>/dev/null
-mkdir dist/Source
-cp -r lib dist/Source/
-cp -r src dist/Source/
-cp platformio.ini dist/Source/
+#rm -rf dist/Source 2>/dev/null
 
-cd dist
-zip ../ESPEasy_$VERSION.zip -r .
+mkdir -p ${TMP_DIST}/source
+cp -r lib ${TMP_DIST}/source/
+cp -r src ${TMP_DIST}/source/
+cp platformio.ini ${TMP_DIST}/source/
+
+cd ${TMP_DIST}
+
+echo
+echo "### Creating zip archive"
+zip ${CURPATH}/ESPEasy_$VERSION.zip -r .
+
+rm -Rf ${TMP_DIST}/* 2>/dev/null
+rmdir ${TMP_DIST}

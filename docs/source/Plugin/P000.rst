@@ -1,0 +1,47 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+.. _P000_page:
+
+|P000_typename|
+==================================================
+
+|P000_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P000_type|
+
+Name: |P000_name|
+
+Status: |P000_status|
+
+GitHub: |P000_github|_
+
+Maintainer: |P000_maintainer|
+
+
+Supported hardware
+------------------
+
+|P000_usedby_GPIO|, |P000_usedby_RTTTL|
+
+Commands available
+------------------
+
+.. include:: P001_commands_GPIO.repl
+.. include:: P001_commands_RTTTL.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.

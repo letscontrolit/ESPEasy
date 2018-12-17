@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p04x.repl
+.. _P040_page:
+
+|P040_typename|
+==================================================
+
+|P040_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P040_type|
+
+Name: |P040_name|
+
+Status: |P040_status|
+
+GitHub: |P040_github|_
+
+Maintainer: |P040_maintainer|
+
+
+Supported hardware
+------------------
+
+|P040_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P040_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

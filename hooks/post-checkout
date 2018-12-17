@@ -1,0 +1,11 @@
+#!/bin/bash
+# purpose: GIT post-commit
+#   change value of BUILD_GIT macro 
+#
+WORKDIR=src
+CUSTOM_H=${WORKDIR}/Custom.h
+GLOBAL_H=${WORKDIR}/ESPEasy-Globals.h
+
+# update BUILD_GIT on branch checkout
+[[ $3 == 1 && -f ${CUSTOM_H} ]] && \
+    sed -i.bak -e "s/\(#define BUILD_GIT\).*/\1 \"$(git log -1 --pretty=format:%h HEAD)\"/" ${CUSTOM_H}

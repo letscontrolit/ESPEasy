@@ -1,604 +1,273 @@
-char* ramtest;
 
-//Reads a string from a stream until a terminator-character.
-//We make sure we're not reading more than maxSize bytes and we're not busy for longer than timeout mS.
-bool safeReadStringUntil(Stream &input, String &str, char terminator, unsigned int maxSize=1024, unsigned int timeout=1000)
+#include "Commands/Common.h"
+#include "Commands/Blynk.h"
+#include "Commands/Diagnostic.h"
+#include "Commands/HTTP.h"
+#include "Commands/i2c.h"
+#include "Commands/MQTT.h"
+#include "Commands/Networks.h"
+#include "Commands/Notifications.h"
+#include "Commands/RTC.h"
+#include "Commands/Rules.h"
+#include "Commands/SDCARD.h"
+#include "Commands/Settings.h"
+#include "Commands/System.h"
+#include "Commands/Tasks.h"
+#include "Commands/Time.h"
+#include "Commands/Timer.h"
+#include "Commands/UPD.h"
+#include "Commands/wd.h"
+#include "Commands/WiFi.h"
+
+
+/*********************************************************************************************\
+* Registers command
+\*********************************************************************************************/
+String doExecuteCommand(const char * cmd, struct EventStruct *event, const char* line)
 {
-    unsigned long startMillis;
-    int c;
-    startMillis = millis();
-    str="";
-
-    do {
-        //read character
-        c = input.read();
-        if(c >= 0) {
-
-            //found terminator, we're ok
-            if (c==terminator)
-            {
-                return(true);
-            }
-            //found character, add to string
-            else
-            {
-                str+=char(c);
-                //string at max size?
-                if (str.length()>=maxSize)
-                {
-                    addLog(LOG_LEVEL_ERROR, F("Not enough bufferspace to read all input data!"));
-                    return(false);
-                }
-            }
-        }
-        yield();
-    } while(millis() - startMillis < timeout);
-
-    addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
-    return(false);
-
-}
-
-
-#define INPUT_COMMAND_SIZE          80
-void ExecuteCommand(byte source, const char *Line)
-{
-  String status = "";
-  boolean success = false;
-  char TmpStr1[80];
-  TmpStr1[0] = 0;
-  char Command[80];
-  Command[0] = 0;
-  int Par1 = 0;
-  int Par2 = 0;
-  int Par3 = 0;
-
-  GetArgv(Line, Command, 1);
-  if (GetArgv(Line, TmpStr1, 2)) Par1 = str2int(TmpStr1);
-  if (GetArgv(Line, TmpStr1, 3)) Par2 = str2int(TmpStr1);
-  if (GetArgv(Line, TmpStr1, 4)) Par3 = str2int(TmpStr1);
-
-  // ****************************************
-  // commands for debugging
-  // ****************************************
-
-  if (strcasecmp_P(Command, PSTR("background")) == 0)
-  {
-    success = true;
-    unsigned long timer = millis() + Par1;
-    Serial.println("start");
-    while (millis() < timer)
-      backgroundtasks();
-    Serial.println("end");
+  String cmd_lc;
+	cmd_lc = cmd;
+	cmd_lc.toLowerCase();
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  	String log = F("Command: ");
+  	log += cmd_lc;
+  	addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_DEBUG, line); // for debug purposes add the whole line.
   }
+  // Simple macro to match command to function call.
+  #define COMMAND_CASE(S, C) if (strcmp_P(cmd_lc.c_str(), PSTR(S)) == 0) { return (C(event, line)); }
 
-  if (strcasecmp_P(Command, PSTR("executeRules")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 2))
-    {
-      String fileName = TmpStr1;
-      String event = "";
-      rulesProcessingFile(fileName, event);
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("clearRTCRAM")) == 0)
-  {
-    success = true;
-    initRTC();
-  }
-
-  if (strcasecmp_P(Command, PSTR("notify")) == 0)
-  {
-    success = true;
-    String message = "";
-    if (GetArgv(Line, TmpStr1, 3))
-      message = TmpStr1;
-
-    if (Par1 > 0)
-    {
-      if (Settings.NotificationEnabled[Par1 - 1] && Settings.Notification[Par1 - 1] != 0)
-      {
-        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[Par1 - 1]);
-        if (NotificationProtocolIndex!=NPLUGIN_NOT_FOUND)
-        {
-          struct EventStruct TempEvent;
-          // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
-          TempEvent.NotificationIndex=Par1-1;
-          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_NOTIFY, &TempEvent, message);
-        }
-      }
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("resetFlashWriteCounter")) == 0)
-  {
-    success = true;
-    RTC.flashDayCounter = 0;
-  }
-
-  if (strcasecmp_P(Command, PSTR("udptest")) == 0)
-  {
-    success = true;
-    for (byte x = 0; x < Par2; x++)
-    {
-      String event = "Test ";
-      event += x;
-      SendUDPCommand(Par1, (char*)event.c_str(), event.length());
-    }
-  }
-#ifdef FEATURE_SD
-  if (strcasecmp_P(Command, PSTR("sdcard")) == 0)
-  {
-    success = true;
-    File root = SD.open("/");
-    root.rewindDirectory();
-    printDirectory(root, 0);
-    root.close();
-  }
-
-  if (strcasecmp_P(Command, PSTR("sdremove")) == 0)
-  {
-    success = true;
-    String fname = Line;
-    fname = fname.substring(9);
-    Serial.print(F("Removing:"));
-    Serial.println(fname.c_str());
-    SD.remove((char*)fname.c_str());
-  }
-#endif
-
-  if (strcasecmp_P(Command, PSTR("lowmem")) == 0)
-  {
-    Serial.print(lowestRAM);
-    Serial.print(F(" : "));
-    Serial.println(lowestRAMfunction);
-    success = true;
-  }
-
-  if (strcasecmp_P(Command, PSTR("malloc")) == 0)
-  {
-    ramtest = (char *)malloc(Par1);
-    success = true;
-  }
-
-  if (strcasecmp_P(Command, PSTR("sysload")) == 0)
-  {
-    success = true;
-    Serial.print(100 - (100 * loopCounterLast / loopCounterMax));
-    Serial.print(F("% (LC="));
-    Serial.print(int(loopCounterLast / 30));
-    Serial.println(F(")"));
-  }
-
-  if (strcasecmp_P(Command, PSTR("SerialFloat")) == 0)
-  {
-    success = true;
-    pinMode(1, INPUT);
-    pinMode(3, INPUT);
-    delay(60000);
-  }
-
-  if (strcasecmp_P(Command, PSTR("meminfo")) == 0)
-  {
-    success = true;
-    Serial.print(F("SecurityStruct         : "));
-    Serial.println(sizeof(SecuritySettings));
-    Serial.print(F("SettingsStruct         : "));
-    Serial.println(sizeof(Settings));
-    Serial.print(F("ExtraTaskSettingsStruct: "));
-    Serial.println(sizeof(ExtraTaskSettings));
-    Serial.print(F("DeviceStruct: "));
-    Serial.println(sizeof(Device));
-  }
-
-  if (strcasecmp_P(Command, PSTR("TaskClear")) == 0)
-  {
-    success = true;
-    taskClear(Par1 - 1, true);
-  }
-
-  if (strcasecmp_P(Command, PSTR("wdconfig")) == 0)
-  {
-    success = true;
-    Wire.beginTransmission(Par1);  // address
-    Wire.write(Par2);              // command
-    Wire.write(Par3);              // data
-    Wire.endTransmission();
-  }
-
-  if (strcasecmp_P(Command, PSTR("wdread")) == 0)
-  {
-    success = true;
-    Wire.beginTransmission(Par1);  // address
-    Wire.write(0x83);              // command to set pointer
-    Wire.write(Par2);              // pointer value
-    Wire.endTransmission();
-    Wire.requestFrom((uint8_t)Par1, (uint8_t)1);
-    if (Wire.available())
-    {
-      byte value = Wire.read();
-      status = F("Reg value: ");
-      status += value;
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("build")) == 0)
-  {
-    success = true;
-    Settings.Build = Par1;
-    SaveSettings();
-  }
-
-  if (strcasecmp_P(Command, PSTR("NoSleep")) == 0)
-  {
-    success = true;
-    Settings.deepSleep = 0;
-  }
-
-  if (strcasecmp_P(Command, PSTR("i2cscanner")) == 0)
-  {
-    success = true;
-
-    byte error, address;
-    for (address = 1; address <= 127; address++ )
-    {
-      Wire.beginTransmission(address);
-      error = Wire.endTransmission();
-      if (error == 0)
-      {
-        Serial.print(F("I2C  : Found 0x"));
-        Serial.println(String(address, HEX));
-      }
-      else if (error == 4)
-      {
-        Serial.print(F("I2C  : Error at 0x"));
-        Serial.println(String(address, HEX));
-      }
-    }
-  }
-
-  // ****************************************
-  // commands for rules
-  // ****************************************
-
-  if (strcasecmp_P(Command, PSTR("config")) == 0)
-  {
-    success = true;
-    struct EventStruct TempEvent;
-    String request = Line;
-    remoteConfig(&TempEvent, request);
-  }
-
-  if (strcasecmp_P(Command, PSTR("deepSleep")) == 0)
-  {
-    success = true;
-    if (Par1 > 0)
-      deepSleepStart(Par1); // call the second part of the function to avoid check and enable one-shot operation
-  }
-
-  if (strcasecmp_P(Command, PSTR("TaskValueSet")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 4))
-    {
-      float result = 0;
-      Calculate(TmpStr1, &result);
-      UserVar[(VARS_PER_TASK * (Par1 - 1)) + Par2 - 1] = result;
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("TaskRun")) == 0)
-  {
-    success = true;
-    SensorSendTask(Par1 - 1);
-  }
-
-  if (strcasecmp_P(Command, PSTR("TimerSet")) == 0)
-  {
-    if (Par1>=1 && Par1<=RULES_TIMER_MAX)
-    {
-      success = true;
-      if (Par2)
-        //start new timer
-        RulesTimer[Par1 - 1] = millis() + (1000 * Par2);
-      else
-        //disable existing timer
-        RulesTimer[Par1 - 1] = 0L;
-    }
-    else
-    {
-      addLog(LOG_LEVEL_ERROR, F("TIMER: invalid timer number"));
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("Delay")) == 0)
-  {
-    success = true;
-    delayBackground(Par1);
-  }
-
-  if (strcasecmp_P(Command, PSTR("Rules")) == 0)
-  {
-    success = true;
-    if (Par1 == 1)
-      Settings.UseRules = true;
-    else
-      Settings.UseRules = false;
-  }
-
-  if (strcasecmp_P(Command, PSTR("Event")) == 0)
-  {
-    success = true;
-    String event = Line;
-    event = event.substring(6);
-    event.replace("$", "#");
-    if (Settings.UseRules)
-      rulesProcessing(event);
-  }
-
-  if (strcasecmp_P(Command, PSTR("SendTo")) == 0)
-  {
-    success = true;
-    String event = Line;
-    event = event.substring(7);
-    int index = event.indexOf(',');
-    if (index > 0)
-    {
-      event = event.substring(index + 1);
-      SendUDPCommand(Par1, (char*)event.c_str(), event.length());
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("Publish")) == 0)
-  {
-    success = true;
-    String event = Line;
-    event = event.substring(8);
-    int index = event.indexOf(',');
-    if (index > 0)
-    {
-      String topic = event.substring(0, index);
-      String value = event.substring(index + 1);
-      MQTTclient.publish(topic.c_str(), value.c_str(), Settings.MQTTRetainFlag);
-    }
-  }
-
-  if (strcasecmp_P(Command, PSTR("SendToUDP")) == 0)
-  {
-    success = true;
-    String strLine = Line;
-    String ip = parseString(strLine, 2);
-    String port = parseString(strLine, 3);
-    int msgpos = getParamStartPos(strLine, 4);
-    String message = strLine.substring(msgpos);
-    byte ipaddress[4];
-    str2ip((char*)ip.c_str(), ipaddress);
-    IPAddress UDP_IP(ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3]);
-    portUDP.beginPacket(UDP_IP, port.toInt());
-    #if defined(ESP8266)
-      portUDP.write(message.c_str(), message.length());
-    #endif
-    portUDP.endPacket();
-  }
-
-  if (strcasecmp_P(Command, PSTR("SendToHTTP")) == 0)
-  {
-    success = true;
-    String strLine = Line;
-    String host = parseString(strLine, 2);
-    String port = parseString(strLine, 3);
-    int pathpos = getParamStartPos(strLine, 4);
-    String path = strLine.substring(pathpos);
-    WiFiClient client;
-    if (client.connect(host.c_str(), port.toInt()))
-    {
-      client.print(String("GET ") + path + " HTTP/1.1\r\n" +
-                   "Host: " + host + "\r\n" +
-                   "Connection: close\r\n\r\n");
-
-      unsigned long timer = millis() + 200;
-      while (!client.available() && millis() < timer)
-        delay(1);
-
-      while (client.available()) {
-        // String line = client.readStringUntil('\n');
-        String line;
-        safeReadStringUntil(client, line, '\n');
-
-
-        if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
-          addLog(LOG_LEVEL_DEBUG, line);
-        delay(1);
-      }
-      client.flush();
-      client.stop();
-    }
-  }
-
-
-  // ****************************************
-  // configure settings commands
-  // ****************************************
-  if (strcasecmp_P(Command, PSTR("WifiSSID")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.WifiSSID, Line + 9);
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiKey")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.WifiKey, Line + 8);
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiSSID2")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.WifiSSID2, Line + 10);
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiKey2")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.WifiKey2, Line + 9);
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiScan")) == 0)
-  {
-    success = true;
-    WifiScan();
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiConnect")) == 0)
-  {
-    success = true;
-    WifiConnect(1);
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiDisconnect")) == 0)
-  {
-    success = true;
-    WifiDisconnect();
-  }
-
-  if (strcasecmp_P(Command, PSTR("WifiAPMode")) == 0)
-  {
-    WifiAPMode(true);
-    success = true;
-  }
-
-  if (strcasecmp_P(Command, PSTR("Unit")) == 0)
-  {
-    success = true;
-    Settings.Unit=Par1;
-  }
-
-  if (strcasecmp_P(Command, PSTR("Name")) == 0)
-  {
-    success = true;
-    strcpy(Settings.Name, Line + 5);
-  }
-
-  if (strcasecmp_P(Command, PSTR("Password")) == 0)
-  {
-    success = true;
-    strcpy(SecuritySettings.Password, Line + 9);
-  }
-
-
-  if (strcasecmp_P(Command, PSTR("Reboot")) == 0)
-  {
-    success = true;
-    pinMode(0, INPUT);
-    pinMode(2, INPUT);
-    pinMode(15, INPUT);
-    #if defined(ESP8266)
-      ESP.reset();
-    #endif
-    #if defined(ESP32)
-      ESP.restart();
-    #endif
-  }
-
-  if (strcasecmp_P(Command, PSTR("Restart")) == 0)
-  {
-    success = true;
-    ESP.restart();
-  }
-  if (strcasecmp_P(Command, PSTR("Erase")) == 0)
-  {
-    success = true;
-    WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
-    WiFi.disconnect(); // this will store empty ssid/wpa into sdk storage
-    WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  }
-
-  if (strcasecmp_P(Command, PSTR("Reset")) == 0)
-  {
-    success = true;
-    ResetFactory();
-  }
-
-  if (strcasecmp_P(Command, PSTR("Save")) == 0)
-  {
-    success = true;
-    SaveSettings();
-  }
-
-  if (strcasecmp_P(Command, PSTR("Load")) == 0)
-  {
-    success = true;
-    LoadSettings();
-  }
-
-  if (strcasecmp_P(Command, PSTR("Debug")) == 0)
-  {
-    success = true;
-    Settings.SerialLogLevel = Par1;
-  }
-
-  if (strcasecmp_P(Command, PSTR("IP")) == 0)
-  {
-    success = true;
-    if (GetArgv(Line, TmpStr1, 2))
-      if (!str2ip(TmpStr1, Settings.IP))
-        Serial.println("?");
-  }
-
-  if (strcasecmp_P(Command, PSTR("Settings")) == 0)
-  {
-    success = true;
-    char str[20];
-    Serial.println();
-
-    Serial.println(F("System Info"));
-    IPAddress ip = WiFi.localIP();
-    sprintf_P(str, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    Serial.print(F("  IP Address    : ")); Serial.println(str);
-    Serial.print(F("  Build         : ")); Serial.println((int)BUILD);
-    Serial.print(F("  Name          : ")); Serial.println(Settings.Name);
-    Serial.print(F("  Unit          : ")); Serial.println((int)Settings.Unit);
-    Serial.print(F("  WifiSSID      : ")); Serial.println(SecuritySettings.WifiSSID);
-    Serial.print(F("  WifiKey       : ")); Serial.println(SecuritySettings.WifiKey);
-    Serial.print(F("  WifiSSID2     : ")); Serial.println(SecuritySettings.WifiSSID2);
-    Serial.print(F("  WifiKey2      : ")); Serial.println(SecuritySettings.WifiKey2);
-    Serial.print(F("  Free mem      : ")); Serial.println(FreeMem());
-  }
-
-  yield();
-
-  if (success)
-    status += F("\nOk");
-  else
-    status += F("\nUnknown command!");
-  SendStatus(source, status);
-  yield();
-}
-
-#ifdef FEATURE_SD
-void printDirectory(File dir, int numTabs) {
-  while (true) {
-
-    File entry =  dir.openNextFile();
-    if (! entry) {
-      // no more files
+  switch (cmd_lc[0]) {
+    case 'a': {
+	  COMMAND_CASE("accessinfo"             , Command_AccessInfo_Ls);              // Network Command
       break;
     }
-    for (uint8_t i = 0; i < numTabs; i++) {
-      Serial.print('\t');
+    case 'b': {
+	  COMMAND_CASE("background"             , Command_Background);                 // Diagnostic.h
+    #ifdef USES_C012
+	  COMMAND_CASE("blynkget"               , Command_Blynk_Get);
+    #endif
+	  COMMAND_CASE("build"                  , Command_Settings_Build);             // Settings.h
+      break;
     }
-    Serial.print(entry.name());
-    if (entry.isDirectory()) {
-      Serial.println("/");
-      printDirectory(entry, numTabs + 1);
-    } else {
-      // files have sizes, directories do not
-      Serial.print("\t\t");
-      Serial.println(entry.size(), DEC);
+    case 'c': {
+	  COMMAND_CASE("clearaccessblock"       , Command_AccessInfo_Clear);           // Network Command
+	  COMMAND_CASE("clearrtcram"            , Command_RTC_Clear);                  // RTC.h
+	  COMMAND_CASE("config"                 , Command_Task_RemoteConfig);          // Tasks.h
+      break;
     }
-    entry.close();
+    case 'd': {
+	  COMMAND_CASE("debug"                  , Command_Debug);                      // Diagnostic.h
+	  COMMAND_CASE("deepsleep"              , Command_System_deepSleep);           // System.h
+	  COMMAND_CASE("delay"                  , Command_Delay);                      // Timers.h
+	  COMMAND_CASE("dns"                    , Command_DNS);                        // Network Command
+	  COMMAND_CASE("dst"                    , Command_DST);                        // Time.h
+      break;
+    }
+    case 'e': {
+	  COMMAND_CASE("erase"                  , Command_WiFi_Erase);                 // WiFi.h
+	  COMMAND_CASE("event"                  , Command_Rules_Events);               // Rule.h
+	  COMMAND_CASE("executerules"           , Command_Rules_Execute);              // Rule.h
+      break;
+    }
+    case 'g': {
+	  COMMAND_CASE("gateway"                , Command_Gateway);                    // Network Command
+      break;
+    }
+    case 'i': {
+	  COMMAND_CASE("i2cscanner"             , Command_i2c_Scanner);                // i2c.h
+	  COMMAND_CASE("ip"                     , Command_IP);                         // Network Command
+      break;
+    }
+    case 'j': {
+    COMMAND_CASE("jsonportstatus"         , Command_JSONPortStatus);             // Diagnostic.h
+    }
+    case 'l': {
+    COMMAND_CASE("let"                    , Command_Rules_Let);                  // Rules.h
+	  COMMAND_CASE("load"                   , Command_Settings_Load);              // Settings.h
+	  COMMAND_CASE("logentry"               , Command_logentry);                   // Diagnostic.h
+    COMMAND_CASE("logportstatus"          , Command_logPortStatus);              // Diagnostic.h
+	  COMMAND_CASE("lowmem"                 , Command_Lowmem);                     // Diagnostic.h
+      break;
+    }
+    case 'm': {
+	  COMMAND_CASE("malloc"                 , Command_Malloc);                     // Diagnostic.h
+	  COMMAND_CASE("meminfo"                , Command_MemInfo);                    // Diagnostic.h
+    COMMAND_CASE("meminfodetail"          , Command_MemInfo_detail);             // Diagnostic.h
+	  COMMAND_CASE("messagedelay"           , Command_MQTT_messageDelay);          // MQTT.h
+	  COMMAND_CASE("mqttretainflag"         , Command_MQTT_Retain);                // MQTT.h
+      break;
+    }
+    case 'n': {
+	  COMMAND_CASE("name"                   , Command_Settings_Name);              // Settings.h
+	  COMMAND_CASE("nosleep"                , Command_System_NoSleep);             // System.h
+	  COMMAND_CASE("notify"                 , Command_Notifications_Notify);       // Notifications.h
+	  COMMAND_CASE("ntphost"                , Command_NTPHost);                    // Time.h
+      break;
+    }
+    case 'p': {
+	  COMMAND_CASE("password"               , Command_Settings_Password);          // Settings.h
+    COMMAND_CASE("publish"                , Command_MQTT_Publish);               // MQTT.h
+      break;
+    }
+    case 'r': {
+	  COMMAND_CASE("reboot"                 , Command_System_Reboot);              // System.h
+	  COMMAND_CASE("reset"                  , Command_Settings_Reset);             // Settings.h
+	  COMMAND_CASE("resetflashwritecounter" , Command_RTC_resetFlashWriteCounter); // RTC.h
+	  COMMAND_CASE("restart"                , Command_System_Restart);             // System.h
+	  COMMAND_CASE("rules"                  , Command_Rules_UseRules);             // Rule.h
+      break;
+    }
+    case 's': {
+	  COMMAND_CASE("save"                   , Command_Settings_Save);              // Settings.h
+	#if FEATURE_SD
+	  COMMAND_CASE("sdcard"                 , Command_SD_LS);                      // SDCARDS.h
+	  COMMAND_CASE("sdremove"               , Command_SD_Remove);                  // SDCARDS.h
+	#endif
+	  COMMAND_CASE("sendto"                 , Command_UPD_SendTo);                 // UDP.h
+	  COMMAND_CASE("sendtohttp"             , Command_HTTP_SendToHTTP);            // HTTP.h
+	  COMMAND_CASE("sendtoudp"              , Command_UDP_SendToUPD);              // UDP.h
+	  COMMAND_CASE("serialfloat"            , Command_SerialFloat);                // Diagnostic.h
+	  COMMAND_CASE("settings"               , Command_Settings_Print);             // Settings.h
+	  COMMAND_CASE("subnet"                 , Command_Subnet);                     // Network Command
+	  COMMAND_CASE("sysload"                , Command_SysLoad);                    // Diagnostic.h
+      break;
+    }
+    case 't': {
+	  COMMAND_CASE("taskclear"              , Command_Task_Clear);                 // Tasks.h
+	  COMMAND_CASE("taskclearall"           , Command_Task_ClearAll);              // Tasks.h
+	  COMMAND_CASE("taskrun"                , Command_Task_Run);                   // Tasks.h
+    COMMAND_CASE("taskvalueset"           , Command_Task_ValueSet);              // Tasks.h
+    COMMAND_CASE("taskvaluetoggle"        , Command_Task_ValueToggle);           // Tasks.h
+	  COMMAND_CASE("taskvaluesetandrun"     , Command_Task_ValueSetAndRun);        // Tasks.h
+	  COMMAND_CASE("timerpause"             , Command_Timer_Pause);                // Timers.h
+	  COMMAND_CASE("timerresume"            , Command_Timer_Resume);               // Timers.h
+	  COMMAND_CASE("timerset"               , Command_Timer_Set);                  // Timers.h
+	  COMMAND_CASE("timezone"               , Command_TimeZone);                   // Time.h
+      break;
+    }
+    case 'u': {
+	  COMMAND_CASE("udpport"                , Command_UDP_Port);                   // UDP.h
+	  COMMAND_CASE("udptest"                , Command_UDP_Test);                   // UDP.h
+	  COMMAND_CASE("unit"                   , Command_Settings_Unit);              // Settings.h
+	  COMMAND_CASE("usentp"                 , Command_useNTP);                     // Time.h
+      break;
+    }
+    case 'w': {
+	  COMMAND_CASE("wdconfig"               , Command_WD_Config);                  // WD.h
+	  COMMAND_CASE("wdread"                 , Command_WD_Read);                    // WD.h
+	  COMMAND_CASE("wifiapmode"             , Command_Wifi_APMode);                // WiFi.h
+	  COMMAND_CASE("wificonnect"            , Command_Wifi_Connect);               // WiFi.h
+	  COMMAND_CASE("wifidisconnect"         , Command_Wifi_Disconnect);            // WiFi.h
+	  COMMAND_CASE("wifikey"                , Command_Wifi_Key);                   // WiFi.h
+	  COMMAND_CASE("wifikey2"               , Command_Wifi_Key2);                  // WiFi.h
+	  COMMAND_CASE("wifimode"               , Command_Wifi_Mode);                  // WiFi.h
+	  COMMAND_CASE("wifiscan"               , Command_Wifi_Scan);                  // WiFi.h
+	  COMMAND_CASE("wifissid"               , Command_Wifi_SSID);                  // WiFi.h
+	  COMMAND_CASE("wifissid2"              , Command_Wifi_SSID2);                 // WiFi.h
+	  COMMAND_CASE("wifistamode"            , Command_Wifi_STAMode);               // WiFi.h
+      break;
+    }
+    default:
+      break;
   }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String errorUnknown = F("Command unknown: \"");
+  	errorUnknown += cmd_lc;
+  	errorUnknown += '\"';
+  	addLog(LOG_LEVEL_INFO, errorUnknown);
+  }
+	return F("\nUnknown command!");
+
+  #undef COMMAND_CASE
+}
+
+// Simple function to return "Ok", to avoid flash string duplication in the firmware.
+String return_command_success()
+{
+	return F("\nOk");
+}
+String return_command_failed()
+{
+	return F("\nFailed");
+}
+String return_not_connected()
+{
+	return F("Not connected to WiFi");
+}
+
+String return_result(struct EventStruct *event, const String& result)
+{
+	serialPrintln(result);
+	if (event->Source == VALUE_SOURCE_SERIAL) {
+		return return_command_success();
+	}
+	return result;
+}
+
+String return_see_serial(struct EventStruct *event)
+{
+	if (event->Source == VALUE_SOURCE_SERIAL) {
+		return return_command_success();
+	}
+	return F("Output sent to serial");
+}
+
+void ExecuteCommand(byte source, const char *Line)
+{
+	checkRAM(F("ExecuteCommand"));
+  String cmd;
+  if (!GetArgv(Line, cmd, 1)) {
+    return;
+  }
+	struct EventStruct TempEvent;
+	// FIXME TD-er: Not sure what happens now, but TaskIndex cannot be set here
+	// since commands can originate from anywhere.
+	TempEvent.Source = source;
+  {
+    // Use extra scope to delete the TmpStr1 before executing command.
+    String TmpStr1;
+    if (GetArgv(Line, TmpStr1, 2)) TempEvent.Par1 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 3)) TempEvent.Par2 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 4)) TempEvent.Par3 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 5)) TempEvent.Par4 = CalculateParam(TmpStr1.c_str());
+  	if (GetArgv(Line, TmpStr1, 6)) TempEvent.Par5 = CalculateParam(TmpStr1.c_str());
+  }
+
+  String status = doExecuteCommand(cmd.c_str(), &TempEvent, Line);
+  delay(0);
+  SendStatus(source, status);
+  delay(0);
+/*
+  } else {
+    // Schedule to run async
+    schedule_command_timer(cmd.c_str(), &TempEvent, Line);
+  }
+*/
+}
+
+#ifdef FEATURE_SD
+void printDirectory(File dir, int numTabs)
+{
+	while (true) {
+		File entry = dir.openNextFile();
+		if (!entry) {
+			// no more files
+			break;
+		}
+		for (uint8_t i = 0; i < numTabs; i++) {
+			serialPrint('\t');
+		}
+		serialPrint(entry.name());
+		if (entry.isDirectory()) {
+			serialPrintln("/");
+			printDirectory(entry, numTabs + 1);
+		} else {
+			// files have sizes, directories do not
+			serialPrint("\t\t");
+			serialPrintln(entry.size(), DEC);
+		}
+		entry.close();
+	}
 }
 #endif

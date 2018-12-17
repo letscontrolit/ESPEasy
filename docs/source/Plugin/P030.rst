@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
+.. _P030_page:
+
+|P030_typename|
+==================================================
+
+|P030_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P030_type|
+
+Name: |P030_name|
+
+Status: |P030_status|
+
+GitHub: |P030_github|_
+
+Maintainer: |P030_maintainer|
+
+
+Supported hardware
+------------------
+
+|P030_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P030_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

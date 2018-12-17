@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
+.. _P034_page:
+
+|P034_typename|
+==================================================
+
+|P034_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P034_type|
+
+Name: |P034_name|
+
+Status: |P034_status|
+
+GitHub: |P034_github|_
+
+Maintainer: |P034_maintainer|
+
+
+Supported hardware
+------------------
+
+|P034_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P034_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

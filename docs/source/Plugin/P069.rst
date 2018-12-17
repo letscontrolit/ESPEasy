@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p06x.repl
+.. _P069_page:
+
+|P069_typename|
+==================================================
+
+|P069_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P069_type|
+
+Name: |P069_name|
+
+Status: |P069_status|
+
+GitHub: |P069_github|_
+
+Maintainer: |P069_maintainer|
+
+
+Supported hardware
+------------------
+
+|P069_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P069_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,3 +1,4 @@
+#ifdef USES_P054
 //#######################################################################################################
 //######################################## Plugin 054: DMX512 TX ########################################
 //#######################################################################################################
@@ -34,7 +35,7 @@
 // Transceiver:
 // SN75176 or MAX485 or LT1785 or ...
 // Pin 5: GND
-// Pin 2, 3, 5: +5V
+// Pin 2, 3, 8: +5V
 // Pin 4: to ESP D4
 // Pin 6: DMX+ (hot)
 // Pin 7: DMX- (cold)
@@ -49,7 +50,6 @@
 
 //#include <*.h>   //no lib needed
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_054
 #define PLUGIN_ID_054         54
@@ -78,7 +78,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_054;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -100,8 +100,8 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
       {
         Settings.TaskDevicePin1[event->TaskIndex] = 2;
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = Plugin_054_DMXSize;
-        addFormNote(string, F("Only GPIO-2 (D4) can be used as TX1!"));
-        addFormNumericBox(string, F("Channels"), F("channels"), Plugin_054_DMXSize, 1, 512);
+        addFormNote(F("Only GPIO-2 (D4) can be used as TX1!"));
+        addFormNumericBox(F("Channels"), F("channels"), Plugin_054_DMXSize, 1, 512);
         success = true;
         break;
       }
@@ -146,10 +146,10 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           byte paramIdx = 2;
           int16_t channel = 1;
           int16_t value = 0;
-
-          lowerString.replace("  ", " ");
-          lowerString.replace(" =", "=");
-          lowerString.replace("= ", "=");
+          //FIXME TD-er: Same code in _P057
+          lowerString.replace(F("  "), " ");
+          lowerString.replace(F(" ="), "=");
+          lowerString.replace(F("= "), "=");
 
           param = parseString(lowerString, paramIdx++);
           if (param.length())
@@ -160,13 +160,15 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
               if (param == F("log"))
               {
-                String log = F("DMX  : ");
-                for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
-                {
-                  log += Plugin_054_DMXBuffer[i];
-                  log += F(", ");
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("DMX  : ");
+                  for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
+                  {
+                    log += Plugin_054_DMXBuffer[i];
+                    log += F(", ");
+                  }
+                  addLog(LOG_LEVEL_INFO, log);
                 }
-                addLog(LOG_LEVEL_INFO, log);
                 success = true;
               }
 
@@ -255,4 +257,4 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif   //PLUGIN_BUILD_TESTING
+#endif // USES_P054

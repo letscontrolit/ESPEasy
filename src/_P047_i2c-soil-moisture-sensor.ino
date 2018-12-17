@@ -1,3 +1,4 @@
+#ifdef USES_P047
 //#######################################################################################################
 //#################### Plugin 047 Moisture & Temperature & Light I2C Soil moisture sensor  ##############
 //#######################################################################################################
@@ -8,7 +9,6 @@
 // this code is based on version 1.1.2 of the above library
 //
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47
@@ -75,20 +75,20 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormTextBox(string, F("I2C Address (Hex)"), F("plugin_047_i2cSoilMoisture_i2cAddress"), String(F("0x")) +
-      			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
+      	addFormTextBox(F("I2C Address (Hex)"), F("p047_i2cSoilMoisture_i2cAddress"), 
+            formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
-        addFormCheckBox(string, F("Send sensor to sleep"), F("plugin_047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormCheckBox(F("Send sensor to sleep"), F("p047_sleep"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
-        addFormCheckBox(string, F("Check sensor version") ,F("plugin_047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        addFormCheckBox(F("Check sensor version") ,F("p047_version"), Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
 
-        addFormSeparator(string);
+        addFormSeparator(2);
 
-        addFormCheckBox(string, F("Change Sensor address"),F("plugin_047_changeAddr"), false);
-      	addFormTextBox(string, F("Change I2C Addr. to (Hex)"), F("plugin_047_i2cSoilMoisture_changeAddr"), String(F("0x")) +
-      			String(Settings.TaskDevicePluginConfig[event->TaskIndex][0],HEX), 4);
+        addFormCheckBox(F("Change Sensor address"),F("p047_changeAddr"), false);
+      	addFormTextBox(F("Change I2C Addr. to (Hex)"), F("p047_i2cSoilMoisture_changeAddr"), 
+            formatToHex_decimal(Settings.TaskDevicePluginConfig[event->TaskIndex][0]), 4);
 
-        addFormSeparator(string);
+        addFormSeparator(2);
 
         success = true;
         break;
@@ -96,17 +96,17 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String plugin1 = WebServer.arg(F("plugin_047_i2cSoilMoisture_i2cAddress"));
+        String plugin1 = WebServer.arg(F("p047_i2cSoilMoisture_i2cAddress"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][0] = (int) strtol(plugin1.c_str(), 0, 16);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("plugin_047_sleep"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = isFormItemChecked(F("p047_sleep"));
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("plugin_047_version"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = isFormItemChecked(F("p047_version"));
 
-        String plugin4 = WebServer.arg(F("plugin_047_i2cSoilMoisture_changeAddr"));
+        String plugin4 = WebServer.arg(F("p047_i2cSoilMoisture_changeAddr"));
         Settings.TaskDevicePluginConfig[event->TaskIndex][3] = (int) strtol(plugin4.c_str(), 0, 16);
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("plugin_047_changeAddr"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("p047_changeAddr"));
         success = true;
         break;
       }
@@ -131,7 +131,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
           }
           else {
             addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Version, no Sensor?"));
-            Plugin_047_write8(SOILMOISTURESENSOR_RESET);
+            I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_RESET);
             break;
           }
         }
@@ -147,7 +147,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         }
 
         // start light measurement
-        Plugin_047_write8(SOILMOISTURESENSOR_MEASURE_LIGHT);
+        I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_MEASURE_LIGHT);
 
         // 2 s delay ...we need this delay, otherwise we get only the last reading...
         delayBackground(2000);
@@ -158,7 +158,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         if (temperature>100 || temperature < -40 || moisture > 800 || moisture < 1 || light > 65535 || light < 0) {
             addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));
-            Plugin_047_write8(SOILMOISTURESENSOR_RESET);
+            I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_RESET);
             success = false;
             break;
         }
@@ -186,7 +186,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
         	if (Settings.TaskDevicePluginConfig[event->TaskIndex][1]) {
         		// send sensor to sleep
-        		Plugin_047_write8(SOILMOISTURESENSOR_SLEEP);
+        		I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_SLEEP);
         		addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
         	}
         	success = true;
@@ -197,65 +197,8 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-/*----------------------------------------------------------------------*
- * Helper method to write an 8 bit value to the sensor via I2C          *
- *----------------------------------------------------------------------*/
-void Plugin_047_write8(byte value) {
-	Wire.beginTransmission((uint8_t)_i2caddrP47);
-	Wire.write(value);
-	Wire.endTransmission();
-}
-
-/*----------------------------------------------------------------------*
- * Helper method to write an 8 bit value to the sensor via I2C to the   *
- * given register                                                       *
- *----------------------------------------------------------------------*/
-void Plugin_047_write8(int reg, int value) {
-	Wire.beginTransmission((uint8_t)_i2caddrP47);
-	Wire.write(reg);
-	Wire.write(value);
-	Wire.endTransmission();
-}
 
 
-
-//**************************************************************************/
-// Reads an 8 bit value over I2C
-//**************************************************************************/
-uint8_t Plugin_047_read8(byte reg)
-{
-  Wire.beginTransmission((uint8_t)_i2caddrP47);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddrP47, (byte)1);
-  return Wire.read();
-}
-
-//**************************************************************************/
-// Reads a 16 bit value over I2C
-//**************************************************************************/
-uint16_t Plugin_047_read16(byte reg)
-{
-  uint16_t value;
-
-  Wire.beginTransmission((uint8_t)_i2caddrP47);
-  Wire.write((uint8_t)reg);
-  Wire.endTransmission();
-  Wire.requestFrom((uint8_t)_i2caddrP47, (byte)2);
-  value = (Wire.read() << 8) | Wire.read();
-  Wire.endTransmission();
-
-  return value;
-}
-
-
-//**************************************************************************/
-// Reads a signed 16 bit value over I2C
-//**************************************************************************/
-int16_t Plugin_047_readS16(byte reg)
-{
-  return (int16_t)Plugin_047_read16(reg);
-}
 
 
 //**************************************************************************/
@@ -263,26 +206,26 @@ int16_t Plugin_047_readS16(byte reg)
 //**************************************************************************/
 float Plugin_047_readTemperature()
 {
-  return Plugin_047_readS16(SOILMOISTURESENSOR_GET_TEMPERATURE);
+  return I2C_readS16_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_TEMPERATURE);
 }
 
 //**************************************************************************/
 // Read light
 //**************************************************************************/
 float Plugin_047_readLight() {
-  return Plugin_047_read16(SOILMOISTURESENSOR_GET_LIGHT);
+  return I2C_read16_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_LIGHT);
 }
 
 //**************************************************************************/
 // Read moisture
 //**************************************************************************/
 unsigned int Plugin_047_readMoisture() {
-  return Plugin_047_read16(SOILMOISTURESENSOR_GET_CAPACITANCE);
+  return I2C_read16_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_CAPACITANCE);
 }
 
 // Read Sensor Version
 uint8_t Plugin_047_getVersion() {
-  return Plugin_047_read8(SOILMOISTURESENSOR_GET_VERSION);
+  return I2C_read8_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_VERSION);
 }
 
 
@@ -293,12 +236,13 @@ uint8_t Plugin_047_getVersion() {
  * Method returns true if the new address is set successfully on sensor.*
  *----------------------------------------------------------------------*/
 bool Plugin_047_setAddress(int addr) {
-	Plugin_047_write8(SOILMOISTURESENSOR_SET_ADDRESS, addr);
-	Plugin_047_write8(SOILMOISTURESENSOR_RESET);
+	I2C_write8_reg(_i2caddrP47, SOILMOISTURESENSOR_SET_ADDRESS, addr);
+	I2C_write8_reg(_i2caddrP47, SOILMOISTURESENSOR_SET_ADDRESS, addr);
+	I2C_write8(_i2caddrP47, SOILMOISTURESENSOR_RESET);
 	delayBackground(1000);
   _i2caddrP47=addr;
-  return (Plugin_047_read8(SOILMOISTURESENSOR_GET_ADDRESS) == addr);
+  return (I2C_read8_reg(_i2caddrP47, SOILMOISTURESENSOR_GET_ADDRESS) == addr);
 }
 
 
-#endif
+#endif // USES_P047

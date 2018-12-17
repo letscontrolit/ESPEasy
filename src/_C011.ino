@@ -1,8 +1,9 @@
+#ifdef USES_C011
 //#######################################################################################################
 //########################### Controller Plugin 011: Generic HTTP #######################################
 //#######################################################################################################
 
-#ifdef PLUGIN_BUILD_TESTING
+// #ifdef PLUGIN_BUILD_TESTING
 
 #define CPLUGIN_011
 #define CPLUGIN_ID_011         11
@@ -15,10 +16,17 @@
 
 struct C011_ConfigStruct
 {
-  char          HttpMethod[C011_HTTP_METHOD_MAX_LEN];
-  char          HttpUri[C011_HTTP_URI_MAX_LEN];
-  char          HttpHeader[C011_HTTP_HEADER_MAX_LEN];
-  char          HttpBody[C011_HTTP_BODY_MAX_LEN];
+  void zero_last() {
+    HttpMethod[C011_HTTP_METHOD_MAX_LEN - 1] = 0;
+    HttpUri[C011_HTTP_URI_MAX_LEN - 1] = 0;
+    HttpHeader[C011_HTTP_HEADER_MAX_LEN - 1] = 0;
+    HttpBody[C011_HTTP_BODY_MAX_LEN - 1] = 0;
+  }
+
+  char          HttpMethod[C011_HTTP_METHOD_MAX_LEN] = {0};
+  char          HttpUri[C011_HTTP_URI_MAX_LEN] = {0};
+  char          HttpHeader[C011_HTTP_HEADER_MAX_LEN] = {0};
+  char          HttpBody[C011_HTTP_BODY_MAX_LEN] = {0};
 };
 
 boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
@@ -51,6 +59,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         C011_ConfigStruct customConfig;
 
         LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
+        customConfig.zero_last();
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
         string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
         for (byte i = 0; i < 5; i++)
@@ -58,7 +67,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
           string += F("<option value='");
           string += methods[i] + "'";
           string += methods[i].equals(customConfig.HttpMethod) ? F(" selected='selected'") : F("");
-          string += F(">");
+          string += '>';
           string += methods[i];
           string += F("</option>");
         }
@@ -69,11 +78,11 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         string += F("' value='");
         string += customConfig.HttpUri;
 
-        string += F("'>");
+        string += "'>";
 
         string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
         string += C011_HTTP_HEADER_MAX_LEN-1;
-        string += F("'>");
+        string += "'>";
         escapeBuffer=customConfig.HttpHeader;
         htmlEscape(escapeBuffer);
         string += escapeBuffer;
@@ -81,7 +90,7 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
 
         string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
         string += C011_HTTP_BODY_MAX_LEN-1;
-        string += F("'>");
+        string += "'>";
         escapeBuffer=customConfig.HttpBody;
         htmlEscape(escapeBuffer);
         string += escapeBuffer;
@@ -101,123 +110,86 @@ boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
         strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
         strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
         strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
+        customConfig.zero_last();
         SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
         break;
       }
 
     case CPLUGIN_PROTOCOL_SEND:
       {
-      	HTTPSend011(event);
+      	success = Create_schedule_HTTP_C011(event);
+        break;
       }
 
   }
   return success;
 }
 
+//********************************************************************************
+// Generic HTTP request
+//********************************************************************************
+bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+  WiFiClient client;
+  if (!try_connect_host(controller_number, client, ControllerSettings))
+    return false;
+
+  return send_via_http(controller_number, client, element.txt, ControllerSettings.MustCheckReply);
+}
+
+
 
 //********************************************************************************
-// Generic HTTP get request
+// Create request
 //********************************************************************************
-boolean HTTPSend011(struct EventStruct *event)
+boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
-  String authHeader = "";
-  if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
-  {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-    authHeader = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth);
-    authHeader += F(" \r\n");
+  int controller_number = CPLUGIN_ID_011;
+  if (!WiFiConnected(100)) {
+    return false;
   }
+  MakeControllerSettings(ControllerSettings);
+  LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
   C011_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
+  customConfig.zero_last();
 
-  boolean success = false;
-
-  IPAddress host(ControllerSettings.IP[0], ControllerSettings.IP[1], ControllerSettings.IP[2], ControllerSettings.IP[3]);
-
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
-  		(ControllerSettings.UseDNS ? ControllerSettings.HostName : host.toString() ) +":"+ControllerSettings.Port);
-
-  // Use WiFiClient class to create TCP connections
   WiFiClient client;
-   if (ControllerSettings.UseDNS ? !client.connect(ControllerSettings.HostName, ControllerSettings.Port) : !client.connect(host, ControllerSettings.Port))
-  {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
+  if (!try_connect_host(controller_number, client, ControllerSettings))
     return false;
-  }
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
 
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
+  if (ExtraTaskSettings.TaskIndex != event->TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
 
-  String hostName = host.toString();
-  if (ControllerSettings.UseDNS)
-    hostName = ControllerSettings.HostName;
+  String payload = create_http_request_auth(
+    controller_number, event->ControllerIndex, ControllerSettings,
+    String(customConfig.HttpMethod), customConfig.HttpUri);
 
-  String payload = String(customConfig.HttpMethod) + " /";
-  payload += customConfig.HttpUri;
-  payload += F(" HTTP/1.1\r\n");
-  payload += F("Host: ");
-  payload += hostName + ":" + ControllerSettings.Port;
-  payload += F("\r\n");
-  payload += authHeader;
-  payload += F("Connection: close\r\n");
 
-  if (strlen(customConfig.HttpHeader) > 0)
+  if (strlen(customConfig.HttpHeader) > 0) {
+    if (payload.endsWith("\r\n\r\n")) {
+      // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
+      payload.remove(payload.length()-2);
+    }
     payload += customConfig.HttpHeader;
+  }
   ReplaceTokenByValue(payload, event);
 
   if (strlen(customConfig.HttpBody) > 0)
   {
     String body = String(customConfig.HttpBody);
     ReplaceTokenByValue(body, event);
-    payload += F("\r\nContent-Length: ");
+    payload += "\r\n";
+    payload += F("Content-Length: ");
     payload += String(body.length());
-    payload += F("\r\n\r\n");
+    payload += "\r\n\r\n";
     payload += body;
   }
-  payload += F("\r\n");
+  payload += "\r\n";
 
-  // This will send the request to the server
-  client.print(payload);
-  addLog(LOG_LEVEL_DEBUG_MORE, payload);
-
-  unsigned long timer = millis() + 200;
-  while (!client.available() && millis() < timer)
-    yield();
-
-  // Read all the lines of the reply from server and print them to Serial
-  while (client.available()) {
-    // String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-
-
-    // line.toCharArray(log, 80);
-    addLog(LOG_LEVEL_DEBUG_MORE, line);
-    if (line.startsWith(F("HTTP/1.1 2")))
-    {
-      addLog(LOG_LEVEL_DEBUG, F("HTTP : Success!"));
-      success = true;
-    }
-    yield();
-  }
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
-
-  client.flush();
-  client.stop();
-
-  return(success);
+  bool success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+  scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
+  return success;
 }
 
 // parses the string and returns only the the number of name/values we want
@@ -246,7 +218,7 @@ void DeleteNotNeededValues(String &s, byte numberOfValuesWanted)
   		{
         String p = s.substring(startIndex,endIndex+4);
         //remove the whole string including tokens
-				s.replace(p, F(""));
+				s.replace(p, "");
 
         //find next ones
         startIndex=s.indexOf(startToken);
@@ -274,75 +246,14 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
 //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname% Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
-
-	switch (event->sensorType)
-	{
-		case SENSOR_TYPE_SINGLE:
-		case SENSOR_TYPE_SWITCH:
-		case SENSOR_TYPE_DIMMER:
-		case SENSOR_TYPE_WIND:
-		case SENSOR_TYPE_LONG:
-		{
-			DeleteNotNeededValues(s,1);
-			break;
-		}
-		case SENSOR_TYPE_DUAL:
-		case SENSOR_TYPE_TEMP_HUM:
-		case SENSOR_TYPE_TEMP_BARO:
-		{
-			DeleteNotNeededValues(s,2);
-			break;
-		}
-		case SENSOR_TYPE_TRIPLE:
-		case SENSOR_TYPE_TEMP_HUM_BARO:
-		{
-			DeleteNotNeededValues(s,3);
-			break;
-		}
-		case SENSOR_TYPE_QUAD:
-		{
-			DeleteNotNeededValues(s,4);
-			break;
-		}
-	}
+  const byte valueCount = getValueCountFromSensorType(event->sensorType);
+  DeleteNotNeededValues(s,valueCount);
 
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-  //NOTE: cant we just call parseTemplate() for all the standard stuff??
+  parseControllerVariables(s, event, true);
 
-  s.replace(F("%systime%"), getTimeString(':'));
-
-	#if FEATURE_ADC_VCC
-		s.replace(F("%vcc%"), String(vcc));
-	#endif
-
-  // IPAddress ip = WiFi.localIP();
-  // char strIP[20];
-  // sprintf_P(strIP, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-  s.replace(F("%ip%"),WiFi.localIP().toString());
-
-  s.replace(F("%sysload%"), String(100 - (100 * loopCounterLast / loopCounterMax)));
-  s.replace(F("%uptime%"), String(wdcounter / 2));
-
-  s.replace(F("%CR%"), F("\r"));
-  s.replace(F("%LF%"), F("\n"));
-  s.replace(F("%sysname%"), URLEncode(Settings.Name));
-  s.replace(F("%tskname%"), URLEncode(ExtraTaskSettings.TaskDeviceName));
-  s.replace(F("%id%"), String(event->idx));
-  s.replace(F("%vname1%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[0]));
-  s.replace(F("%vname2%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[1]));
-  s.replace(F("%vname3%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[2]));
-  s.replace(F("%vname4%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[3]));
-
-  if (event->sensorType == SENSOR_TYPE_LONG)
-    s.replace(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)));
-  else {
-    s.replace(F("%val1%"), formatUserVar(event, 0));
-    s.replace(F("%val2%"), formatUserVar(event, 1));
-    s.replace(F("%val3%"), formatUserVar(event, 2));
-    s.replace(F("%val4%"), formatUserVar(event, 3));
-  }
 	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
 	addLog(LOG_LEVEL_DEBUG_MORE, s);
 }

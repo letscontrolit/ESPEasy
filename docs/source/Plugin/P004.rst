@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
+.. _P004_page:
+
+|P004_typename|
+==================================================
+
+|P004_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P004_type|
+
+Name: |P004_name|
+
+Status: |P004_status|
+
+GitHub: |P004_github|_
+
+Maintainer: |P004_maintainer|
+
+
+Supported hardware
+------------------
+
+|P004_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P004_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,3 +1,4 @@
+#ifdef USES_P041
 //#######################################################################################################
 //#################################### Plugin 041: NeoPixel clock #######################################
 //#######################################################################################################
@@ -26,7 +27,7 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_041;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -48,24 +49,29 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Data"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormNumericBox(string, F("Red"), F("plugin_041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
-      	addFormNumericBox(string, F("Green"), F("plugin_041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
-      	addFormNumericBox(string, F("Blue"), F("plugin_041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
+      	addFormNumericBox(F("Red"), F("p041_red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
+      	addFormNumericBox(F("Green"), F("p041_green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
+      	addFormNumericBox(F("Blue"), F("p041_blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_041_red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_041_green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_041_blue"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p041_red"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p041_green"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p041_blue"));
         Plugin_041_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         Plugin_041_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
         Plugin_041_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        Plugin_041_update();
         success = true;
         break;
       }
@@ -94,8 +100,8 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
       {
         //int ldrVal = map(analogRead(A0), 0, 1023, 15, 245);
-        //Serial.print("LDR value: ");
-        //Serial.println(ldrVal);
+        //serialPrint("LDR value: ");
+        //serialPrintln(ldrVal);
         //Plugin_041_pixels->setBrightness(255-ldrVal);
         //Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.
         success = true;
@@ -429,3 +435,4 @@ void pushHOURE() {
   pushToStrip(103);
   pushToStrip(104);
 }
+#endif // USES_P041

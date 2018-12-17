@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p01x.repl
+.. _P011_page:
+
+|P011_typename|
+==================================================
+
+|P011_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P011_type|
+
+Name: |P011_name|
+
+Status: |P011_status|
+
+GitHub: |P011_github|_
+
+Maintainer: |P011_maintainer|
+
+
+Supported hardware
+------------------
+
+|P011_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P011_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

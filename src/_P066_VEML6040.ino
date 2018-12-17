@@ -1,3 +1,4 @@
+#ifdef USES_P066
 //#######################################################################################################
 //#################################### Plugin 066: VEML6040 RGBW ##############################
 //#######################################################################################################
@@ -9,7 +10,6 @@
 // Application Note: www.vishay.com/doc?84331
 
 
-#ifdef PLUGIN_BUILD_TESTING
 
 #define PLUGIN_066
 #define PLUGIN_ID_066         66
@@ -70,10 +70,10 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         int optionValues[1] = { VEML6040_ADDR };
-        addFormSelectorI2C(string, F("i2c_addr"), 1, optionValues, VEML6040_ADDR);   //Only for display I2C address
+        addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR);   //Only for display I2C address
 
         String optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F("1280ms (515)") };
-        addFormSelector(string, F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, CONFIG(1));
+        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, CONFIG(1));
 
         String optionsVarMap[6] = {
           F("R, G, B, W"),
@@ -82,7 +82,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
           F("R, G, B, Color Temperature [K]"),
           F("R, G, B, Ambient Light [Lux]"),
           F("Color Temperature [K], Ambient Light [Lux], Y, W") };
-        addFormSelector(string, F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, CONFIG(2));
+        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, CONFIG(2));
 
         success = true;
         break;
@@ -233,4 +233,4 @@ float Plugin_066_CalcRelW(float X, float W)
   return X / W;
 }
 
-#endif
+#endif // USES_P066

@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
+.. _P054_page:
+
+|P054_typename|
+==================================================
+
+|P054_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P054_type|
+
+Name: |P054_name|
+
+Status: |P054_status|
+
+GitHub: |P054_github|_
+
+Maintainer: |P054_maintainer|
+
+
+Supported hardware
+------------------
+
+|P054_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P054_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,3 +1,4 @@
+#ifdef USES_P070
 //#######################################################################################################
 //#################################### Plugin 070: NeoPixel ring clock #######################################
 //#######################################################################################################
@@ -74,23 +75,23 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
 	case PLUGIN_GET_DEVICEGPIONAMES:
 	  {
-		    event->String1 = F("GPIO &rarr; LED");
+		    event->String1 = formatGpioName_output("LED");
         break;
 	  }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        addFormSubHeader(string, F("Clock configuration"));
-    	addFormNumericBox(string, F("12 o'clock LED position"), F("offset"), CONFIG(3), 0, 59);
-    	addFormNote(string, F("Position of the 12 o'clock LED in the strip"));
-        addFormCheckBox(string, F("Thick 12 o'clock mark"), F("thick_12_mark"), CONFIG(4));
-    	addFormNote(string, F("Check to have 3 LEDs marking the 12 o'clock position"));
-    	addFormCheckBox(string, F("Clock display enabled"), F("enabled"), CONFIG(0));
-    	addFormNote(string, F("LED activation"));
-    	addFormNumericBox(string, F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
-    	addFormNote(string, F("Brightness level of the H/M/S hands (0-255)"));
-    	addFormNumericBox(string, F("Hour mark brightness"), F("marks"), CONFIG(2), 0, 255);
-    	addFormNote(string, F("Brightness level of the hour marks (0-255)"));
+        addFormSubHeader(F("Clock configuration"));
+        addFormNumericBox(F("12 o'clock LED position"), F("offset"), CONFIG(3), 0, 59);
+        addFormNote(F("Position of the 12 o'clock LED in the strip"));
+        addFormCheckBox(F("Thick 12 o'clock mark"), F("thick_12_mark"), CONFIG(4));
+        addFormNote(F("Check to have 3 LEDs marking the 12 o'clock position"));
+        addFormCheckBox(F("Clock display enabled"), F("enabled"), CONFIG(0));
+        addFormNote(F("LED activation"));
+        addFormNumericBox(F("LED brightness"), F("brightness"), CONFIG(1), 0, 255);
+        addFormNote(F("Brightness level of the H/M/S hands (0-255)"));
+        addFormNumericBox(F("Hour mark brightness"), F("marks"), CONFIG(2), 0, 255);
+        addFormNote(F("Brightness level of the hour marks (0-255)"));
 
         success = true;
         break;
@@ -152,22 +153,22 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         String param3 = parseString(lowerString, 4);
 
         if (command == F("clock")) {
-          if (param1 != "") {
-            int val_Mode = param1.toInt();
+          int val_Mode;
+          if (validIntFromString(param1, val_Mode)) {
             if (val_Mode > -1 && val_Mode < 2) {
               Plugin_070_enabled = val_Mode;
               CONFIG(0) = Plugin_070_enabled;
             }
           }
-          if (param2 != "") {
-            int val_Bright = param2.toInt();
+          int val_Bright;
+          if (validIntFromString(param2, val_Bright)) {
             if (val_Bright > -1 && val_Bright < 256) {
               Plugin_070_brightness = val_Bright;
               CONFIG(1) = Plugin_070_brightness;
             }
           }
-          if (param3 != "") {
-            int val_Marks = param3.toInt();
+          int val_Marks;
+          if (validIntFromString(param3, val_Marks)) {
             if (val_Marks > -1 && val_Marks < 256) {
               Plugin_070_marks = val_Marks;
               CONFIG(2) = Plugin_070_marks;
@@ -280,4 +281,5 @@ void timeToStrip(int hours, int minutes, int seconds) {
   }
 }
 
-#endif
+#endif // PLUGIN_BUILD_DISABLED
+#endif // USES_P070

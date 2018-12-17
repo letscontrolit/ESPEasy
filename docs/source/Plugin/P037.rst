@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p03x.repl
+.. _P037_page:
+
+|P037_typename|
+==================================================
+
+|P037_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P037_type|
+
+Name: |P037_name|
+
+Status: |P037_status|
+
+GitHub: |P037_github|_
+
+Maintainer: |P037_maintainer|
+
+
+Supported hardware
+------------------
+
+|P037_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P037_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
+.. _P055_page:
+
+|P055_typename|
+==================================================
+
+|P055_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P055_type|
+
+Name: |P055_name|
+
+Status: |P055_status|
+
+GitHub: |P055_github|_
+
+Maintainer: |P055_maintainer|
+
+
+Supported hardware
+------------------
+
+|P055_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P055_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

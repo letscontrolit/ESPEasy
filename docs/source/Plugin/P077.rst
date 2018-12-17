@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p07x.repl
+.. _P077_page:
+
+|P077_typename|
+==================================================
+
+|P077_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P077_type|
+
+Name: |P077_name|
+
+Status: |P077_status|
+
+GitHub: |P077_github|_
+
+Maintainer: |P077_maintainer|
+
+
+Supported hardware
+------------------
+
+|P077_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P077_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

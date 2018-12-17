@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+"""
+
+Referencing current branch in github README.md [1]
+This pre-commit hook [2] updates the README.md file's
+Travis badge with the current branch. Based on [4].
+
+[1] http://stackoverflow.com/questions/18673694/referencing-current-branch-in-github-readme-md
+[2] http://www.git-scm.com/book/en/v2/Customizing-Git-Git-Hooks
+[3] https://docs.travis-ci.com/user/status-images/
+[4] https://gist.github.com/dandye/dfe0870a6a1151c89ed9
+
+Copy this file to .git/hooks/
+
+"""
+
+import os
+import sys
+import re
+
+from subprocess import call, check_output
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+
+from fileinput import FileInput
+# https://github.com/python/cpython/commit/6cb7b659#diff-78790b53ff259619377058acd4f74672
+if sys.version_info[0] < 3:
+    class FileInputCtx(FileInput):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, type, value, traceback):
+            self.close()
+
+    FileInput = FileInputCtx
+
+
+def run(cmd, cwd=None):
+    out = check_output(cmd, cwd=cwd)
+    out = out.decode("latin1").strip()
+
+    return out
+
+
+def git_parse_remote(cwd=None, remote="origin"):
+    remote_url = run([
+        "git", "config", "--local",
+        "--get", "remote.{}.url".format(remote)], cwd)
+
+    if remote_url.startswith("git"):
+        _, _, repo = remote_url.partition(":")
+    elif remote_url.startswith("https"):
+        parsed = urlparse(remote_url)
+        repo = parsed.path[1:]
+
+    path = repo.replace(".git", "")
+    return path.split("/")
+
+
+def git_branch(cwd=None):
+    return run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd)
+
+
+def get_version(base, version_h="library.properties"):
+    version = "unknown"
+
+    path = os.path.join(base, version_h)
+    with open(path, "r") as version_f:
+        for line in version_f:
+            if line.startswith("version="):
+                version = line.replace("version=", "").strip()
+                break
+
+    return version
+
+TEMPLATES = {
+    "![travis]": "[![travis](https://travis-ci.org/{USER}/{REPO}.svg?branch={BRANCH})]" \
+        "(https://travis-ci.org/{USER}/{REPO})\n",
+    "![version]": "[![version](https://img.shields.io/badge/version-{VERSION}-brightgreen.svg)](CHANGELOG.md)\n",
+    "![branch]": "[![branch](https://img.shields.io/badge/branch-{BRANCH}-orange.svg)]" \
+        "(https://github.org/{USER}/{REPO}/tree/{BRANCH}/)\n",
+    "![codacy]": "[![codacy](https://img.shields.io/codacy/grade/{CODACY}/{BRANCH}.svg)]" \
+        "(https://www.codacy.com/app/{USER}/{REPO}/dashboard)\n"
+}
+
+README = "README.md"
+
+if __name__ == "__main__":
+    base = os.getcwd()
+
+    user, repo = git_parse_remote()
+    fmt = {
+        "USER": user,
+        "REPO": repo,
+        "BRANCH": git_branch(),
+        "VERSION": get_version(base),
+        "CODACY": "8490fe74f2f745f299df057fdba1351a"
+    }
+    templates = [
+        (k, tmpl.format(**fmt))
+        for k, tmpl in TEMPLATES.items()
+    ]
+
+    def fmt_line(line):
+        for match, tmpl in templates:
+            if match in line:
+                return tmpl
+
+        return line
+
+    path = os.path.join(base, README)
+
+    with FileInput(path, inplace=True) as readme:
+        for line in readme:
+            sys.stdout.write(fmt_line(line))
+
+    sys.exit(call(["git", "add", README]))

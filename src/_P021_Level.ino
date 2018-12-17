@@ -1,3 +1,4 @@
+#ifdef USES_P021
 //#######################################################################################################
 //#################################### Plugin 021: Level Control ########################################
 //#######################################################################################################
@@ -42,20 +43,26 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Level low"));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         // char tmpString[128];
 
-        string += F("<TR><TD>Check Task:<TD>");
-        addTaskSelect(string, "plugin_021_task", Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addHtml(F("<TR><TD>Check Task:<TD>"));
+        addTaskSelect(F("p021_task"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
         LoadTaskSettings(Settings.TaskDevicePluginConfig[event->TaskIndex][0]); // we need to load the values from another task for selection!
-        string += F("<TR><TD>Check Value:<TD>");
-        addTaskValueSelect(string, "plugin_021_value", Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+        addHtml(F("<TR><TD>Check Value:<TD>"));
+        addTaskValueSelect(F("p021_value"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
 
-      	addFormTextBox(string, F("Set Level"), F("plugin_021_setvalue"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 8);
+      	addFormTextBox(F("Set Level"), F("p021_setvalue"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]), 8);
 
-      	addFormTextBox(string, F("Hysteresis"), F("plugin_021_hyst"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), 8);
+      	addFormTextBox(F("Hysteresis"), F("p021_hyst"), String(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1]), 8);
 
         LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
         success = true;
@@ -64,10 +71,10 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_021_task"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_021_value"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_021_setvalue"));
-        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("plugin_021_hyst"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p021_task"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p021_value"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("p021_setvalue"));
+        Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("p021_hyst"));
         success = true;
         break;
       }
@@ -137,3 +144,4 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
+#endif // USES_P021

@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
+.. _P057_page:
+
+|P057_typename|
+==================================================
+
+|P057_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P057_type|
+
+Name: |P057_name|
+
+Status: |P057_status|
+
+GitHub: |P057_github|_
+
+Maintainer: |P057_maintainer|
+
+
+Supported hardware
+------------------
+
+|P057_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P057_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

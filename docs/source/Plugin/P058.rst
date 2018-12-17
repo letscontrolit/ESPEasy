@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p05x.repl
+.. _P058_page:
+
+|P058_typename|
+==================================================
+
+|P058_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P058_type|
+
+Name: |P058_name|
+
+Status: |P058_status|
+
+GitHub: |P058_github|_
+
+Maintainer: |P058_maintainer|
+
+
+Supported hardware
+------------------
+
+|P058_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P058_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

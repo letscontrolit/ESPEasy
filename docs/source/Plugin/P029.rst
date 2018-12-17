@@ -1,0 +1,49 @@
+.. include:: ../Plugin/_plugin_substitutions_p02x.repl
+.. _P029_page:
+
+|P029_typename|
+==================================================
+
+|P029_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P029_type|
+
+Name: |P029_name|
+
+Status: |P029_status|
+
+GitHub: |P029_github|_
+
+Maintainer: |P029_maintainer|
+
+
+Supported hardware
+------------------
+
+|P029_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P029_commands.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+

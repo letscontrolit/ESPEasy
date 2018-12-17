@@ -1,0 +1,21 @@
+.. |P080_name| replace:: :cyan:`iButton`
+.. |P080_type| replace:: :cyan:`Switch input`
+.. |P080_typename| replace:: :cyan:`Switch input - iButton`
+.. |P080_status| replace:: :yellow:`TESTING`
+.. |P080_github| replace:: P080_DallasIButton.ino
+.. _P080_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P080_DallasIButton.ino
+.. |P080_usedby| replace:: `.`
+.. |P080_shortinfo| replace:: `.`
+.. |P080_maintainer| replace:: `.`
+.. |P080_compileinfo| replace:: `.`
+
+.. |P081_name| replace:: :cyan:`CRON`
+.. |P081_type| replace:: :cyan:`Generic`
+.. |P081_typename| replace:: :cyan:`Generic - CRON`
+.. |P081_status| replace:: :yellow:`TESTING`
+.. |P081_github| replace:: P081_Cron.ino
+.. _P081_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P081_Cron.ino
+.. |P081_usedby| replace:: `.`
+.. |P081_shortinfo| replace:: `.`
+.. |P081_maintainer| replace:: `.`
+.. |P081_compileinfo| replace:: `.`

@@ -1,3 +1,4 @@
+#ifdef USES_P032
 //#######################################################################################################
 //################ Plugin 032 MS5611 (GY-63) I2C Temp/Barometric Pressure Sensor  #######################
 //#######################################################################################################
@@ -72,9 +73,9 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
         /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
         int optionValues[2] = { 0x77, 0x76 };
-        addFormSelectorI2C(string, F("plugin_032_ms5611_i2c"), 2, optionValues, choice);
+        addFormSelectorI2C(F("p032_ms5611_i2c"), 2, optionValues, choice);
 
-        addFormNumericBox(string, F("Altitude [m]"), F("plugin_032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+        addFormNumericBox(F("Altitude [m]"), F("p032_ms5611_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
 
         success = true;
         break;
@@ -82,8 +83,8 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_032_ms5611_i2c"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_032_ms5611_elev"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p032_ms5611_i2c"));
+        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p032_ms5611_elev"));
         success = true;
         break;
       }
@@ -135,17 +136,6 @@ bool Plugin_032_begin(uint8_t a) {
 }
 
 //**************************************************************************/
-// Sends a command over I2C
-//**************************************************************************/
-byte Plugin_032_send_cmd(byte aCMD)
-{
-  Wire.beginTransmission((uint8_t)ms5611_i2caddr);
-  Wire.write(aCMD);
-  uint8_t ret=Wire.endTransmission(true);
-  return ret;
-}
-
-//**************************************************************************/
 // Reads the PROM of MS5611
 // There are in total 8 addresses resulting in a total memory of 128 bit.
 // Address 0 contains factory data and the setup, addresses 1-6 calibration
@@ -154,20 +144,12 @@ byte Plugin_032_send_cmd(byte aCMD)
 // clocked with the MSB first.
 //**************************************************************************/
 void Plugin_032_read_prom() {
-  Plugin_032_send_cmd(MS5xxx_CMD_RESET);
+  I2C_write8(ms5611_i2caddr, MS5xxx_CMD_RESET);
   delay(3);
 
   for(uint8_t i=0;i<8;i++)
   {
-      ms5611_prom[i]=0x0000;
-      Plugin_032_send_cmd(MS5xxx_CMD_PROM_RD+2*i);
-      Wire.requestFrom((uint8_t)ms5611_i2caddr, (uint8_t)2);
-
-      unsigned int c = Wire.read();
-      ms5611_prom[i] = (c << 8);
-      c = Wire.read();
-      ms5611_prom[i] += c;
-      Wire.endTransmission(true);
+      ms5611_prom[i] = I2C_read16_reg(ms5611_i2caddr, MS5xxx_CMD_PROM_RD+2*i);
   }
 }
 
@@ -176,10 +158,7 @@ void Plugin_032_read_prom() {
 //**************************************************************************/
 unsigned long Plugin_032_read_adc(unsigned char aCMD)
 {
-  unsigned long value=0;
-  unsigned long c=0;
-
-  Plugin_032_send_cmd(MS5xxx_CMD_ADC_CONV+aCMD); // start DAQ and conversion of ADC data
+  I2C_write8(ms5611_i2caddr, MS5xxx_CMD_ADC_CONV+aCMD); // start DAQ and conversion of ADC data
   switch (aCMD & 0x0f)
   {
     case MS5xxx_CMD_ADC_256 : delayMicroseconds(900);
@@ -193,17 +172,8 @@ unsigned long Plugin_032_read_adc(unsigned char aCMD)
     case MS5xxx_CMD_ADC_4096: delay(10);
     break;
   }
-  Plugin_032_send_cmd(MS5xxx_CMD_ADC_READ); // read out values
-  Wire.requestFrom((uint8_t)ms5611_i2caddr, (uint8_t)3);
-  c = Wire.read();
-  value = (c<<16);
-  c = Wire.read();
-  value += (c<<8);
-  c = Wire.read();
-  value += c;
-  Wire.endTransmission(true);
-
-  return value;
+  // read out values
+  return I2C_read24_reg(ms5611_i2caddr, MS5xxx_CMD_ADC_READ);
 }
 
 
@@ -252,3 +222,4 @@ void Plugin_032_readout() {
 double Plugin_032_pressureElevation(double atmospheric, int altitude) {
   return atmospheric / pow(1.0 - (altitude/44330.0), 5.255);
 }
+#endif // USES_P032

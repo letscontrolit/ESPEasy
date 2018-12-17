@@ -1,0 +1,39 @@
+.. include:: _controller_substitutions.repl
+
+.. _C001_page:
+
+|C001_typename|
+==================================================
+
+|C001_shortinfo|
+
+Controller details
+------------------
+
+Type: |C001_type|
+
+Name: |C001_name|
+
+Status: |C001_status|
+
+GitHub: |C001_github|_
+
+Maintainer: |C001_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------
