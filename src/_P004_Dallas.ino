@@ -387,6 +387,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         Plugin_004_DS_write(ScratchPad[3]); // low alarm temp
         Plugin_004_DS_write(ScratchPad[4]); // configuration register
 
+        Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
         for (byte i = 0; i < 8; i++)
             Plugin_004_DS_write(ROM[i]);
