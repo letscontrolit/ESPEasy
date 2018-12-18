@@ -160,7 +160,7 @@ Environment
 
 Plugins: |Plugin_Environment|
 
-Hardware: |P004_usedby|
+Hardware: |P004_usedby|, |P005_usedby|
 
 Extra IO
 --------
