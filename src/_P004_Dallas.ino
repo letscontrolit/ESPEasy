@@ -360,6 +360,8 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
         return false;
     else
     {
+    	byte old_configuration = ScratchPad[4];
+
         switch (res)
         {
             case 12:
@@ -376,6 +378,9 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res)
                 ScratchPad[4] = 0x1F; //  9 bits
                 break;
         }
+
+        if (ScratchPad[4] == old_configuration)
+        	return true;
 
         Plugin_004_DS_reset();
         Plugin_004_DS_write(0x55); // Choose ROM
