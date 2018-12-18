@@ -37,7 +37,12 @@ void handle_rules_new() {
   int endIdx = startIdx + rulesListPageSize - 1;
 
   //Build table header
-  TXBuffer += F("<table class='multirow' border=1px frame='box' rules='all'><TR><TH>Event Name</TH><TH>Filename</TH><TH>Size</TH><TH>Actions");
+  html_table_class_multirow();
+  html_TR();
+  html_table_header(F("Event Name"));
+  html_table_header(F("Filename"));
+  html_table_header(F("Size"));
+  TXBuffer += F("<TH>Actions");
   addSaveButton(TXBuffer,F("/rules/backup"), F("Backup"));
   TXBuffer += F("</TH></TR>");
   //class StreamingBuffer buffer = TXBuffer;
@@ -120,18 +125,18 @@ void handle_rules_new() {
     #ifdef ESP32
     #define max(a,b) a > b ? a : b
     #endif
-    TXBuffer += F("<a class='button link' href=''/rules?start=");
-    TXBuffer += max(0, startIdx - rulesListPageSize);
-    TXBuffer += F("'>Previous</a>");
+    addButton(TXBuffer
+      , String(F("/rules?start=")) + String(max(0, startIdx - rulesListPageSize))
+      , F("Previous"));
     #ifdef ESP32
       #undef max
     #endif
   }
   if (hasMore && count >= endIdx)
   {
-    TXBuffer += F("<a class='button link' href='/rules?start=");
-    TXBuffer += endIdx + 1;
-    TXBuffer += F("'>Next</a>");
+    addButton(TXBuffer
+      , String(F("/rules?start=")) + String(endIdx + 1)
+      , F("Next"));
   }
   //TXBuffer += F("<BR><BR>");
   sendHeadandTail(F("TmplStd"),_TAIL);

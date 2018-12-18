@@ -1,4 +1,21 @@
 -------------------------------------------------
+Changes in release mega-20181218 (since mega-20181217)
+-------------------------------------------------
+
+Release date: Tue Dec 18 04:00:10 CET 2018
+
+Grovkillen (3):
+      [docs] P003 documented (generic pulse counter)
+      [docs] P004 (DS18b20) added
+      [docs] fixed search box on RTD + added HW links in the plugin categories
+
+TD-er (3):
+      [PUYA] Prepare for upcoming PUYA patch in core library
+      [Core 2.5.0] Update label to core "2.5.0-beta2"
+      [Minimal build] Reduce file size of minimal build for 1MB OTA
+
+
+-------------------------------------------------
 Changes in release mega-20181217 (since mega-20181216)
 -------------------------------------------------
 
