@@ -51,7 +51,11 @@ public:
 };
 
 enum FixQuality { Invalid = 0, GPS = 1, DGPS = 2, PPS = 3, RTK = 4, FloatRTK = 5, Estimated = 6, Manual = 7, Simulated = 8 };
-enum FixMode { N = 'N', A = 'A', D = 'D', E = 'E'};
+enum FixMode {
+  N = 'N', // None
+  A = 'A', // Autonomous
+  D = 'D', // Differential
+  E = 'E'};// Dead Reckoning
 
 struct TinyGPSLocation
 {
