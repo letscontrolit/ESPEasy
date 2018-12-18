@@ -50,6 +50,9 @@ public:
    {}
 };
 
+enum FixQuality { Invalid = 0, GPS = 1, DGPS = 2, PPS = 3, RTK = 4, FloatRTK = 5, Estimated = 6, Manual = 7, Simulated = 8 };
+enum FixMode { N = 'N', A = 'A', D = 'D', E = 'E'};
+
 struct TinyGPSLocation
 {
    friend class TinyGPSPlus;
@@ -61,8 +64,10 @@ public:
    const RawDegrees &rawLng()     { updated = false; return rawLngData; }
    double lat();
    double lng();
+   FixQuality Quality() { updated = false; return fixQuality; }
+   FixMode Mode() { updated = false; return fixMode; }
 
-   TinyGPSLocation() : valid(false), updated(false)
+   TinyGPSLocation() : valid(false), updated(false), fixQuality(Invalid), newFixQuality(Invalid), fixMode(N), newFixMode(N)
    {}
 
 private:
@@ -72,6 +77,8 @@ private:
    void commit();
    void setLatitude(const char *term);
    void setLongitude(const char *term);
+   FixQuality fixQuality, newFixQuality;
+   FixMode fixMode, newFixMode;
 };
 
 struct TinyGPSDate
