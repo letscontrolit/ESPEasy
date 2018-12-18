@@ -1998,7 +1998,7 @@ String getMiscStatsName(int stat) {
 
 
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0), forceMonitor(0), forceEvent(0), previousTask(-1) {}
+  portStatusStruct() : state(-1), output(-1), command(0), init(0), mode(0), task(0), monitor(0), forceMonitor(0), forceEvent(0), previousTask(-1), x(-1) {}
 
   int8_t state : 2; //-1,0,1
   int8_t output : 2; //-1,0,1
@@ -2012,6 +2012,8 @@ struct portStatusStruct {
   uint8_t forceEvent : 1; //0,1
 
   int8_t previousTask : 8;
+
+  int8_t x; //used to synchronize the Plugin_prt vector index (x) with the PLUGIN_ID
 };
 
 std::map<uint32_t, portStatusStruct> globalMapPortStatus;
