@@ -355,14 +355,14 @@ void TinyGPSLocation::setLongitude(const char *term)
 double TinyGPSLocation::lat()
 {
    updated = false;
-   double ret = rawLatData.deg + rawLatData.billionths / 1000000000.0;
+   double ret = (double)rawLatData.deg + ((double)rawLatData.billionths / (double)1000000000.0);
    return rawLatData.negative ? -ret : ret;
 }
 
 double TinyGPSLocation::lng()
 {
    updated = false;
-   double ret = rawLngData.deg + rawLngData.billionths / 1000000000.0;
+   double ret = (double)rawLngData.deg + ((double)rawLngData.billionths / (double)1000000000.0);
    return rawLngData.negative ? -ret : ret;
 }
 
