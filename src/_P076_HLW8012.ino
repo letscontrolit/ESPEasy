@@ -23,9 +23,9 @@ HLW8012 *Plugin_076_hlw = NULL;
 #define PLUGIN_ID_076 76
 #define PLUGIN_076_DEBUG true // activate extra log info in the debug
 #ifdef PLUGIN_SET_SONOFF_POW
-#define PLUGIN_NAME_076 "Energy (AC) - HLW8012 (POW r1) [TESTING]"
+#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937  (POW r1) [TESTING]"
 #else
-#define PLUGIN_NAME_076 "Energy (AC) - HLW8012 [TESTING]"
+#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937  [TESTING]"
 #endif
 #define PLUGIN_VALUENAME1_076 "Voltage (V)"
 #define PLUGIN_VALUENAME2_076 "Current (A)"
@@ -46,7 +46,6 @@ HLW8012 *Plugin_076_hlw = NULL;
 #define HLW_VOLTAGE_RESISTOR_UP (5 * 470000) // Real: 2280k
 #define HLW_VOLTAGE_RESISTOR_DOWN (1000)     // Real 1.009k
 //-----------------------------------------------------------------------------------------------
-
 byte StoredTaskIndex;
 byte p076_read_stage = 0;
 unsigned long p076_timer = 0;
@@ -100,8 +99,42 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   }
 
   case PLUGIN_WEBFORM_LOAD: {
-    addFormNote(
-        F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
+
+    byte currentRead = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+    byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+    byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+
+    String modeRaise[4];
+    modeRaise[0] = F("LOW");
+    modeRaise[1] = F("CHANGE");
+    modeRaise[2] = F("RISING");
+    modeRaise[3] = F("FALLING");
+    int modeValues[4];
+    modeValues[0] = LOW;
+    modeValues[1] = CHANGE;
+    modeValues[2] = RISING;
+    modeValues[3] = FALLING;
+
+    String modeCurr[2];
+    modeCurr[0] = F("LOW");
+    modeCurr[1] = F("HIGH");
+    int modeCurrValues[2];
+    modeCurrValues[0] = LOW;
+    modeCurrValues[1] = HIGH;
+
+    addFormNote(F("Sonoff POW: 1st(SEL)=GPIO-5, 2nd(CF1)=GPIO-13, 3rd(CF)=GPIO-14"));
+
+    addFormSubHeader(F("Special settings"));
+    addFormSelector(F("Current(A) Reading"), F("p076_current_read"), 2,
+                    modeCurr, modeCurrValues, currentRead );
+    addFormSelector(F("CF Trigger"), F("p076_cf_trigger"), 4,
+                    modeRaise, modeValues, cf_trigger );
+    addFormSelector(F("CF1 Trigger"), F("p076_cf1_trigger"), 4,
+                    modeRaise, modeValues, cf1_trigger);
+
+    addFormNote(F("HLW8012: (SEL)=HIGH, 2nd(CF1)=CHANGE, (CF)=CHANGE"));
+    addFormNote(F("BL0937:  (SEL)=LOW,  2nd(CF1)=CHANGE, (CF)=FALLING"));
+
     addFormSubHeader(F("Calibration Values"));
     double hlwMultipliers[3];
     LoadCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
@@ -112,6 +145,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
                    String(hlwMultipliers[1], 2), 25);
     addFormTextBox(F("Power Multiplier"), F("p076_powmult"),
                    String(hlwMultipliers[2], 2), 25);
+
     success = true;
     break;
   }
@@ -130,15 +164,22 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     hlwMultipliers[2] = atof(tmpString.c_str());
     SaveCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                            sizeof(hlwMultipliers));
+
+   Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("p076_current_read"));
+   Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("p076_cf_trigger"));
+   Settings.TaskDevicePluginConfig[event->TaskIndex][6] = getFormItemInt(F("p076_cf1_trigger"));
+
     if (PLUGIN_076_DEBUG) {
       String log = F("HLW8012: Saved Calibration from Config Page");
       addLog(LOG_LEVEL_INFO, log);
     }
+
     if (Plugin_076_hlw) {
       Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
       Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
       Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
     }
+
     if (PLUGIN_076_DEBUG) {
       String log = F("HLW8012: Multipliers Reassigned");
       addLog(LOG_LEVEL_INFO, log);
@@ -218,12 +259,17 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     if (!Plugin_076_hlw) {
       p076_read_stage = 0;
       Plugin_076_hlw = new HLW8012;
+
       // This initializes the HWL8012 library.
       const byte CF_PIN = Settings.TaskDevicePin3[event->TaskIndex];
       const byte CF1_PIN = Settings.TaskDevicePin2[event->TaskIndex];
       const byte SEL_PIN = Settings.TaskDevicePin1[event->TaskIndex];
 
-      Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, HLW_CURRENT_MODE,
+      byte currentRead = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+      byte cf_trigger  = Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+      byte cf1_trigger = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
+
+      Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, currentRead,
                             true); // set use_interrupts to true to use
                                    // interrupts to monitor pulse widths
       if (PLUGIN_076_DEBUG)
@@ -252,14 +298,15 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
       Plugin_076_hlw->setVoltageMultiplier(hlwMultipliers[1]);
       Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
+
       if (PLUGIN_076_DEBUG)
         addLog(LOG_LEVEL_INFO, F("HLW8012: Applied Calibration after INIT"));
       StoredTaskIndex = event->TaskIndex; // store task index value in order to
                                           // use it in the PLUGIN_WRITE routine
 
       // Library expects an interrupt on both edges
-      attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, CHANGE);
-      attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, CHANGE);
+      attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, cf1_trigger);
+      attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, cf_trigger);
     }
     success = true;
     break;
