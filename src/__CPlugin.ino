@@ -136,7 +136,14 @@ void CPluginInit(void)
   CPluginCall(CPLUGIN_INIT, 0);
 }
 
-byte CPluginCall(byte Function, struct EventStruct *event)
+bool CPluginCall(byte pluginNumber, byte Function, struct EventStruct *event, String& str) {
+  START_TIMER;
+  bool ret = CPlugin_ptr[pluginNumber](Function, event, str);
+  STOP_TIMER_CONTROLLER(pluginNumber, Function);
+  return ret;
+}
+
+bool CPluginCall(byte Function, struct EventStruct *event)
 {
   int x;
   struct EventStruct TempEvent;
@@ -158,7 +165,7 @@ byte CPluginCall(byte Function, struct EventStruct *event)
             Protocol.resize(newSize);
           }
           checkRAM(F("CPluginCallADD"),x);
-          CPlugin_ptr[x](Function, event, dummyString);
+          CPluginCall(x, Function, event, dummyString);
         }
       }
       return true;
@@ -170,7 +177,7 @@ byte CPluginCall(byte Function, struct EventStruct *event)
       for (byte x=0; x < CONTROLLER_MAX; x++)
         if (Settings.Protocol[x] != 0 && Settings.ControllerEnabled[x]) {
           event->ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
-          CPlugin_ptr[event->ProtocolIndex](Function, event, dummyString);
+          CPluginCall(event->ProtocolIndex, Function, event, dummyString);
         }
       return true;
       break;

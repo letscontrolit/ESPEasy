@@ -1122,10 +1122,9 @@ String getSystemLibraryString() {
     result += F(", LWIP: ");
     result += getLWIPversion();
   #endif
-  #ifdef PUYASUPPORT
+  if (puyaSupport()) {
     result += F(" PUYA support");
-  #endif
-
+  }
   return result;
 }
 
@@ -1147,6 +1146,36 @@ String getLWIPversion() {
 }
 #endif
 
+bool puyaSupport() {
+  bool supported = false;
+#ifdef PUYA_SUPPORT
+  // New support starting core 2.5.0
+  if (PUYA_SUPPORT) supported = true;
+#endif
+#ifdef PUYASUPPORT
+  // Old patch
+  supported = true;
+#endif
+  return supported;
+}
+
+uint8_t getFlashChipVendorId() {
+#ifdef PUYA_SUPPORT
+  return ESP.getFlashChipVendorId();
+#else
+  #if defined(ESP8266)
+    uint32_t flashChipId = ESP.getFlashChipId();
+    return (flashChipId & 0x000000ff);
+  #else
+    return 0xFF; // Not an existing function for ESP32
+  #endif
+#endif
+}
+
+bool flashChipVendorPuya() {
+  uint8_t vendorId = getFlashChipVendorId();
+  return vendorId == 0x85;  // 0x146085 PUYA
+}
 
 
 
@@ -1968,7 +1997,7 @@ float apply_operator(char op, float first, float second)
     case '/':
       return first / second;
     case '%':
-      return round(first) % round(second);
+      return static_cast<int>(round(first)) % static_cast<int>(round(second));
     case '^':
       return pow(first, second);
     default:

@@ -31,7 +31,7 @@ Supported hardware: |P000_usedby_GPIO|
   GPIO: 0 ... 16
 
   ","
-  **Toggle on/off.**.
+  **Toggle on/off.**. 
   Toggle the current (output) state of the given GPIO pin.
   This will only be executed on pins set to be in output mode.
   "

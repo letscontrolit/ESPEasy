@@ -40,9 +40,9 @@
 .. |P003_status| replace:: :green:`NORMAL`
 .. |P003_github| replace:: P003_Pulse.ino
 .. _P003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P003_Pulse.ino
-.. |P003_usedby| replace:: `.`
-.. |P003_shortinfo| replace:: `.`
-.. |P003_maintainer| replace:: `.`
+.. |P003_usedby| replace:: :ref:`P003_LJ12A3_page`, :ref:`P003_TCR5000_page`, :ref:`P003_YFS401_page`
+.. |P003_shortinfo| replace:: Used to count GPIO pulses.
+.. |P003_maintainer| replace:: Core
 .. |P003_compileinfo| replace:: `.`
 
 .. |P004_name| replace:: :cyan:`DS18b20`
@@ -51,19 +51,19 @@
 .. |P004_status| replace:: :green:`NORMAL`
 .. |P004_github| replace:: P004_Dallas.ino
 .. _P004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P004_Dallas.ino
-.. |P004_usedby| replace:: `.`
-.. |P004_shortinfo| replace:: `.`
-.. |P004_maintainer| replace:: `.`
+.. |P004_usedby| replace:: :ref:`P004_DS18b20_page`
+.. |P004_shortinfo| replace:: Temperature sensor that is easy to use in multiples, easy to fit too.
+.. |P004_maintainer| replace:: Core
 .. |P004_compileinfo| replace:: `.`
 
 .. |P005_name| replace:: :cyan:`DHT11/12/22/SONOFF2301/7021`
 .. |P005_type| replace:: :cyan:`Environment`
-.. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22/SONOFF2301/7021`
+.. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22  SONOFF2301/7021`
 .. |P005_status| replace:: :green:`NORMAL`
 .. |P005_github| replace:: P005_DHT.ino
 .. _P005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P005_DHT.ino
-.. |P005_usedby| replace:: `.`
-.. |P005_shortinfo| replace:: `.`
+.. |P005_usedby| replace:: :ref:`P005_DHT11_DHT22_page`
+.. |P005_shortinfo| replace:: Plugin used to communicate with DHT11/12/22/SONOFF2301/7021
 .. |P005_maintainer| replace:: `.`
 .. |P005_compileinfo| replace:: `.`
 

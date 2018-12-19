@@ -41,6 +41,7 @@ unsigned long getMixedId(unsigned long timerType, unsigned long id) {
  * Handle scheduled timers.
 \*********************************************************************************************/
 void handle_schedule() {
+  START_TIMER
   unsigned long timer;
   unsigned long mixed_id = 0;
   if (timePassedSince(last_system_event_run) < 500) {
@@ -54,6 +55,7 @@ void handle_schedule() {
     backgroundtasks();
     process_system_event_queue();
     last_system_event_run = millis();
+    STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
   }
   const unsigned long timerType = (mixed_id >> TIMER_ID_SHIFT);
@@ -76,6 +78,7 @@ void handle_schedule() {
       process_gpio_timer(id);
       break;
   }
+  STOP_TIMER(HANDLE_SCHEDULER_TASK);
 }
 
 /*********************************************************************************************\
@@ -452,7 +455,7 @@ void process_system_event_queue() {
       Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      CPluginCall(Index, Function, &EventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
       NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);

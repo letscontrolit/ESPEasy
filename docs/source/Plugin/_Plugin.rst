@@ -5,6 +5,8 @@
 Plugins
 #######
 
+Similar to a smartphones "apps" the ESP Easy plugins extends the functionality of
+the core operating system. You can use as many plugins as you available tasks.
 
 List of official plugins
 ========================
@@ -111,6 +113,8 @@ Internal GPIO handling
 
 Plugins: :ref:`P000_page`
 
+Hardware: |P000_usedby_GPIO|, |P000_usedby_RTTTL|
+
 Analog input
 ------------
 
@@ -156,6 +160,8 @@ Environment
 
 Plugins: |Plugin_Environment|
 
+Hardware: |P004_usedby|, |P005_usedby|
+
 Extra IO
 --------
 
@@ -166,10 +172,14 @@ Gases
 
 Plugins: |Plugin_Gases|
 
+Hardware: |P052_usedby|
+
 Generic
 -------
 
 Plugins: |Plugin_Generic|
+
+Hardware: |P003_usedby|
 
 Gesture
 -------
@@ -185,6 +195,8 @@ Hardware
 --------
 
 Plugins: |Plugin_Hardware|
+
+Hardware: |P046_usedby|
 
 Keypad
 ------
@@ -225,6 +237,8 @@ Switch input
 ------------
 
 Plugins: |Plugin_Switch_input|
+
+Hardware: |P001_usedby|
 
 Weight
 ------

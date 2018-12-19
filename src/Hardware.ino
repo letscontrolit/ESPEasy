@@ -242,6 +242,7 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
 }
 
 
+
 #ifdef ESP32
 
 //********************************************************************************
