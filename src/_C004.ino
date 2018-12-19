@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_004         4
 #define CPLUGIN_NAME_004       "ThingSpeak"
 
-boolean CPlugin_004(byte function, struct EventStruct *event, String& string)
+bool CPlugin_004(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {

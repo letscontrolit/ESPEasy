@@ -419,6 +419,7 @@ String LoadTaskSettings(byte TaskIndex)
   checkRAM(F("LoadTaskSettings"));
   if (ExtraTaskSettings.TaskIndex == TaskIndex)
     return(String()); //already loaded
+  START_TIMER
   ExtraTaskSettings.clear();
   String result = "";
   result = LoadFromFile(TaskSettings_Type, TaskIndex, (char*)FILE_CONFIG, (byte*)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
@@ -433,6 +434,7 @@ String LoadTaskSettings(byte TaskIndex)
     //the plugin call should populate ExtraTaskSettings with its default values.
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummyString);
   }
+  STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
 }

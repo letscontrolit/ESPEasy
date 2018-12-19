@@ -29,9 +29,9 @@ struct C011_ConfigStruct
   char          HttpBody[C011_HTTP_BODY_MAX_LEN] = {0};
 };
 
-boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
+bool CPlugin_011(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {

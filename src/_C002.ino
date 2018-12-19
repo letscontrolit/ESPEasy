@@ -9,9 +9,9 @@
 
 #include <ArduinoJson.h>
 
-boolean CPlugin_002(byte function, struct EventStruct *event, String& string)
+bool CPlugin_002(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
