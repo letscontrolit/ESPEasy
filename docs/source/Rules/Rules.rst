@@ -317,6 +317,33 @@ boot/reboot/time/sleep etc. of the unit:
 
    "
    "
+   ``WiFi#APmodeEnabled``
+   Triggered when the ESP has set the AP mode (access point) active.
+   This may happen when no valid WiFi settings are found or the ESP cannot connect to the set AP, but it can also be enabled via some command.
+   N.B. Sending a publish command may not be very useful on this event, since this will mainly happen when there is no WiFi connection.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#APmodeEnabled do
+	    ... // Some command
+	   endon
+
+   "
+   "
+   ``WiFi#APmodeDisabled``
+   Triggered when the ESP has disabled the AP mode (access point).
+   This can happen some time (default 60 seconds) after a WiFi connection has been made. Or disabled using some command.
+   ","
+
+   .. code-block:: html
+
+	   on WiFi#APmodeEnabled do
+	    Publish,%sysname%/status,AP disabled
+	   endon
+
+   "
+   "
    ``Login#Failed``
    Triggered when (someone) has tried to login to a ESP unit with admin password enabled, but have failed to enter correct password.
    ","
