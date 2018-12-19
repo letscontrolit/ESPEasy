@@ -1978,6 +1978,8 @@ unsigned long timingstats_last_reset = 0;
 #define LOAD_TASK_SETTINGS     33
 #define RULES_PROCESSING       34
 #define BACKGROUND_TASKS       35
+#define HANDLE_SCHEDULER_IDLE  36
+#define HANDLE_SCHEDULER_TASK  37
 
 
 
@@ -2014,6 +2016,8 @@ String getMiscStatsName(int stat) {
         case LOAD_TASK_SETTINGS:     return F("LoadTaskSettings()");
         case RULES_PROCESSING:       return F("rulesProcessing()");
         case BACKGROUND_TASKS:       return F("backgroundtasks()");
+        case HANDLE_SCHEDULER_IDLE:  return F("handle_schedule() idle");
+        case HANDLE_SCHEDULER_TASK:  return F("handle_schedule() task");
         case C001_DELAY_QUEUE:
         case C002_DELAY_QUEUE:
         case C003_DELAY_QUEUE:
