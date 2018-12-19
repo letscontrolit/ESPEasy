@@ -1265,7 +1265,7 @@ void handle_controllers() {
         ControllerSettings.ClientTimeout = CONTROLLER_CLIENTTIMEOUT_DFLT;
 //        ControllerSettings.MaxQueueDepth = 0;
         if (Protocol[ProtocolIndex].usesTemplate)
-          CPlugin_ptr[ProtocolIndex](CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
+          CPluginCall(ProtocolIndex, CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummyString);
         safe_strncpy(ControllerSettings.Subscribe, TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
         safe_strncpy(ControllerSettings.Publish, TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
         safe_strncpy(ControllerSettings.MQTTLwtTopic, TempEvent.String3.c_str(), sizeof(ControllerSettings.MQTTLwtTopic));
@@ -1297,7 +1297,7 @@ void handle_controllers() {
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerindex]);
         TempEvent.ControllerIndex = controllerindex;
         TempEvent.ProtocolIndex = ProtocolIndex;
-        CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
+        CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_SAVE, &TempEvent, dummyString);
         ControllerSettings.UseDNS = usedns.toInt();
         if (ControllerSettings.UseDNS)
         {
@@ -1331,7 +1331,7 @@ void handle_controllers() {
         ControllerSettings.ClientTimeout = clienttimeout;
 
 
-        CPlugin_ptr[ProtocolIndex](CPLUGIN_INIT, &TempEvent, dummyString);
+        CPluginCall(ProtocolIndex, CPLUGIN_INIT, &TempEvent, dummyString);
       }
     }
     addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
@@ -1370,7 +1370,7 @@ void handle_controllers() {
         html_TD();
         byte ProtocolIndex = getProtocolIndex(Settings.Protocol[x]);
         String ProtocolName = "";
-        CPlugin_ptr[ProtocolIndex](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
+        CPluginCall(ProtocolIndex, CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
         TXBuffer += ProtocolName;
 
         html_TD();
@@ -1396,7 +1396,7 @@ void handle_controllers() {
     for (byte x = 0; x <= protocolCount; x++)
     {
       String ProtocolName = "";
-      CPlugin_ptr[x](CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
+      CPluginCall(x, CPLUGIN_GET_DEVICENAME, 0, ProtocolName);
       boolean disabled = false;// !((controllerindex == 0) || !Protocol[x].usesMQTT);
       addSelector_Item(ProtocolName,
                        Protocol[x].Number,
@@ -1521,7 +1521,7 @@ void handle_controllers() {
 
       TempEvent.ControllerIndex = controllerindex;
       TempEvent.ProtocolIndex = ProtocolIndex;
-      CPlugin_ptr[ProtocolIndex](CPLUGIN_WEBFORM_LOAD, &TempEvent,TXBuffer.buf);
+      CPluginCall(ProtocolIndex, CPLUGIN_WEBFORM_LOAD, &TempEvent,TXBuffer.buf);
 
     }
 
@@ -2072,7 +2072,7 @@ void handle_devices() {
             Settings.ControllerEnabled[TempEvent.ControllerIndex] && Settings.Protocol[TempEvent.ControllerIndex])
             {
               TempEvent.ProtocolIndex = getProtocolIndex(Settings.Protocol[TempEvent.ControllerIndex]);
-              CPlugin_ptr[TempEvent.ProtocolIndex](CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummyString);
+              CPluginCall(TempEvent.ProtocolIndex, CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummyString);
             }
         }
     }
@@ -4414,7 +4414,7 @@ long stream_timing_statistics(bool clearStats) {
   long timeSinceLastReset = timePassedSince(timingstats_last_reset);
   for (auto& x: pluginStats) {
       if (!x.second.isEmpty()) {
-          const int pluginId = x.first/32;
+          const int pluginId = x.first/256;
           String P_name = "";
           Plugin_ptr[pluginId](PLUGIN_GET_DEVICENAME, NULL, P_name);
           if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
@@ -4427,7 +4427,27 @@ long stream_timing_statistics(bool clearStats) {
           TXBuffer += '_';
           TXBuffer += P_name;
           html_TD();
-          TXBuffer += getPluginFunctionName(x.first%32);
+          TXBuffer += getPluginFunctionName(x.first%256);
+          stream_html_timing_stats(x.second, timeSinceLastReset);
+          if (clearStats) x.second.reset();
+      }
+  }
+  for (auto& x: controllerStats) {
+      if (!x.second.isEmpty()) {
+          const int pluginId = x.first/256;
+          String C_name = "";
+          CPluginCall(pluginId, CPLUGIN_GET_DEVICENAME, NULL, C_name);
+          if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
+            html_TR_TD_highlight();
+          } else {
+            html_TR_TD();
+          }
+          TXBuffer += F("C_");
+          TXBuffer += pluginId + 1;
+          TXBuffer += '_';
+          TXBuffer += C_name;
+          html_TD();
+          TXBuffer += getCPluginCFunctionName(x.first%256);
           stream_html_timing_stats(x.second, timeSinceLastReset);
           if (clearStats) x.second.reset();
       }

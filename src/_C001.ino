@@ -8,9 +8,9 @@
 #define CPLUGIN_NAME_001       "Domoticz HTTP"
 
 
-boolean CPlugin_001(byte function, struct EventStruct *event, String& string)
+bool CPlugin_001(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {

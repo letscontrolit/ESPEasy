@@ -452,7 +452,7 @@ void process_system_event_queue() {
       Plugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
       break;
     case ControllerPluginEnum:
-      CPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);
+      CPluginCall(Index, Function, &EventQueue.front().event, tmpString);
       break;
     case NotificationPluginEnum:
       NPlugin_ptr[Index](Function, &EventQueue.front().event, tmpString);

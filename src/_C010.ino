@@ -7,9 +7,9 @@
 #define CPLUGIN_ID_010         10
 #define CPLUGIN_NAME_010       "Generic UDP"
 
-boolean CPlugin_010(byte function, struct EventStruct *event, String& string)
+bool CPlugin_010(byte function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
